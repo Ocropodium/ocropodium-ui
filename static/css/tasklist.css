@@ -1,0 +1,53 @@
+
+#task_list_controls {
+    font-size: 0.9em;
+    color: #999999;
+}
+
+#task_list_controls_right {
+    float: right;
+}
+
+#task_list_controls input[type="text"] {
+    width: 20px;
+    border: 1px solid #999999;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    background-color: #FDFDFF;
+} 
+
+#task_list_controls input[type="text"]:disabled {
+    background-color: #FCFCFC;
+}
+
+#task_list_controls input[type="button"] {
+    height: 1.4em;
+}
+
+#task_list tr.success {
+    color: #0B3B0B;
+    background-color: #CEF6CE;
+}
+
+#task_list tr.running {
+    color: #B45F04;
+    background-color: #FBF5EF;
+}
+
+#task_list tr.error {
+    color: #8A0808; 
+    background-color: #F8E0E0;
+}
+
+#task_list tr.done {
+    color: #084B8A;
+    background-color: #CEE3F6;
+}
+
+
+.table_form input[type="checkbox"] {
+    margin-left: 0px;
+    margin-right: 10px;
+}
+
+

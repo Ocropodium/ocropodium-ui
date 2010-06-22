@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+       <title>JQuery JSON Test</title>
+
+       <script type="application/javascript" src="jquery-1.4.2.js"></script>
+        
+
+
+   </head>
+   <body>
+       <script type="text/javascript">
+        $(document).ajaxError(function(event, request, settings, exception) {
+            alert("Error: ");
+        });
+
+        $(document).ready(function() {
+                $.ajax({
+                    url: "http://localhost:8989/disco/ctrl/joblist",
+                    dataType: "jsonp",
+                    data: {},
+                    success: function(d) {
+                        alert(d);
+                    }
+                });
+        }); 
+       </script>  
+
+       <p>Test</p>
+   </body>
+</html>

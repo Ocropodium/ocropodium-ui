@@ -1,0 +1,29 @@
+.field_wrapper {
+    padding: 5px;
+}
+
+.field_wrapper textfield {
+
+}
+
+.field_wrapper label {
+    float: left;
+    width: 7em;
+    text-align: right;
+    padding-right: 5px;
+}
+
+.textfield_wrapper label {
+    width: 7em;
+    text-align: left;
+}
+
+.field_wrapper input[type="text"] {
+    width: 20em;
+}
+
+.form_submit_buttons {
+    margin-top: 10px;
+    border-top: 1px;
+}
+

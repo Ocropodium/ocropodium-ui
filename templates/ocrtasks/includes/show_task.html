@@ -1,0 +1,51 @@
+
+<h3>Task Info:</h3>
+
+<table class="properties_table">
+    <tr class="header_row">
+        <th>Attribute</th>
+        <th>Value</th>
+    </tr>
+    <tr>
+        <td>User:</td>
+        <td>{{task.user}}</td>
+    </tr>
+    <tr>
+        <td>Task ID:</td>
+        <td>{{task.task_id}}</td>
+    </tr>
+    <tr>
+        <td>Page Name:</td>
+        <td>{{task.page}}</td>
+    </tr>
+    <tr>
+        <td>Submitted:</td>
+        <td>{{task.created_on|date:"SHORT_DATETIME_FORMAT"}}</td>
+    </tr>
+    <tr>
+        <td>Last Update:</td>
+        <td>{{task.updated_on|date:"SHORT_DATETIME_FORMAT"}}</td>
+    </tr>
+    <tr>
+        <td>Status:</td>
+        <td>{{task.status}}</td>
+    </tr>
+    <tr>
+        <td>Arguments:</td>
+        <td>{{task.args}}</td>
+    </tr>
+    <tr>
+        <td>Keyword Arguments:</td>
+        <td>{{task.kwargs}}</td>
+    </tr>
+</table>
+
+<h3>Results:</h3>
+<ul class="results_list">
+    <li><a target="_blank" href="/ocr/results/{{task.task_id}}/?format=json" title="JSON Format">JSON</a></li>
+    <li><a target="_blank" href="/ocr/results/{{task.task_id}}/?format=text" title="Text Format">Plain Text</a></li>
+</ul>
+
+
+
+

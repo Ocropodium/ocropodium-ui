@@ -1,0 +1,105 @@
+{% extends "ocrtasks/standard.html" %}
+
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/tasklist.css" type="text/css" media="screen" />
+
+    <style type="text/css">
+        #dialog_box {
+            display: none;
+        }
+</style>
+
+{% endblock %}
+
+{% block innercontent %}
+
+<script type="text/javascript">
+    
+var REFRESH_TIMEOUT = -1;
+
+$(document).ready(function() {
+
+    $("li.success").slideDown(3000).delay(1000).fadeOut();
+
+
+    // sort table on headers
+    $(".sort_table").live("click", function(e) {
+        $("#tasklist").load($(this).attr("href") + "&" + 
+            $("#task_filter_form").serialize() + "&" + 
+            $("#task_list_controls_form").serialize()     
+        ); 
+        return false;
+    });
+
+    function scheduleReload() {
+        if ($("#autorefresh").attr("checked")) {
+            REFRESH_TIMEOUT = setTimeout(reloadTable, Math.abs($("#autorefresh_time").val()) * 1000);
+        }
+    }
+
+
+    function reloadTable() {
+        var params = $("#task_list_form").serialize() + "&" + 
+            $("#task_filter_form").serialize() + "&" +
+            $("#task_list_controls_form").serialize();
+        $("#tasklist").load(
+            "/ocrtasks/list",
+            params 
+        );
+        scheduleReload();
+    }
+    //"&order=" + $("#task_order").val() + "&page=" + $("#task_page").val()   
+
+    $("#autorefresh").change(function(e) {
+        $("#autorefresh_time").attr("disabled", !$(this).attr("checked"));
+        if (!$(this).attr("checked") && REFRESH_TIMEOUT != -1) {
+            clearTimeout(REFRESH_TIMEOUT);            
+        }
+    });
+    $("#task_list_controls_form").submit(function(e) {
+        return false;
+    });
+
+    $(".filter_item").change(function(e) {
+        if (REFRESH_TIMEOUT != -1) {
+            clearTimeout(REFRESH_TIMEOUT);
+        }
+        reloadTable();
+    });    
+
+    // show new in a dialog...
+    $(".show_task_link").live("click", function(e) {
+            $("#dialog_box").dialog(
+                {width:600, height:500, title: $(this).attr("title")}
+            ).load($(this).attr("href"));
+            return false;
+    });
+
+    // start the timer (no not) for next reload
+    scheduleReload();
+    $("#autorefresh").change();
+});
+
+</script>
+
+
+
+<h3>Tasks:</h3>
+
+<div id="task_list_controls">
+    <div id="task_list_controls_right">
+        <form id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
+            Auto-Refresh:
+            <input type="checkbox" id="autorefresh" name="autorefresh" {% if refresh %}checked="checked"{% endif %} />
+            <input type="text" id="autorefresh_time" name="autorefresh_time" value="{{refresh_time}}" />
+        </form>
+    </div>
+</div>
+
+
+<div id="tasklist">
+    {% include "ocrtasks/includes/task_list.html" %}
+</div>
+<div id="dialog_box"></div>
+
+{% endblock %}

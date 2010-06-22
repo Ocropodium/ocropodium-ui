@@ -1,0 +1,24 @@
+syntax: glob
+
+.svn/*
+*.o
+*.pro.user
+*.swp
+*.pyc
+
+syntax: regexp
+^release
+^debug
+^moc_.+
+^segviewer
+^Makefile.*
+^ui_.+
+^media/temp.+
+^log/.+
+^apache
+^logincookie.txt
+^celerybeat-schedule
+^simple.png
+^media/.+
+^cluster-hosts
+^deploy.sh

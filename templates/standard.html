@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>{% block title %}OCR Server Test{% endblock %}</title>
+	<script type='application/javascript' src='/static/js/ajax-iframe-upload.js'></script>
+	<script type='application/javascript' src='/static/js/jquery-1.4.2.js'></script>
+    <script type='application/javascript' src='/static/js/jquery-ui-1.8.1.custom.min.js'></script>
+    <link rel="stylesheet" href="/static/css/custom-theme/jquery-ui-1.8.1.custom.css" />
+    <link rel="stylesheet" href="/static/css/style.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/forms.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/messages.css" type="text/css" media="screen" />
+    <link rel='index' title='Ocropodium' href='http://ocropodium.cerch.kcl.ac.uk' />
+
+	{% block headerscript %}{% endblock %}
+	
+</head>
+
+<body>
+    <div id="page_wrapper">
+        <div id="page_wrapper_lbg">
+	        <div id="page">
+                <div id="header">
+                {% if user.is_active and user.is_authenticated %}
+                    <div id="login_details">Logged in as {{user.username}}.  <a href="/accounts/logout">Logout</a></div>
+                    {% endif %}
+                    <div id="blog_logo">
+                        <a href="http://ocropodium.cerch.kcl.ac.uk" target="_blank"><img src="/static/ocr_logo.gif" alt="OCRopodium" width="580" height="148" border="0" /></a>
+                    </div>
+                     <div id="cerch_logo">
+                        <a href="http://www.kcl.ac.uk/iss/cerch" target="_blank"><img src="/static/cerch_logo.gif" alt="Centre for e-Research" width="330" height="148" border="0" /></a>
+                    </div>
+               </div>
+               <div id="navbar" role="navigation" style="clear:both;">
+                    <ul id="navlist" class="horizontal_nav">
+                        <li class="horizontal_nav_item_le">
+                            <a href="/ocr/convert">Convert</a>
+                        </li> 
+                        <li class="horizontal_nav_item_le">
+                            <a href="/ocrmodels/">Models</a>
+                        </li> 
+                        <li class="horizontal_nav_item">
+                            <a href="/ocrtasks/">Tasks</a>
+                        </li>
+                        <li class="horizontal_nav_item">
+                            <a href="/ocrtools/">Tools</a>
+                        </li>              
+                        <li class="horizontal_nav_item">
+                            <a href="/admin/">Settings</a>
+                        </li>              
+                    </ul>                
+               </div>
+                <div id="content" class="narrowcolumn" role="main">
+                    {% block content %}{% endblock %}
+                </div>
+                <div id="footer">
+                    &copy;  2010 King's College London 
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

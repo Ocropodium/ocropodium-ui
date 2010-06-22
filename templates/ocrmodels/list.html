@@ -1,0 +1,66 @@
+{% extends "ocrmodels/standard.html" %}
+
+{% block headerscript %}
+
+<style type="text/css">
+    #formholder {
+        display: none;
+    }
+
+    #dialog_box {
+        display: none;
+    }
+</style>
+
+{% endblock %}
+
+{% block innercontent %}
+
+<script type="text/javascript">
+$(document).ready(function() {
+
+    // filter table by tags
+    $(".model_tag_link").live("click", function(e) {
+        $("#modellist").load($(this).attr("href"));
+        return false;            
+    });
+
+    // sort table on headers
+    $(".sort_table").live("click", function(e) {
+        $("#modellist").load($(this).attr("href")); 
+        return false;
+    });
+
+
+    // show new & edit forms in a dialog...
+    $(".show_model_link, .edit_model_link").live("click", function(e) {
+            $("#dialog_box").dialog(
+                {width:600, height:500, title: $(this).attr("title")}
+            ).load($(this).attr("href"));
+            return false;
+    });
+
+    // Ajaxify cancel button    
+    $("#cancel_new_model_form, #cancel_edit_model_form").live("click", function(e) {
+        $("#dialog_box").dialog("destroy");
+        return false;
+    });
+});
+
+</script>
+
+
+<div class="new_link_container">
+    <h3><a href="/ocrmodels/new" class="new_link">Upload New Model</a></h3>
+</div>
+
+
+<h3>Available Models:</h3>
+
+
+<div id="modellist">
+    {% include "ocrmodels/includes/model_list.html" %}
+</div>
+<div id="dialog_box"></div>
+
+{% endblock %}

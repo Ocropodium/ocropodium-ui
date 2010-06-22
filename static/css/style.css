@@ -1,0 +1,301 @@
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.9em;
+    background-color: #E1E5E8;
+}
+
+a {
+    color: #999999;
+}
+
+
+div#page_wrapper {
+    width:980px;
+    padding-left: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    background: #E1E5E8 url(/static/bgleft.png) repeat-y;
+}
+
+div#page_wrapper_lbg {
+    padding-right:10px;
+    background: #E1E5E8 url(/static/bgright.png) repeat;
+}
+
+div#page {
+    top: 0px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #FFFFFF;
+    border: 1px solid #1b4765;
+}
+
+div#footer {
+    clear: both;
+    margin-top: 20px;
+    font-size: 0.8em;
+    color: #ADADAD;
+    text-align: center;
+    padding: 5px;    
+}
+
+#cerch_logo {
+    float: right;
+}
+
+#blog_logo {
+    float: left;
+}
+
+#content {
+    clear: both;
+}
+
+.innercontent {
+    padding: 10px;
+    padding-right: 340px;
+}
+
+
+.model_info_output {
+    color: #1b4765;
+}
+
+#usernav {
+    color: #BBBBBB;
+    margin-top: 2px;
+    padding-right:5px;
+    float: right;
+
+}
+
+.horizontal_nav {
+    margin: 0px;
+    padding: 5px;
+    padding-left: 0px;
+    background-color: #FBFBFB;
+    border-top: 1px solid #1b4765;
+    border-bottom: 1px solid #1b4765;
+}
+
+
+.horizontal_nav * {
+    display: inline;
+}
+
+.horizontal_nav * a {
+    display: inline;
+    padding: 5px;
+/*    border: 1px solid #BBBBBB; */
+    margin: 0px; 
+    margin-right: 5px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #1b4765;
+    text-decoration: none;
+    border-left: 1px solid #FBFBFB;
+    border-right: 1px solid #FBFBFB;
+}
+
+.horizontal_nav_item a:hover {
+    background-color: #F0F0F0;
+    border-left: 1px solid #1b4765;
+    border-right: 1px solid #1b4765;
+}
+ 
+.horizontal_nav_item_le a:hover {
+    background-color: #F0F0F0;
+    border-right: 1px solid #1b4765;
+}
+
+#sidebar {
+    padding: 10px;
+
+    width: 300px;
+    float: right;
+    background-color: #FBFBFB;
+    border-left: 1px solid #1b4765;
+    border-bottom: 1px solid #1b4765;
+    min-height: 800px;
+    margin-bottom: 10px;
+}
+
+#pageout {
+    margin-right: 320px;
+    padding: 10px;
+
+
+}
+
+.ocr_page_head {
+    padding: 10px;
+    border: 1px dotted #999;
+    background-color: #FBFBFB;
+    font-size: 1.2em;    
+}
+
+.ocr_page {
+    padding: 20px;
+    border: 1px dotted #999;
+    margin-bottom: 20px;
+    background-color: #FEFEFE;
+    font-size: 0.9em;
+}
+
+.view_link {
+    float: right;
+    text-decoration: none;
+    color: #999999;
+    font-size: 0.9em;
+    margin-left: 10px;
+}
+
+.view_link:hover {
+    background-color: #FFDDDD;
+}
+
+.result_link {
+    float: right;
+    text-decoration: none;
+    color: #999999;
+    font-size: 0.9em;
+    margin-left: 10px;
+}
+
+.result_link:hover {
+    background-color: #FFDDDD;
+}
+
+.info_table {
+	width: 100%;
+    border-collapse: collapse;
+}
+
+.info_table tr, td {
+    border: 1px solid #D0D0D0;
+}
+
+.info_table th, td {
+	padding: 5px;
+    border-collapse: collapse;
+    margin: 0px;
+}
+
+.info_table th {
+	font-weight: bolder;
+	font-size: 1em;
+    text-align: left;
+    color: #FFF;
+    background-color: #1B4765;
+    border: none;
+}
+
+a.sort_table {
+    color: #FFF;
+    font-weight: bolder;
+    text-decoration: none;
+    margin-right: 10px;
+}
+
+#login_details {
+    margin: 5px;
+    float: right;
+    font-size: 0.8em;
+}
+
+.field_label {
+	float: left;
+	width: 12em;
+}
+
+.field_error {
+
+}
+
+.field_value * {
+	width: 15em;
+}
+
+.path_entry_box {
+	width: 15em;
+}
+
+#stats {
+	font-size: 0.9em;
+	color: #999999;
+}
+
+.stattype {
+	float: left;
+	width: 12em;
+}
+
+#parameters {
+	margin: 5px;
+}
+
+.ocr-converted {
+	font-family: Fixed, monospace;
+	margin: 5px;
+}
+
+ul.errorlist {
+	display: inline;
+}
+
+ul.errorlist li {
+	display: inline;
+}
+
+.log_output {
+	text-align:left;
+	font-family: Fixed, monospace;
+}
+
+#details_table {
+	text-align:left;
+}
+
+#show_content {
+	text-align:left;
+	font-size: 1.1em;
+	list-style-type: none;
+}
+
+/*
+	Image preview stuff
+*/
+div#loader {
+  border: 1px solid #ccc;
+  width: 500px;
+  height: 300px;
+  overflow: auto;
+}
+
+/**
+ * While we're having the loading class set.
+ * Removig it, will remove the loading message
+ */
+div#loader.loading {
+  background: url(../ajax-loader.gif) no-repeat center center;
+}
+
+.new_link_container {
+    float: right;
+    text-decoration: none;
+}
+
+.new_link {
+    text-decoration: none;
+}
+
+.new_link:hover {    
+    background-color: #FFFFDD;
+}
+
+.disabled_link {
+    color: #D2D2D2;
+
+
+}

@@ -1,0 +1,444 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/ocr-line-views.js'></script>
+
+<style type="text/css">        
+    #singleupload {
+        width: 120px;
+    }
+
+    #dropzone {
+        padding: 5px;
+        border: 1px dotted #999;        
+
+        vertical-align: center;
+        text-align: center;
+        color: #000;
+        margin-top: auto;
+        margin-bottom: auto;
+        font-size: 2em;
+        background-color: #FFF;
+        color: #F0F0F0;
+    }
+    #dropprompt {
+   }
+    .waiting {
+        background-image: url('/static/ajax-loader.gif');
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    #convertwith {
+        font-size: 1.1em;
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
+    .upload-spinner {
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+    }
+    .pageheader {
+        background-color: #ffc;
+        font-weight: bold;        
+    }    
+    .pageresults {
+        text-align: left;
+        margin: 5px;
+    }
+    .resulttext {
+        padding: 5px;
+        margin-bottom: 10px;
+    }
+
+    .ocr_line {
+        border: 1px solid white;
+    }
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<!-- code adapted from http://www.appelsiini.net/demo/html5_upload/demo.html -->
+<script type="text/javascript" charset="utf-8">
+
+
+$(function() {
+    
+    var XHRQUEUE = [];
+    var BOUNDARY = '------multipartformboundary' + (new Date).getTime();
+    var DASHDASH = '--';
+    var CRLF     = '\r\n';
+    var NUMFILES = 1;
+
+
+    /* Display uploaded files. */
+    //$("#dropzone").load("list.php");
+    
+    /* We cannot use $.bind() since jQuery does not normalize the native events. */
+    $('#dropzone')
+        .get(0)
+        .addEventListener('drop', upload, false);
+    $('#dropzone')
+        .get(0)
+        .addEventListener('dragenter', function(event) { 
+                $('#dropzone').css("background-color", "#ffc"); 
+            }, false);
+    $('#dropzone')
+        .get(0)
+        .addEventListener('dragexit', function(event) { 
+                $('#dropzone').css("background-color", "#fff"); 
+            }, false);
+    $('#dropzone')
+        .get(0)
+        .addEventListener('dragover', function(event) { 
+                event.preventDefault(); 
+            }, false);
+
+    $(".ocr_line").live("click", function(e) {
+            //alert("clicked!");
+    });
+
+    $("#singleupload").change(function(event) {
+        if ($(this).val() == "") {
+            return false;
+        }
+        $("#uploadform").submit();
+    });
+
+    $("#uploadform").submit(function(event) {
+        return AIM.submit(this, {
+            'onStart' : function(e) {
+                // make something useful before submit (onStart)
+                $("#dropzone").text("Please wait...").addClass("waiting");
+                $("#pageout").html("");
+         		return true;
+            },                                     
+            'onComplete' : onXHRLoad,
+        });
+    });
+
+    /**
+    *
+    *  Function to build the lang & char models selects when
+    *  the engine type is changed.
+    *
+    **/
+
+    function rebuildModelLists(appname) {
+        var opt = $("<option />");
+        var copt = $("#form_cmodel").val();
+        var lopt = $("#form_lmodel").val();
+
+        $("#uploadform").attr("disabled", "disabled");
+        $.get(
+            "/ocrmodels/search",
+            { app: appname },
+            function(response) {
+                //var data = $.parseJSON(response);
+                //alert(response + " : " + data);
+
+                $("#form_cmodel").html("");
+                $("#form_lmodel").html("");
+                $.each(response, function(index, item) {
+                    var select = item.fields.type == "char"
+                        ? $("#form_cmodel")
+                        : $("#form_lmodel");
+
+
+                    var newopt = opt.clone()
+                            .text(item.fields.name)
+                            .attr("value", item.fields.name);
+                    if (item.fields.name == copt) {
+                        newopt.attr("selected", "selected");
+                    }
+                    
+                    select.append(newopt);
+                    //alert(item.fields.name);
+                });
+                $("#uploadform").removeAttr("disabled");
+            }
+        );
+
+    }
+
+    $("input[name=engine]").change(function(e) {
+        rebuildModelLists($(this).val());
+    });
+
+
+    
+    $(".ocr_line").live("mouseover mouseout", function(e) {
+        if (e.type == "mouseover") {
+            $(this).css("border-color", "red");    
+        } else {
+            $(this).css("border-color", "white");     
+        }
+    });
+
+    $(".view_link").live("click", function(e) {
+        var divid = $(this).parent().attr("id").replace(/_head$/, "");
+        if ($(this).text() == "View Layout") {
+            positionByBounds($("#" + divid));
+            $(this).text("View Paragraphs");
+        } else {
+            $("#" + divid).attr("style", "");
+            insertBreaks($("#" + divid));
+            $(this).text("View Layout");
+        }
+        return false;            
+    });
+
+
+    function pollForResults(element) {
+        var jobname = element.data("jobname");
+        $.getJSON(
+            "/ocr/results/" + jobname,
+            function (data) {
+                if (data.error) {
+                    element
+                        .addClass("jobError")
+                        .text(data.text);
+                } else if (data.status == "SUCCESS") {
+                    $.each(data.results.lines, function(linenum, line) {
+                        lspan = $("<span></span>")
+                            .text(line.text)
+                            .addClass("ocr_line")
+                            .attr("bbox", line.box[0] + " " + line.box[1] 
+                                + " " + line.box[2] + " " + line.box[3]);
+                        element.append(lspan);                        
+                    });
+                    element.removeClass("waiting");
+                    insertBreaks(element);
+                    NUMFILES--;                    
+                } else if (data.status == "PENDING") {
+                    setTimeout(function() {
+                        pollForResults(element);
+                    }, 500 * NUMFILES);
+                } else {
+                    element.text("Oops, task finished with status: " + data.status);
+                }
+            }
+        ); 
+    }
+
+
+    function onXHRLoad(event_or_response) {
+        var data;
+        if (typeof(event_or_response) != "string") {
+            var xhr = event_or_response.target;
+            if (!xhr.responseText) {
+                return;
+            }                
+            if (xhr.status != 200) {
+                return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
+            } 
+            data = $.parseJSON(xhr.responseText);
+        } else {
+            // then it must be a single upload...
+            data = $.parseJSON(event_or_response);
+            $("#singleupload").val("");
+            
+        }
+
+        if (data.error) {
+            alert("Error: " + data.error + "\n\n" + data.trace);
+            $("#dropzone").text("Drop images here...").removeClass("waiting");
+            return;
+        }
+
+        $.each(data, function(page, pageresults) {
+            var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
+            var phead = $("<div></div>")
+                .addClass("ocr_page_head")
+                .attr("id", "ocr_page_" + pagename + "_head")
+                .text(pagename)
+                .append($("<a></a>").attr("href", "#").addClass("view_link").text("View Layout"))                
+                .append(
+                    $("<a></a>").attr("href", "/ocr/results/" + pageresults.job_name + "?format=text")
+                        .attr("target", "_blank")
+                        .addClass("result_link")
+                        .text("Text")
+                )                
+                .append(
+                    $("<a></a>").attr("href", "/ocr/results/" + pageresults.job_name + "?format=json")
+                        .attr("target", "_blank")
+                        .addClass("result_link")
+                        .text("Json")
+                );                
+            $("#pageout").append(phead); 
+            var pdiv = $("<div></div>")
+                .addClass("ocr_page")
+                .addClass("waiting")
+                .attr("id", "ocr_page_" + pagename)
+                .data("jobname", pageresults.job_name);
+            $("#pageout").append(pdiv);
+            pollForResults(pdiv);
+        }); 
+        if (XHRQUEUE.length) {
+            var fxhr = XHRQUEUE.shift();
+            fxhr.open("POST", "/ocr/convert?nohang=1", true);
+            fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + BOUNDARY); 
+            fxhr.sendAsBinary(fxhr.builder);
+        } else {
+            $("#dropzone").text("Drop images here...").removeClass("waiting"); 
+        }
+    };
+
+
+    function upload(event) {
+        
+        var data = event.dataTransfer;
+        for (var i = 0; i < data.files.length; i++) {
+            if (data.files[i].type.search("image/") == -1) {
+                alert("Error: invalid file type: " + data.files[i].type);
+                event.stopPropagation();
+                return;
+            }
+        }
+
+        // set the global NUMFILES variable
+        NUMFILES = data.files.length;
+  
+        /* Show spinner for each dropped file and say we're busy. */
+        $("#dropzone").text("Please wait...").addClass("waiting");
+        $("#pageout").html("");
+
+        var textparams = {
+            engine: $("input[@name=engine]:checked").val(),
+            pseg: $("#form_segmenter").val(),
+            cmodel: $("#form_cmodel").val(),
+            lmodel: $("#form_lmodel").val()   
+        }
+        
+        for (var i = 0; i < data.files.length; i++) {
+            var file = data.files[i];
+            var binaryReader = new FileReader();    
+            /* Build RFC2388 string. */
+            var builder = '';
+            builder += DASHDASH;
+            builder += BOUNDARY;
+            builder += CRLF;
+
+            /* append text param values */
+            $.each(textparams, function(key, value) {
+                builder += 'Content-Disposition: form-data; name="' + key + '"; ';
+                builder += 'Content-Type: text/plain';
+                builder += CRLF;
+                builder += CRLF;
+                builder += value;
+                builder += CRLF;
+                builder += DASHDASH;
+                builder += BOUNDARY;
+                builder += CRLF;
+            });
+            
+            /* Generate headers. */            
+            builder += 'Content-Disposition: form-data; ';
+            builder += 'name="userfile' + i + '[]"';
+            if (file.fileName) {
+              builder += '; filename="' + file.fileName + '"';
+            }
+            builder += CRLF;
+ 
+            builder += 'Content-Type: ' + file.type;
+            builder += CRLF;
+            builder += CRLF; 
+ 
+            /* Append binary data. */
+            builder += file.getAsBinary() ;//binaryReader.readAsBinaryString(file);
+            builder += CRLF;
+ 
+            /* Write BOUNDARY. */
+            builder += DASHDASH;
+            builder += BOUNDARY;
+            builder += CRLF;
+        
+            /* Mark end of the request. */
+            builder += DASHDASH;
+            builder += BOUNDARY;
+            builder += DASHDASH;
+            builder += CRLF;
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.builder = builder;
+                xhr.onload = onXHRLoad;
+                XHRQUEUE.push(xhr);
+            } catch (e) {
+                alert(e);
+                alert('multipart/form-data; boundary=' + BOUNDARY)
+            }
+        }
+        if (XHRQUEUE.length) {
+            var fxhr = XHRQUEUE.shift();
+            fxhr.open("POST", "/ocr/convert?nohang=1", true);
+            fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + BOUNDARY); 
+            fxhr.sendAsBinary(fxhr.builder);
+        }
+
+        /* Prevent FireFox opening the dragged file. */
+        event.stopPropagation();
+        
+    }
+
+    rebuildModelLists($("input[name=engine]:checked").val());     
+});
+</script>
+
+<div id="sidebar">
+    <form id="uploadform" name="convertoptions" action="/ocr/convert" method="POST" enctype="multipart/form-data">
+        <!--        <input type="hidden" name="nohang" value="1" /> -->
+        <h4>Choose an Image:</h4>
+        <p>    
+            <input type="file" name="upload0" id="singleupload" />
+        </p>
+        <h4>...or Drag-Drop Images Here:</h4>
+        <div id="dropzone">
+            Drop images here...
+        </div>
+        <h4>Options:</h4>
+         <p>
+         OCR Engine:&nbsp;
+            <input type="radio" name="engine" value="ocropus">Ocropus&nbsp;
+            <input type="radio" name="engine" value="tesseract" checked>Tesseract
+        </p>
+        <p>        
+            Segmenter:&nbsp;
+            <select id="form_segmenter" name="pseg">
+                <option value="SegmentPageByRAST" selected="selected">RAST</option>
+                <option value="SegmentPageByRAST1">RAST1</option>
+                <option value="SegmentPageBy1CP">1CP</option>
+                <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
+                <option value="SegmentPageByXYCUTS">XYCUTS</option>
+            </select>
+        </p>
+        <p>
+            Pre-processing:&nbsp;
+            <select id="form_preprocess" name="preprocess">
+                <option value="Standard" selected="selected">Standard</option>
+            </select>
+        </p>
+        <p>
+            Character Model:&nbsp;
+            <select id="form_cmodel" name="cmodel">
+            </select>
+        </p>
+        <p>
+            Language Model:&nbsp;
+            <select id="form_lmodel" name="lmodel">
+            </select>
+        </p>
+    </form>
+</div>
+
+<div id="pageout">
+</div>
+<div style="clear: right;"></div>
+ 
+{% endblock %}
+

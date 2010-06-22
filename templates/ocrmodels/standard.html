@@ -1,0 +1,50 @@
+{% extends "standard.html" %}
+{% load tagging_tags %}
+{% tags_for_model ocrmodels.OcrModel as modeltags %}
+
+
+{% block headerscript %}
+
+{% endblock %}
+
+
+{% block content %}
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("li.success").slideDown(3000).delay(1000).fadeOut();
+        $(".delete_model_link").live("click", function(e) {
+            return confirm("Are you sure you want to delete this model?");
+        }); 
+    });
+</script>
+
+<div id="sidebar">
+    <h4>Model Tags</h4>
+    {% load tagging_tags %}
+    {% tags_for_model ocrmodels.OcrModel as modeltags %}
+
+    <ul id="taglist">
+    <li><a class="model_tag_link" href="/ocrmodels/list">All</a></li>    
+    {% for tag in modeltags %}
+    <li><a class="model_tag_link" href="/ocrmodels/list?tag={{tag}}">{{tag|title}}</a></li>    
+    {% endfor %}
+    </ul>
+</div>
+
+<div class="innercontent">
+
+    {% if messages %}
+    <ul class="messages">
+    {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% block innercontent %}
+
+    {% endblock %}
+</div>
+
+{% endblock %}

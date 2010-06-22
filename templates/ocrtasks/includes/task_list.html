@@ -1,0 +1,41 @@
+{# List of OCR tasks #}
+
+
+<form class="table_form" id="task_list_form" method="GET" action="/ocrtasks/list">
+    <input type="hidden" id="task_order" name="order" value="{{order}}" />
+    <input type="hidden" id="task_page" name="page" value="{{page}}" />
+    {% if tasks %}
+        <table id="task_list" class="info_table" cellspacing="0" cellpadding="0">
+            <tr class="header_row">
+            {% for field in fields %}
+                <th><a class="sort_table" href="/ocrtasks/list?order={{field}}">{{field|cut:"-"|capfirst|cut:"_"}}</a></th>
+            {% endfor %}
+            <th colspan="2"></th>
+            </tr>
+            {% for cm in tasks %}
+            <tr class="task_item {{cm.status|lower}}" id="task_{{cm.pk}}">                
+                <td>{{cm.page}}</td>        
+                <td>{{cm.batch.user}}</td>
+                <td>{{cm.updated_on|date:"d-m-Y H:i"}}</td>        
+                <td>{{cm.status}}</td>        
+                <td><a title="Task Details"  class="show_task_link" href="/ocrtasks/show/{{cm.pk}}/">Details</a></td>
+                <td>
+                {% if cm.batch.user == user or user.is_superuser %}
+                    <a title="Revoke Task" class="edit_model_link" href="/ocrtasks/revoke/{{cm.pk}}/">Revoke</a>
+                {% else %}
+                    <span class="disabled_link">Revoke</span>
+                {% endif %}
+                </td> 
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        No tasks found.
+    {% endif %}
+</form>
+
+
+
+
+
+            
