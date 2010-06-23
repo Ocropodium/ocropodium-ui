@@ -14,19 +14,7 @@ from celery.decorators import periodic_task
 from django.contrib.auth.models import User
 from django.conf import settings
 
-import ocropus
-import iulib
-
 from ocradmin.ocr.utils import get_converter
-
-
-class Params(object):
-    def __init__(self, d):
-        for a, b in d.iteritems():
-            if isinstance(b, (list, tuple)):
-               setattr(self, a, [obj(x) if isinstance(x, dict) else x for x in b])
-            else:
-               setattr(self, a, obj(b) if isinstance(b, dict) else b)
 
 
 class ConvertPageTask(AbortableTask):
@@ -59,7 +47,8 @@ class CreateCleanupTempTask(PeriodicTask):
             fdirs = [d for d in os.listdir(tempdir) if re.match("\d{14}", d)]
             for fdir in fdirs:
                 # convert the dir last accessed time to a datetime
-                dt = datetime(*time.localtime(os.path.getmtime(os.path.join(tempdir, fdir)))[0:6])
+                dt = datetime(*time.localtime(
+                        os.path.getmtime(os.path.join(tempdir, fdir)))[0:6])
                 delta = datetime.now() - dt
                 if (delta.seconds / 60) > 10:
                     logger.info("Cleanup directory: %s" % fdir)
