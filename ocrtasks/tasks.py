@@ -1,4 +1,8 @@
-from celery.task import Task
+"""
+Callbacks to run when certain celery signals are recieved in response
+to the ConvertPageTask.
+"""
+
 from celery.registry import tasks
 from celery.signals import task_sent, task_prerun, task_postrun
 
@@ -10,8 +14,6 @@ def on_task_sent(**kwargs):
     """
     Update the database when a task is sent to the broker.
     """
-
-    # 
     ocrtask = OcrTask.objects.get(task_id=kwargs.get("task_id"))
     ocrtask.status = "PENDING"
     ocrtask.save()
@@ -32,7 +34,6 @@ def on_task_postrun(**kwargs):
     """
     Update the database when a task is finished.
     """
-
     # don't know what we need to do here yet
     ocrtask = OcrTask.objects.get(task_id=kwargs.get("task_id"))
     ocrtask.status = "DONE"
