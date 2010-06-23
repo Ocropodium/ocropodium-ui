@@ -41,4 +41,6 @@ class OcrTask(models.Model):
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     updated_on = models.DateTimeField(auto_now_add=True, auto_now=True, editable=False)
 
-
+    @property
+    def user(self):
+        return self.batch.user
