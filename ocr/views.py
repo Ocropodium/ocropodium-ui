@@ -1,25 +1,28 @@
+"""
+Basic OCR functions.  Submit OCR tasks and retrieve the result.
+"""
+
 import os
 import traceback
 import uuid
-
 from celery import result as celeryresult
-from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
-
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch 
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocrmodels.views import model_query
+from ocradmin.ocrtasks.models import OcrTask, OcrBatch 
 
 
-class AppException(Exception):
+class AppException(StandardError):
+    """
+    Most generic app error.
+    """
     pass
 
 
@@ -41,9 +44,9 @@ def convert(request):
     try:
         paths = ocrutils.save_ocr_images(
                 request.FILES.iteritems(), settings.MEDIA_ROOT, temp=True)
-    except AppException, e:
+    except AppException, err:
         return HttpResponse(
-            simplejson.dumps({"error": e.message}),
+            simplejson.dumps({"error": err.message}),
             mimetype="application/json"
         )
     if not paths:
@@ -78,20 +81,20 @@ def convert(request):
         # aggregate the results
         out = []
         for async in asynctasks:
-            results = async.wait() if _should_wait(request) else async.result
+            result = async.wait() if _should_wait(request) else async.result
             out.append({
                 "job_name": async.task_id,
                 "status": async.status,
-                "results": results,
+                "results": result,
             })
         # should be past the danger zone now
         transaction.commit()
         return _json_or_text_response(request, out)
-    except StandardError, e:        
+    except StandardError, err:        
         transaction.rollback()
         return HttpResponse(
             simplejson.dumps({
-                "error": str(e), 
+                "error": str(err), 
                 "trace": traceback.extract_stack()
             }),
             mimetype="application/json"
@@ -100,6 +103,9 @@ def convert(request):
 
 @login_required
 def results(request, job_name):
+    """
+    Retrieve the results using the previously provided task name.
+    """
     async = celeryresult.AsyncResult(job_name)
     if async is None:
         raise Http404
@@ -136,19 +142,19 @@ def _json_or_text_response(request, json):
     """
     Format the output string accordingly.
     """
-    results = ""
     mimetype = "application/json"
     if _wants_text_format(request):
         if isinstance(json, dict):
             json = [json]
         mimetype = "text/plain"
+        result = ""
         for page in json:
             if page.get("results"):
-                results += ocrutils.output_to_plain_text(page.get("results"))
-                results += "\n"
+                result += ocrutils.output_to_plain_text(page.get("results"))
+                result += "\n"
     else:
-        results = simplejson.dumps(json)
-    return HttpResponse(results, mimetype=mimetype)
+        result = simplejson.dumps(json)
+    return HttpResponse(result, mimetype=mimetype)
 
 
 def _get_best_params(postdict):
@@ -158,14 +164,14 @@ def _get_best_params(postdict):
     """
 
     userparams = postdict
-    userparams["engine"] = (postdict.get("engine", "tesseract")).encode()
-    userparams["clean"] = (postdict.get("clean", "StandardPreprocessing")).encode()
-    userparams["pseg"] = (postdict.get("pseg", "SegmentPageByRAST")).encode()
+    userparams["engine"] = postdict.get("engine", "tesseract")
+    userparams["clean"] = postdict.get("clean", "StandardPreprocessing")
+    userparams["pseg"] = postdict.get("pseg", "SegmentPageByRAST")
     for modparam in ("cmodel", "lmodel"):
         try:
             model = OcrModel.objects.get(name=userparams.get(modparam, "???"))
             userparams[modparam] = model.file.path            
-        except OcrModel.DoesNotExist, e:
+        except OcrModel.DoesNotExist:
             # try and choose the best model accordingly - this is a model
             # named "Default Something"
             modtype = "char" if modparam == "cmodel" else "lang"
@@ -176,7 +182,7 @@ def _get_best_params(postdict):
                     type__iexact=modtype,
                 )[0]
                 userparams[modparam] = model.file.path            
-            except IndexError, e:
+            except IndexError:
                 userparams[modparam] = "???" 
 
     return userparams    
