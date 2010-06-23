@@ -4,6 +4,7 @@ import uuid
 
 from celery import result as celeryresult
 from django import forms
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -39,7 +40,8 @@ def convert(request):
 
     # save our files to the DFS and return a list of addresses
     try:
-        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), temp=True)
+        paths = ocrutils.save_ocr_images(
+                request.FILES.iteritems(), settings.MEDIA_ROOT, temp=True)
     except AppException, e:
         return HttpResponse(
             simplejson.dumps({"error": e.message}),
@@ -73,7 +75,6 @@ def convert(request):
                 retries=2,
             )
         )            
-
     try:
         # aggregate the results
         out = []
@@ -94,7 +95,7 @@ def convert(request):
                 "error": str(e), 
                 "trace": traceback.extract_stack()
             }),
-            mimetype=mimetype
+            mimetype="application/json"
         ) 
 
 
