@@ -18,10 +18,9 @@ from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrmodels.views import model_query
 
+
 class AppException(Exception):
     pass
-
-
 
 
 @login_required
