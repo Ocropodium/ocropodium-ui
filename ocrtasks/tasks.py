@@ -5,6 +5,7 @@ to the ConvertPageTask.
 
 from celery.registry import tasks
 from celery.signals import task_sent, task_prerun, task_postrun
+from celery.datastructures import ExceptionInfo
 
 from ocradmin.ocr.tasks import ConvertPageTask 
 from ocradmin.ocrtasks.models import OcrTask
@@ -36,7 +37,13 @@ def on_task_postrun(**kwargs):
     """
     # don't know what we need to do here yet
     ocrtask = OcrTask.objects.get(task_id=kwargs.get("task_id"))
-    ocrtask.status = "DONE"
+    retval = kwargs.get("retval")
+    if isinstance(retval, ExceptionInfo):
+        ocrtask.error = retval.exception
+        ocrtask.traceback = retval.traceback
+        ocrtask.status = "ERROR"
+    else:
+        ocrtask.status = "DONE"
     ocrtask.save()
 
 # Connect up signals to the ConvertPageTask

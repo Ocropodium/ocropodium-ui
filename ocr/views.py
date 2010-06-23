@@ -94,8 +94,10 @@ def convert(request):
         transaction.rollback()
         return HttpResponse(
             simplejson.dumps({
-                "error": str(err), 
-                "trace": traceback.extract_stack()
+                "error": err.message, 
+                "trace": "\n".join(
+                    [ "\t".join(str(t)) for t in traceback.extract_stack()]
+                )
             }),
             mimetype="application/json"
         ) 
@@ -110,6 +112,24 @@ def results(request, job_name):
     if async is None:
         raise Http404
 
+    return _format_task_results(request, async)
+
+
+def _format_task_results(request, async):
+    """
+    Wrap the results in JSON metadata.  Treat
+    exceptions as a special case.
+    """
+    if async.status == "FAILURE":
+        err = async.result
+        taskmeta = OcrTask.objects.get(task_id=async.task_id)
+        return HttpResponse(
+            simplejson.dumps({
+                "error": err.message, 
+                "trace": taskmeta.traceback
+            }),
+            mimetype="application/json"
+        )
     return _json_or_text_response(
         request, {
             "job_name": async.task_id,
@@ -117,7 +137,6 @@ def results(request, job_name):
             "results": async.result
         }
     )
-
 
 
 

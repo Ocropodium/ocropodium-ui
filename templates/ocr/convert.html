@@ -28,6 +28,13 @@
         background-repeat: no-repeat;
         background-position: center;
     }
+    .error {
+        background-color: #fcc;
+    }
+    .traceback {
+        overflow: auto;
+    }
+
     #convertwith {
         font-size: 1.1em;
         margin-top: 5px;
@@ -200,8 +207,13 @@ $(function() {
             function (data) {
                 if (data.error) {
                     element
-                        .addClass("jobError")
-                        .text(data.text);
+                        .removeClass("waiting")                
+                        .addClass("error")
+                        .html("<h4>Error: " + data.error + "</h4>")
+                        .append(
+                            $("<div></div>").addClass("traceback")
+                                .append("<pre>" + data.trace + "</pre>")                                
+                        );                            
                 } else if (data.status == "SUCCESS") {
                     $.each(data.results.lines, function(linenum, line) {
                         lspan = $("<span></span>")
@@ -217,9 +229,9 @@ $(function() {
                 } else if (data.status == "PENDING") {
                     setTimeout(function() {
                         pollForResults(element);
-                    }, 500 * NUMFILES);
+                        }, 500 * NUMFILES);
                 } else {
-                    element.text("Oops, task finished with status: " + data.status);
+                    element.html("<p>Oops, task finished with status: " + data.status + "</p>");
                 }
             }
         ); 

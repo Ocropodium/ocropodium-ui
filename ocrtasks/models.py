@@ -38,6 +38,8 @@ class OcrTask(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     args = fields.PickledObjectField(blank=True, null=True)
     kwargs = fields.PickledObjectField(blank=True, null=True)
+    error = fields.PickledObjectField(blank=True, null=True)
+    traceback = models.TextField(blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     updated_on = models.DateTimeField(auto_now_add=True, auto_now=True, editable=False)
 

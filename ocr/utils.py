@@ -47,6 +47,7 @@ def convert_to_temp_image(imagepath, suffix="tif"):
     more reliable than PIL, which seems to have problems
     with Group4 TIFF encoders.
     """
+    raise ExternalToolError("Test Error")
     with tempfile.NamedTemporaryFile(suffix=".%s" % suffix) as tmp:
         tmp.close()
         retcode = sp.call(["convert", imagepath, tmp.name])
@@ -154,8 +155,7 @@ class OcropusWrapper(object):
             self._lmodel = ocropus.make_OcroFST()
             self._lmodel.load(self.params.lmodel)
         except (StandardError, RuntimeError), err:
-            raise OcropusError("Linerec loading exception for %s: %s" % 
-                    (self.params.cmodel, err.message))
+            raise err
             
     
     def convert(self, filepath, callback=None, **cbkwargs):
@@ -166,7 +166,6 @@ class OcropusWrapper(object):
         results gathered up to that point.  Keyword arguments can also be
         passed to the callback.
         """
-
         page_bin = self.get_page_binary(filepath)
         page_seg = self.get_page_seg(page_bin)
         pagewidth = page_seg.dim(0)
