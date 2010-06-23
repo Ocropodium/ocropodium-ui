@@ -34,5 +34,23 @@
             "description": "Tesseract default language model."
         }
     } 
+,
+    {
+        "pk": 3, 
+        "model": "ocrmodels.ocrmodel", 
+        "fields": {
+            "file": "test/default.fst", 
+            "name": "Default Language Model", 
+            "tags": "default ocropus english", 
+            "app": "ocropus", 
+            "created_on": "2010-06-02", 
+            "user": 1, 
+            "derived_from": null, 
+            "updated_on": null, 
+            "type": "lang", 
+            "public": true, 
+            "description": "OCRopus default language model."
+        }
+    } 
 ]
 

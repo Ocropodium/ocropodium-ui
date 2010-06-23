@@ -18,6 +18,7 @@ class OcrTest(TestCase):
         """
         shutil.copy2("media/models/mytessdata.tgz", "media/test/engtessdata.tgz")
         shutil.copy2("media/models/default.model", "media/test/default.model")
+        shutil.copy2("media/models/default.fst", "media/test/default.fst")
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
@@ -46,6 +47,16 @@ class OcrTest(TestCase):
         Test OCRing with Tesseract as the engine.
         """
         self._test_convert_action({"engine": "tesseract", "lmodel": "Default Tesseract English"})        
+
+    def test_convert_action_ocropus(self):
+        """
+        Test OCRing with OCRopus as the engine.
+        """
+        self._test_convert_action({
+            "engine": "ocropus", 
+            "cmodel": "Default Character Model",
+            "lmodel": "Default Language Model"
+        })        
 
     def test_convert_action_seg(self):
         """
