@@ -35,25 +35,19 @@ def convert(request):
     """
 
     if not request.method == "POST":
-        return render_to_response(
-            "ocr/convert.html", {}, 
-            context_instance=RequestContext(request)
-        )
-
+        return render_to_response("ocr/convert.html", {}, 
+            context_instance=RequestContext(request))
     # save our files to the DFS and return a list of addresses
     try:
         paths = ocrutils.save_ocr_images(
                 request.FILES.iteritems(), settings.MEDIA_ROOT, temp=True)
     except AppException, err:
-        return HttpResponse(
-            simplejson.dumps({"error": err.message}),
-            mimetype="application/json"
-        )
+        return HttpResponse(simplejson.dumps({"error": err.message}),
+            mimetype="application/json")
     if not paths:
         return HttpResponse(
-            simplejson.dumps({"error": "no valid images found"}),
-            mimetype="application/json"
-        )     
+                simplejson.dumps({"error": "no valid images found"}),
+                mimetype="application/json")     
     
     # wrangle the params - this needs improving
     userparams = _get_best_params(request.POST.copy())
