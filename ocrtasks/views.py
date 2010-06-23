@@ -1,12 +1,14 @@
-from django import forms
+"""
+View the task objects that are created when submitting a celery task
+and updated by it's subsequent signals.
+"""
+
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from django.utils import simplejson
-
 from ocradmin.ocrtasks.models import OcrTask
 
 
@@ -14,7 +16,7 @@ def task_query(params):
     """
     Query the task db.
     """
-    order = filter(lambda x: x != "", params.getlist("order")) or ["created_on"]
+    order = [x for x in params.getlist("order") if x != ""] or ["created_on"]
     status = params.getlist("status")
     query = Q()
     if status and "ALL" not in status:
@@ -24,8 +26,7 @@ def task_query(params):
             continue
         if key == "status" or not val:
             continue
-        ld = {str(key): str(val)}
-        query = query & Q(**ld)
+        query = query & Q(**{str(key): str(val)})
     return OcrTask.objects.filter(query).order_by(*order)
 
 
@@ -60,10 +61,10 @@ def list(request):
     if request.GET.get("autorefresh_time"):
         autorf_time = request.GET.get("autorefresh_time")
     
-    fields = ["page", "user", "updated_on", "status"]
+    fields = ["page", "batch__user", "updated_on", "status"]
     allstatus = False if len(selected) > 1 else ("ALL" in selected)
     # add a 'invert token' if we're ordering by the same field again
-    fields = map(lambda x: "-%s" % x if x in order else x, fields)
+    fields = ["-%s" % x if x in order else x for x in fields]
     tasks = task_query(params)
     context = { 
             "tasks": tasks, 
@@ -76,9 +77,11 @@ def list(request):
     }
     template = "ocrtasks/list.html" if not request.is_ajax() \
             else "ocrtasks/includes/task_list.html"
-    response = render_to_response(template, context, context_instance=RequestContext(request))    
+    response = render_to_response(template, context, 
+            context_instance=RequestContext(request))    
     #if request.is_ajax():
-    #    response = HttpResponse(serializers.serialize("json", tasks), mimetype="application/json") 
+    #    response = HttpResponse(serializers.serialize("json", tasks), 
+    #               mimetype="application/json") 
     response.set_cookie("tlstatus", " ".join(selected)) 
     response.set_cookie("tlorder", " ".join(order))
     response.set_cookie("tlrefresh", autorf)
@@ -111,7 +114,8 @@ def show(request, pk):
     context = {"task": task}
     template = "ocrtasks/show.html" if not request.is_ajax() \
             else "ocrtasks/includes/show_task.html"
-    return render_to_response(template, context, context_instance=RequestContext(request))
+    return render_to_response(template, context, 
+            context_instance=RequestContext(request))
 
 
 
