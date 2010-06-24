@@ -7,7 +7,7 @@ from celery.registry import tasks
 from celery.signals import task_sent, task_prerun, task_postrun
 from celery.datastructures import ExceptionInfo
 
-from ocradmin.ocr.tasks import ConvertPageTask 
+from ocradmin.ocr.tasks import ConvertPageTask, BinarizePageTask 
 from ocradmin.ocrtasks.models import OcrTask
 
 
@@ -46,10 +46,11 @@ def on_task_postrun(**kwargs):
         ocrtask.status = "DONE"
     ocrtask.save()
 
-# Connect up signals to the ConvertPageTask
-task_sent.connect(on_task_sent, tasks[ConvertPageTask.name])
-task_prerun.connect(on_task_prerun, tasks[ConvertPageTask.name])
-task_postrun.connect(on_task_postrun, tasks[ConvertPageTask.name])
+# Connect up signals to the *PageTask
+for taskname in [ConvertPageTask.name, BinarizePageTask.name]:
+    task_sent.connect(on_task_sent, tasks[taskname])
+    task_prerun.connect(on_task_prerun, tasks[taskname])
+    task_postrun.connect(on_task_postrun, tasks[taskname])
 
 
 
