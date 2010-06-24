@@ -152,17 +152,16 @@ $(function() {
                             $("<div></div>").addClass("traceback")
                                 .append("<pre>" + data.trace + "</pre>")                                
                         );                            
-                } else if (data.status == "SUCCESS") {
+               } else if (data.status == "SUCCESS") {
                     $.each(data.results.lines, function(linenum, line) {
-                        lspan = $("<span></span>")
-                            .text(line.text)
-                            .addClass("ocr_line")
-                            .attr("bbox", line.box[0] + " " + line.box[1] 
-                                + " " + line.box[2] + " " + line.box[3]);
+                        lspan = $("<img></img>")
+                        .attr("src", "/imageops/scale?image=" 
+                            + line.text + "&w=" 
+                            + element.width()
+                            + "&t=" + (new Date).getTime());
                         element.append(lspan);                        
                     });
                     element.removeClass("waiting");
-                    insertBreaks(element);
                     NUMFILES--;                    
                 } else if (data.status == "PENDING") {
                     setTimeout(function() {
@@ -230,7 +229,7 @@ $(function() {
         }); 
         if (XHRQUEUE.length) {
             var fxhr = XHRQUEUE.shift();
-            fxhr.open("POST", "/ocr/convert?nohang=1", true);
+            fxhr.open("POST", "/ocr/binarize?nohang=1", true);
             fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
             fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + BOUNDARY); 
             fxhr.sendAsBinary(fxhr.builder);
@@ -325,7 +324,7 @@ $(function() {
         }
         if (XHRQUEUE.length) {
             var fxhr = XHRQUEUE.shift();
-            fxhr.open("POST", "/ocr/convert?nohang=1", true);
+            fxhr.open("POST", "/ocr/binarize", true);
             fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
             fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + BOUNDARY); 
             fxhr.sendAsBinary(fxhr.builder);
@@ -341,7 +340,7 @@ $(function() {
 </script>
 
 <div id="sidebar">
-    <form id="uploadform" name="convertoptions" action="/ocr/convert" method="POST" enctype="multipart/form-data">
+    <form id="uploadform" name="convertoptions" action="/ocr/binarize" method="POST" enctype="multipart/form-data">
         <!--        <input type="hidden" name="nohang" value="1" /> -->
         <h4>Choose an Image:</h4>
         <p>    

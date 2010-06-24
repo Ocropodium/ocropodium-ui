@@ -26,12 +26,80 @@ class AppException(StandardError):
     pass
 
 
+
+@login_required
+@transaction.commit_manually
+def binarize(request):
+    """
+        Save a posted image to the DFS.  Binarize it with Celery.
+    """
+
+    if not request.method == "POST":
+        return render_to_response("ocr/binarize.html", {}, 
+            context_instance=RequestContext(request))
+    # save our files to the DFS and return a list of addresses
+    try:
+        paths = ocrutils.save_ocr_images(
+                request.FILES.iteritems(), settings.MEDIA_ROOT, temp=True)
+    except AppException, err:
+        return HttpResponse(simplejson.dumps({"error": err.message}),
+            mimetype="application/json")
+    if not paths:
+        return HttpResponse(
+                simplejson.dumps({"error": "no valid images found"}),
+                mimetype="application/json")     
+    
+    # wrangle the params - this needs improving
+    userparams = _get_best_params(request.POST.copy())
+
+    # create a batch db job
+    batch = OcrBatch(user=request.user, type="ONESHOT")
+    batch.save()
+
+    # init the job from our params
+    asynctasks = []
+    for path in paths:
+        tid = "%s::%s" % (os.path.basename(path), uuid.uuid1())
+        ocrtask = OcrTask(task_id=tid, batch=batch, 
+                page=os.path.basename(path), status="INIT")
+        ocrtask.save()
+        asynctasks.append(
+            tasks.BinarizePageTask.apply_async(
+                args=(path.encode(), userparams),
+                    task_id=tid, loglevel=60, retries=2))            
+    try:
+        # aggregate the results
+        out = []
+        for async in asynctasks:
+            result = async.wait() if _should_wait(request) else async.result
+            out.append({
+                "job_name": async.task_id,
+                "status": async.status,
+                "results": result,
+            })
+        # should be past the danger zone now...
+        transaction.commit()
+        return _json_or_text_response(request, out)
+    except StandardError, err:        
+        transaction.rollback()
+        return HttpResponse(
+            simplejson.dumps({
+                "error": err.message, 
+                "trace": "\n".join(
+                    [ "\t".join(str(t)) for t in traceback.extract_stack()]
+                )
+            }),
+            mimetype="application/json"
+        ) 
+
+
+
 @login_required
 @transaction.commit_manually
 def convert(request):
     """
-        Save a posted image to the DFS.  Convert it with Celery.
-        Then delete the image.
+    Save a posted image to the DFS.  Convert it with Celery.
+    Then delete the image.
     """
 
     if not request.method == "POST":
@@ -66,11 +134,7 @@ def convert(request):
         asynctasks.append(
             tasks.ConvertPageTask.apply_async(
                 args=(path.encode(), userparams),
-                task_id=tid,
-                loglevel=60,
-                retries=2,
-            )
-        )            
+                    task_id=tid, loglevel=60, retries=2))            
     try:
         # aggregate the results
         out = []
@@ -81,7 +145,7 @@ def convert(request):
                 "status": async.status,
                 "results": result,
             })
-        # should be past the danger zone now
+        # should be past the danger zone now...
         transaction.commit()
         return _json_or_text_response(request, out)
     except StandardError, err:        

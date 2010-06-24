@@ -30,6 +30,38 @@ class ConvertPageTask(AbortableTask):
                 logger, paramdict)
         return converter.convert(filepath)
 
+class BinarizePageTask(AbortableTask):
+    """
+    Binarize an image of text into a temporary file.  Return some
+    JSON containing the server-side path to that file.  The client
+    then submits a request to have that binary full-size PNG converted
+    into a scaled image for web viewing.
+    """
+    name = "binarize.page"
+
+    def run(self, filepath, paramdict, **kwargs):
+        """
+        Runs the binarize action.
+        """
+        logger = self.get_logger(**kwargs)
+        logger.info(paramdict)
+        converter = get_converter(paramdict.get("engine", "ocropus"),                 
+                logger, paramdict)
+        page_bin = converter.get_page_binary(filepath)
+        pagewidth = page_bin.dim(0)
+        pageheight = page_bin.dim(1)
+        import iulib
+        binpath =  "%s/bintemp/test.png" % settings.MEDIA_ROOT
+        pagedata = { 
+            "page" : os.path.basename(filepath) ,
+            "lines": [],
+            "box": [0, 0, pagewidth, pageheight]
+        }
+        binmediapath = binpath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
+        iulib.write_image_binary(binpath, page_bin)
+        pagedata["lines"].append({"text": "%s" % os.path.abspath(binmediapath)})
+        return pagedata
+
 
 class CreateCleanupTempTask(PeriodicTask):
     """

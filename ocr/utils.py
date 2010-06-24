@@ -12,6 +12,8 @@ import UserDict
 import ocropus
 import iulib
 
+from PIL import Image
+
 
 def get_tesseract():
     """
@@ -47,7 +49,6 @@ def convert_to_temp_image(imagepath, suffix="tif"):
     more reliable than PIL, which seems to have problems
     with Group4 TIFF encoders.
     """
-    raise ExternalToolError("Test Error")
     with tempfile.NamedTemporaryFile(suffix=".%s" % suffix) as tmp:
         tmp.close()
         retcode = sp.call(["convert", imagepath, tmp.name])
@@ -55,6 +56,26 @@ def convert_to_temp_image(imagepath, suffix="tif"):
             raise ExternalToolError(
                 "convert failed to create TIFF file with errno %d" % retcode) 
         return tmp.name
+
+
+def new_size_from_width(currentsize, width):
+    """
+    Maintain aspect ratio when scaling to a new width.
+    """
+
+    cw, ch = currentsize
+    caspect = float(cw) / float(ch)
+    return width, int(float(ch) * caspect)
+
+
+def scale_image(inpath, outpath, newsize, filter="NEAREST"):
+    """
+    Scale an on-disk image to a new size using PIL.
+    """
+
+    inimg = Image.open(inpath)
+    scaled = inimg.resize(newsize, filter)
+    scaled.save(outpath)
 
 
 def output_to_plain_text(jsondata):
@@ -143,7 +164,6 @@ class OcropusWrapper(object):
         self._lmodel = None
         self.logger = logger
         self.params = OcropusParams(params)
-        self.init()
 
 
     def init(self):
@@ -193,7 +213,10 @@ class OcropusWrapper(object):
                 regions.x1(i) - regions.x0(i), regions.y1(i) - regions.y0(i)]
             try:
                 text = self.get_transcript(line)
-            except StandardError:
+            except ExternalToolError, err:
+                raise err
+            except StandardError, err:
+                self.logger.error("Caught conversion error: %s" % err.message)
                 text = ""
             pagedata["lines"].append({"line": i, "box": bbox, "text" : text })
         return pagedata
@@ -228,6 +251,8 @@ class OcropusWrapper(object):
         Run line-recognition on an iulib.bytearray images of a 
         single line.
         """
+        if self._lmodel is None:
+            self.init()
         fst = ocropus.make_OcroFST()
         self._linerec.recognizeLine(fst, line)
         result = iulib.ustrg()
@@ -262,6 +287,7 @@ class TessWrapper(OcropusWrapper):
         if self.params.lmodel and self._tessdata is None:
             self.unpack_tessdata(self.params.lmodel)
         self._tesseract = get_tesseract()
+        self.logger.info("Using Tesseract: %s" % self._tesseract)
 
 
     def get_transcript(self, line):
@@ -312,12 +338,15 @@ class TessWrapper(OcropusWrapper):
         Tesseract's external interface is quite inflexible.
         TODO: Fix hardcoded path to Tesseract.
         """
+        if self._tessdata is None:
+            self.init()
+
         lines = []
         with tempfile.NamedTemporaryFile() as tmp:
             tmp.close()
-            tessargs = ["/usr/local/bin/tesseract", imagepath, tmp.name]
+            tessargs = [self._tesseract, imagepath, tmp.name]
             if self._lang is not None:
-                tessargs.extend(["-l", self._lang])                
+                tessargs.extend(["-l", self._lang])               
             proc = sp.Popen(tessargs, stderr=sp.PIPE)
             err = proc.stderr.read()
             if proc.wait() != 0:
