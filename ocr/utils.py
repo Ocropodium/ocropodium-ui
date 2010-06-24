@@ -43,6 +43,8 @@ def save_ocr_images(images, basepath, temp=True):
     return paths
 
 
+
+
 def convert_to_temp_image(imagepath, suffix="tif"):
     """
     Convert PNG to TIFF with GraphicsMagick.  This seems
@@ -94,6 +96,123 @@ def get_converter(engine_type, logger, params):
     else:
         return TessWrapper(logger, params)
 
+
+def get_ocropus_components(oftype=None):
+    """
+    Get a datastructure contraining all Ocropus components
+    (possibly of a given type) and their default parameters.
+    """
+    out = []
+    clist = ocropus.ComponentList()
+    for i in range(0, clist.length()):
+        ckind = clist.kind(i)
+        if oftype is not None and oftype.lower() != ckind.lower():
+            continue
+        cname = clist.name(i)
+        compdict = {"name": cname, "type": ckind, "params": []}
+        # this is WELL dodgy
+        try:
+            comp = eval("ocropus.make_%s(\"%s\")" % (ckind, cname))
+        except StandardError, err:
+            print err
+            continue
+        compdict["description"] = comp.description()
+        for paramnum in range(0, comp.plength()):
+            pname = comp.pname(paramnum) 
+            compdict["params"].append({
+                "name": pname,
+                "value": comp.pget(pname),
+            })
+        out.append(compdict)
+    return out
+
+
+
+class OcropusParameter(object):
+    """
+    Representation of an OCRopus parameter.
+    """
+    def __init__(self, name, default):
+        self.name = name
+        self.default = default
+        self.val = default
+
+    def set(self, val):
+        self.val = val
+
+    def get(self):
+        return self.val
+
+    def __repr__(self):
+        return "<Param: %s=%s>" % (self.name, self.val)
+
+
+
+
+class OcropusComponent(object):
+    """
+    Representation of an OCRopus component.
+    """
+    def __init__(self, name, description):
+        """
+        Initialise a component.
+        """
+        self.name = name
+        self.description = description
+        self._parameters = []
+
+    def parameters(self):
+        """
+        List all parameters.
+        """
+        return self._parameters
+
+    def set_parameters(self, paramlist):
+        """
+        Set all parameters.
+        """
+        self._parameters = paramlist
+
+    def add_parameter(self, param):
+        """
+        Add a parameter to the component's parameter list.
+        """
+        self._parameters.append(param)
+
+    def pset(self, name, val):
+        """
+        Set the value of a given parameter.
+        """
+        self._find_param(name).set(val)
+
+    def pget(self, name):
+        """
+        Get the value of a given parameter.
+        """
+        return self._find_param(name).get()
+
+    def _find_param(self, name):
+        """
+        Find a given parameter.
+        """
+        try:
+            param = [p for p in self._parameters if p.name == name][0]
+        except IndexError, err:
+            raise ComponentError("Parameter '%s' not found")
+        return param
+
+    def __repr__(self):
+        """
+        Generic string representation.
+        """
+        return "<%s: %s>" % (self.__class__.__name__, self.name)
+
+
+class ComponentError(StandardError):
+    """
+    Component related exceptions.
+    """
+    pass
 
 
 class OcropusError(StandardError):

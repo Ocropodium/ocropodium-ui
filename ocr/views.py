@@ -176,6 +176,15 @@ def results(request, job_name):
     return _format_task_results(request, async)
 
 
+def components(request):
+    """
+    List OCRopus components - either all or those
+    of an optional type.
+    """
+    comps = ocrutils.get_ocropus_components(request.GET.get("type"))
+    return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
+
+
 def _format_task_results(request, async):
     """
     Wrap the results in JSON metadata.  Treat
