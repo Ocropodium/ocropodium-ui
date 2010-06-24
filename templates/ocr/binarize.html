@@ -152,15 +152,18 @@ $(function() {
                             $("<div></div>").addClass("traceback")
                                 .append("<pre>" + data.trace + "</pre>")                                
                         );                            
-               } else if (data.status == "SUCCESS") {
-                    $.each(data.results.lines, function(linenum, line) {
-                        lspan = $("<img></img>")
-                        .attr("src", "/imageops/scale?image=" 
-                            + line.text + "&w=" 
-                            + element.width()
-                            + "&t=" + (new Date).getTime());
-                        element.append(lspan);                        
-                    });
+                } else if (data.status == "SUCCESS") {
+                    var srcimg = $("<img></img>")
+                        .attr("src", "/imageops/scale?image="+ data.results.src + "&w=" + element.width()
+                            + "&t=" + (new Date).getTime())
+                        .addClass("binsrc")
+                        .css("display", "none");
+                    var dstimg = $("<img></img>")
+                        .attr("src", "/imageops/scale?image="+ data.results.dst + "&w=" + element.width()
+                            + "&t=" + (new Date).getTime())
+                        .addClass("bindst");                        
+                    element.append(srcimg);
+                    element.append(dstimg);                        
                     element.removeClass("waiting");
                     NUMFILES--;                    
                 } else if (data.status == "PENDING") {
@@ -198,6 +201,11 @@ $(function() {
             $("#dropzone").text("Drop images here...").removeClass("waiting");
             return;
         }
+
+        $("#togglesrc").click(function(e) {
+            $(".binsrc").toggle();
+            $(".bindst").toggle();    
+        });
 
         $.each(data, function(page, pageresults) {
             var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
@@ -350,6 +358,11 @@ $(function() {
         <div id="dropzone">
             Drop images here...
         </div>
+
+        <p>
+            <input type="button" id="togglesrc" value="Toggle Source/Binary" />
+        </p>
+
         <h4>Options:</h4>
          <p>
          OCR Engine:&nbsp;

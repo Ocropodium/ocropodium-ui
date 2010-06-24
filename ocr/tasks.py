@@ -57,12 +57,15 @@ class BinarizePageTask(AbortableTask):
                 base, uuid.uuid1(), ext)
         pagedata = { 
             "page" : os.path.basename(filepath) ,
-            "lines": [],
+            "src" : None,
+            "dst" : None,
             "box": [0, 0, pagewidth, pageheight]
         }
+        srcmediapath = filepath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1) 
         binmediapath = binpath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
         iulib.write_image_binary(binpath, page_bin)
-        pagedata["lines"].append({"text": "%s" % os.path.abspath(binmediapath)})
+        pagedata["src"] = os.path.abspath(srcmediapath)
+        pagedata["dst"] = os.path.abspath(binmediapath)
         return pagedata
 
 
