@@ -97,7 +97,7 @@ def get_converter(engine_type, logger, params):
         return TessWrapper(logger, params)
 
 
-def get_ocropus_components(oftype=None):
+def get_ocropus_components(oftypes=None):
     """
     Get a datastructure contraining all Ocropus components
     (possibly of a given type) and their default parameters.
@@ -106,7 +106,8 @@ def get_ocropus_components(oftype=None):
     clist = ocropus.ComponentList()
     for i in range(0, clist.length()):
         ckind = clist.kind(i)
-        if oftype is not None and oftype.lower() != ckind.lower():
+        if oftypes and not \
+                ckind.lower() in [c.lower() for c in oftypes]:
             continue
         cname = clist.name(i)
         compdict = {"name": cname, "type": ckind, "params": []}
