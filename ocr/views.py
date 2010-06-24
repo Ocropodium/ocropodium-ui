@@ -5,6 +5,7 @@ Basic OCR functions.  Submit OCR tasks and retrieve the result.
 import os
 import traceback
 import uuid
+from datetime import datetime
 from celery import result as celeryresult
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -53,7 +54,8 @@ def binarize(request):
     userparams = _get_best_params(request.POST.copy())
 
     # create a batch db job
-    batch = OcrBatch(user=request.user, type="ONESHOT")
+    batch = OcrBatch(user=request.user, name="Binarize %s" % datetime.now(),
+            task_type=tasks.BinarizePageTask.name, batch_type="ONESHOT")
     batch.save()
 
     # init the job from our params
@@ -121,7 +123,8 @@ def convert(request):
     userparams = _get_best_params(request.POST.copy())
 
     # create a batch db job
-    batch = OcrBatch(user=request.user, type="ONESHOT")
+    batch = OcrBatch(user=request.user, name="Convert %s" % datetime.now(),
+            task_type=tasks.ConvertPageTask.name, batch_type="ONESHOT")
     batch.save()
 
     # init the job from our params
