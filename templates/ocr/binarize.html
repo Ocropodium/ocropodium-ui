@@ -343,8 +343,73 @@ $(function() {
         
     }
 
-    rebuildModelLists($("input[name=engine]:checked").val());     
+
+    $(".bincomp").change(buildComponentParams);
+
+    buildComponentOptions();
+    //rebuildModelLists($("input[name=engine]:checked").val());     
 });
+
+var PARAMDATA = [];
+var done = false;
+function buildComponentParams() {
+    $(".component_opts").html("");
+    var paraminput = $("<input />")
+        .attr("type", "text")
+        .addClass("binopt");    
+    $.each($(".bincomp"), function(index, selectitem) {
+        var type = $(selectitem).attr("name");
+        var current = $(selectitem).attr("value");
+
+        //if (!done && current) { alert(current); done = true; }
+        $.each(PARAMDATA, function(index, component) {
+            if (component.name == current) {
+
+                var optbox = $("#" + component.type + "_opts");
+                if (!done) {
+                    alert("#" + component.name + "_opts");
+                    alert(optbox.attr("id"));
+                    done = true;
+                }
+                $.each(component.params, function(index, param) {
+                    if (!done) {
+                        alert(param.name + "  " + param.value);
+                        done = true;
+                        }
+
+                        optbox.append("<label>" + param.name + "</label>").append(
+                        paraminput.clone()
+                            .attr("name", param.name)
+                            .attr("value", param.value)
+                    );
+                });                
+            }
+        });
+    });
+}
+
+function buildComponentOptions() {
+    var opt = $("<option></option>").addClass("binopt");
+    var types = [];
+    $.map($(".bincomp"), function(n, i) {
+        types.push("type=" + $(n).attr("name"));
+        });
+    // returns a list component hashes
+    $.getJSON("/ocr/components", types.join("&"), function(dlist) {
+        PARAMDATA = dlist;
+        $.each(dlist, function(index, component) {
+            var selector = ".bincomp[name='" + component.type + "']";
+            //$("#sidebar").append("<p>" + selector + "</p>");
+            var select = $(selector);
+            select.append(opt.clone().text(component.name));
+        });
+    });
+    buildComponentParams();
+}
+
+
+
+
 </script>
 
 <div id="sidebar">
@@ -364,37 +429,24 @@ $(function() {
         </p>
 
         <h4>Options:</h4>
-         <p>
-         OCR Engine:&nbsp;
-            <input type="radio" name="engine" value="ocropus">Ocropus&nbsp;
-            <input type="radio" name="engine" value="tesseract" checked>Tesseract
-        </p>
-        <p>        
-            Segmenter:&nbsp;
-            <select id="form_segmenter" name="pseg">
-                <option value="SegmentPageByRAST" selected="selected">RAST</option>
-                <option value="SegmentPageByRAST1">RAST1</option>
-                <option value="SegmentPageBy1CP">1CP</option>
-                <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
-                <option value="SegmentPageByXYCUTS">XYCUTS</option>
-            </select>
-        </p>
-        <p>
-            Pre-processing:&nbsp;
-            <select id="form_preprocess" name="preprocess">
-                <option value="Standard" selected="selected">Standard</option>
-            </select>
-        </p>
-        <p>
-            Character Model:&nbsp;
-            <select id="form_cmodel" name="cmodel">
-            </select>
-        </p>
-        <p>
-            Language Model:&nbsp;
-            <select id="form_lmodel" name="lmodel">
-            </select>
-        </p>
+
+        <div id="options">
+            <p>
+                <select class="bincomp" id="binarizer" name="IBinarize">
+                </select>
+                <div class="component_opts" id="IBinarize_opts"></div>
+            </p>
+            <p>
+                <select class="bincomp" id="deskew" name="ICleanupBinary">
+                </select>
+                <div class="component_opts" id="ICleanupBinary_opts"></div>                 
+            </p>
+            <p>
+                <select class="bincomp" id="cleanupgray" name="ICleanupGray">
+                </select>
+                <div class="component_opts" id="ICleanupGray_opts"></div>                 
+            </p>
+        </div>
     </form>
 </div>
 
