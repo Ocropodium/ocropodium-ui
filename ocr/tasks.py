@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import time
+import uuid
 from celery.contrib.abortable import AbortableTask
 from celery.task import PeriodicTask
 from datetime import datetime, timedelta
@@ -51,7 +52,9 @@ class BinarizePageTask(AbortableTask):
         pagewidth = page_bin.dim(0)
         pageheight = page_bin.dim(1)
         import iulib
-        binpath =  "%s/bintemp/test.png" % settings.MEDIA_ROOT
+        base, ext = os.path.splitext(os.path.basename(filepath))
+        binpath =  "%s/bintemp/%s_%s%s" % (settings.MEDIA_ROOT, 
+                base, uuid.uuid1(), ext)
         pagedata = { 
             "page" : os.path.basename(filepath) ,
             "lines": [],
