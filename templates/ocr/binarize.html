@@ -329,7 +329,7 @@ $(function() {
     //rebuildModelLists($("input[name=engine]:checked").val());     
 });
 
-var PARAMDATA = [];
+/*var PARAMDATA = [];
 var done = false;
 function buildComponentParams(type, current) {
     $("#" + type + "_opts").html("");
@@ -357,67 +357,75 @@ function buildComponentParams(type, current) {
         });
         $("#" + type + "_opts").append($("<div class='clear'></div>"));
     });
-}
+} */
 
-// munge the 'component type' of the 'StandardPreprocessing'
-// component so that it says "Preprocess" instead of "IBinarize".
-// This allows us to put it in its own section where is it more
-// useful
-function mungePreprocessComponent(data) {
-    for (var i = 0; i < data.length; i++) {
-        if (data[i].name == "StandardPreprocessing") {
-            data[i].type = "Preprocess";
-            break;
+function setupOptions(components) {
+
+    var option = $("<option></option>");
+    // build selects for each component type
+    var binarizeselect = $("<select></select>");
+    var bincleanselect = $("<select></select>");
+    var bindeskewselect = $("<select></select>");
+    var graydeskewselect = $("<select></select>");
+    var graycleanselect = $("<select></select>");
+        
+    // add a blank option to some of them
+    $.each([bincleanselect, bindeskewselect, 
+            graydeskewselect, graycleanselect], function(index, item) {
+        item.append(option.clone().attr("value", ""));
+    });
+
+    $.each(components, function(name, component) {
+        var newopt = option.clone()
+            .attr("value", component.name)
+            .text(component.name);
+        if (component.type == "IBinarize") {
+            binarizeselect.append(newopt);
+        } else if (component.type == "ICleanupBinary") {
+            if (component.name == "DeskewGrayPageByRAST") {            
+                graydeskewselect.append(newopt);
+            } else if (component.name == "DeskewPageByRAST") {
+                bindeskewselect.append(newopt);
+            } else {
+                bincleanselect.append(newopt); 
+            }
+        } else if (component.type == "ICleanupGray") {
+            graycleanselect.append(newopt);
         }
-    }
-    return data;
+    });
+
+
+    $("#options").append(binarizeselect);
+    $("#options").append(bincleanselect);
+    $("#options").append(bindeskewselect);
+    $("#options").append(graydeskewselect);
+    $("#options").append(graycleanselect);
+
+
+
+    // lay out parameter...
+    var sp = components["StandardPreprocessing"];
+    $.each(sp.params, function(index, param) {
+        var paramname = param.name;
+        var paramtype = paramname;
+        var paramindex = -1;
+        if (paramname.match(/(\w+)(\d+)/)) {
+            paramtype = RegExp.$1;
+            paramindex = RegExp.$2;            
+        }
+        
+        var section = $("#" + paramtype + "_options");
+
+    });
 }
 
 
 function buildComponentOptions() {
-    var opt = $("<option></option>").addClass("binopt");
-    var types = [];
-    $.map($(".bincomp"), function(n, i) {
-        types.push("type=" + $(n).attr("name"));
-        });
+    // get the component data for the types we want
+    var types = ["IBinarize", "ICleanupBinary", "ICleanupGray"];
     // returns a list component hashes
-    $.getJSON("/ocr/components", types.join("&"), function(dlist) {
-        PARAMDATA = mungePreprocessComponent(dlist);
-        var optdict = {};
-        $.each(PARAMDATA, function(index, component) {
-            var selector = ".bincomp[name='" + component.type + "']";
-            //$("#sidebar").append("<p>" + selector + "</p>");
-            var select = $(selector);
-            var option = opt.clone()
-                    .attr("value", component.name)
-                    .text(component.name);
-            // set it selected if theres a cookie                    
-            if (!optdict[component.type]) {
-                var previous = $.cookie(component.type);
-                if (previous && previous == component.name) {
-                    optdict[component.type] = component.name;
-                } else {
-                    optdict[component.type] = component.name;
-                }
-            }
-
-            select.append(option);
-            //alert(select.html());                
-        });
-
-        // make sure each component choice has a selected option and
-        // set their INITIAL parameter values
-        $.each(optdict, function(key, value) {
-            buildComponentParams(key, value);
-        });
-
-    });
-
-
-
-    // rebuild the param lists when we change component
-    $(".bincomp").change(function(e) {
-            buildComponentParams($(this).attr("name"), $(this).val());
+    $.getJSON("/ocr/components", types.join("&"), function(components) {
+        setupOptions(components);        
     });
 }
 
@@ -445,25 +453,26 @@ function buildComponentOptions() {
         <h4>Options:</h4>
 
         <div id="options">
-            <div class="binparams">
-                <select class="bincomp" id="preprocess" name="Preprocess">
-                </select>
-                <div class="component_opts" id="Preprocess_opts"></div>
+            <h4>Preprocessing:</h4>
+            <div id="binarizer_options" class="options_section">
+                <label for="binarizer">
+                </div>
             </div>
-            <div class="binparams">
-                <select class="bincomp" id="binarizer" name="IBinarize">
-                </select>
-                <div class="component_opts" id="IBinarize_opts"></div>
+            <div id="grayclean_options" class="options_section">
+                <label for="grayclean">
+                
             </div>
-            <div class="binparams">
-                <select class="bincomp" id="deskew" name="ICleanupBinary">
-                </select>
-                <div class="component_opts" id="ICleanupBinary_opts"></div>                 
+            <div id="graydeskew_options" class="options_section">
+                <label for="graydeskew">
+                
             </div>
-            <div class="binparams">
-                <select class="bincomp" id="cleanupgray" name="ICleanupGray">
-                </select>
-                <div class="component_opts" id="ICleanupGray_opts"></div>                 
+            <div id="binclean_options" class="options_section">
+                <label for="binclean">
+                
+            </div>
+            <div id="bindeskew_options" class="options_section">
+                <label for="bindeskew">
+                
             </div>
         </div>
     </form>
