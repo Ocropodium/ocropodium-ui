@@ -1,8 +1,45 @@
 {% extends "standard.html" %}
 
 {% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
 	<script type='application/javascript' src='/static/js/ocr-line-views.js'></script>
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+
+<style type="text/css">
+    
+    .binparams {
+        padding: 5px;
+    }
+
+    .component_opts {
+        /*display: none;*/
+        font-size: 0.8em;
+        margin-bottom: 20px;        
+    }
+    .component_opts label {
+        float: left;
+        width: 8em;
+        text-align: right;
+        padding-right: 5px;
+        clear: left;
+    }
+    .component_opts input {
+        float: left;
+        width: 12em;
+        height: 1em;
+        border: 1px solid #999999;
+        background-color: FFFFDD;
+        text-align: right;
+        padding-right: 5px;
+        font-size: 0.9em;
+    }
+    /* HACK */
+    .clear {
+        clear: left;
+    }
+
+
+</style>
 {% endblock %}
 
 {% block content %}
@@ -66,63 +103,6 @@ $(function() {
         });
     });
 
-    /**
-    *
-    *  Function to build the lang & char models selects when
-    *  the engine type is changed.
-    *
-    **/
-
-    function rebuildModelLists(appname) {
-        var opt = $("<option />");
-        var copt = $("#form_cmodel").val();
-        var lopt = $("#form_lmodel").val();
-
-        $("#uploadform").attr("disabled", "disabled");
-        $.get(
-            "/ocrmodels/search",
-            { app: appname },
-            function(response) {
-                //var data = $.parseJSON(response);
-                //alert(response + " : " + data);
-
-                $("#form_cmodel").html("");
-                $("#form_lmodel").html("");
-                $.each(response, function(index, item) {
-                    var select = item.fields.type == "char"
-                        ? $("#form_cmodel")
-                        : $("#form_lmodel");
-
-
-                    var newopt = opt.clone()
-                            .text(item.fields.name)
-                            .attr("value", item.fields.name);
-                    if (item.fields.name == copt) {
-                        newopt.attr("selected", "selected");
-                    }
-                    
-                    select.append(newopt);
-                    //alert(item.fields.name);
-                });
-                $("#uploadform").removeAttr("disabled");
-            }
-        );
-
-    }
-
-    $("input[name=engine]").change(function(e) {
-        rebuildModelLists($(this).val());
-    });
-
-
-    
-    $(".ocr_line").live("mouseover mouseout", function(e) {
-        if (e.type == "mouseover") {
-            $(this).css("border-color", "red");    
-        } else {
-            $(this).css("border-color", "white");     
-        }
-    });
 
     $(".view_link").live("click", function(e) {
         var divid = $(this).parent().attr("id").replace(/_head$/, "");
@@ -344,49 +324,55 @@ $(function() {
     }
 
 
-    $(".bincomp").change(buildComponentParams);
-
     buildComponentOptions();
+
     //rebuildModelLists($("input[name=engine]:checked").val());     
 });
 
 var PARAMDATA = [];
 var done = false;
-function buildComponentParams() {
-    $(".component_opts").html("");
+function buildComponentParams(type, current) {
+    $("#" + type + "_opts").html("");
     var paraminput = $("<input />")
         .attr("type", "text")
         .addClass("binopt");    
-    $.each($(".bincomp"), function(index, selectitem) {
-        var type = $(selectitem).attr("name");
-        var current = $(selectitem).attr("value");
-
-        //if (!done && current) { alert(current); done = true; }
+    $.each($(".bincomp[name='" + type + "']"), function(index, selectitem) {
         $.each(PARAMDATA, function(index, component) {
             if (component.name == current) {
-
                 var optbox = $("#" + component.type + "_opts");
-                if (!done) {
-                    alert("#" + component.name + "_opts");
-                    alert(optbox.attr("id"));
-                    done = true;
-                }
                 $.each(component.params, function(index, param) {
-                    if (!done) {
-                        alert(param.name + "  " + param.value);
-                        done = true;
-                        }
-
-                        optbox.append("<label>" + param.name + "</label>").append(
-                        paraminput.clone()
-                            .attr("name", param.name)
-                            .attr("value", param.value)
+                    optbox
+                        .append(
+                            $("<label>" + param.name + "</label>")
+                                .attr("for", type + "_" + param.name)
+                        )
+                        .append(
+                            paraminput.clone()
+                                .attr("id", type + "_" + param.name)
+                                .attr("name", param.name)
+                                .attr("value", param.value)
                     );
                 });                
             }
         });
+        $("#" + type + "_opts").append($("<div class='clear'></div>"));
     });
 }
+
+// munge the 'component type' of the 'StandardPreprocessing'
+// component so that it says "Preprocess" instead of "IBinarize".
+// This allows us to put it in its own section where is it more
+// useful
+function mungePreprocessComponent(data) {
+    for (var i = 0; i < data.length; i++) {
+        if (data[i].name == "StandardPreprocessing") {
+            data[i].type = "Preprocess";
+            break;
+        }
+    }
+    return data;
+}
+
 
 function buildComponentOptions() {
     var opt = $("<option></option>").addClass("binopt");
@@ -396,15 +382,43 @@ function buildComponentOptions() {
         });
     // returns a list component hashes
     $.getJSON("/ocr/components", types.join("&"), function(dlist) {
-        PARAMDATA = dlist;
-        $.each(dlist, function(index, component) {
+        PARAMDATA = mungePreprocessComponent(dlist);
+        var optdict = {};
+        $.each(PARAMDATA, function(index, component) {
             var selector = ".bincomp[name='" + component.type + "']";
             //$("#sidebar").append("<p>" + selector + "</p>");
             var select = $(selector);
-            select.append(opt.clone().text(component.name));
+            var option = opt.clone()
+                    .attr("value", component.name)
+                    .text(component.name);
+            // set it selected if theres a cookie                    
+            if (!optdict[component.type]) {
+                var previous = $.cookie(component.type);
+                if (previous && previous == component.name) {
+                    optdict[component.type] = component.name;
+                } else {
+                    optdict[component.type] = component.name;
+                }
+            }
+
+            select.append(option);
+            //alert(select.html());                
         });
+
+        // make sure each component choice has a selected option and
+        // set their INITIAL parameter values
+        $.each(optdict, function(key, value) {
+            buildComponentParams(key, value);
+        });
+
     });
-    buildComponentParams();
+
+
+
+    // rebuild the param lists when we change component
+    $(".bincomp").change(function(e) {
+            buildComponentParams($(this).attr("name"), $(this).val());
+    });
 }
 
 
@@ -431,21 +445,26 @@ function buildComponentOptions() {
         <h4>Options:</h4>
 
         <div id="options">
-            <p>
+            <div class="binparams">
+                <select class="bincomp" id="preprocess" name="Preprocess">
+                </select>
+                <div class="component_opts" id="Preprocess_opts"></div>
+            </div>
+            <div class="binparams">
                 <select class="bincomp" id="binarizer" name="IBinarize">
                 </select>
                 <div class="component_opts" id="IBinarize_opts"></div>
-            </p>
-            <p>
+            </div>
+            <div class="binparams">
                 <select class="bincomp" id="deskew" name="ICleanupBinary">
                 </select>
                 <div class="component_opts" id="ICleanupBinary_opts"></div>                 
-            </p>
-            <p>
+            </div>
+            <div class="binparams">
                 <select class="bincomp" id="cleanupgray" name="ICleanupGray">
                 </select>
                 <div class="component_opts" id="ICleanupGray_opts"></div>                 
-            </p>
+            </div>
         </div>
     </form>
 </div>
