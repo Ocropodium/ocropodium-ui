@@ -102,7 +102,7 @@ def get_ocropus_components(oftypes=None):
     Get a datastructure contraining all Ocropus components
     (possibly of a given type) and their default parameters.
     """
-    out = []
+    out = {}
     clist = ocropus.ComponentList()
     for i in range(0, clist.length()):
         ckind = clist.kind(i)
@@ -115,7 +115,6 @@ def get_ocropus_components(oftypes=None):
         try:
             comp = eval("ocropus.make_%s(\"%s\")" % (ckind, cname))
         except StandardError, err:
-            print err
             continue
         compdict["description"] = comp.description()
         for paramnum in range(0, comp.plength()):
@@ -124,7 +123,7 @@ def get_ocropus_components(oftypes=None):
                 "name": pname,
                 "value": comp.pget(pname),
             })
-        out.append(compdict)
+        out[cname] = compdict
     return out
 
 
