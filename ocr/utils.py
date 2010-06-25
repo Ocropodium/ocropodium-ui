@@ -4,6 +4,7 @@ and Tesseract tools.
 """
 
 import os
+import re
 from datetime import datetime
 import shutil
 import tempfile
@@ -117,6 +118,7 @@ def get_ocropus_components(oftypes=None):
         except StandardError, err:
             continue
         compdict["description"] = comp.description()
+        compdict["shortname"] = comp.name()
         for paramnum in range(0, comp.plength()):
             pname = comp.pname(paramnum) 
             compdict["params"].append({
@@ -241,6 +243,12 @@ class OcropusParams(UserDict.DictMixin):
         self.cmodel = ""
         self.pseg = "SegmentPageByRAST"
         self.clean = "StandardPreprocessing"
+        self.binarizer = "BinarizeBySauvola"
+        self.deskewgray = "DeskewGrayPageByRAST"
+        self.deskewbin = "DeskewPageByRAST"
+        self.binclean0 = "AutoInvert"
+        self.binclean1 = "RmHalftone"
+        self.binclean2 = "RmBig"
 
         for key, val in dct.iteritems():
             if isinstance(val, (list, tuple)):
@@ -305,7 +313,7 @@ class OcropusWrapper(object):
         results gathered up to that point.  Keyword arguments can also be
         passed to the callback.
         """
-        page_bin = self.get_page_binary(filepath)
+        _, page_bin = self.standard_preprocess(filepath)
         page_seg = self.get_page_seg(page_bin)
         pagewidth = page_seg.dim(0)
         pageheight = page_seg.dim(1)
@@ -334,9 +342,10 @@ class OcropusWrapper(object):
                 text = self.get_transcript(line)
             except ExternalToolError, err:
                 raise err
-            except StandardError, err:
-                self.logger.error("Caught conversion error: %s" % err.message)
-                text = ""
+            #except StandardError, err:
+            #    raise err
+            #    self.logger.error("Caught conversion error: %s" % err.message)
+            #    text = ""
             pagedata["lines"].append({"line": i, "box": bbox, "text" : text })
         return pagedata
 
@@ -380,7 +389,97 @@ class OcropusWrapper(object):
         return result.as_string()
 
 
+    def standard_preprocess(self, filepath):
+        """
+        Mimic OCRopus's StandardPreprocessing component but
+        allow more flexible param setting.  Somehow.
+        """
+        pagegray = iulib.bytearray()
+        pageout = iulib.bytearray()
+        iulib.read_image_gray(pagegray, filepath)
 
+        # init components
+        binarizer = ocropus.make_IBinarize(self.params.binarizer)
+        graydeskew = ocropus.make_ICleanupGray(self.params.deskewgray)
+        bindeskew = ocropus.make_ICleanupBinary(self.params.deskewbin)
+        cleanups = { "grayclean": [], "binclean": [] }
+        for cleantype, cleanlist in cleanups.iteritems():
+            for i in range(0, 10): 
+                paramval = self.params.get("%s%s" % (cleantype, i))
+                if paramval:
+                    try:
+                        cleanlist.append(ocropus.make_ICleanupBinary(paramval))
+                    except IndexError, err:
+                        self.logger.error(err.message)
+
+        # set all the parameters on our components
+        for component in [binarizer, bindeskew, graydeskew] + \
+                cleanups["grayclean"] + cleanups["binclean"]:
+            for name, val in self.params.iteritems():
+                cmatch = re.match("%s_(.+)" % component.name(), name, re.I)
+                if cmatch:
+                    param = cmatch.groups()[0]
+                    self.logger.info("Setting: %s -> %s" % (param, val))
+                    component.pset(param, val)
+
+        # onwards with cleanup
+        pageout = pagegray
+        deskewed = False
+        
+        gray = iulib.bytearray()
+        tmp = iulib.bytearray()
+        if iulib.contains_only(pageout, 0, 255):
+            pageout = self._batch_clean(cleanups["binclean"], pagegray)            
+            self.logger.debug("Deskewing with: %s" % self.params.deskewbin)
+            iulib.dshow(pageout)
+            bindeskew.cleanup(tmp, pageout)
+            deskewed = True
+        else:
+            pageout = self._batch_clean(cleanups["grayclean"], pagegray)
+            self.logger.debug("Deskewing with: %s" % self.params.deskewgray)
+            graydeskew.cleanup_gray(tmp, pageout)
+            deskewed = True
+        pageout.move(tmp)
+
+        # TODO: Ensure this copy isn't costly...
+        gray.copy(pageout)
+        iulib.dshow(gray)
+        tmp.move(pageout)
+        try:
+            binarizer.binarize(pageout, tmp)
+        except StandardError, err:
+            self.logger.error("Binarizer failed: %s" % err)
+            pageout.move(tmp)
+        tmp.move(pageout)
+        pageout = self._batch_clean(cleanups["binclean"], tmp)
+        if not deskewed:
+            tmp.move(pageout)
+            try:
+                bindeskew.cleanup(pageout, tmp)
+            except StandardError, err:
+                self.logger.error("Binary deskew failed: %s" % err)
+                pageout.move(tmp)
+        return gray, pageout
+
+
+    def _batch_clean(self, components, pagedata):
+        tmp = iulib.bytearray()
+        # TODO: Ditto, benchmark this copy
+        pageout = iulib.bytearray()
+        pageout.copy(pagedata)
+        count = 0
+        for component in components:
+            self.logger.debug("Running cleanup: %s.  Image size: %s" % (component.name(), pageout.length()))
+            try:
+                component.cleanup(tmp, pageout)
+                pageout.move(tmp)
+            except Exception, err:
+                self.logger.error("clean%s: %s failed:" % (count, component.name()))
+            count += 1
+
+        return pageout
+
+ 
 
 
 class TessWrapper(OcropusWrapper):
