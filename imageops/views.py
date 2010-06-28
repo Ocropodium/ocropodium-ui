@@ -29,7 +29,6 @@ def scale(request):
     if imagetype.startswith("."):
         imagetype = imagetype[1:]
     
-    
     try:
         pil = Image.open(mediapath)
     except Exception, err:
@@ -41,7 +40,6 @@ def scale(request):
         fhandle.close()
         sp.call(["convert", mediapath, path])
         pil = Image.open(path)
-
 
     # initialise response object to write to 
     response = HttpResponse(mimetype="image/png") 
