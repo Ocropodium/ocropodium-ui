@@ -70,14 +70,17 @@ class BinarizePageTask(AbortableTask):
 
         # get a smaller representation of the files
         if paramdict.get("twidth"):
+            newwidth = int(paramdict.get("twidth"))
             newsize = utils.new_size_from_width(
-                    (pagewidth, pageheight), int(paramdict.get("twidth")))
-            srctmppath = "%s_scaled%s" % os.path.splitext(filepath)
+                    (pagewidth, pageheight), newwidth)
+            srctmppath = "%s_scaled.png" % os.path.splitext(filepath)[0]
             dsttmppath = "%s_scaled%s" % os.path.splitext(binpath) 
             utils.scale_image(filepath, srctmppath, newsize)
             utils.scale_image(binpath, dsttmppath, newsize)
             srcmediaurl = utils.media_path_to_url(srctmppath)
             binmediaurl = utils.media_path_to_url(dsttmppath)
+            pagedata["scale"] = round(
+                    float(newwidth) / float(pagewidth), 2)
 
         pagedata["src"] = srcmediaurl
         pagedata["dst"] = binmediaurl

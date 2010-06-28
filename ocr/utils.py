@@ -64,6 +64,29 @@ def convert_to_temp_image(imagepath, suffix="tif"):
         return tmp.name
 
 
+def find_file_with_basename(pathbase):
+    """
+    Get the first file with the given basename (full path
+    minus the extension.)
+    """
+    basename = os.path.basename(pathbase)
+    dirname = os.path.dirname(pathbase)
+    candidates = [fname for fname in os.listdir(dirname) \
+            if fname.startswith(basename)]
+    return candidates[0]
+
+
+def find_unscaled_path(path):
+    """
+    Find the non-scaled path to a temp file.
+    """
+    uspath = os.path.abspath(path.replace("_scaled", "", 1))
+    if not os.path.exists(uspath):
+        uspath = find_file_with_basename(
+                os.path.splitext(uspath)[0])
+    return uspath
+
+
 def new_size_from_width(currentsize, width):
     """
     Maintain aspect ratio when scaling to a new width.
@@ -74,18 +97,18 @@ def new_size_from_width(currentsize, width):
     return width, int(width / caspect)
 
 
-def scale_image(inpath, outpath, newsize, filter=Image.NEAREST):
+def scale_image(inpath, outpath, newsize, filter=Image.ANTIALIAS):
     """
     Scale an on-disk image to a new size using PIL.
     """
     try:
         pil = Image.open(inpath)
         scaled = pil.resize(newsize, filter)
-        scaled.save(outpath)
-    except IOError, (errno, stderr):
+        scaled.save(outpath, "PNG")
+    except IOError, err:
         # fall back on GraphicsMagick if opening fails
         import subprocess as sp
-        sp.call(["convert", inpath, "-resize %sx%s" % newsize, outpath])
+        sp.call(["convert", inpath, "-resize", "%sx%s" % newsize, outpath])
 
 
 def media_url_to_path(url):
