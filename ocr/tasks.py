@@ -63,7 +63,6 @@ class BinarizePageTask(AbortableTask):
             "dst" : None,
             "box": [0, 0, pagewidth, pageheight]
         }
-        print "%s %s -> %s" % (filepath, settings.MEDIA_ROOT, settings.MEDIA_URL) 
         srcmediapath = filepath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1) 
         binmediapath = binpath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
         iulib.write_image_binary(binpath, page_bin)
