@@ -394,10 +394,12 @@ class OcropusWrapper(object):
         Mimic OCRopus's StandardPreprocessing component but
         allow more flexible param setting.  Somehow.
         """
+        components = get_ocropus_components(
+                oftypes=["IBinarize", "ICleanupGray", "ICleanupBinary"])
         pagegray = iulib.bytearray()
         pageout = iulib.bytearray()
         iulib.read_image_gray(pagegray, filepath)
-
+        self.logger.info("Binarizing with params: %s" % self.params)
         # init components
         binarizer = ocropus.make_IBinarize(self.params.binarizer)
         graydeskew = ocropus.make_ICleanupGray(self.params.deskewgray)
@@ -416,10 +418,14 @@ class OcropusWrapper(object):
         for component in [binarizer, bindeskew, graydeskew] + \
                 cleanups["grayclean"] + cleanups["binclean"]:
             for name, val in self.params.iteritems():
-                cmatch = re.match("%s_(.+)" % component.name(), name, re.I)
+                # find the 'long' name for the component with the given short
+                # name, i.e: binsauvola -> BinarizeBySauvola
+                compname = [comp["name"] for comp in components.itervalues() \
+                        if comp["shortname"] == component.name()][0]
+                cmatch = re.match("%s__(.+)" % compname, name, re.I)
                 if cmatch:
                     param = cmatch.groups()[0]
-                    self.logger.info("Setting: %s -> %s" % (param, val))
+                    self.logger.info("Setting: %s.%s -> %s" % (compname, param, val))
                     component.pset(param, val)
 
         # onwards with cleanup
