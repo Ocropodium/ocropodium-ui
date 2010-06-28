@@ -11,7 +11,8 @@ from celery.contrib.abortable import AbortableTask
 from celery.task import PeriodicTask
 from datetime import datetime, timedelta
 from django.conf import settings
-from ocradmin.ocr.utils import get_converter
+from ocradmin.ocr import utils
+import iulib
 
 
 class ConvertPageTask(AbortableTask):
@@ -27,7 +28,7 @@ class ConvertPageTask(AbortableTask):
         """
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
-        converter = get_converter(paramdict.get("engine", "tesseract"), 
+        converter = utils.get_converter(paramdict.get("engine", "tesseract"), 
                 logger, paramdict)
         return converter.convert(filepath)
 
@@ -46,15 +47,14 @@ class BinarizePageTask(AbortableTask):
         """
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
-        converter = get_converter(paramdict.get("engine", "ocropus"),                 
+        converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
                 logger, paramdict)
         grey, page_bin = converter.standard_preprocess(filepath)
         pagewidth = page_bin.dim(0)
         pageheight = page_bin.dim(1)
-        import iulib
-        base, ext = os.path.splitext(os.path.basename(filepath))
         binpath = paramdict.get("dst", "").encode()
         if not binpath:
+            base, ext = os.path.splitext(os.path.basename(filepath))
             binpath =  "%s/bintemp/%s_%s%s" % (settings.MEDIA_ROOT, 
                     base, uuid.uuid1(), ".png")
         pagedata = { 
@@ -63,11 +63,24 @@ class BinarizePageTask(AbortableTask):
             "dst" : None,
             "box": [0, 0, pagewidth, pageheight]
         }
-        srcmediapath = filepath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1) 
-        binmediapath = binpath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
+
         iulib.write_image_binary(binpath, page_bin)
-        pagedata["src"] = os.path.abspath(srcmediapath)
-        pagedata["dst"] = os.path.abspath(binmediapath)
+        srcmediaurl = utils.media_path_to_url(filepath)
+        binmediaurl = utils.media_path_to_url(binpath)
+
+        # get a smaller representation of the files
+        if paramdict.get("twidth"):
+            newsize = utils.new_size_from_width(
+                    (pagewidth, pageheight), int(paramdict.get("twidth")))
+            srctmppath = "%s_scaled%s" % os.path.splitext(filepath)
+            dsttmppath = "%s_scaled%s" % os.path.splitext(binpath) 
+            utils.scale_image(filepath, srctmppath, newsize)
+            utils.scale_image(binpath, dsttmppath, newsize)
+            srcmediaurl = utils.media_path_to_url(srctmppath)
+            binmediaurl = utils.media_path_to_url(dsttmppath)
+
+        pagedata["src"] = srcmediaurl
+        pagedata["dst"] = binmediaurl
         return pagedata
 
 

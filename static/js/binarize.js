@@ -85,23 +85,19 @@ $(function() {
                 } else if (data.status == "SUCCESS") {
                     if ($("#binsrc").length == 0) {
                         var srcimg = $("<img></img>")
-                            .attr("src", "/imageops/scale?image="+ data.results.src + "&w=" + element.width()
-                                + "&t=" + (new Date).getTime())
+                            .attr("src", data.results.src + "?t=" + (new Date).getTime())
                             .attr("id", "binsrc")
                             .css("display", "none")
                             .data("path", data.results.src);
                         var dstimg = $("<img></img>")
-                            .attr("src", "/imageops/scale?image="+ data.results.dst + "&w=" + element.width()
-                                + "&t=" + (new Date).getTime())
+                            .attr("src", data.results.dst + "?t=" + (new Date).getTime())
                             .attr("id", "bindst")
                             .data("path", data.results.dst);                        
                         element.append(srcimg);
                         element.append(dstimg);
                     } else {
-                        $("#binsrc").attr("src", "/imageops/scale?image="+ data.results.src + "&w=" + element.width()
-                                + "&t=" + (new Date).getTime());
-                        $("#bindst").attr("src", "/imageops/scale?image="+ data.results.dst + "&w=" + element.width()
-                                + "&t=" + (new Date).getTime())
+                        $("#binsrc").attr("src", data.results.src + "?t=" + (new Date).getTime());
+                        $("#bindst").attr("src", data.results.dst + "?t=" + (new Date).getTime())
                     }                        
                     element.removeClass("waiting");
                 } else if (data.status == "PENDING") {
@@ -221,7 +217,8 @@ $(function() {
             engine: $("input[@name=engine]:checked").val(),
             pseg: $("#form_segmenter").val(),
             cmodel: $("#form_cmodel").val(),
-            lmodel: $("#form_lmodel").val()   
+            lmodel: $("#form_lmodel").val(),
+            twidth: $(".ocr_page").length > 0 ? $(".ocr_page")[0].width() : 586,   
         }
 
         $("#optionsform input, #optionsform select").each(function() { 

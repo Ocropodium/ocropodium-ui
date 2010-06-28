@@ -16,6 +16,8 @@ import iulib
 
 from PIL import Image
 
+from django.conf import settings
+
 
 def get_tesseract():
     """
@@ -69,17 +71,37 @@ def new_size_from_width(currentsize, width):
 
     cw, ch = currentsize
     caspect = float(cw) / float(ch)
-    return width, int(float(ch) * caspect)
+    return width, int(width / caspect)
 
 
-def scale_image(inpath, outpath, newsize, filter="NEAREST"):
+def scale_image(inpath, outpath, newsize, filter=Image.NEAREST):
     """
     Scale an on-disk image to a new size using PIL.
     """
+    try:
+        pil = Image.open(inpath)
+        scaled = pil.resize(newsize, filter)
+        scaled.save(outpath)
+    except IOError, (errno, stderr):
+        # fall back on GraphicsMagick if opening fails
+        import subprocess as sp
+        sp.call(["convert", inpath, "-resize %sx%s" % newsize, outpath])
 
-    inimg = Image.open(inpath)
-    scaled = inimg.resize(newsize, filter)
-    scaled.save(outpath)
+
+def media_url_to_path(url):
+    """
+    Substitute the MEDIA_URL for the MEDIA_ROOT.
+    """
+    url = os.path.abspath(url)
+    return url.replace(settings.MEDIA_URL, settings.MEDIA_ROOT, 1)
+
+
+def media_path_to_url(path):
+    """
+    Substitute the MEDIA_ROOT for the MEDIA_URL.
+    """
+    path = os.path.abspath(path)
+    return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
 
 
 def output_to_plain_text(jsondata):
