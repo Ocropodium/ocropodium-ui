@@ -41,6 +41,41 @@ $(function() {
         $("#uploadform").submit();
     });
 
+    function updateZoom() {
+        if (!$(".ocr_page").length) {
+            return;
+        }        
+
+        var startw = $(".ocr_page").width();
+        var starth = $(".ocr_page").height();
+        var zoom = Math.max(1, $("#zoom").slider("value"));
+        var neww = startw * zoom;
+        var newh = starth * zoom; 
+        var overw = ((neww - startw) / 2) ; //- $(".ocr_page").position().left;
+        var overh = ((newh - starth) / 2) ; //- $(".ocr_page").position().top;
+
+        // set the new width/height and then set the css
+        // margin property to hide the overlap.
+        $("#bindst, #binsrc").width(neww);
+        $("#bindst, #binsrc").height(newh); 
+        $("#bindst, #binsrc").css("margin-left", -overw); 
+        $("#bindst, #binsrc").css("margin-top",  -overh); 
+        $("#logwindow").append($("<p></p>").text("Width: " + neww + " Height: " + newh
+                    + " Left: " + -overw + " Top: " + -overh + " Zoom: "
+                    + zoom));
+    }
+
+    // decorate the zoom slider
+    $("#zoom").slider({min: 1, max: 25, step: 0.5});
+    $("#zoom").bind("slide", updateZoom);
+    $("#zoom").bind("slidestart", function(e) {
+        $(".ocr_page").css("width", $(".ocr_page").width());
+        $(".ocr_page").css("height", $(".ocr_page").height());
+    });
+
+    $("#zoom").bind("slidestop", updateZoom);
+
+
     $("#uploadform").submit(function(event) {
         return AIM.submit(this, {
             'onStart' : function(e) {
@@ -83,6 +118,11 @@ $(function() {
                                 .append("<pre>" + data.trace + "</pre>")                                
                         );                            
                 } else if (data.status == "SUCCESS") {
+                    // set up the zoom slider according to the scale
+                    //$("#zoom").slider({"min": data.results.scale});
+
+
+
                     if ($("#binsrc").length == 0) {
                         var srcimg = $("<img></img>")
                             .attr("src", data.results.src + "?t=" + (new Date).getTime())
@@ -98,7 +138,8 @@ $(function() {
                     } else {
                         $("#binsrc").attr("src", data.results.src + "?t=" + (new Date).getTime());
                         $("#bindst").attr("src", data.results.dst + "?t=" + (new Date).getTime())
-                    }                        
+                    }
+                    element.data("scale", data.results.scale);
                     element.removeClass("waiting");
                 } else if (data.status == "PENDING") {
                     setTimeout(function() {
