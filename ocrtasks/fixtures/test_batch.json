@@ -3,8 +3,10 @@
         "pk": 1, 
         "model": "ocrtasks.ocrbatch", 
         "fields": {
-            "created_on": "2010-06-22 11:23:36", 
-            "type": "ONESHOT", 
+            "created_on": "2010-06-22 11:23:36",
+            "name": "Test Task", 
+            "task_type" : "convert.page",
+            "batch_type": "ONESHOT", 
             "user": 1
         }
     }
