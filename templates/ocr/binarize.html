@@ -7,8 +7,35 @@
 
 <style type="text/css">
     
-    .binparams {
-        padding: 5px;
+    .compparam {
+        padding-right: 10px;
+        padding-left: 10px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .compparam input {
+        border: 1px solid #999999;
+        height: 1em;
+        background-color: #FFFFDD;
+    }
+
+    .compparam * {
+        margin-bottom: 5px;
+    }
+
+    #options * {
+        font-size: 0.9em;
+    }
+
+    #options label {
+        float: left;
+        clear: left;
+        width: 10em;    
+    }
+
+    #options select {
+        width: 13em;
     }
 
     .component_opts {
@@ -133,23 +160,31 @@ $(function() {
                                 .append("<pre>" + data.trace + "</pre>")                                
                         );                            
                 } else if (data.status == "SUCCESS") {
-                    var srcimg = $("<img></img>")
-                        .attr("src", "/imageops/scale?image="+ data.results.src + "&w=" + element.width()
-                            + "&t=" + (new Date).getTime())
-                        .addClass("binsrc")
-                        .css("display", "none");
-                    var dstimg = $("<img></img>")
-                        .attr("src", "/imageops/scale?image="+ data.results.dst + "&w=" + element.width()
-                            + "&t=" + (new Date).getTime())
-                        .addClass("bindst");                        
-                    element.append(srcimg);
-                    element.append(dstimg);                        
+                    if ($("#binsrc").length == 0) {
+                        var srcimg = $("<img></img>")
+                            .attr("src", "/imageops/scale?image="+ data.results.src + "&w=" + element.width()
+                                + "&t=" + (new Date).getTime())
+                            .attr("id", "binsrc")
+                            .css("display", "none")
+                            .data("path", data.results.src);
+                        var dstimg = $("<img></img>")
+                            .attr("src", "/imageops/scale?image="+ data.results.dst + "&w=" + element.width()
+                                + "&t=" + (new Date).getTime())
+                            .attr("id", "bindst")
+                            .data("path", data.results.dst);                        
+                        element.append(srcimg);
+                        element.append(dstimg);
+                    } else {
+                        $("#binsrc").attr("src", "/imageops/scale?image="+ data.results.src + "&w=" + element.width()
+                                + "&t=" + (new Date).getTime());
+                        $("#bindst").attr("src", "/imageops/scale?image="+ data.results.dst + "&w=" + element.width()
+                                + "&t=" + (new Date).getTime())
+                    }                        
                     element.removeClass("waiting");
-                    NUMFILES--;                    
                 } else if (data.status == "PENDING") {
                     setTimeout(function() {
                         pollForResults(element);
-                        }, 500 * NUMFILES);
+                        }, 500);
                 } else {
                     element.html("<p>Oops, task finished with status: " + data.status + "</p>");
                 }
@@ -157,6 +192,24 @@ $(function() {
         ); 
     }
 
+    // toggle the source and binary images
+    $("#togglesrc").click(function(e) {
+        $("#binsrc").toggle();
+        $("#bindst").toggle();    
+    });
+
+    // resubmit the form...
+    $("#refresh").click(function(e) {
+        var params = "redo=1&src=" + $("#binsrc").data("path") 
+            + "&dst=" + $("#bindst").data("path")
+            + "&" + $("#optionsform").serialize();
+        $.post("/ocr/binarize", params, function(data) {
+            $(".ocr_page").each(function(index, pdiv) {
+                $(this).data("jobname", data[index].job_name);
+                pollForResults($(this));
+            });
+        });
+    });
 
     function onXHRLoad(event_or_response) {
         var data;
@@ -182,10 +235,6 @@ $(function() {
             return;
         }
 
-        $("#togglesrc").click(function(e) {
-            $(".binsrc").toggle();
-            $(".bindst").toggle();    
-        });
 
         $.each(data, function(page, pageresults) {
             var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
@@ -251,7 +300,11 @@ $(function() {
             cmodel: $("#form_cmodel").val(),
             lmodel: $("#form_lmodel").val()   
         }
-        
+
+        $("#optionsform input, #optionsform select").each(function() { 
+            textparams[$(this).attr("name")] = $(this).val();
+        });
+
         for (var i = 0; i < data.files.length; i++) {
             var file = data.files[i];
             var binaryReader = new FileReader();    
@@ -307,7 +360,6 @@ $(function() {
                 XHRQUEUE.push(xhr);
             } catch (e) {
                 alert(e);
-                alert('multipart/form-data; boundary=' + BOUNDARY)
             }
         }
         if (XHRQUEUE.length) {
@@ -325,106 +377,166 @@ $(function() {
 
 
     buildComponentOptions();
-
-    //rebuildModelLists($("input[name=engine]:checked").val());     
+    $(".binoption").live("change", function(e) {
+        reinitParams($(this));
+    });
 });
 
-/*var PARAMDATA = [];
-var done = false;
-function buildComponentParams(type, current) {
-    $("#" + type + "_opts").html("");
-    var paraminput = $("<input />")
-        .attr("type", "text")
-        .addClass("binopt");    
-    $.each($(".bincomp[name='" + type + "']"), function(index, selectitem) {
-        $.each(PARAMDATA, function(index, component) {
-            if (component.name == current) {
-                var optbox = $("#" + component.type + "_opts");
-                $.each(component.params, function(index, param) {
-                    optbox
-                        .append(
-                            $("<label>" + param.name + "</label>")
-                                .attr("for", type + "_" + param.name)
-                        )
-                        .append(
-                            paraminput.clone()
-                                .attr("id", type + "_" + param.name)
-                                .attr("name", param.name)
-                                .attr("value", param.value)
-                    );
-                });                
-            }
+
+function reinitParams(binselect) {
+    var compname = binselect.val();
+    var paramlabel = $("<label></label>");
+    var paraminput = $("<input type='text'></input>");
+    var pdiv = binselect.next();
+    if (pdiv.attr("tagName") == "DIV") {
+        pdiv.html("");
+        pdiv.remove();
+    } else {
+        pdiv = $("<div></div>").attr("class", "compparam");
+    }
+
+    var params = PARAMS[compname].params;
+    if (params.length) {
+        $.each(params, function(index, param) {
+            var plabel = paramlabel.clone()
+                .attr("foo", binselect.val() + "_option")
+                .text(param.name);
+            var pinput = paraminput.clone()
+                .attr("name", binselect.val() + "__" + param.name)
+                .attr("value", param.value);
+            pdiv.append(plabel).append(pinput);
+            binselect.after(pdiv);
         });
-        $("#" + type + "_opts").append($("<div class='clear'></div>"));
+    }
+}
+
+
+function setSingleOptionDefaults(components) {
+    $.each(components["StandardPreprocessing"].params, function(index, param) {
+        if (param.name == "binarizer") {
+            $("#binarizer").attr("name", param.name).val(param.value);
+        } else if (param.name == "graydeskew") {
+            $("#graydeskew").attr("name", param.name).val(param.value);
+        } else if (param.name == "bindeskew") {
+            $("#bindeskew").attr("name", param.name).val(param.value);
+        }
     });
-} */
+}
+
+function setMultiOptionDefaults(components, bincleansel, graycleansel) { // FIXME: Stupid params!
+    $.each(components["StandardPreprocessing"].params, function(index, param) {
+        if (param.value) {
+            var cselect;
+            if (param.name.search("grayclean") != -1) {
+                cselect = graycleansel.clone();
+            } else if (param.name.search("binclean") != -1) {
+                cselect = bincleansel.clone();
+            }
+            if (cselect) {
+                cselect.attr("name", param.name)
+                    .val(param.value).attr("id", param.name);
+                $("#options").append("<label>" + param.name + "</label>")
+                    .attr("for", param.name);
+                $("#options").append(cselect);
+            }
+        }
+    });
+}
+
 
 function setupOptions(components) {
 
     var option = $("<option></option>");
     // build selects for each component type
-    var binarizeselect = $("<select></select>");
-    var bincleanselect = $("<select></select>");
-    var bindeskewselect = $("<select></select>");
-    var graydeskewselect = $("<select></select>");
-    var graycleanselect = $("<select></select>");
+    var baseselect = $("<select></select>").addClass("binoption");
+    var binarizesel = baseselect.clone().attr("id", "binarizer");
+    var bindeskewsel = baseselect.clone().attr("id", "bindeskew");
+    var graydeskewsel = baseselect.clone().attr("id", "graydeskew");
+    var bincleansel = baseselect.clone();
+    var graycleansel = baseselect.clone();
         
     // add a blank option to some of them
-    $.each([bincleanselect, bindeskewselect, 
-            graydeskewselect, graycleanselect], function(index, item) {
+    $.each([bincleansel, bindeskewsel, 
+            graydeskewsel, graycleansel], function(index, item) {
         item.append(option.clone().attr("value", ""));
     });
 
     $.each(components, function(name, component) {
-        var newopt = option.clone()
+            var newopt = option.clone()
             .attr("value", component.name)
             .text(component.name);
         if (component.type == "IBinarize") {
-            binarizeselect.append(newopt);
+            binarizesel.append(newopt);
         } else if (component.type == "ICleanupBinary") {
             if (component.name == "DeskewGrayPageByRAST") {            
-                graydeskewselect.append(newopt);
+                graydeskewsel.append(newopt);
             } else if (component.name == "DeskewPageByRAST") {
-                bindeskewselect.append(newopt);
-            } else {
-                bincleanselect.append(newopt); 
+                bindeskewsel.append(newopt);
+                } else {
+                //alert("Adding to binclean: " + component.name);
+                bincleansel.append(newopt); 
             }
         } else if (component.type == "ICleanupGray") {
-            graycleanselect.append(newopt);
+            graycleansel.append(newopt);
         }
     });
 
+    $("#options").append("<label>Binarizer</label>").attr("for", "binarizer");
+    $("#options").append(binarizesel);
+    $("#options").append("<label>Deskew Grayscale</label>").attr("for", "graydeskew");
+    $("#options").append(graydeskewsel);
+    $("#options").append("<label>Deskew Binary</label>").attr("for", "bindeskew");
+    $("#options").append(bindeskewsel);
 
-    $("#options").append(binarizeselect);
-    $("#options").append(bincleanselect);
-    $("#options").append(bindeskewselect);
-    $("#options").append(graydeskewselect);
-    $("#options").append(graycleanselect);
+    // set options and defaults on multi-value options (binclean, grayclean)
+    setMultiOptionDefaults(components, bincleansel, graycleansel);
+
+    // set the remaining defaults to those listed in StandardPreprocessing...
+    setSingleOptionDefaults(components);        
+
+    // add appropriate options for components
+    layoutOptions(components);
+}
 
 
-
+function layoutOptions(components) {
+    var paramdiv = $("<div></div>").addClass("compparam");
+    var paramlabel = $("<label></label>");
+    var paraminput = $("<input type='text'></input>");
     // lay out parameter...
     var sp = components["StandardPreprocessing"];
     $.each(sp.params, function(index, param) {
         var paramname = param.name;
-        var paramtype = paramname;
-        var paramindex = -1;
-        if (paramname.match(/(\w+)(\d+)/)) {
-            paramtype = RegExp.$1;
-            paramindex = RegExp.$2;            
+        var cselect = $("select.binoption#" + paramname);
+        var compname = cselect.val();
+        if (compname) {
+            var component = components[compname];
+            var compparams = component.params;
+            var pdiv = paramdiv.clone().attr("id", cselect.attr("id") + "_options");
+            $.each(compparams, function(index, param) {
+                var paramname = compname + "__" + param.name;
+                var plabel = paramlabel.clone()
+                    .attr("for", paramname)
+                    .text(param.name);
+                var pinput = paraminput.clone()
+                    .attr("name", paramname)
+                    .attr("id", paramname)
+                    .val(param.value);
+                pdiv.append(plabel).append(pinput);
+                cselect.after(pdiv);            
+            });
         }
-        
-        var section = $("#" + paramtype + "_options");
-
     });
 }
 
+var PARAMS = {}; // sorry, global.
 
 function buildComponentOptions() {
     // get the component data for the types we want
     var types = ["IBinarize", "ICleanupBinary", "ICleanupGray"];
     // returns a list component hashes
     $.getJSON("/ocr/components", types.join("&"), function(components) {
+        PARAMS = components;
         setupOptions(components);        
     });
 }
@@ -448,32 +560,15 @@ function buildComponentOptions() {
 
         <p>
             <input type="button" id="togglesrc" value="Toggle Source/Binary" />
+            <input type="button" id="refresh" value="Refresh" />
         </p>
+    </form>
+    <form id="optionsform" name="options" action="/ocr/binarize" method="POST">
 
         <h4>Options:</h4>
 
         <div id="options">
             <h4>Preprocessing:</h4>
-            <div id="binarizer_options" class="options_section">
-                <label for="binarizer">
-                </div>
-            </div>
-            <div id="grayclean_options" class="options_section">
-                <label for="grayclean">
-                
-            </div>
-            <div id="graydeskew_options" class="options_section">
-                <label for="graydeskew">
-                
-            </div>
-            <div id="binclean_options" class="options_section">
-                <label for="binclean">
-                
-            </div>
-            <div id="bindeskew_options" class="options_section">
-                <label for="bindeskew">
-                
-            </div>
         </div>
     </form>
 </div>
