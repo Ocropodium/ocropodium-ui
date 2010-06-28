@@ -4,7 +4,7 @@
 import os
 import socket
 
-SITE_ROOT = os.path.dirname(__file__)
+SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 # don't run in debug mode on the servers
 DEBUG = TEMPLATE_DEBUG = not socket.gethostname().startswith("ocr") 
