@@ -293,7 +293,6 @@ class OcropusWrapper(object):
         self.logger = logger if logger else self.get_default_logger()
         self.params = OcropusParams(params) if params \
                 else OcropusParams({})
-        print self.params
 
 
     def init(self):
