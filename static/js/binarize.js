@@ -89,20 +89,6 @@ $(function() {
     });
 
 
-    $(".view_link").live("click", function(e) {
-        var divid = $(this).parent().attr("id").replace(/_head$/, "");
-        if ($(this).text() == "View Layout") {
-            positionByBounds($("#" + divid));
-            $(this).text("View Paragraphs");
-        } else {
-            $("#" + divid).attr("style", "");
-            insertBreaks($("#" + divid));
-            $(this).text("View Layout");
-        }
-        return false;            
-    });
-
-
     function pollForResults(element) {
         var jobname = element.data("jobname");
         $.getJSON(
@@ -201,20 +187,7 @@ $(function() {
             var phead = $("<div></div>")
                 .addClass("ocr_page_head")
                 .attr("id", "ocr_page_" + pagename + "_head")
-                .text(pagename)
-                .append($("<a></a>").attr("href", "#").addClass("view_link").text("View Layout"))                
-                .append(
-                    $("<a></a>").attr("href", "/ocr/results/" + pageresults.job_name + "?format=text")
-                        .attr("target", "_blank")
-                        .addClass("result_link")
-                        .text("Text")
-                )                
-                .append(
-                    $("<a></a>").attr("href", "/ocr/results/" + pageresults.job_name + "?format=json")
-                        .attr("target", "_blank")
-                        .addClass("result_link")
-                        .text("Json")
-                );                
+                .text(pagename);                
             $("#pageout").append(phead); 
             var pdiv = $("<div></div>")
                 .addClass("ocr_page")
