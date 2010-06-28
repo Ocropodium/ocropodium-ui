@@ -48,19 +48,22 @@ class BinarizePageTask(AbortableTask):
         logger.info(paramdict)
         converter = get_converter(paramdict.get("engine", "ocropus"),                 
                 logger, paramdict)
-        page_bin = converter.get_page_binary(filepath)
+        grey, page_bin = converter.standard_preprocess(filepath)
         pagewidth = page_bin.dim(0)
         pageheight = page_bin.dim(1)
         import iulib
         base, ext = os.path.splitext(os.path.basename(filepath))
-        binpath =  "%s/bintemp/%s_%s%s" % (settings.MEDIA_ROOT, 
-                base, uuid.uuid1(), ext)
+        binpath = paramdict.get("dst", "").encode()
+        if not binpath:
+            binpath =  "%s/bintemp/%s_%s%s" % (settings.MEDIA_ROOT, 
+                    base, uuid.uuid1(), ".png")
         pagedata = { 
             "page" : os.path.basename(filepath) ,
             "src" : None,
             "dst" : None,
             "box": [0, 0, pagewidth, pageheight]
         }
+        print "%s %s -> %s" % (filepath, settings.MEDIA_ROOT, settings.MEDIA_URL) 
         srcmediapath = filepath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1) 
         binmediapath = binpath.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
         iulib.write_image_binary(binpath, page_bin)
