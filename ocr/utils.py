@@ -6,6 +6,7 @@ and Tesseract tools.
 import os
 import re
 from datetime import datetime
+import logging
 import shutil
 import tempfile
 import subprocess as sp
@@ -244,8 +245,8 @@ class OcropusParams(UserDict.DictMixin):
         self.pseg = "SegmentPageByRAST"
         self.clean = "StandardPreprocessing"
         self.binarizer = "BinarizeBySauvola"
-        self.deskewgray = "DeskewGrayPageByRAST"
-        self.deskewbin = "DeskewPageByRAST"
+        self.graydeskew = "DeskewPageByRAST"
+        self.bindeskew = "DeskewPageByRAST"
         self.binclean0 = "AutoInvert"
         self.binclean1 = "RmHalftone"
         self.binclean2 = "RmBig"
@@ -283,14 +284,16 @@ class OcropusWrapper(object):
     Wrapper around OCRopus's basic page-recognition functions so
     that bits and peices can be reused more easily.
     """
-    def __init__(self, logger, params):
+    def __init__(self, logger=None, params=None):
         """
         Initialise an OcropusWrapper object.
         """
         self._linerec = None
         self._lmodel = None
-        self.logger = logger
-        self.params = OcropusParams(params)
+        self.logger = logger if logger else self.get_default_logger()
+        self.params = OcropusParams(params) if params \
+                else OcropusParams({})
+        print self.params
 
 
     def init(self):
@@ -350,6 +353,14 @@ class OcropusWrapper(object):
         return pagedata
 
 
+    def get_default_logger(self):
+        """
+        Initialize a default logger to stderr.
+        """
+        logging.basicConfig(level=logging.DEBUG)
+        return logging.getLogger(self.__class__.__name__)
+
+
     def get_page_binary(self, filepath):
         """
         Convert an on-disk file into an in-memory iulib.bytearray.
@@ -399,11 +410,16 @@ class OcropusWrapper(object):
         pagegray = iulib.bytearray()
         pageout = iulib.bytearray()
         iulib.read_image_gray(pagegray, filepath)
+        self.logger.debug("Page gray initial size: %s" % pagegray.length())
         self.logger.info("Binarizing with params: %s" % self.params)
         # init components
         binarizer = ocropus.make_IBinarize(self.params.binarizer)
-        graydeskew = ocropus.make_ICleanupGray(self.params.deskewgray)
-        bindeskew = ocropus.make_ICleanupBinary(self.params.deskewbin)
+        graydeskew = None
+        if self.params.graydeskew:
+            graydeskew = ocropus.make_ICleanupGray(self.params.graydeskew)
+        bindeskew = None
+        if self.params.bindeskew:
+            bindeskew = ocropus.make_ICleanupBinary(self.params.bindeskew)
         cleanups = { "grayclean": [], "binclean": [] }
         for cleantype, cleanlist in cleanups.iteritems():
             for i in range(0, 10): 
@@ -417,6 +433,8 @@ class OcropusWrapper(object):
         # set all the parameters on our components
         for component in [binarizer, bindeskew, graydeskew] + \
                 cleanups["grayclean"] + cleanups["binclean"]:
+            if component is None:
+                continue
             for name, val in self.params.iteritems():
                 # find the 'long' name for the component with the given short
                 # name, i.e: binsauvola -> BinarizeBySauvola
@@ -433,23 +451,27 @@ class OcropusWrapper(object):
         deskewed = False
         
         gray = iulib.bytearray()
-        tmp = iulib.bytearray()
+        tmp = iulib.bytearray()        
         if iulib.contains_only(pageout, 0, 255):
+            self.logger.debug("Running BINARY batch clean.")
             pageout = self._batch_clean(cleanups["binclean"], pagegray)            
-            self.logger.debug("Deskewing with: %s" % self.params.deskewbin)
-            iulib.dshow(pageout)
-            bindeskew.cleanup(tmp, pageout)
-            deskewed = True
+            if bindeskew:
+                self.logger.debug("Deskewing with: %s" % self.params.bindeskew)
+                bindeskew.cleanup(tmp, pageout)
+                deskewed = True
+                pageout.move(tmp)
         else:
+            self.logger.debug("Running GRAYSCALE batch clean.")
             pageout = self._batch_clean(cleanups["grayclean"], pagegray)
-            self.logger.debug("Deskewing with: %s" % self.params.deskewgray)
-            graydeskew.cleanup_gray(tmp, pageout)
-            deskewed = True
-        pageout.move(tmp)
+            if graydeskew:
+                self.logger.debug("Deskewing with: %s" % self.params.graydeskew)
+                graydeskew.cleanup_gray(tmp, pageout)
+                deskewed = True
+                pageout.move(tmp)
 
+        self.logger.debug("Page out length: %s" % pageout.length())
         # TODO: Ensure this copy isn't costly...
         gray.copy(pageout)
-        iulib.dshow(gray)
         tmp.move(pageout)
         try:
             binarizer.binarize(pageout, tmp)
@@ -458,7 +480,8 @@ class OcropusWrapper(object):
             pageout.move(tmp)
         tmp.move(pageout)
         pageout = self._batch_clean(cleanups["binclean"], tmp)
-        if not deskewed:
+        self.logger.debug("Page out length: %s" % pageout.length())
+        if bindeskew and not deskewed:
             tmp.move(pageout)
             try:
                 bindeskew.cleanup(pageout, tmp)
