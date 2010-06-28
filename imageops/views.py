@@ -28,16 +28,29 @@ def scale(request):
     imagetype = os.path.splitext(imageurl)[1].lower() or "png"
     if imagetype.startswith("."):
         imagetype = imagetype[1:]
-    pil = Image.open(mediapath)
+    
+    
+    try:
+        pil = Image.open(mediapath)
+    except Exception, err:
+        # fall back on GraphicsMagick if opening fails
+        print err
+        import subprocess as sp
+        import tempfile
+        fhandle, path  = tempfile.mktemp(suffix=".png")
+        fhandle.close()
+        sp.call(["convert", mediapath, path])
+        pil = Image.open(path)
+
 
     # initialise response object to write to 
-    response = HttpResponse(mimetype="image/%s" % imagetype) 
+    response = HttpResponse(mimetype="image/png") 
 
     # if we don't have a width or height just return the rewritten data
     width = int(request.GET.get("w", -1))
     height = int(request.GET.get("h", -1))
     if width == -1 and height == -1:        
-        pil.save(response, imagetype.upper())
+        pil.save(response, "PNG")
         return response
 
     if height == -1:
@@ -47,7 +60,7 @@ def scale(request):
     else:
         newsize = (width, height)
 
-    pil.resize(newsize, Image.ANTIALIAS).save(response, imagetype.upper())
+    pil.resize(newsize, Image.ANTIALIAS).save(response, "PNG")
     return response
 
 
