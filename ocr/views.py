@@ -39,12 +39,16 @@ def binarize(request):
         return render_to_response("ocr/binarize.html", {}, 
             context_instance=RequestContext(request))
     # save our files to the DFS and return a list of addresses
-    try:
-        paths = ocrutils.save_ocr_images(
-                request.FILES.iteritems(), settings.MEDIA_ROOT, temp=True)
-    except AppException, err:
-        return HttpResponse(simplejson.dumps({"error": err.message}),
-            mimetype="application/json")
+    if request.POST.get("redo"):
+        paths = [os.path.abspath(request.POST.get("src", "").replace(
+            settings.MEDIA_URL, settings.MEDIA_ROOT + "/", 1))]
+    else:
+        try:
+            paths = ocrutils.save_ocr_images(
+                    request.FILES.iteritems(), settings.MEDIA_ROOT, temp=True)
+        except AppException, err:
+            return HttpResponse(simplejson.dumps({"error": err.message}),
+                mimetype="application/json")
     if not paths:
         return HttpResponse(
                 simplejson.dumps({"error": "no valid images found"}),
@@ -82,6 +86,7 @@ def binarize(request):
         # should be past the danger zone now...
         transaction.commit()
         return _json_or_text_response(request, out)
+
     except StandardError, err:        
         transaction.rollback()
         return HttpResponse(
@@ -252,7 +257,7 @@ def _get_best_params(postdict):
     POST.  This is continent on data in the models table.
     """
 
-    userparams = postdict
+    userparams = postdict    
     userparams["engine"] = postdict.get("engine", "tesseract")
     userparams["clean"] = postdict.get("clean", "StandardPreprocessing")
     userparams["pseg"] = postdict.get("pseg", "SegmentPageByRAST")
@@ -273,5 +278,10 @@ def _get_best_params(postdict):
                 userparams[modparam] = model.file.path            
             except IndexError:
                 userparams[modparam] = "???" 
+
+    if userparams.get("dst"):
+        path = userparams.get("dst").replace(settings.MEDIA_URL,
+                settings.MEDIA_ROOT + "/")
+        userparams["dst"] = path
 
     return userparams    
