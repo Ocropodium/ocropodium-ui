@@ -73,7 +73,9 @@ def find_file_with_basename(pathbase):
     dirname = os.path.dirname(pathbase)
     candidates = [fname for fname in os.listdir(dirname) \
             if fname.startswith(basename)]
-    return candidates[0]
+    if candidates:
+        return os.path.join(dirname, candidates[0])
+    return pathbase
 
 
 def find_unscaled_path(path):
@@ -81,6 +83,7 @@ def find_unscaled_path(path):
     Find the non-scaled path to a temp file.
     """
     uspath = os.path.abspath(path.replace("_scaled", "", 1))
+    uspath = os.path.abspath(path.replace(".dzi", ".png", 1))
     if not os.path.exists(uspath):
         uspath = find_file_with_basename(
                 os.path.splitext(uspath)[0])
@@ -109,6 +112,17 @@ def scale_image(inpath, outpath, newsize, filter=Image.ANTIALIAS):
         # fall back on GraphicsMagick if opening fails
         import subprocess as sp
         sp.call(["convert", inpath, "-resize", "%sx%s" % newsize, outpath])
+
+def make_png(inpath):
+    """
+    PIL has problems with some TIFFs so this is
+    a quick way of converting an image.
+    """
+    if inpath.lower().endswith(".png"):
+        return inpath
+    outpath = "%s.png" % os.path.splitext(inpath)[0]
+    sp.call(["convert", inpath, outpath]) 
+    return outpath
 
 
 def media_url_to_path(url):

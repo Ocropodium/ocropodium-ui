@@ -7,6 +7,7 @@ $(function() {
     var NUMFILES = 1;
 
 
+
     /* Display uploaded files. */
     //$("#dropzone").load("list.php");
     
@@ -41,41 +42,6 @@ $(function() {
         $("#uploadform").submit();
     });
 
-    function updateZoom() {
-        if (!$(".ocr_page").length) {
-            return;
-        }        
-
-        var startw = $(".ocr_page").width();
-        var starth = $(".ocr_page").height();
-        var zoom = Math.max(1, $("#zoom").slider("value"));
-        var neww = startw * zoom;
-        var newh = starth * zoom; 
-        var overw = ((neww - startw) / 2) ; //- $(".ocr_page").position().left;
-        var overh = ((newh - starth) / 2) ; //- $(".ocr_page").position().top;
-
-        // set the new width/height and then set the css
-        // margin property to hide the overlap.
-        $("#bindst, #binsrc").width(neww);
-        $("#bindst, #binsrc").height(newh); 
-        $("#bindst, #binsrc").css("margin-left", -overw); 
-        $("#bindst, #binsrc").css("margin-top",  -overh); 
-        $("#logwindow").append($("<p></p>").text("Width: " + neww + " Height: " + newh
-                    + " Left: " + -overw + " Top: " + -overh + " Zoom: "
-                    + zoom));
-    }
-
-    // decorate the zoom slider
-    $("#zoom").slider({min: 1, max: 25, step: 0.5});
-    $("#zoom").bind("slide", updateZoom);
-    $("#zoom").bind("slidestart", function(e) {
-        $(".ocr_page").css("width", $(".ocr_page").width());
-        $(".ocr_page").css("height", $(".ocr_page").height());
-    });
-
-    $("#zoom").bind("slidestop", updateZoom);
-
-
     $("#uploadform").submit(function(event) {
         return AIM.submit(this, {
             'onStart' : function(e) {
@@ -95,8 +61,8 @@ $(function() {
             "/ocr/results/" + jobname,
             function (data) {
                 if (data.error) {
+                    $("#binary_out_head").removeClass("waiting");
                     element
-                        .removeClass("waiting")                
                         .addClass("error")
                         .html("<h4>Error: " + data.error + "</h4>")
                         .append(
@@ -107,26 +73,22 @@ $(function() {
                     // set up the zoom slider according to the scale
                     //$("#zoom").slider({"min": data.results.scale});
 
-
-
-                    if ($("#binsrc").length == 0) {
-                        var srcimg = $("<img></img>")
-                            .attr("src", data.results.src + "?t=" + (new Date).getTime())
-                            .attr("id", "binsrc")
-                            .css("display", "none")
-                            .data("path", data.results.src);
-                        var dstimg = $("<img></img>")
-                            .attr("src", data.results.dst + "?t=" + (new Date).getTime())
-                            .attr("id", "bindst")
-                            .data("path", data.results.dst);                        
-                        element.append(srcimg);
-                        element.append(dstimg);
+                    element.data("src", data.results.src);
+                    element.data("dst", data.results.dst);
+                    if (binviewer.isOpen()) {
+                        var center = binviewer.viewport.getCenter();
+                        var zoom = binviewer.viewport.getZoom();
+                        binviewer.openDzi(data.results.dst);
+                        srcviewer.openDzi(data.results.src);
+                        binviewer.addEventListener("open", function(e) {
+                            binviewer.viewport.panTo(center, true); 
+                            binviewer.viewport.zoomTo(zoom, true); 
+                        });
                     } else {
-                        $("#binsrc").attr("src", data.results.src + "?t=" + (new Date).getTime());
-                        $("#bindst").attr("src", data.results.dst + "?t=" + (new Date).getTime())
+                        binviewer.openDzi(data.results.dst);
+                        srcviewer.openDzi(data.results.src);
                     }
-                    element.data("scale", data.results.scale);
-                    element.removeClass("waiting");
+                    $("#binary_out_head").removeClass("waiting");
                 } else if (data.status == "PENDING") {
                     setTimeout(function() {
                         pollForResults(element);
@@ -140,14 +102,18 @@ $(function() {
 
     // toggle the source and binary images
     $("#togglesrc").click(function(e) {
-        $("#binsrc").toggle();
-        $("#bindst").toggle();    
+        if ($("#binary_out").css("margin-top") != "-560px") {
+            $("#binary_out").css("margin-top", "-560px");
+        } else {
+            $("#binary_out").css("margin-top", "0px"); 
+        }
     });
 
     // resubmit the form...
     $("#refresh").click(function(e) {
-        var params = "redo=1&src=" + $("#binsrc").data("path") 
-            + "&dst=" + $("#bindst").data("path")
+        
+        var params = "&src=" + $("#binary_out").data("src") 
+            + "&dst=" + $("#binary_out").data("dst")
             + "&" + $("#optionsform").serialize();
         $.post("/ocr/binarize", params, function(data) {
             $(".ocr_page").each(function(index, pdiv) {
@@ -184,18 +150,10 @@ $(function() {
 
         $.each(data, function(page, pageresults) {
             var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
-            var phead = $("<div></div>")
-                .addClass("ocr_page_head")
-                .attr("id", "ocr_page_" + pagename + "_head")
-                .text(pagename);                
-            $("#pageout").append(phead); 
-            var pdiv = $("<div></div>")
-                .addClass("ocr_page")
-                .addClass("waiting")
-                .attr("id", "ocr_page_" + pagename)
+            $("#binary_out_head").text(pagename).addClass("waiting");
+            $("#binary_out")
                 .data("jobname", pageresults.job_name);
-            $("#pageout").append(pdiv);
-            pollForResults(pdiv);
+            pollForResults($("#binary_out"));
         }); 
         if (XHRQUEUE.length) {
             var fxhr = XHRQUEUE.shift();
@@ -219,21 +177,21 @@ $(function() {
                 return;
             }
         }
-
         // set the global NUMFILES variable
         NUMFILES = data.files.length;
   
         /* Show spinner for each dropped file and say we're busy. */
         $("#dropzone").text("Please wait...").addClass("waiting");
-        $("#pageout").html("");
 
-        var textparams = {
-            engine: $("input[@name=engine]:checked").val(),
-            pseg: $("#form_segmenter").val(),
-            cmodel: $("#form_cmodel").val(),
-            lmodel: $("#form_lmodel").val(),
-            twidth: $(".ocr_page").length > 0 ? $(".ocr_page")[0].width() : 586,   
-        }
+        try {
+            var textparams = {
+                engine: $("input[@name=engine]:checked").val(),
+                pseg: $("#form_segmenter").val(),
+                twidth: $("#binary_out").width(),   
+            }
+        } catch (err) {
+            alert(err);
+        } 
 
         $("#optionsform input, #optionsform select").each(function() { 
             textparams[$(this).attr("name")] = $(this).val();
@@ -479,4 +437,34 @@ function buildComponentOptions() {
 }
 
 
+// init the seadragon viewer
+var binviewer = null;
+var srcviewer = null;
+
+function syncViewer(viewer, other) {
+    if (!viewer.isOpen() || !other.isOpen()) {
+        return;
+    }
+    other.viewport.zoomTo(viewer.viewport.getZoom(), true);
+    other.viewport.panTo(viewer.viewport.getCenter(), true);
+}
+
+function initViewers() {
+    Seadragon.Config.animationTime = 1.5;
+    Seadragon.Config.blendTime = 0.5;
+    Seadragon.Config.maxZoomPixelRatio = 3;
+
+    srcviewer = new Seadragon.Viewer("source_out");
+    binviewer = new Seadragon.Viewer("binary_out");
+    binviewer.addEventListener("animation", function(e) {
+        syncViewer(binviewer, srcviewer);
+    });
+    srcviewer.addEventListener("animation", function(e) {
+        syncViewer(srcviewer, binviewer);
+    });
+} 
+
+$(function(e) {
+    initViewers();
+});
 

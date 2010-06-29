@@ -39,10 +39,11 @@ def binarize(request):
         return render_to_response("ocr/binarize.html", {}, 
             context_instance=RequestContext(request))
     # save our files to the DFS and return a list of addresses
-    if request.POST.get("redo"):
+    if request.POST.get("src"):
         path = os.path.abspath(request.POST.get("src", "").replace(
             settings.MEDIA_URL, settings.MEDIA_ROOT + "/", 1))
         paths = [ocrutils.find_unscaled_path(path)]
+        print "Converting with paths: %s" % paths
     else:
         try:
             paths = ocrutils.save_ocr_images(

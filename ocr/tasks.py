@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from ocradmin.ocr import utils
 import iulib
+import deepzoom
 
 
 class ConvertPageTask(AbortableTask):
@@ -47,6 +48,9 @@ class BinarizePageTask(AbortableTask):
         """
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
+
+        filepath = utils.make_png(filepath)
+
         converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
                 logger, paramdict)
         grey, page_bin = converter.standard_preprocess(filepath)
@@ -63,27 +67,23 @@ class BinarizePageTask(AbortableTask):
             "dst" : None,
             "box": [0, 0, pagewidth, pageheight]
         }
-
+        logger.info("Converting: %s" % filepath)
+        logger.info("To: %s" % binpath)
         iulib.write_image_binary(binpath, page_bin)
-        srcmediaurl = utils.media_path_to_url(filepath)
-        binmediaurl = utils.media_path_to_url(binpath)
 
-        # get a smaller representation of the files
-        if paramdict.get("twidth"):
-            newwidth = int(paramdict.get("twidth"))
-            newsize = utils.new_size_from_width(
-                    (pagewidth, pageheight), newwidth)
-            srctmppath = "%s_scaled.png" % os.path.splitext(filepath)[0]
-            dsttmppath = "%s_scaled%s" % os.path.splitext(binpath) 
-            utils.scale_image(filepath, srctmppath, newsize)
-            utils.scale_image(binpath, dsttmppath, newsize)
-            srcmediaurl = utils.media_path_to_url(srctmppath)
-            binmediaurl = utils.media_path_to_url(dsttmppath)
-            pagedata["scale"] = round(
-                    float(newwidth) / float(pagewidth), 2)
+        # now create deepzoom images of both source
+        # and destination...
+        srcdzipath = "%s.dzi" % os.path.splitext(filepath)[0]
+        dstdzipath = "%s.dzi" % os.path.splitext(binpath)[0]
 
-        pagedata["src"] = srcmediaurl
-        pagedata["dst"] = binmediaurl
+        creator = deepzoom.ImageCreator(tile_size=256, tile_overlap=2, tile_format="png",
+                                image_quality=1, resize_filter="bicubic")
+        creator.create(filepath, srcdzipath)
+        creator.create(binpath, dstdzipath)
+        logger.info(srcdzipath)
+        logger.info(dstdzipath)
+        pagedata["src"] = utils.media_path_to_url(srcdzipath)
+        pagedata["dst"] = utils.media_path_to_url(dstdzipath)
         return pagedata
 
 
