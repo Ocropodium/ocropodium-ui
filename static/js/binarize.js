@@ -1,35 +1,42 @@
+
+// the uploader...
+var uploader = null;
+
+
+// init the seadragon viewer
+var binviewer = null;
+var srcviewer = null;
+
+function syncViewer(viewer, other) {
+    if (!viewer.isOpen() || !other.isOpen()) {
+        return;
+    }
+    other.viewport.zoomTo(viewer.viewport.getZoom(), true);
+    other.viewport.panTo(viewer.viewport.getCenter(), true);
+}
+
+function initViewers() {
+    Seadragon.Config.animationTime = 0.5;
+    Seadragon.Config.blendTime = 0.5;
+    Seadragon.Config.maxZoomPixelRatio = 3;
+
+    srcviewer = new Seadragon.Viewer("source_out");
+    binviewer = new Seadragon.Viewer("binary_out");
+    binviewer.addEventListener("animation", function(e) {
+        syncViewer(binviewer, srcviewer);
+    });
+    srcviewer.addEventListener("animation", function(e) {
+        syncViewer(srcviewer, binviewer);
+    });
+} 
+
+$(function(e) {
+    initViewers();
+});
+
+
 $(function() {
     
-    var XHRQUEUE = [];
-    var BOUNDARY = '------multipartformboundary' + (new Date).getTime();
-    var DASHDASH = '--';
-    var CRLF     = '\r\n';
-    var NUMFILES = 1;
-
-
-
-    /* Display uploaded files. */
-    //$("#dropzone").load("list.php");
-    
-    /* We cannot use $.bind() since jQuery does not normalize the native events. */
-    $('#dropzone')
-        .get(0)
-        .addEventListener('drop', upload, false);
-    $('#dropzone')
-        .get(0)
-        .addEventListener('dragenter', function(event) { 
-                $('#dropzone').css("background-color", "#ffc"); 
-            }, false);
-    $('#dropzone')
-        .get(0)
-        .addEventListener('dragexit', function(event) { 
-                $('#dropzone').css("background-color", "#fff"); 
-            }, false);
-    $('#dropzone')
-        .get(0)
-        .addEventListener('dragover', function(event) { 
-                event.preventDefault(); 
-            }, false);
 
     $(".ocr_line").live("click", function(e) {
             //alert("clicked!");
@@ -116,10 +123,8 @@ $(function() {
             + "&dst=" + $("#binary_out").data("dst")
             + "&" + $("#optionsform").serialize();
         $.post("/ocr/binarize", params, function(data) {
-            $(".ocr_page").each(function(index, pdiv) {
-                $(this).data("jobname", data[index].job_name);
-                pollForResults($(this));
-            });
+            $("#binary_out").data("jobname", data[0].job_name);
+            pollForResults($("#binary_out"));
         });
     });
 
@@ -155,117 +160,13 @@ $(function() {
                 .data("jobname", pageresults.job_name);
             pollForResults($("#binary_out"));
         }); 
-        if (XHRQUEUE.length) {
-            var fxhr = XHRQUEUE.shift();
-            fxhr.open("POST", "/ocr/binarize?nohang=1", true);
-            fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + BOUNDARY); 
-            fxhr.sendAsBinary(fxhr.builder);
-        } else {
-            $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-        }
     };
 
-
-    function upload(event) {
-        
-        var data = event.dataTransfer;
-        for (var i = 0; i < data.files.length; i++) {
-            if (data.files[i].type.search("image/") == -1) {
-                alert("Error: invalid file type: " + data.files[i].type);
-                event.stopPropagation();
-                return;
-            }
-        }
-        // set the global NUMFILES variable
-        NUMFILES = data.files.length;
-  
-        /* Show spinner for each dropped file and say we're busy. */
-        $("#dropzone").text("Please wait...").addClass("waiting");
-
-        try {
-            var textparams = {
-                engine: $("input[@name=engine]:checked").val(),
-                pseg: $("#form_segmenter").val(),
-                twidth: $("#binary_out").width(),   
-            }
-        } catch (err) {
-            alert(err);
-        } 
-
-        $("#optionsform input, #optionsform select").each(function() { 
-            textparams[$(this).attr("name")] = $(this).val();
-        });
-
-        for (var i = 0; i < data.files.length; i++) {
-            var file = data.files[i];
-            var binaryReader = new FileReader();    
-            /* Build RFC2388 string. */
-            var builder = '';
-            builder += DASHDASH;
-            builder += BOUNDARY;
-            builder += CRLF;
-
-            /* append text param values */
-            $.each(textparams, function(key, value) {
-                builder += 'Content-Disposition: form-data; name="' + key + '"; ';
-                builder += 'Content-Type: text/plain';
-                builder += CRLF;
-                builder += CRLF;
-                builder += value;
-                builder += CRLF;
-                builder += DASHDASH;
-                builder += BOUNDARY;
-                builder += CRLF;
-            });
-            
-            /* Generate headers. */            
-            builder += 'Content-Disposition: form-data; ';
-            builder += 'name="userfile' + i + '[]"';
-            if (file.fileName) {
-              builder += '; filename="' + file.fileName + '"';
-            }
-            builder += CRLF;
- 
-            builder += 'Content-Type: ' + file.type;
-            builder += CRLF;
-            builder += CRLF; 
- 
-            /* Append binary data. */
-            builder += file.getAsBinary() ;//binaryReader.readAsBinaryString(file);
-            builder += CRLF;
- 
-            /* Write BOUNDARY. */
-            builder += DASHDASH;
-            builder += BOUNDARY;
-            builder += CRLF;
-        
-            /* Mark end of the request. */
-            builder += DASHDASH;
-            builder += BOUNDARY;
-            builder += DASHDASH;
-            builder += CRLF;
-            try {
-                var xhr = new XMLHttpRequest();
-                xhr.builder = builder;
-                xhr.onload = onXHRLoad;
-                XHRQUEUE.push(xhr);
-            } catch (e) {
-                alert(e);
-            }
-        }
-        if (XHRQUEUE.length) {
-            var fxhr = XHRQUEUE.shift();
-            fxhr.open("POST", "/ocr/binarize", true);
-            fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + BOUNDARY); 
-            fxhr.sendAsBinary(fxhr.builder);
-        }
-
-        /* Prevent FireFox opening the dragged file. */
-        event.stopPropagation();
-        
-    }
+    // initialise the uploader...
+    uploader  = new AjaxUploader("/ocr/binarize", "dropzone", onXHRLoad);
+    $("#optionsform input, #optionsform select").each(function() { 
+        uploader.registerTextParameter($(this).attr("id"));
+    });
 
 
     buildComponentOptions();
@@ -436,35 +337,4 @@ function buildComponentOptions() {
     });
 }
 
-
-// init the seadragon viewer
-var binviewer = null;
-var srcviewer = null;
-
-function syncViewer(viewer, other) {
-    if (!viewer.isOpen() || !other.isOpen()) {
-        return;
-    }
-    other.viewport.zoomTo(viewer.viewport.getZoom(), true);
-    other.viewport.panTo(viewer.viewport.getCenter(), true);
-}
-
-function initViewers() {
-    Seadragon.Config.animationTime = 1.5;
-    Seadragon.Config.blendTime = 0.5;
-    Seadragon.Config.maxZoomPixelRatio = 3;
-
-    srcviewer = new Seadragon.Viewer("source_out");
-    binviewer = new Seadragon.Viewer("binary_out");
-    binviewer.addEventListener("animation", function(e) {
-        syncViewer(binviewer, srcviewer);
-    });
-    srcviewer.addEventListener("animation", function(e) {
-        syncViewer(srcviewer, binviewer);
-    });
-} 
-
-$(function(e) {
-    initViewers();
-});
 
