@@ -6,49 +6,49 @@
 **/
  
 AIM = {
-    frame : function(c) {
+    frame : function(control) {
  
-        var n = 'f' + Math.floor(Math.random() * 99999);
-        var d = document.createElement('DIV');
-        d.innerHTML = '<iframe style="display:none" src="about:blank" id="'+n+'" name="'+n+'" onload="AIM.loaded(\''+n+'\')"></iframe>';
-        document.body.appendChild(d);
+        var name = 'f' + Math.floor(Math.random() * 99999);
+        var doc = document.createElement('DIV');
+        doc.innerHTML = '<iframe style="display:none" src="about:blank" id="'
+            +name+'" name="'+name+'" onload="AIM.loaded(\''+name+'\')"></iframe>';
+        document.body.appendChild(doc);
  
-        var i = document.getElementById(n);
-        if (c && typeof(c.onComplete) == 'function') {
-            i.onComplete = c.onComplete;
+        var frameele = document.getElementById(name);
+        if (control && typeof(control.onComplete) == 'function') {
+            frameele.onComplete = control.onComplete;
         }
  
-        return n;
+        return name;
     },
  
-    form : function(f, name) {
-        f.setAttribute('target', name);
+    form : function(formele, name) {
+        formele.setAttribute('target', name);
     },
  
-    submit : function(f, c) {
-        AIM.form(f, AIM.frame(c));
-        if (c && typeof(c.onStart) == 'function') {
-            return c.onStart();
+    submit : function(formele, control) {
+        AIM.form(formele, AIM.frame(control));
+        if (control && typeof(control.onStart) == 'function') {
+            return control.onStart();
         } else {
             return true;
         }
     },
  
     loaded : function(id) {
-        var i = document.getElementById(id);
-        if (i.contentDocument) {
-            var d = i.contentDocument;
-        } else if (i.contentWindow) {
-            var d = i.contentWindow.document;
+        var frameele = document.getElementById(id);
+        if (frameele.contentDocument) {
+            var doc = frameele.contentDocument;
+        } else if (frameele.contentWindow) {
+            var doc = frameele.contentWindow.document;
         } else {
-            var d = window.frames[id].document;
+            var doc = window.frames[id].document;
         }
-        if (d.location.href == "about:blank") {
+        if (doc.location.href == "about:blank") {
             return;
         }
- 
-        if (typeof(i.onComplete) == 'function') {
-            i.onComplete(d.body.innerHTML);
+        if (typeof(frameele.onComplete) == 'function') {
+            frameele.onComplete(doc.body.innerHTML);
 
         }
     }
