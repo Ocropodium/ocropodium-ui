@@ -145,6 +145,40 @@ $(function() {
         }); 
     }
 
+    function createPage(page, pageresults) {
+        var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
+
+        var viewlink = $("<a></a>")
+                    .attr("target", "_blank")
+                    .addClass("result_link");
+
+        var phead = $("<div></div>")
+            .addClass("ocr_page_head")
+            .attr("id", "ocr_page_" + pagename + "_head")
+            .text(pagename)
+            .append($("<a></a>").attr("href", "#").addClass("view_link").text("View Layout"))                
+            .append(
+                viewlink.clone()
+                    .attr("href", "/ocr/results/" + pageresults.job_name + "?format=text")
+                    .text("Text")
+            )                
+            .append(
+                viewlink.clone()
+                    .attr("href", "/ocr/results/" + pageresults.job_name + "?format=json")
+                    .text("Json")
+            );                
+        var pdiv = $("<div></div>")
+            .addClass("ocr_page")
+            .addClass("waiting")
+            .attr("id", "ocr_page_" + pagename)
+            .data("jobname", pageresults.job_name);
+
+        $("#pageout").append(phead).append(pdiv);        
+
+        // set off the timer polling for the page results...
+        pollForResults(pdiv);
+    }
+
 
     function onXHRLoad(event_or_response) {
         var data;
@@ -161,7 +195,6 @@ $(function() {
             // then it must be a single upload...
             data = event_or_response;
             $("#singleupload").val("");
-            
         }
 
         if (data.error) {
@@ -171,32 +204,7 @@ $(function() {
         }
 
         $.each(data, function(page, pageresults) {
-            var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
-            var phead = $("<div></div>")
-                .addClass("ocr_page_head")
-                .attr("id", "ocr_page_" + pagename + "_head")
-                .text(pagename)
-                .append($("<a></a>").attr("href", "#").addClass("view_link").text("View Layout"))                
-                .append(
-                    $("<a></a>").attr("href", "/ocr/results/" + pageresults.job_name + "?format=text")
-                        .attr("target", "_blank")
-                        .addClass("result_link")
-                        .text("Text")
-                )                
-                .append(
-                    $("<a></a>").attr("href", "/ocr/results/" + pageresults.job_name + "?format=json")
-                        .attr("target", "_blank")
-                        .addClass("result_link")
-                        .text("Json")
-                );                
-            $("#pageout").append(phead); 
-            var pdiv = $("<div></div>")
-                .addClass("ocr_page")
-                .addClass("waiting")
-                .attr("id", "ocr_page_" + pagename)
-                .data("jobname", pageresults.job_name);
-            $("#pageout").append(pdiv);
-            pollForResults(pdiv);
+            createPage(page, pageresults);
         }); 
     };
 
