@@ -1,0 +1,164 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
+	<script type='application/javascript' src='/static/js/ocr-line-views.js'></script>
+	<script type='application/javascript' src='/static/js/segment.js'></script>
+	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <script type="text/javascript" src="http://seadragon.com/ajax/0.8/seadragon-min.js"></script>
+<style type="text/css">
+    
+    .compparam {
+        padding-right: 10px;
+        padding-left: 15px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .compparam input {
+        border: 1px solid #999999;
+        height: 1em;
+        background-color: #FFFFDD;
+    }
+
+    .compparam * {
+        margin-bottom: 5px;
+    }
+
+    #options * {
+        font-size: 0.9em;
+    }
+
+    #options label {
+        float: left;
+        clear: left;
+        width: 10em;    
+    }
+
+    #options select {
+        width: 13em;
+    }
+
+    .component_opts {
+        /*display: none;*/
+        font-size: 0.8em;
+        margin-bottom: 20px;        
+    }
+    .component_opts label {
+        float: left;
+        width: 8em;
+        text-align: right;
+        padding-right: 5px;
+        clear: left;
+    }
+    .component_opts input {
+        float: left;
+        width: 12em;
+        height: 1em;
+        border: 1px solid #999999;
+        background-color: FFFFDD;
+        text-align: right;
+        padding-right: 5px;
+        font-size: 0.9em;
+    }
+    /* HACK */
+    .clear {
+        clear: left;
+    }
+
+    .ocr_page {
+        overflow: hidden;
+    }
+
+    #logwindow {
+        background-color: #FDFDFD;
+        position: absolute;
+        top:20px;
+        left:20px;
+        overflow: auto;;
+        height: 150px;
+        width: 300px;
+        font-size: 0.8em;
+        font-family: monospace;
+        border: 2px solid #999999;
+        display: none;
+    }
+
+    .dragoverlay {
+        z-index: 100;
+        background-color: transparent;
+        height: 100%;
+        position: absolute;
+        float: right;
+    }
+
+    #zoom_container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    #binary_out, #source_out {
+        height: 500px;
+    }
+
+    #source_out {
+       /* display: none;*/
+    }
+
+    #out_mask {
+        height: 520px;
+        overflow: hidden;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- code adapted from http://www.appelsiini.net/demo/html5_upload/demo.html -->
+<script type="text/javascript" charset="utf-8">
+
+
+</script>
+
+<div id="sidebar">
+    <form id="uploadform" name="convertoptions" action="/ocr/segment" method="POST" enctype="multipart/form-data">
+        <!--        <input type="hidden" name="nohang" value="1" /> -->
+        <h4>Choose an Image:</h4>
+        <p>    
+            <input type="file" name="upload0" id="singleupload" />
+        </p>
+        <h4>...or Drag-Drop Images Here:</h4>
+        <div id="dropzone">
+            Drop images here...
+        </div>
+
+        <p>
+            <input type="button" id="togglesrc" value="Toggle Source/Binary" />
+            <input type="button" id="refresh" value="Refresh" />
+        </p>
+    </form>
+    <form id="optionsform" name="options" action="/ocr/segment" method="POST">
+
+        <h4>Options:</h4>
+
+        <div id="options">
+            <h4>Preprocessing:</h4>
+        </div>
+    </form>
+</div>
+<div id="logwindow"></div>
+<div id="pageout">
+    <div class="ocr_page_head" id="binary_out_head">Upload Image...</div>
+    <div id="out_mask">
+        <div class="ocr_page" id="binary_out"></div>
+        <div class="ocr_page" id="source_out"></div>
+    </div>
+
+</div>
+<div style="clear: right;"></div>
+ 
+{% endblock %}
+

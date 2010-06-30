@@ -438,6 +438,15 @@ class OcropusWrapper(object):
         """
         self.logger.info("Segmenting page with %s" % self.params.pseg)
         segmenter = ocropus.make_ISegmentPage(self.params.pseg)
+        for name, val in self.params.iteritems():
+            # find the 'long' name for the component with the given short
+            # name, i.e: binsauvola -> BinarizeBySauvola
+            cmatch = re.match("%s__(.+)" % self.params.pseg, name, re.I)
+            if cmatch:
+                param = cmatch.groups()[0]
+                self.logger.info("Setting: %s.%s -> %s" % (self.params.pseg, param, val))
+                segmenter.pset(param, val)
+
         page_seg = iulib.intarray()
         segmenter.segment(page_seg, page_bin)
         return page_seg

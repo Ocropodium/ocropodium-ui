@@ -18,7 +18,7 @@ function syncViewer(viewer, other) {
 function initViewers() {
     //Seadragon.Config.animationTime = 0.5;
     //Seadragon.Config.blendTime = 0.5;
-    //Seadragon.Config.maxZoomPixelRatio = 3;
+    Seadragon.Config.maxZoomPixelRatio = 6;
 
     srcviewer = new Seadragon.Viewer("source_out");
     binviewer = new Seadragon.Viewer("binary_out");
@@ -131,7 +131,7 @@ $(function() {
         var params = "&src=" + $("#binary_out").data("src") 
             + "&dst=" + $("#binary_out").data("dst")
             + "&" + $("#optionsform").serialize();
-        $.post("/ocr/binarize", params, function(data) {
+        $.post("/ocr/segment", params, function(data) {
             $("#binary_out").data("jobname", data[0].job_name);
             pollForResults($("#binary_out"));
         });
@@ -170,13 +170,13 @@ $(function() {
 
     // initialise the binarising controls
     buildComponentOptions();
-    $(".binoption").live("change", function(e) {
+    $(".segoption").live("change", function(e) {
         reinitParams($(this));
     });
 
 
     // initialise the uploader...
-    uploader  = new AjaxUploader("/ocr/binarize", "dropzone");
+    uploader  = new AjaxUploader("/ocr/segment", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
         if (srcviewer.isOpen() && binviewer.isOpen()) {
@@ -225,90 +225,27 @@ function reinitParams(binselect) {
 }
 
 
-function setSingleOptionDefaults(components) {
-    $.each(components["StandardPreprocessing"].params, function(index, param) {
-        if (param.name == "binarizer") {
-            $("#binarizer").attr("name", param.name).val(param.value);
-        } else if (param.name == "graydeskew") {
-            $("#graydeskew").attr("name", param.name).val(param.value);
-        } else if (param.name == "bindeskew") {
-            $("#bindeskew").attr("name", param.name).val(param.value);
-        }
-    });
-}
-
-function setMultiOptionDefaults(components, bincleansel, graycleansel) { // FIXME: Stupid params!
-    $.each(components["StandardPreprocessing"].params, function(index, param) {
-        if (param.value) {
-            var cselect;
-            if (param.name.search("grayclean") != -1) {
-                cselect = graycleansel.clone();
-            } else if (param.name.search("binclean") != -1) {
-                cselect = bincleansel.clone();
-            }
-            if (cselect) {
-                cselect.attr("name", param.name)
-                    .val(param.value).attr("id", param.name);
-                $("#options").append("<label>" + param.name + "</label>")
-                    .attr("for", param.name);
-                $("#options").append(cselect);
-            }
-        }
-    });
-}
-
-
 function setupOptions(components) {
 
     var option = $("<option></option>");
     // build selects for each component type
-    var baseselect = $("<select></select>").addClass("binoption");
-    var binarizesel = baseselect.clone().attr("id", "binarizer");
-    var bindeskewsel = baseselect.clone().attr("id", "bindeskew");
-    var graydeskewsel = baseselect.clone().attr("id", "graydeskew");
-    var bincleansel = baseselect.clone();
-    var graycleansel = baseselect.clone();
+    var segselect = $("<select></select>")
+        .addClass("segoption")
+        .attr("id", "segmenter");
         
-    // add a blank option to some of them
-    $.each([bincleansel, bindeskewsel, 
-            graydeskewsel, graycleansel], function(index, item) {
-        item.append(option.clone().attr("value", ""));
-    });
-
     $.each(components, function(name, component) {
             var newopt = option.clone()
             .attr("value", component.name)
             .text(component.name);
-        if (component.type == "IBinarize" 
-                && component.name != "StandardPreprocessing") {
-            binarizesel.append(newopt);
-        } else if (component.type == "ICleanupBinary") {
-            if (component.name == "DeskewGrayPageByRAST") {            
-                graydeskewsel.append(newopt);
-            } else if (component.name == "DeskewPageByRAST") {
-                bindeskewsel.append(newopt);
-                } else {
-                //alert("Adding to binclean: " + component.name);
-                bincleansel.append(newopt); 
-            }
-        } else if (component.type == "ICleanupGray") {
-            graycleansel.append(newopt);
-        }
+        segselect.append(newopt);
     });
 
-    $("#options").append("<label>Binarizer</label>").attr("for", "binarizer");
-    $("#options").append(binarizesel);
-    $("#options").append("<label>Deskew Grayscale</label>").attr("for", "graydeskew");
-    $("#options").append(graydeskewsel);
-    $("#options").append("<label>Deskew Binary</label>").attr("for", "bindeskew");
-    $("#options").append(bindeskewsel);
+    $("#options").append("<label>Segmenter</label>").attr("for", "segmenter");
+    $("#options").append(segselect);
 
-    // set options and defaults on multi-value options (binclean, grayclean)
-    setMultiOptionDefaults(components, bincleansel, graycleansel);
-
-    // set the remaining defaults to those listed in StandardPreprocessing...
-    setSingleOptionDefaults(components);        
-
+    // set default option
+    segselect.attr("name", "segmenter").val("SegmentPageByRAST");
+    
     // add appropriate options for components
     layoutOptions(components);
 }
@@ -319,38 +256,34 @@ function layoutOptions(components) {
     var paramlabel = $("<label></label>");
     var paraminput = $("<input type='text'></input>");
     // lay out parameter...
-    var sp = components["StandardPreprocessing"];
-    $.each(sp.params, function(index, param) {
-        var paramname = param.name;
-        var cselect = $("select.binoption#" + paramname);
-        var compname = cselect.val();
-        if (compname) {
-            var component = components[compname];
-            var compparams = component.params;
-            var pdiv = paramdiv.clone().attr("id", cselect.attr("id") + "_options");
-            $.each(compparams, function(index, param) {
-                var paramname = compname + "__" + param.name;
-                var plabel = paramlabel.clone()
-                    .attr("for", paramname)
-                    .text(param.name);
-                var pinput = paraminput.clone()
-                    .attr("name", paramname)
-                    .attr("id", paramname)
-                    .val(param.value);
-                pdiv.append(plabel).append(pinput);
-                cselect.after(pdiv);            
-            });
-        }
-    });
+    //
+    var cselect = $("#segmenter");
+    var compname = cselect.val();
+    if (compname) {
+        var component = components[compname];
+        var compparams = component.params;
+        var pdiv = paramdiv.clone().attr("id", cselect.attr("id") + "_options");
+        $.each(compparams, function(index, param) {
+            var paramname = compname + "__" + param.name;
+            var plabel = paramlabel.clone()
+                .attr("for", paramname)
+                .text(param.name);
+            var pinput = paraminput.clone()
+                .attr("name", paramname)
+                .attr("id", paramname)
+                .val(param.value);
+            pdiv.append(plabel).append(pinput);
+            cselect.after(pdiv);            
+        });
+    }
 }
 
 var PARAMS = {}; // sorry, global.
 
 function buildComponentOptions() {
     // get the component data for the types we want
-    var types = ["IBinarize", "ICleanupBinary", "ICleanupGray"];
     // returns a list component hashes
-    $.getJSON("/ocr/components", types.join("&"), function(components) {
+    $.getJSON("/ocr/components", "type=ISegmentPage", function(components) {
         PARAMS = components;
         setupOptions(components);        
     });

@@ -87,6 +87,61 @@ class BinarizePageTask(AbortableTask):
         return pagedata
 
 
+class SegmentPageTask(AbortableTask):
+    """
+    Segment an image of text into a temporary file.  Return some
+    JSON containing the server-side path to that file.  The client
+    then submits a request to have that binary full-size PNG converted
+    into a scaled image for web viewing.
+    """
+    name = "segment.page"
+
+    def run(self, filepath, paramdict, **kwargs):
+        """
+        Runs the segment action.
+        """
+        logger = self.get_logger(**kwargs)
+        logger.info(paramdict)
+
+        filepath = utils.make_png(filepath)
+
+        converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
+                logger, paramdict)
+        grey, page_bin = converter.standard_preprocess(filepath)
+        page_seg = converter.get_page_seg(page_bin)
+
+        pagewidth = page_seg.dim(0)
+        pageheight = page_seg.dim(1)
+
+        segpath = paramdict.get("dst", "").encode()
+        if not segpath:
+            base, ext = os.path.splitext(os.path.basename(filepath))
+            segpath =  "%s/segtemp/%s_%s%s" % (settings.MEDIA_ROOT, 
+                    base, uuid.uuid1(), ".png")
+        pagedata = { 
+            "page" : os.path.basename(filepath) ,
+            "src" : None,
+            "dst" : None,
+            "box": [0, 0, pagewidth, pageheight]
+        }
+        iulib.write_image_packed(segpath, page_seg)
+
+        # now create deepzoom images of both source
+        # and destination...
+        srcdzipath = "%s.dzi" % os.path.splitext(filepath)[0]
+        dstdzipath = "%s.dzi" % os.path.splitext(segpath)[0]
+
+        creator = deepzoom.ImageCreator(tile_size=256, tile_overlap=2, tile_format="png",
+                                image_quality=1, resize_filter="bicubic")
+        creator.create(filepath, srcdzipath)
+        creator.create(segpath, dstdzipath)
+        logger.info(srcdzipath)
+        logger.info(dstdzipath)
+        pagedata["src"] = utils.media_path_to_url(srcdzipath)
+        pagedata["dst"] = utils.media_path_to_url(dstdzipath)
+        return pagedata
+
+
 class CreateCleanupTempTask(PeriodicTask):
     """
     Periodically cleanup images in the settings.MEDIA_ROOT/temp

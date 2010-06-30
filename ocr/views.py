@@ -61,6 +61,21 @@ def convert(request):
 
 
 @login_required
+@transaction.commit_manually
+def segment(request):
+    """
+        Save a posted image to the DFS.  Segment it with Celery.
+    """
+
+    return _ocr_task(
+        request,
+        "ocr/segment.html",
+        "Segment",
+        tasks.SegmentPageTask,
+    )
+
+
+@login_required
 def results(request, job_name):
     """
     Retrieve the results using the previously provided task name.
