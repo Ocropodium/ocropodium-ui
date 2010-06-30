@@ -12,14 +12,19 @@ var DASHDASH = '--';
 var CRLF     = '\r\n';
 
 
-function AjaxUploader(url, dropzone_id, onLoad) {
+function AjaxUploader(url, dropzone_id) {
     dropzone = $("#" + dropzone_id).get(0);    
     _queue = [];
     _params = [];
 
+    // note - re-reference 'me' to 'this' so it refers to the
+    // correctly-scoped this via the closure...
+    var me = this;
+
     // dequeue and send the next file...
     _sendNextItem = function() {
         if (_queue.length) {
+            me.onUploadStart()
             var fxhr = _queue.shift();
             fxhr.open("POST", url, true);
             fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
@@ -27,38 +32,50 @@ function AjaxUploader(url, dropzone_id, onLoad) {
             fxhr.sendAsBinary(fxhr.builder);
         } else {
             $(dropzone).text("Drop images here...").removeClass("waiting"); 
+            me.onUploadsFinished();
         }  
     }
 
     // wrap the user event function so as to trigger the
     // next upload in the queue
     _onXHRLoad = function(event) {
-        onLoad(event);
+        me.onXHRLoad(event);
         _sendNextItem();
     }
 
 
-
+    // accessor for the size of the queue
+    this.size = function() {
+        return _queue.length;
+    }
 
     // return a hash of text param key/vals
-    textParameters = function() {
+    _textParameters = function() {
         params = {};
         $.each(_params, function(index, paramname) {
-            params[$("#" + paramname).attr("name")] = $("#" + paramname).val();
+            if ($(paramname).length) {
+                params[$(paramname).attr("name")] = $(paramname).val();
+            }
         });
         return params;
     }
 
+    this.textParameters = function() {
+        return _textParameters();
+    }
+
     // register a new text parameter to be included when the upload
     // commences
-    registerTextParameter = function(paramname) {
+    this.registerTextParameter = function(paramname) {
         _params.push(paramname);
     }
 
 
     // actually do the upload!
     upload = function(event) {
-            
+
+        me.onUploadsStarted();        
+
         var data = event.dataTransfer;
         for (var i = 0; i < data.files.length; i++) {
             if (data.files[i].type.search("image/") == -1) {
@@ -70,6 +87,8 @@ function AjaxUploader(url, dropzone_id, onLoad) {
         /* Show spinner for each dropped file and say we're busy. */
         $(dropzone).text("Please wait...").addClass("waiting");
         for (var i = 0; i < data.files.length; i++) {
+
+
             var file = data.files[i];
             var binaryReader = new FileReader();    
             /* Build RFC2388 string. */
@@ -79,7 +98,7 @@ function AjaxUploader(url, dropzone_id, onLoad) {
             builder += CRLF;
 
             /* append text param values */
-            $.each(textParameters(), function(key, value) {
+            $.each(_textParameters(), function(key, value) {
                 builder += 'Content-Disposition: form-data; name="' + key + '"; ';
                 builder += 'Content-Type: text/plain';
                 builder += CRLF;
@@ -150,15 +169,20 @@ function AjaxUploader(url, dropzone_id, onLoad) {
 }
 
 
-AjaxUploader.prototype.foo = function() {
-    alert(this.toSource());
+// Events
+AjaxUploader.prototype.onXHRLoad = function(event) {
 }
 
+AjaxUploader.prototype.onUploadStart = function(event) {
+}
 
+AjaxUploader.prototype.onUploadEnd = function(event) {
+}
 
-AjaxUploader.prototype.onXHRLoad = function(event) {
-    alert("base function called");
-    // pass
+AjaxUploader.prototype.onUploadsStarted = function(event) {
+}
+
+AjaxUploader.prototype.onUploadsFinished = function(event) {
 }
 
 

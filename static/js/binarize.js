@@ -16,9 +16,9 @@ function syncViewer(viewer, other) {
 }
 
 function initViewers() {
-    Seadragon.Config.animationTime = 0.5;
-    Seadragon.Config.blendTime = 0.5;
-    Seadragon.Config.maxZoomPixelRatio = 3;
+    //Seadragon.Config.animationTime = 0.5;
+    //Seadragon.Config.blendTime = 0.5;
+    //Seadragon.Config.maxZoomPixelRatio = 3;
 
     srcviewer = new Seadragon.Viewer("source_out");
     binviewer = new Seadragon.Viewer("binary_out");
@@ -162,17 +162,29 @@ $(function() {
         }); 
     };
 
-    // initialise the uploader...
-    uploader  = new AjaxUploader("/ocr/binarize", "dropzone", onXHRLoad);
-    $("#optionsform input, #optionsform select").each(function() { 
-        uploader.registerTextParameter($(this).attr("id"));
-    });
-
-
+    // initialise the binarising controls
     buildComponentOptions();
     $(".binoption").live("change", function(e) {
         reinitParams($(this));
     });
+
+
+    // initialise the uploader...
+    uploader  = new AjaxUploader("/ocr/binarize", "dropzone");
+    uploader.onXHRLoad = onXHRLoad;
+    uploader.onUploadsStarted = function(e) {
+        if (srcviewer.isOpen() && binviewer.isOpen()) {
+            srcviewer.close();
+            binviewer.close();
+        }
+        // slurp up the parameters.  Since the params are build 
+        // dynamically this has to be done immediately before the
+        // upload commences, hence in the onUploadsStarted handler
+        $("#optionsform input, #optionsform select").each(function() {
+            uploader.registerTextParameter("#" + $(this).attr("id"));
+        });
+    };
+
 });
 
 
