@@ -239,6 +239,14 @@ def _json_or_text_response(request, json):
     Format the output string accordingly.
     """
     mimetype = "application/json"
+
+    # bad code alert!  if uploaded via the dodgy
+    # Ajax iframe method, force a text response
+    # otherwise firefox eats the results for us...
+    if request.POST.get("_iframe"):
+        mimetype = "text/html"
+
+
     if _wants_text_format(request):
         if isinstance(json, dict):
             json = [json]

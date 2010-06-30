@@ -49,16 +49,13 @@ $(function() {
         $("#uploadform").submit();
     });
 
-    $("#uploadform").submit(function(event) {
-        return AIM.submit(this, {
-            'onStart' : function(e) {
-                // make something useful before submit (onStart)
-                $("#dropzone").text("Please wait...").addClass("waiting");
-                $("#pageout").html("");
-         		return true;
-            },                                     
-            'onComplete' : onXHRLoad,
-        });
+
+   $("#uploadform").ajaxForm({
+        data : { _iframe: 1 },
+        dataType: "json",
+        success: function(data, responseText, xhr) {
+            onXHRLoad(data, responseText, xhr);
+        },
     });
 
 
@@ -129,8 +126,7 @@ $(function() {
     });
 
     function onXHRLoad(event_or_response) {
-        var data;
-        if (typeof(event_or_response) != "string") {
+        if (event_or_response.target != null) {
             var xhr = event_or_response.target;
             if (!xhr.responseText) {
                 return;
@@ -141,7 +137,7 @@ $(function() {
             data = $.parseJSON(xhr.responseText);
         } else {
             // then it must be a single upload...
-            data = $.parseJSON(event_or_response);
+            data = event_or_response;
             $("#singleupload").val("");
             
         }
