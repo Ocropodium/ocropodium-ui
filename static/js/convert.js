@@ -97,41 +97,52 @@ $(function() {
     });
 
 
+    function processData(element, data) {
+        if (data.error) {
+            element
+                .removeClass("waiting")                
+                .addClass("error")
+                .html("<h4>Error: " + data.error + "</h4>")
+                .append(
+                    $("<div></div>").addClass("traceback")
+                        .append("<pre>" + data.trace + "</pre>")                                
+                );                            
+        } else if (data.status == "SUCCESS") {
+            $.each(data.results.lines, function(linenum, line) {
+                lspan = $("<span></span>")
+                    .text(line.text)
+                    .addClass("ocr_line")
+                    .attr("bbox", line.box[0] + " " + line.box[1] 
+                        + " " + line.box[2] + " " + line.box[3]);
+                element.append(lspan);                        
+            });
+            element.removeClass("waiting");
+            insertBreaks(element);
+        } else if (data.status == "PENDING") {
+            setTimeout(function() {
+                pollForResults(element);
+                }, 250 * Math.max(1, uploader.size())
+            );
+        } else {
+            element.html("<p>Oops, task finished with status: " + data.status + "</p>");
+        }
+    }
+
+
     function pollForResults(element) {
         var jobname = element.data("jobname");
-        $.getJSON(
-            "/ocr/results/" + jobname,
-            function (data) {
-                if (data.error) {
-                    element
-                        .removeClass("waiting")                
-                        .addClass("error")
-                        .html("<h4>Error: " + data.error + "</h4>")
-                        .append(
-                            $("<div></div>").addClass("traceback")
-                                .append("<pre>" + data.trace + "</pre>")                                
-                        );                            
-                } else if (data.status == "SUCCESS") {
-                    $.each(data.results.lines, function(linenum, line) {
-                        lspan = $("<span></span>")
-                            .text(line.text)
-                            .addClass("ocr_line")
-                            .attr("bbox", line.box[0] + " " + line.box[1] 
-                                + " " + line.box[2] + " " + line.box[3]);
-                        element.append(lspan);                        
-                    });
-                    element.removeClass("waiting");
-                    insertBreaks(element);
-                } else if (data.status == "PENDING") {
-                    setTimeout(function() {
-                        pollForResults(element);
-                        }, 250 * Math.max(1, uploader.size())
-                    );
-                } else {
-                    element.html("<p>Oops, task finished with status: " + data.status + "</p>");
-                }
+        $.ajax({
+            url: "/ocr/results/" + jobname,
+            dataType: "json",
+            success: function(data) {
+                processData(element, data);    
+            },
+            error: function(xhr, statusText, errorThrown) {
+                element.addClass("error")
+                    .html("<h4>Http Error</h4>")
+                    .append("<div>" + errorThrown + "</div>");                
             }
-        ); 
+        }); 
     }
 
 

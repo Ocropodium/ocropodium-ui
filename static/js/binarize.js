@@ -59,49 +59,60 @@ $(function() {
     });
 
 
+    function processData(element, data) {
+        if (!data || data.status == "PENDING") {
+            setTimeout(function() {
+                pollForResults(element);
+                }, 500);
+        } else if (data.error) {
+            $("#binary_out_head").removeClass("waiting");
+            element
+                .addClass("error")
+                .html("<h4>Error: " + data.error + "</h4>")
+                .append(
+                    $("<div></div>").addClass("traceback")
+                        .append("<pre>" + data.trace + "</pre>")                                
+                );                            
+        } else if (data.status == "SUCCESS") {
+            // set up the zoom slider according to the scale
+            //$("#zoom").slider({"min": data.results.scale});
+
+            element.data("src", data.results.src);
+            element.data("dst", data.results.dst);
+            if (binviewer.isOpen()) {
+                var center = binviewer.viewport.getCenter();
+                var zoom = binviewer.viewport.getZoom();
+                binviewer.openDzi(data.results.dst);
+                srcviewer.openDzi(data.results.src);
+                binviewer.addEventListener("open", function(e) {
+                    binviewer.viewport.panTo(center, true); 
+                    binviewer.viewport.zoomTo(zoom, true); 
+                });
+            } else {
+                binviewer.openDzi(data.results.dst);
+                srcviewer.openDzi(data.results.src);
+            }
+            $("#binary_out_head").removeClass("waiting");
+        } else {
+            element.html("<p>Oops, task finished with status: " + data.status + "</p>");
+        }
+    } 
+                
+
     function pollForResults(element) {
         var jobname = element.data("jobname");
-        $.getJSON(
-            "/ocr/results/" + jobname,
-            function (data) {
-                if (data.error) {
-                    $("#binary_out_head").removeClass("waiting");
-                    element
-                        .addClass("error")
-                        .html("<h4>Error: " + data.error + "</h4>")
-                        .append(
-                            $("<div></div>").addClass("traceback")
-                                .append("<pre>" + data.trace + "</pre>")                                
-                        );                            
-                } else if (data.status == "SUCCESS") {
-                    // set up the zoom slider according to the scale
-                    //$("#zoom").slider({"min": data.results.scale});
-
-                    element.data("src", data.results.src);
-                    element.data("dst", data.results.dst);
-                    if (binviewer.isOpen()) {
-                        var center = binviewer.viewport.getCenter();
-                        var zoom = binviewer.viewport.getZoom();
-                        binviewer.openDzi(data.results.dst);
-                        srcviewer.openDzi(data.results.src);
-                        binviewer.addEventListener("open", function(e) {
-                            binviewer.viewport.panTo(center, true); 
-                            binviewer.viewport.zoomTo(zoom, true); 
-                        });
-                    } else {
-                        binviewer.openDzi(data.results.dst);
-                        srcviewer.openDzi(data.results.src);
-                    }
-                    $("#binary_out_head").removeClass("waiting");
-                } else if (data.status == "PENDING") {
-                    setTimeout(function() {
-                        pollForResults(element);
-                        }, 500);
-                } else {
-                    element.html("<p>Oops, task finished with status: " + data.status + "</p>");
-                }
+        $.ajax({
+            url: "/ocr/results/" + jobname,
+            dataType: "json",
+            success: function(data) {
+                processData(element, data);    
+            },
+            error: function(xhr, statusText, errorThrown) {
+                element.addClass("error")
+                    .html("<h4>Http Error</h4>")
+                    .append("<div>" + errorThrown + "</div>");                
             }
-        ); 
+        }); 
     }
 
     // toggle the source and binary images
