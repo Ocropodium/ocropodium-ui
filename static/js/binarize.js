@@ -55,6 +55,7 @@ $(function() {
         dataType: "json",
         success: function(data, responseText, xhr) {
             onXHRLoad(data, responseText, xhr);
+            $("#singleupload").val("");
         },
     });
 
@@ -149,8 +150,6 @@ $(function() {
         } else {
             // then it must be a single upload...
             data = event_or_response;
-            $("#singleupload").val("");
-            
         }
 
         if (data.error) {
