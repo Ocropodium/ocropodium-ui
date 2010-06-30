@@ -35,15 +35,65 @@ def binarize(request):
         Save a posted image to the DFS.  Binarize it with Celery.
     """
 
+    return _ocr_task(
+        request,
+        "ocr/binarize.html",
+        "Binarize",
+        tasks.BinarizePageTask,
+    )
+
+
+
+@login_required
+@transaction.commit_manually
+def convert(request):
+    """
+    Save a posted image to the DFS.  Convert it with Celery.
+    Then delete the image.
+    """
+
+    return _ocr_task(
+        request,
+        "ocr/convert.html",
+        "Convert",
+        tasks.ConvertPageTask,
+    )
+
+
+@login_required
+def results(request, job_name):
+    """
+    Retrieve the results using the previously provided task name.
+    """
+    async = celeryresult.AsyncResult(job_name)
+    if async is None:
+        raise Http404
+
+    return _format_task_results(request, async)
+
+
+@login_required
+def components(request):
+    """
+    List OCRopus components - either all or those
+    of an optional type.
+    """
+    comps = ocrutils.get_ocropus_components(request.GET.getlist("type"))
+    return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
+
+
+def _ocr_task(request, template, tasktype, celerytask):
+    """
+    Generic handler for OCR tasks which run a celery job.
+    """
     if not request.method == "POST":
-        return render_to_response("ocr/binarize.html", {}, 
+        return render_to_response(template, {}, 
             context_instance=RequestContext(request))
     # save our files to the DFS and return a list of addresses
     if request.POST.get("src"):
         path = os.path.abspath(request.POST.get("src", "").replace(
             settings.MEDIA_URL, settings.MEDIA_ROOT + "/", 1))
         paths = [ocrutils.find_unscaled_path(path)]
-        print "Converting with paths: %s" % paths
     else:
         try:
             paths = ocrutils.save_ocr_images(
@@ -60,8 +110,8 @@ def binarize(request):
     userparams = _get_best_params(request.POST.copy())
 
     # create a batch db job
-    batch = OcrBatch(user=request.user, name="Binarize %s" % datetime.now(),
-            task_type=tasks.BinarizePageTask.name, batch_type="ONESHOT")
+    batch = OcrBatch(user=request.user, name="%s %s" % (tasktype, datetime.now()),
+            task_type=celerytask.name, batch_type="ONESHOT")
     batch.save()
 
     # init the job from our params
@@ -72,7 +122,7 @@ def binarize(request):
                 page=os.path.basename(path), status="INIT")
         ocrtask.save()
         asynctasks.append(
-            tasks.BinarizePageTask.apply_async(
+            celerytask.apply_async(
                 args=(path.encode(), userparams),
                     task_id=tid, loglevel=60, retries=2))            
     try:
@@ -102,94 +152,6 @@ def binarize(request):
         ) 
 
 
-
-@login_required
-@transaction.commit_manually
-def convert(request):
-    """
-    Save a posted image to the DFS.  Convert it with Celery.
-    Then delete the image.
-    """
-
-    if not request.method == "POST":
-        return render_to_response("ocr/convert.html", {}, 
-            context_instance=RequestContext(request))
-    # save our files to the DFS and return a list of addresses
-    try:
-        paths = ocrutils.save_ocr_images(
-                request.FILES.iteritems(), settings.MEDIA_ROOT, temp=True)
-    except AppException, err:
-        return HttpResponse(simplejson.dumps({"error": err.message}),
-            mimetype="application/json")
-    if not paths:
-        return HttpResponse(
-                simplejson.dumps({"error": "no valid images found"}),
-                mimetype="application/json")     
-    
-    # wrangle the params - this needs improving
-    userparams = _get_best_params(request.POST.copy())
-
-    # create a batch db job
-    batch = OcrBatch(user=request.user, name="Convert %s" % datetime.now(),
-            task_type=tasks.ConvertPageTask.name, batch_type="ONESHOT")
-    batch.save()
-
-    # init the job from our params
-    asynctasks = []
-    for path in paths:
-        tid = "%s::%s" % (os.path.basename(path), uuid.uuid1())
-        ocrtask = OcrTask(task_id=tid, batch=batch, 
-                page=os.path.basename(path), status="INIT")
-        ocrtask.save()
-        asynctasks.append(
-            tasks.ConvertPageTask.apply_async(
-                args=(path.encode(), userparams),
-                    task_id=tid, loglevel=60, retries=2))            
-    try:
-        # aggregate the results
-        out = []
-        for async in asynctasks:
-            result = async.wait() if _should_wait(request) else async.result
-            out.append({
-                "job_name": async.task_id,
-                "status": async.status,
-                "results": result,
-            })
-        # should be past the danger zone now...
-        transaction.commit()
-        return _json_or_text_response(request, out)
-    except StandardError, err:        
-        transaction.rollback()
-        return HttpResponse(
-            simplejson.dumps({
-                "error": err.message, 
-                "trace": "\n".join(
-                    [ "\t".join(str(t)) for t in traceback.extract_stack()]
-                )
-            }),
-            mimetype="application/json"
-        ) 
-
-
-@login_required
-def results(request, job_name):
-    """
-    Retrieve the results using the previously provided task name.
-    """
-    async = celeryresult.AsyncResult(job_name)
-    if async is None:
-        raise Http404
-
-    return _format_task_results(request, async)
-
-
-def components(request):
-    """
-    List OCRopus components - either all or those
-    of an optional type.
-    """
-    comps = ocrutils.get_ocropus_components(request.GET.getlist("type"))
-    return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
 
 
 def _format_task_results(request, async):
