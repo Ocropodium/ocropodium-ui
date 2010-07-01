@@ -118,8 +118,9 @@ $(function() {
 
     // toggle the source and binary images
     $("#togglesrc").click(function(e) {
-        if ($("#binary_out").css("margin-top") != "-560px") {
-            $("#binary_out").css("margin-top", "-560px");
+        var shift = "-" + $("#binary_out").css("height");
+        if ($("#binary_out").css("margin-top") != shift) {
+            $("#binary_out").css("margin-top", shift);
         } else {
             $("#binary_out").css("margin-top", "0px"); 
         }
@@ -231,7 +232,7 @@ function setupOptions(components) {
     // build selects for each component type
     var segselect = $("<select></select>")
         .addClass("segoption")
-        .attr("id", "segmenter");
+        .attr("id", "psegmenter");
         
     $.each(components, function(name, component) {
             var newopt = option.clone()
@@ -240,11 +241,11 @@ function setupOptions(components) {
         segselect.append(newopt);
     });
 
-    $("#options").append("<label>Segmenter</label>").attr("for", "segmenter");
+    $("#options").append("<label>Segmenter</label>").attr("for", "psegmenter");
     $("#options").append(segselect);
 
     // set default option
-    segselect.attr("name", "segmenter").val("SegmentPageByRAST");
+    segselect.attr("name", "psegmenter").val("SegmentPageByRAST");
     
     // add appropriate options for components
     layoutOptions(components);
@@ -257,7 +258,7 @@ function layoutOptions(components) {
     var paraminput = $("<input type='text'></input>");
     // lay out parameter...
     //
-    var cselect = $("#segmenter");
+    var cselect = $("#psegmenter");
     var compname = cselect.val();
     if (compname) {
         var component = components[compname];

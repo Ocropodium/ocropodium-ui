@@ -118,8 +118,9 @@ $(function() {
 
     // toggle the source and binary images
     $("#togglesrc").click(function(e) {
-        if ($("#binary_out").css("margin-top") != "-560px") {
-            $("#binary_out").css("margin-top", "-560px");
+        var shift = "-" + $("#binary_out").css("height");
+        if ($("#binary_out").css("margin-top") != shift) {
+            $("#binary_out").css("margin-top", shift);
         } else {
             $("#binary_out").css("margin-top", "0px"); 
         }
