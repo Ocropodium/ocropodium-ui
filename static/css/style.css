@@ -70,55 +70,6 @@ div#footer {
 
 }
 
-.horizontal_nav {
-    margin: 0px;
-    padding: 5px;
-    padding-left: 0px;
-    background-color: #FBFBFB;
-    border-top: 1px solid #1b4765;
-    border-bottom: 1px solid #1b4765;
-}
-
-
-.horizontal_nav * {
-    display: inline;
-}
-
-.horizontal_nav * a {
-    display: inline;
-    padding: 5px;
-/*    border: 1px solid #BBBBBB; */
-    margin: 0px; 
-    margin-right: 5px;
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #1b4765;
-    text-decoration: none;
-    border-left: 1px solid #FBFBFB;
-    border-right: 1px solid #FBFBFB;
-}
-
-.horizontal_nav_item a:hover {
-    background-color: #F0F0F0;
-    border-left: 1px solid #1b4765;
-    border-right: 1px solid #1b4765;
-}
-
-.horizontal_nav_item_le a:hover {
-    background-color: #F0F0F0;
-    border-right: 1px solid #1b4765;
-}
-
-a.current {
-    background-color: #6A94B2;
-    color: #F0F0F0;
-}
- 
-a.current:hover {
-    background-color: #6A94B2;
-    color: #1b4765;
-}
- 
 #sidebar {
     padding: 10px;
 
