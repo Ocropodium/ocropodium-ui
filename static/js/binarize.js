@@ -15,6 +15,14 @@ function syncViewer(viewer, other) {
     other.viewport.panTo(viewer.viewport.getCenter(), true);
 }
 
+var syncSourceToOutput = function(e) {
+    syncViewer(binviewer, srcviewer);
+};
+
+var syncOutputToSource = function(e) {
+    syncViewer(srcviewer, binviewer);
+};
+
 function initViewers() {
     //Seadragon.Config.animationTime = 0.5;
     //Seadragon.Config.blendTime = 0.5;
@@ -24,12 +32,10 @@ function initViewers() {
     
     srcviewer = new Seadragon.Viewer("source_out");
     binviewer = new Seadragon.Viewer("binary_out");
-    binviewer.addEventListener("animation", function(e) {
-        syncViewer(binviewer, srcviewer);
-    });
-    srcviewer.addEventListener("animation", function(e) {
-        syncViewer(srcviewer, binviewer);
-    });
+    binviewer.addEventListener("animation", syncSourceToOutput);
+    //srcviewer.addEventListener("animation", function(e) {
+    //    syncViewer(srcviewer, binviewer);
+    //});
 } 
 
 $(function(e) {
@@ -120,11 +126,16 @@ $(function() {
 
     // toggle the source and binary images
     $("#togglesrc").click(function(e) {
-        var shift = "-" + $("#binary_out").css("height");
+        var shift = "-" + $("#binary_out").outerHeight(true) + "px";
         if ($("#binary_out").css("margin-top") != shift) {
+            // this means the output is CURRENTLY visible
             $("#binary_out").css("margin-top", shift);
+            binviewer.removeEventListener("animation", syncSourceToOutput);
+            srcviewer.addEventListener("animation", syncOutputToSource);
         } else {
             $("#binary_out").css("margin-top", "0px"); 
+            srcviewer.removeEventListener("animation", syncOutputToSource);
+            binviewer.addEventListener("animation", syncSourceToOutput);
         }
     });
 
