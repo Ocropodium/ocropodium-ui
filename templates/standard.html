@@ -15,6 +15,11 @@
 	
 </head>
 
+<script type="text/javascript">
+$(function(e) {
+});    
+</script>
+
 <body>
     <div id="page_wrapper">
         <div id="page_wrapper_lbg">
@@ -33,25 +38,32 @@
                <div id="navbar" role="navigation" style="clear:both;">
                     <ul id="navlist" class="horizontal_nav">
                         <li class="horizontal_nav_item_le">
-                            <a href="/ocr/convert">Convert</a>
-                        </li> 
-                        <li class="horizontal_nav_item_le">
-                            <a href="/ocr/binarize">Binarize</a>
-                        </li> 
-                        <li class="horizontal_nav_item_le">
-                            <a href="/ocr/segment">Segment</a>
-                        </li> 
-                        <li class="horizontal_nav_item_le">
-                            <a href="/ocrmodels/">Models</a>
+                        <a {% ifequal request.path "/ocr/convert" %}class="current"{% endifequal %}
+                            href="/ocr/convert">Convert</a>
                         </li> 
                         <li class="horizontal_nav_item">
-                            <a href="/ocrtasks/">Tasks</a>
+                        <a {% ifequal request.path "/ocr/binarize" %}class="current"{% endifequal %}
+                            href="/ocr/binarize">Binarize</a>
+                        </li> 
+                        <li class="horizontal_nav_item">
+                        <a {% ifequal request.path "/ocr/segment" %}class="current"{% endifequal %}
+                            href="/ocr/segment">Segment</a>
+                        </li> 
+                        <li class="horizontal_nav_item">
+                        <a {% ifequal request.path "/ocrmodels" %}class="current"{% endifequal %}
+                            href="/ocrmodels/">Models</a>
+                        </li> 
+                        <li class="horizontal_nav_item">
+                        <a {% ifequal request.path "/ocrtasks" %}class="current"{% endifequal %}
+                            href="/ocrtasks/">Tasks</a>
                         </li>
                         <li class="horizontal_nav_item">
-                            <a href="/ocrtools/">Tools</a>
+                        <a {% ifequal request.path "/ocrtools" %}class="current"{% endifequal %}
+                            href="/ocrtools/">Tools</a>
                         </li>              
                         <li class="horizontal_nav_item">
-                            <a href="/admin/">Settings</a>
+                        <a {% ifequal request.path "/admin" %}class="current"{% endifequal %}
+                            href="/admin/">Settings</a>
                         </li>              
                     </ul>                
                </div>

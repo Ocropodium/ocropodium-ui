@@ -247,7 +247,7 @@ def _get_best_params(postdict):
     userparams = postdict    
     userparams["engine"] = postdict.get("engine", "tesseract")
     userparams["clean"] = postdict.get("clean", "StandardPreprocessing")
-    userparams["pseg"] = postdict.get("pseg", "SegmentPageByRAST")
+    userparams["psegmenter"] = postdict.get("psegmenter", "SegmentPageByRAST")
     for modparam in ("cmodel", "lmodel"):
         try:
             model = OcrModel.objects.get(name=userparams.get(modparam, "???"))

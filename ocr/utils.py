@@ -301,7 +301,7 @@ class OcropusParams(UserDict.DictMixin):
     def __init__(self, dct):
         self.lmodel = ""
         self.cmodel = ""
-        self.pseg = "SegmentPageByRAST"
+        self.psegmenter = "SegmentPageByRAST"
         self.clean = "StandardPreprocessing"
         self.binarizer = "BinarizeBySauvola"
         self.graydeskew = "DeskewPageByRAST"
@@ -436,15 +436,15 @@ class OcropusWrapper(object):
         """
         Segment the binary page into a colour-coded segmented images.
         """
-        self.logger.info("Segmenting page with %s" % self.params.pseg)
-        segmenter = ocropus.make_ISegmentPage(self.params.pseg)
+        self.logger.info("Segmenting page with %s" % self.params.psegmenter)
+        segmenter = ocropus.make_ISegmentPage(self.params.psegmenter)
         for name, val in self.params.iteritems():
             # find the 'long' name for the component with the given short
             # name, i.e: binsauvola -> BinarizeBySauvola
-            cmatch = re.match("%s__(.+)" % self.params.pseg, name, re.I)
+            cmatch = re.match("%s__(.+)" % self.params.psegmenter, name, re.I)
             if cmatch:
                 param = cmatch.groups()[0]
-                self.logger.info("Setting: %s.%s -> %s" % (self.params.pseg, param, val))
+                self.logger.info("Setting: %s.%s -> %s" % (self.params.psegmenter, param, val))
                 segmenter.pset(param, val)
 
         page_seg = iulib.intarray()
