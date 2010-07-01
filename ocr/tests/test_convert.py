@@ -1,5 +1,5 @@
 """
-    OCR app tests.
+    OCR convert tests.
 """
 import os
 import shutil
@@ -10,7 +10,7 @@ from django.conf import settings
 from django.utils import simplejson
 
 
-class OcrTest(TestCase):
+class OcrConvertTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json"]
     def setUp(self):
         """
@@ -62,7 +62,7 @@ class OcrTest(TestCase):
         """
         Test OCRing with variable segmentation.
         """
-        self._test_convert_action({"pseg": "SegmentPageByXYCUTS"})        
+        self._test_convert_action({"psegmenter": "SegmentPageByXYCUTS"})        
 
     def test_convert_plain_text(self):
         """
