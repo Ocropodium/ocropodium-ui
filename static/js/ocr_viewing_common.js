@@ -102,6 +102,7 @@ $(function() {
 
         $.each(data, function(page, pageresults) {
             var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
+            sdviewer.setTitle(pagename);
             sdviewer.setWaiting(true);
             $("#viewerwindow")
                 .data("jobname", pageresults.job_name);
