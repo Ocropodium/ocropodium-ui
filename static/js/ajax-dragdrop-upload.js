@@ -3,7 +3,7 @@
 //
 // FIXME:  General weirdness... don't understand how JS works
 // Need to take the functions out of the constructor closure
-
+// code adapted from http://www.appelsiini.net/demo/html5_upload/demo.html 
 
 // Globals, want to get rid of these eventually
 var XHRQUEUE = [];

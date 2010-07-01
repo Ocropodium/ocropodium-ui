@@ -103,12 +103,22 @@ div#footer {
     border-left: 1px solid #1b4765;
     border-right: 1px solid #1b4765;
 }
- 
+
 .horizontal_nav_item_le a:hover {
     background-color: #F0F0F0;
     border-right: 1px solid #1b4765;
 }
 
+a.current {
+    background-color: #6A94B2;
+    color: #F0F0F0;
+}
+ 
+a.current:hover {
+    background-color: #6A94B2;
+    color: #1b4765;
+}
+ 
 #sidebar {
     padding: 10px;
 
