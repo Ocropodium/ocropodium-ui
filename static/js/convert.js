@@ -1,8 +1,39 @@
 // the uploader...
 var uploader = null;
 
+
+function saveState() {
+    $.cookie("engine", $("input[@name=engine]:checked").attr("value"));
+    $.each(["psegmenter", "cmodel", "lmodel"], function(index, item) {
+        $.cookie(item, $("select[name=" + item + "]").attr("value"));     
+    });
+}
+
+
+function loadState() {
+    var engine = $.cookie("engine");
+    if (engine) {
+        $("input[value='" + engine + "']").attr("checked", true);
+    }
+    $.each(["psegmenter", "cmodel", "lmodel"], function(index, item) {
+        var val = $.cookie(item);
+        if (val) {
+            $("select[name=" + item + "]").val(val);
+        }
+    });
+
+
+}
+
+// save state on leaving the page... at least try to...
+window.onbeforeunload = function(event) {
+    saveState();
+}
+
+
+
 $(function() {
-    
+
 
     $(".ocr_line").live("click", function(e) {
             //alert("clicked!");
@@ -222,6 +253,11 @@ $(function() {
 
 
 
-    rebuildModelLists($("input[name=engine]:checked").val());     
+    rebuildModelLists($("input[name=engine]:checked").val());    
+
+
+    loadState();
+
+
 });
 

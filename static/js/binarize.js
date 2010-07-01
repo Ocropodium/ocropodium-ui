@@ -19,7 +19,9 @@ function initViewers() {
     //Seadragon.Config.animationTime = 0.5;
     //Seadragon.Config.blendTime = 0.5;
     //Seadragon.Config.maxZoomPixelRatio = 3;
+    Seadragon.Config.imagePath = "/static/js/seadragon/img/";
 
+    
     srcviewer = new Seadragon.Viewer("source_out");
     binviewer = new Seadragon.Viewer("binary_out");
     binviewer.addEventListener("animation", function(e) {
