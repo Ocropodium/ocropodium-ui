@@ -49,7 +49,8 @@ function ImageWindow(container_id, config) {
     var outviewer = null;
 
 
-
+    // overlay a spinner thing when waiting for something
+    // to happen
     this.setWaiting = function(waiting) {
         overlay.css("top", waiting
                 ? "-" + ((2 * height) + 20) + "px"

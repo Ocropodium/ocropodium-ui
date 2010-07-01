@@ -88,19 +88,36 @@ div#footer {
 
 }
 
+.ocr_page_container {
+    border: 1px solid #999;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-box-shadow: 2px 4px 4px #DDD;
+    -moz-box-shadow: 2px 4px 4px #DDD;
+    margin-bottom: 20px;
+}
+
 .ocr_page_head {
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
     padding: 10px;
-  /*  border: 1px dotted #999;
-    background-color: #FBFBFB;*/
+    background-color: #FBFBFB;    
+    border-bottom: 1px solid #DDD;
     font-size: 1.2em;    
 }
 
 .ocr_page {
-    padding: 20px;
- /*    border: 1px dotted #999; */
-    margin-bottom: 20px;
+    margin: 10px;
     background-color: #FEFEFE;
     font-size: 0.9em;
+    padding-bottom: 10px;
+    min-height: 30px;    
+}
+
+.waiting {
+    background-image: url(/static/ajax-loader-large.gif);
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .view_link {

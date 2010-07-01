@@ -1,5 +1,35 @@
-// the uploader...
-var uploader = null;
+
+// Function to build the lang & char models selects when
+// the engine type is changed.
+function rebuildModelLists(appname) {
+    var opt = $("<option />");
+    var copt = $("#form_cmodel").val();
+    var lopt = $("#form_lmodel").val();
+
+    $("#uploadform").attr("disabled", "disabled");
+    $.get(
+        "/ocrmodels/search",
+        { app: appname },
+        function(response) {
+            $("#form_cmodel").html("");
+            $("#form_lmodel").html("");
+            $.each(response, function(index, item) {
+                var select = item.fields.type == "char"
+                    ? $("#form_cmodel")
+                    : $("#form_lmodel");
+
+                var newopt = opt.clone()
+                        .text(item.fields.name)
+                        .attr("value", item.fields.name);
+                if (item.fields.name == copt) {
+                    newopt.attr("selected", "selected");
+                }
+                select.append(newopt);
+            });
+            $("#uploadform").removeAttr("disabled");
+        }
+    );
+}
 
 
 function saveState() {
@@ -33,6 +63,7 @@ window.onbeforeunload = function(event) {
 
 
 $(function() {
+    var uploader = null;
 
 
     $(".ocr_line").live("click", function(e) {
@@ -55,50 +86,10 @@ $(function() {
         },
     });
 
-
-
-    /**
-    *
-    *  Function to build the lang & char models selects when
-    *  the engine type is changed.
-    *
-    **/
-
-    function rebuildModelLists(appname) {
-        var opt = $("<option />");
-        var copt = $("#form_cmodel").val();
-        var lopt = $("#form_lmodel").val();
-
-        $("#uploadform").attr("disabled", "disabled");
-        $.get(
-            "/ocrmodels/search",
-            { app: appname },
-            function(response) {
-                //var data = $.parseJSON(response);
-                //alert(response + " : " + data);
-
-                $("#form_cmodel").html("");
-                $("#form_lmodel").html("");
-                $.each(response, function(index, item) {
-                    var select = item.fields.type == "char"
-                        ? $("#form_cmodel")
-                        : $("#form_lmodel");
-
-
-                    var newopt = opt.clone()
-                            .text(item.fields.name)
-                            .attr("value", item.fields.name);
-                    if (item.fields.name == copt) {
-                        newopt.attr("selected", "selected");
-                    }
-                    
-                    select.append(newopt);
-                    //alert(item.fields.name);
-                });
-                $("#uploadform").removeAttr("disabled");
-            }
-        );
-
+    // hide the drag-drop zone for browsers other than firefox
+    if (!($.browser.mozilla && 
+                parseFloat($.browser.version.slice(0, 3)) >= 1.9)) {
+            $("#dragdrop").hide();
     }
 
     $("input[name=engine]").change(function(e) {
@@ -184,6 +175,8 @@ $(function() {
                     .attr("target", "_blank")
                     .addClass("result_link");
 
+        var container = $("<div></div>").addClass("ocr_page_container");
+
         var phead = $("<div></div>")
             .addClass("ocr_page_head")
             .attr("id", "ocr_page_" + pagename + "_head")
@@ -205,7 +198,8 @@ $(function() {
             .attr("id", "ocr_page_" + pagename)
             .data("jobname", pageresults.job_name);
 
-        $("#pageout").append(phead).append(pdiv);        
+        container.append(phead).append(pdiv); 
+        $("#pageout").append(container);
 
         // set off the timer polling for the page results...
         pollForResults(pdiv);
@@ -251,13 +245,10 @@ $(function() {
         uploader.registerTextParameter("#form_lmodel"); 
     };
 
-
-
+    // fetch the appropriate models...
     rebuildModelLists($("input[name=engine]:checked").val());    
 
-
+    // load state stored from last time
     loadState();
-
-
 });
 
