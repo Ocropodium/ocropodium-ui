@@ -58,6 +58,14 @@ function ImageWindow(container_id, config) {
     }
 
 
+    // set the viewer title
+    this.setTitle = function(text) {
+        if (imgheader.text().match(/.+(\s-\s\w+)/)) {
+            imgheader.text(text + RegExp.$1);
+        } 
+    }
+
+
     // Portal sync functions - there must be an easier way to do this,
     // but we have to remove the event listeners before re-attaching
     // them when toggling the visible viewer, otherwise we get some
