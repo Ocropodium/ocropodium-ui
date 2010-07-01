@@ -90,14 +90,14 @@ div#footer {
 
 .ocr_page_head {
     padding: 10px;
-    border: 1px dotted #999;
-    background-color: #FBFBFB;
+  /*  border: 1px dotted #999;
+    background-color: #FBFBFB;*/
     font-size: 1.2em;    
 }
 
 .ocr_page {
     padding: 20px;
-    border: 1px dotted #999;
+ /*    border: 1px dotted #999; */
     margin-bottom: 20px;
     background-color: #FEFEFE;
     font-size: 0.9em;
