@@ -64,6 +64,7 @@ window.onbeforeunload = function(event) {
 
 $(function() {
     var uploader = null;
+    var pageobjects = [];
 
 
     $(".ocr_line").live("click", function(e) {
@@ -74,6 +75,8 @@ $(function() {
         if ($(this).val() == "") {
             return false;
         }
+
+        //alert($(this).attr("value"));
         $("#uploadform").submit();
     });
 
@@ -120,91 +123,6 @@ $(function() {
     });
 
 
-    function processData(element, data) {
-        if (data.error) {
-            element
-                .removeClass("waiting")                
-                .addClass("error")
-                .html("<h4>Error: " + data.error + "</h4>")
-                .append(
-                    $("<div></div>").addClass("traceback")
-                        .append("<pre>" + data.trace + "</pre>")                                
-                );                            
-        } else if (data.status == "SUCCESS") {
-            $.each(data.results.lines, function(linenum, line) {
-                lspan = $("<span></span>")
-                    .text(line.text)
-                    .addClass("ocr_line")
-                    .attr("bbox", line.box[0] + " " + line.box[1] 
-                        + " " + line.box[2] + " " + line.box[3]);
-                element.append(lspan);                        
-            });
-            element.removeClass("waiting");
-            insertBreaks(element);
-        } else if (data.status == "PENDING") {
-            setTimeout(function() {
-                pollForResults(element);
-                }, 250 * Math.max(1, uploader.size())
-            );
-        } else {
-            element.html("<p>Oops, task finished with status: " + data.status + "</p>");
-        }
-    }
-
-
-    function pollForResults(element) {
-        var jobname = element.data("jobname");
-        $.ajax({
-            url: "/ocr/results/" + jobname,
-            dataType: "json",
-            success: function(data) {
-                processData(element, data);    
-            },
-            error: function(xhr, statusText, errorThrown) {
-                element.addClass("error")
-                    .html("<h4>Http Error</h4>")
-                    .append("<div>" + errorThrown + "</div>");                
-            }
-        }); 
-    }
-
-    function createPage(page, pageresults) {
-        var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
-
-        var viewlink = $("<a></a>")
-                    .attr("target", "_blank")
-                    .addClass("result_link");
-
-        var container = $("<div></div>").addClass("ocr_page_container");
-
-        var phead = $("<div></div>")
-            .addClass("ocr_page_head")
-            .attr("id", "ocr_page_" + pagename + "_head")
-            .text(pagename)
-            .append($("<a></a>").attr("href", "#").addClass("view_link").text("View Layout"))                
-            .append(
-                viewlink.clone()
-                    .attr("href", "/ocr/results/" + pageresults.job_name + "?format=text")
-                    .text("Text")
-            )                
-            .append(
-                viewlink.clone()
-                    .attr("href", "/ocr/results/" + pageresults.job_name + "?format=json")
-                    .text("Json")
-            );                
-        var pdiv = $("<div></div>")
-            .addClass("ocr_page")
-            .addClass("waiting")
-            .attr("id", "ocr_page_" + pagename)
-            .data("jobname", pageresults.job_name);
-
-        container.append(phead).append(pdiv); 
-        $("#pageout").append(container);
-
-        // set off the timer polling for the page results...
-        pollForResults(pdiv);
-    }
-
 
     function onXHRLoad(event_or_response) {
         var data;
@@ -228,8 +146,9 @@ $(function() {
             return;
         }
 
-        $.each(data, function(page, pageresults) {
-            createPage(page, pageresults);
+        $.each(data, function(pagenum, pageresults) {
+            pageobjects[pagenum] = new OcrPage("pageout", pagenum, pageresults);
+            pageobjects[pagenum].pollForResults(250 * data.length);
         }); 
     };
 

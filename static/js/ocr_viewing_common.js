@@ -32,6 +32,9 @@ $(function() {
             $("#dragdrop").hide();
     }
 
+    // make interactive params disabled at the start
+    $(".interact_param").attr("disabled", true);
+
     // Process the data completed results data... in this case
     // set the viewer source and output paths
     function processData(element, data) {
@@ -54,6 +57,7 @@ $(function() {
             sdviewer.setSource(data.results.src);
             sdviewer.setOutput(data.results.dst);
             sdviewer.setWaiting(false);
+            $(".interact_param").attr("disabled", false);
         } else {
             element.html("<p>Oops, task finished with status: " + data.status + "</p>");
         }
@@ -114,8 +118,19 @@ $(function() {
     // toggle the source and binary images
     $("#togglesrc").click(sdviewer.toggle);
 
+    getCropRect = function() {
+        sdviewer.getCropRect();
+    }
+
+
     // resubmit the form...
     $("#refresh").click(function(e) {
+        // check if we need to crop the re-binarized section
+        if ($("#cropsize").attr("checked")) {
+                        
+        }    
+
+
         sdviewer.setWaiting(true);
         var params = "&src=" + $("#viewerwindow").data("src") 
             + "&dst=" + $("#viewerwindow").data("dst")

@@ -167,8 +167,11 @@ function buildComponentOptions() {
 }
 
 
+var getCropRect = null;
+
 
 $(function() {
+
 
 });
 

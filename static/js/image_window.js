@@ -66,6 +66,14 @@ function ImageWindow(container_id, config) {
     }
 
 
+    this.getCropRect = function() {
+        if (!srcviewer.isOpen() || !outviewer.isOpen()) {
+            return;
+        }
+
+    }
+
+
     // Portal sync functions - there must be an easier way to do this,
     // but we have to remove the event listeners before re-attaching
     // them when toggling the visible viewer, otherwise we get some
