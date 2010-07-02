@@ -1,0 +1,40 @@
+
+.imagewindow_container {
+    border: 1px solid #999;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-box-shadow: 2px 4px 4px #DDD;
+    -moz-box-shadow: 2px 4px 4px #DDD;
+}
+
+
+.imagewindow_header {
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    padding: 10px;
+    background-color: #FBFBFB;    
+    border-bottom: 1px solid #DDD;
+    font-size: 1.2em;    
+}
+
+.imagewindow_viewport {
+    margin: 10px;
+}
+
+.overlays {
+    position: relative;
+    top: 0px;
+}
+
+#overlaybg {
+    -moz-opacity: 0.2;
+    opacity: 0.2;
+    background-color: #000000;
+}
+
+#overlayfg {
+    background-color: transparent;
+    background-image: url(/static/ajax-loader-large.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+}
