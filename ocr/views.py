@@ -10,7 +10,7 @@ from celery import result as celeryresult
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
@@ -25,6 +25,14 @@ class AppException(StandardError):
     Most generic app error.
     """
     pass
+
+
+@login_required
+def index(request):
+    """
+    OCR index page.
+    """
+    return HttpResponseRedirect("/ocr/convert/")
 
 
 
