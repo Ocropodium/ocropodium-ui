@@ -71,6 +71,8 @@ function ImageWindow(container_id, config) {
             return;
         }
 
+        //alert("Center (pixels): " +
+        //            outviewer.viewport.getCenter().toSource());
     }
 
 
@@ -106,6 +108,18 @@ function ImageWindow(container_id, config) {
     };
 
 
+    // add HTML to the document and start up the seadragon viewers
+    this.init = function() {
+        imgwindow.append(imgheader).append(
+                    viewport.append(outportal).append(srcportal).append(overlay)
+        );
+
+        // init the viewers...
+        srcviewer = new Seadragon.Viewer(srcportal.attr("id"));
+        outviewer = new Seadragon.Viewer(outportal.attr("id"));
+        syncSourceToOutput();    
+    }
+
 
     // set the path to a viewer and wire it to switch back
     // to the original position and zoom...
@@ -120,21 +134,6 @@ function ImageWindow(container_id, config) {
         }
         viewer.openDzi(dzipath);        
     }
-
-
-
-    // add HTML to the document and start up the seadragon viewers
-    this.init = function() {
-        imgwindow.append(imgheader).append(
-                    viewport.append(outportal).append(srcportal).append(overlay)
-        );
-
-        // init the viewers...
-        srcviewer = new Seadragon.Viewer(srcportal.attr("id"));
-        outviewer = new Seadragon.Viewer(outportal.attr("id"));
-        syncSourceToOutput();    
-    }
-
 
     // the path to source and output DZIs
     this.setSource = function(dzipath) {
