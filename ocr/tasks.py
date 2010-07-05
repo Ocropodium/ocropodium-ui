@@ -12,8 +12,8 @@ from celery.task import PeriodicTask
 from datetime import datetime, timedelta
 from django.conf import settings
 from ocradmin.ocr import utils
+from ocradmin.vendor import deepzoom
 import iulib
-import deepzoom
 
 
 class ConvertPageTask(AbortableTask):
