@@ -14,10 +14,10 @@
 // changes (to SUCCESS or ERROR) at which point to displays
 // whatever is in 'results'.
 
-function OcrPage(insertinto_id, page_id, data) {
+function OcrPage(insertinto_id, page_id, jobname) {
     // extract the pagename from the job name, delimited by "::"
-    var pagename = data.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
-    var resultsurl = "/ocr/results/" + data.job_name;
+    var pagename = jobname.split("::")[0].replace(/\.[^\.]+$/, "");
+    var resultsurl = "/ocr/results/" + jobname;
     var boxpattern = new RegExp(/(\d+) (\d+) (\d+) (\d+)/);
     var me = this;
 
@@ -32,7 +32,7 @@ function OcrPage(insertinto_id, page_id, data) {
         .addClass("ocr_page")
         .addClass("waiting")
         .attr("id", "ocr_page_" + page_id)
-        .data("jobname", data.job_name);
+        .data("jobname", jobname);
 
     // setup header buttons
     var layout = $("<a></a>").attr("href", "#")
@@ -97,15 +97,15 @@ function OcrPage(insertinto_id, page_id, data) {
 
 
     // handle the results of each poll
-    var processData = function(newdata) {
-        if (newdata.error) {
-            setError(newdata.error, newdata.trace);
-        } else if (newdata.status == "SUCCESS") {
-            setResults(newdata.results);
-        } else if (newdata.status == "PENDING") {
+    var processData = function(data) {
+        if (data.error) {
+            setError(data.error, data.trace);
+        } else if (data.status == "SUCCESS") {
+            setResults(data.results);
+        } else if (data.status == "PENDING") {
             return false;
         } else {
-            pdiv.html("<p>Oops, task finished with status: " + newdata.status + "</p>");
+            pdiv.html("<p>Oops, task finished with status: " + data.status + "</p>");
         }
         return true;
     }
@@ -119,14 +119,14 @@ function OcrPage(insertinto_id, page_id, data) {
         }
     }
 
-
-    // copy scope for making recursive poll call
+    
+    // check the server for complete results...
     var pollForResults = function(polltime) {
         $.ajax({
             url: resultsurl,
             dataType: "json",
-            success: function(newdata) {
-                if (!processData(newdata)) {
+            success: function(data) {
+                if (!processData(data)) {
                     setTimeout(function() {
                         pollForResults();
                     }, polltime);
@@ -224,7 +224,6 @@ function OcrPage(insertinto_id, page_id, data) {
             var lspan = $(item);
             var iheight = lspan.height();
             var iwidth = lspan.width();
-
             
             // if 'h' is within .25% of median, use the median instead    
             var h = orderedheights[position];
