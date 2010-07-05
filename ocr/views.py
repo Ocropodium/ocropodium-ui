@@ -32,7 +32,8 @@ def index(request):
     """
     OCR index page.
     """
-    return HttpResponseRedirect("/ocr/convert/")
+    #return HttpResponseRedirect("/ocr/convert/")
+    return Http404
 
 
 
