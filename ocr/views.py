@@ -120,7 +120,8 @@ def _ocr_task(request, template, tasktype, celerytask):
     else:
         try:
             paths = ocrutils.save_ocr_images(
-                    request.FILES.iteritems(), settings.MEDIA_ROOT, temp=True)
+                    request.FILES.iteritems(), settings.MEDIA_ROOT, 
+                    temp=True, user=request.user.username)
         except AppException, err:
             return HttpResponse(simplejson.dumps({"error": err.message}),
                 mimetype="application/json")
