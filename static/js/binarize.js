@@ -15,7 +15,7 @@ function reinitParams(binselect) {
         pdiv.remove();
     }
     // that'll do if we're just removing the component 
-    if (compname == "") {
+    if (compname == "-") {
         return;
     }
     
@@ -83,7 +83,7 @@ function setupOptions(components) {
     // add a blank option to some of them
     $.each([bincleansel, bindeskewsel, 
             graydeskewsel, graycleansel], function(index, item) {
-        item.append(option.clone().attr("value", ""));
+        item.append(option.clone().attr("value", "-"));
     });
 
     $.each(components, function(name, component) {
@@ -135,7 +135,7 @@ function layoutOptions(components) {
         var paramname = param.name;
         var cselect = $("select.ocroption#" + paramname);
         var compname = cselect.val();
-        if (compname) {
+        if (compname && compname != "-") {
             var component = components[compname];
             var compparams = component.params;
             var pdiv = paramdiv.clone().attr("id", cselect.attr("id") + "_options");

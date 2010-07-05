@@ -27,13 +27,15 @@ def get_tesseract():
             stdout=sp.PIPE).communicate()[0].strip()
 
 
-def save_ocr_images(images, basepath, temp=True):
+def save_ocr_images(images, basepath, user=None, temp=True, tempname="temp"):
     """
     Save OCR images to the media directory...
     """                         
     paths = []
     if temp:
-        basepath = os.path.join(basepath, "temp")
+        basepath = os.path.join(basepath, tempname)
+    if user:
+        basepath = os.path.join(basepath, user)
     basepath = os.path.join(basepath, datetime.now().strftime("%Y%m%d%H%M%S"))
     if not os.path.exists(basepath):
         os.makedirs(basepath, 0777)
@@ -395,16 +397,16 @@ class OcropusWrapper(object):
         # init components
         binarizer = ocropus.make_IBinarize(self.params.binarizer)
         graydeskew = None
-        if self.params.graydeskew:
+        if self.params.graydeskew and self.params.graydeskew != "-":
             graydeskew = ocropus.make_ICleanupGray(self.params.graydeskew)
         bindeskew = None
-        if self.params.bindeskew:
+        if self.params.bindeskew and self.params.bindeskew != "-":
             bindeskew = ocropus.make_ICleanupBinary(self.params.bindeskew)
         cleanups = { "grayclean": [], "binclean": [] }
         for cleantype, cleanlist in cleanups.iteritems():
             for i in range(0, 10): 
                 paramval = self.params.get("%s%s" % (cleantype, i))
-                if paramval:
+                if paramval and paramval != "-":
                     try:
                         cleanlist.append(ocropus.make_ICleanupBinary(paramval))
                     except IndexError, err:
