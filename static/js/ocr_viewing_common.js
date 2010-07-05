@@ -9,16 +9,18 @@ function saveState() {
         var dst = $("#viewerwindow").data("dst");        
 
         if (dst && src) {
-            $.cookie("srcdzi", src);
-            $.cookie("dstdzi", dst);
+            var winprefix = window.location.pathname.replace("/", "");
+            $.cookie(winprefix + "_srcdzi", src);
+            $.cookie(winprefix + "_dstdzi", dst);
         }
     }
 }
 
 function loadState() {
     if (sdviewer) {
-        var src = $.cookie("srcdzi");
-        var dst = $.cookie("dstdzi");
+        var winprefix = window.location.pathname.replace("/", "");
+        var src = $.cookie(winprefix + "srcdzi");
+        var dst = $.cookie(winprefix + "dstdzi");
 
         if (src && dst) {
             sdviewer.setSource(src);
