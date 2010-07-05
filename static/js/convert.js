@@ -1,3 +1,4 @@
+var pageobjects = [];
 
 // Function to build the lang & char models selects when
 // the engine type is changed.
@@ -37,6 +38,14 @@ function saveState() {
     $.each(["psegmenter", "cmodel", "lmodel"], function(index, item) {
         $.cookie(item, $("select[name=" + item + "]").attr("value"));     
     });
+
+    // save the job names of the current pages...
+    var jobnames = $(".ocr_page").map(function(i, d) {
+        return $(d).data("jobname");
+    }).get().join(",");
+    if (jobnames) {
+        $.cookie("jobnames", jobnames);
+    }
 }
 
 
@@ -52,7 +61,14 @@ function loadState() {
         }
     });
 
-
+    var jobnames = $.cookie("jobnames");
+    if (jobnames) {
+        var joblist = jobnames.split(",");
+        $.each(joblist, function(index, jobname) {
+            pageobjects[index] = new OcrPage("pageout", index, jobname);
+            pageobjects[index].pollForResults();            
+        });
+    }
 }
 
 // save state on leaving the page... at least try to...
@@ -64,7 +80,6 @@ window.onbeforeunload = function(event) {
 
 $(function() {
     var uploader = null;
-    var pageobjects = [];
 
 
     $(".ocr_line").live("click", function(e) {
@@ -109,20 +124,6 @@ $(function() {
         }
     });
 
-    $(".view_link").live("click", function(e) {
-        var divid = $(this).parent().attr("id").replace(/_head$/, "");
-        if ($(this).text() == "View Layout") {
-            positionByBounds($("#" + divid));
-            $(this).text("View Paragraphs");
-        } else {
-            $("#" + divid).attr("style", "");
-            insertBreaks($("#" + divid));
-            $(this).text("View Layout");
-        }
-        return false;            
-    });
-
-
 
     function onXHRLoad(event_or_response) {
         var data;
@@ -137,6 +138,8 @@ $(function() {
             data = $.parseJSON(xhr.responseText);
         } else {
             // then it must be a single upload...
+            // save the job names of the current pages...
+            var jobnames = [];
             data = event_or_response;
         }
 
@@ -147,7 +150,7 @@ $(function() {
         }
 
         $.each(data, function(pagenum, pageresults) {
-            pageobjects[pagenum] = new OcrPage("pageout", pagenum, pageresults);
+            pageobjects[pagenum] = new OcrPage("pageout", pagenum, pageresults.job_name);
             pageobjects[pagenum].pollForResults(250 * data.length);
         }); 
     };
