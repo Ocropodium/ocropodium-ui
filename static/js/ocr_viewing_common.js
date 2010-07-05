@@ -1,10 +1,43 @@
 // Initialisation operations common to both the binarizer
 // view and the segmentation view (and probably some others)
 
+var sdviewer = null;
+
+function saveState() {
+    if (sdviewer) {
+        var src = $("#viewerwindow").data("src");
+        var dst = $("#viewerwindow").data("dst");        
+
+        if (dst && src) {
+            $.cookie("srcdzi", src);
+            $.cookie("dstdzi", dst);
+        }
+    }
+}
+
+function loadState() {
+    if (sdviewer) {
+        var src = $.cookie("srcdzi");
+        var dst = $.cookie("dstdzi");
+
+        if (src && dst) {
+            sdviewer.setSource(src);
+            sdviewer.setOutput(dst);
+        }
+    }
+}
+
+// save state on leaving the page... at least try to...
+window.onbeforeunload = function(event) {
+    saveState();
+}
+
+
+
 $(function() {
 
     // initialise the viewer
-    var sdviewer = new ImageWindow("viewerwindow"); 
+    sdviewer = new ImageWindow("viewerwindow"); 
     sdviewer.init();
     
    // ajaxify the upload form
@@ -54,8 +87,8 @@ $(function() {
         } else if (data.status == "SUCCESS") {
             element.data("src", data.results.src);
             element.data("dst", data.results.dst);
-            sdviewer.setSource(data.results.src);
-            sdviewer.setOutput(data.results.dst);
+            sdviewer.setSource(data.results.src + "?" + (new Date().getTime()));
+            sdviewer.setOutput(data.results.dst + "?" + (new Date().getTime()));
             sdviewer.setWaiting(false);
             $(".interact_param").attr("disabled", false);
         } else {
@@ -164,4 +197,6 @@ $(function() {
             uploader.registerTextParameter("#" + $(this).attr("id"));
         });
     };
+
+    loadState();
 });
