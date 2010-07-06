@@ -15,7 +15,7 @@ function reinitParams(binselect) {
         pdiv.remove();
     }
     // that'll do if we're just removing the component 
-    if (compname == "-") {
+    if (! PARAMS[compname]) {
         return;
     }
     
