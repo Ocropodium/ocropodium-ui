@@ -1,4 +1,25 @@
 
+#preset_container {
+    font-size: 0.9em;
+}
+
+#preset_container.waiting {
+    background-image: url("/static/ajax-loader-hz2.gif");
+    background-position: right bottom;
+    background-repeat: no-repeat;
+}
+
+a.preset_control {
+    text-decoration: none;
+    font-weight: bold;
+    padding: 2px;
+    margin-left: 5px;
+}
+
+a.preset_control:hover {
+    color: #1B4765;
+}
+
 .pm_preset_list {
     padding: 5px;
     margin-bottom: 5px;
@@ -35,4 +56,8 @@
 
 .pm_preset_button {
     float: right;
+}
+
+.pm_preset_select {
+    width: 10em;
 }

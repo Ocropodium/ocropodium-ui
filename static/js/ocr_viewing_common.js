@@ -189,8 +189,14 @@ $(function() {
     // initialize the preset manager
     // this first bit's a hack
     var presettype = window.location.pathname.replace(/\/ocr\//g, "").replace(/\//g, "");
-    presetmanager = new PresetManager(presettype);
-    presetmanager.addControls("preset_container");
+    presetmanager = new PresetManager("preset_container", presettype);
+    presetmanager.onPresetClear = buildComponentOptions;
+    presetmanager.onBeforeAction = function(event) {
+        //$(".ocroption, .compparam > input").attr("disabled", true);
+    }
+    presetmanager.onCompleteAction = function(event) {
+        //$(".ocroption, .compparam > input").attr("disabled", false);
+    }
 
 
     // initialise the uploader...

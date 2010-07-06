@@ -1,14 +1,20 @@
 
-var PARAMS = {}; // sorry, global.
+var PARAMS = null; // sorry, global.
 
 function buildComponentOptions() {
     // get the component data for the types we want
     // returns a list component hashes
-    $.getJSON("/ocr/components", "type=ISegmentPage", function(components) {
-        PARAMS = components;
-        setupOptions(components);        
-    });
+    //
+    if (PARAMS == null) {
+        $.getJSON("/ocr/components", "type=ISegmentPage", function(components) {
+            PARAMS = components;
+            setupOptions(components);        
+        });
+    } else {
+        setupOptions(PARAMS);
+    }
 }
+
 
 function reinitParams(binselect) {
     var compname = binselect.val();
@@ -55,7 +61,7 @@ function setupOptions(components) {
             .text(component.name);
         segselect.append(newopt);
     });
-
+    $("#options").empty();
     $("#options").append("<label>Segmenter</label>").attr("for", "psegmenter");
     $("#options").append(segselect);
 
@@ -74,7 +80,8 @@ function layoutOptions(components) {
     // lay out parameter...
     //
     var cselect = $("#psegmenter");
-    var compname = cselect.val();
+    reinitParams(cselect);
+/*    var compname = cselect.val();
     if (compname) {
         var component = components[compname];
         var compparams = component.params;
@@ -91,7 +98,7 @@ function layoutOptions(components) {
             pdiv.append(plabel).append(pinput);
             cselect.after(pdiv);            
         });
-    }
+    }*/
 }
 
 

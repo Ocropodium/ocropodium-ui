@@ -1,6 +1,6 @@
 
 
-var PARAMS = {}; // sorry, global.
+var PARAMS = null; // sorry, global.
 
 
 // rebuild the params for a given component when it is
@@ -106,7 +106,7 @@ function setupOptions(components) {
             graycleansel.append(newopt);
         }
     });
-
+    $("#options").empty();
     $("#options").append("<label>Binarizer</label>").attr("for", "binarizer");
     $("#options").append(binarizesel);
     $("#options").append("<label>Deskew Grayscale</label>").attr("for", "graydeskew");
@@ -160,10 +160,14 @@ function buildComponentOptions() {
     // get the component data for the types we want
     var types = ["IBinarize", "ICleanupBinary", "ICleanupGray"];
     // returns a list component hashes
-    $.getJSON("/ocr/components", types.join("&"), function(components) {
-        PARAMS = components;
-        setupOptions(components);        
-    });
+    if (PARAMS == null) {
+        $.getJSON("/ocr/components", types.join("&"), function(components) {
+            PARAMS = components;
+            setupOptions(components);        
+        });
+    } else {
+        setupOptions(PARAMS);
+    }
 }
 
 
