@@ -9,6 +9,18 @@
     background-repeat: no-repeat;
 }
 
+.save_dialog {
+    font-size: 0.8em;
+}
+
+.manage_dialog {
+    font-size: 0.8em;
+}
+
+.save_dialog .ui-dialog-titlebar {
+    display: none;
+}
+
 a.preset_control {
     text-decoration: none;
     font-weight: bold;

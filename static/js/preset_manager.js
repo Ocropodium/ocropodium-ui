@@ -2,12 +2,16 @@
 // showing and selecting from a list of presets of a
 // given type, i.e. "binarize", "segment"
 
+// Note: showing/editing preset description/tags is not
+// yet implemented
 
 function PresetManager(container_id, type) {
 
     var loadeddata = null;
     var currentpreset = null;
     
+    var container = $("#" + container_id);
+
     // capture outer scope for callback functions...
     var me = this;
 
@@ -21,7 +25,8 @@ function PresetManager(container_id, type) {
         .addClass("pm_preset_list");
     var presetdetails = $("<div></div>")
         .attr("id", "preset_details")
-        .addClass("pm_preset_details");
+        .addClass("pm_preset_details")
+        .hide();
     var buttonbox = $("<div></div>")
         .attr("id", "button_box")
         .addClass("pm_button_box");
@@ -47,7 +52,7 @@ function PresetManager(container_id, type) {
         .attr("id", "preset_description")
         .attr("name", "preset_description")
         .addClass("pm_preset_input")
-        .attr("value", "Enter preset description");
+        .attr("value", "");
     var savebutton = $("<input type='button'></input>")
         .attr("id", "save_button")
         .addClass("pm_preset_button")
@@ -79,13 +84,13 @@ function PresetManager(container_id, type) {
 
     // ajax callbacks
     var beforeSend = function(event) {
-        $("#" + container_id).addClass("waiting");
+        container.addClass("waiting");
         me.onBeforeAction(event);
 
     }
 
     var onComplete = function(event) {
-        $("#" + container_id).removeClass("waiting");
+        container.removeClass("waiting");
         me.onCompleteAction(event);
     }
 
@@ -193,8 +198,8 @@ function PresetManager(container_id, type) {
         var name = $("#preset_name").val();
         var desc = $("#preset_description").val();
 
-        if (!(name && desc)) {
-            alert("You must supply a name and description");
+        if (!(name)) {
+            alert("You must supply a preset name");
             return false;
         }
         $("#save_button").attr("disabled", true);
@@ -254,35 +259,42 @@ function PresetManager(container_id, type) {
             .append(buttonbox.append(loadbutton).append(deletebutton));
         $(document).append(dialogdiv);
         //dialogdiv.position(target.position());
-        dialogdiv.dialog(
-                {title: "Mange Presets", modal: true, close: me.hide});       
+        dialogdiv.dialog({
+            title: "Manage Presets",
+            modal: true,
+            close: me.hide,
+            dialogClass: "manage_dialog",
+        });       
         loadData();           
     }
 
     this.hide = function() {
         $(".pm_preset_item, #delete_button, #load_button, #save_button").unbind();
         buttonbox.empty();
-        dialogdiv.empty().remove();
+        dialogdiv.slideUp(200).empty().remove();
     }
 
     this.save = function(event) {
         var target = event ? $(event.target) : $(document);
+        //container.addClass("waiting")
+        dialogdiv
+            .append(presetname)
+            .append(savebutton);
 
-        dialogdiv.append(presetname).append(presetdesc)
-            .append(buttonbox.append(savebutton));
-        $(document).append(dialogdiv);
-        presetname.focus().select();
-
-        $("#save_button").live("click", function(event) {
-            savePreset();
-        });        
-        $("#preset_name, #preset_description").live("change", function(e) {
-            if (presetname.val() && presetdesc.val()) {
-                savebutton.attr("disabled", false);
-            }
+        // place the control at the bottom of the param div
+        // and scroll it down
+        dialogdiv.dialog({
+            dialogClass: "save_dialog",
+            position: [
+                container.position().left,
+                container.position().top - $(document).scrollTop() + container.height(),
+            ],
+            minHeight: "10",
+            modal: true,
+            draggable: false,
+            resizable: false,
         });
-
-        dialogdiv.dialog({title: "Save Preset...", close: me.hide});
+        presetname.select();
     }
 
     // add a preset select list to the given dialogdiv...
@@ -343,7 +355,7 @@ function PresetManager(container_id, type) {
         }        
     });
 
-    $("#load_button").live("click", function() {
+    $("#load_button").live("click", function(event) {
         loadPresetData(currentpreset.pk);
         me.onPresetLoad(event);
     });
@@ -369,6 +381,15 @@ function PresetManager(container_id, type) {
         me.onPresetClear(event);
         $("#preset_id").val(0);
         return false;
+    });
+
+    $("#save_button").live("click", function(event) {
+        savePreset();
+    });        
+    $("#preset_name, #preset_description").live("keyup", function(e) {
+        if (presetname.val()) {
+            savebutton.attr("disabled", false);
+        }
     });
 
     // add controls to the container div
