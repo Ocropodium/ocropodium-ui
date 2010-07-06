@@ -46,7 +46,7 @@ function setupOptions(components) {
     var option = $("<option></option>");
     // build selects for each component type
     var segselect = $("<select></select>")
-        .addClass("segoption")
+        .addClass("ocroption")
         .attr("id", "psegmenter");
         
     $.each(components, function(name, component) {

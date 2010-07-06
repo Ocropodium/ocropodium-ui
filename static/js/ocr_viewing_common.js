@@ -2,6 +2,7 @@
 // view and the segmentation view (and probably some others)
 
 var sdviewer = null;
+var presetmanager = null;
 
 function saveState() {
     if (sdviewer) {
@@ -9,7 +10,7 @@ function saveState() {
         var dst = $("#viewerwindow").data("dst");        
 
         if (dst && src) {
-            var winprefix = window.location.pathname.replace("/", "");
+            var winprefix = window.location.pathname.replace(/\//g, "");
             $.cookie(winprefix + "_srcdzi", src);
             $.cookie(winprefix + "_dstdzi", dst);
         }
@@ -18,9 +19,9 @@ function saveState() {
 
 function loadState() {
     if (sdviewer) {
-        var winprefix = window.location.pathname.replace("/", "");
-        var src = $.cookie(winprefix + "srcdzi");
-        var dst = $.cookie(winprefix + "dstdzi");
+        var winprefix = window.location.pathname.replace(/\//g, "");
+        var src = $.cookie(winprefix + "_srcdzi");
+        var dst = $.cookie(winprefix + "_dstdzi");
 
         if (src && dst) {
             sdviewer.setSource(src);
@@ -185,6 +186,13 @@ $(function() {
     });
 
 
+    // initialize the preset manager
+    // this first bit's a hack
+    var presettype = window.location.pathname.replace(/\/ocr\//g, "").replace(/\//g, "");
+    presetmanager = new PresetManager(presettype);
+    presetmanager.addControls("preset_container");
+
+
     // initialise the uploader...
     var uploader  = new AjaxUploader(window.location.pathname, "dropzone");
     uploader.onXHRLoad = onXHRLoad;
@@ -199,6 +207,7 @@ $(function() {
             uploader.registerTextParameter("#" + $(this).attr("id"));
         });
     };
+
 
     loadState();
 });

@@ -90,14 +90,17 @@ div#footer {
 
 .ocr_page_container {
     border: 1px solid #999;
+    border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
+    box-shadow: 2px 4px 4px #DDD;
     -webkit-box-shadow: 2px 4px 4px #DDD;
     -moz-box-shadow: 2px 4px 4px #DDD;
     margin-bottom: 20px;
 }
 
 .ocr_page_head {
+    border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     padding: 10px;

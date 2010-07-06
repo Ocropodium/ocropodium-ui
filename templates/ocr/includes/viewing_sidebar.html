@@ -1,0 +1,38 @@
+<div id="sidebar">
+    <form id="uploadform" name="convertoptions" action="{{request.path}}" method="POST" enctype="multipart/form-data">
+        <!--        <input type="hidden" name="nohang" value="1" /> -->
+        <h4>Choose an Image:</h4>
+        <p>    
+            <input type="file" name="upload0" id="singleupload" />
+        </p>
+        <div id="dragdrop">
+            <h4>...or Drag-Drop Images Here:</h4>
+            <div id="dropzone">
+                Drop images here...
+            </div>
+        </div>
+        <p>
+            <input class="interact_param" type="button" id="togglesrc" value="Toggle Source/Output" />
+            <input class="interact_param" type="button" id="refresh" value="Refresh" />
+        </p>
+    </form>
+    
+    <div id="preset_container">
+        <h4>Presets:</h4>
+    </div>
+
+    <form id="optionsform" name="options" action="{{request.path}}" method="POST">
+
+        <h4>Options:</h4>
+
+        <div id="options">
+            <h4>Preprocessing:</h4>
+        </div>
+    </form>
+</div>
+<div id="logwindow"></div>
+<div id="pageout">
+    <div id="viewerwindow"></div>
+</div>
+<div style="clear: right;"></div>
+

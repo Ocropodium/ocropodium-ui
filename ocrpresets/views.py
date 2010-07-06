@@ -10,6 +10,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.template import Template, Context
 from django.template.loader import get_template
+from django.utils import simplejson
 
 from tagging.models import TaggedItem
 
@@ -43,7 +44,21 @@ def list(request):
     List available presets.
     """
 
-    return Http404
+    presets = OcrPreset.objects.filter(type=request.GET.get("type", ""))
+    response = HttpResponse(mimetype="application/json")
+    serializers.serialize("json", presets, ensure_ascii=False, 
+            fields=("name", "description"), stream=response)
+
+    return response
+
+
+def data(request, pk):
+    """
+    Get a preset's unpickled data.
+    """
+    preset = get_object_or_404(OcrPreset, pk=pk)
+    return HttpResponse(simplejson.dumps(preset.data), 
+            mimetype="application/json")
 
 
 def show(request, pk):
@@ -67,7 +82,24 @@ def create(request):
     Create a new preset.
     """
 
-    return Http404
+    pname = request.POST.get("preset_name")
+    pdesc = request.POST.get("preset_description")
+    ptype = request.POST.get("preset_type")
+
+    data = {}
+    for key, val in request.POST.iteritems():
+        if key.startswith("ocrdata_"):
+            paramname = key.replace("ocrdata_", "", 1)
+            data[paramname] = val
+
+    preset = OcrPreset(name=pname, description=pdesc, 
+            type=ptype, data=data, user=request.user)
+    preset.save()
+
+    response = HttpResponse(mimetype="application/json")
+    serializers.serialize("json", [preset], ensure_ascii=False, 
+            fields=("name", "description"), stream=response)
+    return response
 
 
 def edit(request, pk):
@@ -86,14 +118,19 @@ def update(request, pk):
     return Http404
 
 
-
 def delete(request, pk):
     """
     Delete a preset.
     """
+    preset = get_object_or_404(OcrPreset, pk=pk)
+    preset.delete()
 
-    return Http404
+    presets = OcrPreset.objects.filter(type=preset.type)
+    response = HttpResponse(mimetype="application/json")
+    serializers.serialize("json", presets, ensure_ascii=False, 
+            fields=("name", "description"), stream=response)
 
+    return response
 
 
 def search(request):

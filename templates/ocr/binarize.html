@@ -3,132 +3,21 @@
 {% block headerscript %}
     <link rel="stylesheet" href="/static/css/image_window.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/preset_manager.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
 	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
 	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
     <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
+	<script type='application/javascript' src='/static/js/preset_manager.js'></script>
 	<script type='application/javascript' src='/static/js/image_window.js'></script>
 	<script type='application/javascript' src='/static/js/binarize.js'></script>
 	<script type='application/javascript' src='/static/js/ocr_viewing_common.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
-    
-    
-<style type="text/css">
-    
-    .compparam {
-        padding-right: 10px;
-        padding-left: 15px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-
-    .compparam input {
-        border: 1px solid #999999;
-        height: 1em;
-        background-color: #FFFFDD;
-    }
-
-    .compparam * {
-        margin-bottom: 5px;
-    }
-
-    #options * {
-        font-size: 0.9em;
-    }
-
-    #options label {
-        float: left;
-        clear: left;
-        width: 10em;    
-    }
-
-    #options select {
-        width: 13em;
-    }
-
-    .component_opts {
-        /*display: none;*/
-        font-size: 0.8em;
-        margin-bottom: 20px;        
-    }
-    .component_opts label {
-        float: left;
-        width: 8em;
-        text-align: right;
-        padding-right: 5px;
-        clear: left;
-    }
-    .component_opts input {
-        float: left;
-        width: 12em;
-        height: 1em;
-        border: 1px solid #999999;
-        background-color: FFFFDD;
-        text-align: right;
-        padding-right: 5px;
-        font-size: 0.9em;
-    }
-    /* HACK */
-    .clear {
-        clear: left;
-    }
-
-    .ocr_page {
-        overflow: hidden;
-    }
-
-    #logwindow {
-        background-color: #FDFDFD;
-        position: absolute;
-        top:20px;
-        left:20px;
-        overflow: auto;;
-        height: 150px;
-        width: 300px;
-        font-size: 0.8em;
-        font-family: monospace;
-        border: 2px solid #999999;
-        display: none;
-    }
-
-</style>
 {% endblock %}
 
 {% block content %}
 
-
-<div id="sidebar">
-    <form id="uploadform" name="convertoptions" action="/ocr/binarize" method="POST" enctype="multipart/form-data">
-        <!--        <input type="hidden" name="nohang" value="1" /> -->
-        <h4>Choose an Image:</h4>
-        <p>    
-            <input type="file" name="upload0" id="singleupload" />
-        </p>
-        <div id="dragdrop">
-            <h4>...or Drag-Drop Images Here:</h4>
-            <div id="dropzone">
-                Drop images here...
-            </div>
-        </div>
-        <p class="interact_param">
-            <input class="interact_param" type="button" id="togglesrc" value="Toggle Source/Binary" />
-            <input class="interact_param" type="button" id="refresh" value="Refresh" />
-            <input class="interact_param" type="checkbox" id="cropsize" />Crop
-        </p>
-    </form>
-    <form id="optionsform" name="options" action="/ocr/binarize" method="POST">
-
-        <h4>Options:</h4>
-
-        <div id="options">
-            <h4>Preprocessing:</h4>
-        </div>
-    </form>
-</div>
-<div id="logwindow"></div>
-<div id="pageout">
-    <div id="viewerwindow"></div>
-</div>
-<div style="clear: right;"></div>
+    {% include "ocr/includes/viewing_sidebar.html" %}
  
 {% endblock %}
 

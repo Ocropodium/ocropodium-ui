@@ -1,0 +1,38 @@
+
+.pm_preset_list {
+    padding: 5px;
+    margin-bottom: 5px;
+    height: 100px;
+    overflow: auto;
+    list-style-type: square;
+    border: 1px solid #999999;
+}
+
+.pm_preset_item {
+    cursor: pointer;
+    background-image: url("/static/icons/preset.png");
+    background-repeat: no-repeat;
+    background-position: left;
+    padding-left: 18px;
+
+}
+
+.pm_preset_list li.odd {
+    background-color: #FBFBFB;
+}
+
+.pm_preset_list li.selected {
+    background-color: #6A94B2;
+    color: #F0F0F0; 
+}
+
+.pm_preset_details {
+    margin-bottom: 5px;
+    padding: 5px;
+    height:40px;
+    overflow: auto;
+}
+
+.pm_preset_button {
+    float: right;
+}

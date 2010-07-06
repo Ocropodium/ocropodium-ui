@@ -2,6 +2,7 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
 	(r'^create/?$', 'ocradmin.ocrpresets.views.create'),
+	(r'^data/(?P<pk>\d+)/$', 'ocradmin.ocrpresets.views.data'),
 	(r'^delete/(?P<pk>\d+)/$', 'ocradmin.ocrpresets.views.delete'),
 	(r'^edit/(?P<pk>\d+)/$', 'ocradmin.ocrpresets.views.edit'),
 	(r'^list/?$', 'ocradmin.ocrpresets.views.list'),
