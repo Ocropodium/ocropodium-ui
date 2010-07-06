@@ -7,11 +7,15 @@
 
 function ImageWindow(container_id, config) {
 
+    var A = "A";   // not sure about this!
+    var B = "B";
+    var S = "S";
+
     // basic config options
     config = config || {};
     var height = config.height || 500;
     var width  = config.width || 500;
-    var label = config.label || "Viewer - Output";
+    var label = config.label || "Viewer - Output A";
     var id = config.id || "imagewindow";
 
     // Seadragon config
@@ -19,7 +23,19 @@ function ImageWindow(container_id, config) {
 
 
     // indicate the current state...
-    var showingout = true;
+    var showing = A;
+    var activeout = A;
+
+    // store paths since can't seem to work out how to get
+    // them directly from the SD viewers
+    var spath = null;
+    var apath = null;
+    var bpath = null;
+
+    // viewer holders
+    var sviewer = null;
+    var aviewer = null;
+    var bviewer = null;
 
     // Initialise HTML...
     var imgwindow = $("#" + container_id)
@@ -29,12 +45,17 @@ function ImageWindow(container_id, config) {
         .text(label);
     var viewport = $("<div><div>")
         .addClass("imagewindow_viewport").attr("id", id + "_viewport")
-        .height(height).css("overflow", "hidden")
-    var outportal = $("<div></div>")
+        .height(height).css("overflow", "hidden");
+    var portalholder = $("<div></div>");
+    var aportal = $("<div></div>")
         .height(height)
         .css("margin-bottom", "20px")
-        .addClass("imagewindow_portal").attr("id", id + "_portal_out");
-    var srcportal = $("<div></div>")
+        .addClass("imagewindow_portal").attr("id", id + "_portal_out_a");
+    var bportal = $("<div></div>")
+        .height(height)
+        .css("margin-bottom", "20px")
+        .addClass("imagewindow_portal").attr("id", id + "_portal_out_b");
+    var sportal = $("<div></div>")
         .height(height)
         .addClass("imagewindow_portal").attr("id", id + "_portal_src");
     var overlay = $("<div></div>")
@@ -42,11 +63,6 @@ function ImageWindow(container_id, config) {
         .attr("id", "overlayfg")
         .height(height)
         .css("position", "relative");
-
-
-    // viewer holders
-    var srcviewer = null;
-    var outviewer = null;
 
 
     // overlay a spinner thing when waiting for something
@@ -67,12 +83,12 @@ function ImageWindow(container_id, config) {
 
 
     this.getCropRect = function() {
-        if (!srcviewer.isOpen() || !outviewer.isOpen()) {
+        if (!sviewer.isOpen() || !aviewer.isOpen()) {
             return;
         }
 
         //alert("Center (pixels): " +
-        //            outviewer.viewport.getCenter().toSource());
+        //            aviewer.viewport.getCenter().toSource());
     }
 
 
@@ -80,44 +96,64 @@ function ImageWindow(container_id, config) {
     // but we have to remove the event listeners before re-attaching
     // them when toggling the visible viewer, otherwise we get some
     // kind of dodgy feedback between animation events.
-    function syncViewer(viewer, other) {
-        if (!viewer.isOpen() || !other.isOpen()) {
+    function syncViewer(viewer, others) {
+        if (!viewer.isOpen()) {
             return;
         }
-        other.viewport.zoomTo(viewer.viewport.getZoom(), true);
-        other.viewport.panTo(viewer.viewport.getCenter(), true);
+        for (var other in others) {
+            other.viewport.zoomTo(viewer.viewport.getZoom(), true);
+            other.viewport.panTo(viewer.viewport.getCenter(), true);
+        }
     }
 
-    var syncOut =  function(e) {
-        syncViewer(outviewer, srcviewer);
+    var syncOutA =  function(e) {
+        syncViewer(aviewer, [sviewer, bviewer]);
+    };
+
+    var syncOutB =  function(e) {
+        syncViewer(bviewer, [sviewer, aviewer]);
     };
 
     var syncSrc = function(e) {
-        syncViewer(srcviewer, outviewer);
+        syncViewer(sviewer, [aviewer, bviewer]);
     };                                          
 
     // switch sync between the viewports...
-    var syncSourceToOutput = function(e) {
-        srcviewer.removeEventListener("animation", syncSrc);
-        outviewer.addEventListener("animation", syncOut);
+    var syncToOutputA = function(e) {
+        sviewer.removeEventListener("animation", syncSrc);
+        bviewer.removeEventListener("animation", syncOutB);
+        aviewer.addEventListener("animation", syncOutA);
     };
 
-    var syncOutputToSource = function(e) {
-        outviewer.removeEventListener("animation", syncOut);
-        srcviewer.addEventListener("animation", syncSrc);
+    var syncToOutputB = function(e) {
+        sviewer.removeEventListener("animation", syncSrc);
+        aviewer.removeEventListener("animation", syncOutA);
+        bviewer.addEventListener("animation", syncOutB);
+    };
+
+    var syncToSource = function(e) {
+        aviewer.removeEventListener("animation", syncOutA);
+        aviewer.removeEventListener("animation", syncOutB);
+        sviewer.addEventListener("animation", syncSrc);
     };
 
 
     // add HTML to the document and start up the seadragon viewers
     this.init = function() {
-        imgwindow.append(imgheader).append(
-                    viewport.append(outportal).append(srcportal).append(overlay)
+        imgwindow.append(imgheader).append(viewport.append(
+            portalholder
+                .append(aportal)
+                .append(bportal)
+                .append(sportal)
+                .append(overlay)
+            )
         );
 
         // init the viewers...
-        srcviewer = new Seadragon.Viewer(srcportal.attr("id"));
-        outviewer = new Seadragon.Viewer(outportal.attr("id"));
-        syncSourceToOutput();    
+        sviewer = new Seadragon.Viewer(sportal.attr("id"));
+        aviewer = new Seadragon.Viewer(aportal.attr("id"));
+        bviewer = new Seadragon.Viewer(bportal.attr("id"));
+        syncToOutputA();    
     }
 
 
@@ -137,41 +173,99 @@ function ImageWindow(container_id, config) {
 
     // the path to source and output DZIs
     this.setSource = function(dzipath) {
-        setViewerPath(srcviewer, dzipath);
+        spath = dzipath;
+        setViewerPath(sviewer, dzipath);
     }
 
-    this.setOutput = function(dzipath) {
-        setViewerPath(outviewer, dzipath);
+    this.setOutputA = function(dzipath) {
+        apath = dzipath;
+        setViewerPath(aviewer, dzipath);
+    }
+
+    this.setOutputB = function(dzipath) {
+        bpath = dzipath;
+        setViewerPath(bviewer, dzipath);
+    }
+
+    this.activePath = function() {
+        if (showing == S) {
+            return spath;
+        } else if (showing == A) {
+            return apath;
+        } else if (showing == B) {
+            return bpath;
+        } else {
+            throw Error("Invalid 'showing' flag: not one of A, B, or S");
+        }
+    }
+
+    this.activeOutputPath = function() {
+        if (activeout == A) {
+            return apath;
+        } else if (activeout == B) {
+            return bpath;
+        } else {
+            throw Error("Invalid 'activeout' flag: not one of A or B");
+        }
     }
 
 
     // close the viewer images
     this.close = function() {
-        if (outviewer.isOpen()) {
-            outviewer.close();
+        if (aviewer.isOpen()) {
+            aviewer.close();
         }
-        if (srcviewer.isOpen()) {
-            srcviewer.close();
+        if (bviewer.isOpen()) {
+            bviewer.close();
+        }
+        if (sviewer.isOpen()) {
+            sviewer.close();
         }
     }
 
 
     // switch between viewers...
-    this.toggle = function() {
-        if (showingout) {
-            syncOutputToSource();
-            outportal.css("margin-top", "-" 
-                    + outportal.outerHeight(true) + "px");
-            imgheader.text(imgheader.text().replace("- Output", "- Source"));
-            showingout = false;
+    var me = this;
+    this.toggleSrc = function() {
+        var marginshift = 0;
+        var portalheight = aportal.outerHeight(true); 
+
+        if (showing == A || showing == B) {            
+            syncToSource();
+            marginshift = 2 * portalheight;
+            imgheader.text(imgheader.text().replace(/- \w+$/, "- Source"));
+            showing = S;
         } else {
-            syncSourceToOutput();
-            outportal.css("margin-top", "0px");            
-            imgheader.text(imgheader.text().replace("- Source", "- Output"));
-            showingout = true;
+            activeout == A ? syncToOutputA() : syncToOutputB();
+            marginshift = activeout == A ? 0 : portalheight;
+            imgheader.text(imgheader.text().replace("- Source", "- Output " + activeout));
+            showing = activeout;
         }
+        portalholder.css("margin-top", "-" + marginshift + "px");
+    }
+
+
+    // switch between viewers...
+    this.toggleAB = function() {
+        var inactive = activeout == A ? B : A;
+        var marginshift = 0;        
+        var portalheight = aportal.outerHeight(true); 
+        if (showing == S) {
+            activeout = inactive;
+        } else {
+            if (activeout == A) {
+                syncToOutputB();
+                marginshift = portalheight;
+                showing = B;
+                activeout = B;
+            } else {
+                syncToOutputA();
+                marginshift = 0;
+                showing = A;
+                activeout = A
+            }
+        }
+        imgheader.text(imgheader.text().replace(/- \w+(\s[AB])?$/, "- Output " + activeout));
+        portalholder.css("margin-top", "-" + marginshift + "px");
     }
 }
-
-
-

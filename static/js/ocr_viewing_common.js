@@ -7,12 +7,14 @@ var presetmanager = null;
 function saveState() {
     if (sdviewer) {
         var src = $("#viewerwindow").data("src");
-        var dst = $("#viewerwindow").data("dst");        
+        var outa = $("#viewerwindow").data("outa");        
+        var outb = $("#viewerwindow").data("outb");        
 
-        if (dst && src) {
+        if (outa && src) {
             var winprefix = window.location.pathname.replace(/\//g, "");
             $.cookie(winprefix + "_srcdzi", src);
-            $.cookie(winprefix + "_dstdzi", dst);
+            $.cookie(winprefix + "_outadzi", outa);
+            $.cookie(winprefix + "_outbdzi", outb);
         }
     }
 }
@@ -21,14 +23,22 @@ function loadState() {
     if (sdviewer) {
         var winprefix = window.location.pathname.replace(/\//g, "");
         var src = $.cookie(winprefix + "_srcdzi");
-        var dst = $.cookie(winprefix + "_dstdzi");
+        var outa = $.cookie(winprefix + "_outadzi");
+        var outb = $.cookie(winprefix + "_outbdzi");
 
-        if (src && dst) {
+        if (src && outa) {
             sdviewer.setSource(src);
-            sdviewer.setOutput(dst);
+            sdviewer.setOutputA(outa);
             $("#viewerwindow").data("src", src);
-            $("#viewerwindow").data("dst", dst);        
+            $("#viewerwindow").data("outa", outa);        
             $(".interact_param").attr("disabled", false);
+
+            if (outb) {
+                sdviewer.setOutputB(outb);
+                $("#viewerwindow").data("outb", outb);        
+            } else {
+                $("#toggleab").attr("disabled", true);
+            }
         }
     }
 }
@@ -92,9 +102,15 @@ $(function() {
                 );                            
         } else if (data.status == "SUCCESS") {
             element.data("src", data.results.src);
-            element.data("dst", data.results.dst);
+            if (data.results.dst.search("_b.dzi") != -1) {
+                element.data("outb", data.results.dst);
+                sdviewer.setOutputB(data.results.dst + "?" + (new Date().getTime()));
+            } else {
+                element.data("outa", data.results.dst);
+                sdviewer.setOutputA(data.results.dst + "?" + (new Date().getTime()));
+            }
+
             sdviewer.setSource(data.results.src + "?" + (new Date().getTime()));
-            sdviewer.setOutput(data.results.dst + "?" + (new Date().getTime()));
             sdviewer.setWaiting(false);
             $(".interact_param").attr("disabled", false);
         } else {
@@ -155,7 +171,8 @@ $(function() {
 
 
     // toggle the source and binary images
-    $("#togglesrc").click(sdviewer.toggle);
+    $("#togglesrc").click(sdviewer.toggleSrc);
+    $("#toggleab").click(sdviewer.toggleAB);
 
     getCropRect = function() {
         sdviewer.getCropRect();
@@ -172,7 +189,7 @@ $(function() {
 
         sdviewer.setWaiting(true);
         var params = "&src=" + $("#viewerwindow").data("src") 
-            + "&dst=" + $("#viewerwindow").data("dst")
+            + "&dst=" + sdviewer.activeOutputPath()
             + "&" + $("#optionsform").serialize();
         $.post(window.location.pathname, params, function(data) {
             $("#viewerwindow").data("jobname", data[0].job_name);
