@@ -26,6 +26,9 @@ function loadState() {
         if (src && dst) {
             sdviewer.setSource(src);
             sdviewer.setOutput(dst);
+            $("#viewerwindow").data("src", src);
+            $("#viewerwindow").data("dst", dst);        
+            $(".interact_param").attr("disabled", false);
         }
     }
 }
