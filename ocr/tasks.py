@@ -56,11 +56,10 @@ class BinarizePageTask(AbortableTask):
         grey, page_bin = converter.standard_preprocess(filepath)
         pagewidth = page_bin.dim(0)
         pageheight = page_bin.dim(1)
-        binpath = paramdict.get("dst", "").encode()
-        if not binpath:
-            base, ext = os.path.splitext(os.path.basename(filepath))
-            binpath =  "%s/bintemp/%s_%s%s" % (settings.MEDIA_ROOT, 
-                    base, uuid.uuid1(), ".png")
+        
+        binpath = utils.get_temp_ab_output_path(filepath, 
+                paramdict.get("dst", "").encode(), "bin", ".png")
+        
         pagedata = { 
             "page" : os.path.basename(filepath) ,
             "src" : None,
@@ -112,12 +111,9 @@ class SegmentPageTask(AbortableTask):
 
         pagewidth = page_seg.dim(0)
         pageheight = page_seg.dim(1)
+        segpath = utils.get_temp_ab_output_path(filepath,
+                paramdict.get("dst", "").encode(), "seg", ".png")
 
-        segpath = paramdict.get("dst", "").encode()
-        if not segpath:
-            base, ext = os.path.splitext(os.path.basename(filepath))
-            segpath =  "%s/segtemp/%s_%s%s" % (settings.MEDIA_ROOT, 
-                    base, uuid.uuid1(), ".png")
         pagedata = { 
             "page" : os.path.basename(filepath) ,
             "src" : None,

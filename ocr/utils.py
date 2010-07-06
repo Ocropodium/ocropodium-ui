@@ -10,6 +10,7 @@ import logging
 import shutil
 import tempfile
 import subprocess as sp
+import uuid
 import UserDict
 import ocropus
 import iulib
@@ -64,6 +65,32 @@ def convert_to_temp_image(imagepath, suffix="tif"):
             raise ExternalToolError(
                 "convert failed to create TIFF file with errno %d" % retcode) 
         return tmp.name
+
+
+def get_temp_ab_output_path(inpath, outpath, type, ext=".png"):
+    """
+    Get an output path appended with either _a or _b depending
+    on what the given input, output paths are.  This is so we 
+    can switch between two temp paths (and also to prevent
+    the SeaDragon viewer from caching images.
+    TODO: Make this work less horribly.
+    """
+    if not outpath:
+        base = os.path.splitext(os.path.basename(inpath))[0]
+        outpath =  "%s/%stemp/%s_%s%s" % (settings.MEDIA_ROOT, type,
+                base, uuid.uuid1(), ext)
+    aext = "_a%s" % ext
+    bext = "_b%s" % ext
+
+    if outpath.endswith(aext):
+        outpath = outpath.replace(aext, bext)
+    elif outpath.endswith(bext):
+        outpath = outpath.replace(bext, aext) 
+    else:
+        outpath = outpath.replace(ext, aext) 
+    return outpath
+
+    
 
 
 def find_file_with_basename(pathbase):
