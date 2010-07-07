@@ -79,6 +79,7 @@ def get_temp_ab_output_path(inpath, outpath, type, ext=".png"):
         base = os.path.splitext(os.path.basename(inpath))[0]
         outpath =  "%s/%stemp/%s_%s%s" % (settings.MEDIA_ROOT, type,
                 base, uuid.uuid1(), ext)
+    outpath = outpath.replace(".dzi", ".png")
     aext = "_a%s" % ext
     bext = "_b%s" % ext
 
@@ -107,12 +108,15 @@ def find_file_with_basename(pathbase):
     return pathbase
 
 
-def find_unscaled_path(path):
+def find_unscaled_path(path, strip_ab=False):
     """
     Find the non-scaled path to a temp file.
     """
     uspath = os.path.abspath(path.replace("_scaled", "", 1))
     uspath = os.path.abspath(path.replace(".dzi", ".png", 1))
+    if strip_ab:
+        uspath = os.path.abspath(path.replace("_a.png", ".png", 1)) 
+        uspath = os.path.abspath(path.replace("_b.png", ".png", 1)) 
     if not os.path.exists(uspath):
         uspath = find_file_with_basename(
                 os.path.splitext(uspath)[0])

@@ -129,7 +129,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     if request.POST.get("src"):
         path = os.path.abspath(request.POST.get("src", "").replace(
             settings.MEDIA_URL, settings.MEDIA_ROOT + "/", 1))
-        paths = [ocrutils.find_unscaled_path(path)]
+        paths = [ocrutils.find_unscaled_path(path, strip_ab=True)]
     else:
         try:
             paths = ocrutils.save_ocr_images(
