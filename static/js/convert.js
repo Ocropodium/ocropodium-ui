@@ -35,7 +35,7 @@ function rebuildModelLists(appname) {
 
 function saveState() {
     $.cookie("engine", $("input[@name=engine]:checked").attr("value"));
-    $.each(["psegmenter", "cmodel", "lmodel"], function(index, item) {
+    $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         $.cookie(item, $("select[name=" + item + "]").attr("value"));     
     });
 
@@ -54,7 +54,7 @@ function loadState() {
     if (engine) {
         $("input[value='" + engine + "']").attr("checked", true);
     }
-    $.each(["psegmenter", "cmodel", "lmodel"], function(index, item) {
+    $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         var val = $.cookie(item);
         if (val) {
             $("select[name=" + item + "]").val(val);
