@@ -173,6 +173,7 @@ function OcrPage(insertinto_id, page_id, jobname) {
         var lastyh = -1;
         var lasth = -1;
         var lastitem;
+        pdiv.removeClass("literal");
         pdiv.children(".ocr_line").each(function(lnum, item) {
             var dims = parseBoundingBoxAttr($(item).attr("bbox"));
             var y = dims[1];  // bbox x, y, w, h
@@ -192,9 +193,44 @@ function OcrPage(insertinto_id, page_id, jobname) {
         pdiv.css("height", null);
     }
 
+    var resizeToTarget = function(span, targetheight, targetwidth) {
+        var iheight = span.height();
+        var iwidth = span.width();
+        var count = 0
+        if (iheight < targetheight && iheight) {
+            //alert("grow! ih: " + iheight + " th: " + targetheight);
+            while (iheight < targetheight && iwidth < targetwidth) {
+                var cfs = parseInt(span.css("font-size").replace("px", ""));
+                span = span.css("font-size", (cfs + 1) + "px");
+                iheight = span.height();
+                count++;
+                if (count > 50) {
+                    alert("growing too long: iheight: " + iheight + " th: " + targetheight);
+                    break;
+                }
+            }
+        } else if (iheight > targetheight) {
+            while (iheight && iheight > targetheight) {
+                var cfs = parseInt(span.css("font-size").replace("px", ""));
+                span = span.css("font-size", (cfs - 1) + "px");
+                iheight = span.height();
+                alert("ih: " + iheight + " fs:" + cfs + " th: " + targetheight);
+                //alert("iheight: " + iheight + " fs: " + span.css("font-size") + " cfs: " + (cfs - 1));
+                count++;
+                if (count > 50) {
+                    alert("shrinking too long: iheight: " + iheight + " th: " + targetheight);
+                    break;
+                }
+            }
+        }
+        return span.css("font-size");
+    }
+
+
     // Horrid function to try and position lines how they would be on
     // the source material.  TODO: Make this not suck.
     this.positionByBounds = function() {
+
         var dims  = parseBoundingBoxAttr(pdiv.attr("bbox"));
         var scale = (pdiv.outerWidth(true)) / dims[2];
         var offx = pdiv.offset().left;
@@ -205,7 +241,9 @@ function OcrPage(insertinto_id, page_id, jobname) {
         var orderedheights = [];
         var orderedwidths = [];        
 
+        pdiv.addClass("literal");
         pdiv.children(".ocr_line").each(function(position, item) {
+            $(item).children("br").remove();
             var lspan = $(item);
             var linedims = parseBoundingBoxAttr(lspan.attr("bbox"));
             var x = ((linedims[0] - dims[0]) * scale) + offx;
@@ -219,31 +257,32 @@ function OcrPage(insertinto_id, page_id, jobname) {
             orderedwidths.push(w);
         });
 
+
+
         var stats = new Stats(heights);
+        var medianfs = null;
         pdiv.children(".ocr_line").each(function(position, item) {
-            var lspan = $(item);
-            var iheight = lspan.height();
-            var iwidth = lspan.width();
+            //var lspan = $(item);
+            //var iheight = lspan.height();
+            //var iwidth = lspan.width();
             
             // if 'h' is within .25% of median, use the median instead    
             var h = orderedheights[position];
+            var w = orderedwidths[position];
+            var ismedian = false;
             if ((h / stats.median - 1) < 0.25) {
                 h = stats.median;
-            }
+                ismedian = true;
+            } 
+
             // also clamp 'h' is min 3
             h = Math.max(h, 3);
-            var w = orderedwidths[position];
-            if (iheight < h && iheight) {
-                while (iheight < h && iwidth < w) {
-                    var cfs = parseInt(lspan.css("font-size").replace("px", ""));
-                    lspan = lspan.css("font-size", (cfs + 1) + "px");
-                    iheight = lspan.height();
-                }
-            } else if (iheight > h) {
-                while (iheight && iheight > h) {
-                    var cfs = parseInt(lspan.css("font-size").replace("px", ""));
-                    lspan = lspan.css("font-size", (cfs - 1) + "px");
-                    iheight = lspan.height();
+            if (medianfs != null && ismedian) {
+                $(item).css("font-size", medianfs);
+            } else {            
+                var fs = resizeToTarget($(item), h, w);
+                if (medianfs == null && ismedian) {
+                    medianfs = fs;
                 }
             }
         });       
