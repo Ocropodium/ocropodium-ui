@@ -24,8 +24,17 @@ def get_tesseract():
     """
     Try and find where Tesseract is installed.
     """
-    return sp.Popen(["which", "tesseract"], 
+    tess = sp.Popen(["which", "tesseract"], 
             stdout=sp.PIPE).communicate()[0].strip()
+    if tess and os.path.exists(tess):
+        return tess
+
+    for path in ["/usr/local/bin", "/usr/bin"]:
+        tesspath = os.path.join(path, "tesseract") 
+        if os.path.exists(tesspath):
+            return tesspath
+    # fallback, you never know...;
+    return "tesseract"
 
 
 def save_ocr_images(images, basepath, user=None, temp=True, tempname="temp"):
