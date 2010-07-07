@@ -116,16 +116,6 @@ $(function() {
     });
 
 
-    
-    $(".ocr_line").live("mouseover mouseout", function(e) {
-        if (e.type == "mouseover") {
-            $(this).css("border-color", "red");    
-        } else {
-            $(this).css("border-color", "white");     
-        }
-    });
-
-
     function onXHRLoad(event_or_response) {
         var data;
         if (event_or_response.target != null) {
