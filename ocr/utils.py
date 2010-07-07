@@ -89,15 +89,13 @@ def get_ab_output_path(inpath):
     """
     outpath = inpath
     base, ext = os.path.splitext(inpath)
-    aext = "_a"
-    bext = "_b"
 
-    if base.endswith(aext):
-        outpath = "%s_b%s" % (base[:-2], ext)
-    elif base.endswith(bext):
-        outpath = "%s_a%s" % (base[:-2], ext)
+    smatch = re.match("(.+)_(\d+)$", base)
+    if smatch:
+        pre, inc = smatch.groups()
+        outpath = "%s_%03d%s" % (pre, int(inc) + 1, ext)
     else:
-        outpath = "%s_a%s" % (base, ext)
+        outpath = "%s_001%s" % (base, ext)
     return outpath
 
     
