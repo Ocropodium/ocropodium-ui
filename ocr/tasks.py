@@ -42,9 +42,12 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
 
     logger.info(srcdzipath)
     logger.info(dstdzipath)
-    os.chmod(outpath, 0777)
-    os.chmod(dstdzipath, 0777)
-    os.chmod(srcdzipath, 0777)
+    try:
+        os.chmod(outpath, 0777)
+        os.chmod(dstdzipath, 0777)
+        os.chmod(srcdzipath, 0777)
+    except Exception:
+        pass
 
     return srcdzipath, dstdzipath
 
