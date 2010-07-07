@@ -168,10 +168,11 @@ $(function() {
         uploader.registerTextParameter("#form_lmodel"); 
     };
 
+    // load state stored from last time
+    loadState();
+
     // fetch the appropriate models...
     rebuildModelLists($("input[name=engine]:checked").val());    
 
-    // load state stored from last time
-    loadState();
 });
 
