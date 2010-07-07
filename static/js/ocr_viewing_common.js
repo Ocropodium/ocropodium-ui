@@ -115,7 +115,7 @@ $(function() {
             sdviewer.setWaiting(false);
             $(".interact_param").attr("disabled", false);
         } else {
-            element.html("<p>Oops, task finished with status: " + data.status + "</p>");
+            alert("Oops.  Task finished with bad status: " + data.status);
         }
     } 
                 
@@ -130,9 +130,11 @@ $(function() {
                 processData(element, data);    
             },
             error: function(xhr, statusText, errorThrown) {
-                element.addClass("error")
-                    .html("<h4>Http Error</h4>")
-                    .append("<div>" + errorThrown + "</div>");                
+                var msg = "Http Error: " + statusText;
+                if (errorThrown) {
+                    msg += "\n\n" + errorThrown;
+                }
+                alert(msg);
             }
         }); 
     }
