@@ -40,17 +40,33 @@
         <p>        
             Segmenter:&nbsp;
             <select id="form_segmenter" name="psegmenter">
-                <option value="SegmentPageByRAST" selected="selected">RAST</option>
-                <option value="SegmentPageByRAST1">RAST1</option>
-                <option value="SegmentPageBy1CP">1CP</option>
-                <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
-                <option value="SegmentPageByXYCUTS">XYCUTS</option>
+                <optgroup label="Basic">
+                    <option value="SegmentPageByRAST" selected="selected">RAST</option>
+                    <option value="SegmentPageByRAST1">RAST1</option>
+                    <option value="SegmentPageBy1CP">1CP</option>
+                    <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
+                    <option value="SegmentPageByXYCUTS">XYCUTS</option>
+                </optgroup>
+                {% if segpresets %}
+                    <optgroup label="Presets">
+                    {% for p in segpresets %}
+                        <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+                    {% endfor %}            
+                    </optgroup>
+                {% endif %}            
             </select>
         </p>
         <p>
             Pre-processing:&nbsp;
-            <select id="form_preprocess" name="preprocess">
-                <option value="Standard" selected="selected">Standard</option>
+            <select id="form_clean" name="clean">
+                <option value="StandardPreprocessing" selected="selected">Standard</option>
+                {% if binpresets %}
+                    <optgroup label="Presets">
+                    {% for p in binpresets %}
+                        <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+                    {% endfor %}            
+                    </optgroup>
+                {% endif %}            
             </select>
         </p>
         <p>

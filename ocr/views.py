@@ -2,6 +2,7 @@
 Basic OCR functions.  Submit OCR tasks and retrieve the result.
 """
 
+import re
 import os
 import traceback
 import uuid
@@ -17,6 +18,7 @@ from django.utils import simplejson
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
 from ocradmin.ocrmodels.models import OcrModel
+from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch 
 
 
@@ -46,6 +48,7 @@ def binarize(request):
     return _ocr_task(
         request,
         "ocr/binarize.html",
+        {},
         "Binarize",
         tasks.BinarizePageTask,
     )
@@ -60,9 +63,18 @@ def convert(request):
     Then delete the image.
     """
 
+    # add available seg and bin presets to the context
+    context = {
+        "binpresets": OcrPreset.objects.filter(
+            type="binarize").order_by("name"),
+        "segpresets": OcrPreset.objects.filter(
+            type="segment").order_by("name"),
+    }
+
     return _ocr_task(
         request,
         "ocr/convert.html",
+        context,
         "Convert",
         tasks.ConvertPageTask,
     )
@@ -78,6 +90,7 @@ def segment(request):
     return _ocr_task(
         request,
         "ocr/segment.html",
+        {},
         "Segment",
         tasks.SegmentPageTask,
     )
@@ -105,13 +118,13 @@ def components(request):
     return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
 
 
-def _ocr_task(request, template, tasktype, celerytask):
+def _ocr_task(request, template, context, tasktype, celerytask):
     """
     Generic handler for OCR tasks which run a celery job.
     """
     if not request.method == "POST":
-        return render_to_response(template, {}, 
-            context_instance=RequestContext(request))
+        return render_to_response(template, context, 
+                        context_instance=RequestContext(request))
     # save our files to the DFS and return a list of addresses
     if request.POST.get("src"):
         path = os.path.abspath(request.POST.get("src", "").replace(
@@ -247,16 +260,50 @@ def _json_or_text_response(request, json):
     return HttpResponse(result, mimetype=mimetype)
 
 
+def _get_preset_data(param):
+    """
+    Fetch a preset by primary key and return its data
+    dict for merging into OCR params.
+    """
+    pmatch = re.match("preset_(\d+)", param)
+    data = None
+    if pmatch:
+        try:
+            preset = OcrPreset.objects.get(pk=int(pmatch.groups()[0]))
+            data = preset.data
+        except OcrPreset.DoesNotExist:
+            # use the default
+            pass
+    return data
+
+
+
 def _get_best_params(postdict):
     """
     Attempt to determine the best params if not specified in
-    POST.  This is continent on data in the models table.
+    POST.  This is contingent on data in the models table.
+    TODO: Make this less horrible
     """
 
     userparams = postdict    
     userparams["engine"] = postdict.get("engine", "tesseract")
-    userparams["clean"] = postdict.get("clean", "StandardPreprocessing")
-    userparams["psegmenter"] = postdict.get("psegmenter", "SegmentPageByRAST")
+
+    # get the bin and seg params.  These are either dicts or default strings
+    segparam = postdict.get("psegmenter", "SegmentPageByRAST")
+    segdata = _get_preset_data(segparam)
+    if segdata:
+        userparams.update(segdata)
+    else:
+        userparams["psegmenter"] = segparam
+
+    binparam = postdict.get("clean", "StandardPreprocessing")
+    bindata = _get_preset_data(binparam)
+    if bindata:
+        userparams.update(bindata)
+    else:
+        userparams["clean"] = binparam
+
+    # get the lmodel/cmodel, either model object paths or defaults
     for modparam in ("cmodel", "lmodel"):
         try:
             model = OcrModel.objects.get(name=userparams.get(modparam, "???"))

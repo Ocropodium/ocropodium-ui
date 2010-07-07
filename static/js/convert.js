@@ -162,6 +162,7 @@ $(function() {
     uploader.onUploadsStarted = function(e) {
         $("#pageout").html("");
         uploader.registerTextParameter("input[@name=engine]:checked"); 
+        uploader.registerTextParameter("#form_clean"); 
         uploader.registerTextParameter("#form_segmenter"); 
         uploader.registerTextParameter("#form_cmodel"); 
         uploader.registerTextParameter("#form_lmodel"); 
