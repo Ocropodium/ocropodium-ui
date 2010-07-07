@@ -104,12 +104,13 @@ $(function() {
             element.data("src", data.results.src);
             if (data.results.dst.search("_b.dzi") != -1) {
                 element.data("outb", data.results.dst);
-                sdviewer.setOutputB(data.results.dst + "?" + (new Date().getTime()));
+                //sdviewer.setOutputB(data.results.dst + "?" + (new Date().getTime()));
             } else {
                 element.data("outa", data.results.dst);
-                sdviewer.setOutputA(data.results.dst + "?" + (new Date().getTime()));
+                //sdviewer.setOutputA(data.results.dst + "?" + (new Date().getTime()));
             }
-
+//            alert("set primary buffer: " + data.results.dst);
+            sdviewer.setOutput(data.results.dst + "?" + (new Date().getTime()));
             sdviewer.setSource(data.results.src + "?" + (new Date().getTime()));
             sdviewer.setWaiting(false);
             $(".interact_param").attr("disabled", false);

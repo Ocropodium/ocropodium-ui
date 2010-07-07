@@ -62,15 +62,19 @@ function ImageWindow(container_id, config) {
         .addClass("overlay")
         .attr("id", "overlayfg")
         .height(height)
+        .css("float", "left")
+        .css("margin-top", height + "px")
+        .css("z-index", "100")
+        .css("width", $("#" + container_id).width())
         .css("position", "relative");
 
 
     // overlay a spinner thing when waiting for something
     // to happen
     this.setWaiting = function(waiting) {
-        overlay.css("top", waiting
-                ? "-" + ((2 * height) + 20) + "px"
-                : "0px");
+        overlay.css("margin-top", waiting
+                ? "0px" 
+                : height + "px");
     }
 
 
@@ -97,12 +101,9 @@ function ImageWindow(container_id, config) {
     // them when toggling the visible viewer, otherwise we get some
     // kind of dodgy feedback between animation events.
     function syncViewer(viewer, others) {
-        if (!viewer.isOpen()) {
-            return;
-        }
-        for (var other in others) {
-            other.viewport.zoomTo(viewer.viewport.getZoom(), true);
-            other.viewport.panTo(viewer.viewport.getCenter(), true);
+        for (i in others) {
+            others[i].viewport.zoomTo(viewer.viewport.getZoom(), true);
+            others[i].viewport.panTo(viewer.viewport.getCenter(), true);
         }
     }
 
@@ -140,12 +141,12 @@ function ImageWindow(container_id, config) {
 
     // add HTML to the document and start up the seadragon viewers
     this.init = function() {
-        imgwindow.append(imgheader).append(viewport.append(
+        imgwindow.append(imgheader).append(
+            viewport.append(overlay).append(
             portalholder
                 .append(aportal)
                 .append(bportal)
                 .append(sportal)
-                .append(overlay)
             )
         );
 
@@ -177,9 +178,19 @@ function ImageWindow(container_id, config) {
         setViewerPath(sviewer, dzipath);
     }
 
+    this.setOutput = function(dzipath) {
+        bpath = apath ? apath : dzipath;
+        apath = dzipath;
+        setViewerPath(aviewer, apath);
+        setViewerPath(bviewer, bpath);
+    }
+
     this.setOutputA = function(dzipath) {
         apath = dzipath;
         setViewerPath(aviewer, dzipath);
+        if (!bviewer.isOpen()) {
+            setViewerPath(bviewer, dzipath);
+        } 
     }
 
     this.setOutputB = function(dzipath) {
@@ -233,7 +244,7 @@ function ImageWindow(container_id, config) {
         if (showing == A || showing == B) {            
             syncToSource();
             marginshift = 2 * portalheight;
-            imgheader.text(imgheader.text().replace(/- \w+$/, "- Source"));
+            imgheader.text(imgheader.text().replace(/- \w+(\s[AB])?$/, "- Source"));
             showing = S;
         } else {
             activeout == A ? syncToOutputA() : syncToOutputB();
