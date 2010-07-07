@@ -40,6 +40,7 @@ def save_ocr_images(images, basepath, user=None, temp=True, tempname="temp"):
     basepath = os.path.join(basepath, datetime.now().strftime("%Y%m%d%H%M%S"))
     if not os.path.exists(basepath):
         os.makedirs(basepath, 0777)
+        os.chmod(basepath, 0777)
 
     for _, handle in images:
         path = os.path.join(basepath, handle.name)
@@ -47,6 +48,8 @@ def save_ocr_images(images, basepath, user=None, temp=True, tempname="temp"):
             for chunk in handle.chunks():
                 outfile.write(chunk)
             paths.append(path)
+            os.chmod(path, 0777)
+
     return paths
 
 
