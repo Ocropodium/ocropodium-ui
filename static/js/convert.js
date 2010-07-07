@@ -82,10 +82,6 @@ $(function() {
     var uploader = null;
 
 
-    $(".ocr_line").live("click", function(e) {
-            //alert("clicked!");
-    });
-
     $("#singleupload").change(function(event) {
         if ($(this).val() == "") {
             return false;
@@ -99,7 +95,7 @@ $(function() {
         data : { _iframe: 1 },
         dataType: "json",
         success: function(data, responseText, xhr) {
-            $("#pageout").html("");
+            //$("#pageout").html("");
             onXHRLoad(data, responseText, xhr);
             $("#singleupload").val("");
         },
