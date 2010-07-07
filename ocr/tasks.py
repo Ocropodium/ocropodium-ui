@@ -15,6 +15,40 @@ from ocradmin.vendor import deepzoom
 import iulib
 
 
+def make_deepzoom_proxies(logger, inpath, outpath, type, params):
+    """
+    Make deepzoom versions of a source and output.
+    """
+    # now create deepzoom images of both source
+    # and destination...
+    creator = deepzoom.ImageCreator(tile_size=256, tile_overlap=2, tile_format="png",
+                            image_quality=1, resize_filter="bicubic")
+
+    # source DZI path gets passed in again so we don't have to remake it
+    srcdzipath = utils.media_url_to_path(params.get("src"))
+    if srcdzipath is None or not os.path.exists(srcdzipath):
+        srcdzipath = "%s.dzi" % os.path.splitext(inpath)[0]
+        creator.create(inpath, srcdzipath)
+
+
+    # get an A or B output path that DOESN'T match the one
+    # being passed in
+    dstdzipath = utils.media_url_to_path(params.get("dst"))
+    if dstdzipath is None or not os.path.exists(dstdzipath):            
+        dstdzipath = "%s_a.dzi" % os.path.splitext(outpath)[0]
+    else:
+        dstdzipath = utils.get_ab_output_path(dstdzipath)
+    creator.create(outpath, dstdzipath)
+
+    logger.info(srcdzipath)
+    logger.info(dstdzipath)
+    os.chmod(outpath, 0777)
+    os.chmod(dstdzipath, 0777)
+    os.chmod(srcdzipath, 0777)
+
+    return srcdzipath, dstdzipath
+
+
 class ConvertPageTask(AbortableTask):
     """
     Convert an image of text into some JSON.  This is done using
@@ -55,9 +89,8 @@ class BinarizePageTask(AbortableTask):
         grey, page_bin = converter.standard_preprocess(filepath)
         pagewidth = page_bin.dim(0)
         pageheight = page_bin.dim(1)
-        
-        binpath = utils.get_temp_ab_output_path(filepath, 
-                paramdict.get("dst", "").encode(), "bin", ".png")
+        binpath = utils.get_media_output_path(filepath, "bin", ".png")
+        iulib.write_image_binary(binpath, page_bin)
         
         pagedata = { 
             "page" : os.path.basename(filepath) ,
@@ -65,29 +98,14 @@ class BinarizePageTask(AbortableTask):
             "dst" : None,
             "box": [0, 0, pagewidth, pageheight]
         }
-        logger.info("Converting: %s" % filepath)
-        logger.info("To: %s" % binpath)
-        iulib.write_image_binary(binpath, page_bin)
-
-        # now create deepzoom images of both source
-        # and destination...
-        srcdzipath = "%s.dzi" % os.path.splitext(filepath)[0]
-        dstdzipath = "%s.dzi" % os.path.splitext(binpath)[0]
-
-        creator = deepzoom.ImageCreator(tile_size=256, tile_overlap=2, tile_format="png",
-                                image_quality=1, resize_filter="bicubic")
-        creator.create(filepath, srcdzipath)
-        creator.create(binpath, dstdzipath)
-        logger.info(srcdzipath)
-        logger.info(dstdzipath)
-        pagedata["src"] = utils.media_path_to_url(srcdzipath)
-        pagedata["dst"] = utils.media_path_to_url(dstdzipath)
-
-        os.chmod(binpath, 0777)
-        os.chmod(dstdzipath, 0777)
-        os.chmod(srcdzipath, 0777)
+        
+        src, dst = make_deepzoom_proxies(logger, filepath, binpath, "bin", paramdict)
+        pagedata["png"] = utils.media_path_to_url(filepath)
+        pagedata["src"] = utils.media_path_to_url(src)
+        pagedata["dst"] = utils.media_path_to_url(dst)
     
         return pagedata
+
 
 
 class SegmentPageTask(AbortableTask):
@@ -115,34 +133,21 @@ class SegmentPageTask(AbortableTask):
 
         pagewidth = page_seg.dim(0)
         pageheight = page_seg.dim(1)
-        segpath = utils.get_temp_ab_output_path(filepath,
-                paramdict.get("dst", "").encode(), "seg", ".png")
+        segpath = utils.get_media_output_path(filepath, "seg", ".png")
+        iulib.write_image_packed(segpath, page_seg)
 
         pagedata = { 
             "page" : os.path.basename(filepath) ,
+            "png" : None,
             "src" : None,
             "dst" : None,
             "box": [0, 0, pagewidth, pageheight]
         }
-        iulib.write_image_packed(segpath, page_seg)
 
-        # now create deepzoom images of both source
-        # and destination...
-        srcdzipath = "%s.dzi" % os.path.splitext(filepath)[0]
-        dstdzipath = "%s.dzi" % os.path.splitext(segpath)[0]
-
-        creator = deepzoom.ImageCreator(tile_size=256, tile_overlap=2, tile_format="png",
-                                image_quality=1, resize_filter="bicubic")
-        creator.create(filepath, srcdzipath)
-        creator.create(segpath, dstdzipath)
-        logger.info(srcdzipath)
-        logger.info(dstdzipath)
-        pagedata["src"] = utils.media_path_to_url(srcdzipath)
-        pagedata["dst"] = utils.media_path_to_url(dstdzipath)
-
-        os.chmod(segpath, 0777)
-        os.chmod(dstdzipath, 0777)
-        os.chmod(srcdzipath, 0777)
+        src, dst = make_deepzoom_proxies(logger, filepath, segpath, "seg", paramdict)
+        pagedata["png"] = utils.media_path_to_url(filepath)
+        pagedata["src"] = utils.media_path_to_url(src)
+        pagedata["dst"] = utils.media_path_to_url(dst)
     
         return pagedata
 

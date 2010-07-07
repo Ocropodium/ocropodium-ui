@@ -67,7 +67,16 @@ def convert_to_temp_image(imagepath, suffix="tif"):
         return tmp.name
 
 
-def get_temp_ab_output_path(inpath, outpath, type, ext=".png"):
+def get_media_output_path(inpath, type, ext=".png"):
+    """
+    Get an output path for a given type of input file.
+    """
+    base = os.path.splitext(os.path.basename(inpath))[0] 
+    return  "%s/%stemp/%s_%s%s" % (settings.MEDIA_ROOT, type,
+                base, uuid.uuid1(), ext)    
+
+
+def get_ab_output_path(inpath):
     """
     Get an output path appended with either _a or _b depending
     on what the given input, output paths are.  This is so we 
@@ -75,20 +84,17 @@ def get_temp_ab_output_path(inpath, outpath, type, ext=".png"):
     the SeaDragon viewer from caching images.
     TODO: Make this work less horribly.
     """
-    if not outpath:
-        base = os.path.splitext(os.path.basename(inpath))[0]
-        outpath =  "%s/%stemp/%s_%s%s" % (settings.MEDIA_ROOT, type,
-                base, uuid.uuid1(), ext)
-    outpath = outpath.replace(".dzi", ".png")
-    aext = "_a%s" % ext
-    bext = "_b%s" % ext
+    outpath = inpath
+    base, ext = os.path.splitext(inpath)
+    aext = "_a"
+    bext = "_b"
 
-    if outpath.endswith(aext):
-        outpath = outpath.replace(aext, bext)
-    elif outpath.endswith(bext):
-        outpath = outpath.replace(bext, aext) 
+    if base.endswith(aext):
+        outpath = "%s_b%s" % (base, ext)
+    elif base.endswith(bext):
+        outpath = "%s_a%s" % (base, ext)
     else:
-        outpath = outpath.replace(ext, aext) 
+        outpath = "%s_a%s" % (base, ext)
     return outpath
 
     
@@ -162,16 +168,19 @@ def media_url_to_path(url):
     """
     Substitute the MEDIA_URL for the MEDIA_ROOT.
     """
-    url = os.path.abspath(url)
-    return url.replace(settings.MEDIA_URL, settings.MEDIA_ROOT, 1)
+    if url:
+        url = os.path.abspath(url)
+        url = url.replace(settings.MEDIA_URL, settings.MEDIA_ROOT + "/", 1) 
+        return os.path.abspath(url)
 
 
 def media_path_to_url(path):
     """
     Substitute the MEDIA_ROOT for the MEDIA_URL.
     """
-    path = os.path.abspath(path)
-    return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
+    if path:
+        path = os.path.abspath(path)
+        return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
 
 
 def output_to_plain_text(jsondata):

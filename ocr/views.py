@@ -126,16 +126,14 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         return render_to_response(template, context, 
                         context_instance=RequestContext(request))
     # save our files to the DFS and return a list of addresses
-    if request.POST.get("src"):
-        path = os.path.abspath(request.POST.get("src", "").replace(
-            settings.MEDIA_URL, settings.MEDIA_ROOT + "/", 1))
-        paths = [ocrutils.find_unscaled_path(path, strip_ab=True)]
+    if request.POST.get("png"):
+        paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
     else:
         try:
             paths = ocrutils.save_ocr_images(
                     request.FILES.iteritems(), settings.MEDIA_ROOT, 
                     temp=True, user=request.user.username)
-        except AppException, err:
+        except IndexError, e: #AppException, err:
             return HttpResponse(simplejson.dumps({"error": err.message}),
                 mimetype="application/json")
     if not paths:
@@ -162,31 +160,33 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             celerytask.apply_async(
                 args=(path.encode(), userparams),
                     task_id=tid, loglevel=60, retries=2))            
-    try:
-        # aggregate the results
-        out = []
-        for async in asynctasks:
-            result = async.wait() if _should_wait(request) else async.result
-            out.append({
-                "job_name": async.task_id,
-                "status": async.status,
-                "results": result,
-            })
-        # should be past the danger zone now...
-        transaction.commit()
-        return _json_or_text_response(request, out)
+    #try:
+    # aggregate the results
+    out = []
+    for async in asynctasks:
+        result = async.wait() if _should_wait(request) else async.result
+        out.append({
+            "job_name": async.task_id,
+            "status": async.status,
+            "results": result,
+        })
+    # should be past the danger zone now...
+    transaction.commit()
+    return _json_or_text_response(request, out)
 
-    except StandardError, err:        
-        transaction.rollback()
-        return HttpResponse(
-            simplejson.dumps({
-                "error": err.message, 
-                "trace": "\n".join(
-                    [ "\t".join(str(t)) for t in traceback.extract_stack()]
-                )
-            }),
-            mimetype="application/json"
-        ) 
+
+    #except Exception, err:
+    print err
+    transaction.rollback()
+    return HttpResponse(
+        simplejson.dumps({
+            "error": err.message, 
+            "trace": "\n".join(
+                [ "\t".join(str(t)) for t in traceback.extract_stack()]
+            )
+        }),
+        mimetype="application/json"
+    ) 
 
 
 
@@ -321,10 +321,5 @@ def _get_best_params(postdict):
                 userparams[modparam] = model.file.path            
             except IndexError:
                 userparams[modparam] = "???" 
-
-    if userparams.get("dst"):
-        path = userparams.get("dst").replace(settings.MEDIA_URL,
-                settings.MEDIA_ROOT + "/")
-        userparams["dst"] = ocrutils.find_unscaled_path(path)
 
     return userparams    

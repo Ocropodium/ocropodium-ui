@@ -6,12 +6,14 @@ var presetmanager = null;
 
 function saveState() {
     if (sdviewer) {
+        var png = $("#viewerwindow").data("png");
         var src = $("#viewerwindow").data("src");
         var outa = $("#viewerwindow").data("outa");        
         var outb = $("#viewerwindow").data("outb");        
 
-        if (outa && src) {
+        if (outa && png) {
             var winprefix = window.location.pathname.replace(/\//g, "");
+            $.cookie(winprefix + "_srcpng", png);
             $.cookie(winprefix + "_srcdzi", src);
             $.cookie(winprefix + "_outadzi", outa);
             $.cookie(winprefix + "_outbdzi", outb);
@@ -22,13 +24,15 @@ function saveState() {
 function loadState() {
     if (sdviewer) {
         var winprefix = window.location.pathname.replace(/\//g, "");
+        var png = $.cookie(winprefix + "_srcpng");
         var src = $.cookie(winprefix + "_srcdzi");
         var outa = $.cookie(winprefix + "_outadzi");
         var outb = $.cookie(winprefix + "_outbdzi");
 
-        if (src && outa) {
+        if (png && outa) {
             sdviewer.setSource(src);
             sdviewer.setOutputA(outa);
+            $("#viewerwindow").data("png", png);
             $("#viewerwindow").data("src", src);
             $("#viewerwindow").data("outa", outa);        
             $(".interact_param").attr("disabled", false);
@@ -101,6 +105,7 @@ $(function() {
                         .append("<pre>" + data.trace + "</pre>")                                
                 );                            
         } else if (data.status == "SUCCESS") {
+            element.data("png", data.results.png);
             element.data("src", data.results.src);
             if (data.results.dst.search("_b.dzi") != -1) {
                 element.data("outb", data.results.dst);
@@ -191,12 +196,23 @@ $(function() {
 
 
         sdviewer.setWaiting(true);
-        var params = "&src=" + $("#viewerwindow").data("src") 
+        var params = "src=" + $("#viewerwindow").data("src") 
+            + "&png=" + $("#viewerwindow").data("png") 
             + "&dst=" + sdviewer.activeOutputPath()
             + "&" + $("#optionsform").serialize();
-        $.post(window.location.pathname, params, function(data) {
-            $("#viewerwindow").data("jobname", data[0].job_name);
-            pollForResults($("#viewerwindow"));
+        $.ajax({
+            url: window.location.pathname,
+            type: "POST",
+            data: params, 
+            dataType: "text",
+            success: function(data) {
+                data = $.parseJSON(data);
+                $("#viewerwindow").data("jobname", data[0].job_name);
+                pollForResults($("#viewerwindow"));
+            },
+            error: function(xhr, errorResponse, errorThrown) {
+                alert("XHR failed: " + errorResponse);
+            }
         });
     });
 
