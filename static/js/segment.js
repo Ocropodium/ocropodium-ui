@@ -34,11 +34,13 @@ function reinitParams(binselect) {
     if (params.length) {
         pdiv = $("<div></div>").attr("class", "compparam");
         $.each(params, function(index, param) {
+            var paramname = binselect.val() + "__" + param.name;
             var plabel = paramlabel.clone()
                 .attr("foo", binselect.val() + "_option")
                 .text(param.name);
             var pinput = paraminput.clone()
-                .attr("name", binselect.val() + "__" + param.name)
+                .attr("id", paramname)
+                .attr("name", paramname)
                 .attr("value", param.value);
             pdiv.append(plabel).append(pinput);
             binselect.after(pdiv);
