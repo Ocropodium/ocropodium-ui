@@ -87,7 +87,7 @@ $(function() {
     // Process the data completed results data... in this case
     // set the viewer source and output paths
     function processData(element, data) {
-        if (!data || data.status == "PENDING") {
+        if (!data || !data.status || data.status == "PENDING") {
             setTimeout(function() {
                 pollForResults(element);
                 }, 500);
