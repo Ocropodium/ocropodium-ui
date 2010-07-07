@@ -115,8 +115,8 @@ $(function() {
                 //sdviewer.setOutputA(data.results.dst + "?" + (new Date().getTime()));
             }
 //            alert("set primary buffer: " + data.results.dst);
-            sdviewer.setOutput(data.results.dst + "?" + (new Date().getTime()));
-            sdviewer.setSource(data.results.src + "?" + (new Date().getTime()));
+            sdviewer.setOutput(data.results.dst);
+            sdviewer.setSource(data.results.src);
             sdviewer.setWaiting(false);
             $(".interact_param").attr("disabled", false);
         } else {
