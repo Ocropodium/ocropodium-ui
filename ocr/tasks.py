@@ -68,7 +68,6 @@ class BinarizePageTask(AbortableTask):
         logger.info("Converting: %s" % filepath)
         logger.info("To: %s" % binpath)
         iulib.write_image_binary(binpath, page_bin)
-        os.chmod(binpath, 0777)
 
         # now create deepzoom images of both source
         # and destination...
@@ -141,7 +140,7 @@ class SegmentPageTask(AbortableTask):
         pagedata["src"] = utils.media_path_to_url(srcdzipath)
         pagedata["dst"] = utils.media_path_to_url(dstdzipath)
 
-        os.chmod(binpath, 0777)
+        os.chmod(segpath, 0777)
         os.chmod(dstdzipath, 0777)
         os.chmod(srcdzipath, 0777)
     
