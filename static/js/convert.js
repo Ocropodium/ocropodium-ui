@@ -61,14 +61,14 @@ function loadState() {
         }
     });
 
-    var jobnames = $.cookie("jobnames");
+    /*var jobnames = $.cookie("jobnames");
     if (jobnames) {
         var joblist = jobnames.split(",");
         $.each(joblist, function(index, jobname) {
             pageobjects[index] = new OcrPage("pageout", index, jobname);
             pageobjects[index].pollForResults();            
         });
-    }
+    }*/
 }
 
 // save state on leaving the page... at least try to...
