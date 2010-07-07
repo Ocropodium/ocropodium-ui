@@ -99,6 +99,7 @@ $(function() {
         data : { _iframe: 1 },
         dataType: "json",
         success: function(data, responseText, xhr) {
+            $("#pageout").html("");
             onXHRLoad(data, responseText, xhr);
             $("#singleupload").val("");
         },
