@@ -182,7 +182,8 @@ $(function() {
     // refrwesh on compparm enter
     $(".compparam > input").live("keydown", function(event) {
         if (event.keyCode == 13) {
-            refreshImage();            
+           refreshImage();            
+           return false;
         }
     });
 

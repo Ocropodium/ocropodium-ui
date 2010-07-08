@@ -118,6 +118,14 @@ def components(request):
     return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
 
 
+def test(request):
+    """
+    Dummy action for running JS unit tests.  Probably needs to
+    be put somewhere else.
+    """
+    return render_to_response("ocr/test.html", {})
+
+
 def _ocr_task(request, template, context, tasktype, celerytask):
     """
     Generic handler for OCR tasks which run a celery job.
@@ -133,7 +141,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             paths = ocrutils.save_ocr_images(
                     request.FILES.iteritems(), settings.MEDIA_ROOT, 
                     temp=True, user=request.user.username)
-        except IndexError, e: #AppException, err:
+        except AppException, err:
             return HttpResponse(simplejson.dumps({"error": err.message}),
                 mimetype="application/json")
     if not paths:

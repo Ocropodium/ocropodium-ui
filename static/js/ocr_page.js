@@ -205,7 +205,7 @@ function OcrPage(insertinto_id, page_id, jobname) {
                 iheight = span.height();
                 count++;
                 if (count > 50) {
-                    alert("growing too long: iheight: " + iheight + " th: " + targetheight);
+                    //alert("growing too long: iheight: " + iheight + " th: " + targetheight);
                     break;
                 }
             }
@@ -214,11 +214,11 @@ function OcrPage(insertinto_id, page_id, jobname) {
                 var cfs = parseInt(span.css("font-size").replace("px", ""));
                 span = span.css("font-size", (cfs - 1) + "px");
                 iheight = span.height();
-                alert("ih: " + iheight + " fs:" + cfs + " th: " + targetheight);
+                //alert("ih: " + iheight + " fs:" + cfs + " th: " + targetheight);
                 //alert("iheight: " + iheight + " fs: " + span.css("font-size") + " cfs: " + (cfs - 1));
                 count++;
                 if (count > 50) {
-                    alert("shrinking too long: iheight: " + iheight + " th: " + targetheight);
+                    //alert("shrinking too long: iheight: " + iheight + " th: " + targetheight);
                     break;
                 }
             }
