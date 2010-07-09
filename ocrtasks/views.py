@@ -43,47 +43,6 @@ def index(request):
 
 
 @login_required
-def listdata(request):
-    """
-    Do it right this time.
-    """
-    if not request.is_ajax() and not request.GET.get("json"):
-        return render_to_response("ocrtasks/list2.html", {}, 
-                context_instance=RequestContext(request))    
-
-    alltasks = task_query(request.GET.copy())
-    paginator = Paginator(alltasks, PER_PAGE)
-
-    # Make sure page request is an int. If not, deliver first page.
-    try:
-        page = int(request.GET.get('page', '1'))
-    except ValueError:
-        page = 1
-    
-    # If page request (9999) is out of range, deliver last page of results.
-    try:
-        tasks = paginator.page(page)
-    except (EmptyPage, InvalidPage):
-        tasks = paginator.page(paginator.num_pages)
-    
-    response = HttpResponse(mimetype="application/json")
-    json_serializer = serializers.get_serializer("json")()
-    json_serializer.serialize(tasks.object_list, 
-            excludes=("args", "kwargs",),
-            relations={
-                "batch": {
-                    "relations": {
-                        "user": {
-                            "fields": ("username",),
-                        }
-                    }
-                }
-            },
-            ensure_ascii=False, stream=response)
-    return response
-
-
-@login_required
 def list(request):
     """
     List tasks.
