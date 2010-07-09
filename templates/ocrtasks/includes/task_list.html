@@ -3,8 +3,8 @@
 
 <form class="table_form" id="task_list_form" method="GET" action="/ocrtasks/list">
     <input type="hidden" id="task_order" name="order" value="{{order}}" />
-    <input type="hidden" id="task_page" name="page" value="{{page}}" />
-    {% if tasks %}
+    <input type="hidden" id="page" name="page" value="{{ tasks.number }}" />
+    {% if tasks.object_list %}
         <table id="task_list" class="info_table" cellspacing="0" cellpadding="0">
             <tr class="header_row">
             {% for field in fields %}
@@ -12,9 +12,9 @@
             {% endfor %}
             <th colspan="2"></th>
             </tr>
-            {% for cm in tasks %}
+            {% for cm in tasks.object_list %}
             <tr class="task_item {{cm.status|lower}}" id="task_{{cm.pk}}">                
-                <td>{{cm.page}}</td>        
+                <td>{{cm.page_name}}</td>        
                 <td>{{cm.batch.user}}</td>
                 <td>{{cm.updated_on|date:"d-m-Y H:i"}}</td>        
                 <td>{{cm.status}}</td>        
@@ -32,8 +32,24 @@
     {% else %}
         No tasks found.
     {% endif %}
-</form>
 
+    <div class="pagination">
+        <span class="step_links">
+            {% if tasks.has_previous %}
+                <a href="/ocrtasks/list?page={{ tasks.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ tasks.number }} of {{ tasks.paginator.num_pages }} &nbsp;
+            </span>
+
+            {% if tasks.has_next %}
+                <a href="/ocrtasks/list?page={{ tasks.next_page_number }}">Next</a>
+            {% endif %}
+        </span>
+    </div>
+
+</form>
 
 
 

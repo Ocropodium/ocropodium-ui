@@ -9,13 +9,24 @@
         }
 </style>
 
-{% endblock %}
-
-{% block innercontent %}
-
 <script type="text/javascript">
     
 var REFRESH_TIMEOUT = -1;
+
+
+// Read a page's GET URL variables and return them as an associative array.
+function getUrlVars(url) {
+    url = url ? url :  window.location.href;
+    var vars = [], hash;
+    var hashes = url.slice(url.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
 
 $(document).ready(function() {
 
@@ -24,16 +35,27 @@ $(document).ready(function() {
 
     // sort table on headers
     $(".sort_table").live("click", function(e) {
-        $("#tasklist").load($(this).attr("href") + "&" + 
-            $("#task_filter_form").serialize() + "&" + 
-            $("#task_list_controls_form").serialize()     
-        ); 
+        $("input[name='order']").attr(
+            "value",
+            getUrlVars($(this).attr("href"))["order"]
+        );
+        reloadTable();
+        return false;
+    });
+
+    $(".step_links > a").live("click", function(e) {
+        $("input[name='page']").attr(
+            "value",
+            getUrlVars($(this).attr("href"))["page"]
+        );
+        reloadTable();
         return false;
     });
 
     function scheduleReload() {
         if ($("#autorefresh").attr("checked")) {
-            REFRESH_TIMEOUT = setTimeout(reloadTable, Math.abs($("#autorefresh_time").val()) * 1000);
+            REFRESH_TIMEOUT = setTimeout(reloadTable, 
+                    Math.abs($("#autorefresh_time").val()) * 1000);
         }
     }
 
@@ -48,7 +70,6 @@ $(document).ready(function() {
         );
         scheduleReload();
     }
-    //"&order=" + $("#task_order").val() + "&page=" + $("#task_page").val()   
 
     $("#autorefresh").change(function(e) {
         $("#autorefresh_time").attr("disabled", !$(this).attr("checked"));
@@ -81,6 +102,10 @@ $(document).ready(function() {
 });
 
 </script>
+
+{% endblock %}
+
+{% block innercontent %}
 
 
 

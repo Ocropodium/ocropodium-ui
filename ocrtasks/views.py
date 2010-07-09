@@ -5,11 +5,14 @@ and updated by it's subsequent signals.
 
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.db.models import Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from ocradmin.ocrtasks.models import OcrTask
+
+PER_PAGE = 20
 
 
 def task_query(params):
@@ -18,7 +21,7 @@ def task_query(params):
     """
     order = [x for x in params.getlist("order") if x != ""] or ["created_on"]
     status = params.getlist("status")
-    query = Q()
+    query =  Q()
     if status and "ALL" not in status:
         query = Q(status__in=status)
     for key, val in params.items():
@@ -27,7 +30,8 @@ def task_query(params):
         if key == "status" or not val:
             continue
         query = query & Q(**{str(key): str(val)})
-    return OcrTask.objects.filter(query).order_by(*order)
+    return OcrTask.objects.select_related().filter(query).order_by(*order)
+
 
 
 @login_required
@@ -36,6 +40,47 @@ def index(request):
     Default view.
     """
     return list(request)
+
+
+@login_required
+def listdata(request):
+    """
+    Do it right this time.
+    """
+    if not request.is_ajax() and not request.GET.get("json"):
+        return render_to_response("ocrtasks/list2.html", {}, 
+                context_instance=RequestContext(request))    
+
+    alltasks = task_query(request.GET.copy())
+    paginator = Paginator(alltasks, PER_PAGE)
+
+    # Make sure page request is an int. If not, deliver first page.
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+    
+    # If page request (9999) is out of range, deliver last page of results.
+    try:
+        tasks = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        tasks = paginator.page(paginator.num_pages)
+    
+    response = HttpResponse(mimetype="application/json")
+    json_serializer = serializers.get_serializer("json")()
+    json_serializer.serialize(tasks.object_list, 
+            excludes=("args", "kwargs",),
+            relations={
+                "batch": {
+                    "relations": {
+                        "user": {
+                            "fields": ("username",),
+                        }
+                    }
+                }
+            },
+            ensure_ascii=False, stream=response)
+    return response
 
 
 @login_required
@@ -61,11 +106,23 @@ def list(request):
     if request.GET.get("autorefresh_time"):
         autorf_time = request.GET.get("autorefresh_time")
     
-    fields = ["page", "batch__user", "updated_on", "status"]
+    fields = ["page_name", "batch__user", "updated_on", "status"]
     allstatus = False if len(selected) > 1 else ("ALL" in selected)
     # add a 'invert token' if we're ordering by the same field again
     fields = ["-%s" % x if x in order else x for x in fields]
-    tasks = task_query(params)
+    alltasks = task_query(params)
+    paginator = Paginator(alltasks, PER_PAGE) 
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+    
+    # If page request (9999) is out of range, deliver last page of results.
+    try:
+        tasks = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        tasks = paginator.page(paginator.num_pages)
+    
     context = { 
             "tasks": tasks, 
             "fields": fields, 

@@ -40,7 +40,7 @@ class OcrTask(models.Model):
     batch = models.ForeignKey(OcrBatch)
     task_id = models.CharField(max_length=100)
     task_name = models.CharField(max_length=100)
-    page = models.CharField(max_length=255)
+    page_name = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     args = fields.PickledObjectField(blank=True, null=True)
     kwargs = fields.PickledObjectField(blank=True, null=True)
