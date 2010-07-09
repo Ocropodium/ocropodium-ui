@@ -138,7 +138,7 @@ $(function() {
 
         $.each(data, function(pagenum, pageresults) {
             pageobjects[pagenum] = new OcrPage("pageout", pagenum, pageresults.job_name);
-            pageobjects[pagenum].pollForResults(250 * data.length);
+            pageobjects[pagenum].pollForResults((250 * data.length) + (pagenum * 250));
         }); 
     };
 
