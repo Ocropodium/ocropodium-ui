@@ -1,4 +1,11 @@
 
+#filter_head.waiting {
+    padding-right: 20px;
+    background-image: url("/static/ajax-loader-hz2.gif"),
+    background-position: right center;
+    background-repeat: no-repeat;
+}
+
 #task_list_controls {
     font-size: 0.9em;
     color: #999999;
@@ -50,4 +57,7 @@
     margin-right: 10px;
 }
 
+.pagination {
+    float: right;
 
+}
