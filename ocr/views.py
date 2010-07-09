@@ -162,7 +162,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     for path in paths:
         tid = "%s::%s" % (os.path.basename(path), uuid.uuid1())
         ocrtask = OcrTask(task_id=tid, batch=batch, 
-                page=os.path.basename(path), status="INIT")
+                page_name=os.path.basename(path), status="INIT")
         ocrtask.save()
         asynctasks.append(
             celerytask.apply_async(
