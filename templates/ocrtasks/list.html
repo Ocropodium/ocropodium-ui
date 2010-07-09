@@ -89,11 +89,20 @@ $(document).ready(function() {
     });    
 
     // show new in a dialog...
-    $(".show_task_link").live("click", function(e) {
+    $(".show_task").live("click", function(e) {
             $("#dialog_box").dialog(
                 {width:600, height:500, title: $(this).attr("title")}
             ).load($(this).attr("href"));
             return false;
+    });
+
+    // show new in a dialog...
+    $(".revoke_task").live("click", function(e) {
+        $.post({
+            url: $(this).attr("href"),
+            success: reloadTable,
+        });
+        return false;
     });
 
     // start the timer (no not) for next reload

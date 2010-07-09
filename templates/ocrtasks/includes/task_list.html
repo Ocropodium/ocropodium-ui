@@ -18,12 +18,16 @@
                 <td>{{cm.batch.user}}</td>
                 <td>{{cm.updated_on|date:"d-m-Y H:i"}}</td>        
                 <td>{{cm.status}}</td>        
-                <td><a title="Task Details"  class="show_task_link" href="/ocrtasks/show/{{cm.pk}}/">Details</a></td>
+                <td><a title="Task Details"  class="show_task" href="/ocrtasks/show/{{cm.pk}}/">Details</a></td>
                 <td>
-                {% if cm.batch.user == user or user.is_superuser %}
-                    <a title="Revoke Task" class="edit_model_link" href="/ocrtasks/revoke/{{cm.pk}}/">Revoke</a>
+                {% if cm.status in revokable %} 
+                    {% if cm.batch.user == user or user.is_superuser %}
+                        <a title="Revoke Task" class="revoke_task" href="/ocrtasks/revoke/{{cm.task_id}}/">Revoke</a>
+                    {% else %}
+                        <span class="disabled_link">Revoke</span>
+                    {% endif %}
                 {% else %}
-                    <span class="disabled_link">Revoke</span>
+                <span class="disabled_link">Revoke</span>
                 {% endif %}
                 </td> 
             </tr>

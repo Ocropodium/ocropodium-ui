@@ -3,6 +3,7 @@ View the task objects that are created when submitting a celery task
 and updated by it's subsequent signals.
 """
 
+from celery.task.control import revoke
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
@@ -67,6 +68,7 @@ def list(request):
     
     fields = ["page_name", "batch__user", "updated_on", "status"]
     allstatus = False if len(selected) > 1 else ("ALL" in selected)
+    revokable = ("INIT", "PENDING")
     # add a 'invert token' if we're ordering by the same field again
     fields = ["-%s" % x if x in order else x for x in fields]
     alltasks = task_query(params)
@@ -86,6 +88,7 @@ def list(request):
             "tasks": tasks, 
             "fields": fields, 
             "statuses": OcrTask.STATUS_CHOICES,
+            "revokable": revokable,
             "selected" : selected,
             "allstatus" : allstatus,
             "refresh"   : autorf,
@@ -133,5 +136,14 @@ def show(request, pk):
     return render_to_response(template, context, 
             context_instance=RequestContext(request))
 
+
+
+@login_required
+def revoke(request, task_id):
+    """
+    Revoke a task (cancel it's execution.)
+    """
+    print revoke(task_id)
+    return HttpResponseRedirect("/ocrtasks/list")
 
 
