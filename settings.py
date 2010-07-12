@@ -6,8 +6,11 @@ import socket
 
 SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
+# flag whether we're on a server.  Really need a better way of doing this.
+SERVER = socket.gethostname().startswith("ocr") 
+
 # don't run in debug mode on the servers
-DEBUG = TEMPLATE_DEBUG = True #not socket.gethostname().startswith("ocr") 
+DEBUG = TEMPLATE_DEBUG = not SERVER
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -22,7 +25,7 @@ MANAGERS = ADMINS
 #DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
 #DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
-DATABASE_HOST = "localhost" if DEBUG else "ocr1"
+DATABASE_HOST = "localhost" if SERVER else "ocr1"
 DATABASES = {
     'default' : {
         'ENGINE'    : 'django.db.backends.mysql',
@@ -37,7 +40,7 @@ DATABASES = {
 # mysql
 CELERY_RESULT_BACKEND = "database"
 CELERY_RESULT_DBURI = "mysql://celery:celery@localhost/celeryresults"
-BROKER_HOST = "localhost" if DEBUG else "ocr1"
+BROKER_HOST = "localhost" if SERVER else "ocr1"
 BROKER_PORT = 5672
 BROKER_VHOST = "/"
 BROKER_USER = "guest"
@@ -76,7 +79,7 @@ USE_I18N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = "%s/media" % SITE_ROOT if DEBUG else "/media/share"
+MEDIA_ROOT = "%s/media" % SITE_ROOT if SERVER else "/media/share"
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
