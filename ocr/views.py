@@ -168,33 +168,33 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             celerytask.apply_async(
                 args=(path.encode(), userparams),
                     task_id=tid, loglevel=60, retries=2))            
-    #try:
-    # aggregate the results
-    out = []
-    for async in asynctasks:
-        result = async.wait() if _should_wait(request) else async.result
-        out.append({
-            "job_name": async.task_id,
-            "status": async.status,
-            "results": result,
-        })
-    # should be past the danger zone now...
-    transaction.commit()
-    return _json_or_text_response(request, out)
+    try:
+        # aggregate the results
+        out = []
+        for async in asynctasks:
+            result = async.wait() if _should_wait(request) else async.result
+            out.append({
+                "job_name": async.task_id,
+                "status": async.status,
+                "results": result,
+            })
+        # should be past the danger zone now...
+        transaction.commit()
+        return _json_or_text_response(request, out)
 
 
-    #except Exception, err:
-    print err
-    transaction.rollback()
-    return HttpResponse(
-        simplejson.dumps({
-            "error": err.message, 
-            "trace": "\n".join(
-                [ "\t".join(str(t)) for t in traceback.extract_stack()]
-            )
-        }),
-        mimetype="application/json"
-    ) 
+    except Exception, err:
+        print err
+        transaction.rollback()
+        return HttpResponse(
+            simplejson.dumps({
+                "error": err.message, 
+                "trace": "\n".join(
+                    [ "\t".join(str(t)) for t in traceback.extract_stack()]
+                )
+            }),
+            mimetype="application/json"
+        ) 
 
 
 
