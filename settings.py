@@ -7,7 +7,7 @@ import socket
 SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 # don't run in debug mode on the servers
-DEBUG = TEMPLATE_DEBUG = not socket.gethostname().startswith("ocr") 
+DEBUG = TEMPLATE_DEBUG = True #not socket.gethostname().startswith("ocr") 
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -51,7 +51,7 @@ SEND_EVENTS = True
 
 # User Celery's test_runner.  This sets ALWAYS_EAGER to True so
 # that tasks skip the DB infrastructure and run locally
-TEST_RUNNER = "celery.contrib.test_runner.run_tests" 
+TEST_RUNNER = "djcelery.contrib.test_runner.run_tests" 
 
 # tagging stuff
 FORCE_LOWERCASE_TAGS = True
@@ -132,11 +132,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
+    'djcelery',
     'accounts',
     'ocr',
     'ocrmodels',
     'ocrpresets',
     'ocrtasks',
     'tagging',
-    'celery'
 )
