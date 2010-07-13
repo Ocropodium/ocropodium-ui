@@ -104,6 +104,7 @@ class BinarizePageTask(AbortableTask):
         
         src, dst = make_deepzoom_proxies(logger, filepath, binpath, "bin", paramdict)
         pagedata["png"] = utils.media_path_to_url(filepath)
+        pagedata["out"] = utils.media_path_to_url(binpath)
         pagedata["src"] = utils.media_path_to_url(src)
         pagedata["dst"] = utils.media_path_to_url(dst)
     

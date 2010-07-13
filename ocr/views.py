@@ -182,7 +182,6 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         transaction.commit()
         return _json_or_text_response(request, out)
 
-
     except Exception, err:
         print err
         transaction.rollback()
@@ -233,6 +232,17 @@ def _wants_text_format(request):
         or request.POST.get("format", "") == "text"
 
 
+def _wants_png_format(request):
+    """
+    Determine whether to send back an image rather than JSON.
+    (For binarisation/segmentation.
+    """
+    return (request.META.get("HTTP_ACCEPT", "") == "image/png" \
+        or request.GET.get("format", "") == "png" \
+        or request.POST.get("format", "") == "png")                                                                    
+
+
+
 def _should_wait(request):
     """
     Determine if we should block waiting for the results.  The
@@ -253,8 +263,18 @@ def _json_or_text_response(request, json):
     if request.POST.get("_iframe"):
         mimetype = "text/html"
 
-
-    if _wants_text_format(request):
+    if _wants_png_format(request):
+        if isinstance(json, dict):
+            json = [json]
+        mimetype = "image/png"
+        try:
+            path = ocrutils.media_url_to_path(
+                    json[0]["results"]["out"])
+            result = open(path, "rb").read()
+        except (IndexError, KeyError), err:
+            result = ""
+            raise err
+    elif _wants_text_format(request):
         if isinstance(json, dict):
             json = [json]
         mimetype = "text/plain"
@@ -271,17 +291,23 @@ def _json_or_text_response(request, json):
 def _get_preset_data(param):
     """
     Fetch a preset by primary key and return its data
-    dict for merging into OCR params.
+    dict for merging into OCR params.  Try to get the
+    preset via primary key (as used via the web UI) 
+    or name (as used via Curl).
     """
     pmatch = re.match("preset_(\d+)", param)
     data = None
+    #keyval = {}
     if pmatch:
-        try:
-            preset = OcrPreset.objects.get(pk=int(pmatch.groups()[0]))
-            data = preset.data
-        except OcrPreset.DoesNotExist:
-            # use the default
-            pass
+        keyval = dict(pk=pmatch.groups()[0])
+    else:
+        keyval = dict(name=param)
+
+    try:
+        preset = OcrPreset.objects.get(**keyval)
+        data = preset.data
+    except OcrPreset.DoesNotExist:
+        pass
     return data
 
 
