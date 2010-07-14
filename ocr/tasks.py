@@ -156,7 +156,7 @@ class SegmentPageTask(AbortableTask):
         return pagedata
 
 
-class CreateCleanupTempTask(PeriodicTask):
+class CleanupTempTask(PeriodicTask):
     """
     Periodically cleanup images in the settings.MEDIA_ROOT/temp
     directory.  Currently they're swept if they're over 10 minutes
@@ -187,5 +187,39 @@ class CreateCleanupTempTask(PeriodicTask):
                     except StandardError, err:
                         logger.critical(
                                 "Error during cleanup: %s" % err.message)
+
+
+class CleanupDziTask(PeriodicTask):
+    """
+    Periodically cleanup images and DZI files in the
+    settings.MEDIA_ROOT/{bin,seg}temp directories.  Leave
+    the last one in place.
+    """
+    name = "cleanup.dzi"
+    run_every = timedelta(seconds=1200)
+    relative = True
+    ignore_result = True
+
+    def run(self, **kwargs):
+        """
+        Clean the modia folder of any files that haven't been accessed for X minutes.
+        """
+        logger = self.get_logger(**kwargs)
+        tempdir = os.path.join(settings.MEDIA_ROOT, "temp")
+        if os.path.exists(tempdir):
+            fdirs = [d for d in os.listdir(tempdir) if re.match("\d{14}", d)]
+            for fdir in fdirs:
+                # convert the dir last accessed time to a datetime
+                dtm = datetime(*time.localtime(
+                        os.path.getmtime(os.path.join(tempdir, fdir)))[0:6])
+                delta = datetime.now() - dtm
+                if (delta.seconds / 60) > 10:
+                    logger.info("Cleanup directory: %s" % fdir)
+                    try:
+                        shutil.rmtree(os.path.join(tempdir, fdir))
+                    except StandardError, err:
+                        logger.critical(
+                                "Error during cleanup: %s" % err.message)
+
 
 

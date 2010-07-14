@@ -37,28 +37,38 @@ def get_tesseract():
     return "tesseract"
 
 
-def save_ocr_images(images, basepath, user=None, temp=True, tempname="temp"):
+def get_ocr_path(user=None, temp=True, subdir="test", unique=False):
+    """
+    Get a path for saving temp images.
+    """
+    basepath = settings.MEDIA_ROOT
+    if temp:
+        basepath = os.path.join(basepath, "temp")
+    if user:
+        basepath = os.path.join(basepath, user)
+    if subdir:
+        basepath = os.path.join(basepath, subdir)
+    return os.path.join(basepath, datetime.now().strftime("%Y%m%d%H%M%S"))
+
+
+
+def save_ocr_images(images, user=None, temp=True, name="test"):
     """
     Save OCR images to the media directory...
     """                         
     paths = []
-    if temp:
-        basepath = os.path.join(basepath, tempname)
-    if user:
-        basepath = os.path.join(basepath, user)
-    basepath = os.path.join(basepath, datetime.now().strftime("%Y%m%d%H%M%S"))
-    if not os.path.exists(basepath):
-        os.makedirs(basepath, 0777)
-        os.chmod(basepath, 0777)
+    path = get_ocr_path(user=user, temp=True, subdir=name)
+    if not os.path.exists(path):
+        os.makedirs(path, 0777)
+        os.chmod(path, 0777)
 
     for _, handle in images:
-        path = os.path.join(basepath, handle.name)
-        with open(path, "wb") as outfile:
+        filepath = os.path.join(path, handle.name)
+        with open(filepath, "wb") as outfile:
             for chunk in handle.chunks():
                 outfile.write(chunk)
-            paths.append(path)
-            os.chmod(path, 0777)
-
+            paths.append(filepath)
+            os.chmod(filepath, 0777)
     return paths
 
 
@@ -83,9 +93,8 @@ def get_media_output_path(inpath, type, ext=".png"):
     """
     Get an output path for a given type of input file.
     """
-    base = os.path.splitext(os.path.basename(inpath))[0] 
-    return  "%s/%stemp/%s_%s%s" % (settings.MEDIA_ROOT, type,
-                base, uuid.uuid1(), ext)    
+    base = os.path.splitext(inpath)[0] 
+    return  "%s_%s%s" % (base, type, ext)    
 
 
 def get_ab_output_path(inpath):
