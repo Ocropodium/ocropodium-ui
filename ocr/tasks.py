@@ -21,8 +21,8 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
     """
     # now create deepzoom images of both source
     # and destination...
-    creator = deepzoom.ImageCreator(tile_size=256, tile_overlap=2, tile_format="png",
-                            image_quality=1, resize_filter="bicubic")
+    creator = deepzoom.ImageCreator(tile_size=512, tile_overlap=2, tile_format="png",
+                            image_quality=1, resize_filter="nearest")
 
     # source DZI path gets passed in again so we don't have to remake it
     srcdzipath = utils.media_url_to_path(params.get("src"))

@@ -20,7 +20,7 @@ function ImageWindow(container_id, config) {
 
     // Seadragon config
     Seadragon.Config.imagePath = "/static/js/seadragon/img/";
-
+    Seadragon.Config.maxZoomPixelRatio = 20;
 
     // indicate the current state...
     var showing = A;
