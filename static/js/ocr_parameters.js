@@ -12,7 +12,7 @@ function ParameterBuilder(container_id, ctypes) {
     container = $("#" + container_id),
 
     // cache of parameter data, fetched from the server
-    paramdata = null,
+    componentdata = null,
 
     // the list of components to build initially, set via
     // registerComponent
@@ -37,7 +37,7 @@ function ParameterBuilder(container_id, ctypes) {
     };
 
     /*
-     *  Event handling
+     *  Event stuff ===========================================================
      */
 
     // rebuild the params when components change
@@ -47,8 +47,9 @@ function ParameterBuilder(container_id, ctypes) {
 
 
     /*
-     *  Functions
+     *  Functions =============================================================
      */
+    var me = this;
 
     // add a component to the list of initially-built ones
     this.registerComponent = function(cname, label, def, multiple, add_blank) {
@@ -85,18 +86,28 @@ function ParameterBuilder(container_id, ctypes) {
                 alert("Unable to fetch parameter info: " + error);
             },
             success: function(data) {
-                paramdata = data;
+                componentdata = data;
                 buildParameters();
             },
         });
     }
 
     // clear everything and start over...
-    var me = this;
     this.reinit = function() {
         container.html("");
         me.init();
     }
+
+    /*
+     *  Private stuff =========================================================
+     */
+
+    var sortByName = function(a, b) {
+        var x = a.name;
+        var y = b.name;
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    }
+
 
     // construct a UI containing the registered components, with
     // the fetched default parameter info...
@@ -112,15 +123,11 @@ function ParameterBuilder(container_id, ctypes) {
     // use a particular component to provide a template
     // for the full component set
     var buildMetaComponentSet = function() {
-        var metacomp = paramdata[metacomponent];
+        var metacomp = componentdata[metacomponent];
 
         // sort the list alphabetically - affects the
         // original data but we don't care
-        metacomp.params.sort(function(a, b) {
-            var x = a.name;
-            var y = b.name;
-            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-        });
+        metacomp.params.sort(sortByName);
 
         // sort the list so multiple c-params go at the end...
         var splist = [];
@@ -169,8 +176,8 @@ function ParameterBuilder(container_id, ctypes) {
         }
         var plabel = $("<label></label>");
         var pinput = $("<input type='text'></input>");
-        for (var i in paramdata[compname].params) {
-            var param = paramdata[compname].params[i];
+        for (var i in componentdata[compname].params) {
+            var param = componentdata[compname].params[i];
             var pname = compname + "__" + param.name;
             pdiv.append(plabel.clone().text(param.name).attr("for", pname));    
             pdiv.append(
@@ -180,6 +187,24 @@ function ParameterBuilder(container_id, ctypes) {
         }    
     }
 
+    // get a list of components for a param name like 'binarize'
+    var getComponentOptions = function(name) {
+        var comptype = getComponentType(name);
+        var complist = [];
+        for (var cname in componentdata) {
+            var comp = componentdata[cname];
+            // skip metacomponent or those of different types
+            if (comp.type != comptype || 
+                    (metacomponent && metacomponent == comp.name)) {
+                continue;
+            }
+            complist.push(comp);
+        }
+        complist.sort(sortByName);
+        return complist;
+    }
+
+    // add a select with component selection options
     var addComponentSelect = function(name, label, def, blank) {
         var lab = $("<label></label>")
             .attr("for", name)
@@ -194,18 +219,11 @@ function ParameterBuilder(container_id, ctypes) {
         if (blank) {
             sel.append($("<option></option>").attr("value", "-"));
         }
-        var comptype = getComponentType(name);
-        for (var pname in paramdata) {
-            var data = paramdata[pname];
-            // skip metacomponent or those of different types
-            if (data.type != comptype || 
-                    (metacomponent && metacomponent == data.name)) {
-                continue;
-            }
+        $.each(getComponentOptions(name), function(i, comp) {
             sel.append($("<option></option>")
-                    .attr("value", data.name)
-                    .text(data.name)); 
-        }
+                    .attr("value", comp.name)
+                    .text(comp.name)); 
+        });
         if (def) {
             sel.attr("value", def);
             setComponentParams(def, pdiv);
