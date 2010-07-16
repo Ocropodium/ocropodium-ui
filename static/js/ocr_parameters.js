@@ -42,7 +42,31 @@ function ParameterBuilder(container_id, ctypes) {
 
     // rebuild the params when components change
     $(".ocroption").live("change", function(e) {
-        setComponentParams($(this).val(), $(this).next());
+        setComponentParams($(this).val(), $(this).parent("div").nextAll("div.compparam"));
+    });
+
+    $(".compsel").live('mouseenter mouseleave', function(event) {
+        if (event.type == 'mouseover') {
+            $(this).children("input[type='button']").css("opacity", 1);
+        } else {
+            $(this).children("input[type='button']").css("opacity", 0);
+        }
+    });
+
+    $(".addmulti").live("click", function(e) {
+        var compname = $(this).prev("select").attr("name");
+        var thisdiv = $(this).parent("div").parent("div");
+        var newdiv = thisdiv.clone();
+        newdiv.children("select").val("-");
+        newdiv.children("div.compparam").html("");
+        thisdiv.after(newdiv);
+        renumberMultiComponents(compname);
+    });
+
+    $(".remmulti").live("click", function(e) {
+        var compname = $(this).prevAll("select").attr("name");
+        $(this).parent("div").parent("div").remove();
+        renumberMultiComponents(compname);
     });
 
 
@@ -108,6 +132,22 @@ function ParameterBuilder(container_id, ctypes) {
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
     }
 
+    // when the user adds another multi-component (binclean1-10),
+    // renumber them accordingly
+    var renumberMultiComponents = function(compname) {
+        var basename = compname.match(/(\w+?)(\d+)$/)[1];
+        var count = 0;
+        $("select[name^='" + basename + "']").each(function(i, sel) {
+            var newname = basename + count;
+            $(sel).attr("name", newname).attr("id", newname);
+            $(sel).parent().prev("label")
+                .text(newname)
+                .attr("for", newname);
+            $(sel).parent().nextAll("div").attr("id", newname + "_options");
+            count++;
+        });
+
+    }
 
     // construct a UI containing the registered components, with
     // the fetched default parameter info...
@@ -118,7 +158,6 @@ function ParameterBuilder(container_id, ctypes) {
             buildRegisteredComponentSet();
         }
     }
-
 
     // use a particular component to provide a template
     // for the full component set
@@ -216,6 +255,13 @@ function ParameterBuilder(container_id, ctypes) {
         var pdiv = $("<div></div>")
             .addClass("compparam")
             .attr("id", name + "_options");
+        var add = $("<input type='button' />")
+            .addClass("addmulti")
+            .attr("value", "+");
+        var rem = $("<input type='button' />")
+            .addClass("remmulti")
+            .attr("value", "-");
+
         if (blank) {
             sel.append($("<option></option>").attr("value", "-"));
         }
@@ -228,6 +274,11 @@ function ParameterBuilder(container_id, ctypes) {
             sel.attr("value", def);
             setComponentParams(def, pdiv);
         }
-        container.append(lab).append(sel).append(pdiv);
+        var div1 = $("<div></div>").append(lab);
+        var div2 = $("<div></div>").addClass("compsel").append(sel);
+        if (name.match(/\d+$/)) {
+            div2.append(add).append(rem);
+        }
+        container.append(div1.append(div2).append(pdiv));
     }
 }

@@ -27,7 +27,7 @@
 #options label {
     float: left;
     clear: left;
-    width: 10em;    
+    width: 7em;    
 }
 
 #options select {
@@ -79,3 +79,10 @@
     display: none;
 }
 
+.addmulti, .remmulti {
+    height: 20px;
+    width: 18px;
+    margin-left: 2px;
+    text-align: center;
+    opacity: 0;
+}
