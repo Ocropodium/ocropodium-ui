@@ -22,3 +22,4 @@ syntax: regexp
 ^media/.+
 ^cluster-hosts
 ^deploy.sh
+^ocradmin.vim
