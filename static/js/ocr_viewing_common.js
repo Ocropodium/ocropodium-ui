@@ -232,14 +232,6 @@ $(function() {
     // resubmit the form...
     $("#refresh").click(refreshImage);
 
-    // initialise the controls
-    buildComponentOptions();
-
-    // rebuild the params when components change
-    $(".ocroption").live("change", function(e) {
-        reinitParams($(this));
-    });
-
 
     // initialize the preset manager
     // this first bit's a hack
