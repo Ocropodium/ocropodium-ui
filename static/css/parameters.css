@@ -1,3 +1,8 @@
+
+#options {
+    min-height: 50px;
+}
+
 .compparam {
     padding-right: 10px;
     padding-left: 15px;

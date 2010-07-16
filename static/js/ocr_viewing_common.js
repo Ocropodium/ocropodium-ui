@@ -3,6 +3,7 @@
 
 var sdviewer = null;
 var presetmanager = null;
+var pbuilder = null;
 
 function saveState() {
     if (sdviewer) {
@@ -237,7 +238,7 @@ $(function() {
     // this first bit's a hack
     var presettype = window.location.pathname.replace(/\/ocr\//g, "").replace(/\//g, "");
     presetmanager = new PresetManager("preset_container", presettype);
-    presetmanager.onPresetClear = buildComponentOptions;
+    presetmanager.onPresetClear = pbuilder.reinit;
     presetmanager.onBeforeAction = function(event) {
         //$(".ocroption, .compparam > input").attr("disabled", true);
     }

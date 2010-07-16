@@ -75,6 +75,12 @@ function ParameterBuilder(container_id, ctypes) {
         $.ajax({
             url: url,
             dataType: "json",
+            beforeSend: function() {
+                container.addClass("waiting");
+            },
+            complete: function() {
+                container.removeClass("waiting");
+            },
             error: function(xhr, error) {
                 alert("Unable to fetch parameter info: " + error);
             },
@@ -83,6 +89,13 @@ function ParameterBuilder(container_id, ctypes) {
                 buildParameters();
             },
         });
+    }
+
+    // clear everything and start over...
+    var me = this;
+    this.reinit = function() {
+        container.html("");
+        me.init();
     }
 
     // construct a UI containing the registered components, with
