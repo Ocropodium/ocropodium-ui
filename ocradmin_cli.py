@@ -20,7 +20,7 @@ import urllib2
 
 import simplejson
 
-SITE = "http://localhost:8000"
+SITE = "http://ocr1.cerch.kcl.ac.uk"
 LOGIN = "/accounts/login"
 BINURL = "/ocr/binarize/"
 RESURL = "/ocr/results/"
@@ -47,7 +47,7 @@ class OcrAdmin(object):
         body = {"username": USERNAME, "password": PASSWORD}
         headers = {"Content-type": "application/x-www-form-urlencoded"}
         response, content = self.http.request(
-                "%s%s" % (SITE, LOGIN), 
+                "%s%s" % (self.opts.host, LOGIN), 
                 "POST", headers=headers, body=urllib.urlencode(body))
         self.authheaders = {"Cookie": response["set-cookie"]}
 
@@ -83,7 +83,7 @@ class OcrAdmin(object):
         headers.update(self.authheaders)
 
         # Create the Request object
-        request = urllib2.Request("%s%s" % (SITE, BINURL), datagen, headers)
+        request = urllib2.Request("%s%s" % (self.opts.host, BINURL), datagen, headers)
         # Actually do the request, and get the response
         print "Uploading: %s" % filename
         token = simplejson.load(urllib2.urlopen(request))[0]
@@ -97,7 +97,7 @@ class OcrAdmin(object):
         """
         Get results for a job.
         """
-        url = "%s%s%s" % (SITE, RESURL, token["job_name"])
+        url = "%s%s%s" % (self.opts.host, RESURL, token["job_name"])
         data = {} #{"format": "png"}
         #response, content = self.http.request(url, "GET", 
         #        urllib.urlencode(data), headers=self.authheaders)
@@ -117,7 +117,7 @@ class OcrAdmin(object):
             os.makedirs(self.opts.outdir)
 
         outfile = "%s/%04d.bin.png" % (self.opts.outdir, token["count"])
-        outurl = "%s%s" % (SITE, outtoken["results"]["out"])
+        outurl = "%s%s" % (self.opts.host, outtoken["results"]["out"])
         outreq = urllib2.Request(outurl, 
             urllib.urlencode(data), headers=self.authheaders) 
         outhandle = open(outfile, "wb")
@@ -151,6 +151,8 @@ if __name__ == "__main__":
     usage = "%prog [options] file1.png file2.png"
     version = "%prog 1.00"
     parser = OptionParser(usage=usage, version=version)
+    parser.add_option("-h", "--host", action="store", dest="host",
+            default=SITE, help="Site URL")                      
     parser.add_option("-o", "--outdir", action="store", dest="outdir",
             default="book", help="Output directory name")                      
     parser.add_option("-c", "--clean", action="store", dest="clean",
