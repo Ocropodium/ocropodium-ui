@@ -87,10 +87,16 @@ def segment(request):
         Save a posted image to the DFS.  Segment it with Celery.
     """
 
+    # add available seg and bin presets to the context
+    context = {
+        "binpresets": OcrPreset.objects.filter(
+            type="binarize").order_by("name"),
+    }
+
     return _ocr_task(
         request,
         "ocr/segment.html",
-        {},
+        context,
         "Segment",
         tasks.SegmentPageTask,
     )

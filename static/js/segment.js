@@ -5,6 +5,8 @@ function buildComponentOptions() {
     // get the component data for the types we want
     // returns a list component hashes
     //
+    
+
     if (PARAMS == null) {
         $.getJSON("/ocr/components", "type=ISegmentPage", function(components) {
             PARAMS = components;
