@@ -242,13 +242,6 @@ $(function() {
     presetmanager = new PresetManager("preset_container", presettype);
     presetmanager.onPresetLoadData = pbuilder.loadData;
     presetmanager.onPresetClear = pbuilder.reinit;
-    presetmanager.onBeforeAction = function(event) {
-        //$(".ocroption, .compparam > input").attr("disabled", true);
-    }
-    presetmanager.onCompleteAction = function(event) {
-        //$(".ocroption, .compparam > input").attr("disabled", false);
-    }
-
 
     // initialise the uploader...
     var uploader  = new AjaxUploader(window.location.pathname, "dropzone");
