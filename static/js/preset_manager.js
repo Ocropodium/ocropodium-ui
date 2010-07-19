@@ -66,6 +66,9 @@ function PresetManager(container_id, type) {
     this.onPresetLoad = function(event) {
     }
 
+    this.onPresetLoadData = function(data) {
+    }
+
     this.onPresetSave = function(event) {
     }
 
@@ -151,19 +154,7 @@ function PresetManager(container_id, type) {
         $.ajax({
             url: "/ocrpresets/data/" + preset_pk + "/",
             success: function(presetdata) {
-                $(".ocroption").each(function(index, item) {
-                    var cname = $(this).attr("name");
-                    if (presetdata[cname]) {
-                        $(this).val(presetdata[cname]);
-                        $(item).trigger("change");
-                    }
-                });
-                $(".compparam > input").each(function(index, item) {
-                    var pname = $(this).attr("name");
-                    if (presetdata[pname]) {
-                        $(this).val(presetdata[pname]);
-                    }
-                });
+                me.onPresetLoadData(presetdata);
                 me.hide();
                 $("#preset_id").val(preset_pk);
             },

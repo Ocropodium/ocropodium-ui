@@ -75,6 +75,31 @@ function ParameterBuilder(container_id, ctypes) {
      */
     var me = this;
 
+    // indicate we're doing something
+    this.setWaiting = function(wait) {
+        wait = wait || false;
+        $(".ocroption, .compparam > input").attr("disabled", wait);
+        //container.toggleClass("waiting", wait);
+    }
+
+    // return a hash of param data
+    this.data = function() {
+        var params = {};
+        $(".ocroption, .compparam > input").each(function(i, p) {
+            params[$(p).attr("name")] = $(p).val();
+        });
+        return params;    
+    }
+
+    this.serializedData = function() {
+        var params = [];
+        var data = me.data();
+        for (var i in data) {
+            params.push(i + "=" + data[i]);
+        }
+        return params.join("&");
+    }
+
     // add a component to the list of initially-built ones
     this.registerComponent = function(cname, label, def, multiple, add_blank) {
         components.push({
@@ -101,10 +126,10 @@ function ParameterBuilder(container_id, ctypes) {
             url: url,
             dataType: "json",
             beforeSend: function() {
-                container.addClass("waiting");
+                me.setWaiting(true);
             },
             complete: function() {
-                container.removeClass("waiting");
+                me.setWaiting(false);
             },
             error: function(xhr, error) {
                 alert("Unable to fetch parameter info: " + error);
@@ -120,6 +145,45 @@ function ParameterBuilder(container_id, ctypes) {
     this.reinit = function() {
         container.html("");
         me.init();
+    }
+
+    // load an object containing param data...
+    // data looks like:
+    // {
+    //      binarizer: "BinarizeByHT",
+    //      BinarizeByHT__k1:  0.1,
+    // }
+    this.loadData = function(data) {
+        $.each(data, function(key, value) {
+            if (!key.match(/__/)) {
+                var sel = $("#" + key);
+                if (sel.length) {
+                    sel.val(value);
+                } else {
+                    // add a multi component select with a blank
+                    // option
+                    addComponentSelect(key, key, value, true);
+                    renumberMultiComponents(key);
+                    sel = $("#" + key);
+                }
+                sel.trigger("change");
+            }
+        });
+
+        // set the component parameter values
+        $.each(data, function(key, value) {
+            if (key.match(/__/)) {
+                $("#" + key).val(value);
+            }
+        });
+
+        // strip any components not in the preset
+        $(".ocroption").each(function(i, comp) {
+            var id = $(comp).attr("name");
+            if (!data[id]) {
+                $(comp).parent("div").parent("div").remove();
+            }
+        });
     }
 
     /*

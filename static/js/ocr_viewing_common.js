@@ -56,12 +56,15 @@ window.onbeforeunload = function(event) {
 
 
 function refreshImage() {
-    sdviewer.setWaiting(true);
-
     var params = "src=" + $("#viewerwindow").data("src") 
         + "&png=" + $("#viewerwindow").data("png") 
         + "&dst=" + sdviewer.activeOutputPath()
-        + "&" + $("#optionsform").serialize();
+        + "&" + pbuilder.serializedData();
+
+    // have to disable the params AFTER building the param
+    // string!
+    sdviewer.setWaiting(true);
+    pbuilder.setWaiting(true);
 
     $.ajax({
         url: window.location.pathname,
@@ -69,7 +72,6 @@ function refreshImage() {
         type: "POST",
         dataType: "json",
         beforeSend: function(data) {
-            $(".compparam > input, .ocroption").attr("disabled", true);
         },
         success: function(data) {
             $("#viewerwindow").data("jobname", data[0].job_name);
@@ -113,7 +115,7 @@ function processData(element, data) {
         sdviewer.setOutput(data.results.dst);
         sdviewer.setSource(data.results.src);
         sdviewer.setWaiting(false);
-        $(".compparam > input, .ocroption").attr("disabled", false);
+        pbuilder.setWaiting(false);
         $(".interact_param").attr("disabled", false);
     } else {
         alert("Oops.  Task finished with bad status: " + data.status);
@@ -193,7 +195,7 @@ $(function() {
         data : { _iframe: 1 },
         dataType: "json",
         beforeSend: function(e) {
-            $(".compparam > input, .ocroption").attr("disabled", true);
+            pbuilder.setWaiting(true);
         },
         success: function(data, responseText, xhr) {
             onXHRLoad(data, responseText, xhr);
@@ -238,6 +240,7 @@ $(function() {
     // this first bit's a hack
     var presettype = window.location.pathname.replace(/\/ocr\//g, "").replace(/\//g, "");
     presetmanager = new PresetManager("preset_container", presettype);
+    presetmanager.onPresetLoadData = pbuilder.loadData;
     presetmanager.onPresetClear = pbuilder.reinit;
     presetmanager.onBeforeAction = function(event) {
         //$(".ocroption, .compparam > input").attr("disabled", true);
@@ -253,12 +256,12 @@ $(function() {
     uploader.onUploadsStarted = function(e) {
         // close anything that's already open in the viewer
         sdviewer.close();
-        $(".compparam > input, .ocroption").attr("disabled", true);
+        pbuilder.setWaiting(true);
         
         // slurp up the parameters.  Since the params are build 
         // dynamically this has to be done immediately before the
         // upload commences, hence in the onUploadsStarted handler
-        $("#optionsform input, #optionsform select").each(function() {
+        $("#optionsform input[type='text'], #optionsform select").each(function() {
             uploader.registerTextParameter("#" + $(this).attr("id"));
         });
     };
