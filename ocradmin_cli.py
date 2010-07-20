@@ -151,7 +151,7 @@ if __name__ == "__main__":
     usage = "%prog [options] file1.png file2.png"
     version = "%prog 1.00"
     parser = OptionParser(usage=usage, version=version)
-    parser.add_option("-h", "--host", action="store", dest="host",
+    parser.add_option("--host", action="store", dest="host",
             default=SITE, help="Site URL")                      
     parser.add_option("-o", "--outdir", action="store", dest="outdir",
             default="book", help="Output directory name")                      
