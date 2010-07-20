@@ -171,55 +171,34 @@ class CleanupTempTask(PeriodicTask):
         """
         Clean the modia folder of any files that haven't been accessed for X minutes.
         """
+        import glob
         logger = self.get_logger(**kwargs)
         tempdir = os.path.join(settings.MEDIA_ROOT, "temp")
-        if os.path.exists(tempdir):
-            fdirs = [d for d in os.listdir(tempdir) if re.match("\d{14}", d)]
+        if not os.path.exists(tempdir):
+            return
+
+        for userdir in glob.glob("%s/*/*" % tempdir):
+            logger.debug("Checking dir: %s" % userdir)
+            fdirs = [d for d in sorted(os.listdir(userdir)) if re.match("\d{14}", d)]
+
+            if not fdirs:
+                continue
+
+            # keep the latest, then delete everything
+            # else not accessed in the last 10 mins
+            logger.info("Retaining: %s" % fdirs.pop())
             for fdir in fdirs:
                 # convert the dir last accessed time to a datetime
                 dtm = datetime(*time.localtime(
-                        os.path.getmtime(os.path.join(tempdir, fdir)))[0:6])
+                        os.path.getmtime(os.path.join(userdir, fdir)))[0:6])
                 delta = datetime.now() - dtm
-                if (delta.seconds / 60) > 10:
-                    logger.info("Cleanup directory: %s" % fdir)
-                    try:
-                        shutil.rmtree(os.path.join(tempdir, fdir))
-                    except StandardError, err:
-                        logger.critical(
-                                "Error during cleanup: %s" % err.message)
-
-
-class CleanupDziTask(PeriodicTask):
-    """
-    Periodically cleanup images and DZI files in the
-    settings.MEDIA_ROOT/{bin,seg}temp directories.  Leave
-    the last one in place.
-    """
-    name = "cleanup.dzi"
-    run_every = timedelta(seconds=1200)
-    relative = True
-    ignore_result = True
-
-    def run(self, **kwargs):
-        """
-        Clean the modia folder of any files that haven't been accessed for X minutes.
-        """
-        logger = self.get_logger(**kwargs)
-        tempdir = os.path.join(settings.MEDIA_ROOT, "temp")
-        if os.path.exists(tempdir):
-            fdirs = [d for d in os.listdir(tempdir) if re.match("\d{14}", d)]
-            for fdir in fdirs:
-                # convert the dir last accessed time to a datetime
-                dtm = datetime(*time.localtime(
-                        os.path.getmtime(os.path.join(tempdir, fdir)))[0:6])
-                delta = datetime.now() - dtm
-                if (delta.seconds / 60) > 10:
-                    logger.info("Cleanup directory: %s" % fdir)
-                    try:
-                        shutil.rmtree(os.path.join(tempdir, fdir))
-                    except StandardError, err:
-                        logger.critical(
-                                "Error during cleanup: %s" % err.message)
-
+                if (delta.seconds / 60) <= 10:
+                    continue
+                logger.info("Cleanup directory: %s" % fdir)
+                try:
+                    shutil.rmtree(os.path.join(userdir, fdir))
+                except StandardError, err:
+                    logger.critical(
+                            "Error during cleanup: %s" % err.message)
 
 
