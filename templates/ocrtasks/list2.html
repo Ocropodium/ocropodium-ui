@@ -1,0 +1,52 @@
+{% extends "ocrtasks/standard.html" %}
+
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/tasklist.css" type="text/css" media="screen" />
+    <script type="text/javascript" src="/static/js/task_list.js"></script>
+
+    <style type="text/css">
+        #dialog_box {
+            display: none;
+        }
+    </style>
+
+
+<script type="text/javascript">
+
+$(function() {
+    var tasklist = new TaskList("tasklist", "task_filter_form");
+    tasklist.init();
+
+
+
+});
+
+
+</script>
+
+
+{% endblock %}
+
+{% block innercontent %}
+
+
+
+<h3>Tasks:</h3>
+
+<div id="task_list_controls">
+    <div id="task_list_controls_right">
+        <form id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
+            Auto-Refresh:
+            <input type="checkbox" id="autorefresh" name="autorefresh" {% if refresh %}checked="checked"{% endif %} />
+            <input type="text" id="autorefresh_time" name="autorefresh_time" value="{{refresh_time}}" />
+        </form>
+    </div>
+</div>
+
+
+<div id="tasklist">
+</div>
+<div id="dialog_box"></div>
+
+{% endblock %}
+

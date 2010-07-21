@@ -31,22 +31,22 @@
     height: 1.4em;
 }
 
-#task_list tr.success {
+#task_list tr td.success {
     color: #0B3B0B;
     background-color: #CEF6CE;
 }
 
-#task_list tr.running {
+#task_list tr td.running {
     color: #B45F04;
     background-color: #FBF5EF;
 }
 
-#task_list tr.error {
+#task_list tr td.error {
     color: #8A0808; 
     background-color: #F8E0E0;
 }
 
-#task_list tr.done {
+#task_list tr td.done {
     color: #084B8A;
     background-color: #CEE3F6;
 }

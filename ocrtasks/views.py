@@ -3,14 +3,19 @@ View the task objects that are created when submitting a celery task
 and updated by it's subsequent signals.
 """
 
+from types import ClassType, MethodType
+
 from celery.task.control import revoke
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
+from django.core.serializers.json import DjangoJSONEncoder
+
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
+from django.utils import simplejson
 from ocradmin.ocrtasks.models import OcrTask
 
 PER_PAGE = 20
@@ -106,6 +111,64 @@ def list(request):
     response.set_cookie("tlrefresh", autorf)
     response.set_cookie("tlrefresh_time", autorf_time)
     return response
+
+
+def list2(request):
+    """
+    Another attempt!
+    """
+
+    excludes = ["args", "kwargs",]
+    context = {}
+    if not request.is_ajax():
+        return render_to_response("ocrtasks/list2.html", context,
+                context_instance=RequestContext(request))
+
+
+    params = request.GET.copy()
+    paginator = Paginator(task_query(params), PER_PAGE) 
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+    
+    # If page request (9999) is out of range, deliver last page of results.
+    try:
+        tasks = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        tasks = paginator.page(paginator.num_pages)
+    
+    pythonserializer = serializers.get_serializer("python")()
+    serializedpage = {}
+    wanted = ("end_index", "has_next", "has_other_pages", "has_previous",
+            "next_page_number", "number", "start_index", "previous_page_number")
+    for attr in wanted:
+        v = getattr(tasks, attr)
+        if isinstance(v, MethodType):
+            serializedpage[attr] = v()
+        elif isinstance(v, (str, int)):
+            serializedpage[attr] = v
+    # This gets rather gnarly, see: 
+    # http://code.google.com/p/wadofstuff/wiki/DjangoFullSerializers
+    serializedpage["object_list"] = pythonserializer.serialize(
+        tasks.object_list, 
+        excludes=excludes,
+        relations={
+            "batch": {
+                "relations": {
+                    "user": {
+                        "fields": ("username"),
+                    }
+                }
+            }
+        },
+    ) 
+
+    response = HttpResponse(mimetype="application/json")
+    simplejson.dump(serializedpage, response, cls=DjangoJSONEncoder)
+    return response
+
+
 
 
 @login_required

@@ -143,3 +143,10 @@ INSTALLED_APPS = (
     'ocrtasks',
     'tagging',
 )
+
+SERIALIZATION_MODULES = {
+    'python' : 'wadofstuff.django.serializers.python',
+    'json' : 'wadofstuff.django.serializers.json'
+}
+
+
