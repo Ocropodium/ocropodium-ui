@@ -211,6 +211,11 @@ function ParameterBuilder(container_id, ctypes) {
             count++;
         });
 
+        // if there's only one of a given component, disable the
+        // delete button...
+        $("select[name^='" + basename + "']").nextAll("input.remmulti")
+            .attr("disabled", count == 1);
+
     }
 
     // construct a UI containing the registered components, with
