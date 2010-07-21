@@ -113,13 +113,16 @@ def list(request):
     return response
 
 
+@login_required
 def list2(request):
     """
     Another attempt!
     """
 
     excludes = ["args", "kwargs",]
-    context = {}
+    context = { 
+        "statuses": OcrTask.STATUS_CHOICES,
+    }
     if not request.is_ajax():
         return render_to_response("ocrtasks/list2.html", context,
                 context_instance=RequestContext(request))

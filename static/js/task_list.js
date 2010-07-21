@@ -7,6 +7,13 @@ function TaskList(list_container_id, param_container_id) {
 
     var url = "/ocrtasks/list2";
 
+
+    // events!
+    $("input[type='checkbox'].filter_item").click(function(e) {
+        alert($(this).val());
+    });        
+
+
     // public functions
     var me = this;
 
