@@ -1,146 +1,151 @@
-{% extends "standard.html" %}
+{% extends "ocrtasks/standard.html" %}
 
 {% block headerscript %}
     <link rel="stylesheet" href="/static/css/tasklist.css" type="text/css" media="screen" />
-	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
-    <script type="text/javascript" src="/static/js/task_list.js"></script>
 
     <style type="text/css">
         #dialog_box {
             display: none;
         }
-    </style>
-
+</style>
 
 <script type="text/javascript">
+    
+var REFRESH_TIMEOUT = -1;
 
-var tasks = null;
 
-function saveState() {
-    var order_by = document.filter.order_by.value;
-    var user = document.filter.batch__user__pk.value;
-    var stat = $.map(document.filter.status, function(cb) {
-        if (cb.checked) {
-            return cb.value;
+// Read a page's GET URL variables and return them as an associative array.
+function getUrlVars(url) {
+    url = url ? url :  window.location.href;
+    var vars = [], hash;
+    var hashes = url.slice(url.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
+$(document).ready(function() {
+
+    $("li.success").slideDown(3000).delay(1000).fadeOut();
+
+    $("#view_status_all").click(function(e) {
+        if ($(this).attr("checked")) {
+            $("input.filter_item[type=checkbox]:not(#view_status_all)").attr("checked", false);
         }
-    }).join(",");
-    var autorf = document.controls.autorefresh.value;
-    var autorftime = document.controls.autorefresh_time.value;
+    });
 
-    var winprefix = window.location.pathname.replace(/\//g, "");
-    $.cookie(winprefix + "_order_by", order_by);
-    $.cookie(winprefix + "_user", user);
-    $.cookie(winprefix + "_stat", stat);
-    $.cookie(winprefix + "_autorf", autorf);
-    $.cookie(winprefix + "_autorf_time", autorf_time);
-}
+    $("input.filter_item[type=checkbox]:not(#view_status_all)").click(function(e) {
+        if ($(this).attr("checked")) {
+            $("#view_status_all").attr("checked", false);
+        }
+    });
 
-function loadState() {
-    var winprefix = window.location.pathname.replace(/\//g, "");
-    var order_by = $.cookie(winprefix + "_order_by");
-    var user = $.cookie(winprefix + "_user");
-    var stat = $.cookie(winprefix + "_stat");
-    var autorf = $.cookie(winprefix + "_autorf");
-    var autorf_time = $.cookie(winprefix + "_autorf_time");
 
-    if (order_by) {
-        document.filter.order_by.value = order_by;
+    // sort table on headers
+    $(".sort_table").live("click", function(e) {
+        $("input[name='order']").attr(
+            "value",
+            getUrlVars($(this).attr("href"))["order"]
+        );
+        reloadTable();
+        return false;
+    });
+
+    $(".step_links > a").live("click", function(e) {
+        $("input[name='page']").attr(
+            "value",
+            getUrlVars($(this).attr("href"))["page"]
+        );
+        reloadTable();
+        return false;
+    });
+
+    function scheduleReload() {
+        if ($("#autorefresh").attr("checked")) {
+            REFRESH_TIMEOUT = setTimeout(reloadTable, 
+                    Math.abs($("#autorefresh_time").val()) * 1000);
+        }
     }
-    if (user) {
-        document.filter.batch__user__pk.value = user;
+
+
+    function reloadTable() {
+        var params = $("#task_list_form").serialize() + "&" + 
+            $("#task_filter_form").serialize() + "&" +
+            $("#task_list_controls_form").serialize();
+        $("#tasklist").load(
+            "/ocrtasks/list",
+            params 
+        );
+        scheduleReload();
     }
-    if (stat) {
-        $.each(stat.split(","), function(i, s) {
-            $("input[value='" + s + "']").attr("checked", true);
+
+    $("#autorefresh").change(function(e) {
+        $("#autorefresh_time").attr("disabled", !$(this).attr("checked"));
+        if (!$(this).attr("checked") && REFRESH_TIMEOUT != -1) {
+            clearTimeout(REFRESH_TIMEOUT);            
+        }
+    });
+    $("#task_list_controls_form").submit(function(e) {
+        return false;
+    });
+
+    $(".filter_item").change(function(e) {
+        if (REFRESH_TIMEOUT != -1) {
+            clearTimeout(REFRESH_TIMEOUT);
+        }
+        reloadTable();
+    });    
+
+    // show new in a dialog...
+    $(".show_task").live("click", function(e) {
+            $("#dialog_box").dialog(
+                {width:600, height:500, title: $(this).attr("title")}
+            ).load($(this).attr("href"));
+            return false;
+    });
+
+    // show new in a dialog...
+    $(".revoke_task").live("click", function(e) {
+        $.post({
+            url: $(this).attr("href"),
+            success: reloadTable,
         });
-    }
-    if (autorf) {
-        document.controls.autorefresh.value = autorf;
-    }
-    if (autorf_time) {
-        document.controls.autorefresh_time.value = autorf_time;
-    }
-}
+        return false;
+    });
 
-
-// save state on leaving the page... at least try to...
-window.onbeforeunload = function(event) {
-    saveState();
-}
-
-
-$(function() {
-    loadState();
-    tasks = new TaskList("tasklist", "task_filter_form");
-    tasks.init();
+    // start the timer (no not) for next reload
+    scheduleReload();
+    $("#autorefresh").change();
 });
-
 
 </script>
 
-
 {% endblock %}
 
-{% block content %}
+{% block innercontent %}
 
 
-<div id="sidebar">
-    <h4 id="filter_head">Filter Tasks:</h4>
-    <form name="filter" id="task_filter_form" method="GET" action="/ocrtasks/list">
-        <input type="hidden" class="filter_item" name="page" value="{{params.page}}" />
-        <input type="hidden" class="filter_item" name="order_by" value="{{params.order_by}}" />
 
-        <div class="field_wrapper">
-            <label for="view_status_all">All:</label>            
-            <input type="checkbox" name="status" class="filter_item" id="view_status_all" value="ALL"
-                checked="checked" />
-            <br />
-            {% for status, name in statuses %}
-                <label for="view_status_{{status}}">{{name}}:</label>
-                <input type="checkbox" name="status" class="filter_item" id="view_status_{{status}}" 
-                {% if status in selected %} checked="Checked" {% endif %} value="{{status}}" />
-                <br />
-            {% endfor %}
-        </div>
-        <div class="field_wrapper">
-            <label for="filter_user">User:</label>
-            <select class="filter_item" id="filter_user" name="batch__user__pk">
-                <option value="" {% ifequal params.user_id "" %}selected="selected"{% endifequal %}>All</option>
-                <option value="{{request.user.pk}}" {% ifequal params.user_id request.user.pk %}selected="selected"
-                {% endifequal %}>{{user.username}}</option>
-            </select>
-        </div>
-    </form>
-</div>
+<h3>Tasks:</h3>
 
-<div class="innercontent">
-
-    {% if messages %}
-    <ul class="messages">
-    {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-    </ul>
-    {% endif %}
-
-    <h3>Tasks:</h3>
-
-    <div id="task_list_controls">
-        <div id="task_list_controls_right">
-            <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
-                Auto-Refresh:
-                <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
-                <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
-            </form>
-        </div>
+<div id="task_list_controls">
+    <div id="task_list_controls_right">
+        <form id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
+            Auto-Refresh:
+            <input type="checkbox" id="autorefresh" name="autorefresh" {% if refresh %}checked="checked"{% endif %} />
+            <input type="text" id="autorefresh_time" name="autorefresh_time" value="{{refresh_time}}" />
+        </form>
     </div>
-
-
-    <div id="tasklist">
-    </div>
-    <div id="dialog_box"></div>
 </div>
 
 
-{% endblock %}
+<div id="tasklist">
+    {% include "ocrtasks/includes/task_list.html" %}
+</div>
+<div id="dialog_box"></div>
 
+{% endblock %}
