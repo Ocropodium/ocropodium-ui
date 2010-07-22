@@ -179,6 +179,29 @@ def list2(request):
     return response
 
 
+@login_required
+def delete(request, pk=None):
+    """
+    Delete a task or tasks.
+    """
+
+    response = HttpResponse()
+    if not pk is None:
+        t = get_object_or_404(OcrTask, pk=pk)
+        t.delete()
+    else:
+        pks = request.POST.getlist("pk")
+        taskquery = OcrTask.objects.filter(pk__in=pks)
+        if not request.user.is_staff:
+            taskquery = taskquery.filter(batch__user=request.user)
+            if not len(taskquery) == len(pks):
+                response.status_code = 201
+        taskquery.delete()
+    if request.is_ajax():
+        return response
+
+    return HttpResponseRedirect("/ocrtasks/list")
+
 
 
 @login_required

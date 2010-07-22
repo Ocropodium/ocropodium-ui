@@ -51,6 +51,13 @@
     background-color: #CEE3F6;
 }
 
+.task_item.selected {
+    background-color: #F2F2F2;
+}
+
+.task_item.todelete {
+    background-color: #F0F0F0;
+}
 
 .table_form input[type="checkbox"] {
     margin-left: 0px;

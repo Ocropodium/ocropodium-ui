@@ -16,6 +16,10 @@
 
 var tasks = null;
 
+
+$(function(){
+});
+
 function saveState() {
     var order_by = document.filter.order_by.value;
     var user = document.filter.batch__user__pk.value;
@@ -70,8 +74,21 @@ window.onbeforeunload = function(event) {
 
 
 $(function() {
+    $.extend($.fn.disableTextSelect = function() {
+        return this.each(function(){
+            if ($.browser.mozilla){ //Firefox
+                $(this).css('MozUserSelect','none');
+            } else if($.browser.msie){ //IE
+                $(this).bind('selectstart',function(){ return false;});
+            } else{ //Opera, etc.
+                $(this).bind("mousedown", function(){return false;});
+            }
+        });
+    });
+    
+    
     loadState();
-    tasks = new task_list("task_list", "task_filter_form");
+    tasks = new TaskList("task_list", "task_filter_form");
     tasks.init();
 });
 
