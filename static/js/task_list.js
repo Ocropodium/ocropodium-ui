@@ -25,27 +25,26 @@ function TaskList(list_container_id, param_container_id) {
         }
     });
 
-    $("#autorefresh_time").change(function(e) {
-        alert("foo");
-    });
-
+    // when we check the 'All' status box, deselect any others
     $("input[type='checkbox'].filter_item").click(function(e) {
         if ($(this).attr("id") != "view_status_all") {
             $("#view_status_all").attr("checked", false);
         } else {
-            $("input.filter_item[type=checkbox]:not(#view_status_all)").attr("checked", false);
+            $("input.filter_item[type=checkbox]:not(#view_status_all)")
+                .attr("checked", false);
         }
         me.init();
     });        
 
+    // update the list when the user changes
     $("select.filter_item").change(function(e) {
         me.init();
     });        
 
-    $(".sort_header").live("click", function(e) {
-        var corder = document.forms[0].order_by.value;
+    $(".sort_table").live("click", function(e) {
+        var curorder = document.filter.order_by.value;
         var order = getUrlVars($(this).attr("href")).order_by;
-        if (corder == order) {
+        if (curorder == order) {
             if (order.match(/^-(.+)/)) {
                 order = Regexp.$1;
                 $(this).addClass("order");
@@ -54,14 +53,14 @@ function TaskList(list_container_id, param_container_id) {
                 $(this).addClass("order_desc");
             }
         }
-        document.forms[0].order_by.value = order;
+        document.filter.order_by.value = order;
         me.init();
         return false;
     });
 
     $(".pagination > a").live("click", function(e) {
         var page = getUrlVars($(this).attr("href")).page;
-        document.forms[0].page.value = page;
+        document.filter.page.value = page;
         me.init();
         return false;
         if (timeout != -1) {
@@ -91,7 +90,7 @@ function TaskList(list_container_id, param_container_id) {
 
 
     this.setWaiting = function(wait) {
-        list_container.toggleClass("waiting", wait);
+        //list_container.toggleClass("waiting", wait);
     }
 
     
@@ -102,7 +101,7 @@ function TaskList(list_container_id, param_container_id) {
         scheduleReload();
     }    
 
-
+    // set a timer to reload the list in X seconds
     function scheduleReload() {
         if ($("#autorefresh").attr("checked")) {
             var time = parseFloat($("#autorefresh_time").val());
@@ -114,8 +113,11 @@ function TaskList(list_container_id, param_container_id) {
         }
     }
 
-
+    
     var drawPaginators = function(data) {
+        if (!data.has_other_pages) {
+            return;
+        }
         var pag = $("<div></div>")
             .addClass("pagination")
             .addClass("step_links");
@@ -125,15 +127,12 @@ function TaskList(list_container_id, param_container_id) {
                         + data.previous_page_number));
         }
         pag.append($("<span></span>")
-                .text(data.number + " of " + data.end_index).html());
+                .text("Page " + data.number + " of " + data.num_pages).html());
         if (data.has_next) {
             pag.append($("<a>Next</a>")
                     .attr("href", url + "?page="
                         + data.next_page_number));
         }
-        
-
-
         return pag;
     }
 
@@ -142,28 +141,25 @@ function TaskList(list_container_id, param_container_id) {
         var table = $("<table></table")
             .attr("id", "task_list")
             .addClass("info_table");
-
         var headerrow = $("<tr></tr>")
             .addClass("header_row");
         headerrow.append($("<th></th>").append($("<a></a>")
-                .addClass("sort_header")
+                .addClass("sort_table")
                 .text("File").attr("href", url + "?order_by=page_name")));
         headerrow.append($("<th></th>").append($("<a></a>")
-                .addClass("sort_header")
+                .addClass("sort_table")
                 .text("User").attr("href", url + "?order_by=batch__user")));
         headerrow.append($("<th></th>").append($("<a></a>")
-                .addClass("sort_header")
+                .addClass("sort_table")
                 .text("Last Update").attr("href", url + "?order_by=updated_on")));
         headerrow.append($("<th></th>").append($("<a></a>")
-                .addClass("sort_header")
+                .addClass("sort_table")
                 .text("Status").attr("href", url + "?order_by=status")));
         table.append(headerrow);
 
         for (var i in task_list) {
             var task = task_list[i];
-
             var row = $("<tr></tr>")
-                
                 .addClass("task_item")
                 .attr("id", "task_" + task.pk);
             row.append($("<td></td>").text(task.fields.page_name));

@@ -143,8 +143,9 @@ def list2(request):
     except (EmptyPage, InvalidPage):
         tasks = paginator.page(paginator.num_pages)
     
-    pythonserializer = serializers.get_serializer("python")()
+    pythonserializer = serializers.get_serializer("python")()    
     serializedpage = {}
+    serializedpage["num_pages"] = paginator.num_pages
     wanted = ("end_index", "has_next", "has_other_pages", "has_previous",
             "next_page_number", "number", "start_index", "previous_page_number")
     for attr in wanted:
