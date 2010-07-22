@@ -131,8 +131,9 @@ $(function() {
     <h3>Tasks:</h3>
 
     <div id="task_list_controls">
-        <div id="task_list_controls_right">
+        <div id="task_list_controls_right">            
             <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
+                <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
                 Auto-Refresh:
                 <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
                 <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />

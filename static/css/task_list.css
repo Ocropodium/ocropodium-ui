@@ -28,7 +28,8 @@
 }
 
 #task_list_controls input[type="button"] {
-    height: 1.4em;
+    height: 20px;
+    font-size: 10px;
 }
 
 #task_list tr td.success {
@@ -71,3 +72,21 @@
 .pagination a {
     margin: 0px 5px 0px 5px;
 }
+
+a.sort_table {
+    padding-right: 12px;
+}
+
+a.order {
+    background-image: url("/static/icons/arrow_up.gif");
+    background-position: right;
+    background-repeat: no-repeat;
+}
+
+
+a.order_desc {
+    background-image: url("/static/icons/arrow_down.gif");
+    background-position: right;
+    background-repeat: no-repeat;
+}
+

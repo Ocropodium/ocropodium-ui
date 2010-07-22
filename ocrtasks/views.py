@@ -186,16 +186,25 @@ def delete(request, pk=None):
     """
     response = HttpResponse()
     if not pk is None:
-        t = get_object_or_404(OcrTask, pk=pk)
-        t.delete()
+        pks = [pk]
     else:
         pks = request.POST.getlist("pk")
-        taskquery = OcrTask.objects.filter(pk__in=pks)
-        if not request.user.is_staff:
-            taskquery = taskquery.filter(batch__user=request.user)
-            if not len(taskquery) == len(pks):
-                response.status_code = 201
-        taskquery.delete()
+
+    
+
+    taskquery = OcrTask.objects.filter(pk__in=pks)
+    if not request.user.is_staff:
+        taskquery = taskquery.filter(batch__user=request.user)
+        if not len(taskquery) == len(pks):
+            response.status_code = 201
+    for task in taskquery:
+        if task.is_revokable():
+            print "Revoking %s" % task
+            try:
+                print "%s" % revoke(task.task_id)
+            except Exception, e:
+                print e.message
+    taskquery.delete()
     if request.is_ajax():
         return response
 
@@ -231,14 +240,5 @@ def show(request, pk):
     return render_to_response(template, context, 
             context_instance=RequestContext(request))
 
-
-
-@login_required
-def revoke(request, task_id):
-    """
-    Revoke a task (cancel it's execution.)
-    """
-    print revoke(task_id)
-    return HttpResponseRedirect("/ocrtasks/list")
 
 

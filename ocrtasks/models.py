@@ -52,3 +52,11 @@ class OcrTask(models.Model):
     @property
     def user(self):
         return self.batch.user
+
+    def is_revokable(self):
+        """
+        Whether or not a given status allows
+        revoking (cancelling) a task.
+        """
+        return self.status in ("INIT", "PENDING", "RUNNING")
+

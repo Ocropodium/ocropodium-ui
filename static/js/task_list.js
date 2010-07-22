@@ -5,6 +5,13 @@ function TaskList(list_container_id, param_container_id) {
     var list_container = $("#" + list_container_id);
     var param_container = $("#" + param_container_id);
 
+    var headers = {
+        page_name:  "File",
+        batch__user__pk:  "User",
+        updated_on:  "Last Update",
+        status:  "Status",
+    };
+
     var url = window.location.pathname;
     var showurl = "/ocrtasks/show/";
     var deleteurl = "/ocrtasks/delete/";
@@ -23,14 +30,7 @@ function TaskList(list_container_id, param_container_id) {
     //
     $(window).keydown(function(event) {
         if (event.keyCode == 46) {
-            var deltasks = $(".task_item.selected");
-            if (deltasks.length > 0) {
-                if (confirm("Really delete " + 
-                        deltasks.length + " task" +
-                        (deltasks.length == 1 ? "?" : "s?"))) {
-                    deleteTasks(deltasks); 
-                }
-            }
+            deleteTasks();
         } 
     });
 
@@ -69,6 +69,11 @@ function TaskList(list_container_id, param_container_id) {
     $(".task_item").live("dblclick", function(event) {
         showTask($(this));    
 
+    });
+
+    // clear button clicked
+    $("#clear_tasks").click(function(event) {
+        deleteTasks();
     });    
 
     // handle task selection and multiselection
@@ -102,19 +107,16 @@ function TaskList(list_container_id, param_container_id) {
             // to use when selecting a range
             lastselected = "#" + $(this).attr("id");
         }
+        updateButtonState();
     });
 
     $(".sort_table").live("click", function(e) {
         var curorder = document.filter.order_by.value;
         var order = getUrlVars($(this).attr("href")).order_by;
         if (curorder == order) {
-            if (order.match(/^-(.+)/)) {
-                order = Regexp.$1;
-                $(this).addClass("order");
-            } else {
-                order = "-" + order;
-                $(this).addClass("order_desc");
-            }
+            order = order.match(/^-(.+)/) 
+                ? Regexp.$1
+                : "-" + order;
         }
         document.filter.order_by.value = order;
         me.init();
@@ -174,7 +176,14 @@ function TaskList(list_container_id, param_container_id) {
 
 
     // delete a list of jquery objects via ajax...
-    var deleteTasks = function(tasks) {
+    var deleteTasks = function() {
+        var tasks = $(".task_item.selected");
+        if (tasks.length == 0 || !confirm("Really delete " + 
+                    tasks.length + " task" +
+                    (tasks.length == 1 ? "?" : "s?"))) {
+            return;
+        }
+
         var params = $.map(tasks, function(t) {
             return "pk=" + $(t).attr("id").replace("task_", "");
         }).join("&");
@@ -199,11 +208,17 @@ function TaskList(list_container_id, param_container_id) {
         });
     }
 
+    // set the button state after Stuff Happens
+    var updateButtonState = function() {
+        document.controls.clear.disabled = ($(".task_item.selected").length == 0);
+    }
+
     
     var refreshList = function(data) {
         list_container.html("");        
         list_container.append(drawList(data.object_list))
         list_container.append(drawPaginators(data));
+        updateButtonState();
         scheduleReload();
     }    
 
@@ -263,19 +278,19 @@ function TaskList(list_container_id, param_container_id) {
             .addClass("info_table");
         var headerrow = $("<tr></tr>")
             .addClass("header_row");
-        headerrow.append($("<th></th>").append($("<a></a>")
-                .addClass("sort_table")
-                .text("File").attr("href", url + "?order_by=page_name")));
-        headerrow.append($("<th></th>").append($("<a></a>")
-                .addClass("sort_table")
-                .text("User").attr("href", url + "?order_by=batch__user")));
-        headerrow.append($("<th></th>").append($("<a></a>")
-                .addClass("sort_table")
-                .text("Last Update").attr("href", url + "?order_by=updated_on")));
-        headerrow.append($("<th></th>").append($("<a></a>")
-                .addClass("sort_table")
-                .text("Status").attr("href", url + "?order_by=status")));
+
         table.append(headerrow);
+        var headerlink = $("<a></a>").addClass("sort_table");
+        $.each(headers, function(name, text) {
+            var link = headerlink.clone().text(text)
+                .attr("href", url + "?order_by=" + name);
+            if (name == document.filter.order_by.value) {
+                link.addClass("order");
+            } else if ("-" + name == document.filter.order_by.value) {
+                link.addClass("order_desc");
+            }
+            headerrow.append($("<th></th>").append(link));    
+        });
 
         for (var i in task_list) {
             var task = task_list[i];
