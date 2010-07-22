@@ -13,9 +13,10 @@
 
 <script type="text/javascript">
 
+var tasks = null;
 $(function() {
-    var tasklist = new TaskList("tasklist", "task_filter_form");
-    tasklist.init();
+    tasks = new TaskList("tasklist", "task_filter_form");
+    tasks.init();
 
 
 
@@ -37,8 +38,8 @@ $(function() {
     <div id="task_list_controls_right">
         <form id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
             Auto-Refresh:
-            <input type="checkbox" id="autorefresh" name="autorefresh" {% if refresh %}checked="checked"{% endif %} />
-            <input type="text" id="autorefresh_time" name="autorefresh_time" value="{{refresh_time}}" />
+            <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
+            <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
         </form>
     </div>
 </div>

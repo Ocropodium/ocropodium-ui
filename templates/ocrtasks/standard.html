@@ -13,18 +13,6 @@
 $(document).ready(function() {
     $("li.success").slideDown(3000).delay(1000).fadeOut();
     
-    $("#view_status_all").click(function(e) {
-        if ($(this).attr("checked")) {
-            $("input.filter_item[type=checkbox]:not(#view_status_all)").attr("checked", false);
-        }
-    });
-
-    $("input.filter_item[type=checkbox]:not(#view_status_all)").click(function(e) {
-        if ($(this).attr("checked")) {
-            $("#view_status_all").attr("checked", false);
-        }
-    });
-
 });
 
 </script>
@@ -32,10 +20,13 @@ $(document).ready(function() {
 <div id="sidebar">
     <h4 id="filter_head">Filter Tasks:</h4>
     <form id="task_filter_form" method="GET" action="/ocrtasks/list">
+        <input type="hidden" class="filter_item" name="page" value="{{params.page}}" />
+        <input type="hidden" class="filter_item" name="order_by" value="{{params.order_by}}" />
+
         <div class="field_wrapper">
             <label for="view_status_all">All:</label>            
             <input type="checkbox" name="status" class="filter_item" id="view_status_all" value="ALL"
-                {% if allstatus %}checked="checked"{% endif %} />
+                checked="checked" />
             <br />
             {% for status, name in statuses %}
                 <label for="view_status_{{status}}">{{name}}:</label>
@@ -46,7 +37,7 @@ $(document).ready(function() {
         </div>
         <div class="field_wrapper">
             <label for="filter_user">User:</label>
-            <select class="filter_item" id="filter_user" name="user_id">
+            <select class="filter_item" id="filter_user" name="batch__user__pk">
                 <option value="" {% ifequal params.user_id "" %}selected="selected"{% endifequal %}>All</option>
                 <option value="{{request.user.pk}}" {% ifequal params.user_id request.user.pk %}selected="selected"
                 {% endifequal %}>{{user.username}}</option>

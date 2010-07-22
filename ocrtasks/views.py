@@ -25,13 +25,14 @@ def task_query(params):
     """
     Query the task db.
     """
-    order = [x for x in params.getlist("order") if x != ""] or ["created_on"]
+    order = [x for x in params.getlist("order_by") if x != ""] or ["created_on"]
     status = params.getlist("status")
     query =  Q()
     if status and "ALL" not in status:
         query = Q(status__in=status)
     for key, val in params.items():
-        if not key in OcrTask._meta.get_all_field_names():
+        if key.find("__") == -1 and \
+                not key in OcrTask._meta.get_all_field_names():
             continue
         if key == "status" or not val:
             continue
@@ -120,15 +121,16 @@ def list2(request):
     """
 
     excludes = ["args", "kwargs",]
+    params = request.GET.copy()
     context = { 
         "statuses": OcrTask.STATUS_CHOICES,
+        "params" : params,
     }
     if not request.is_ajax():
         return render_to_response("ocrtasks/list2.html", context,
                 context_instance=RequestContext(request))
 
 
-    params = request.GET.copy()
     paginator = Paginator(task_query(params), PER_PAGE) 
     try:
         page = int(request.GET.get('page', '1'))
@@ -153,6 +155,7 @@ def list2(request):
             serializedpage[attr] = v
     # This gets rather gnarly, see: 
     # http://code.google.com/p/wadofstuff/wiki/DjangoFullSerializers
+    serializedpage["params"] = params
     serializedpage["object_list"] = pythonserializer.serialize(
         tasks.object_list, 
         excludes=excludes,

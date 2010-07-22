@@ -32,6 +32,18 @@ $(document).ready(function() {
 
     $("li.success").slideDown(3000).delay(1000).fadeOut();
 
+    $("#view_status_all").click(function(e) {
+        if ($(this).attr("checked")) {
+            $("input.filter_item[type=checkbox]:not(#view_status_all)").attr("checked", false);
+        }
+    });
+
+    $("input.filter_item[type=checkbox]:not(#view_status_all)").click(function(e) {
+        if ($(this).attr("checked")) {
+            $("#view_status_all").attr("checked", false);
+        }
+    });
+
 
     // sort table on headers
     $(".sort_table").live("click", function(e) {
