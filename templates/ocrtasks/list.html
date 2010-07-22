@@ -28,8 +28,8 @@ function saveState() {
             return cb.value;
         }
     }).join(",");
-    var autorf = document.controls.autorefresh.value;
-    var autorftime = document.controls.autorefresh_time.value;
+    var autorf = document.controls.autorefresh.checked;
+    var autorf_time = document.controls.autorefresh_time.value;
 
     var winprefix = window.location.pathname.replace(/\//g, "");
     $.cookie(winprefix + "_order_by", order_by);
@@ -59,7 +59,7 @@ function loadState() {
         });
     }
     if (autorf) {
-        document.controls.autorefresh.value = autorf;
+        document.controls.autorefresh.checked = (autorf === 'true');
     }
     if (autorf_time) {
         document.controls.autorefresh_time.value = autorf_time;
@@ -74,18 +74,6 @@ window.onbeforeunload = function(event) {
 
 
 $(function() {
-    $.extend($.fn.disableTextSelect = function() {
-        return this.each(function(){
-            if ($.browser.mozilla){ //Firefox
-                $(this).css('MozUserSelect','none');
-            } else if($.browser.msie){ //IE
-                $(this).bind('selectstart',function(){ return false;});
-            } else{ //Opera, etc.
-                $(this).bind("mousedown", function(){return false;});
-            }
-        });
-    });
-    
     
     loadState();
     tasks = new TaskList("task_list", "task_filter_form");

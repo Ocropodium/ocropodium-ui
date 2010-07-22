@@ -6,6 +6,8 @@ function TaskList(list_container_id, param_container_id) {
     var param_container = $("#" + param_container_id);
 
     var url = window.location.pathname;
+    var showurl = "/ocrtasks/show/";
+    var deleteurl = "/ocrtasks/delete/";
 
     // refresh timeout
     var timeout = -1;
@@ -61,7 +63,13 @@ function TaskList(list_container_id, param_container_id) {
     // update the list when the user changes
     $("select.filter_item").change(function(e) {
         me.init();
-    });        
+    });
+
+    
+    $(".task_item").live("dblclick", function(event) {
+        showTask($(this));    
+
+    });    
 
     // handle task selection and multiselection
     $(".task_item").live("click", function(event) {
@@ -149,13 +157,29 @@ function TaskList(list_container_id, param_container_id) {
     }
 
 
+    var showTask = function(task) {
+        $("#dialog_box")
+            .load(
+                showurl + $(task).attr("id").replace("task_", ""),
+                null,
+                function(data) {
+                    $("#dialog_box").dialog({
+                        width: 700,
+                        modal: true,
+                        title: "Task Details",                        
+                    });
+                }
+            );
+    }
+
+
     // delete a list of jquery objects via ajax...
     var deleteTasks = function(tasks) {
         var params = $.map(tasks, function(t) {
             return "pk=" + $(t).attr("id").replace("task_", "");
         }).join("&");
         $.ajax({
-            url: "/ocrtasks/delete/",
+            url: deleteurl,
             data: params,
             dataType: "json",
             type: "POST",
@@ -230,6 +254,10 @@ function TaskList(list_container_id, param_container_id) {
 
 
     var drawList = function(task_list) {
+        if (task_list.length == 0) {
+            return $("<div></div>").text("No tasks found");
+        }
+
         var table = $("<table></table")
             .attr("id", "task_list")
             .addClass("info_table");

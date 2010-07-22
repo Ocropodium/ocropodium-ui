@@ -184,7 +184,6 @@ def delete(request, pk=None):
     """
     Delete a task or tasks.
     """
-
     response = HttpResponse()
     if not pk is None:
         t = get_object_or_404(OcrTask, pk=pk)
