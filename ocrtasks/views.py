@@ -63,7 +63,7 @@ def list(request):
         "params" : params,
     }
     if not request.is_ajax():
-        return render_to_response("ocrtasks/list2.html", context,
+        return render_to_response("ocrtasks/list.html", context,
                 context_instance=RequestContext(request))
 
 
