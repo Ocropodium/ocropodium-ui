@@ -128,7 +128,7 @@ function OcrPage(insertinto_id, page_id, jobname) {
             success: function(data) {
                 if (!processData(data)) {
                     setTimeout(function() {
-                        pollForResults();
+                        pollForResults(polltime);
                     }, polltime);
                 }                
             },

@@ -135,10 +135,9 @@ $(function() {
             $("#dropzone").text("Drop images here...").removeClass("waiting");
             return;
         }
-
         $.each(data, function(pagenum, pageresults) {
             pageobjects[pagenum] = new OcrPage("pageout", pagenum, pageresults.job_name);
-            pageobjects[pagenum].pollForResults((250 * data.length) + (pagenum * 250));
+            pageobjects[pagenum].pollForResults((300 * uploader.size()) + (pagenum * 250));
         }); 
     };
 
