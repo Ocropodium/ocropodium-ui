@@ -23,7 +23,8 @@ function TaskList(list_container_id, param_container_id) {
     var selected = {};
     var lastselected = null;
 
-    // public functions
+    // alias 'this' so we can refer to it within
+    // other function closures
     var me = this;
 
     // events!
@@ -110,6 +111,11 @@ function TaskList(list_container_id, param_container_id) {
         updateButtonState();
     });
 
+
+    // sort the table when clicking on a header.  If the order
+    // is already the current order, then reverse it by 
+    // prepending "-" to the param name (a horrible implementation
+    // detail...)
     $(".sort_table").live("click", function(e) {
         var curorder = document.filter.order_by.value;
         var order = getUrlVars($(this).attr("href")).order_by;
@@ -123,20 +129,23 @@ function TaskList(list_container_id, param_container_id) {
         return false;
     });
 
+
+    // go to the next/prev page when clicking the pagination]
+    // links
     $(".pagination > a").live("click", function(e) {
         var page = getUrlVars($(this).attr("href")).page;
         document.filter.page.value = page;
         me.init();
         return false;
-        if (timeout != -1) {
-            cancelTimeout(timeout);
-            timeout = -1;
-        }
     });
 
+
+    // call the server for new list data and trigger a 
+    // table refresh when it returns
     this.init = function() {
         if (timeout != -1) {
             clearTimeout(timeout);
+            timeout = -1;
         }
         $.ajax({
             url: url,
@@ -153,12 +162,13 @@ function TaskList(list_container_id, param_container_id) {
         });
     }
 
-
+    // indicate we're actually doing something
     this.setWaiting = function(wait) {
         //list_container.toggleClass("waiting", wait);
     }
 
 
+    // pop up task details when the user double-clicks on a task
     var showTask = function(task) {
         $("#dialog_box")
             .load(
@@ -235,6 +245,8 @@ function TaskList(list_container_id, param_container_id) {
     }
 
 
+    // set a task in the list selected and store it's id
+    // so the selection can be preserved after refresh
     var selectTask = function(task, select) {
         task.toggleClass("selected", select);
         if (select) {
