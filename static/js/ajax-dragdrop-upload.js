@@ -8,11 +8,12 @@
 
 
 function AjaxUploader(url, dropzone_id) {
-    dropzone = $("#" + dropzone_id).get(0);    
-    queue = [];
-    params = [];
+    var dropzone = $("#" + dropzone_id).get(0);    
+    var queue = [];
+    var params = [];
+    var maxsize = 0;
 
-    // Globals, want to get rid of these eventually
+    // Request building guff
     var xhrqueue = [];
     var boundary = '------multipartformboundary' + (new Date).getTime();
     var dashdash = '--';
@@ -48,7 +49,7 @@ function AjaxUploader(url, dropzone_id) {
 
     // accessor for the size of the queue
     this.size = function() {
-        return queue.length;
+        return maxsize;
     }
 
     // return a hash of text param key/vals
@@ -86,6 +87,9 @@ function AjaxUploader(url, dropzone_id) {
                 return;
             }
         }
+
+        maxsize = data.files.length;
+
         /* Show spinner for each dropped file and say we're busy. */
         $(dropzone).text("Please wait...").addClass("waiting");
         for (var i = 0; i < data.files.length; i++) {
