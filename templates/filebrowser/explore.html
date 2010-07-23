@@ -1,0 +1,43 @@
+
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - Files {% endblock %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
+	<script type='application/javascript' src='/static/js/stats.js'></script>
+	<script type='application/javascript' src='/static/js/filebrowser.js'></script>
+	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
+    <link rel="stylesheet" href="/static/css/filebrowser.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+
+    <script type="application/javascript">
+
+
+var fbrowser = null;
+
+$(function() {
+
+        fbrowser = new FileBrowser("file_browser");
+        fbrowser.init();
+
+
+
+});
+
+
+    </script>
+{% endblock %}
+
+{% block content %}
+
+<div class="innercontent">
+    <div class="filewindow" id="file_browser">
+
+    </div>
+
+</div>
+
+
+{% endblock %}

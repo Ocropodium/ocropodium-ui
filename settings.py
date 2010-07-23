@@ -137,6 +137,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'djcelery',
     'accounts',
+    'filebrowser',
     'ocr',
     'ocrmodels',
     'ocrpresets',
