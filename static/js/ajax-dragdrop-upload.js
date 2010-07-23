@@ -5,17 +5,19 @@
 // Need to take the functions out of the constructor closure
 // code adapted from http://www.appelsiini.net/demo/html5_upload/demo.html 
 
-// Globals, want to get rid of these eventually
-var XHRQUEUE = [];
-var BOUNDARY = '------multipartformboundary' + (new Date).getTime();
-var DASHDASH = '--';
-var CRLF     = '\r\n';
 
 
 function AjaxUploader(url, dropzone_id) {
     dropzone = $("#" + dropzone_id).get(0);    
     _queue = [];
     _params = [];
+
+    // Globals, want to get rid of these eventually
+    var xhrqueue = [];
+    var boundary = '------multipartformboundary' + (new Date).getTime();
+    var dashdash = '--';
+    var crlf     = '\r\n';
+
 
     // note - re-reference 'me' to 'this' so it refers to the
     // correctly-scoped this via the closure...
@@ -28,7 +30,7 @@ function AjaxUploader(url, dropzone_id) {
             var fxhr = _queue.shift();
             fxhr.open("POST", url, true);
             fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + BOUNDARY); 
+            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + boundary); 
             fxhr.sendAsBinary(fxhr.builder);
         } else {
             $(dropzone).text("Drop images here...").removeClass("waiting"); 
@@ -93,21 +95,21 @@ function AjaxUploader(url, dropzone_id) {
             var binaryReader = new FileReader();    
             /* Build RFC2388 string. */
             var builder = '';
-            builder += DASHDASH;
-            builder += BOUNDARY;
-            builder += CRLF;
+            builder += dashdash;
+            builder += boundary;
+            builder += crlf;
 
             /* append text param values */
             $.each(_textParameters(), function(key, value) {
                 builder += 'Content-Disposition: form-data; name="' + key + '"; ';
                 builder += 'Content-Type: text/plain';
-                builder += CRLF;
-                builder += CRLF;
+                builder += crlf;
+                builder += crlf;
                 builder += value;
-                builder += CRLF;
-                builder += DASHDASH;
-                builder += BOUNDARY;
-                builder += CRLF;
+                builder += crlf;
+                builder += dashdash;
+                builder += boundary;
+                builder += crlf;
             });
             
             /* Generate headers. */            
@@ -116,25 +118,25 @@ function AjaxUploader(url, dropzone_id) {
             if (file.fileName) {
               builder += '; filename="' + file.fileName + '"';
             }
-            builder += CRLF;
+            builder += crlf;
 
             builder += 'Content-Type: ' + file.type;
-            builder += CRLF;
-            builder += CRLF; 
+            builder += crlf;
+            builder += crlf; 
 
             /* Append binary data. */
             builder += file.getAsBinary() ;//binaryReader.readAsBinaryString(file);
-            builder += CRLF;
+            builder += crlf;
 
-            /* Write BOUNDARY. */
-            builder += DASHDASH;
-            builder += BOUNDARY;
-            builder += CRLF;
+            /* Write boundary. */
+            builder += dashdash;
+            builder += boundary;
+            builder += crlf;
             /* Mark end of the request. */
-            builder += DASHDASH;
-            builder += BOUNDARY;
-            builder += DASHDASH;
-            builder += CRLF;
+            builder += dashdash;
+            builder += boundary;
+            builder += dashdash;
+            builder += crlf;
             try {
                 var xhr = new XMLHttpRequest();
                 xhr.builder = builder;
