@@ -9,8 +9,8 @@
 
 function AjaxUploader(url, dropzone_id) {
     dropzone = $("#" + dropzone_id).get(0);    
-    _queue = [];
-    _params = [];
+    queue = [];
+    params = [];
 
     // Globals, want to get rid of these eventually
     var xhrqueue = [];
@@ -19,42 +19,42 @@ function AjaxUploader(url, dropzone_id) {
     var crlf     = '\r\n';
 
 
-    // note - re-reference 'me' to 'this' so it refers to the
+    // note - re-reference 'self' to 'this' so it refers to the
     // correctly-scoped this via the closure...
-    var me = this;
+    var self = this;
 
     // dequeue and send the next file...
     _sendNextItem = function() {
-        if (_queue.length) {
-            me.onUploadStart()
-            var fxhr = _queue.shift();
+        if (queue.length) {
+            self.onUploadStart()
+            var fxhr = queue.shift();
             fxhr.open("POST", url, true);
             fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
             fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + boundary); 
             fxhr.sendAsBinary(fxhr.builder);
         } else {
             $(dropzone).text("Drop images here...").removeClass("waiting"); 
-            me.onUploadsFinished();
+            self.onUploadsFinished();
         }  
     }
 
     // wrap the user event function so as to trigger the
     // next upload in the queue
     _onXHRLoad = function(event) {
-        me.onXHRLoad(event);
+        self.onXHRLoad(event);
         _sendNextItem();
     }
 
 
     // accessor for the size of the queue
     this.size = function() {
-        return _queue.length;
+        return queue.length;
     }
 
     // return a hash of text param key/vals
     _textParameters = function() {
         params = {};
-        $.each(_params, function(index, paramname) {
+        $.each(params, function(index, paramname) {
             if ($(paramname).length) {
                 params[$(paramname).attr("name")] = $(paramname).val();
             }
@@ -69,14 +69,14 @@ function AjaxUploader(url, dropzone_id) {
     // register a new text parameter to be included when the upload
     // commences
     this.registerTextParameter = function(paramname) {
-        _params.push(paramname);
+        params.push(paramname);
     }
 
 
     // actually do the upload!
     upload = function(event) {
 
-        me.onUploadsStarted();        
+        self.onUploadsStarted();        
 
         var data = event.dataTransfer;
         for (var i = 0; i < data.files.length; i++) {
@@ -141,7 +141,7 @@ function AjaxUploader(url, dropzone_id) {
                 var xhr = new XMLHttpRequest();
                 xhr.builder = builder;
                 xhr.onload = _onXHRLoad;
-                _queue.push(xhr);
+                queue.push(xhr);
             } catch (e) {
                 alert(e);
             }
