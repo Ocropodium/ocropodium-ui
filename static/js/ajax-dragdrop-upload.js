@@ -25,7 +25,7 @@ function AjaxUploader(url, dropzone_id) {
     var self = this;
 
     // dequeue and send the next file...
-    _sendNextItem = function() {
+    sendNextItem = function() {
         if (queue.length) {
             self.onUploadStart()
             var fxhr = queue.shift();
@@ -41,9 +41,9 @@ function AjaxUploader(url, dropzone_id) {
 
     // wrap the user event function so as to trigger the
     // next upload in the queue
-    _onXHRLoad = function(event) {
+    onXHRLoad = function(event) {
         self.onXHRLoad(event);
-        _sendNextItem();
+        sendNextItem();
     }
 
 
@@ -53,7 +53,7 @@ function AjaxUploader(url, dropzone_id) {
     }
 
     // return a hash of text param key/vals
-    _textParameters = function() {
+    textParameters = function() {
         params = {};
         $.each(params, function(index, paramname) {
             if ($(paramname).length) {
@@ -64,7 +64,7 @@ function AjaxUploader(url, dropzone_id) {
     }
 
     this.textParameters = function() {
-        return _textParameters();
+        return textParameters();
     }
 
     // register a new text parameter to be included when the upload
@@ -87,7 +87,6 @@ function AjaxUploader(url, dropzone_id) {
                 return;
             }
         }
-
         maxsize = data.files.length;
 
         /* Show spinner for each dropped file and say we're busy. */
@@ -104,7 +103,7 @@ function AjaxUploader(url, dropzone_id) {
             builder += crlf;
 
             /* append text param values */
-            $.each(_textParameters(), function(key, value) {
+            $.each(textParameters(), function(key, value) {
                 builder += 'Content-Disposition: form-data; name="' + key + '"; ';
                 builder += 'Content-Type: text/plain';
                 builder += crlf;
@@ -144,14 +143,14 @@ function AjaxUploader(url, dropzone_id) {
             try {
                 var xhr = new XMLHttpRequest();
                 xhr.builder = builder;
-                xhr.onload = _onXHRLoad;
+                xhr.onload = onXHRLoad;
                 queue.push(xhr);
             } catch (e) {
                 alert(e);
             }
         }
         // start uploading
-        _sendNextItem();
+        sendNextItem();
 
         /* Prevent FireFox opening the dragged file. */
         event.stopPropagation();
