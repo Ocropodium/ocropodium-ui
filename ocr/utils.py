@@ -116,7 +116,12 @@ def get_ab_output_path(inpath):
         outpath = "%s_001%s" % (base, ext)
     return outpath
 
-    
+def get_new_task_id(filepath):
+    """
+    Get a unique id for a new page task, given it's
+    file path.
+    """
+    return "%s::%s" % (os.path.basename(filepath), uuid.uuid1()) 
 
 
 def find_file_with_basename(pathbase):

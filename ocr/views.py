@@ -5,9 +5,9 @@ Basic OCR functions.  Submit OCR tasks and retrieve the result.
 import re
 import os
 import traceback
-import uuid
 from datetime import datetime
 from celery import result as celeryresult
+from celery.task.sets import TaskSet, subtask
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -40,6 +40,96 @@ def index(request):
 
 @login_required
 @transaction.commit_manually
+def batch(request):
+    """
+    Save a batch of posted image to the DFS and convert them with Celery.
+    """
+
+    # add available seg and bin presets to the context
+    context = {
+        "binpresets": OcrPreset.objects.filter(
+            type="binarize").order_by("name"),
+        "segpresets": OcrPreset.objects.filter(
+            type="segment").order_by("name"),
+    }
+    tasktype = "Batch"
+    celerytask = tasks.ConvertPageTask
+
+    if not request.method == "POST":
+        return render_to_response("ocr/batch.html", context, 
+                        context_instance=RequestContext(request))
+
+    try:
+        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), 
+                temp=True, user=request.user.username,
+                name=tasktype.lower())
+    except AppException, err:
+        return HttpResponse(simplejson.dumps({"error": err.message}),
+            mimetype="application/json")
+    if not paths:
+        return HttpResponse(
+                simplejson.dumps({"error": "no valid images found"}),
+                mimetype="application/json")     
+    
+    # wrangle the params - this needs improving
+    userparams = _get_best_params(request.POST.copy())
+
+    # create a batch db job
+    batch_name = request.POST.get("name", "%s %s" % (tasktype, datetime.now()))
+    batch = OcrBatch(user=request.user, name=batch_name,
+            task_type=celerytask.name, batch_type="MULTI")
+    batch.save()
+
+    subtasks = []
+    try:
+        for path in paths:
+            tid = ocrutils.get_new_task_id(path) 
+            ocrtask = OcrTask(task_id=tid, batch=batch, 
+                    page_name=os.path.basename(path), status="INIT")
+            ocrtask.save()
+            subtasks.append(
+                celerytask.subtask(
+                    args=(path.encode(), userparams),
+                    options=dict(task_id=tid, loglevel=60, retries=2)))            
+        tasksetresults = TaskSet(tasks=subtasks).apply_async()
+        out = {
+            "job_name": tasksetresults.taskset_id,
+            "count" : tasksetresults.total,
+            "subtasks" : [t.task_id for t in tasksetresults.subtasks],
+            "completed_count": tasksetresults.completed_count(),
+            "done": tasksetresults.successful() | tasksetresults.failed(),
+        }
+    except Exception, e:
+        transaction.rollback()
+        print e.message
+        return HttpResponse(e.message, 
+                mimetype="application/json")
+
+    transaction.commit()
+    return HttpResponse(simplejson.dumps(out), 
+            mimetype="application/json")
+
+
+@login_required
+def batch_results(request, job_name):
+    """
+    Get results for a taskset.
+    """
+    subtasks = request.POST.getlist("task_id")
+    asynctasks = [celeryresult.AsyncResult(t) for t in subtasks]
+    tasksetresults = celeryresult.TaskSetResult(job_name, asynctasks)
+    out = {
+        "job_name": tasksetresults.taskset_id,
+        "count" : tasksetresults.total,
+        "completed_count": tasksetresults.completed_count(),
+        "done": tasksetresults.successful() | tasksetresults.failed(),
+    }
+    return HttpResponse(simplejson.dumps(out), 
+            mimetype="application/json")
+
+
+@login_required
+@transaction.commit_manually
 def binarize(request):
     """
         Save a posted image to the DFS.  Binarize it with Celery.
@@ -59,8 +149,7 @@ def binarize(request):
 @transaction.commit_manually
 def convert(request):
     """
-    Save a posted image to the DFS.  Convert it with Celery.
-    Then delete the image.
+    Save a posted image to the DFS and convert it with Celery.
     """
 
     # add available seg and bin presets to the context
@@ -140,6 +229,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     if not request.method == "POST":
         return render_to_response(template, context, 
                         context_instance=RequestContext(request))
+
     # save our files to the DFS and return a list of addresses
     if request.POST.get("png"):
         paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
@@ -167,7 +257,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     # init the job from our params
     asynctasks = []
     for path in paths:
-        tid = "%s::%s" % (os.path.basename(path), uuid.uuid1())
+        tid = ocrutils.get_new_task_id(path) 
         ocrtask = OcrTask(task_id=tid, batch=batch, 
                 page_name=os.path.basename(path), status="INIT")
         ocrtask.save()
