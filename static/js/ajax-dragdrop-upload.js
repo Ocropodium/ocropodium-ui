@@ -41,7 +41,7 @@ function AjaxUploader(url, dropzone_id) {
 
     // wrap the user event function so as to trigger the
     // next upload in the queue
-    onXHRLoad = function(event) {
+    var onXHRLoad = function(event) {
         self.onXHRLoad(event);
         sendNextItem();
     }
