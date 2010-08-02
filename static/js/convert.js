@@ -65,7 +65,7 @@ function loadState() {
     if (jobnames) {
         var joblist = jobnames.split(",");
         $.each(joblist, function(index, jobname) {
-            pageobjects[index] = new OcrPage("pageout", index, jobname);
+            pageobjects[index] = new OcrPage("document_window", index, jobname);
             pageobjects[index].pollForResults();            
         });
     }*/
@@ -95,7 +95,6 @@ $(function() {
         data : { _iframe: 1 },
         dataType: "json",
         success: function(data, responseText, xhr) {
-            //$("#pageout").html("");
             onXHRLoad(data, responseText, xhr);
             $("#singleupload").val("");
         },
@@ -136,7 +135,7 @@ $(function() {
             return;
         }
         $.each(data, function(pagenum, pageresults) {
-            pageobjects[pagenum] = new OcrPage("pageout", pagenum, pageresults.job_name);
+            pageobjects[pagenum] = new OcrPage("document_window", pagenum, pageresults.job_name);
             pageobjects[pagenum].pollForResults((300 * uploader.size()) + (pagenum * 250));
         }); 
     };
@@ -146,7 +145,7 @@ $(function() {
     uploader  = new AjaxUploader("/ocr/convert", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
-        $("#pageout").html("");
+        $("#document_window").html("");
         uploader.registerTextParameter("input[@name=engine]:checked"); 
         uploader.registerTextParameter("#form_clean"); 
         uploader.registerTextParameter("#form_segmenter"); 

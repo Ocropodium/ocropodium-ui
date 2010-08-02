@@ -10,6 +10,7 @@
 	<script type='application/javascript' src='/static/js/convert.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/ocr_page.css" type="text/css" media="screen" />
 {% endblock %}
 
 {% block content %}
@@ -20,7 +21,7 @@
 
 </script>
 
-<div id="sidebar">
+<div id="sidebar" class="widget">
     <form id="uploadform" name="convertoptions" action="/ocr/convert" method="POST" enctype="multipart/form-data">
         <!--        <input type="hidden" name="nohang" value="1" /> -->
         <h4>Choose an Image:</h4>
@@ -84,7 +85,7 @@
     </form>
 </div>
 
-<div id="pageout">
+<div id="document_window">
 </div>
 <div style="clear: right;"></div>
  

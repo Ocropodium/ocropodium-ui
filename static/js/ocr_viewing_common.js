@@ -30,7 +30,7 @@ function loadState() {
         var outa = $.cookie(winprefix + "_outadzi");
         var outb = $.cookie(winprefix + "_outbdzi");
 
-        if (png && outa) {
+       /* if (png && outa) {
             sdviewer.setSource(src);
             sdviewer.setOutputA(outa);
             $("#viewerwindow").data("png", png);
@@ -44,7 +44,7 @@ function loadState() {
             } else {
                 $("#toggleab").attr("disabled", true);
             }
-        }
+        }*/
     }
 }
 

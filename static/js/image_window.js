@@ -13,8 +13,8 @@ function ImageWindow(container_id, config) {
 
     // basic config options
     config = config || {};
-    var height = config.height || 500;
-    var width  = config.width || 500;
+    var height = 600;
+    var width  = $("#" + container_id).width() || 500;
     var label = config.label || "Viewer - Output A";
     var id = config.id || "imagewindow";
 
@@ -41,7 +41,7 @@ function ImageWindow(container_id, config) {
     var imgwindow = $("#" + container_id)
         .addClass("imagewindow_container");
     var imgheader = $("<div><div>")
-        .addClass("imagewindow_header").attr("id", id + "_header")
+        .addClass("imagewindow_header widget_header").attr("id", id + "_header")
         .text(label);
     var viewport = $("<div><div>")
         .addClass("imagewindow_viewport").attr("id", id + "_viewport")
@@ -65,8 +65,14 @@ function ImageWindow(container_id, config) {
         .css("float", "left")
         .css("margin-top", height + "px")
         .css("z-index", "100")
-        .css("width", $("#" + container_id).width())
+        .css("width", width)
         .css("position", "relative");
+
+    // update size when image window changes
+    $(window).resize(function(event) {
+        updateSize();
+    });
+
 
 
     // overlay a spinner thing when waiting for something
@@ -90,9 +96,6 @@ function ImageWindow(container_id, config) {
         if (!sviewer.isOpen() || !aviewer.isOpen()) {
             return;
         }
-
-        //alert("Center (pixels): " +
-        //            aviewer.viewport.getCenter().toSource());
     }
 
 
@@ -105,6 +108,18 @@ function ImageWindow(container_id, config) {
             others[i].viewport.zoomTo(viewer.viewport.getZoom(), true);
             others[i].viewport.panTo(viewer.viewport.getCenter(), true);
         }
+    }
+
+    var updateSize = function() {
+        height = 600;
+        width  = $("#" + container_id).width();
+        var divs = [viewport, aportal, bportal, sportal];
+        for (var i in  divs) {
+            divs[i].height(height);            
+        }
+        overlay.width(width).height(height)
+            .css("margin-top", height + "px");
+
     }
 
     var syncOutA =  function(e) {

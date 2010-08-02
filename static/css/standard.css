@@ -54,9 +54,9 @@ body {
     padding: 10px 20px 10px 20px;
 }
 
-#main_toolbar_menu li a:hover {
+#main_toolbar_menu li a:hover, #main_toolbar_menu li a.current {
     text-decoration: none;
-    color: #999999;
+    color: #888;
     font-size: 1.1em;
     padding: 10px 20px 10px 20px;
     background: -webkit-gradient(
@@ -73,15 +73,15 @@ body {
     );
 }
 
+#main_toolbar_menu li a:hover {
+    color: #666;
+}
+
 #workspace {
     min-height: 300px;
 }
 
-
-#sidebar {
-    float: right;
-    width: 300px;
-    padding: 10px;
+.widget {
     border: #999999;
     border-radius: 4px;
     -webkit-border-radius: 4px;
@@ -98,10 +98,40 @@ body {
         rgb(230,230,230) 35%,
         rgb(245,245,245) 50%
     );
-    margin: 10px 10px 0px 0px;
     box-shadow: 2px 3px 3px #919598;
     -webkit-box-shadow: 2px 3px 3px #919598;
     -moz-box-shadow: 2px 3px 3px #919598;
+}
 
+.widget_header {
+    border-top-left-radius: 4px 4px;
+    border-top-right-radius: 4px 4px;
+    -webkit-border-radius-topleft: 4px 4px;
+    -moz-border-radius-topleft: 4px 4px;
+    -moz-border-radius-topright: 4px 4px;
+    font-size: 1.1em;
+    padding: 10px;
+    background-color: #FBFBFC;
+    border-bottom: 1px solid #DDD;
+}
+
+#sidebar {
+    min-height: 600px;
+    padding: 10px;
+}
+
+#sidebar {
+    width: 300px;
+    float: right;
+    /* need this because the document_window
+     * somehow shifts the sidebar down... 
+     */
+    margin: 10px 10px 0px 0px;
+}
+
+#document_window {
+    padding: 10px 0px 10px 10px;
+    min-width: 500px;
+    margin-right: 340px;
 }
 

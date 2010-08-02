@@ -23,8 +23,10 @@ function OcrPage(insertinto_id, page_id, jobname) {
 
     // create container structure
     var container = $("<div></div>")
-        .addClass("ocr_page_container");  
+        .addClass("ocr_page_container")
+        .addClass("widget");  
     var phead = $("<div></div>")
+        .addClass("widget_header")
         .addClass("ocr_page_head")
         .attr("id", "ocr_page_" + page_id + "_head")
         .text(pagename);

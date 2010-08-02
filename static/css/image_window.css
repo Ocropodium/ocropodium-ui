@@ -1,16 +1,10 @@
 
 .imagewindow_container {
-    border: 1px solid #999;
-    border-radius: 4px;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    box-shadow: 2px 4px 4px #DDD;
-    -webkit-box-shadow: 2px 4px 4px #DDD;
-    -moz-box-shadow: 2px 4px 4px #DDD;
+    padding: 0px 0px 10px 0px;
 }
 
 
-.imagewindow_header {
+/*.imagewindow_header {
     border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
@@ -18,10 +12,11 @@
     background-color: #FBFBFB;    
     border-bottom: 1px solid #DDD;
     font-size: 1.2em;    
-}
+} */
 
 .imagewindow_viewport {
-    margin: 10px;
+    background-color: #FFF;
+    border-bottom: 1px solid #DDD;
 }
 
 .overlays {
