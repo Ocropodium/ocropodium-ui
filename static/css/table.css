@@ -1,0 +1,32 @@
+.info_table {
+	width: 100%;
+    border-collapse: collapse;
+}
+
+.info_table tr, td {
+    border: 1px solid #D0D0D0;
+}
+
+.info_table th, td {
+	padding: 5px;
+    border-collapse: collapse;
+    margin: 0px;
+}
+
+.info_table th {
+	font-weight: bolder;
+	font-size: 1em;
+    text-align: left;
+    color: #FFF;
+    background-color: #1B4765;
+    border: none;
+}
+
+a.sort_table {
+    color: #FFF;
+    font-weight: bolder;
+    text-decoration: none;
+    margin-right: 10px;
+}
+
+
