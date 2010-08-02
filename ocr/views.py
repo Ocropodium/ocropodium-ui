@@ -121,6 +121,7 @@ def batch_results(request, job_name):
     out = {
         "job_name": tasksetresults.taskset_id,
         "count" : tasksetresults.total,
+        "subtasks" : [t.task_id for t in tasksetresults.subtasks],
         "completed_count": tasksetresults.completed_count(),
         "done": tasksetresults.successful() | tasksetresults.failed(),
     }
