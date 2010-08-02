@@ -261,6 +261,7 @@ function TaskList(list_container_id, param_container_id) {
         if (!data.has_other_pages) {
             return;
         }
+        var container = $("<div></div>").addClass("paginators"); 
         var pag = $("<div></div>")
             .addClass("pagination")
             .addClass("step_links");
@@ -276,7 +277,7 @@ function TaskList(list_container_id, param_container_id) {
                     .attr("href", url + "?page="
                         + data.next_page_number));
         }
-        return pag;
+        return container.append(pag);
     }
 
 

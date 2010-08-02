@@ -1,6 +1,7 @@
 {% extends "standard.html" %}
 
 {% block headerscript %}
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/task_list.css" type="text/css" media="screen" />
 	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
     <script type="text/javascript" src="/static/js/task_list.js"></script>
@@ -89,7 +90,7 @@ $(function() {
 {% block content %}
 
 
-<div id="sidebar">
+<div id="sidebar" class="widget">
     <h4 id="filter_head">Filter Tasks:</h4>
     <form name="filter" id="task_filter_form" method="GET" action="/ocrtasks/list">
         <input type="hidden" class="filter_item" name="page" value="{{params.page}}" />
@@ -118,7 +119,7 @@ $(function() {
     </form>
 </div>
 
-<div class="innercontent">
+<div id="document_window">
 
     {% if messages %}
     <ul class="messages">
@@ -128,23 +129,25 @@ $(function() {
     </ul>
     {% endif %}
 
-    <h3>Tasks:</h3>
+    <div class="widget">
+        <div class="widget_header">Tasks:</div>
 
-    <div id="task_list_controls">
-        <div id="task_list_controls_right">            
-            <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
-                <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
-                Auto-Refresh:
-                <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
-                <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
-            </form>
+        <div id="task_list_controls">
+            <div id="task_list_controls_right">            
+                <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
+                    <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
+                    Auto-Refresh:
+                    <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
+                    <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
+                </form>
+            </div>
         </div>
-    </div>
 
 
-    <div id="task_list">
+        <div id="task_list">
+        </div>
+        <div id="dialog_box"></div>
     </div>
-    <div id="dialog_box"></div>
 </div>
 
 

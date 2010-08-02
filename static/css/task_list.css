@@ -9,10 +9,13 @@
 #task_list_controls {
     font-size: 0.9em;
     color: #999999;
+    height: 30px;
+    padding: 0px 5px 0px 5px;
 }
 
 #task_list_controls_right {
     float: right;
+    overflow: auto;
 }
 
 #task_list_controls input[type="text"] {
@@ -65,8 +68,15 @@
     margin-right: 10px;
 }
 
+.paginators {
+    padding-top: 5px;
+    overflow: auto;
+}
+
 .pagination {
+    height: 30px;
     float: right;
+    overflow: auto;
 }
 
 .pagination a {
