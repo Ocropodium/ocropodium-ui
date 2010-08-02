@@ -1,0 +1,107 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.9em;
+    background-color: #A1A5A8;
+    margin: 0px;
+}
+
+
+#header_logo {
+    float: right;
+}
+
+#main_toolbar {
+    background-color: #F0F0F0;
+    margin: 0px 0px 0px 0px;
+    text-align: left;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(230,230,230))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(230,230,230) 35%,
+        rgb(245,245,245) 50%
+    );
+
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+}
+
+#main_toolbar_menu {
+    margin: 0px;
+    padding: 0px;
+    overflow: auto;
+}
+
+#main_toolbar_menu li {
+    list-style-type: none;
+    list-style-position: inside;
+    list-style: block; 
+    float: left;
+    padding: 10px 0px 10px 0px;
+
+}
+
+#main_toolbar_menu li a {
+    text-decoration: none;
+    color: #999999;
+    font-size: 1.1em;
+    padding: 10px 20px 10px 20px;
+}
+
+#main_toolbar_menu li a:hover {
+    text-decoration: none;
+    color: #999999;
+    font-size: 1.1em;
+    padding: 10px 20px 10px 20px;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(235,235,235)),
+        color-stop(0.35, rgb(225,225,225))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(230,230,230) 35%,
+        rgb(235,235,235) 50%
+    );
+}
+
+#workspace {
+    min-height: 300px;
+}
+
+
+#sidebar {
+    float: right;
+    width: 300px;
+    padding: 10px;
+    border: #999999;
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(230,230,230))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(230,230,230) 35%,
+        rgb(245,245,245) 50%
+    );
+    margin: 10px 10px 0px 0px;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+
+}
+
