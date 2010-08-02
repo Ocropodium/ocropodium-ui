@@ -11,32 +11,55 @@
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
     <link rel="stylesheet" href="/static/css/filebrowser.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
-
     <script type="application/javascript">
 
 
 var fbrowser = null;
 
 $(function() {
-
         fbrowser = new FileBrowser("file_browser");
-        fbrowser.init();
 
-
-
+        $("#browse").live("click", function(e) {
+            fbrowser.onClose = function(e) {
+                $.each(fbrowser.getValue(), function(i, v) {
+                    $("#files").append($("<div></div>").text(v));
+                });
+            };
+            fbrowser.showModal();
+            return false;
+        });
 });
 
 
     </script>
+
+    <style type="text/css">
+        #files {
+            float: left;
+            width: 400px;
+            height: 200px;
+            background-color: #FFFFDD;
+            border: 1px solid #F0F0F0;            
+        }
+
+        #browse {
+            float: left;
+            font-size: 1.1em;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 
 <div class="innercontent">
-    <div class="filewindow" id="file_browser">
-
+    <div id="files">
     </div>
+    <a href="#" id="browse">Browse</a>
+    <div id="dialog">
+        <div class="filewindow" id="file_browser">
 
+        </div>
+    </div>
 </div>
 
 

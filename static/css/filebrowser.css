@@ -1,7 +1,181 @@
 
 
-.filewindow {
-    min-height: 500px;
-        
+.fboverlay {
+    opacity: 0.5;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    float: left;
+    background-color: #000;
+}
 
+.fbcontainer {
+   
+    z-index: 1000;
+    background-color: #FFF;
+}
+
+.filewindow {
+    /*height: 500px;*/
+    z-index: 1000;
+}
+
+.filedialog {
+    padding: 0px;
+    margin: 0px;
+    background-color: #F0F0F0;
+    z-index: 1000;
+}
+
+#tscroll {
+    width: 100%;
+    height: 400px;
+    overflow: auto;
+    border-bottom: 1px solid #D0D0D0;
+    border-top: 1px solid #D0D0D0;
+    float: left;
+}
+
+.fbcontrols {
+    margin: 10px 0px 10px 0px;
+    width: 100%;
+    float: left;
+}
+
+.fbcontrol {
+    float: right;
+}
+
+.listhead {
+    border-width: 1px 1px 0px 1px;
+    border-color: #D0D0D0;
+    border-style: solid;
+    padding: 0px 1px 0px 1px;
+}
+
+
+.filelist, .listhead {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+.listhead th, .filelist td {
+    overflow: none;
+}
+
+.filelist {
+    border-left: 1px solid #D0D0D0;
+    border-right: 1px solid #D0D0D0;
+    border-bottom: 1px solid #D0D0D0;
+    margin-bottom: -1px;
+}
+
+
+.listhead thead {
+    background-color: #F0F0F0;
+    text-align: left;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(240,240,240))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(240,240,240) 35%,
+        rgb(245,245,245) 50%
+    );
+}
+
+.selected {
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.35, rgb(135,180,255)),
+        color-stop(0.48, rgb(143,184,255))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(135,180,255) 35%,
+        rgb(143,184,255) 48%
+    );
+}
+
+.listhead th {
+    padding: 5px 0px 5px 5px;
+}
+
+.filelist td {
+    border: none;
+}
+
+.filelist tr td.n {
+    padding-left: 32px;
+    background-image: url("/static/icons/file.png");
+    background-position: 5px;
+    background-repeat: no-repeat;
+}
+
+.filelist tr.dir td.n {
+    background-image: url("/static/icons/folder.png");
+}
+
+.filelist tr {
+    background-color: #FFFFFF;
+}
+
+.filelist tr.odd {
+    background-color: #F4F4F4;
+}
+
+.sort_arrow {
+    float: right;
+    height: 15px;
+    width: 30px;
+    background-position: right;
+    background-repeat: no-repeat;
+}
+
+.order {
+    text-decoration: underline;
+    background-image: url("/static/icons/arrow_up.gif");
+}
+
+
+.order_desc {
+    text-decoration: underline;
+    background-image: url("/static/icons/arrow_down.gif");
+}
+
+.header_drag {
+    float: right;
+    padding: 0px 3px 0px 3px;
+    cursor: e-resize;
+}
+
+
+.header_line {
+    float: right;
+    width: 1px;
+    height: 15px;
+    background-color: #D0D0D0;
+}
+
+.pressed {
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(240,240,240)),
+        color-stop(0.35, rgb(235,235,235))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(235,235,235) 35%,
+        rgb(240,240,240) 50%
+    );
 }

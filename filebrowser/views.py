@@ -1,6 +1,7 @@
 # App for browsing the server.
 
 import os
+import time
 from stat import *
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -28,7 +29,18 @@ def entry_info(path):
     """
     Return info on a directory entry.
     """
-    for entry in os.listdir(path):
+    try:
+        flist = os.listdir(path)
+    except OSError, (errno, strerr):
+        return {"error": strerr}
+    except Exception, e:
+        print e
+        return {"error": e.message}
+
+    stats = []
+    for entry in flist:
+        if entry.startswith("."):
+            continue
         type = "unknown"
         st = os.stat(os.path.join(path, entry))
         mode = st[ST_MODE]
@@ -38,14 +50,15 @@ def entry_info(path):
             type = "link"
         elif S_ISREG(mode):
             type = "file"
-        yield (
+        stats.append( (
             entry,
             type,
             st.st_size,
             st.st_atime,
             st.st_mtime,
             st.st_ctime
-        )
+        ))
+    return stats
             
 
 @login_required
@@ -58,6 +71,7 @@ def ls(request):
     root = os.path.join(
             os.path.abspath(settings.MEDIA_ROOT), "files", request.user.username)
     fulldir = os.path.join(root, dir)
+    #fulldir = "/" + dir
     response = HttpResponse(mimetype="application/json")
     simplejson.dump(entry_info(fulldir), response, cls=ExtJsonEncoder)
     return response
