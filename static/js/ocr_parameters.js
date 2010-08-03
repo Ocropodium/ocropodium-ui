@@ -4,11 +4,9 @@
 
 
 function ParameterBuilder(container_id, ctypes) {
-
     var url = "/ocr/components?" + $.map(ctypes, function(c, i) {
             return "type=" + c;
     }).join("&"),
-
     container = $("#" + container_id),
 
     // cache of parameter data, fetched from the server
@@ -31,9 +29,11 @@ function ParameterBuilder(container_id, ctypes) {
         binclean:   "ICleanupBinary",
         grayclean:  "ICleanupGray",
         binarizer:  "IBinarize",
-        graydeskew: "ICleanupBinary",   // don't ask...?
         bindeskew:  "ICleanupBinary",        
+        graydeskew: "ICleanupBinary",   // don't ask, it's just like this...
         psegmenter: "ISegmentPage",
+        segmenter:  "ISegmentLine",
+        grouper:    "IGrouper",
     };
 
     /*
@@ -258,10 +258,9 @@ function ParameterBuilder(container_id, ctypes) {
     }
 
     var buildRegisteredComponentSet = function() {
-        for (var i in components) {
-            var comp = components[i];
+        $.each(components, function(i, comp) {
             addComponentSelect(comp.name, comp.label, comp.defvalue, comp.blank);
-        }
+        });
     }
 
     // get the component type for a string name like
@@ -292,7 +291,8 @@ function ParameterBuilder(container_id, ctypes) {
                 pinput.clone()
                     .attr("name", pname).attr("id", pname)
                     .val(param.value));
-        }    
+        }
+
     }
 
     // get a list of components for a param name like 'binarize'

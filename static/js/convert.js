@@ -77,10 +77,10 @@ window.onbeforeunload = function(event) {
 }
 
 
+var uploader = null;
+var pbuilder = null;
 
 $(function() {
-    var uploader = null;
-
 
     $("#singleupload").change(function(event) {
         if ($(this).val() == "") {
@@ -145,12 +145,11 @@ $(function() {
     uploader  = new AjaxUploader("/ocr/convert", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
-        $("#document_window").html("");
+        //$("#document_window").html("");
         uploader.registerTextParameter("input[@name=engine]:checked"); 
-        uploader.registerTextParameter("#form_clean"); 
-        uploader.registerTextParameter("#form_segmenter"); 
-        uploader.registerTextParameter("#form_cmodel"); 
-        uploader.registerTextParameter("#form_lmodel"); 
+        $("#optionsform input[type='text'], #optionsform select").each(function() {
+            uploader.registerTextParameter("#" + $(this).attr("id"));
+        });
     };
 
     // load state stored from last time
@@ -158,6 +157,14 @@ $(function() {
 
     // fetch the appropriate models...
     rebuildModelLists($("input[name=engine]:checked").val());    
+
+    // initialise the controls
+    pbuilder = new ParameterBuilder("options", ["ISegmentLine", "IGrouper"]);
+    pbuilder.registerComponent("grouper", "Grouper", "StandardGrouper");
+    pbuilder.registerComponent("segmenter", "Line Segmenter", "DpSegmenter");
+    pbuilder.init();
+
+
 
 });
 

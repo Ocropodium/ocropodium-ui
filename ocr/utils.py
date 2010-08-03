@@ -283,6 +283,8 @@ class OcropusParams(UserDict.DictMixin):
     def __init__(self, dct):
         self.lmodel = ""
         self.cmodel = ""
+        self.segmenter = "DpSegmenter"
+        self.grouper = "StandardGrouper"
         self.psegmenter = "SegmentPageByRAST"
         self.clean = "StandardPreprocessing"
         self.binarizer = "BinarizeBySauvola"
@@ -346,6 +348,23 @@ class OcropusWrapper(object):
             self._lmodel.load(self.params.lmodel)
         except (StandardError, RuntimeError), err:
             raise err
+        if self.params.segmenter:
+            self.logger.info("Using line segmenter: %s" % self.params.segmenter)
+            self._linerec.pset("segmenter", self.params.segmenter)
+        if self.params.grouper:
+            self.logger.info("Using grouper: %s" % self.params.grouper)
+            self._linerec.pset("grouper", self.params.grouper)
+        # TODO: Work out how to set parameters on the grouper and segmenter
+        # Unsure about how (or if it's possible) to access the segmenter
+        # via the LineRec
+        #for name, val in self.params.iteritems():
+        #    # find the 'long' name for the component with the given short
+        #    # name, i.e: binsauvola -> BinarizeBySauvola
+        #    cmatch = re.match("%s__(.+)" % self.params.segmenter, name, re.I)
+        #    if cmatch:
+        #        param = cmatch.groups()[0]
+        #        self.logger.info("Setting: %s.%s -> %s" % (self.params.psegmenter, param, val))
+        #        self._linerec.pset(param, val)
             
     
     def convert(self, filepath, callback=None, **cbkwargs):
