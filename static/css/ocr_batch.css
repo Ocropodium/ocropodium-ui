@@ -1,0 +1,25 @@
+
+
+.batch_task {
+    margin: 5px;
+    border: 1px solid #999;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    padding: 5px;
+    background-color: #FCFCFC;
+}
+.progress_outer {
+    float: right;
+    width: 200px;
+    border: 1px; solid #999;
+    height: 20px;
+}
+
+.progress_inner {
+    float: left;
+    width: 0%;
+    height: 20px;
+    background-color: #44FF44;
+}
+
+
