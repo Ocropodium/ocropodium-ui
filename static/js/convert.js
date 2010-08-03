@@ -87,18 +87,23 @@ $(function() {
             return false;
         }
 
-        //alert($(this).attr("value"));
+        // get the extra params
+        var pdata = pbuilder.data();
+        // server-size hack so we know it's using the iframe method
+        pdata._iframe = 1;
+        pdata.engine = $("input[@name=engine]:checked").val();
+
+        $("#uploadform").ajaxForm({
+            data : pdata,
+            dataType: "json",
+            success: function(data, responseText, xhr) {
+                onXHRLoad(data, responseText, xhr);
+                $("#singleupload").val("");
+            },
+        });
         $("#uploadform").submit();
     });
 
-    $("#uploadform").ajaxForm({
-        data : { _iframe: 1 },
-        dataType: "json",
-        success: function(data, responseText, xhr) {
-            onXHRLoad(data, responseText, xhr);
-            $("#singleupload").val("");
-        },
-    });
 
     // hide the drag-drop zone for browsers other than firefox
     if (!($.browser.mozilla && 
