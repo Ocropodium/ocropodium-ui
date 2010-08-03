@@ -101,6 +101,7 @@ body {
     box-shadow: 2px 3px 3px #919598;
     -webkit-box-shadow: 2px 3px 3px #919598;
     -moz-box-shadow: 2px 3px 3px #919598;
+    padding-bottom: 20px;
 }
 
 .widget_header {
@@ -109,15 +110,29 @@ body {
     -webkit-border-radius-topleft: 4px 4px;
     -moz-border-radius-topleft: 4px 4px;
     -moz-border-radius-topright: 4px 4px;
-    font-size: 1.1em;
-    padding: 10px;
+    font-size: 1.0em;
+    font-weight: bold;
+    color: #666;
+    padding: 7px;
     background-color: #FBFBFC;
     border-bottom: 1px solid #DDD;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(240,240,240))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(240,240,240) 35%,
+        rgb(245,245,245) 50%
+    );
+
 }
 
 #sidebar {
-    min-height: 600px;
-    padding: 10px;
+    min-height: 500px;
 }
 
 #sidebar {
@@ -129,9 +144,13 @@ body {
     margin: 10px 10px 0px 0px;
 }
 
+.widget_content {
+    padding: 10px;
+}
+
 #document_window {
     padding: 10px 0px 10px 10px;
     min-width: 500px;
-    margin-right: 340px;
+    margin-right: 320px;
 }
 

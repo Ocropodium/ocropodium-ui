@@ -1,47 +1,49 @@
 <div id="sidebar" class="widget">
-    <form id="uploadform" name="convertoptions" action="{{request.path}}" method="POST" enctype="multipart/form-data">
-        <!--        <input type="hidden" name="nohang" value="1" /> -->
-        <h4>Choose an Image:</h4>
-        <p>    
-            <input type="file" name="upload0" id="singleupload" />
-        </p>
-        <div id="dragdrop">
-            <h4>...or Drag-Drop Images Here:</h4>
-            <div id="dropzone">
-                Drop images here...
+    <div class="widget_header">Options</div>
+    <div class="widget_content">
+        <form id="uploadform" name="convertoptions" action="{{request.path}}" method="POST" enctype="multipart/form-data">
+            <!--        <input type="hidden" name="nohang" value="1" /> -->
+            <p>    
+                <input type="file" name="upload0" id="singleupload" />
+            </p>
+            <div id="dragdrop">
+                <h4>...or Drag-Drop Images Here:</h4>
+                <div id="dropzone">
+                    Drop images here...
+                </div>
             </div>
-        </div>
-        <p>
-            <input class="interact_param" type="button" id="togglesrc" value="Source/Output" />
-            <input class="interact_param" type="button" id="toggleab" value="A/B" />
-            <input class="interact_param" type="button" id="refresh" value="Refresh" />
-        </p>
-    </form>
-    <form id="optionsform" name="options" action="{{request.path}}" method="POST">
+            <p>
+                <input class="interact_param" type="button" id="togglesrc" value="Source/Output" />
+                <input class="interact_param" type="button" id="toggleab" value="A/B" />
+                <input class="interact_param" type="button" id="refresh" value="Refresh" />
+            </p>
+        </form>
+        <form id="optionsform" name="options" action="{{request.path}}" method="POST">
 
-        {# Add a binarisation menu (for segmentation only) #}
-        {% if binpresets %}
-        <h4>Preprocessing:</h4>
-        <p>
-            <select id="form_clean" name="clean">
-                <option value="StandardPreprocessing" selected="selected">Standard</option>
-                <optgroup label="Presets">
-                {% for p in binpresets %}
-                    <option value="preset_{{p.pk}}">{{p.name}}</option>                        
-                {% endfor %}            
-                </optgroup>
-            </select>
-        </p>
-        {% endif %}
+            {# Add a binarisation menu (for segmentation only) #}
+            {% if binpresets %}
+            <h4>Preprocessing:</h4>
+            <p>
+                <select id="form_clean" name="clean">
+                    <option value="StandardPreprocessing" selected="selected">Standard</option>
+                    <optgroup label="Presets">
+                    {% for p in binpresets %}
+                        <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+                    {% endfor %}            
+                    </optgroup>
+                </select>
+            </p>
+            {% endif %}
 
-        <h4>Option Presets:</h4>
-        <div id="preset_container">
-        </div>
+            <h4>Option Presets:</h4>
+            <div id="preset_container">
+            </div>
 
-        <h4>Options:</h4>
-        <div id="options">
-        </div>
-    </form>
+            <h4>Options:</h4>
+            <div id="options">
+            </div>
+        </form>
+    </div>    
 </div>
 <div id="logwindow"></div>
 <div id="document_window">

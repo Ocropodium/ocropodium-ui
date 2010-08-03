@@ -13,7 +13,7 @@ function ImageWindow(container_id, config) {
 
     // basic config options
     config = config || {};
-    var height = 600;
+    var height = 450;
     var width  = $("#" + container_id).width() || 500;
     var label = config.label || "Viewer - Output A";
     var id = config.id || "imagewindow";
@@ -111,7 +111,6 @@ function ImageWindow(container_id, config) {
     }
 
     var updateSize = function() {
-        height = 600;
         width  = $("#" + container_id).width();
         var divs = [viewport, aportal, bportal, sportal];
         for (var i in  divs) {

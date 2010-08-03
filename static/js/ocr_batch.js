@@ -22,13 +22,15 @@ function OcrBatch(insertinto_id, jobname, subtasks) {
     }).join("&");
     var resultsurl = "/ocr/batch_results/" + jobname;
     var boxpattern = new RegExp(/(\d+) (\d+) (\d+) (\d+)/);
-    var me = this;
+    var self = this;
 
     // create container structure
     var container = $("<div></div>")
-        .addClass("ocr_page_container");  
+        .addClass("ocr_page_container")
+        .addClass("widget");  
     var phead = $("<div></div>")
         .addClass("ocr_page_head")
+        .addClass("widget_header")
         .attr("id", "ocr_page_head")
         .text(pagename);
     var pdiv = $("<div></div>")
@@ -47,10 +49,10 @@ function OcrBatch(insertinto_id, jobname, subtasks) {
         .text("View Layout")
         .click(function(event) {
             if ($(this).text() == "View Layout") {
-                me.positionByBounds();
+                self.positionByBounds();
                 $(this).text("View Paragraphs");
             } else {
-                me.insertBreaks();
+                self.insertBreaks();
                 $(this).text("View Layout");
             } 
         })
@@ -86,6 +88,10 @@ function OcrBatch(insertinto_id, jobname, subtasks) {
         pdiv.removeClass("waiting");
         var percentdone = (results.completed_count / results.count) * 100;
         pdiv.text(results.count + " images (" + Math.round(percentdone) + "%)");
+
+        $.each(results.subtasks, function(i, taskname) {
+            pdiv.append($("<div></div>").text(taskname));
+        });
     }
 
 

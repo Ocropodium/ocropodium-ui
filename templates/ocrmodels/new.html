@@ -1,14 +1,19 @@
-{% extends "ocrmodels/standard.html" %}
+{% extends "standard.html" %}
 
 {% block headerscript %}
 
 
 {% endblock %}
 
-{% block innercontent %}
+{% block content %}
+    {% include "ocrmodels/includes/sidebar.html" %}
 
-    <h3>Upload New Model:</h3>
-    {% include "ocrmodels/includes/new_model_form.html" %}
+    <div id="document_window">
+        <div class="widget">
+            <div class="widget_header">Upload New Model:</div>
+
+            {% include "ocrmodels/includes/new_model_form.html" %}
+    </div>
 
 
 {% endblock %}

@@ -9,7 +9,7 @@
 
 function AjaxBatchUploader(url, dropzone_id) {
     var dropzone = $("#" + dropzone_id).get(0);    
-    var params = [];
+    var m_params = [];
     var maxsize = 0;
 
     // Request building guff
@@ -37,7 +37,7 @@ function AjaxBatchUploader(url, dropzone_id) {
     // return a hash of text param key/vals
     textParameters = function() {
         params = {};
-        $.each(params, function(index, paramname) {
+        $.each(m_params, function(index, paramname) {
             if ($(paramname).length) {
                 params[$(paramname).attr("name")] = $(paramname).val();
             }
@@ -52,7 +52,7 @@ function AjaxBatchUploader(url, dropzone_id) {
     // register a new text parameter to be included when the upload
     // commences
     this.registerTextParameter = function(paramname) {
-        params.push(paramname);
+        m_params.push(paramname);
     }
 
 

@@ -21,31 +21,35 @@
                 <img src="/static/ocr_logo.png" alt="OCRopodium Logo" />
             </a>
             <ul id="main_toolbar_menu">
-                <li class="topnav_item_le">
+                <li>
                 <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}
                     href="/ocr/convert/">Convert</a>
                 </li> 
-                <li class="topnav_item">
+                <li>
                 <a {% ifequal request.path "/ocr/binarize/" %}class="current"{% endifequal %}
                     href="/ocr/binarize/">Binarize</a>
                 </li> 
-                <li class="topnav_item">
+                <li>
                 <a {% ifequal request.path "/ocr/segment/" %}class="current"{% endifequal %}
                     href="/ocr/segment/">Segment</a>
+                </li>
+                <li> 
+                <a {% ifequal request.path "/ocr/batch/" %}class="current"{% endifequal %}
+                    href="/ocr/batch/">Batch</a>
                 </li> 
-                <li class="topnav_item">
+                <li>
                 <a {% ifequal request.path "/ocrmodels/" %}class="current"{% endifequal %}
                     href="/ocrmodels/">Models</a>
                 </li> 
-                <li class="topnav_item">
+                <li>
                 <a {% ifequal request.path "/ocrtasks/" %}class="current"{% endifequal %}
                     href="/ocrtasks/">Tasks</a>
                 </li>
-                <li class="topnav_item">
+                <li>
                 <a {% ifequal request.path "/ocrtools/" %}class="current"{% endifequal %}
                     href="/ocrtools/">Tools</a>
                 </li>              
-                <li class="topnav_item">
+                <li>
                 <a {% ifequal request.path "/admin/" %}class="current"{% endifequal %}
                     href="/admin/">Settings</a>
                 </li>              
