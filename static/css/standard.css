@@ -102,6 +102,7 @@ body {
     -webkit-box-shadow: 2px 3px 3px #919598;
     -moz-box-shadow: 2px 3px 3px #919598;
     padding-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .widget_header {
