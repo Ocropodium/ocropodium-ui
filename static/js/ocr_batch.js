@@ -96,12 +96,16 @@ function OcrBatch(insertinto_id, batchdata) {
                 var progressbar = $("<span></span>")
                     .addClass("progress_outer");
                 var progress = $("<span></span>")
-                    .addClass("progress_inner");
+                    .addClass("progress");
                 task.append(progressbar.append(progress));
                 pdiv.append(task);
             }
-            task.find(".progress_inner")
+            task.find(".progress")
                 .css("width", taskdata.fields.progress + "%");
+            if (taskdata.fields.status == "DONE") {
+                task.find(".progress").addClass("progress_done");
+                task.find(".progress_outer").addClass("progress_outer_done");                
+            }
         });
     }
 
@@ -120,7 +124,7 @@ function OcrBatch(insertinto_id, batchdata) {
             setError(data.error, data.trace);
         } else {
             setResults(data);
-            return done == data.length;
+            return done == data.length; 
         }
         return true;
     }

@@ -11,15 +11,31 @@
 .progress_outer {
     float: right;
     width: 200px;
-    border: 1px; solid #999;
-    height: 20px;
+    border: 1px solid #999;
+    height: 10px;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    background-image: url("/static/progbar.gif");
+    background-position: center left;
+    background-repeat: no-repeat;
 }
 
-.progress_inner {
+.progress_outer_done {
+    background-image: none;
+}
+
+.progress {
     float: left;
     width: 0%;
-    height: 20px;
-    background-color: #44FF44;
+    height: 10px;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    background-color: #088A08;
+    opacity: 0.5;
+}
+
+.progress_done {
+    background-color: #045FB4;
 }
 
 
