@@ -37,7 +37,7 @@ class OcrTask(models.Model):
         ("DONE", "Done"),
     )
 
-    batch = models.ForeignKey(OcrBatch)
+    batch = models.ForeignKey(OcrBatch, related_name="tasks")
     task_id = models.CharField(max_length=100)
     task_name = models.CharField(max_length=100)
     page_name = models.CharField(max_length=255)

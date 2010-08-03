@@ -135,7 +135,7 @@ $(function() {
             $("#dropzone").text("Drop images here...").removeClass("waiting");
             return;
         }
-        pageobjects[0] = new OcrBatch("document_window", data.job_name, data.subtasks);
+        pageobjects[0] = new OcrBatch("document_window", data[0]);
         pageobjects[0].pollForResults(300 * uploader.size());
     };
 

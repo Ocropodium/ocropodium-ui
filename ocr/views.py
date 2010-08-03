@@ -12,7 +12,8 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render_to_response
+from django.core import serializers
+from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.ocr import tasks
@@ -92,13 +93,28 @@ def batch(request):
                     args=(path.encode(), userparams),
                     options=dict(task_id=tid, loglevel=60, retries=2)))            
         tasksetresults = TaskSet(tasks=subtasks).apply_async()
-        out = {
-            "job_name": tasksetresults.taskset_id,
-            "count" : tasksetresults.total,
-            "subtasks" : [t.task_id for t in tasksetresults.subtasks],
-            "completed_count": tasksetresults.completed_count(),
-            "done": tasksetresults.successful() | tasksetresults.failed(),
-        }
+
+        # return a serialized result
+        jsonserializer = serializers.get_serializer("json")()     
+        out = jsonserializer.serialize(
+            [batch], 
+            relations={
+                "tasks": {
+                    "excludes": ("args", "kwargs"),    
+                },
+                "user": {
+                    "fields": ("username"),
+                }
+            },
+        )
+
+#        out = {
+#            "job_name": tasksetresults.taskset_id,
+#            "count" : tasksetresults.total,
+#            "subtasks" : [t.task_id for t in tasksetresults.subtasks],
+#            "completed_count": tasksetresults.completed_count(),
+#            "done": tasksetresults.successful() | tasksetresults.failed(),
+#        }
     except Exception, e:
         transaction.rollback()
         print e.message
@@ -106,7 +122,22 @@ def batch(request):
                 mimetype="application/json")
 
     transaction.commit()
-    return HttpResponse(simplejson.dumps(out), 
+    return HttpResponse(out, 
+            mimetype="application/json")
+
+
+@login_required
+def batch_results_db(request, pk):
+    """
+    Get results for a taskset.
+    """
+    batch = get_object_or_404(OcrBatch, pk=pk)
+    jsonserializer = serializers.get_serializer("json")()     
+    out = jsonserializer.serialize(
+        batch.tasks.all(),
+        excludes=("args", "kwargs")
+    )
+    return HttpResponse(out, 
             mimetype="application/json")
 
 

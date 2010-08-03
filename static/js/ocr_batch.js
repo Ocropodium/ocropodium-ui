@@ -14,13 +14,10 @@
 // changes (to SUCCESS or ERROR) at which point to displays
 // whatever is in 'results'.
 
-function OcrBatch(insertinto_id, jobname, subtasks) {
-    // extract the pagename from the job name, delimited by "::"
-    var pagename = jobname.split("::")[0].replace(/\.[^\.]+$/, "");
-    var subtaskparams = $.map(subtasks, function(s) {
-        return "task_id=" + s;
-    }).join("&");
-    var resultsurl = "/ocr/batch_results/" + jobname;
+function OcrBatch(insertinto_id, batchdata) {
+    // extract the batchname from the job name, delimited by "::"
+    var batchname = batchdata.fields.name;
+    var resultsurl = "/ocr/batch_results/" + batchdata.pk;
     var boxpattern = new RegExp(/(\d+) (\d+) (\d+) (\d+)/);
     var self = this;
 
@@ -32,12 +29,12 @@ function OcrBatch(insertinto_id, jobname, subtasks) {
         .addClass("ocr_page_head")
         .addClass("widget_header")
         .attr("id", "ocr_page_head")
-        .text(pagename);
+        .text(batchname);
     var pdiv = $("<div></div>")
         .addClass("ocr_page")
         .addClass("waiting")
         .attr("id", "ocr_page")
-        .data("jobname", jobname);
+        .data("batchname", batchname);
 
     // setup header buttons
     var layout = $("<a></a>").attr("href", "#")
@@ -86,11 +83,25 @@ function OcrBatch(insertinto_id, jobname, subtasks) {
     // add results to the page.
     var setResults = function(results) {
         pdiv.removeClass("waiting");
-        var percentdone = (results.completed_count / results.count) * 100;
-        pdiv.text(results.count + " images (" + Math.round(percentdone) + "%)");
-
-        $.each(results.subtasks, function(i, taskname) {
-            pdiv.append($("<div></div>").text(taskname));
+        //var percentdone = (results.completed_count / results.count) * 100;
+        //pdiv.text(results.count + " images (" + Math.round(percentdone) + "%)");
+        
+        $.each(results, function(i, taskdata) {
+            var task = pdiv.find("#task" + taskdata.pk);
+            if (task.length == 0) {
+                task = $("<div></div>")
+                    .addClass("batch_task")
+                    .attr("id", "task" + taskdata.pk)
+                    .text(taskdata.fields.page_name);
+                var progressbar = $("<span></span>")
+                    .addClass("progress_outer");
+                var progress = $("<span></span>")
+                    .addClass("progress_inner");
+                task.append(progressbar.append(progress));
+                pdiv.append(task);
+            }
+            task.find(".progress_inner")
+                .css("width", taskdata.fields.progress + "%");
         });
     }
 
@@ -98,11 +109,18 @@ function OcrBatch(insertinto_id, jobname, subtasks) {
 
     // handle the results of each poll
     var processData = function(data) {
+        var done = 0;
+        $.each(data, function(i, t) {
+            if (t.fields.status.match(/DONE|ERROR/)) {
+                done++;
+            }
+        });        
+
         if (data.error) {
             setError(data.error, data.trace);
         } else {
             setResults(data);
-            return data.done;
+            return done == data.length;
         }
         return true;
     }
@@ -122,7 +140,6 @@ function OcrBatch(insertinto_id, jobname, subtasks) {
         $.ajax({
             url: resultsurl,
             type: "POST",
-            data: subtaskparams,
             dataType: "json",
             success: function(data) {
                 if (!processData(data)) {
