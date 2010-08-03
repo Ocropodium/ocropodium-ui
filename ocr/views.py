@@ -231,6 +231,10 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         return render_to_response(template, context, 
                         context_instance=RequestContext(request))
 
+    print request.POST
+    print request.FILES
+    print request.FILES.values()[0].multiple_chunks()
+    print request.FILES.values()[0].size
     # save our files to the DFS and return a list of addresses
     if request.POST.get("png"):
         paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
@@ -246,6 +250,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         return HttpResponse(
                 simplejson.dumps({"error": "no valid images found"}),
                 mimetype="application/json")     
+
     
     # wrangle the params - this needs improving
     userparams = _get_best_params(request.POST.copy())

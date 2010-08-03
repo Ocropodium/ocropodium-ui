@@ -322,6 +322,19 @@ class OcropusParams(UserDict.DictMixin):
         return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
 
 
+def set_progress(logger, progress_func, step, end, granuarity=5):
+    """
+    Call a progress function, if supplied.  Only call
+    every 5 steps.  
+    """
+    if progress_func is None:
+        return
+    if step % granularity != 0:
+        return
+    perc = min(100, (float(step) / float(end)) * 100) 
+    progress_func(perc)
+
+
 class OcropusWrapper(object):
     """
     Wrapper around OCRopus's basic page-recognition functions so
@@ -367,7 +380,7 @@ class OcropusWrapper(object):
         #        self._linerec.pset(param, val)
             
     
-    def convert(self, filepath, callback=None, **cbkwargs):
+    def convert(self, filepath, progress_func=None, callback=None, **cbkwargs):
         """
         Convert an image file into text.  A callback can be supplied that
         is evaluated before every individual page line is run.  If it does
@@ -395,7 +408,7 @@ class OcropusWrapper(object):
             if callback is not None:
                 if not callback(**cbkwargs):
                     return pagedata
-
+            set_progress(self.logger, progress_func, i, regions.length())
             line = iulib.bytearray()
             regions.extract(line, page_bin, i, 1)        
             bbox = [regions.x0(i), pageheight - regions.y0(i),
@@ -409,6 +422,10 @@ class OcropusWrapper(object):
             #    self.logger.error("Caught conversion error: %s" % err.message)
             #    text = ""
             pagedata["lines"].append({"line": i, "box": bbox, "text" : text })
+
+        # set progress complete
+        set_progress(self.logger, progress_func, 100, 100)
+
         return pagedata
 
 

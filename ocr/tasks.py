@@ -67,7 +67,14 @@ class ConvertPageTask(AbortableTask):
         logger.info(paramdict)
         converter = utils.get_converter(paramdict.get("engine", "tesseract"), 
                 logger, paramdict)
-        return converter.convert(filepath)
+        
+        from ocradmin.ocrtasks.models import OcrTask
+        def progress_func(progress):
+            task = OcrTask.objects.get(task_id=kwargs["task_id"])
+            task.progress = progress
+            task.save()
+
+        return converter.convert(filepath, progress_func=progress_func)
 
 class BinarizePageTask(AbortableTask):
     """
