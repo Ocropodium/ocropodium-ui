@@ -10,7 +10,7 @@
 function AjaxUploader(url, dropzone_id) {
     var dropzone = $("#" + dropzone_id).get(0);    
     var queue = [];
-    var params = [];
+    var m_params = [];
     var maxsize = 0;
 
     // Request building guff
@@ -25,7 +25,7 @@ function AjaxUploader(url, dropzone_id) {
     var self = this;
 
     // dequeue and send the next file...
-    sendNextItem = function() {
+    var sendNextItem = function() {
         if (queue.length) {
             self.onUploadStart()
             var fxhr = queue.shift();
@@ -53,9 +53,9 @@ function AjaxUploader(url, dropzone_id) {
     }
 
     // return a hash of text param key/vals
-    textParameters = function() {
+    var textParameters = function() {
         params = {};
-        $.each(params, function(index, paramname) {
+        $.each(m_params, function(index, paramname) {
             if ($(paramname).length) {
                 params[$(paramname).attr("name")] = $(paramname).val();
             }
@@ -70,13 +70,12 @@ function AjaxUploader(url, dropzone_id) {
     // register a new text parameter to be included when the upload
     // commences
     this.registerTextParameter = function(paramname) {
-        params.push(paramname);
+        m_params.push(paramname);
     }
 
 
     // actually do the upload!
-    upload = function(event) {
-
+    var upload = function(event) {
         self.onUploadsStarted();        
 
         var data = event.dataTransfer;
