@@ -138,6 +138,7 @@ INSTALLED_APPS = (
     'djcelery',
     'accounts',
     'filebrowser',
+    'batch',
     'ocr',
     'ocrmodels',
     'ocrpresets',
