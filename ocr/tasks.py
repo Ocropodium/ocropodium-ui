@@ -58,6 +58,7 @@ class ConvertPageTask(AbortableTask):
     the OcropusWrapper (and it's proxy, TessWrapper) in util.py.
     """
     name = "convert.page"
+    max_retries = None
 
     def run(self, filepath, paramdict, **kwargs):
         """
@@ -69,11 +70,14 @@ class ConvertPageTask(AbortableTask):
                 logger, paramdict)
         
         from ocradmin.ocrtasks.models import OcrTask
-        def progress_func(progress, lines):
+        def progress_func(progress, lines=None):
             task = OcrTask.objects.get(task_id=kwargs["task_id"])
             task.progress = progress
-            task.lines = lines
+            if lines is not None:
+                task.lines = lines
             task.save()
+        # init progress to zero (for when retrying tasks)
+        progress_func(0)
 
         return converter.convert(filepath, progress_func=progress_func)
 
