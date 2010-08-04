@@ -48,3 +48,14 @@
     float: right;
     width: 100px;
 }
+
+.task_list {
+    padding: 0px 0px 0px 20px;
+}
+
+.retry_task, .retry_batch {
+    text-decoration: none;
+    color: #999;
+    float: right;
+    margin: 0px 10px 0px 10px;
+}

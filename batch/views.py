@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core import serializers
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
@@ -83,18 +84,10 @@ def batch(request):
         return HttpResponse(e.message, mimetype="application/json")
 
     # return a serialized result
-    jsonserializer = serializers.get_serializer("json")()     
-    out = jsonserializer.serialize(
-        [batch], 
-        relations={
-            "tasks": { "excludes": ("args", "kwargs") },
-            "user":  { "fields": ("username") }
-        },
-    )
-
     transaction.commit()
-    return HttpResponse(out, 
-            mimetype="application/json")
+    response = HttpResponse(mimetype="application/json")
+    simplejson.dump(_serialize_batch(batch), response, cls=DjangoJSONEncoder)
+    return response
 
 
 @login_required
@@ -103,12 +96,81 @@ def results(request, pk):
     Get results for a taskset.
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
-    jsonserializer = serializers.get_serializer("json")()     
-    out = jsonserializer.serialize(
-        batch.tasks.all(),
-        excludes=("args", "kwargs")
-    )
-    return HttpResponse(out, 
+    response = HttpResponse(mimetype="application/json")
+    simplejson.dump(_serialize_batch(batch), response, cls=DjangoJSONEncoder)
+    return response
+
+
+@login_required
+def latest(request):
+    """
+    View the latest batch.
+    """
+    try:
+        batch = OcrBatch.objects.filter(user=request.user)\
+                .order_by("-created_on")[0]
+    except OcrBatch.DoesNotExist:
+        raise Http404
+
+    return _show_batch(request, batch)
+
+
+@login_required
+def show(request, pk):
+    """
+    View a batch.
+    """
+    batch = get_object_or_404(OcrBatch, pk=pk)
+    return _show_batch(request, batch)
+
+
+def _show_batch(request, batch):
+    """
+    View a (passed-in) batch.
+    """
+    template = "batch/show.html"
+    context = {"batch": batch}
+
+    return render_to_response(template, context, 
+            context_instance=RequestContext(request))
+
+
+@login_required
+def retry_task(request, pk):
+    """
+    Retry a batch task.
+    """
+    task = get_object_or_404(OcrTask, pk=pk)
+    task.status = "RETRY"
+    task.progress = 0
+    task.save()
+    celerytask = tasks.ConvertPageTask
+    celerytask.retry(args=task.args, kwargs=task.kwargs,
+                options=dict(task_id=task.task_id, loglevel=60, retries=2), 
+                countdown=0, throw=False)
+    return HttpResponse(simplejson.dumps({"ok": True}), 
             mimetype="application/json")
 
 
+
+
+def _serialize_batch(batch):
+    """
+    Hack around the problem of serializing
+    an object AND it's child objects.
+    """
+    pyserializer = serializers.get_serializer("python")()     
+    batchsl = pyserializer.serialize(
+        [batch],
+        extras=("estimate_progress",),
+        relations={
+            "user":  { "fields": ("username") }
+        },
+    )
+    taskssl = pyserializer.serialize(
+        batch.tasks.all(),
+        excludes=("args", "kwargs"),
+    )
+    batchsl[0]["fields"]["tasks"] = taskssl
+    return batchsl
+    
