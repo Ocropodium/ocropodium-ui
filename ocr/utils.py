@@ -322,7 +322,7 @@ class OcropusParams(UserDict.DictMixin):
         return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
 
 
-def set_progress(logger, progress_func, step, end, granuarity=5):
+def set_progress(logger, progress_func, step, end, granularity=5):
     """
     Call a progress function, if supplied.  Only call
     every 5 steps.  

@@ -7,7 +7,7 @@ function TaskList(list_container_id, param_container_id) {
 
     var headers = {
         page_name:  "File",
-        batch__user__pk:  "User",
+        user_id:  "User",
         updated_on:  "Last Update",
         status:  "Status",
     };
@@ -314,7 +314,7 @@ function TaskList(list_container_id, param_container_id) {
                 .data("index", i)
                 .css("MozUserSelect", "none");
             row.append($("<td></td>").text(task.fields.page_name));
-            row.append($("<td></td>").text(task.fields.batch.fields.user.fields.username));
+            row.append($("<td></td>").text(task.fields.user.fields.username));
             row.append($("<td></td>").text(task.fields.updated_on));
             row.append($("<td></td>")
                 .text(task.fields.status)

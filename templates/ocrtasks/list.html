@@ -133,21 +133,20 @@ $(function() {
 
     <div class="widget">
         <div class="widget_header">Tasks:</div>
-
-        <div id="task_list_controls">
-            <div id="task_list_controls_right">            
-                <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
-                    <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
-                    Auto-Refresh:
-                    <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
-                    <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
-                </form>
+        <div class="widget_content">
+            <div id="task_list_controls">
+                <div id="task_list_controls_right">            
+                    <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
+                        <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
+                        Auto-Refresh:
+                        <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
+                        <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
+                    </form>
+                </div>
             </div>
-        </div>
-
-
-        <div id="task_list">
-        </div>
+            <div id="task_list">
+            </div>
+        </div> 
         <div id="dialog_box"></div>
     </div>
 </div>

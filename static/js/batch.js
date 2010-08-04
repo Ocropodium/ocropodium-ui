@@ -141,7 +141,7 @@ $(function() {
 
 
     // initialise the uploader...
-    uploader  = new AjaxBatchUploader("/ocr/batch", "dropzone");
+    uploader  = new AjaxBatchUploader("/batch/batch", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
         $("#document_window").html("");

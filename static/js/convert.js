@@ -89,9 +89,9 @@ $(function() {
 
         // get the extra params
         var pdata = pbuilder.data();
+        pdata.engine = $("input[@name=engine]:checked").val();
         // server-size hack so we know it's using the iframe method
         pdata._iframe = 1;
-        pdata.engine = $("input[@name=engine]:checked").val();
 
         $("#uploadform").ajaxForm({
             data : pdata,

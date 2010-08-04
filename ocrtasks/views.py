@@ -96,13 +96,9 @@ def list(request):
     serializedpage["object_list"] = pythonserializer.serialize(
         tasks.object_list, 
         excludes=excludes,
-        relations={
-            "batch": {
-                "relations": {
-                    "user": {
-                        "fields": ("username"),
-                    }
-                }
+        relations= {
+            "user": {
+                "fields": ("username"),
             }
         },
     ) 
@@ -137,7 +133,7 @@ def list2(request):
     if request.GET.get("autorefresh_time"):
         autorf_time = request.GET.get("autorefresh_time")
     
-    fields = ["page_name", "batch__user", "updated_on", "status"]
+    fields = ["page_name", "user", "updated_on", "status"]
     allstatus = False if len(selected) > 1 else ("ALL" in selected)
     revokable = ("INIT", "PENDING")
     # add a 'invert token' if we're ordering by the same field again
@@ -194,7 +190,7 @@ def delete(request, pk=None):
 
     taskquery = OcrTask.objects.filter(pk__in=pks)
     if not request.user.is_staff:
-        taskquery = taskquery.filter(batch__user=request.user)
+        taskquery = taskquery.filter(user=request.user)
         if not len(taskquery) == len(pks):
             response.status_code = 201
     for task in taskquery:

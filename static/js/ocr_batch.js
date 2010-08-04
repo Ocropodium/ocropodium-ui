@@ -10,14 +10,14 @@
 //
 //
 // This object then creates an HTML container for the data and 
-// repeatedly polls /ocr/results/<JOBNAME> until to status
+// repeatedly polls /batch/results/<batch-pk> until to status
 // changes (to SUCCESS or ERROR) at which point to displays
 // whatever is in 'results'.
 
 function OcrBatch(insertinto_id, batchdata) {
     // extract the batchname from the job name, delimited by "::"
     var batchname = batchdata.fields.name;
-    var resultsurl = "/ocr/batch_results/" + batchdata.pk;
+    var resultsurl = "/batch/results/" + batchdata.pk;
     var boxpattern = new RegExp(/(\d+) (\d+) (\d+) (\d+)/);
     var self = this;
 
