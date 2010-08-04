@@ -26,6 +26,24 @@ from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.ocr.views import _get_best_params
 
 
+
+@login_required
+def new(request):
+    """
+    Present a new batch form.
+    """
+    template = "batch/new.html"
+    # add available seg and bin presets to the context
+    context = {
+        "binpresets": OcrPreset.objects.filter(
+            type="binarize").order_by("name"),
+        "segpresets": OcrPreset.objects.filter(
+            type="segment").order_by("name"),
+    }
+    return render_to_response(template, context, 
+            context_instance=RequestContext(request))    
+
+
 @login_required
 @transaction.commit_manually
 def batch(request):

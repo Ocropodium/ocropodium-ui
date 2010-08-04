@@ -193,14 +193,14 @@ function OcrBatch(insertinto_id, batchdata) {
                     .addClass("progress");
                 task.append(progressbar.append(progress));
                 task.append(
-                    $("<span></span>")
-                        .addClass("page_info"));
-                task.append(
                     $("<a></a>")
                         .attr("href", "#")
                         .addClass("retry_task")
                         .data("pk", taskdata.pk)
                         .text("Retry"));
+                task.append(
+                    $("<span></span>")
+                        .addClass("page_info"));
                 tasklist.append(task);
             }
             task.find(".progress")
