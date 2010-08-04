@@ -141,17 +141,38 @@ def retry_task(request, pk):
     Retry a batch task.
     """
     task = get_object_or_404(OcrTask, pk=pk)
-    task.status = "RETRY"
-    task.progress = 0
-    task.save()
-    celerytask = tasks.ConvertPageTask
-    celerytask.retry(args=task.args, kwargs=task.kwargs,
-                options=dict(task_id=task.task_id, loglevel=60, retries=2), 
-                countdown=0, throw=False)
+    _retry_celery_task(task)
     return HttpResponse(simplejson.dumps({"ok": True}), 
             mimetype="application/json")
 
 
+
+@transaction.commit_manually
+@login_required
+def retry_batch(request, pk):
+    """
+    Retry all tasks in a batch.
+    """
+    batch = get_object_or_404(OcrBatch, pk=pk)
+    for task in batch.tasks.all():
+        _retry_celery_task(task)        
+    transaction.commit()
+    return HttpResponse(simplejson.dumps({"ok": True}), 
+            mimetype="application/json")
+
+
+
+def _retry_celery_task(task):
+    """
+    Set a task re-running.
+    """
+    celerytask = tasks.ConvertPageTask
+    celerytask.retry(args=task.args, kwargs=task.kwargs,
+                options=dict(task_id=task.task_id, loglevel=60, retries=2), 
+                countdown=0, throw=False)
+    task.status = "RETRY"
+    task.progress = 0
+    task.save()
 
 
 def _serialize_batch(batch):

@@ -89,6 +89,29 @@ function OcrBatch(insertinto_id, batchdata) {
     });
 
 
+    $(".retry_batch").live("click", function(event) {
+        var pk = $(this).data("pk");
+        $.ajax({
+            url: "/batch/retry_batch/" + pk + "/",
+            type: "POST",
+            dataType: "json",
+            success: function(data) {
+                if (data.ok) {
+                    $("#batch" + pk + ", #batch" + pk + "_list")
+                        .find(".progress_outer")
+                        .removeClass("progress_outer_done");
+                    $("#batch" + pk + ", #batch" + pk + "_list")
+                        .find(".progress")
+                        .removeClass("progress_done").css("width", "0%");
+
+                }
+                self.pollForResults(300);                
+            },
+        });
+        event.preventDefault();    
+    });
+
+
 
     // show an error
     var setError = function(error, traceback) {
