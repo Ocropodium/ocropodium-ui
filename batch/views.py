@@ -66,7 +66,6 @@ def batch(request):
     batch = OcrBatch(user=request.user, name=batch_name,
             task_type=celerytask.name, batch_type="MULTI")
     batch.save()
-
     subtasks = []
     try:
         for path in paths:
@@ -75,30 +74,23 @@ def batch(request):
                     page_name=os.path.basename(path), status="INIT")
             ocrtask.save()
             subtasks.append(
-                celerytask.subtask(
-                    args=(path.encode(), userparams),
-                    options=dict(task_id=tid, loglevel=60, retries=2)))            
+                    celerytask.subtask(args=(path.encode(), userparams), 
+                        options=dict(task_id=tid, loglevel=60, retries=2)))
         tasksetresults = TaskSet(tasks=subtasks).apply_async()
-
-        # return a serialized result
-        jsonserializer = serializers.get_serializer("json")()     
-        out = jsonserializer.serialize(
-            [batch], 
-            relations={
-                "tasks": {
-                    "excludes": ("args", "kwargs"),    
-                },
-                "user": {
-                    "fields": ("username"),
-                }
-            },
-        )
-
     except Exception, e:
         transaction.rollback()
         print e.message
-        return HttpResponse(e.message, 
-                mimetype="application/json")
+        return HttpResponse(e.message, mimetype="application/json")
+
+    # return a serialized result
+    jsonserializer = serializers.get_serializer("json")()     
+    out = jsonserializer.serialize(
+        [batch], 
+        relations={
+            "tasks": { "excludes": ("args", "kwargs") },
+            "user":  { "fields": ("username") }
+        },
+    )
 
     transaction.commit()
     return HttpResponse(out, 
