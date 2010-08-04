@@ -325,14 +325,15 @@ class OcropusParams(UserDict.DictMixin):
 def set_progress(logger, progress_func, step, end, granularity=5):
     """
     Call a progress function, if supplied.  Only call
-    every 5 steps.  
+    every 5 steps.  Also set the total todo, i.e. the
+    number of lines to process.
     """
     if progress_func is None:
         return
-    if step % granularity != 0:
+    if step != end and step % granularity != 0:
         return
-    perc = min(100, (float(step) / float(end)) * 100) 
-    progress_func(perc)
+    perc = min(100.0, round(float(step) / float(end), 2) * 100)
+    progress_func(perc, end)
 
 
 class OcropusWrapper(object):
@@ -396,19 +397,19 @@ class OcropusWrapper(object):
         self.logger.info("Extracting regions...")
         regions = ocropus.RegionExtractor()
         regions.setPageLines(page_seg)
-        
+        numlines = regions.length()
         self.logger.info("Recognising lines...")
         pagedata = { 
             "page" : os.path.basename(filepath) ,
             "lines": [],
             "box": [0, 0, pagewidth, pageheight]
         }
-        for i in range(1, regions.length()):
+        for i in range(1, numlines):
             # test for continuation
             if callback is not None:
                 if not callback(**cbkwargs):
                     return pagedata
-            set_progress(self.logger, progress_func, i, regions.length())
+            set_progress(self.logger, progress_func, i, numlines)
             line = iulib.bytearray()
             regions.extract(line, page_bin, i, 1)        
             bbox = [regions.x0(i), pageheight - regions.y0(i),
@@ -424,7 +425,7 @@ class OcropusWrapper(object):
             pagedata["lines"].append({"line": i, "box": bbox, "text" : text })
 
         # set progress complete
-        set_progress(self.logger, progress_func, 100, 100)
+        set_progress(self.logger, progress_func, numlines, numlines)
 
         return pagedata
 

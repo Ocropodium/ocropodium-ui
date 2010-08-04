@@ -92,12 +92,18 @@ function OcrBatch(insertinto_id, batchdata) {
                 task = $("<div></div>")
                     .addClass("batch_task")
                     .attr("id", "task" + taskdata.pk)
-                    .text(taskdata.fields.page_name);
+                task.append(
+                    $("<span></span>")
+                        .addClass("page_name")
+                        .text(taskdata.fields.page_name));
                 var progressbar = $("<span></span>")
                     .addClass("progress_outer");
                 var progress = $("<span></span>")
                     .addClass("progress");
                 task.append(progressbar.append(progress));
+                task.append(
+                    $("<span></span>")
+                        .addClass("page_info"));
                 pdiv.append(task);
             }
             task.find(".progress")
@@ -105,6 +111,9 @@ function OcrBatch(insertinto_id, batchdata) {
             if (taskdata.fields.status == "DONE") {
                 task.find(".progress").addClass("progress_done");
                 task.find(".progress_outer").addClass("progress_outer_done");                
+            }
+            if (taskdata.fields.lines != null) {
+                task.find(".page_info").text("Lines: " + taskdata.fields.lines);
             }
         });
     }

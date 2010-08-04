@@ -39,3 +39,12 @@
 }
 
 
+.page_name {
+    font-weight: bold;
+}
+
+.page_info {
+    color: #B9B9B9;
+    float: right;
+    width: 100px;
+}

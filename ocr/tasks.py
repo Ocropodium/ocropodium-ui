@@ -69,9 +69,10 @@ class ConvertPageTask(AbortableTask):
                 logger, paramdict)
         
         from ocradmin.ocrtasks.models import OcrTask
-        def progress_func(progress):
+        def progress_func(progress, lines):
             task = OcrTask.objects.get(task_id=kwargs["task_id"])
             task.progress = progress
+            task.lines = lines
             task.save()
 
         return converter.convert(filepath, progress_func=progress_func)

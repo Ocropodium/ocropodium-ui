@@ -25,6 +25,7 @@ class OcrTask(models.Model):
     task_name = models.CharField(max_length=100)
     page_name = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    lines = models.IntegerField(blank=True, null=True)
     progress = models.FloatField(default=0.0, blank=True, null=True)
     args = fields.PickledObjectField(blank=True, null=True)
     kwargs = fields.PickledObjectField(blank=True, null=True)
