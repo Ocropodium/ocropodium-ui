@@ -172,11 +172,11 @@ def results(request, pk):
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
     try:
-        start = int(request.GET.get("start", 0))
+        start = max(0, int(request.GET.get("start", 0)))
     except ValueError:
         start = 0
     try:
-        limit = int(request.GET.get("limit", 25))
+        limit = max(1, int(request.GET.get("limit", 25)))
     except ValueError:
         limit = 25
     response = HttpResponse(mimetype="application/json")

@@ -15,15 +15,8 @@
     <script type="text/javascript">
 
 $(function() {
-    $.ajax({
-        url: "/batch/results/" + $("#batch_id").val() + "/",
-        success: function(data) {
-            var batch = new OcrBatch("document_window", data[0]);
-            batch.updateResults();
-            if (!batch.isComplete()) 
-                batch.pollForResults(300);
-        },
-    });
+    var batch = new OcrBatch("document_window", $("#batch_id").val());
+    batch.init();
 });        
 
     </script>
