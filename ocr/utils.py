@@ -37,27 +37,32 @@ def get_tesseract():
     return "tesseract"
 
 
-def get_ocr_path(user=None, temp=True, subdir="test", unique=False):
+def get_ocr_path(user=None, temp=True, subdir="test", unique=False, timestamp=True):
     """
     Get a path for saving temp images.
     """
     basepath = settings.MEDIA_ROOT
     if temp:
         basepath = os.path.join(basepath, "temp")
+    else:
+        basepath = os.path.join(basepath, "files")
     if user:
         basepath = os.path.join(basepath, user)
     if subdir:
         basepath = os.path.join(basepath, subdir)
-    return os.path.join(basepath, datetime.now().strftime("%Y%m%d%H%M%S"))
+    if timestamp:
+        basepath = os.path.join(basepath, 
+                datetime.now().strftime("%Y%m%d%H%M%S"))
+    return basepath
 
 
 
-def save_ocr_images(images, user=None, temp=True, name="test"):
+def save_ocr_images(images, user=None, temp=True, name="test", timestamp=True):
     """
     Save OCR images to the media directory...
     """                         
     paths = []
-    path = get_ocr_path(user=user, temp=True, subdir=name)
+    path = get_ocr_path(user=user, temp=temp, subdir=name, timestamp=timestamp)
     if not os.path.exists(path):
         os.makedirs(path, 0777)
         os.chmod(path, 0777)
