@@ -192,7 +192,11 @@ function FileBrowser(container_id) {
         if (m_container.dialog("isOpen")) {
             m_value = [];
             $(".selected.file").each(function(i, item) {
-                m_value.push(m_dir + "/" + $(item).data("name"));
+                if (m_dir == "") {
+                    m_value.push($(item).data("name"));
+                } else {
+                    m_value.push(m_dir + "/" + $(item).data("name"));
+                }
             });
         }        
         return m_value;
