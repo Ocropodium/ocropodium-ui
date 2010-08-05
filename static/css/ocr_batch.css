@@ -8,37 +8,41 @@
     padding: 5px;
     background-color: #FCFCFC;
 }
-.progress_outer {
+
+.progressbar {
     float: right;
     width: 200px;
     border: 1px solid #999;
     height: 10px;
-    border-radius: 5px;
-    -moz-border-radius: 5px;
+    border-radius: 2px;
+    -moz-border-radius: 2px;
+}
+
+.progressbar.running {
     background-image: url("/static/progbar.gif");
     background-position: center left;
     background-repeat: no-repeat;
 }
 
-.progress_outer_done {
-    background-image: none;
-}
-
-.progress {
+.progressbar span {
     float: left;
     width: 0%;
     height: 10px;
-    border-radius: 5px;
-    -moz-border-radius: 5px;
+    /*border-radius: 2px;
+    -moz-border-radius: 2px;*/
     background-color: #088A08;
     opacity: 0.5;
 }
 
-.progress_done {
+.progressbar.pending, .progressbar.retry {
+    background-color: #FFFFFF;
+}
+
+.progressbar.done span {
     background-color: #045FB4;
 }
 
-.progress_error {
+.progressbar.error span {
     background-color: #FA5858;
 }
 
@@ -99,6 +103,5 @@
         rgb(135,180,255) 35%,
         rgb(143,184,255) 48%
     );
-
 }
 

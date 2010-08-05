@@ -137,11 +137,7 @@ function OcrBatch(insertinto_id, batchdata) {
                 $("<span></span>")
                     .addClass("page_name")
                     .text(batchdata.fields.name));
-            var progressbar = $("<span></span>")
-                .addClass("progress_outer");
-            var progress = $("<span></span>")
-                .addClass("progress");
-            batch.append(progressbar.append(progress));
+            addProgressBar(batch);
             batch.append(
                 $("<span></span>")
                     .addClass("page_info"));
@@ -150,18 +146,34 @@ function OcrBatch(insertinto_id, batchdata) {
                     .attr("href", "#")
                     .addClass("retry_batch")
                     .data("pk", batchdata.pk)
-                    .text("Retry"));
+                    .text("Retry All"));
             pdiv.append(batch);
         }
-        batch.find(".progress")
-            .css("width", batchdata.extras.estimate_progress + "%");
-        var complete = batchdata.extras.estimate_progress > 99;
-        batch.find(".progress").toggleClass("progress_done", complete);
-        batch.find(".progress_outer").toggleClass("progress_outer_done", complete);                
-        
+        setProgressStatus(batch, batchdata.extras.estimate_progress);
+
         return batch;
     }
 
+
+    var setProgressStatus = function(task, progress, status) {
+        task.find(".progress").css("width", progress + "%");
+        if (status) {
+            task.find(".progressbar").attr("class", "progressbar " + status.toLowerCase());
+        } else if (progress > 99.5) {
+            task.find(".progressbar").attr("class", "progressbar done");
+        } else {
+            task.find(".progressbar").attr("class", "progressbar running");
+        }       
+    }
+
+
+    var addProgressBar = function(task) {
+        var progressbar = $("<span></span>")
+            .addClass("progressbar");
+        var progress = $("<span></span>")
+            .addClass("progress");
+        task.append(progressbar.append(progress));
+    }
 
     // add results to the page.
     var updateResults = function() {
@@ -187,11 +199,7 @@ function OcrBatch(insertinto_id, batchdata) {
                     $("<span></span>")
                         .addClass("page_name")
                         .text(taskdata.fields.page_name));
-                var progressbar = $("<span></span>")
-                    .addClass("progress_outer");
-                var progress = $("<span></span>")
-                    .addClass("progress");
-                task.append(progressbar.append(progress));
+                addProgressBar(task);
                 task.append(
                     $("<a></a>")
                         .attr("href", "#")
@@ -203,20 +211,8 @@ function OcrBatch(insertinto_id, batchdata) {
                         .addClass("page_info"));
                 tasklist.append(task);
             }
-            task.find(".progress")
-                .css("width", taskdata.fields.progress + "%");
-            if (taskdata.fields.status == "DONE") {
-                task.find(".progress").toggleClass("progress_done", true);
-                task.find(".progress_outer").toggleClass("progress_outer_done", true);                
-            } else if (taskdata.fields.status == "ERROR") {
-                task.find(".progress")
-                    .toggleClass("progress_error", true)
-                    .css("width", "100%");
-                task.find(".progress_outer")
-                    .toggleClass("progress_outer_done", true);
-            }
-
-
+            
+            setProgressStatus(task, taskdata.fields.progress, taskdata.fields.status);
             if (taskdata.fields.lines != null) {
                 task.find(".page_info").text("Lines: " + taskdata.fields.lines);
             }
