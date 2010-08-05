@@ -171,8 +171,17 @@ def results(request, pk):
     Get results for a taskset.
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
+    try:
+        start = int(request.GET.get("start", 0))
+    except ValueError:
+        start = 0
+    try:
+        limit = int(request.GET.get("limit", 25))
+    except ValueError:
+        limit = 25
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch), response, cls=DjangoJSONEncoder)
+    simplejson.dump(_serialize_batch(batch, start, limit), 
+            response, cls=DjangoJSONEncoder)
     return response
 
 
@@ -272,7 +281,7 @@ def _retry_celery_task(task):
     task.save()
 
 
-def _serialize_batch(batch):
+def _serialize_batch(batch, start=0, limit=25):
     """
     Hack around the problem of serializing
     an object AND it's child objects.
@@ -280,13 +289,13 @@ def _serialize_batch(batch):
     pyserializer = serializers.get_serializer("python")()     
     batchsl = pyserializer.serialize(
         [batch],
-        extras=("estimate_progress",),
+        extras=("estimate_progress", "task_count",),
         relations={
             "user":  { "fields": ("username") }
         },
     )
     taskssl = pyserializer.serialize(
-        batch.tasks.all(),
+        batch.tasks.all()[start:start + limit],
         excludes=("args", "kwargs"),
     )
     batchsl[0]["fields"]["tasks"] = taskssl
