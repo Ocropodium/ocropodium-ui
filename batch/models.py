@@ -47,7 +47,10 @@ class OcrBatch(models.Model):
         for t in tasks:
             lines = t.lines or 50
             weight = float(lines) / float(totallines)
-            percentdone += (weight * t.progress)            
+            if t.status == "ERROR":
+                percentdone += (weight * 100)            
+            else:
+                percentdone += (weight * t.progress)            
         return min(100.0, percentdone)
 
 
