@@ -7,7 +7,10 @@
 	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
 	<script type='application/javascript' src='/static/js/stats.js'></script>
 	<script type='application/javascript' src='/static/js/ocr_batch.js'></script>
+	<script type='application/javascript' src='/static/js/filebrowser.js'></script>
+	<script type='application/javascript' src='/static/js/batch_new.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-batch-upload.js'></script>
+    <link rel="stylesheet" href="/static/css/filebrowser.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/ocr_batch.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/ocr_page.css" type="text/css" media="screen" />
@@ -18,7 +21,7 @@
 <div id="sidebar" class="widget">
     <div class="widget_header">Options</div>
     <div class="widget_content">
-        <form id="uploadform" name="convertoptions" action="/batch/batch/" method="POST" enctype="multipart/form-data">
+        <form id="uploadform" name="uploadoptions" action="/batch/upload_files/" method="POST" enctype="multipart/form-data">
             <p>    
                 <input type="file" name="upload[]" multiple="multiple" id="singleupload" />
             </p>
@@ -28,6 +31,8 @@
                     Drop images here...
                 </div>
             </div>
+        </form>            
+        <form id="optionsform" name="convertoptions" method="POST">
             <h4>Options:</h4>
              <p>
              OCR Engine:&nbsp;
@@ -84,23 +89,32 @@
     <div class="widget" id="new_batch">
         <div class="widget_header">New Batch</div>
         <div class="widget_content">
-
-            <form name="batch_form" action="{{request.path}}" id="batch_form">
-
-                <p>
+            <form name="batchform" type="POST" action="{{request.path}}" id="batchform">
+                <div class="form_field">
                     <label for="batch_name">Batch Identifier:</label>
+                    <br />
                     <input type="text" name="batch_name" id="batch_name" />
-                </p>
-                <p>
+                </div>
+                <div class="form_field">
+                    <label for="batch_desc">Description:</label>
+                    <br />
+                    <textarea name="batch_desc" id="batch_desc"></textarea>
+                </div>
+                <div class="form_field">
                     <label for="batch_files">Files:</label>
                     <br />
-                    <textarea name="batch_files" id="batch_files"></textarea>
-                </p>
-                <input type="SUBMIT" value="Submit Batch" id="submit_batch" />
+                    <div id="batch_file_list">
+
+                    </div>
+                    <input type="button" value="Browse Server" id="browse" />
+                </div>
+                <br />
+                <input type="SUBMIT" value="Submit Batch" id="submit_batch" disabled="disabled" />
             </form>
         </div>
     </div>
 </div>
+<div id="file_browser"></div>
 <div style="clear: right;"></div>
  
 {% endblock %}

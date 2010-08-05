@@ -46,6 +46,63 @@ def new(request):
 
 @login_required
 @transaction.commit_manually
+def create(request):
+    """
+    Create a batch from pre-saved images convert them with Celery.
+    """
+
+    tasktype = "Batch"
+    celerytask = tasks.ConvertPageTask
+
+    if not request.method == "POST":
+        return render_to_response("batch/new.html", context, 
+                        context_instance=RequestContext(request))
+
+    filenames = request.POST.get("files", "").split(",")
+    dirpath = ocrutils.get_ocr_path(user=request.user.username, 
+            temp=False, subdir=None, timestamp=False)
+    paths = [os.path.join(dirpath, f) for f in filenames]
+    
+    if not paths:
+        return HttpResponse(
+                simplejson.dumps({"error": "no valid images found"}),
+                mimetype="application/json")     
+    
+    # wrangle the params - this needs improving
+    userparams = _get_best_params(request.POST.copy())
+
+    # create a batch db job
+    batch_name = request.POST.get("batch_name", "%s %s" % (tasktype, datetime.now()))
+    batch_desc = request.POST.get("batch_desc", "")
+    batch = OcrBatch(user=request.user, name=batch_name, description=batch_desc,
+            task_type=celerytask.name, batch_type="MULTI")
+    batch.save()
+    subtasks = []
+    try:
+        for path in paths:
+            tid = ocrutils.get_new_task_id(path) 
+            ocrtask = OcrTask(task_id=tid, user=request.user, batch=batch, 
+                    page_name=os.path.basename(path), status="INIT")
+            ocrtask.save()
+            subtasks.append(
+                    celerytask.subtask(args=(path.encode(), userparams), 
+                        options=dict(task_id=tid, loglevel=60, retries=2)))
+        tasksetresults = TaskSet(tasks=subtasks).apply_async()
+    except Exception, e:
+        transaction.rollback()
+        print e.message
+        return HttpResponse(e.message, mimetype="application/json")
+
+    # return a serialized result
+    transaction.commit()
+    response = HttpResponse(mimetype="application/json")
+    simplejson.dump(_serialize_batch(batch), response, cls=DjangoJSONEncoder)
+    return response
+
+
+
+@login_required
+@transaction.commit_manually
 def batch(request):
     """
     Save a batch of posted image to the DFS and convert them with Celery.
@@ -140,6 +197,28 @@ def show(request, pk):
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
     return _show_batch(request, batch)
+
+
+@login_required
+def upload_files(request):
+    """
+    Upload files to the server for batch-processing.
+    """
+    try:
+        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), 
+                temp=False, user=request.user.username,
+                name=None, timestamp=False)
+    except AppException, err:
+        return HttpResponse(simplejson.dumps({"error": err.message}),
+            mimetype="application/json")
+    if not paths:
+        return HttpResponse(
+                simplejson.dumps({"error": "no valid images found"}),
+                mimetype="application/json")     
+    pathlist = [os.path.basename(p) for p in paths]
+    return HttpResponse(simplejson.dumps(pathlist),
+            mimetype="application/json")
+
 
 
 def _show_batch(request, batch):

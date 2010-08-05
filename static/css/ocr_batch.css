@@ -38,6 +38,11 @@
     background-color: #045FB4;
 }
 
+.progress_error {
+    background-color: #FA5858;
+}
+
+
 
 .page_name {
     font-weight: bold;
@@ -59,3 +64,41 @@
     float: right;
     margin: 0px 10px 0px 10px;
 }
+
+#batch_file_list {
+    max-height: 100px;
+    min-height: 40px;
+    overflow: auto;
+    background: #FFF;
+    border: 1px solid #666;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    width: 400px;
+}
+
+.file_item {
+    padding: 3px;
+    color: #333;    
+}
+
+#batch_file_list .odd {
+    background-color: #F2F2F2;
+}
+
+#batch_file_list .selected {
+    background-color: #999; 
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.35, rgb(135,180,255)),
+        color-stop(0.48, rgb(143,184,255))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(135,180,255) 35%,
+        rgb(143,184,255) 48%
+    );
+
+}
+

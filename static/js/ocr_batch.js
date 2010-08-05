@@ -205,9 +205,18 @@ function OcrBatch(insertinto_id, batchdata) {
             }
             task.find(".progress")
                 .css("width", taskdata.fields.progress + "%");
-            var complete = taskdata.fields.status == "DONE";
-            task.find(".progress").toggleClass("progress_done", complete);
-            task.find(".progress_outer").toggleClass("progress_outer_done", complete);                
+            if (taskdata.fields.status == "DONE") {
+                task.find(".progress").toggleClass("progress_done", true);
+                task.find(".progress_outer").toggleClass("progress_outer_done", true);                
+            } else if (taskdata.fields.status == "ERROR") {
+                task.find(".progress")
+                    .toggleClass("progress_error", true)
+                    .css("width", "100%");
+                task.find(".progress_outer")
+                    .toggleClass("progress_outer_done", true);
+            }
+
+
             if (taskdata.fields.lines != null) {
                 task.find(".page_info").text("Lines: " + taskdata.fields.lines);
             }
