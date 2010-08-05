@@ -166,6 +166,18 @@
     margin-right: 15px;
 }
 
+.batch {
+    cursor: pointer;
+    padding-left: 15px;
+    background-image: url("/static/vt_scroll_right.gif");
+    background-position: left center;
+    background-repeat: no-repeat;
+}
+
+.batch.expanded {
+    background-image: url("/static/hz_scroll_down.gif");
+}
+
 
 #scroll_viewer {
     color: #FFF;

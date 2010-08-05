@@ -70,6 +70,13 @@ function OcrBatch(insertinto_id, batch_id) {
      *  Events
      */
 
+    $(".batch").live("click", function(event) {
+        $(this).toggleClass("expanded");
+        m_batchdiv.find(".tl_container").toggle();
+        setScrollHandleHeight();
+    });
+
+
     $(".retry_task").live("click", function(event) {
         var pk = $(this).data("pk");
         $.ajax({
@@ -212,6 +219,7 @@ function OcrBatch(insertinto_id, batch_id) {
         if (batch.length == 0) {
             batch = $("<div></div>")
                 .addClass("batch")
+                .addClass("expanded")
                 .attr("id", "batch" + m_batchdata.pk)
             batch.append(
                 $("<span></span>")
