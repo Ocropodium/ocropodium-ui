@@ -28,6 +28,12 @@ class OcrBatch(models.Model):
         return self.tasks.all()
 
 
+    def task_count(self):
+        """
+        Return the number of contained tasks.
+        """
+        return self.tasks.count()
+
 
     def estimate_progress(self):
         """
