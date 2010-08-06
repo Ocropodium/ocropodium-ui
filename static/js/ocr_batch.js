@@ -15,11 +15,10 @@
 // whatever is in 'results'.
 
 function OcrBatch(insertinto_id, batch_id) {
-    // extract the batchname from the job name, delimited by "::"
-    var m_resultsurl = "/batch/results/" + batch_id;
+    var m_batch_id = batch_id;
 
     // time to recheck running tasks
-    var m_polltime = 300; 
+    var m_polltime = 500; 
 
     // max number of tasks to load
     var m_maxtasks = 15;
@@ -30,17 +29,19 @@ function OcrBatch(insertinto_id, batch_id) {
     // cache of data, initially empty
     var m_batchdata = null;
 
+    // store the id for the next timeout
+    var m_polltimeout = -1;
+
     // alias 'this' for use from within callbacks
     var self = this;
 
     // UI bits it's useful to keep a reference to:
     var m_container = $("<div></div>")
-        .addClass("ocr_page_container")
         .addClass("widget");  
     var m_header = $("<div></div>")
-        .addClass("ocr_page_head")
+        .addClass("batch_head")
         .addClass("widget_header")
-        .attr("id", "ocr_page_head");
+        .attr("id", "batch_head");
     var m_batchdiv = $("<div></div>")
         .addClass("ocr_page")
         .addClass("waiting")
@@ -50,8 +51,10 @@ function OcrBatch(insertinto_id, batch_id) {
         .addClass("scroll_viewer")
         .attr("id", "scroll_viewer");
 
+
     this.buildUi = function() {
         // create container structure
+        createBatchHeaderUi();    
 
         // add the containter to the
         m_container.append(m_header).append(m_batchdiv).appendTo("#" + insertinto_id);
@@ -61,8 +64,16 @@ function OcrBatch(insertinto_id, batch_id) {
 
     this.init = function() {
         self.buildUi();
-        self.pollForResults(m_polltime);
+        manualRefresh();
 
+    }
+
+
+    this.setBatchId = function(batch_id) {
+        m_batch_id = batch_id;
+        if (self.isComplete()) {
+            manualRefresh();
+        }
     }
 
 
@@ -79,6 +90,7 @@ function OcrBatch(insertinto_id, batch_id) {
 
     $(".retry_task").live("click", function(event) {
         var pk = $(this).data("pk");
+        alert("click: " + pk);
         $.ajax({
             url: "/batch/retry_task/" + pk + "/",
             type: "POST",
@@ -86,7 +98,7 @@ function OcrBatch(insertinto_id, batch_id) {
             success: function(data) {
                 if (data.ok) {
                 }
-                self.pollForResults(300);                
+                manualRefresh();                
             },
         });
         event.preventDefault();    
@@ -103,7 +115,7 @@ function OcrBatch(insertinto_id, batch_id) {
                 if (data.ok) {
                 } else {
                 }
-                self.pollForResults(m_polltime);                
+                manualRefresh();                
             },
         });
         event.preventDefault();    
@@ -120,7 +132,7 @@ function OcrBatch(insertinto_id, batch_id) {
                 if (data.ok) {
                 } else {
                 }
-                self.pollForResults(m_polltime);                
+                manualRefresh();                
             },
         });
         event.preventDefault();    
@@ -132,7 +144,7 @@ function OcrBatch(insertinto_id, batch_id) {
             m_batchdata.extras.task_count - m_maxtasks, 
             m_taskoffset + 1);
         if (self.isComplete()) {
-            pollForResults(m_polltime);
+            manualRefresh();
         }
         setScrollHandlePosition();        
     });
@@ -140,7 +152,7 @@ function OcrBatch(insertinto_id, batch_id) {
     $("#scrollup").live("click", function(event) {
         m_taskoffset = Math.max(0, m_taskoffset - 1);
         if (self.isComplete()) {
-            pollForResults(m_polltime);
+            manualRefresh();
         }        
         setScrollHandlePosition();        
     });
@@ -154,15 +166,8 @@ function OcrBatch(insertinto_id, batch_id) {
             dataType: "json",
             success: function(data) {
                 if (data.ok) {
-                    $("#batch" + pk + ", #batch" + pk + "_list")
-                        .find(".progress_outer")
-                        .removeClass("progress_outer_done");
-                    $("#batch" + pk + ", #batch" + pk + "_list")
-                        .find(".progress")
-                        .removeClass("progress_done").css("width", "0%");
-
                 }
-                self.pollForResults(300);                
+                manualRefresh();                
             },
         });
         event.preventDefault();   
@@ -222,7 +227,7 @@ function OcrBatch(insertinto_id, batch_id) {
     var onScrollStop = function(event, ui) {
         m_scrollwin.remove();
         if (self.isComplete()) {
-            pollForResults(m_polltime);
+            manualRefresh();
         }
     }
 
@@ -244,38 +249,48 @@ function OcrBatch(insertinto_id, batch_id) {
         }                
     }
 
-    var setBatchResults = function() {
-        var batch = m_batchdiv.find("#batch" + m_batchdata.pk);
-        if (batch.length == 0) {
-            batch = $("<div></div>")
-                .addClass("batch")
-                .addClass("expanded")
-                .attr("id", "batch" + m_batchdata.pk)
-            batch.append(
-                $("<span></span>")
-                    .addClass("batch_name")
-                    .text(m_batchdata.fields.name));
-            addProgressBar(batch);
-            batch.append(
-                $("<span></span>")
-                    .addClass("page_info"));
-            batch.append(
-                $("<a></a>")
-                    .attr("href", "/batch/retry_batch/" + m_batchdata.pk + "/")
-                    .addClass("retry_batch")
-                    .data("pk", m_batchdata.pk)
-                    .text("Retry All"));
-            batch.append(
-                $("<a></a>")
-                    .attr("href", "/batch/abort_batch/" + m_batchdata.pk + "/")
-                    .addClass("abort_batch")
-                    .data("pk", m_batchdata.pk)
-                    .text("Abort Batch"));
-            m_batchdiv.append(batch);
-        }
-        setProgressStatus(batch, m_batchdata.extras.estimate_progress);
 
-        return batch;
+    var createBatchHeaderUi = function() {
+        var batch = $("<div></div>")
+            .addClass("batch")
+            .addClass("expanded");
+        batch.append(
+            $("<span></span>")
+                .addClass("batch_name")
+                .text("Batch"));
+        addProgressBar(batch);
+        batch.append(
+            $("<span></span>")
+                .addClass("page_info"));
+        batch.append(
+            $("<a></a>")
+                .attr("href", "#")
+                .addClass("retry_batch")
+                .text("Retry All"));
+        batch.append(
+            $("<a></a>")
+                .attr("href", "#")
+                .addClass("abort_batch")
+                .text("Abort Batch"));
+        m_batchdiv.append(batch);
+    }
+
+
+    var setBatchResults = function(batchdata) {
+        var batch = m_batchdiv.find(".batch");
+        batch.attr("id", "batch" + batchdata.pk)
+
+        // set titles
+        batch.find("#batch_head, .batch_name").text(batchdata.fields.name);
+
+        // update links with the batch id
+        batch.find(".retry_batch")
+            .attr("href", "/batch/retry_batch/" + batchdata.pk + "/") 
+            .data("pk", batchdata.pk);
+        batch.find(".abort_batch")
+            .attr("href", "/batch/abort_batch/" + batchdata.pk + "/") 
+            .data("pk", batchdata.pk);
+        setProgressStatus(batch, batchdata.extras.estimate_progress);
     }
 
 
@@ -299,30 +314,37 @@ function OcrBatch(insertinto_id, batch_id) {
         task.append(progressbar.append(progress));
     }
 
-    var setScrollHandleHeight = function() {
-        // work out how big the scroll handle should be
-        var taskcount = m_batchdata.extras.task_count;
-        if (taskcount < m_maxtasks) {
-            $(".tl_scrollcontainer").hide();
-            $(".task_list").css("margin-right", "0px");
+    
+    var toggleScrollBar = function(show) {
+        if (show) {
+            $(".tl_scrollcontainer").show(100);
+            $(".task_list").css("margin-right", "15px");
         } else {
-            var percheight = m_maxtasks / taskcount;
-            var pixheight = Math.max(30, $("#scrollbar").height() * percheight);
-            $("#scrollhandle").height(pixheight);
+            $(".tl_scrollcontainer").hide(100);
+            $(".task_list").css("margin-right", "0px");
         }
     }
 
-    // add results to the page.
-    var updateResults = function() {
 
-        // set titles
-        $("#ocr_page_head").text(m_batchdata.fields.name);
+    var setScrollHandleHeight = function() {
+        // work out how big the scroll handle should be
+        var taskcount = m_batchdata.extras.task_count;
+        var percheight = m_maxtasks / taskcount;
+        var pixheight = Math.max(30, $("#scrollbar").height() * percheight);
+        $("#scrollhandle").animate({height: pixheight}, 100);
+
+        // hide the scrollbar if necessary
+        toggleScrollBar(taskcount > m_maxtasks);
+    }
+
+    // add results to the page.
+    var updateResults = function(batchdata) {
 
         m_batchdiv.removeClass("waiting");
         //var percentdone = (results.completed_count / results.count) * 100;
         //m_batchdiv.text(results.count + " images (" + Math.round(percentdone) + "%)");
-        var batch = setBatchResults();
-        var tasklist = m_batchdiv.find("#batch" + m_batchdata.pk + "_tasks");
+        setBatchResults(batchdata);
+        var tasklist = m_batchdiv.find(".task_list");        
         if (tasklist.length == 0) {
             var tlcontainer = $("<div></div>")
                 .addClass("tl_container");
@@ -354,17 +376,17 @@ function OcrBatch(insertinto_id, batch_id) {
                 .appendTo(tlcontainer);
 
             tasklist = $("<div></div>")
-                .attr("id", "batch" + m_batchdata.pk + "_tasks")
                 .addClass("task_list");
-            tlcontainer.append(tasklist).insertAfter(batch);
-        }
+            tlcontainer.append(tasklist);
+            m_batchdiv.append(tlcontainer);
+        }                
         setScrollHandleHeight();
 
 
         $(".batch_task").remove();
 
-        for (var i in m_batchdata.fields.tasks) {
-            var taskdata = m_batchdata.fields.tasks[i];
+        for (var i in batchdata.fields.tasks) {
+            var taskdata = batchdata.fields.tasks[i];
             var task = tasklist.find("#task" + taskdata.pk);
             task = $("<div></div>")
                 .addClass("batch_task")
@@ -422,7 +444,7 @@ function OcrBatch(insertinto_id, batch_id) {
             setError(data.error, data.trace);
         } else {
             m_batchdata = data[0];
-            updateResults();
+            updateResults(m_batchdata);
             return self.isComplete(); 
         }
         return true;
@@ -441,21 +463,32 @@ function OcrBatch(insertinto_id, batch_id) {
     // check the server for complete results...
     var pollForResults = function(polltime) {
         $.ajax({
-            url: m_resultsurl,
+            url: "/batch/results/" + m_batch_id,
             data: {start: m_taskoffset, limit: m_maxtasks},
             type: "GET",
             dataType: "json",
             success: function(data) {
                 if (!processData(data)) {
-                    setTimeout(function() {
+                    m_polltimeout = setTimeout(function() {
                         pollForResults(polltime);
                     }, polltime);
+                } else {
+                    m_polltimeout = -1;
                 }                
             },
             error: function(xhr, statusText, errorThrown) {
                 setError("Http Error " + statusText, errorThrown);
             }
         }); 
+    }
+
+    // refresh immediately - cancel the next poll
+    // and start a new one if necessary
+    var manualRefresh = function() {
+        if (m_polltimeout != -1) {
+            clearTimeout(m_polltimeout);
+        }
+        pollForResults(m_polltime)
     }
 
 
