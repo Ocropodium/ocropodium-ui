@@ -393,14 +393,14 @@ def _serialize_batch(batch, start=0, limit=25):
     pyserializer = serializers.get_serializer("python")()     
     batchsl = pyserializer.serialize(
         [batch],
-        extras=("estimate_progress", "task_count",),
+        extras=("estimate_progress", "is_complete", "task_count",),
         relations={
             "user":  { "fields": ("username") }
         },
     )
     taskssl = pyserializer.serialize(
         batch.tasks.all()[start:start + limit],
-        excludes=("args", "kwargs"),
+        excludes=("args", "kwargs", "traceback",),
     )
     batchsl[0]["fields"]["tasks"] = taskssl
     return batchsl

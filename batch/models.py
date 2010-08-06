@@ -31,6 +31,15 @@ class OcrBatch(models.Model):
         return self.tasks.all()
 
 
+    def is_complete(self):
+        """
+        Check whether all tasks are done.
+        """        
+        numrunning = self.tasks.exclude(
+                status__in=("DONE", "ERROR", "ABORTED")).count()
+        return numrunning == 0
+
+
     def task_count(self):
         """
         Return the number of contained tasks.
@@ -56,7 +65,7 @@ class OcrBatch(models.Model):
         for t in tasks:
             lines = t.lines or 50
             weight = float(lines) / float(totallines)
-            if t.status == "ERROR":
+            if t.status in ("ERROR", "ABORTED", "DONE"):
                 percentdone += (weight * 100)            
             else:
                 percentdone += (weight * t.progress)            
