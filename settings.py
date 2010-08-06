@@ -4,6 +4,10 @@
 import os
 import socket
 
+# Ensure celery/lazy loading Django models play nice 
+import djcelery
+djcelery.setup_loader()
+
 SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 # flag whether we're on a server.  Really need a better way of doing this.
