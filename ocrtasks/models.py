@@ -46,5 +46,12 @@ class OcrTask(models.Model):
         Whether or not a given status allows
         revoking (cancelling) a task.
         """
-        return self.status in ("INIT", "PENDING", "RUNNING")
+        return self.status in ("INIT", "PENDING")
+
+    def is_abortable(self):
+        """
+        Whether we can cancel execution.
+        """
+        return self.status in ("RUNNING", "RETRY")
+
 
