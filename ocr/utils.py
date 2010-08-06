@@ -353,6 +353,7 @@ def check_aborted(method):
         instance = args[0]
         if instance.abort_func is not None:
             if instance.abort_func():
+                instance.logger.warning("Aborted")
                 raise AbortedAction(method.func_name)
         return method(*args, **kwargs)
     return wrapper

@@ -74,7 +74,7 @@ class ConvertPageTask(AbortableTask):
             # TODO: this should be possible via a simple 'self.is_aborted()'
             # Find out why it isn't.
             asyncres = AbortableAsyncResult(kwargs["task_id"])            
-            return asyncres.is_aborted()
+            return asyncres.backend.get_status(kwargs["task_id"]) == "ABORTED" 
 
         converter = utils.get_converter(paramdict.get("engine", "tesseract"), 
                 logger=logger, abort_func=abort_func, params=paramdict)
