@@ -89,7 +89,6 @@ function OcrBatch(insertinto_id, batch_id) {
 
     $(".retry_task").live("click", function(event) {
         var pk = $(this).data("pk");
-        alert("click: " + pk);
         $.ajax({
             url: "/batch/retry_task/" + pk + "/",
             type: "POST",
