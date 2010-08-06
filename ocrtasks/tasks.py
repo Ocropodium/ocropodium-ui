@@ -15,20 +15,20 @@ def on_task_sent(**kwargs):
     """
     Update the database when a task is sent to the broker.
     """
-    ocrtask = OcrTask.objects.get(task_id=kwargs.get("task_id"))
-    ocrtask.status = "PENDING"
-    ocrtask.save()
+    task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
+    task.status = "PENDING"
+    task.save()
 
 
 def on_task_prerun(**kwargs):
     """
     Update the database when a task is about to run.
     """
-    ocrtask = OcrTask.objects.get(task_id=kwargs.get("task_id"))
-    ocrtask.args = kwargs.get("args")
-    ocrtask.kwargs = kwargs.get("kwargs")
-    ocrtask.status = "RUNNING"
-    ocrtask.save()
+    task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
+    task.args = kwargs.get("args")
+    task.kwargs = kwargs.get("kwargs")
+    task.status = "RUNNING"
+    task.save()
 
 
 def on_task_postrun(**kwargs):
@@ -36,15 +36,15 @@ def on_task_postrun(**kwargs):
     Update the database when a task is finished.
     """
     # don't know what we need to do here yet
-    ocrtask = OcrTask.objects.get(task_id=kwargs.get("task_id"))
+    task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
     retval = kwargs.get("retval")
     if isinstance(retval, ExceptionInfo):
-        ocrtask.error = retval.exception
-        ocrtask.traceback = retval.traceback
-        ocrtask.status = "ERROR"
+        task.error = retval.exception
+        task.traceback = retval.traceback
+        task.status = "ERROR"
     else:
-        ocrtask.status = "DONE"
-    ocrtask.save()
+        task.status = "DONE"
+    task.save()
 
 # Connect up signals to the *PageTask
 for taskname in [ConvertPageTask.name, BinarizePageTask.name]:
