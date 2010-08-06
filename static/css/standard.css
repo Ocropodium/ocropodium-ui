@@ -10,7 +10,21 @@ body {
     float: right;
 }
 
+#login_info {
+    margin-top: 12px;
+    margin-right: 12px;
+    color: #999;
+    float: right;
+    font-size: 0.8em;
+}
+
+#login_info a {
+    color: #666;
+    font-weight: bold;
+}
+
 #main_toolbar {
+    vertical-align: middle;
     background-color: #F0F0F0;
     margin: 0px 0px 0px 0px;
     text-align: left;

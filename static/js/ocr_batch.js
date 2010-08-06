@@ -70,7 +70,7 @@ function OcrBatch(insertinto_id, batch_id) {
      *  Events
      */
 
-    $(".batch").live("click", function(event) {
+    $(".batch_name").live("click", function(event) {
         $(this).toggleClass("expanded");
         m_batchdiv.find(".tl_container").toggle();
         setScrollHandleHeight();
@@ -85,13 +85,42 @@ function OcrBatch(insertinto_id, batch_id) {
             dataType: "json",
             success: function(data) {
                 if (data.ok) {
-                    $("#task" + pk).find(".progress_outer")
-                        .removeClass("progress_outer_done");
-                    $("#task" + pk).find(".progress")
-                        .removeClass("progress_done").css("width", "0%");
-
                 }
                 self.pollForResults(300);                
+            },
+        });
+        event.preventDefault();    
+    });
+
+
+    $(".abort_task").live("click", function(event) {
+        var pk = $(this).data("pk");
+        $.ajax({
+            url: "/batch/abort_task/" + pk + "/",
+            type: "POST",
+            dataType: "json",
+            success: function(data) {
+                if (data.ok) {
+                } else {
+                }
+                self.pollForResults(m_polltime);                
+            },
+        });
+        event.preventDefault();    
+    });
+
+
+    $(".abort_batch").live("click", function(event) {
+        var pk = $(this).data("pk");
+        $.ajax({
+            url: "/batch/abort_batch/" + pk + "/",
+            type: "POST",
+            dataType: "json",
+            success: function(data) {
+                if (data.ok) {
+                } else {
+                }
+                self.pollForResults(m_polltime);                
             },
         });
         event.preventDefault();    
@@ -136,7 +165,8 @@ function OcrBatch(insertinto_id, batch_id) {
                 self.pollForResults(300);                
             },
         });
-        event.preventDefault();    
+        event.preventDefault();   
+        event.stopPropagation(); 
     });
 
     var setScrollHandlePosition = function() {
@@ -223,7 +253,7 @@ function OcrBatch(insertinto_id, batch_id) {
                 .attr("id", "batch" + m_batchdata.pk)
             batch.append(
                 $("<span></span>")
-                    .addClass("page_name")
+                    .addClass("batch_name")
                     .text(m_batchdata.fields.name));
             addProgressBar(batch);
             batch.append(
@@ -231,10 +261,16 @@ function OcrBatch(insertinto_id, batch_id) {
                     .addClass("page_info"));
             batch.append(
                 $("<a></a>")
-                    .attr("href", "#")
+                    .attr("href", "/batch/retry_batch/" + m_batchdata.pk + "/")
                     .addClass("retry_batch")
                     .data("pk", m_batchdata.pk)
                     .text("Retry All"));
+            batch.append(
+                $("<a></a>")
+                    .attr("href", "/batch/abort_batch/" + m_batchdata.pk + "/")
+                    .addClass("abort_batch")
+                    .data("pk", m_batchdata.pk)
+                    .text("Abort Batch"));
             m_batchdiv.append(batch);
         }
         setProgressStatus(batch, m_batchdata.extras.estimate_progress);
@@ -340,10 +376,16 @@ function OcrBatch(insertinto_id, batch_id) {
             addProgressBar(task);
             task.append(
                 $("<a></a>")
-                    .attr("href", "#")
+                    .attr("href", "/batch/retry_task/" + taskdata.pk + "/")
                     .addClass("retry_task")
                     .data("pk", taskdata.pk)
                     .text("Retry"));
+            task.append(
+                $("<a></a>")
+                    .attr("href", "/batch/abort_task/" + taskdata.pk + "/")
+                    .addClass("abort_task")
+                    .data("pk", taskdata.pk)
+                    .text("Abort"));
             task.append(
                 $("<span></span>")
                     .addClass("page_info"));

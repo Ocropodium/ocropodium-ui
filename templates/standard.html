@@ -20,6 +20,9 @@
             <a id="header_logo" href="/" rel="Home" alt="OCRopodium Logo">
                 <img border="0" src="/static/ocr_logo.png" alt="OCRopodium Logo" />
             </a>
+            <div id="login_info">Logged in as {{request.user.username}}.
+                <a href="/accounts/logout" alt="Logout">Logout</a>
+            </div>
             <ul id="main_toolbar_menu">
                 <li>
                 <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}

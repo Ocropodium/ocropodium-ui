@@ -48,10 +48,12 @@
     background-color: #FA5858;
 }
 
-
-
-.page_name {
+.page_name, .batch_name {
     font-weight: bold;
+}
+
+.batch_name {
+    cursor: pointer;
 }
 
 .page_info {
@@ -60,7 +62,7 @@
     width: 100px;
 }
 
-.retry_task, .retry_batch {
+.retry_task, .retry_batch, .abort_task, .abort_batch {
     text-decoration: none;
     color: #999;
     float: right;
@@ -167,7 +169,6 @@
 }
 
 .batch {
-    cursor: pointer;
     padding-left: 15px;
     background-image: url("/static/vt_scroll_right.gif");
     background-position: left center;
