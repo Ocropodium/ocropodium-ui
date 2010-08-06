@@ -61,8 +61,10 @@ class OcrBatchTest(TestCase):
         pk = self._test_batch_action()        
         r = self.client.get("/batch/results/%s" % pk)
         self.assert_(r.content, "No content returned")
-        content = simplejson.loads(r.content)        
-        self.assertEqual(content[0]["fields"]["page_name"], os.path.basename(TESTFILE))
+        content = simplejson.loads(r.content)
+        self.assertEqual(
+                content[0]["fields"]["tasks"][0]["fields"]["page_name"], 
+                os.path.basename(TESTFILE))
 
     def _test_batch_action(self, params=None, headers={}):
         """

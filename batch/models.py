@@ -21,6 +21,9 @@ class OcrBatch(models.Model):
     tags = TagField()
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
 
+    def username(self):
+        return self.user.username
+    
     def subtasks(self):
         """
         Alias for 'tasks', for use when serializing

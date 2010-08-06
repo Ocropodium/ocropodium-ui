@@ -1,18 +1,19 @@
-# Create your views here.
-
-
 import re
 import os
 import traceback
+from types import ClassType, MethodType
 from datetime import datetime
 from celery import result as celeryresult
+from celery.contrib.abortable import AbortableAsyncResult
 from celery.task.sets import TaskSet, subtask
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core import serializers
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
@@ -25,6 +26,24 @@ from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 
 from ocradmin.ocr.views import _get_best_params
 
+
+PER_PAGE = 10
+
+
+def batch_query(params):
+    """
+    Query the batch db.
+    """
+    order = [x for x in params.getlist("order_by") if x != ""] or ["created_on"]
+    query =  Q()
+    for key, val in params.items():
+        if key.find("__") == -1 and \
+                not key in OcrBatch._meta.get_all_field_names():
+            continue
+        if not val:
+            continue
+        query = query & Q(**{str(key): str(val)})
+    return OcrBatch.objects.select_related().filter(query).order_by(*order)
 
 
 @login_required
@@ -44,6 +63,52 @@ def new(request):
             context_instance=RequestContext(request))    
 
 
+@login_required
+def list(request):
+    """
+    List recent batches.
+    """
+    excludes = ["args", "kwargs",]
+    params = request.GET.copy()
+    context = { 
+        "params" : params,
+    }
+    
+    paginator = Paginator(batch_query(params), PER_PAGE) 
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+    
+    try:
+        batches = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        batches = paginator.page(paginator.num_pages)
+    
+    pythonserializer = serializers.get_serializer("python")()    
+    serializedpage = {}
+    serializedpage["num_pages"] = paginator.num_pages
+    wanted = ("end_index", "has_next", "has_other_pages", "has_previous",
+            "next_page_number", "number", "start_index", "previous_page_number")
+    for attr in wanted:
+        v = getattr(batches, attr)
+        if isinstance(v, MethodType):
+            serializedpage[attr] = v()
+        elif isinstance(v, (str, int)):
+            serializedpage[attr] = v
+    # This gets rather gnarly, see: 
+    # http://code.google.com/p/wadofstuff/wiki/DjangoFullSerializers
+    serializedpage["params"] = params
+    serializedpage["object_list"] = pythonserializer.serialize(
+        batches.object_list, 
+        extras=( "username", ),
+    ) 
+
+    response = HttpResponse(mimetype="application/json")
+    simplejson.dump(serializedpage, response, cls=DjangoJSONEncoder)
+    return response
+
+    
 @login_required
 @transaction.commit_manually
 def create(request):
@@ -252,6 +317,30 @@ def retry_task(request, pk):
             mimetype="application/json")
 
 
+@login_required
+def abort_task(request, pk):
+    """
+    Abort a batch task.
+    """
+    task = get_object_or_404(OcrTask, pk=pk)
+    return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}), 
+            mimetype="application/json")
+
+    
+@transaction.commit_manually
+@login_required
+def abort_batch(request, pk):
+    """
+    Abort an entire batch.
+    """
+    batch = get_object_or_404(OcrBatch, pk=pk)
+    for task in batch.tasks.all():
+        _abort_celery_task(task)
+    transaction.commit()
+    return HttpResponse(simplejson.dumps({"ok": True}), 
+            mimetype="application/json")
+
+
 
 @transaction.commit_manually
 @login_required
@@ -268,10 +357,25 @@ def retry_batch(request, pk):
 
 
 
+
+
+def _abort_celery_task(task):
+    """
+    Abort a task.
+    """
+    asyncres = AbortableAsyncResult(task.task_id)
+    asyncres.abort()
+    if asyncres.is_aborted():
+        task.status = "ABORTED"
+        task.progress = 0
+        task.save()
+    return asyncres.is_aborted()
+
+
 def _retry_celery_task(task):
     """
     Set a task re-running.
-    """
+    """                                             
     celerytask = tasks.ConvertPageTask
     celerytask.retry(args=task.args, kwargs=task.kwargs,
                 options=dict(task_id=task.task_id, loglevel=60, retries=2), 
