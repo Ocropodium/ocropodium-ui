@@ -7,6 +7,7 @@ import re
 import shutil
 import time
 from celery.contrib.abortable import AbortableTask
+from celery.contrib.abortable import AbortableAsyncResult
 from celery.task import PeriodicTask
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -64,11 +65,21 @@ class ConvertPageTask(AbortableTask):
         """
         Runs the convert action.
         """
+        # function for the converted to call periodically to check whether 
+        # to end execution early
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
-        converter = utils.get_converter(paramdict.get("engine", "tesseract"), 
-                logger, paramdict)
         
+        def abort_func():
+            # TODO: this should be possible via a simple 'self.is_aborted()'
+            # Find out why it isn't.
+            asyncres = AbortableAsyncResult(kwargs["task_id"])            
+            return asyncres.is_aborted()
+
+        converter = utils.get_converter(paramdict.get("engine", "tesseract"), 
+                logger=logger, abort_func=abort_func, params=paramdict)
+        
+        # function for the converter to update progress
         from ocradmin.ocrtasks.models import OcrTask
         def progress_func(progress, lines=None):
             task = OcrTask.objects.get(task_id=kwargs["task_id"])
@@ -94,13 +105,21 @@ class BinarizePageTask(AbortableTask):
         """
         Runs the binarize action.
         """
+        # function for the converted to call periodically to check whether 
+        # to end execution early
+        def abort_func():
+            # TODO: this should be possible via a simple 'self.is_aborted()'
+            # Find out why it isn't.
+            asyncres = AbortableAsyncResult(kwargs["task_id"])            
+            return asyncres.is_aborted()
+
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
 
         filepath = utils.make_png(filepath)
 
         converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
-                logger, paramdict)
+                logger=logger, abort_func=abort_func, params=paramdict)
         grey, page_bin = converter.standard_preprocess(filepath)
         pagewidth = page_bin.dim(0)
         pageheight = page_bin.dim(1)
@@ -137,13 +156,21 @@ class SegmentPageTask(AbortableTask):
         """
         Runs the segment action.
         """
+        # function for the converted to call periodically to check whether 
+        # to end execution early
+        def abort_func():
+            # TODO: this should be possible via a simple 'self.is_aborted()'
+            # Find out why it isn't.
+            asyncres = AbortableAsyncResult(kwargs["task_id"])            
+            return asyncres.is_aborted()
+
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
 
         filepath = utils.make_png(filepath)
 
         converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
-                logger, paramdict)
+                logger=logger, abort_func=abort_func, params=paramdict)
         grey, page_bin = converter.standard_preprocess(filepath)
         page_seg = converter.get_page_seg(page_bin)
 

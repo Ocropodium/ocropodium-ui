@@ -219,14 +219,14 @@ def output_to_plain_text(jsondata):
     return " ".join([line["text"] for line in jsondata["lines"]])
 
 
-def get_converter(engine_type, logger, params):
+def get_converter(engine_type, *args, **kwargs):
     """
     Get the appropriate class to do the conversion.
     """
     if engine_type == "ocropus":
-        return OcropusWrapper(logger, params)
+        return OcropusWrapper(*args, **kwargs)
     else:
-        return TessWrapper(logger, params)
+        return TessWrapper(*args, **kwargs)
 
 
 def get_ocropus_components(oftypes=None, withnames=None):
@@ -341,15 +341,33 @@ def set_progress(logger, progress_func, step, end, granularity=5):
     progress_func(perc, end)
 
 
+class AbortedAction(StandardError):
+    """
+    Exception to raise when execution is aborted.
+    """
+    pass
+
+
+def check_aborted(method):
+    def wrapper(*args, **kwargs):
+        instance = args[0]
+        if instance.abort_func is not None:
+            if instance.abort_func():
+                raise AbortedAction(method.func_name)
+        return method(*args, **kwargs)
+    return wrapper
+
+
 class OcropusWrapper(object):
     """
     Wrapper around OCRopus's basic page-recognition functions so
     that bits and peices can be reused more easily.
     """
-    def __init__(self, logger=None, params=None):
+    def __init__(self, logger=None, abort_func=None, params=None):
         """
         Initialise an OcropusWrapper object.
         """
+        self.abort_func = abort_func
         self._linerec = None
         self._lmodel = None
         self.logger = logger if logger else self.get_default_logger()
@@ -442,7 +460,7 @@ class OcropusWrapper(object):
         logging.basicConfig(level=logging.DEBUG)
         return logging.getLogger(self.__class__.__name__)
 
-
+    @check_aborted
     def get_page_binary(self, filepath):
         """
         Convert an on-disk file into an in-memory iulib.bytearray.
@@ -455,7 +473,7 @@ class OcropusWrapper(object):
         preproc.binarize(page_bin, page_gray)
         return page_bin
 
-
+    @check_aborted
     def get_page_seg(self, page_bin):
         """
         Segment the binary page into a colour-coded segmented images.
@@ -475,7 +493,7 @@ class OcropusWrapper(object):
         segmenter.segment(page_seg, page_bin)
         return page_seg
 
-
+    @check_aborted
     def get_transcript(self, line):
         """
         Run line-recognition on an iulib.bytearray images of a 
@@ -490,7 +508,7 @@ class OcropusWrapper(object):
         ocropus.beam_search(result, fst, self._lmodel, 1000)
         return result.as_string()
 
-
+    @check_aborted
     def standard_preprocess(self, filepath):
         """
         Mimic OCRopus's StandardPreprocessing component but
@@ -545,7 +563,7 @@ class OcropusWrapper(object):
         tmp = iulib.bytearray()        
         if iulib.contains_only(pageout, 0, 255):
             self.logger.debug("Running BINARY batch clean.")
-            pageout = self._batch_clean(cleanups["binclean"], pagegray)            
+            pageout = self.batch_clean(cleanups["binclean"], pagegray)            
             if bindeskew:
                 self.logger.debug("Deskewing with: %s" % self.params.bindeskew)
                 bindeskew.cleanup(tmp, pageout)
@@ -553,7 +571,7 @@ class OcropusWrapper(object):
                 pageout.move(tmp)
         else:
             self.logger.debug("Running GRAYSCALE batch clean.")
-            pageout = self._batch_clean(cleanups["grayclean"], pagegray)
+            pageout = self.batch_clean(cleanups["grayclean"], pagegray)
             if graydeskew:
                 self.logger.debug("Deskewing with: %s" % self.params.graydeskew)
                 graydeskew.cleanup_gray(tmp, pageout)
@@ -570,7 +588,7 @@ class OcropusWrapper(object):
             self.logger.error("Binarizer failed: %s" % err)
             pageout.move(tmp)
         tmp.move(pageout)
-        pageout = self._batch_clean(cleanups["binclean"], tmp)
+        pageout = self.batch_clean(cleanups["binclean"], tmp)
         self.logger.debug("Page out length: %s" % pageout.length())
         if bindeskew and not deskewed:
             tmp.move(pageout)
@@ -581,8 +599,8 @@ class OcropusWrapper(object):
                 pageout.move(tmp)
         return gray, pageout
 
-
-    def _batch_clean(self, components, pagedata):
+    @check_aborted
+    def batch_clean(self, components, pagedata):
         tmp = iulib.bytearray()
         # TODO: Ditto, benchmark this copy
         pageout = iulib.bytearray()
@@ -627,7 +645,7 @@ class TessWrapper(OcropusWrapper):
         self._tesseract = get_tesseract()
         self.logger.info("Using Tesseract: %s" % self._tesseract)
 
-
+    @check_aborted
     def get_transcript(self, line):
         """
         Recognise each individual line by writing it as a temporary
@@ -667,7 +685,7 @@ class TessWrapper(OcropusWrapper):
         # this DOESN'T include the "tessdata" part
         os.environ["TESSDATA_PREFIX"] = self._tessdata
 
-
+    @check_aborted
     def process_line(self, imagepath):
         """
         Run Tesseract on the TIFF image, using YET ANOTHER temporary
