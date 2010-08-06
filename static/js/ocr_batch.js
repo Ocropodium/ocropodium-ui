@@ -55,7 +55,7 @@ function OcrBatch(insertinto_id, batch_id) {
     this.buildUi = function() {
         // create container structure
         createBatchHeaderUi();    
-
+        createTaskListUi();
         // add the containter to the
         m_container.append(m_header).append(m_batchdiv).appendTo("#" + insertinto_id);
     }
@@ -65,7 +65,6 @@ function OcrBatch(insertinto_id, batch_id) {
     this.init = function() {
         self.buildUi();
         manualRefresh();
-
     }
 
 
@@ -211,7 +210,7 @@ function OcrBatch(insertinto_id, batch_id) {
         // clamp it's range
         m_taskoffset = Math.min(maxoffset, m_taskoffset);
         m_taskoffset = Math.max(0, m_taskoffset);
-        m_scrollwin.text("Task " + (m_taskoffset + 1)); // + "  " + Math.round(percent) + "% ");
+        m_scrollwin.text("Task " + (m_taskoffset + 1)); 
     }
 
     var onScrollStart = function(event, ui) {
@@ -232,21 +231,6 @@ function OcrBatch(insertinto_id, batch_id) {
     }
 
     var updateScrollButtons = function(event) {
-    }
-
-
-    // show an error
-    var setError = function(error, traceback) {
-        m_batchdiv.removeClass("waiting")
-            .addClass("error")
-            .html("<h4>Error: " + error + "</h4>");
-        
-        if (traceback) {
-            m_batchdiv.append(
-                $("<div></div>").addClass("traceback")
-                    .append("<pre>" + traceback + "</pre>")                                
-            );
-        }                
     }
 
 
@@ -273,6 +257,68 @@ function OcrBatch(insertinto_id, batch_id) {
                 .addClass("abort_batch")
                 .text("Abort Batch"));
         m_batchdiv.append(batch);
+    }
+
+
+    var createTaskListUi = function() {
+        var tlcontainer = $("<div></div>")
+            .addClass("tl_container");
+        var tlscrollcontainer = $("<div></div>")
+            .addClass("tl_scrollcontainer");
+        var scrollup = $("<div></div>")
+            .addClass("tl_scrollup")
+            .attr("id", "scrollup");
+        var scrollbar = $("<div></div>")
+            .addClass("tl_scrollbar")
+            .attr("id", "scrollbar");
+        var scrolldown = $("<div></div>")
+            .addClass("tl_scrolldown")
+            .attr("id", "scrolldown");
+        var scrollhandle = $("<div></div>")
+            .addClass("tl_scrollhandle")
+            .attr("id", "scrollhandle")
+            .draggable({
+                containment: "parent",
+                axis: "y",
+                start: onScrollStart,
+                drag: onScroll,
+                stop: onScrollStop,
+            });
+        tlscrollcontainer
+            .append(scrollup)
+            .append(scrollbar.append(scrollhandle))
+            .append(scrolldown)
+            .appendTo(tlcontainer);
+
+        var tasklist = $("<div></div>")
+            .addClass("task_list");
+        tlcontainer.append(tasklist);
+
+        var task = $("<div></div>")
+            .addClass("batch_task")
+            .hide();
+        task.append(
+            $("<span></span>")
+                .addClass("page_name"));
+        addProgressBar(task);
+        task.append(
+            $("<a></a>")
+                .attr("href", "#")
+                .addClass("retry_task")
+                .text("Retry"));
+        task.append(
+            $("<a></a>")
+                .attr("href", "#")
+                .addClass("abort_task")
+                .text("Abort"));
+        task.append(
+            $("<span></span>")
+                .addClass("page_info"));
+        for (var i = 0; i < m_maxtasks; i++) {
+            tasklist.append(task.clone());
+        }
+
+        m_batchdiv.append(tlcontainer);        
     }
 
 
@@ -341,95 +387,47 @@ function OcrBatch(insertinto_id, batch_id) {
     var updateResults = function(batchdata) {
 
         m_batchdiv.removeClass("waiting");
-        //var percentdone = (results.completed_count / results.count) * 100;
-        //m_batchdiv.text(results.count + " images (" + Math.round(percentdone) + "%)");
         setBatchResults(batchdata);
-        var tasklist = m_batchdiv.find(".task_list");        
-        if (tasklist.length == 0) {
-            var tlcontainer = $("<div></div>")
-                .addClass("tl_container");
-            var tlscrollcontainer = $("<div></div>")
-                .addClass("tl_scrollcontainer");
-            var scrollup = $("<div></div>")
-                .addClass("tl_scrollup")
-                .attr("id", "scrollup");
-            var scrollbar = $("<div></div>")
-                .addClass("tl_scrollbar")
-                .attr("id", "scrollbar");
-            var scrolldown = $("<div></div>")
-                .addClass("tl_scrolldown")
-                .attr("id", "scrolldown");
-            var scrollhandle = $("<div></div>")
-                .addClass("tl_scrollhandle")
-                .attr("id", "scrollhandle")
-                .draggable({
-                    containment: "parent",
-                    axis: "y",
-                    start: onScrollStart,
-                    drag: onScroll,
-                    stop: onScrollStop,
-                });
-            tlscrollcontainer
-                .append(scrollup)
-                .append(scrollbar.append(scrollhandle))
-                .append(scrolldown)
-                .appendTo(tlcontainer);
-
-            tasklist = $("<div></div>")
-                .addClass("task_list");
-            tlcontainer.append(tasklist);
-            m_batchdiv.append(tlcontainer);
-        }                
         setScrollHandleHeight();
 
-
-        $(".batch_task").remove();
-
-        for (var i in batchdata.fields.tasks) {
+        var tasklist = m_batchdiv.find(".task_list");        
+        for (var i = 0; i < m_maxtasks; i++) {
             var taskdata = batchdata.fields.tasks[i];
-            var task = tasklist.find("#task" + taskdata.pk);
-            task = $("<div></div>")
-                .addClass("batch_task")
-                .attr("id", "task" + taskdata.pk)
-            task.append(
-                $("<span></span>")
-                    .addClass("page_name")
-                    .text(taskdata.fields.page_name));
-            addProgressBar(task);
-            task.append(
-                $("<a></a>")
-                    .attr("href", "/batch/retry_task/" + taskdata.pk + "/")
-                    .addClass("retry_task")
-                    .data("pk", taskdata.pk)
-                    .text("Retry"));
-            task.append(
-                $("<a></a>")
-                    .attr("href", "/batch/abort_task/" + taskdata.pk + "/")
-                    .addClass("abort_task")
-                    .data("pk", taskdata.pk)
-                    .text("Abort"));
-            task.append(
-                $("<span></span>")
-                    .addClass("page_info"));
-            tasklist.append(task);
-            
+            var task = tasklist.find(".batch_task").slice(i);
+            // hide the task if we've run out of data - this happens
+            // if there are less than m_maxtasks tasks in the set.
+            if (taskdata == null) {
+                task.hide()
+                    .attr("id", null)
+                    .find("a")
+                    .removeData()
+                    .attr("href", "#")
+                    .end()
+                    .find("page_name")
+                    .text("");
+                continue;                
+            }
+
+            task.attr("id", "task" + taskdata.pk)
+            task.find(".page_name")
+                .text(taskdata.fields.page_name);
+            task.find("a").data("pk", taskdata.pk);
+            task.find(".retry_task")
+                .attr("href", "/batch/retry_task/" + taskdata.pk + "/");
+            task.find(".abort_task")
+                .attr("href", "/batch/abort_task/" + taskdata.pk + "/");
             setProgressStatus(task, taskdata.fields.progress, taskdata.fields.status);
             if (taskdata.fields.lines != null) {
                 task.find(".page_info").text("Lines: " + taskdata.fields.lines);
             }
+            task.show()
         }
     }
 
 
     // check whether all tasks are complete
     this.isComplete = function() {
-        var done = 0;
-        $.each(m_batchdata.fields.tasks, function(i, t) {
-            if (t.fields.status.match(/DONE|ERROR/)) {
-                done++;
-            }
-        });        
-        return done == m_batchdata.fields.tasks.length;
+        return m_batchdata.extras.is_complete;
     }
 
     this.updateResults = function() {
