@@ -56,7 +56,7 @@ def list(request):
     GET filter settings.
     """
 
-    excludes = ["args", "kwargs",]
+    excludes = ["args", "kwargs","traceback","results",]
     params = request.GET.copy()
     context = { 
         "statuses": OcrTask.STATUS_CHOICES,
