@@ -12,11 +12,10 @@ class OcrTask(models.Model):
     STATUS_CHOICES = (
         ("INIT", "Initialising"),
         ("PENDING", "Pending"),
-        ("RUNNING", "Running"),
+        ("STARTED", "Started"),
         ("RETRY", "Retry"),
         ("SUCCESS", "Success"),
         ("ERROR", "Error"),
-        ("DONE", "Done"),
     )
 
     user = models.ForeignKey(User)
@@ -29,6 +28,7 @@ class OcrTask(models.Model):
     progress = models.FloatField(default=0.0, blank=True, null=True)
     args = fields.PickledObjectField(blank=True, null=True)
     kwargs = fields.PickledObjectField(blank=True, null=True)
+    results = fields.PickledObjectField(blank=True, null=True)
     error = fields.PickledObjectField(blank=True, null=True)
     traceback = models.TextField(blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
@@ -52,6 +52,6 @@ class OcrTask(models.Model):
         """
         Whether we can cancel execution.
         """
-        return self.status in ("RUNNING", "RETRY")
+        return self.status in ("STARTED", "RETRY")
 
 

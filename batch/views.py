@@ -68,7 +68,7 @@ def list(request):
     """
     List recent batches.
     """
-    excludes = ["args", "kwargs",]
+    excludes = ["args", "kwargs", "traceback", "results",]
     params = request.GET.copy()
     context = { 
         "params" : params,
@@ -294,6 +294,21 @@ def upload_files(request):
             mimetype="application/json")
 
 
+@login_required
+def transcript(request, pk):
+    """
+    View the transcription of a batch.
+    """
+    batch = get_object_or_404(OcrBatch, pk=pk)
+    template = "batch/transcript.html"
+    context = {"batch": batch}
+
+    return render_to_response(template, context, 
+            context_instance=RequestContext(request))
+
+
+
+
 
 def _show_batch(request, batch):
     """
@@ -341,7 +356,6 @@ def abort_batch(request, pk):
             mimetype="application/json")
 
 
-
 @transaction.commit_manually
 @login_required
 def retry_batch(request, pk):
@@ -356,15 +370,17 @@ def retry_batch(request, pk):
             mimetype="application/json")
 
 
-
-
-
 def _abort_celery_task(task):
     """
     Abort a task.
     """
     asyncres = AbortableAsyncResult(task.task_id)
-    asyncres.abort()
+    print asyncres
+    print asyncres.__dict__    
+    #asyncres.revoke()
+    print "STATUS PRE:", asyncres.backend.get_status(task.task_id)
+    print asyncres.abort()
+    print "STATUS POST:", asyncres.backend.get_status(task.task_id)
     if asyncres.is_aborted():
         task.status = "ABORTED"
         task.progress = 0
@@ -400,7 +416,7 @@ def _serialize_batch(batch, start=0, limit=25):
     )
     taskssl = pyserializer.serialize(
         batch.tasks.all()[start:start + limit],
-        excludes=("args", "kwargs", "traceback",),
+        excludes=("args", "kwargs", "traceback", "results",),
     )
     batchsl[0]["fields"]["tasks"] = taskssl
     return batchsl

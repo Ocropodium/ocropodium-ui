@@ -363,9 +363,9 @@ function OcrBatch(insertinto_id, batch_id) {
         if (status) {
             task.find(".progressbar").attr("class", "progressbar " + status.toLowerCase());
         } else if (progress > 99.5) {
-            task.find(".progressbar").attr("class", "progressbar done");
+            task.find(".progressbar").attr("class", "progressbar success");
         } else {
-            task.find(".progressbar").attr("class", "progressbar running");
+            task.find(".progressbar").attr("class", "progressbar started");
         }       
     }
 

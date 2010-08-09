@@ -31,7 +31,7 @@
     -moz-border-radius: 2px;
 }
 
-.progressbar.running {
+.progressbar.started {
     background-image: url("/static/progbar.gif");
     background-position: center left;
     background-repeat: no-repeat;
@@ -51,7 +51,7 @@
     background-color: #FFFFFF;
 }
 
-.progressbar.done span {
+.progressbar.success span {
     background-color: #045FB4;
 }
 

@@ -13,5 +13,6 @@ urlpatterns = patterns('',
     (r'^retry_batch/(?P<pk>\d+)/?$', 'ocradmin.batch.views.retry_batch'),
     (r'^retry_task/(?P<pk>\d+)/?$', 'ocradmin.batch.views.retry_task'),
     (r'^show/(?P<pk>\d+)/?$', 'ocradmin.batch.views.show'),
+    (r'^transcript/(?P<pk>\d+)/?$', 'ocradmin.batch.views.transcript'),
 	(r'^upload_files/?$', 'ocradmin.batch.views.upload_files'),
 )
