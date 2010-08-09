@@ -3,7 +3,7 @@
         "pk": 1, 
         "model": "ocrtasks.ocrtask", 
         "fields": {
-            "status": "DONE", 
+            "status": "SUCCESS", 
             "task_id": "simple.png::37c2ea6a-7de8-11df-9023-002564d1c84c", 
             "args": null, 
             "user": 1,
