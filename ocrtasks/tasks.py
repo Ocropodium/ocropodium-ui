@@ -48,7 +48,7 @@ def on_task_postrun(**kwargs):
     task.save()
 
 # Connect up signals to the *PageTask
-for taskname in [ConvertPageTask.name, BinarizePageTask.name]:
+for taskname in [ConvertPageTask.name]:
     task_sent.connect(on_task_sent, tasks[taskname])
     task_prerun.connect(on_task_prerun, tasks[taskname])
     task_postrun.connect(on_task_postrun, tasks[taskname])
