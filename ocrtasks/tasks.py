@@ -27,7 +27,7 @@ def on_task_prerun(**kwargs):
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
     task.args = kwargs.get("args")
     task.kwargs = kwargs.get("kwargs")
-    task.status = "RUNNING"
+    task.status = "STARTED"
     task.save()
 
 
@@ -43,7 +43,8 @@ def on_task_postrun(**kwargs):
         task.traceback = retval.traceback
         task.status = "ERROR"
     else:
-        task.status = "DONE"
+        task.results = retval
+        task.status = "SUCCESS"
     task.save()
 
 # Connect up signals to the *PageTask
