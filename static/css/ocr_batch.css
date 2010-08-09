@@ -11,6 +11,17 @@
     vertical-align: middle;
 }
 
+.progressbar_container {
+    float: right;
+    padding-left: 20px;
+}
+
+.progressbar_container.waiting {
+    background-image: url("/static/ajax-loader-small2.gif");
+    background-position: center left;
+    background-repeat: no-repeat;
+}
+
 .progressbar {
     float: right;
     width: 200px;

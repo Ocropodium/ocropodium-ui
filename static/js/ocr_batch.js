@@ -41,7 +41,8 @@ function OcrBatch(insertinto_id, batch_id) {
     var m_header = $("<div></div>")
         .addClass("batch_head")
         .addClass("widget_header")
-        .attr("id", "batch_head");
+        .attr("id", "batch_head")
+        .text("OCR Batch");
     var m_batchdiv = $("<div></div>")
         .addClass("ocr_page")
         .addClass("waiting")
@@ -109,6 +110,12 @@ function OcrBatch(insertinto_id, batch_id) {
             url: "/batch/abort_task/" + pk + "/",
             type: "POST",
             dataType: "json",
+            beforeSend: function(e) {
+                setTaskWaiting($("#task" + pk), true);
+            },
+            complete: function(e) {
+                setTaskWaiting($("#task" + pk), false);
+            },
             success: function(data) {
                 if (data.ok) {
                 } else {
@@ -126,6 +133,12 @@ function OcrBatch(insertinto_id, batch_id) {
             url: "/batch/abort_batch/" + pk + "/",
             type: "POST",
             dataType: "json",
+            beforeSend: function(e) {
+                setTaskWaiting($("#batch" + pk), true);
+            },
+            complete: function(e) {
+                setTaskWaiting($("#batch" + pk), false);
+            },
             success: function(data) {
                 if (data.ok) {
                 } else {
@@ -162,6 +175,12 @@ function OcrBatch(insertinto_id, batch_id) {
             url: "/batch/retry_batch/" + pk + "/",
             type: "POST",
             dataType: "json",
+            beforeSend: function(e) {
+                setTaskWaiting($("#batch" + pk), true);
+            },
+            complete: function(e) {
+                setTaskWaiting($("#batch" + pk), false);
+            },
             success: function(data) {
                 if (data.ok) {
                 }
@@ -352,13 +371,18 @@ function OcrBatch(insertinto_id, batch_id) {
 
 
     var addProgressBar = function(task) {
+        var holder = $("<div></div>")
+            .addClass("progressbar_container");
         var progressbar = $("<span></span>")
             .addClass("progressbar");
         var progress = $("<span></span>")
             .addClass("progress");
-        task.append(progressbar.append(progress));
+        task.append(holder.append(progressbar.append(progress)));
     }
 
+    var setTaskWaiting = function(task, waiting) {
+        task.find(".progressbar_container").toggleClass("waiting", waiting);        
+    }
     
     var toggleScrollBar = function(show) {
         if (show) {
@@ -375,11 +399,12 @@ function OcrBatch(insertinto_id, batch_id) {
         // work out how big the scroll handle should be
         var taskcount = m_batchdata.extras.task_count;
         var percheight = m_maxtasks / taskcount;
-        var pixheight = Math.max(30, $("#scrollbar").height() * percheight);
-        $("#scrollhandle").animate({height: pixheight}, 100);
-
+        
         // hide the scrollbar if necessary
         toggleScrollBar(taskcount > m_maxtasks);
+        
+        var pixheight = Math.max(30, $("#scrollbar").height() * percheight);
+        $("#scrollhandle").animate({height: pixheight}, 100);
     }
 
     // add results to the page.
@@ -387,7 +412,6 @@ function OcrBatch(insertinto_id, batch_id) {
 
         m_batchdiv.removeClass("waiting");
         setBatchResults(batchdata);
-        setScrollHandleHeight();
 
         var tasklist = m_batchdiv.find(".task_list");        
         for (var i = 0; i < m_maxtasks; i++) {
@@ -421,6 +445,8 @@ function OcrBatch(insertinto_id, batch_id) {
             }
             task.show()
         }
+
+        setScrollHandleHeight();
     }
 
 
