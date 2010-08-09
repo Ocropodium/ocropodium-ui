@@ -251,6 +251,59 @@ def results(request, pk):
 
 
 @login_required
+def page_results(request, pk, page_index):
+    """
+    Get the results for a single page.
+    """
+    batch = get_object_or_404(OcrBatch, pk=pk)
+    try:
+        page = batch.tasks.all()[int(page_index)]
+    except OcrBatch.DoesNotExist, e:
+        raise e
+
+    pyserializer = serializers.get_serializer("python")()
+    response = HttpResponse(mimetype="application/json")
+    taskssl = pyserializer.serialize(
+        [page],
+        excludes=("results",), 
+    )
+    taskssl[0]["results"] = page.results
+    simplejson.dump(taskssl, response, cls=DjangoJSONEncoder)
+    return response
+
+
+@login_required
+def submit_viewer_binarization(request, pk):
+    """
+    Trigger a re-binarization of the image for viewing purposes.
+    """
+    task = get_object_or_404(OcrTask, pk=pk)
+    async = tasks.BinarizePageTask.apply_async(args=task.args)            
+    out = {
+        "job_name": async.task_id,
+        "status": async.status,
+        "results": async.result,
+    }
+    return HttpResponse(simplejson.dumps(out),
+            mimetype="application/json")
+
+
+@login_required
+def viewer_binarization_results(request, task_id):
+    """
+    Trigger a re-binarization of the image for viewing purposes.
+    """
+    async = celeryresult.AsyncResult(task_id)    
+    out = {
+        "job_name": async.task_id,
+        "status": async.status,
+        "results": async.result,
+    }
+    return HttpResponse(simplejson.dumps(out),
+            mimetype="application/json")
+
+
+@login_required
 def latest(request):
     """
     View the latest batch.

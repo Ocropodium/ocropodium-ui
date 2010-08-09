@@ -1,0 +1,65 @@
+#tsnaxform {
+
+
+}
+
+
+#page_slider {
+    width: 200px;
+}
+
+
+.ocr_line {
+    font-size: 1.1em;
+    border: 1px transparent #FFF;
+    padding: 2px;
+    margin: 1px;
+}
+
+.toolbar_item {
+    float: left;
+}
+
+
+.transcript_lines {
+    background-color: #FFF;
+    padding: 10px;
+}
+
+
+.ocr_line.hover {
+    background-color: #DDDDFF;
+}
+
+.ocr_line.editing {
+    border: 1px solid blue;
+}
+
+.ocr_line.selected {
+    color: #FFF;
+    background-color: #0000DD;
+}
+
+#proxy_container {
+    padding: 5px;
+    position: absolute;    
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(230,230,230))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(230,230,230) 35%,
+        rgb(245,245,245) 50%
+    );
+
+    border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+}

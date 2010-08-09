@@ -8,10 +8,21 @@
 	<script type='application/javascript' src='/static/js/stats.js'></script>
 	<script type='application/javascript' src='/static/js/batch_transcript.js'></script>
 	<script type='application/javascript' src='/static/js/ocr_transcript.js'></script>
+	<script type='application/javascript' src='/static/js/ocr_line_editor.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-batch-upload.js'></script>
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/ocr_batch.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/ocr_page.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/ocr_transcript.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block subtoolbar %}
+    <div class="sub_toolbar" id="transcript_toolbar">
+        <form id="tsnavform" >
+            <input class="toolbar_item" type="text" name="page_num" id="page_num" />
+            <div class="toolbar_item" id="page_slider"></div>
+            <input class="toolbar_item" type="button" value="Prev" id="prev_page" />
+            <input class="toolbar_item" type="button" value="Next" id="next_page" />
+        </form>        
+    </div>
 {% endblock %}
 
 {% block content %}

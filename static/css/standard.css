@@ -91,6 +91,24 @@ body {
     color: #666;
 }
 
+.sub_toolbar {
+    overflow: auto;
+    padding: 5px;
+    background-color: #87B4FF;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.35, rgb(135,180,255)),
+        color-stop(0.48, rgb(143,184,255))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(135,180,255) 35%,
+        rgb(143,184,255) 48%
+    );
+}
+
 #workspace {
     min-height: 300px;
 }
