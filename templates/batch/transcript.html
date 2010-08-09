@@ -1,0 +1,38 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - {{batch.name}} Transcript {% endblock %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
+	<script type='application/javascript' src='/static/js/stats.js'></script>
+	<script type='application/javascript' src='/static/js/batch_transcript.js'></script>
+	<script type='application/javascript' src='/static/js/ocr_transcript.js'></script>
+	<script type='application/javascript' src='/static/js/ajax-dragdrop-batch-upload.js'></script>
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/ocr_batch.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/ocr_page.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block content %}
+
+<div class="widget" id="sidebar">
+    <div class="widget_header">Recent Batches</div>
+    <div class="widget_content">
+        <div id="viewer">
+
+        </div>
+        <div id="transcript_options">
+
+        </div>
+    </div>
+</div>
+
+<form id="batch_form" action="{{request.path}}" >
+    <input type="hidden" name="batch_id" value="{{batch.pk}}" id="batch_id" />
+</form>
+<div id="document_window">
+    
+</div>
+
+{% endblock %}
