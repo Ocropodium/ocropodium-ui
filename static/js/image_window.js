@@ -37,6 +37,9 @@ function ImageWindow(container_id, config) {
     var aviewer = null;
     var bviewer = null;
 
+    // alias 'this' for use in callbacks
+    var self = this;
+    
     // Initialise HTML...
     var imgwindow = $("#" + container_id)
         .addClass("imagewindow_container");
@@ -246,7 +249,19 @@ function ImageWindow(container_id, config) {
         return sviewer;
     }
 
-
+    this.activeViewer = function() {
+        if (showing == S) {
+            return self.sourceViewer();
+        } else if (showing == A) {
+            return self.outputViewerA();
+        } else if (showing == B) {
+            return self.outputViewerB();
+        } else {
+            throw Error("Invalid 'showing' flag: not one of A, B, or S");
+        }
+    }
+    
+    
     // close the viewer images
     this.close = function() {
         if (aviewer.isOpen()) {
@@ -262,7 +277,6 @@ function ImageWindow(container_id, config) {
 
 
     // switch between viewers...
-    var me = this;
     this.toggleSrc = function() {
         var marginshift = 0;
         var portalheight = aportal.outerHeight(true); 
