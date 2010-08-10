@@ -207,7 +207,7 @@ function ImageWindow(container_id, config) {
         } 
     }
 
-    this.setOutputB = function(dzipath) {
+    this.setOutputB = function(dzipath) {                                                                                 faucibus
         bpath = dzipath;
         setViewerPath(bviewer, dzipath);
     }
@@ -228,10 +228,22 @@ function ImageWindow(container_id, config) {
         if (activeout == A) {
             return apath;
         } else if (activeout == B) {
-            return bpath;
+            return bpath;                                                                                                 faucibus
         } else {
             throw Error("Invalid 'activeout' flag: not one of A or B");
         }
+    }
+
+    this.outputViewerA = function() {
+        return aviewer;
+    }
+
+    this.outputViewerB = function() {
+        return bviewer;
+    }
+
+    this.sourceViewer = function() {
+        return sviewer;
     }
 
 
