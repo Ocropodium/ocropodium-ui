@@ -25,6 +25,10 @@ function OcrTranscript(insertinto_id, batch_id) {
         .addClass("widget_header")
         .attr("id", "batch_head")
         .text("OCR Batch");
+    var m_pagename = $("<span></span>")
+        .attr("id", "page_name");
+    var m_pagecount = $("<span></span>")
+        .attr("id", "page_count");
     var m_batchdiv = $("<div></div>")
         .addClass("ocr_transcript")
         .addClass("waiting")
@@ -55,6 +59,10 @@ function OcrTranscript(insertinto_id, batch_id) {
     // set a waiting spinner when doing something
     this.setWaiting = function(waiting) {
         m_batchdiv.toggleClass("waiting", waiting);
+    }
+
+    this.page = function() {
+        return m_page;
     }
 
     this.pageCount = function() {
@@ -114,11 +122,15 @@ function OcrTranscript(insertinto_id, batch_id) {
                 }               
             },
         });    
+        self.onPageChange();
     }
 
     this.buildUi = function() {
 
-        m_container.append(m_header).append(m_batchdiv.append(m_pagediv)).appendTo("#" + insertinto_id);
+        m_container.append(
+                m_header.append(m_pagecount).append(m_pagename))
+            .append(m_batchdiv.append(m_pagediv))
+            .appendTo("#" + insertinto_id);
     }
 
 
@@ -146,9 +158,11 @@ function OcrTranscript(insertinto_id, batch_id) {
 
 
     var setPageLines = function(data) {
+        m_pagecount.text("Page " + (m_page + 1) + " of " + m_batchdata.extras.task_count);
+        m_pagename.text(data.fields.page_name);
         m_pagediv.find(".ocr_line").remove();
-        m_pagediv.data("bbox", data.results.box);
-        $.each(data.results.lines, function(linenum, line) {
+        m_pagediv.data("bbox", data.fields.results.box);
+        $.each(data.fields.results.lines, function(linenum, line) {
             lspan = $("<span></span>")
                 .text("  " + line.text)
                 .addClass("ocr_line")
@@ -313,5 +327,12 @@ OcrTranscript.prototype.onPageLoad = function() {
 
 
 }
+
+
+OcrTranscript.prototype.onPageChange = function() {
+
+
+}
+
 
 

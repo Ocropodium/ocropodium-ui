@@ -6,8 +6,17 @@
 
 #page_slider {
     width: 200px;
+    margin: 7px 10px 0px 20px;
 }
 
+
+.batch_head span {
+    margin-left:10px;
+}
+
+#page_name {
+    font-weight: normal; 
+}
 
 .ocr_line {
     font-size: 1.1em;
