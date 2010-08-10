@@ -98,7 +98,7 @@ $(function() {
     }
 
     transcript.onClickPosition = function(position) {
-        if (!($("#link_viewer").attr("checked") && sdviewer.outputViewerA().viewport))
+        if (!($("#link_viewer").attr("checked") && sdviewer.activeViewer().viewport))
             return;
 
         // ensure the given line is centred in the viewport
@@ -111,11 +111,11 @@ $(function() {
             overlaydiv = document.createElement("div");
             $(overlaydiv).addClass("viewer_highlight");
         }
-        sdviewer.outputViewerA().viewport.fitBounds(rect, true);
+        sdviewer.activeViewer().viewport.fitBounds(rect, true);
         if (update) {
-            sdviewer.outputViewerA().drawer.updateOverlay(overlaydiv, rect); 
+            sdviewer.activeViewer().drawer.updateOverlay(overlaydiv, rect); 
         } else {
-            sdviewer.outputViewerA().drawer.addOverlay(overlaydiv, rect); 
+            sdviewer.activeViewer().drawer.addOverlay(overlaydiv, rect); 
         }
     }
 
