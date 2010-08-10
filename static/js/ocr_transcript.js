@@ -138,6 +138,27 @@ function OcrTranscript(insertinto_id, batch_id) {
      *  Events
      */
 
+//    m_batchdiv.bind("mouseup", function(event) {
+//        var sel = window.getSelection();
+//        if (sel.toString() == "" || sel.rangeCount > 1)
+//            return;
+//
+//        var elem = $(sel.baseNode.parentElement);
+//        $(document).bind("keydown.lineedit", function(e) {
+//            if (e.which == 27) { // escape
+//                alert("escape");
+//                $(document).unbind(".lineedit");
+//                return false;
+//            } else if (e.which == 13) {
+//                alert("return");
+//                $(document).unbind(".lineedit");
+//                return false;
+//            } else {
+//                alert(e.which);
+//            }
+//        });
+//    });
+
     $(".ocr_line").live("mouseover mouseout", function(event) {
         if (event.type == "mouseover") {
             $(this).addClass("hover");
@@ -151,8 +172,12 @@ function OcrTranscript(insertinto_id, batch_id) {
             m_editor = new OcrLineEditor(insertinto_id);
             m_editor.init();
             m_editor.setElement(this);
+            m_editor.show();
+        } else if (m_editor.element().get(0) === this) {
+            m_editor.updateSelection(); 
         } else {
             m_editor.setElement(this);
+            m_editor.show();
         }
         self.onClickPosition($(this).data("bbox"));
     });
