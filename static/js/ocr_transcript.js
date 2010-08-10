@@ -154,6 +154,7 @@ function OcrTranscript(insertinto_id, batch_id) {
         } else {
             m_editor.setElement(this);
         }
+        self.onClickPosition($(this).data("bbox"));
     });
 
 
@@ -330,6 +331,12 @@ OcrTranscript.prototype.onPageLoad = function() {
 
 
 OcrTranscript.prototype.onPageChange = function() {
+
+
+}
+
+
+OcrTranscript.prototype.onClickPosition = function(position) {
 
 
 }
