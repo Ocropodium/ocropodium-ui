@@ -1,7 +1,6 @@
 var transcript = null;
 var sdviewer = null;
 var polltimeout = -1;
-var overlaydiv = null;
 
 
 function onBinaryFetchResult(data) {
@@ -81,7 +80,6 @@ $(function() {
             dataType: "json",
             beforeSend: function(e) {
                 sdviewer.close();
-                overlaydiv = null;
                 sdviewer.setWaiting(true);
             },
             success: function(data) {
@@ -106,17 +104,11 @@ $(function() {
         var fw = bounds[2], fh = bounds[3];
         var x = position[0], y = position[1], w = position[2], h = position[3];        
         var rect = new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw);
-        var update = (overlaydiv != null);
-        if (overlaydiv == null) {
-            overlaydiv = document.createElement("div");
-            $(overlaydiv).addClass("viewer_highlight");
-        }
+        var overlaydiv = document.createElement("div");
+        $(overlaydiv).addClass("viewer_highlight");
         sdviewer.activeViewer().viewport.fitBounds(rect, true);
-        if (update) {
-            sdviewer.activeViewer().drawer.updateOverlay(overlaydiv, rect); 
-        } else {
-            sdviewer.activeViewer().drawer.addOverlay(overlaydiv, rect); 
-        }
+        sdviewer.activeViewer().drawer.clearOverlays(); 
+        sdviewer.activeViewer().drawer.addOverlay(overlaydiv, rect); 
     }
 
     $("#page_slider").slider({
