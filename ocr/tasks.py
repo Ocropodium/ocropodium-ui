@@ -39,7 +39,10 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
         dstdzipath = "%s_a.dzi" % os.path.splitext(outpath)[0]
     else:
         dstdzipath = utils.get_ab_output_path(dstdzipath)
-    creator.create(outpath, dstdzipath)
+    if os.path.exists(dstdzipath) and params.get("allowcache"):
+        pass
+    else:
+        creator.create(outpath, dstdzipath)
 
     logger.info(srcdzipath)
     logger.info(dstdzipath)
@@ -118,13 +121,18 @@ class BinarizePageTask(AbortableTask):
 
         filepath = utils.make_png(filepath)
 
-        converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
-                logger=logger, abort_func=abort_func, params=paramdict)
-        grey, page_bin = converter.standard_preprocess(filepath)
-        pagewidth = page_bin.dim(0)
-        pageheight = page_bin.dim(1)
         binpath = utils.get_media_output_path(filepath, "bin", ".png")
-        iulib.write_image_binary(binpath, page_bin)
+        # hack - this is to save time when doing the transcript editor
+        # work - don't rebinarize of there's an existing file
+        if os.path.exists(binpath) and paramdict.get("allowcache"):
+            pagewidth, pageheight = utils.get_image_dims(binpath)
+        else:
+            converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
+                    logger=logger, abort_func=abort_func, params=paramdict)
+            grey, page_bin = converter.standard_preprocess(filepath)
+            pagewidth = page_bin.dim(0)
+            pageheight = page_bin.dim(1)
+            iulib.write_image_binary(binpath, page_bin)
         
         pagedata = { 
             "page" : os.path.basename(filepath) ,
