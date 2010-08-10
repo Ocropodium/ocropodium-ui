@@ -267,7 +267,7 @@ def page_results(request, pk, page_index):
         [page],
         excludes=("results",), 
     )
-    taskssl[0]["results"] = page.results
+    taskssl[0]["fields"]["results"] = page.results
     simplejson.dump(taskssl, response, cls=DjangoJSONEncoder)
     return response
 
