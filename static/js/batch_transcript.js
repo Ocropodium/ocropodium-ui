@@ -1,6 +1,7 @@
 var transcript = null;
 var sdviewer = null;
 var polltimeout = -1;
+var overlaydiv = null;
 
 
 function onBinaryFetchResult(data) {
@@ -43,6 +44,13 @@ function pollForResults(data, polltime) {
 
 $(function() {
 
+    // FIXME FIXME FIXME FIXME
+    // Setting the width of the sidebar to be bigger, since it's holding
+    // a viewer. 
+    $("#sidebar").css("width", "600px");
+    $("#document_window").css("margin-right", "620px");
+
+
     $("#page_slider").slider({min: 1, value: 1});
 
     transcript = new OcrTranscript("document_window", $("#batch_id").val());   
@@ -73,6 +81,7 @@ $(function() {
             dataType: "json",
             beforeSend: function(e) {
                 sdviewer.close();
+                overlaydiv = null;
                 sdviewer.setWaiting(true);
             },
             success: function(data) {
@@ -86,7 +95,28 @@ $(function() {
                 alert(e);
             },
         });
+    }
 
+    transcript.onClickPosition = function(position) {
+        if (!sdviewer.outputViewerA().viewport)
+            return;
+
+        // ensure the given line is centred in the viewport
+        var bounds = transcript.pageData().fields.results.box;
+        var fw = bounds[2], fh = bounds[3];
+        var x = position[0], y = position[1], w = position[2], h = position[3];        
+        var rect = new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw);
+        var update = (overlaydiv != null);
+        if (overlaydiv == null) {
+            overlaydiv = document.createElement("div");
+            $(overlaydiv).addClass("viewer_highlight");
+        }
+        sdviewer.outputViewerA().viewport.fitBounds(rect, true);
+        if (update) {
+            sdviewer.outputViewerA().drawer.updateOverlay(overlaydiv, rect); 
+        } else {
+            sdviewer.outputViewerA().drawer.addOverlay(overlaydiv, rect); 
+        }
     }
 
     $("#page_slider").slider({
