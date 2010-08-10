@@ -181,6 +181,20 @@ def scale_image(inpath, outpath, newsize, filter=Image.ANTIALIAS):
         import subprocess as sp
         sp.call(["convert", inpath, "-resize", "%sx%s" % newsize, outpath])
 
+def get_image_dims(inpath):
+    """
+    Get dimensions WxH of an image file.
+    """
+    try:
+        pil = Image.open(inpath)
+        return pil.size
+    except IOError, err:
+        # fall back on GraphicsMagick if opening fails
+        import subprocess as sp
+        return sp.Popen(["identify", inpath, "-format", '%w %h'],
+                stdout=sp.PIPE).communicate()[0].split()
+    
+
 def make_png(inpath):
     """
     PIL has problems with some TIFFs so this is
