@@ -278,7 +278,11 @@ def submit_viewer_binarization(request, pk):
     Trigger a re-binarization of the image for viewing purposes.
     """
     task = get_object_or_404(OcrTask, pk=pk)
-    async = tasks.BinarizePageTask.apply_async(args=task.args)            
+    # hack!  add an allowcache to the params dict to indicate
+    # that we don't want to remake an existing binary
+    args = task.args
+    args[1]["allowcache"] = True
+    async = tasks.BinarizePageTask.apply_async(args=args)
     out = {
         "job_name": async.task_id,
         "status": async.status,
