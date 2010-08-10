@@ -20,7 +20,9 @@
 {% block subtoolbar %}
     <div class="sub_toolbar" id="transcript_toolbar">
         <form id="tsnavform" >
-            <input class="toolbar_item" type="text" name="page_num" id="page_num" />
+            <div class="toolbar_item">
+                Link Viewer: <input checked="checked" type="checkbox" name="link_viewer" id="link_viewer" />
+            </div>
             <div class="toolbar_item" id="page_slider"></div>
             <input class="toolbar_item" type="button" value="Prev" id="prev_page" disabled="disabled" />
             <input class="toolbar_item" type="button" value="Next" id="next_page" />

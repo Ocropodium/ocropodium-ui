@@ -98,7 +98,7 @@ $(function() {
     }
 
     transcript.onClickPosition = function(position) {
-        if (!sdviewer.outputViewerA().viewport)
+        if (!($("#link_viewer").attr("checked") && sdviewer.outputViewerA().viewport))
             return;
 
         // ensure the given line is centred in the viewport
