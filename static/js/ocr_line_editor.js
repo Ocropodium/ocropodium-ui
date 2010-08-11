@@ -8,6 +8,16 @@ function OcrLineEditor(insertinto_id) {
     // useful key codes
     var ESCAPE = 27;
     var RETURN = 13;
+    var LEFT = 37;
+    var RIGHT = 39;
+    var DELETE = 46;
+    var BACKSPACE = 8;
+    var SHIFT = 16;
+    var CTRL = 17;
+    var ALT = 18;
+    var CAPSLOCK = 20;
+    var TAB = 9;
+
 
     // selection start & end index
     var m_selectstart = -1;
@@ -16,17 +26,119 @@ function OcrLineEditor(insertinto_id) {
     // initial text of selected element
     var m_inittext = null;
 
-    var m_proxycontainer = $("<div></div>")
+    var m_blinktimer = -1;
+
+    var m_proxycontainer = $("<span></span>")
         .attr("id", "proxy_container");
-    var m_proxyeditor = $("<input></input>")
-        .addClass("proxy_editor")
-        .attr("type", "text")
-        .attr("id", "proxy_editor")
-        .width(500);
+
+    var m_currchar = null;
+
+    var m_cursor = $("<div></div>")
+        .addClass("editcursor")
+        .text("|");
+    
+    // we're at the end of the text line
+    var m_endstop = false;
+
+    // we're at the start of the text line
+    var m_startstop = true;
+
+
 
     // alias 'this'
     var self = this;
 
+    var blinkCursor = function(blink) {
+        if (blink) {
+            m_cursor.toggleClass("blink");
+            m_blinktimer = setTimeout(function() {
+                blinkCursor(true);        
+            }, 500);
+        } else {
+            clearTimeout(m_blinktimer);
+            m_blinktimer = -1;
+        }
+    }
+
+
+    var positionCursorTo = function(elem, atend) {
+        var w = elem.width();
+        m_cursor
+            .css("top", elem.offset().top + "px")
+            .css("left", (elem.offset().left + (atend ? w : 0)) + "px");
+    }
+
+    var moveCursorLeft = function() {
+        if (m_startstop)
+            return;
+
+        var prev = m_currchar.prev();
+        if (prev.length == 1) {            
+            if (!m_endstop)
+                m_currchar = prev;
+            m_endstop = false;
+        }
+        positionCursorTo(m_currchar);
+        m_startstop = prev.length == 0;    
+    }
+
+    var moveCursorRight = function() {
+        if (m_endstop)
+            return;
+
+        var next = m_currchar.next();
+        if (next.length == 1) {
+            m_currchar = next;
+            m_startstop = false;
+        }
+        positionCursorTo(m_currchar, next.length == 0);
+        m_endstop = next.length == 0;    
+    }
+
+    var initialiseCursor = function() {
+        // find the first letter in the series (ignore spaces)
+        m_currchar = m_elem.find("span").filter(function(index) {
+            return $(this).text() != " ";                            
+        }).first();
+        positionCursorTo(m_currchar, true);
+        $("body").append(m_cursor);
+        blinkCursor(true);    
+    }
+
+    var deleteChar = function() {
+        if (m_endstop)
+            return;
+        var next = m_currchar.next();
+        m_currchar.remove();
+        m_currchar = next;
+        positionCursorTo(m_currchar);
+    }
+
+    var insertChar = function(charcode, unshift) {
+        if (!unshift)
+            charcode += 32;
+        var char = $("<span></span>")
+            .text(String.fromCharCode(charcode))
+            .insertBefore(m_currchar);
+        positionCursorTo(m_currchar);
+    }
+
+    var insertSpace = function() {
+        var text = document.createTextNode("\u00a0");
+        var char = $("<span></span>")
+            .append($(text))
+            .insertBefore(m_currchar);
+        positionCursorTo(m_currchar);
+    }
+
+    var backspace = function() {
+        if (m_startstop) {
+            alert("stop");
+            return;
+        }
+        moveCursorLeft();
+        deleteChar();
+    }
 
     this.setElement = function(element) {
         if (m_elem != null) {
@@ -41,70 +153,106 @@ function OcrLineEditor(insertinto_id) {
         return m_elem;
     }
 
-    this.init = function() {
-        buildUi();
-    }
-
-    this.updateSelection = function() {
-        var sel = document.getSelection();
-        var srange = sel.getRangeAt(0);
-        //var drange = m_proxyeditor.get(0).createTextRange();
-        //drange.collapse(true);
-        //drange.moveEnd(srange.endOffset);
-        //drange.moveStart(srange.startOffset);
-        m_proxyeditor.get(0).setSelectionRange(srange.startOffset, srange.endOffset);
-
-    }
-
-    this.show = function() {
-        m_proxycontainer.show();
-    }
-
-    this.hide = function() {
-        m_proxycontainer.hide();
-    }
-    
     this.grabElement = function() {
         m_elem.addClass("selected");    
         m_elem.addClass("editing");
-        //m_elem.bind("click.lineedit", function(event) {
-        //    m_elem.toggleClass("selected");    
-        //});
-        m_elem.bind("mouseup.textsel", function(event) {
-            var sel = document.getSelection();
-            
-        });
-        m_proxyeditor.val(m_elem.text());
-        m_proxyeditor.focus();
-        m_proxyeditor.select();
-        m_proxycontainer.css("margin-top", "0px").css("position", "absolute")
-            .css("top", "20px").css("left", "20px").width(500);
-        //m_proxycontainer.show().css("top",
-        //        (m_elem.offset().top - (2 * m_proxycontainer.height())) + "px");
-    }    
+        
+        // wrap a span round each char
+        m_elem.html($.map(m_elem.text(), function(ch) {
+            return "<span>" + ch + "</span>";
+        }).join(""));
+        
+        // set up a click handler for the window
+        // if we click outside the current element, 
+        // close the editor and unbind the click
+        $(window).bind("click.editorblur", function(event) {
+            var left = m_elem.offset().left;
+            var top = m_elem.offset().top;
+            var width = m_elem.outerWidth();
+            var height = m_elem.outerHeight();
 
-    this.releaseElement = function() {
-        m_elem.removeClass("selected");
-        m_elem.removeClass("editing");
-        m_elem.unbind("click.lineedit");
-        m_elem.unbind("keydown.lineedit");
-        m_elem.unbind("mouseup.textsel");
+            if (!(event.pageX >= left 
+                    && event.pageX <= (left + m_elem.width())
+                    && event.pageY >= top
+                    && event.pageY <= (top + m_elem.height()))) {
+                self.releaseElement();
+            }
+        });
+
+        $(window).bind("keydown.editortype", function(event) {
+            if (event.ctrlKey || event.altKey)
+                return;
+
+            if (event.which == ALT || event.which == CTRL
+                || event.which == TAB || event.which == CAPSLOCK) {
+
+            } else if (event.which == ESCAPE) {
+                self.releaseElement(m_inittext);
+            } else if (event.which == RETURN) {
+                self.releaseElement();
+            } else if (event.which == RIGHT) {
+                moveCursorRight();
+            } else if (event.which == LEFT) {
+                moveCursorLeft();
+            } else if (event.which == DELETE) {
+                deleteChar();
+            } else if (event.which == BACKSPACE) {
+                backspace();;
+            } else if (event.which == SHIFT) {
+                
+            } else if ((event.which >= 48 
+                    && event.which <= 90)
+                    || (event.which >= 186
+                        && event.which <= 222)) {
+                insertChar(event.which, event.shiftKey);
+            } else if (event.which == 32) { 
+                insertSpace();            
+            } else {
+                alert(event.which);
+            }
+            blinkCursor(false);    
+        });
+
+        $(window).bind("keyup.editortype", function(event) {
+            if (m_blinktimer == -1)
+                blinkCursor(true);  
+        });
+
+        m_elem.find("span").live("click.positioncursor", function(event) {
+            var offset = $(this).offset();
+            var mid = $(this).width() / 2;
+            if (event.pageX > (offset + mid)) {
+                if ($(this).next().length == 0) {
+                    m_currchar = null;
+                    positionCursorTo($(this), true);
+                    m_endstop = true;
+                } else {
+                    m_currchar = $(this).next();
+                    positionCursorTo($(this).next());                }
+                    m_endstop = false;                                        
+            } else {
+                m_currchar = $(this);
+                positionCursorTo(m_currchar);
+            }
+            if ($(this).prev().length == 0) {
+                m_startstop = true;
+            }                        
+        });
+        initialiseCursor();
     }
 
-    m_proxyeditor.bind("keydown keyup", function(event) {
-        m_elem.text(m_proxyeditor.val());
-        if (event.which == ESCAPE) { 
-            m_elem.text(m_inittext);
-            m_proxyeditor.trigger("blur");
-            self.hide();            
-        } else if (event.which == RETURN) {
-            m_proxyeditor.trigger("blur");
-            self.hide();
-        }
-    });
 
-    var buildUi = function() {
-        $("#" + insertinto_id).append(m_proxycontainer.append(m_proxyeditor).hide());
+    this.releaseElement = function(settext) {
+        m_elem.find("span").die("click.positioncursor");
+        m_elem.html(settext ? settext : m_elem.text());                                
+        m_elem.removeClass("selected");
+        m_elem.removeClass("editing");
+        m_elem.unbind("mouseup.textsel");
 
+        $(window).unbind("click.editorblur");
+        $(window).unbind("keydown.editortype");
+        m_elem = null;
+        m_cursor.remove();
+        blinkCursor(false);
     }
 }
