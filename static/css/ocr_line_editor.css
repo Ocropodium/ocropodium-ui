@@ -1,0 +1,47 @@
+#proxy_container {
+    padding: 5px;
+    position: absolute;    
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(230,230,230))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(230,230,230) 35%,
+        rgb(245,245,245) 50%
+    );
+
+    border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+}
+
+.ocr_line.editing {
+    border: 1px solid #FFF;
+}
+
+.ocr_line.selected {
+    color: #000;
+    background-color: #FFFFAA;
+}
+
+.editcursor {
+    float: right;
+    position: absolute;
+    width: 3px;
+    background-color: #000;
+    color: #000;
+    margin-left: -0.2em;
+}
+
+.editcursor.blink {
+    background-color: transparent;
+}
+
+
