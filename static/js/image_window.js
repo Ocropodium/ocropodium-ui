@@ -13,7 +13,7 @@ function ImageWindow(container_id, config) {
 
     // basic config options
     config = config || {};
-    var height = 450;
+    var height = $("#" + container_id).height() - 35 || 450; ;
     var width  = $("#" + container_id).width() || 500;
     var label = config.label || "Viewer - Output A";
     var id = config.id || "imagewindow";
@@ -41,8 +41,6 @@ function ImageWindow(container_id, config) {
     var self = this;
     
     // Initialise HTML...
-    var imgwindow = $("#" + container_id)
-        .addClass("imagewindow_container");
     var imgheader = $("<div><div>")
         .addClass("imagewindow_header widget_header").attr("id", id + "_header")
         .text(label);
@@ -70,6 +68,25 @@ function ImageWindow(container_id, config) {
         .css("z-index", "100")
         .css("width", width)
         .css("position", "relative");
+    var imgwindow = $("#" + container_id)
+        .addClass("imagewindow_container");
+//        .resizable({
+//            handles: 'se, sw, w, e, n, s',
+//            resize: function(e, ui) {
+//                height = $("#" + container_id).height() - 35;
+//               updateSize(); 
+//            },
+//            stop: function(e, ui) {
+//                width = $("#" + container_id).width();
+//                overlay.css("width", width + "px");
+//                updateSize();
+//            },        
+//        }).draggable({
+//            handle: ".widget_header",
+//            cancel: ".imagewindow_viewport",
+//            stack: ".widget",
+//            snap: "#workspace"
+//        }).sortable({connectWith: ".widget"});
 
     // update size when image window changes
     $(window).resize(function(event) {

@@ -111,6 +111,7 @@ body {
 
 #workspace {
     min-height: 300px;
+    margin: 10px;
 }
 
 .widget {
@@ -174,7 +175,18 @@ body {
     /* need this because the document_window
      * somehow shifts the sidebar down... 
      */
-    margin: 10px 10px 0px 0px;
+}
+
+#sideviewer {
+    float: right;
+    width: 300px;
+    height: 300px;
+}
+
+#viewerwindow {
+    float: right;
+    width: 600px;
+    height: 450px;
 }
 
 .widget_content {

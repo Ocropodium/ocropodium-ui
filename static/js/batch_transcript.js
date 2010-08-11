@@ -130,7 +130,7 @@ $(function() {
     
     
     
-    sdviewer = new ImageWindow("sidebar"); 
+    sdviewer = new ImageWindow("sideviewer"); 
     sdviewer.init();
 });        
 

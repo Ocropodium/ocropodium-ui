@@ -464,7 +464,7 @@ function OcrBatch(insertinto_id, batch_id) {
     // (due to the way django serializes our query
     var processData = function(data) {
         if (data.error) {
-            setError(data.error, data.trace);
+            alert(data.error + "\n\n" +  data.trace);
         } else {
             m_batchdata = data[0];
             updateResults(m_batchdata);
@@ -500,7 +500,7 @@ function OcrBatch(insertinto_id, batch_id) {
                 }                
             },
             error: function(xhr, statusText, errorThrown) {
-                setError("Http Error " + statusText, errorThrown);
+                alert("Http Error " + statusText + "\n\n" + errorThrown);
             }
         }); 
     }

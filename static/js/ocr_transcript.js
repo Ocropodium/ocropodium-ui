@@ -19,7 +19,20 @@ function OcrTranscript(insertinto_id, batch_id) {
 
     // UI bits it's useful to keep a reference to:
     var m_container = $("<div></div>")
-        .addClass("widget");  
+        .addClass("widget");
+//        .css("width", "400px")
+//        .css("height", "200px")
+//        .draggable({
+//            stack: ".widget",
+//            snap: "#workspace",
+//            handle: "#batch_head",
+//        }).resizable({
+//            minWidth: 300,
+//            resize: function(e, ui) {
+//                $(".transcript_lines")
+//                    .css("min-height", $(this).height() - 45);
+//            },        
+//        }).sortable({connectWith: ".widget"});  
     var m_header = $("<div></div>")
         .addClass("batch_head")
         .addClass("widget_header")
@@ -29,12 +42,12 @@ function OcrTranscript(insertinto_id, batch_id) {
         .attr("id", "page_name");
     var m_pagecount = $("<span></span>")
         .attr("id", "page_count");
-    var m_batchdiv = $("<div></div>")
-        .addClass("ocr_transcript")
-        .addClass("waiting")
-        .attr("id", "ocr_transcript");
+    var m_scroller = $("<div></div>")
+        .attr("id", "scroll_container");
     var m_pagediv = $("<div></div>")
-        .addClass("transcript_lines"); 
+        .addClass("waiting")
+        .addClass("transcript_lines");
+        //.css("min-height", m_container.height() - 45); 
 
 
     this.init = function() {
@@ -58,7 +71,7 @@ function OcrTranscript(insertinto_id, batch_id) {
 
     // set a waiting spinner when doing something
     this.setWaiting = function(waiting) {
-        m_batchdiv.toggleClass("waiting", waiting);
+        m_pagediv.toggleClass("waiting", waiting);
     }
 
     this.page = function() {
@@ -129,7 +142,7 @@ function OcrTranscript(insertinto_id, batch_id) {
 
         m_container.append(
                 m_header.append(m_pagecount).append(m_pagename))
-            .append(m_batchdiv.append(m_pagediv))
+            .append(m_scroller.append(m_pagediv))
             .appendTo("#" + insertinto_id);
     }
 

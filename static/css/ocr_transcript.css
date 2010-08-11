@@ -33,10 +33,12 @@
 .transcript_lines {
     background-color: #FFF;
     padding: 10px;
-    height: 500px;
-    overflow: auto;
 }
 
+#scroll_container {
+    height: 320px;
+    overflow: auto;
+}
 
 .ocr_line.hover {
     background-color: #DDDDFF;
