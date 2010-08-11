@@ -111,7 +111,6 @@ body {
 
 #workspace {
     min-height: 300px;
-    margin: 10px;
 }
 
 .widget {
@@ -135,7 +134,9 @@ body {
     -webkit-box-shadow: 2px 3px 3px #919598;
     -moz-box-shadow: 2px 3px 3px #919598;
     padding-bottom: 20px;
-    margin-bottom: 20px;
+    float: right;
+    width: 600px;
+    margin: 10px;
 }
 
 .widget_header {

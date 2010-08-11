@@ -135,7 +135,7 @@ $(function() {
             $("#dropzone").text("Drop images here...").removeClass("waiting");
             return;
         }
-        pageobjects[0] = new OcrBatch("document_window", data[0]);
+        pageobjects[0] = new OcrBatch("workspace", data[0]);
         pageobjects[0].pollForResults(300 * uploader.size());
     };
 
@@ -144,7 +144,6 @@ $(function() {
     uploader  = new AjaxBatchUploader("/batch/batch", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
-        $("#document_window").html("");
         uploader.registerTextParameter("input[@name=engine]:checked"); 
         uploader.registerTextParameter("#form_clean"); 
         uploader.registerTextParameter("#form_segmenter"); 

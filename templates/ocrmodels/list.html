@@ -61,25 +61,27 @@ $(document).ready(function() {
 
     {% include "ocrmodels/includes/sidebar.html" %}
 
-<div id="document_window">
 
-    {% if messages %}
-    <ul class="messages">
-    {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-    </ul>
-    {% endif %}
+{% if messages %}
+<ul class="messages">
+{% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+{% endfor %}
+</ul>
+{% endif %}
 
-    <div id="modellist" class="widget">
-        <div class="widget_header">
-            <div class="new_link_container">
-                <a href="/ocrmodels/new" class="new_link">Upload New Model</a>
-            </div>
-            Available Models:
+<div id="modellist" class="widget">
+    <div class="widget_header">
+        <div class="new_link_container">
+            <a href="/ocrmodels/new" class="new_link">Upload New Model</a>
         </div>
+        Available Models:
+    </div>
+    <div class="widget_content">
         {% include "ocrmodels/includes/model_list.html" %}
     </div>
-    <div id="dialog_box"></div>
 </div>
+
+<div id="dialog_box"></div>
+
 {% endblock %}

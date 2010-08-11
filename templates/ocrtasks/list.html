@@ -121,34 +121,31 @@ $(function() {
     </div>
 </div>
 
-<div id="document_window">
+{% if messages %}
+<ul class="messages">
+{% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+{% endfor %}
+</ul>
+{% endif %}
 
-    {% if messages %}
-    <ul class="messages">
-    {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-    </ul>
-    {% endif %}
-
-    <div class="widget">
-        <div class="widget_header">Tasks:</div>
-        <div class="widget_content">
-            <div id="task_list_controls">
-                <div id="task_list_controls_right">            
-                    <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
-                        <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
-                        Auto-Refresh:
-                        <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
-                        <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
-                    </form>
-                </div>
+<div class="widget">
+    <div class="widget_header">Tasks:</div>
+    <div class="widget_content">
+        <div id="task_list_controls">
+            <div id="task_list_controls_right">            
+                <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
+                    <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
+                    Auto-Refresh:
+                    <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
+                    <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
+                </form>
             </div>
-            <div id="task_list">
-            </div>
-        </div> 
-        <div id="dialog_box"></div>
-    </div>
+        </div>
+        <div id="task_list">
+        </div>
+    </div> 
+    <div id="dialog_box"></div>
 </div>
 
 

@@ -65,7 +65,7 @@ function loadState() {
     if (jobnames) {
         var joblist = jobnames.split(",");
         $.each(joblist, function(index, jobname) {
-            pageobjects[index] = new OcrPage("document_window", index, jobname);
+            pageobjects[index] = new OcrPage("workspace", index, jobname);
             pageobjects[index].pollForResults();            
         });
     }*/
@@ -140,7 +140,7 @@ $(function() {
             return;
         }
         $.each(data, function(pagenum, pageresults) {
-            pageobjects[pagenum] = new OcrPage("document_window", pagenum, pageresults.job_name);
+            pageobjects[pagenum] = new OcrPage("workspace", pagenum, pageresults.job_name);
             pageobjects[pagenum].pollForResults((300 * uploader.size()) + (pagenum * 250));
         }); 
     };
@@ -150,7 +150,6 @@ $(function() {
     uploader  = new AjaxUploader("/ocr/convert", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
-        //$("#document_window").html("");
         uploader.registerTextParameter("input[@name=engine]:checked"); 
         $("#optionsform input[type='text'], #optionsform select").each(function() {
             uploader.registerTextParameter("#" + $(this).attr("id"));
@@ -168,8 +167,5 @@ $(function() {
     pbuilder.registerComponent("grouper", "Grouper", "StandardGrouper");
     pbuilder.registerComponent("segmenter", "Line Segmenter", "DpSegmenter");
     pbuilder.init();
-
-
-
 });
 

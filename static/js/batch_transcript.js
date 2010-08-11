@@ -46,13 +46,11 @@ $(function() {
     // FIXME FIXME FIXME FIXME
     // Setting the width of the sidebar to be bigger, since it's holding
     // a viewer. 
-    $("#sidebar").css("width", "600px");
-    $("#document_window").css("margin-right", "620px");
-
+    //$("#sidebar").css("width", "600px");
 
     $("#page_slider").slider({min: 1, value: 1});
 
-    transcript = new OcrTranscript("document_window", $("#batch_id").val());   
+    transcript = new OcrTranscript("workspace", $("#batch_id").val());   
     transcript.init();
     transcript.onBatchLoad = function() {
         $("#page_slider").slider({max: transcript.pageCount()});
