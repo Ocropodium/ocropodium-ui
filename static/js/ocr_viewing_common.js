@@ -187,27 +187,33 @@ $(function() {
         }
     });
 
-    // ajaxify the upload form
-    $("#uploadform").ajaxForm({
-        data : { _iframe: 1 },
-        dataType: "json",
-        beforeSend: function(e) {
-            pbuilder.setWaiting(true);
-        },
-        success: function(data, responseText, xhr) {
-            onXHRLoad(data, responseText, xhr);
-            $("#singleupload").val("");
-        },
-    });
-
-
-    // upload the image when the file input changes
     $("#singleupload").change(function(event) {
         if ($(this).val() == "") {
             return false;
         }
+
+        // get the extra params
+        var pdata = pbuilder.data();
+        pdata.engine = $("input[@name=engine]:checked").val();
+
+        // hack to pull in the cleanup option on the segment page
+        if ($("#form_clean").length) {
+            pdata.clean = $("#form_clean").val();
+        }
+        // server-size hack so we know it's using the iframe method
+        pdata._iframe = 1;
+
+        $("#uploadform").ajaxForm({
+            data : pdata,
+            dataType: "json",
+            success: function(data, responseText, xhr) {
+                onXHRLoad(data, responseText, xhr);
+                $("#singleupload").val("");
+            },
+        });
         $("#uploadform").submit();
     });
+
 
     // hide the drag-drop zone for browsers other than firefox
     if (!($.browser.mozilla && 
