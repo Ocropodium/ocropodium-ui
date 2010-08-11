@@ -183,15 +183,13 @@ function OcrTranscript(insertinto_id, batch_id) {
     $(".ocr_line").live("click", function(event) {
         if (m_editor == null) {
             m_editor = new OcrLineEditor(insertinto_id);
-            m_editor.init();
             m_editor.setElement(this);
-            m_editor.show();
-        } else if (m_editor.element().get(0) === this) {
-            m_editor.updateSelection(); 
+        } else if (m_editor.element() && m_editor.element().get(0) === this) {
+            // don't do anything - we're already editing it
         } else {
             m_editor.setElement(this);
-            m_editor.show();
         }
+        
         self.onClickPosition($(this).data("bbox"));
     });
 
