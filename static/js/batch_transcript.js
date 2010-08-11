@@ -45,7 +45,8 @@ $(function() {
 
     // FIXME FIXME FIXME FIXME
     // Setting the width of the sidebar to be bigger, since it's holding
-    // a viewer. 
+    // a viewer.
+
     //$("#sidebar").css("width", "600px");
 
     $("#page_slider").slider({min: 1, value: 1});
@@ -130,5 +131,7 @@ $(function() {
     
     sdviewer = new ImageWindow("sideviewer"); 
     sdviewer.init();
+
+    layoutWidgets();
 });        
 
