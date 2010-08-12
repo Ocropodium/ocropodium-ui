@@ -471,19 +471,28 @@ function OcrLineEditor(insertinto_id) {
 
 
     this.releaseElement = function(settext) {
-        m_elem.find("span").die("click.clearselect");
-        m_elem.find("span").die("click.positioncursor");
-        m_elem.html(settext ? settext : m_elem.text());                                
-        m_elem.removeClass("selected");
-        m_elem.removeClass("editing");
-        m_elem.unbind("mouseup.textsel");
-        m_elem.unbind("mousedown.noselection");
+        m_elem.children()
+            .die("click.clearselect")
+            .die("click.positioncursor");
+        m_elem
+            .html(settext ? settext : m_elem.text())
+            .removeClass("selected")
+            .removeClass("editing")
+            .unbind("dblclick.selectword")
+            .unbind("mousedown.noselection")
+            .unbind("mousemove.selecttext")
+            .unbind("mouseup.textsel");
+        $(window)
+            .unbind("click.editorblur")
+            .unbind("keydown.editortype")
+            .unbind("keypress.editortype")
+            .unbind("keyup.editortype")
+            .unbind("mousemove.noselection")
+            .unbind("mouseup.checkselection")
+            .unbind("mouseup.selecttext");
 
-        $(window).unbind("click.editorblur");
-        $(window).unbind("keydown.editortype");
-        $(window).unbind("keypress.editortype");
         m_elem = null;
-        m_cursor.remove();
         blinkCursor(false);
+        m_cursor.remove();
     }
 }
