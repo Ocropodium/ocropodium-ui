@@ -107,8 +107,25 @@ $(function() {
         $(overlaydiv).addClass("viewer_highlight");
         sdviewer.activeViewer().viewport.fitBounds(rect, true);
         sdviewer.activeViewer().drawer.clearOverlays(); 
-        sdviewer.activeViewer().drawer.addOverlay(overlaydiv, rect); 
+        sdviewer.activeViewer().drawer.addOverlay(overlaydiv, rect);         
     }
+
+    $("#spellcheck").click(function(event) {
+        var text = [];
+        $(".ocr_line").each(function(i, elem) {
+            text.push($(elem).text());
+        });
+
+        $.ajax({
+            url: "/batch/spellcheck",
+            type: "POST",
+            data: {text: text.join("\n")},
+            dataType: "json",
+            success: function(data) {
+                alert(data);
+            },
+        });
+    });
 
     $("#page_slider").slider({
         change: function(e, ui) {
