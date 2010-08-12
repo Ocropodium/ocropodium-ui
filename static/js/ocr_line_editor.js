@@ -35,7 +35,11 @@ function OcrLineEditor(insertinto_id) {
     var m_proxycontainer = $("<span></span>")
         .attr("id", "proxy_container");
 
+    // the current character in front of the cursor
     var m_char = null;
+
+    // the point dragging started
+    var m_dragpoint = null;
 
     var m_cursor = $("<div></div>")
         .addClass("editcursor")
@@ -335,6 +339,47 @@ function OcrLineEditor(insertinto_id) {
         return false;
     }
 
+    var valueInRange = function(value, min, max) {
+        return (value <= max) && (value >= min);
+    }
+
+    var rectOverlap = function(A, B) {
+        var xOverlap = valueInRange(A.x, B.x, B.x + B.width) ||
+            valueInRange(B.x, A.x, A.x + A.width);
+        var yOverlap = valueInRange(A.y, B.y, B.y + B.height) ||
+            valueInRange(B.y, A.y, A.y + A.height);
+        return xOverlap && yOverlap;
+    }
+
+
+    var expandSelectedChars = function(moveevent) {
+        if (!m_dragpoint)
+            return;
+        // create a normalised rect from the current
+        // point and the m_dragpoint
+        //
+        var x0 = Math.min(m_dragpoint.x, moveevent.pageX),
+            x1 = Math.max(m_dragpoint.x, moveevent.pageX),
+            y0 = Math.min(m_dragpoint.y, moveevent.pageY),
+            y1 = Math.max(m_dragpoint.y, moveevent.pageY);
+        var cbox = {x: x0, y: y1, width: x1 - x0, height: y1 - y0},
+            span = m_elem.get(0),
+            cr,
+            box;
+        for (var i = 0; i < span.childElementCount; i++) {
+            cr = span.children[i].getClientRects()[0];
+            box = {
+                x: cr.left,
+                y: cr.top,
+                width: cr.right - cr.left, 
+                height: cr.bottom - cr.top,
+            }
+            if (rectOverlap(cbox, box)) {
+                $(span.children[i]).addClass("sl");
+            }
+        }
+    }
+
 
     this.setElement = function(element, clickevent) {
         if (m_elem != null) {
@@ -391,6 +436,19 @@ function OcrLineEditor(insertinto_id) {
         m_elem.bind("mousedown.noselection", function(event) {
             $(window).bind("mousemove.noselection", function(event) {
                 window.getSelection().removeAllRanges();
+            });
+        });
+
+        // handler to track mouse moves when selecting text
+        m_elem.bind("mousedown.selecttext", function(event) {
+            m_dragpoint = { x: event.pageX, y: event.pageY };
+            m_elem.bind("mousemove.selecttext", function(event) {
+                expandSelectedChars(event);                
+            });
+            $(window).bind("mouseup.selecttext", function(event) {
+                m_elem.unbind("mousemove.selecttext");
+                $(window).unbind("mouseup.selecttext");
+                m_dragpoint = null;
             });            
         });
 
