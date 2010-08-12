@@ -186,28 +186,21 @@ function OcrLineEditor(insertinto_id) {
         return true;
     }
 
-    var insertChar = function(charcode, unshift) {
+    var insertChar = function() {
+        var charcode = m_keyevent.which;        
         eraseSelection();
-        if (!unshift)
-            charcode += 32;
         var char = $("<span></span>")
-            .text(String.fromCharCode(charcode));
+            .text(m_keyevent.charCode == 32
+                    ? "\u00a0"
+                    : String.fromCharCode(m_keyevent.charCode));
         if (m_char.length) {
-            char.insertBefore(m_char);
+            char.insertBefore(m_char.first());
         } else {
             char.append(m_elem);
         }
         positionCursorTo(m_char);
     }
-
-    var insertSpace = function() {
-        var text = document.createTextNode("\u00a0");
-        var char = $("<span></span>")
-            .append($(text))
-            .insertBefore(m_char);
-        positionCursorTo(m_char);
-    }
-
+    
     var backspace = function(event) {
         if (eraseSelection())
             return;
@@ -240,16 +233,8 @@ function OcrLineEditor(insertinto_id) {
         } else if (event.which == BACKSPACE) {
             backspace();
         } else if (event.which == SHIFT) {
-            
-        } else if ((event.which >= 48 
-                && event.which <= 90)
-                || (event.which >= 186
-                    && event.which <= 222)) {
-            insertChar(event.which, event.shiftKey);
-        } else if (event.which == 32) { 
-            insertSpace();            
         } else {
-            alert(event.which);
+            //alert(event.which);
         }
         blinkCursor(false);    
     }
@@ -324,6 +309,33 @@ function OcrLineEditor(insertinto_id) {
         positionCursorTo(m_char);
     }
 
+
+    var isCapslock = function (e) {
+        e = (e) ? e : window.event;
+
+        var charCode = false;
+        if (e.which) {
+            charCode = e.which;
+        } else if (e.keyCode) {
+            charCode = e.keyCode;
+        }
+        var shifton = false;
+        if (e.shiftKey) {
+            shifton = e.shiftKey;
+        } else if (e.modifiers) {
+            shifton = !!(e.modifiers & 4);
+        }
+        if (charCode >= 97 && charCode <= 122 && shifton) {
+            return true;
+        }
+        if (charCode >= 65 && charCode <= 90 && !shifton) {
+            return true;
+        }
+
+        return false;
+    }
+
+
     this.setElement = function(element, clickevent) {
         if (m_elem != null) {
             self.releaseElement();
@@ -364,6 +376,10 @@ function OcrLineEditor(insertinto_id) {
         });
 
         $(window).bind("keydown.editortype", keyPressDetection);
+        $(window).bind("keypress.editortype", function(event) {
+            m_keyevent = event;
+            insertChar();        
+        });
         window.getSelection().removeAllRanges();
                 
         // bind mouse up to override selection
@@ -407,6 +423,7 @@ function OcrLineEditor(insertinto_id) {
 
         $(window).unbind("click.editorblur");
         $(window).unbind("keydown.editortype");
+        $(window).unbind("keypress.editortype");
         m_elem = null;
         m_cursor.remove();
         blinkCursor(false);

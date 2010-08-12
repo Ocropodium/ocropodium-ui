@@ -50,4 +50,6 @@
     background-color: transparent;
 }
 
-
+.endmarker {
+    float: right;
+}
