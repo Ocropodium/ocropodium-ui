@@ -21,8 +21,8 @@
 .ocr_line {
     font-size: 1.1em;
     border: 1px solid transparent;
-    padding: 2px;
-    margin: 1px;
+    padding: 0px;
+    margin: 3px;
 }
 
 .toolbar_item {
