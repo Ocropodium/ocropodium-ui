@@ -29,7 +29,7 @@ class Aspell(object):
         # switch to terse mode
         pipe.stdin.write('!\n')
         # write the data
-        pipe.stdin.write(data + "\n")
+        pipe.stdin.write(data.encode('utf8') + "\n")
         stdout, stderr = pipe.communicate()
         
         out = []
