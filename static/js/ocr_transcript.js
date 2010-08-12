@@ -183,11 +183,11 @@ function OcrTranscript(insertinto_id, batch_id) {
     $(".ocr_line").live("click", function(event) {
         if (m_editor == null) {
             m_editor = new OcrLineEditor(insertinto_id);
-            m_editor.setElement(this);
+            m_editor.setElement(this, event);
         } else if (m_editor.element() && m_editor.element().get(0) === this) {
             // don't do anything - we're already editing it
         } else {
-            m_editor.setElement(this);
+            m_editor.setElement(this, event);
         }
         
         self.onClickPosition($(this).data("bbox"));
@@ -201,7 +201,7 @@ function OcrTranscript(insertinto_id, batch_id) {
         m_pagediv.data("bbox", data.fields.results.box);
         $.each(data.fields.results.lines, function(linenum, line) {
             lspan = $("<span></span>")
-                .text("  " + line.text)
+                .text(line.text)
                 .addClass("ocr_line")
                 .data("bbox", line.box);
             m_pagediv.append(lspan);                        
@@ -233,6 +233,10 @@ function OcrTranscript(insertinto_id, batch_id) {
     // where there are large gaps between lines.  Significantly
     // improves the look of a block of OCR'd text.
     this.insertBreaks = function() {
+        // insert space between each line
+        $("<span></span>").text("\u00a0").insertBefore(
+        m_pagediv.find(".ocr_line").first().nextAll());
+
         var lastyh = -1;
         var lasth = -1;
         var lastitem;
