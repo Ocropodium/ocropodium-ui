@@ -19,6 +19,7 @@ from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
+from ocradmin.batch import utils as batchutils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch 
@@ -426,6 +427,20 @@ def retry_batch(request, pk):
     return HttpResponse(simplejson.dumps({"ok": True}), 
             mimetype="application/json")
 
+
+@login_required
+def spellcheck(request):
+    """
+    Spellcheck some POST data.
+    """
+    data = request.POST.get("text")
+    if not data:
+        data = request.GET.get("text", "")
+
+    aspell = batchutils.Aspell()
+    response = HttpResponse(mimetype="application/json")
+    simplejson.dump(aspell.spellcheck(data), response)
+    return response
 
 def _abort_celery_task(task):
     """
