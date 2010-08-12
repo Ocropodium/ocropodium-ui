@@ -170,6 +170,17 @@ function OcrLineEditor(insertinto_id) {
         if (delset.length == 0)
             return false;
         m_char = delset.last().next();
+        // if we're on a space boundary and the next character
+        // after the selection is also a space, hoover it up
+        // as well
+        if (delset.first().prev().length) {
+            if (delset.first().prev().text().match(/^\s$/)) {
+                if (m_char.text().match(/^\s$/)) {
+                    m_char.addClass(".sl");
+                    m_char = m_char.next();
+                }
+            }
+        }
         delset.remove();
         positionCursorTo(m_char);
         return true;
@@ -276,13 +287,13 @@ function OcrLineEditor(insertinto_id) {
         clearSelection();
         if (m_char.length == 0)
             return;
-        var startchar = m_char.first().prev();
-        while (startchar.prev().length && startchar.prev().text() != " ") {
+        var startchar = m_char.first();
+        while (startchar.prev().length && startchar.prev().text() .match(/^\w$/)) {
             startchar = startchar.prev();
         }
         startchar.addClass("ss");
-        var endchar = m_char.first().next();        
-        while (endchar.next().length && endchar.next().text() != " ") {
+        var endchar = m_char.first();        
+        while (endchar.next().length && endchar.next().text().match(/^\w$/)) {
             endchar = endchar.next();
         }
         endchar.addClass("se").addClass("sl");
