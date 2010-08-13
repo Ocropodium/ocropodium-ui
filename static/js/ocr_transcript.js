@@ -46,7 +46,8 @@ function OcrTranscript(insertinto_id, batch_id) {
         .attr("id", "scroll_container");
     var m_pagediv = $("<div></div>")
         .addClass("waiting")
-        .addClass("transcript_lines");
+        .addClass("transcript_lines")
+        .attr("id", "transcript_lines");
         //.css("min-height", m_container.height() - 45); 
 
 
@@ -250,7 +251,7 @@ function OcrTranscript(insertinto_id, batch_id) {
                 $(item).children("br").remove();
                 if ((lastyh != -1 && lasth != -1) 
                         && (y - (h * 0.75) > lastyh || lasth < (h * 0.75))) {
-                    $(lastitem).append($("<br />")).append($("<br />"));
+                    $(lastitem).after($("<br />")).after($("<br />"));
                 }
                 lastitem = item;                
                 lastyh = y + h;
