@@ -115,6 +115,10 @@ $(function() {
         speller.spellCheck();
     });
 
+    $("#save_data").click(function(event) {
+        transcript.save();
+    });
+
     $("#page_slider").slider({
         change: function(e, ui) {
             transcript.setPage($("#page_slider").slider("option", "value") - 1);

@@ -206,18 +206,44 @@ function OcrTranscript(insertinto_id, batch_id) {
     var setPageLines = function(data) {
         m_pagecount.text("Page " + (m_page + 1) + " of " + m_batchdata.extras.task_count);
         m_pagename.text(data.fields.page_name);
-        m_pagediv.find(".ocr_line").remove();
+        m_pagediv.children().remove();
         m_pagediv.data("bbox", data.fields.results.box);
         $.each(data.fields.results.lines, function(linenum, line) {
             lspan = $("<span></span>")
                 .text(line.text)
                 .addClass("ocr_line")
-                .data("bbox", line.box);
+                .data("bbox", line.box)
+                .data("num", line.line);
             m_pagediv.append(lspan);                        
         });
         self.insertBreaks();
     }
 
+
+    this.save = function() {
+        var lines = [];
+        m_pagediv.find(".ocr_line").each(function(i, elem) {
+            lines.push({
+                text: $(elem).text(),
+                line: $(elem).data("num"),
+                box:  $(elem).data("bbox"),
+            });
+        });
+        $.ajax({
+            url: "/batch/save/" + m_batch_id + "/" + m_page + "/", 
+            data: {lines: JSON.stringify(lines)},
+            dataType: "json",
+            type: "POST",
+            error: function(e) {
+                alert("Error saving data: " + e);
+            },
+            success: function(data) {
+                if (data && data.ok) {
+                    alert("Saved ok!");
+                }
+            },
+        });
+    }
 
 
     //

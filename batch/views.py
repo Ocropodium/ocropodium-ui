@@ -274,6 +274,28 @@ def page_results(request, pk, page_index):
 
 
 @login_required
+def save_page_data(request, pk, page_index):
+    """
+    Save data for a single page.
+    """
+    batch = get_object_or_404(OcrBatch, pk=pk)
+    try:
+        page = batch.tasks.all()[int(page_index)]
+    except OcrBatch.DoesNotExist, e:
+        raise e
+
+    json = request.POST.get("lines")
+    if not json:
+        raise Http505("No data passed to 'save' function.")
+    lines = simplejson.loads(json)
+    page.results["lines"] = lines
+    page.save()
+
+    return HttpResponse(simplejson.dumps({"ok": True}),
+            mimetype="application/json")
+
+
+@login_required
 def submit_viewer_binarization(request, pk):
     """
     Trigger a re-binarization of the image for viewing purposes.
