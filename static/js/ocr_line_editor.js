@@ -45,6 +45,9 @@ function OcrLineEditor(insertinto_id) {
         .addClass("editcursor")
         .text("|");
     
+    // anchor for the end of the line
+    var m_endmarker = $("<div></div>")
+            .addClass("endmarker");
 
     // alias 'this'
     var self = this;
@@ -66,8 +69,8 @@ function OcrLineEditor(insertinto_id) {
         // the container box
         if (elem.length == 0) {
             m_cursor
-                .css("top", (m_elem.offset().top + 3) + "px")
-                .css("left", (m_elem.offset().left + m_elem.width() + 3) + "px");
+                .css("top", (m_endmarker.offset().top) + "px")
+                .css("left", (m_endmarker.offset().left + m_endmarker.width()) + "px");
             return;
         }
 
@@ -118,13 +121,20 @@ function OcrLineEditor(insertinto_id) {
         else if (code == END)
             moveCursorToEnd();
         if (m_keyevent.shiftKey)
-            updateSelection();
+            updateSelection(m_selectstart.get(0), m_char.get(0));
     }
 
-    var updateSelection = function() {
-        var s = m_selectstart.get(0);
-        var e = m_char.get(0);
-        m_char.first().prev().addClass("sl");
+    var updateSelection = function(s, e) {
+        if (s == e)
+            return;
+        var span = m_elem.get(0);
+        var gotstart = false;
+        for (var i = 0; i < span.childElementCount; i++) {         
+            if (span.children[i] == s || span.children[i] == e) {
+                gotstart = !gotstart;
+            }
+            $(span.children[i]).toggleClass("sl", gotstart);
+        }
     }
 
     var moveCursorRight = function() {
@@ -276,19 +286,17 @@ function OcrLineEditor(insertinto_id) {
         clearSelection();
         if (m_char.length == 0)
             return;
-        var startchar = m_char.first();
-        while (startchar.prev().length && startchar.prev().text() .match(/^\w$/)) {
-            startchar = startchar.prev();
+        var startchar = m_char.first().get(0);
+        while (startchar.previousElementSibling 
+                && startchar.previousElementSibling.textContent.match(/^\w$/)) {
+            startchar = startchar.previousElementSibling;
         }
-        startchar.addClass("ss");
-        var endchar = m_char.first();        
-        while (endchar.next().length && endchar.next().text().match(/^\w$/)) {
-            endchar = endchar.next();
+        var endchar = m_char.first().get(0);        
+        while (endchar && endchar != m_endmarker.get(0)
+                && endchar.textContent.match(/^\w$/)) {
+            endchar = endchar.nextElementSibling;
         }
-        endchar.addClass("se").addClass("sl");
-        startchar.nextUntil(".se").andSelf()
-            .addClass("sl")
-            .removeClass("ss");
+        updateSelection(startchar, endchar);
     }
 
     var selectCharUnderClick = function(event) {
@@ -374,9 +382,7 @@ function OcrLineEditor(insertinto_id) {
                 width: cr.right - cr.left, 
                 height: cr.bottom - cr.top,
             }
-            if (rectOverlap(cbox, box)) {
-                $(span.children[i]).addClass("sl");
-            }
+            $(span.children[i]).toggleClass("sl", rectOverlap(cbox, box));
         }
     }
 
@@ -401,7 +407,9 @@ function OcrLineEditor(insertinto_id) {
         // wrap a span round each char
         m_elem.html($.map($.trim(m_elem.text()), function(ch) {
             return "<span>" + ch + "</span>";
-        }).join(""));
+        }).join("")).append(
+            m_endmarker.height(m_elem.height())
+        );
 
         // set up a click handler for the window
         // if we click outside the current element, 
@@ -490,6 +498,7 @@ function OcrLineEditor(insertinto_id) {
             .unbind("mousemove.noselection")
             .unbind("mouseup.checkselection")
             .unbind("mouseup.selecttext");
+        m_elem.unbind("mousedown.noselection");
 
         m_elem = null;
         blinkCursor(false);

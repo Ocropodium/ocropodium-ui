@@ -51,5 +51,7 @@
 }
 
 .endmarker {
-    float: right;
+    display: inline;
+    overflow: hidden;
+    width; 0px;
 }
