@@ -125,8 +125,10 @@ function OcrLineEditor(insertinto_id) {
     }
 
     var updateSelection = function(s, e) {
-        if (s == e)
+        if (s == e) {
+            m_elem.children().removeClass("sl");
             return;
+        }
         var span = m_elem.get(0);
         var gotstart = false;
         for (var i = 0; i < span.childElementCount; i++) {         
