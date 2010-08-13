@@ -1,0 +1,41 @@
+
+.badspell {
+    background-color: #FFDDDD;
+}
+
+
+.suggestion_window {
+    max-height: 300px;
+    overflow: auto;
+    float: right;
+    position: absolute;
+    background-color: #FFF;
+    width: 200px;
+    margin: 0px;
+    padding: 0px;
+}
+
+.suggestion_window ul {
+    margin: 0px;
+    padding: 0px;
+}
+
+.suggestion_window ul li {
+    list-style: none;
+    margin: 0px;
+    padding: 5px 10px;
+}
+
+.suggestion {
+    text-decoration: none;
+    color: blue;
+}
+
+.suggestion.hover {
+    background-color: #BBBBFF;
+}
+
+.spellword {
+    margin-bottom: 20px;
+}
+
