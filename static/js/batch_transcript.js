@@ -1,5 +1,6 @@
 var transcript = null;
 var sdviewer = null;
+var speller = null;
 var polltimeout = -1;
 
 
@@ -111,20 +112,7 @@ $(function() {
     }
 
     $("#spellcheck").click(function(event) {
-        var text = [];
-        $(".ocr_line").each(function(i, elem) {
-            text.push($(elem).text());
-        });
-
-        $.ajax({
-            url: "/batch/spellcheck",
-            type: "POST",
-            data: {text: text.join("\n")},
-            dataType: "json",
-            success: function(data) {
-                alert(data);
-            },
-        });
+        speller.spellCheck();
     });
 
     $("#page_slider").slider({
@@ -148,6 +136,8 @@ $(function() {
     
     sdviewer = new ImageWindow("sideviewer"); 
     sdviewer.init();
+
+    speller = new Spellchecker(".ocr_line");
 
     layoutWidgets();
 });        

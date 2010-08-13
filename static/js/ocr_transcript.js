@@ -9,10 +9,13 @@ function OcrTranscript(insertinto_id, batch_id) {
     var m_batchdata = null;
 
     // editor for each line
-    var m_editor = null;
+    var m_editor = new OcrLineEditor(insertinto_id); 
 
     // page data cache
     var m_pagedata = null;
+
+    // store the current line
+    var m_currentline = null;
 
     // alias 'this' for use from within callbacks
     var self = this;
@@ -173,7 +176,13 @@ function OcrTranscript(insertinto_id, batch_id) {
 //        });
 //    });
 
-    $(".ocr_line").live("mouseover mouseout", function(event) {
+    $(window).bind("keyup.lineedit", function(event) {
+        if (m_currentline && event.keyCode == 113) {  // F2
+            m_editor.setElement(m_currentline, event);
+        }        
+    });
+
+    $(".ocr_line").live("mouseover.hoverline mouseout.hoverline", function(event) {
         if (event.type == "mouseover") {
             $(this).addClass("hover");
         } else {
@@ -181,16 +190,15 @@ function OcrTranscript(insertinto_id, batch_id) {
         }
     });
 
-    $(".ocr_line").live("click", function(event) {
-        if (m_editor == null) {
-            m_editor = new OcrLineEditor(insertinto_id);
-            m_editor.setElement(this, event);
-        } else if (m_editor.element() && m_editor.element().get(0) === this) {
-            // don't do anything - we're already editing it
-        } else {
-            m_editor.setElement(this, event);
+    $(".ocr_line").live("dblclick.editline", function(event) {
+            
+        if (!(m_editor.element() && m_editor.element().get(0) === this)) {
+            m_editor.setElement(this, event); 
         }
-        
+    });
+
+    $(".ocr_line").live("click", function(event) {
+        m_currentline = $(this);        
         self.onClickPosition($(this).data("bbox"));
     });
 
