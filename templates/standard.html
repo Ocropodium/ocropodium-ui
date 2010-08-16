@@ -3,10 +3,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>
-        {% block title %} OCRopodium - Test Server {% endblock %}
         {% if request.session.project %}
-            [{{ request.session.project }}]
+            {{ request.session.project }} -
         {% endif %}
+        {% block title %} OCRopodium - Test Server {% endblock %}
     </title>
 	<script type='application/javascript' src='/static/js/jquery-1.4.2.js'></script>
     <script type='application/javascript' src='/static/js/jquery-ui-1.8.1.custom.min.js'></script>
