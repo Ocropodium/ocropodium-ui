@@ -73,6 +73,7 @@ def list(request):
     """
     excludes = ["args", "kwargs", "traceback", "results",]
     params = request.GET.copy()
+    params["project__pk"] = request.session["project"].pk
     context = { 
         "params" : params,
     }
@@ -341,7 +342,8 @@ def latest(request):
     View the latest batch.
     """
     try:
-        batch = OcrBatch.objects.filter(user=request.user)\
+        batch = OcrBatch.objects.filter(
+                user=request.user, project=request.session["project"])\
                 .order_by("-created_on")[0]
     except OcrBatch.DoesNotExist:
         raise Http404
