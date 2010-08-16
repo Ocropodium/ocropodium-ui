@@ -4,87 +4,14 @@
     <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/task_list.css" type="text/css" media="screen" />
 	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
-    <script type="text/javascript" src="/static/js/task_list.js"></script>
+    <script type="text/javascript" src="/static/js/tasklist.js"></script>
+    <script type="text/javascript" src="/static/js/tasks_list.js"></script>
 
     <style type="text/css">
         #dialog_box {
             display: none;
         }
     </style>
-
-
-<script type="text/javascript">
-
-var tasks = null;
-
-
-$(function(){
-});
-
-function saveState() {
-    var order_by = document.filter.order_by.value;
-    var user = document.filter.batch__user__pk.value;
-    var stat = $.map(document.filter.status, function(cb) {
-        if (cb.checked) {
-            return cb.value;
-        }
-    }).join(",");
-    var autorf = document.controls.autorefresh.checked;
-    var autorf_time = document.controls.autorefresh_time.value;
-
-    var winprefix = window.location.pathname.replace(/\//g, "");
-    $.cookie(winprefix + "_order_by", order_by);
-    $.cookie(winprefix + "_user", user);
-    $.cookie(winprefix + "_stat", stat);
-    $.cookie(winprefix + "_autorf", autorf);
-    $.cookie(winprefix + "_autorf_time", autorf_time);
-}
-
-function loadState() {
-    var winprefix = window.location.pathname.replace(/\//g, "");
-    var order_by = $.cookie(winprefix + "_order_by");
-    var user = $.cookie(winprefix + "_user");
-    var stat = $.cookie(winprefix + "_stat");
-    var autorf = $.cookie(winprefix + "_autorf");
-    var autorf_time = $.cookie(winprefix + "_autorf_time");
-
-    if (order_by) {
-        document.filter.order_by.value = order_by;
-    }
-    if (user) {
-        document.filter.batch__user__pk.value = user;
-    }
-    if (stat) {
-        $.each(stat.split(","), function(i, s) {
-            $("input[value='" + s + "']").attr("checked", true);
-        });
-    }
-    if (autorf) {
-        document.controls.autorefresh.checked = (autorf === 'true');
-    }
-    if (autorf_time) {
-        document.controls.autorefresh_time.value = autorf_time;
-    }
-}
-
-
-// save state on leaving the page... at least try to...
-window.onbeforeunload = function(event) {
-    saveState();
-}
-
-
-$(function() {
-    
-    loadState();
-    tasks = new TaskList("task_list", "task_filter_form");
-    tasks.init();
-});
-
-
-</script>
-
-
 {% endblock %}
 
 {% block content %}
@@ -111,7 +38,7 @@ $(function() {
             </div>
             <div class="field_wrapper">
                 <label for="filter_user">User:</label>
-                <select class="filter_item" id="filter_user" name="batch__user__pk">
+                <select class="filter_item" id="filter_user" name="user__pk">
                     <option value="" {% ifequal params.user_id "" %}selected="selected"{% endifequal %}>All</option>
                     <option value="{{request.user.pk}}" {% ifequal params.user_id request.user.pk %}selected="selected"
                     {% endifequal %}>{{user.username}}</option>
