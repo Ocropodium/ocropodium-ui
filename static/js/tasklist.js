@@ -7,7 +7,7 @@ function TaskList(list_container_id, param_container_id) {
 
     var headers = {
         page_name:  "File",
-        user_id:  "User",
+        user:  "User",
         updated_on:  "Last Update",
         status:  "Status",
     };
