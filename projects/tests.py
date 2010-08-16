@@ -1,23 +1,118 @@
-"""
-This file demonstrates two different styles of tests (one doctest and one
-unittest). These will both pass when you run "manage.py test".
-
-Replace these with more appropriate tests for your application.
-"""
-
+import os
+import shutil
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.test import TestCase
+from django.test.client import Client
+from django.utils import simplejson
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
+from ocradmin.projects.models import OcrProject
+
+
+AJAX_HEADERS = {
+    "HTTP_X_REQUESTED_WITH": "XMLHttpRequest"
+}
+
+class OcrProjectsTest(TestCase):
+    fixtures = ["test_fixtures.json"]
+
+    def setUp(self):
         """
-        Tests that 1 + 1 always equals 2.
+            Setup OCR tests.  Creates a test user.
         """
-        self.failUnlessEqual(1 + 1, 2)
+        self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
+        self.client = Client()
+        self.client.login(username="test_user", password="testpass")
 
-__test__ = {"doctest": """
-Another way to test that 1 + 1 is equal to 2.
+    def tearDown(self):
+        """
+            Cleanup a test.
+        """
+        self.testuser.delete()
 
->>> 1 + 1 == 2
-True
-"""}
 
+    def test_projects_view(self):
+        """
+        Test basic list view
+        """
+        self.assertEqual(self.client.get("/projects/").status_code, 200)
+
+    def test_tag_filter(self):
+        """
+        Test filtering by tag.
+        """
+        r = self.client.get("/projects/list", {"tag": "test"})
+        self.assertEqual(r.status_code, 200)
+
+
+    def test_new_ajax_form(self):
+        """
+        Test requesting a new upload form via Ajax works.
+        """
+        r = self.client.get("/projects/new", {}, **AJAX_HEADERS)
+        self.assertEqual(r.status_code, 200)
+        # make sure there's a form in the results
+        self.assertTrue(r.content.find("<form") != -1)
+
+    def test_create_project_ajax(self):
+        """
+        Test creating a new project from an uploaded file.
+        """
+        # we shouldn't have any projects in the DB yet.  If 
+        # successful it'll redirect back to the list.
+        before = OcrProject.objects.count()
+        r = self._create_test_project()
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(before + 1, OcrProject.objects.count())
+
+    def test_edit_project_view(self):
+        """
+        Test viewing the edit for (no Ajax).
+        """
+        r = self.client.get("/projects/edit/1/")
+        self.assertEqual(r.status_code, 200)
+
+    def test_edit_project_not_found(self):
+        """
+        Test viewing the edit form for a non-existant item.
+        """
+        r = self.client.get("/projects/edit/666666/")
+        self.assertEqual(r.status_code, 404)
+
+    def test_update_project(self):
+        """
+        Test the updating of the fixture project.
+        """
+        r = self._update_test_project()
+        self.assertEqual(r.status_code, 302)
+        project = OcrProject.objects.get(pk=1)
+        self.assertEqual(project.description, "")
+
+
+    def _create_test_project(self):
+        """
+        Insert a post test project view post
+        """
+        r = self.client.post(
+            "/projects/create",
+            dict(
+                tags="test blah",
+                name="Test Project",
+                description="Testing project creation",
+            ),
+        )
+        return r
+
+
+    def _update_test_project(self):
+        """
+        Update the fixture project.
+        """
+        return self.client.post(
+            "/projects/update/1/",
+            dict(
+                name="Test Update Project",
+                tags="test project update",
+                description="",
+            ),
+        )

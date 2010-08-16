@@ -67,15 +67,24 @@ function OcrLineEditor(insertinto_id) {
     var positionCursorTo = function(elem) {
         // if there's no char elem, set to back of
         // the container box
-        if (elem.length == 0) {
+        if (elem.length == 0 || elem.get(0).tagName == "DIV") {
+            var top = m_endmarker.offset().top;
+            // hack around Firefox float drop bug
+            if ($.browser.mozilla) {
+                if (m_elem.children().length > 1) {
+                    top = m_elem.children().slice(-2).offset().top;
+                } else {
+                    top = (m_elem.offset().top + m_elem.height()) - m_endmarker.height();
+                }
+            }
             m_cursor
-                .css("top", (m_endmarker.offset().top) + "px")
+                .css("top", top + "px")
                 .css("left", (m_endmarker.offset().left + m_endmarker.width()) + "px");
             return;
         }
-
+        var top = elem.offset().top;
         m_cursor
-            .css("top", elem.offset().top + "px")
+            .css("top", top + "px")
             .css("left", elem.offset().left + "px");
     }
 
@@ -230,8 +239,14 @@ function OcrLineEditor(insertinto_id) {
             return;
 
         if (event.which == ALT || event.which == CTRL
-            || event.which == TAB || event.which == CAPSLOCK) {
+            || event.which == CAPSLOCK) {
 
+        } else if (event.which == TAB) {
+            if (!event.shiftKey)             
+                self.onEditNextElement();
+            else
+                self.onEditPrevElement();
+            return false;
         } else if (event.which == ESCAPE) {
             self.releaseElement(m_inittext);
         } else if (event.which == RETURN) {
@@ -302,6 +317,8 @@ function OcrLineEditor(insertinto_id) {
     }
 
     var selectCharUnderClick = function(event) {
+        if (!event)
+            return;
         // find the 'new' span element that would've
         // been under the mouse when clicked
         for (var i = 0; i < m_elem.find("span").length; i++) {
@@ -432,6 +449,8 @@ function OcrLineEditor(insertinto_id) {
 
         $(window).bind("keydown.editortype", keyPressDetection);
         $(window).bind("keypress.editortype", function(event) {
+            if (event.charCode == 0)
+                return;
             m_keyevent = event;
             insertChar();        
         });
@@ -507,3 +526,12 @@ function OcrLineEditor(insertinto_id) {
         m_cursor.remove();
     }
 }
+
+OcrLineEditor.prototype.onEditNextElement = function(event) {
+
+}
+
+OcrLineEditor.prototype.onEditPrevElement = function(event) {
+
+}
+

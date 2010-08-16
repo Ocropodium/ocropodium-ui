@@ -37,6 +37,7 @@
 #scroll_container {
     height: 320px;
     overflow: auto;
+    background-color: #FFF;
 }
 
 .ocr_line.hover {
