@@ -14,7 +14,8 @@ TESTFILE = "simple.png"
 
 
 class OcrBatchTest(TestCase):
-    fixtures = ["ocrmodels/fixtures/test_fixtures.json"]
+    fixtures = ["ocrmodels/fixtures/test_fixtures.json",
+            "projects/fixtures/test_fixtures.json"]
     def setUp(self):
         """
             Setup OCR tests.  Creates a test user.
@@ -25,6 +26,7 @@ class OcrBatchTest(TestCase):
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
+        self.client.get("/projects/load/1/")
 
     def tearDown(self):
         """
