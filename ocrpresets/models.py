@@ -16,3 +16,9 @@ class OcrPreset(models.Model):
             choices=[("segment", "Segment"), ("binarize", "Binarize")])
     data = fields.PickledObjectField()
 
+
+    def __unicode__(self):
+        """
+        String representation.
+        """
+        return self.name

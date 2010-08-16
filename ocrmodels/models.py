@@ -23,8 +23,11 @@ class OcrModel(models.Model):
     app = models.CharField(max_length=20,
             choices=[("ocropus", "Ocropus"), ("tesseract", "Tesseract")])
 
-#    def natural_key(self):
-#        return (self.name, self.type)
-#
-#    class Meta:
-#        unique_together = (('name', 'type'),)
+
+    def __unicode__(self):
+        """
+        String representation.
+        """
+        return self.name
+
+    

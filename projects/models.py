@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 from tagging.fields import TagField
+from ocradmin.ocrmodels.models import OcrModel
+from ocradmin.ocrpresets.models import OcrPreset
 
-from ocradmin.ocrmodels.model import OcrModel
-from ocradmin.ocrpresets.model import OcrPreset
 
-class Project(models.Model):
+class OcrProject(models.Model):
     """
     OCR Project model.
     """
@@ -14,18 +14,29 @@ class Project(models.Model):
     description = models.TextField(blank=True, null=True)
     tags = TagField()
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
-    defaults = models.OneToOneField("ProjectDefaults", null=True, blank=True)
+    defaults = models.OneToOneField("OcrProjectDefaults", null=True, blank=True)
+
+    def __unicode__(self):
+        """
+        String representation.
+        """
+        return self.name
 
 
-class ProjectDefaults(models.Model):
+class OcrProjectDefaults(models.Model):
     """
     OCR Project Defaults.  This is something of a 
     meta-preset.
     """
-    default_lmodel = models.ForeignKey(OcrModel, blank=True, null=True)
-    default_cmodel = models.ForeignKey(OcrModel, blank=True, null=True)
-    default_binarizer = models.ForeignKey(OcrPreset, blank=True, null=True)
-    default_psegmenter = models.ForeignKey(OcrPreset, blank=True, null=True)
-    default_recognizer = models.ForeignKey(OcrPreset, blank=True, null=True)
+    lmodel = models.ForeignKey(OcrModel, blank=True, null=True, 
+            related_name="lmodel", limit_choices_to={"type": "lang"})
+    cmodel = models.ForeignKey(OcrModel, blank=True, null=True,
+            related_name="cmodel", limit_choices_to={"type": "char"})
+    binarizer = models.ForeignKey(OcrPreset, blank=True, null=True,
+            related_name="binarizer", limit_choices_to={"type": "binarize"})
+    psegmenter = models.ForeignKey(OcrPreset, blank=True, null=True,
+            related_name="psegmenter", limit_choices_to={"type": "segment"})
+    recognizer = models.ForeignKey(OcrPreset, blank=True, null=True,
+            related_name="recognizer", limit_choices_to={"type": "recognize"})
 
 
