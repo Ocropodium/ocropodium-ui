@@ -24,7 +24,7 @@ from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch 
 
-
+from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params
 
 
@@ -48,6 +48,7 @@ def batch_query(params):
 
 
 @login_required
+@project_required
 def new(request):
     """
     Present a new batch form.
@@ -65,6 +66,7 @@ def new(request):
 
 
 @login_required
+@project_required
 def list(request):
     """
     List recent batches.
@@ -111,6 +113,7 @@ def list(request):
 
     
 @login_required
+@project_required
 @transaction.commit_manually
 def create(request):
     """
@@ -168,6 +171,7 @@ def create(request):
 
 
 @login_required
+@project_required
 @transaction.commit_manually
 def batch(request):
     """
@@ -331,6 +335,7 @@ def viewer_binarization_results(request, task_id):
 
 
 @login_required
+@project_required
 def latest(request):
     """
     View the latest batch.
@@ -354,6 +359,7 @@ def show(request, pk):
 
 
 @login_required
+@project_required
 def upload_files(request):
     """
     Upload files to the server for batch-processing.
@@ -375,6 +381,7 @@ def upload_files(request):
 
 
 @login_required
+@project_required
 def transcript(request, pk):
     """
     View the transcription of a batch.
