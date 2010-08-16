@@ -144,7 +144,7 @@ def create(request):
     batch_name = request.POST.get("batch_name", "%s %s" % (tasktype, datetime.now()))
     batch_desc = request.POST.get("batch_desc", "")
     batch = OcrBatch(user=request.user, name=batch_name, description=batch_desc,
-            task_type=celerytask.name, batch_type="MULTI")
+            task_type=celerytask.name, batch_type="MULTI", project=request.session["project"])
     batch.save()
     subtasks = []
     try:

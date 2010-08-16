@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from tagging.fields import TagField
 
+from ocradmin.projects.models import OcrProject
+
 
 class OcrBatch(models.Model):
     """
@@ -15,6 +17,7 @@ class OcrBatch(models.Model):
 
     user = models.ForeignKey(User)
     name = models.CharField(max_length=255)
+    project = models.ForeignKey(OcrProject)
     task_type = models.CharField(max_length=100)
     batch_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     description = models.TextField(blank=True, null=True)
