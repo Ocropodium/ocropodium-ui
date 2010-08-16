@@ -107,6 +107,11 @@
     background-color: #F8F8F8;
 }
 
+.disabled_option {
+    color: #BBB;
+    cursor: text;
+}
+
 /* Begin non-anchor hover selectors */
 
 /* Enter the more specific element (div) selector
