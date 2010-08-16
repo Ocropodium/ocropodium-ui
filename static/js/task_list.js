@@ -335,7 +335,7 @@ function TaskList(list_container_id, param_container_id) {
             params.push($(elem).attr("name") + "=" + $(elem).val());
         });
         $("input[type='checkbox'].filter_item").each(function(i, elem) {
-            if ($(this).attr("checked")) {    
+            if ($(elem).attr("checked")) {    
                 params.push($(elem).attr("name") + "=" + $(elem).val());
             }
         });
