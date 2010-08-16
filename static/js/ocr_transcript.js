@@ -20,6 +20,11 @@ function OcrTranscript(insertinto_id, batch_id) {
     // alias 'this' for use from within callbacks
     var self = this;
 
+    // Ugh, keycodes
+    var TAB = 9,
+        F2 = 113;
+
+
     // UI bits it's useful to keep a reference to:
     var m_container = $("<div></div>")
         .addClass("widget");
@@ -176,31 +181,97 @@ function OcrTranscript(insertinto_id, batch_id) {
 //        });
 //    });
 
+    $(window).bind("keydown.tabshift", function(event) {        
+        if (event.keyCode == TAB) {
+            var elem;
+            if (m_currentline) {
+                elem = event.shiftKey
+                    ? m_currentline.prevAll(".ocr_line").first()
+                    : m_currentline.nextAll(".ocr_line").first();
+                if (elem.length == 0) {
+                    elem = event.shiftKey
+                        ? m_currentline.nextAll(".ocr_line").last()
+                        : m_currentline.prevAll(".ocr_line").last();
+                }
+            } else {
+                elem = event.shiftKey
+                    ? m_pagediv.find(".ocr_line").last()                
+                    : m_pagediv.find(".ocr_line").first();    
+            }
+            setCurrentLine(elem);
+            return false;
+        }
+    });
+
+    m_editor.onEditNextElement = function() {
+        var next = m_editor.element().nextAll(".ocr_line").first();
+        if (!next.length)
+            next = $(".ocr_line").first();
+        m_editor.setElement(next.get(0));
+        next.trigger("click");
+    }
+
+    m_editor.onEditPrevElement = function() {
+        var prev = m_editor.element().prevAll(".ocr_line").first();
+        if (!prev.length)
+            prev = $(".ocr_line").last();
+        m_editor.setElement(prev.get(0));
+        prev.trigger("click");
+    }
+
+
     $(window).bind("keyup.lineedit", function(event) {
-        if (m_currentline && event.keyCode == 113) {  // F2
+        if (m_currentline && event.keyCode == F2) {
             m_editor.setElement(m_currentline, event);
         }        
     });
 
-    $(".ocr_line").live("mouseover.hoverline mouseout.hoverline", function(event) {
-        if (event.type == "mouseover") {
-            $(this).addClass("hover");
-        } else {
-            $(this).removeClass("hover");
-        }
-    });
+//    $(".ocr_line").live("mouseover.hoverline mouseout.hoverline", function(event) {
+//        if (event.type == "mouseover") {
+//            $(this).addClass("hover");
+//        } else {
+//            $(this).removeClass("hover");
+//        }
+//    });
 
     $(".ocr_line").live("dblclick.editline", function(event) {
             
         if (!(m_editor.element() && m_editor.element().get(0) === this)) {
-            m_editor.setElement(this, event); 
+            m_editor.setElement(this, event);
         }
     });
 
     $(".ocr_line").live("click", function(event) {
-        m_currentline = $(this);        
-        self.onClickPosition($(this).data("bbox"));
+        setCurrentLine($(this));
     });
+
+
+    // check is an element is visible - returns -1 if the elem
+    // is above the viewport, 0 if visible, 1 if below
+    var isScrolledIntoView = function(elem) {
+        var docviewtop = $("#scroll_container").scrollTop();
+        var docviewbottom = docviewtop + $("#scroll_container").height();
+
+        var elemtop = $(elem).offset().top;
+        var elembottom = elemtop + $(elem).height();
+        if (elembottom > docviewbottom) 
+            return 1;
+        if (elemtop < docviewtop) 
+            return -1;
+        return 0;
+    }
+
+
+    var setCurrentLine = function(line) {
+        m_currentline = line;
+        $(".ocr_line").removeClass("hover");
+        line.addClass("hover");
+        var pos = isScrolledIntoView(line.get(0));
+        if (pos != 0) {
+            line.get(0).scrollIntoView(pos == -1);
+        }        
+        self.onClickPosition(line.data("bbox"));
+    }
 
 
     var setPageLines = function(data) {
