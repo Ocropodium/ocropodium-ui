@@ -20,6 +20,7 @@ urlpatterns = patterns('',
     (r'^ocrtasks/?', include('ocradmin.ocrtasks.urls')),
     (r'^ocrmodels/?', include('ocradmin.ocrmodels.urls')),
     (r'^ocrpresets/?', include('ocradmin.ocrpresets.urls')),
+    (r'^projects/?', include('ocradmin.projects.urls')),
     (r'^imageops/?', include('ocradmin.imageops.urls')),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
