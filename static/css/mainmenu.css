@@ -1,0 +1,153 @@
+/* Borrowed from 
+ * http://www.seoconsultants.com/css/menus/horizontal/css/menuh.css
+ */
+
+#menu {
+    /* top margin is to prevent glitchy hovers to the child
+     * elements when the browser is temporarily unaware of 
+     * the position of the mouse (i.e. when closing select
+     * menus. */
+    margin: 1px 0px 0px 0px;
+    width: 100%;
+    float: left;
+    vertical-align: middle;
+    background-color: #F0F0F0;
+    text-align: left;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(230,230,230))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(230,230,230) 35%,
+        rgb(245,245,245) 50%
+    );
+}
+
+#menu a {
+    display: block;
+    white-space: nowrap;
+    margin: 0;
+}
+
+#menu h3 {
+    font: bold 90%/205% tahoma,arial,helvetica,sans-serif;
+    display: block;
+    white-space: nowrap;
+    margin: 0;
+}
+
+#menu h3 {
+    padding: 0px 20px 0px 5px;
+}
+
+#menu h3.top {
+    background-image: url("/static/hz_scroll_down.gif");
+    background-repeat: no-repeat;
+    background-position: center right;
+}
+
+#menu h3.right {
+    background-image: url("/static/vt_scroll_right.gif");
+    background-repeat: no-repeat;
+    background-position: center right;
+}
+
+#menu a {
+    text-decoration: none;
+}
+
+#menu a, #menu a:visited {
+    color: #020202;
+}
+
+#menu a:hover {
+    color: #020202;
+}
+
+#menu a:active {
+}
+
+#menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    float: left;
+}
+
+#menu li {
+    position: relative;
+    padding: 0px 5px 0px 5px;
+}
+
+#menu ul ul {
+    position: absolute;
+    z-index: 500;
+    top: auto;
+    display: none;
+    background-color: #FEFEFE;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+}
+
+#menu ul ul ul {
+    top: 0;
+    left: 100%;
+}
+
+#menu ul ul li {
+    padding: 5px 20px 5px 5px;
+}
+
+#menu ul ul li:hover {
+    background-color: #F8F8F8;
+}
+
+/* Begin non-anchor hover selectors */
+
+/* Enter the more specific element (div) selector
+on non-anchor hovers for IE5.x to comply with the
+older version of csshover.htc - V1.21.041022. It
+improves IE's performance speed to use the older
+file and this method */
+
+div#menu h3:hover {
+}
+
+div#menu li:hover {
+cursor: pointer;
+z-index: 100;
+}
+
+div#menu li:hover ul ul,
+div#menu li li:hover ul ul,
+div#menu li li li:hover ul ul,
+div#menu li li li li:hover ul ul
+{display: none;}
+
+div#menu li:hover ul,
+div#menu li li:hover ul,
+div#menu li li li:hover ul,
+div#menu li li li li:hover ul
+{display: block;}
+
+/* End of non-anchor hover selectors */
+
+/* Styling for Expand */
+
+#menu a.x, #menu a.x:visited {
+    color: #020202;
+    font-weight: normal;
+}
+
+#menu a.x:hover {
+    color: #020202;
+}
+
+#menu a.x:active {
+}
+

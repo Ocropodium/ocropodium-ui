@@ -7,6 +7,7 @@
     <script type='application/javascript' src='/static/js/jquery-ui-1.8.1.custom.min.js'></script>
 	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
     <link rel="stylesheet" href="/static/css/custom-theme/jquery-ui-1.8.2.custom.css" />
+    <link rel="stylesheet" href="/static/css/mainmenu.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/standard.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/forms.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/messages.css" type="text/css" media="screen" />
@@ -18,48 +19,101 @@
 </head>
 <body>
     <div id="app_container">
-        <div id="main_toolbar">
-            <a id="header_logo" href="/" rel="Home" alt="OCRopodium Logo">
-                <img border="0" src="/static/ocr_logo.png" alt="OCRopodium Logo" />
-            </a>
-            <div id="login_info">Logged in as {{request.user.username}}.
-                <a href="/accounts/logout" alt="Logout">Logout</a>
-            </div>
-            <ul id="main_toolbar_menu">
+        <div id="menu">
+            <span id="login_info">
+                Logged in as {{request.user.username}}. <a href="/accounts/logout" alt="Logout">Logout</a>
+            </span>
+            <ul>
                 <li>
-                <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}
-                    href="/ocr/convert/">Convert</a>
-                </li> 
-                <li>
-                <a {% ifequal request.path "/ocr/binarize/" %}class="current"{% endifequal %}
-                    href="/ocr/binarize/">Binarize</a>
-                </li> 
-                <li>
-                <a {% ifequal request.path "/ocr/segment/" %}class="current"{% endifequal %}
-                    href="/ocr/segment/">Segment</a>
+                <h3 class="top">Project</h3>                
+                <ul>
+                    <li>
+                        <a href="/projects/new/">New...</a>
+                    </li>
+                    <li>
+                        <a href="/projects/open/">Open...</a>
+                    </li>
+                    <li>
+                        <h3 class="right">Recent</h3>
+                        <ul>
+                            <li>
+                                Item
+                            </li>
+                            {% if request.session.recent_projects %}
+                                {% for recent in request.session.recent_projects %}
+                                    <li>
+                                        <a href="/projects/open/{{recent.pk}}/">{{recent.name}}</a>
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </li>
+                    <li>
+                        {% if request.session.project %}
+                            <a href="/projects/open/">Close</a>
+                        {% else %}
+                            <span class="disabled_option">Close</span>
+                        {% endif %}
+                    </li>
+                </ul>
                 </li>
+            </ul>
+            <ul>
                 <li> 
-                <a {% ifequal request.path "/batch/latest/" %}class="current"{% endifequal %}
-                    href="/batch/batch/">Batch</a>
+                    <h3 class="top">Batch</h3>
+                    <ul>
+                        <li>
+                            <a {% ifequal request.path "/batch/new/" %}class="current"{% endifequal %}
+                                href="/batch/new/">New</a>
+                        </li>
+                        <li>
+                            <a {% ifequal request.path "/batch/latest/" %}class="current"{% endifequal %}
+                                href="/batch/latest/">Latest</a>
+                        </li>
+                    </ul>
+
                 </li> 
+            </ul>
+            <ul>
                 <li>
-                <a {% ifequal request.path "/ocrmodels/" %}class="current"{% endifequal %}
-                    href="/ocrmodels/">Models</a>
+                    <h3><a {% ifequal request.path "/ocrmodels/" %}class="current"{% endifequal %}
+                        href="/ocrmodels/">Models</a></h3>
                 </li> 
+            </ul>
+            <ul>
                 <li>
-                <a {% ifequal request.path "/ocrtasks/" %}class="current"{% endifequal %}
-                    href="/ocrtasks/">Tasks</a>
+                    <h3><a {% ifequal request.path "/ocrtasks/" %}class="current"{% endifequal %}
+                        href="/ocrtasks/">Tasks</a></h3>
                 </li>
+            </ul>
+            <ul>
                 <li>
-                <a {% ifequal request.path "/ocrtools/" %}class="current"{% endifequal %}
-                    href="/ocrtools/">Tools</a>
-                </li>              
+                <h3 class="top">Tools</h3>
+                    <ul>
+                        <li>
+                        <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}
+                            href="/ocr/convert/">Convert</a>
+                        <div class="menu_dropdown">This is a sub menu</div>
+                        </li> 
+                        <li>
+                        <a {% ifequal request.path "/ocr/binarize/" %}class="current"{% endifequal %}
+                            href="/ocr/binarize/">Binarize</a>
+                        </li> 
+                        <li>
+                        <a {% ifequal request.path "/ocr/segment/" %}class="current"{% endifequal %}
+                            href="/ocr/segment/">Segment</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <ul>
                 <li>
-                <a {% ifequal request.path "/admin/" %}class="current"{% endifequal %}
-                    href="/admin/">Settings</a>
+                    <h3><a {% ifequal request.path "/admin/" %}class="current"{% endifequal %}
+                        href="/admin/">Admin</a></h3>
                 </li>              
             </ul>
         </div>
+        <div style="clear:both"></div>
         {% block subtoolbar %}{% endblock %}
         <div id="workspace">
                     {% block content %}{% endblock %}

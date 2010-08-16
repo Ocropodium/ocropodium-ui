@@ -11,8 +11,8 @@ body {
 }
 
 #login_info {
-    margin-top: 12px;
-    margin-right: 12px;
+    margin-top: 5px;
+    margin-right: 5px;
     color: #999;
     float: right;
     font-size: 0.8em;
@@ -21,6 +21,7 @@ body {
 #login_info a {
     color: #666;
     font-weight: bold;
+    display: inline;
 }
 
 #main_toolbar {
@@ -50,6 +51,7 @@ body {
     margin: 0px;
     padding: 0px;
     overflow: auto;
+    z-index: 10000;
 }
 
 #main_toolbar_menu li {
@@ -57,22 +59,22 @@ body {
     list-style-position: inside;
     list-style: block; 
     float: left;
-    padding: 10px 0px 10px 0px;
+    padding: 5px 5px;
 
 }
 
 #main_toolbar_menu li a {
     text-decoration: none;
-    color: #999999;
-    font-size: 1.1em;
-    padding: 10px 20px 10px 20px;
+    color: #666;
+    font-size: 1em;
+    padding: 10px 10px 10px 10px;
 }
 
 #main_toolbar_menu li a:hover, #main_toolbar_menu li a.current {
     text-decoration: none;
-    color: #888;
-    font-size: 1.1em;
-    padding: 10px 20px 10px 20px;
+    color: #333;
+    font-size: 1em;
+    padding: 10px 10px 10px 10px;
     background: -webkit-gradient(
         linear,
         left bottom,
@@ -87,8 +89,42 @@ body {
     );
 }
 
+.menu_dropdown {
+    display: none;
+    float: right;
+    z-index: 2000;
+    text-decoration: none;
+    position: absolute;
+    color: #333;
+    font-size: 1em;
+    padding: 10px 10px 10px 10px;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(225,225,225)),
+        color-stop(0.35, rgb(235,235,235))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(235,235,235) 35%,
+        rgb(230,230,230) 50%
+    );
+    margin: 5px -5px 0px 0px;
+}
+
+#main_toolbar_menu li .menu_dropdown li {
+    display: block;
+    clear: left;
+}
+
 #main_toolbar_menu li a:hover {
-    color: #666;
+    color: #333;
+}
+
+#main_toolbar_menu li:hover .menu_dropdown {
+    display: block;
+    float: right;
 }
 
 .sub_toolbar {
@@ -198,5 +234,22 @@ body {
     padding: 10px 0px 10px 10px;
     min-width: 500px;
     margin-right: 320px;
+}
+
+
+legend.collapsed, legend.expanded {
+    padding-left: 15px;
+    background-repeat: no-repeat;
+    background-position: left center;
+    cursor: pointer;
+}
+
+legend.collapsed {
+    background-image: url("/static/vt_scroll_right.gif");
+}
+
+
+legend.expanded {
+    background-image: url("/static/hz_scroll_down.gif");
 }
 
