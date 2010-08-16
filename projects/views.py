@@ -14,6 +14,8 @@ from django.utils import simplejson
 from tagging.models import TaggedItem
 from ocradmin.projects.models import OcrProject, OcrProjectDefaults
 
+PER_PAGE = 10
+
 
 class OcrProjectForm(forms.ModelForm):
     """
@@ -164,13 +166,11 @@ def update(request, pk):
 
     if request.method == "POST":        
         if not defform.is_valid() or not form.is_valid():
-            print "Forms invalid!"
             # if we get here there's an error
             context = {"project": project, "form": form, "defform": defform}
             template = "projects/edit.html"
             return render_to_response(template, context,
                     context_instance=RequestContext(request))
-        print "Trying to save forms"
         defaults = defform.save()
         project = form.instance
         project.defaults = defaults
@@ -191,6 +191,53 @@ def show(request, pk):
             context_instance=RequestContext(request))
 
 
+@login_required
+def open(request):
+    """
+    List available projects.
+    """
+    
+    # this is not complete yet
+    return list(request)
+
+    params = request.GET.copy()
+    allprojects = project_query(params)
+    paginator = Paginator(allprojects, PER_PAGE) 
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+    
+    try:
+        tasks = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        tasks = paginator.page(paginator.num_pages)
+
+    context = {"projects": projects}
+    template = "projects/open.html" if not request.is_ajax() \
+            else "projects/includes/open_list.html"
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
 
 
+@login_required
+def load(request, pk):
+    """
+    Open a project (load it in the session).
+    """
+    project = get_object_or_404(OcrProject, pk=pk)
+    next = request.META.get("HTTP_REFERER", "/ocr/")
+    request.session["project"] = project
+    return HttpResponseRedirect(next)
+
+
+def close(request):
+    """
+    Close the current project.
+    """
+    try:
+        del request.session["project"]
+    except KeyError:
+        pass
+    return HttpResponseRedirect("/ocr/")
 

@@ -2,7 +2,12 @@
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-    <title>{% block title %} OCRopodium - Test Server {% endblock %}</title>
+    <title>
+        {% block title %} OCRopodium - Test Server {% endblock %}
+        {% if request.session.project %}
+            [{{ request.session.project }}]
+        {% endif %}
+    </title>
 	<script type='application/javascript' src='/static/js/jquery-1.4.2.js'></script>
     <script type='application/javascript' src='/static/js/jquery-ui-1.8.1.custom.min.js'></script>
 	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
@@ -25,20 +30,17 @@
             </span>
             <ul>
                 <li>
-                <h3 class="top">Project</h3>                
+                <h3 class="top"><a href="/projects/list/">Project</a></h3>                
                 <ul>
                     <li>
-                        <a href="/projects/new/">New...</a>
+                        <a href="/projects/new/">New Project</a>
                     </li>
                     <li>
-                        <a href="/projects/open/">Open...</a>
+                        <a href="/projects/open/">Open Project</a>
                     </li>
                     <li>
                         <h3 class="right">Recent</h3>
                         <ul>
-                            <li>
-                                Item
-                            </li>
                             {% if request.session.recent_projects %}
                                 {% for recent in request.session.recent_projects %}
                                     <li>
@@ -48,16 +50,15 @@
                             {% endif %}
                         </ul>
                     </li>
-                    <li>
-                        {% if request.session.project %}
-                            <a href="/projects/open/">Close</a>
-                        {% else %}
-                            <span class="disabled_option">Close</span>
-                        {% endif %}
-                    </li>
+                    {% if request.session.project %}
+                        <li><a href="/projects/close/">Close</a></li>
+                    {% else %}
+                        <li class="disabled_option">Close</li>
+                    {% endif %}
                 </ul>
                 </li>
             </ul>
+            {% if request.session.project %}
             <ul>
                 <li> 
                     <h3 class="top">Batch</h3>
@@ -74,6 +75,7 @@
 
                 </li> 
             </ul>
+            {% endif %}
             <ul>
                 <li>
                     <h3><a {% ifequal request.path "/ocrmodels/" %}class="current"{% endifequal %}

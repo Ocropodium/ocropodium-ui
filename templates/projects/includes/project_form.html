@@ -1,0 +1,29 @@
+
+{% include "includes/form_errors.html" %}
+
+
+<div class="field_wrapper">
+    <label for="id_name">Name:</label>
+    {{ form.name }}
+</div>
+<div class="field_wrapper">
+    <label for="id_tags">Tags:</label>
+    {{ form.tags }}
+</div>
+<div class="field_wrapper textfield_wrapper">
+    <label for="id_description">Description:</label><br />
+    {{ form.description }}
+</div>
+
+<fieldset>
+    <legend class="collapsed">Project Default Settings</legend>
+
+    <div>{{defform.as_p}}</div>
+</fieldset
+
+<div class="form_submit_buttons">
+    <input type="submit" value="Submit" id="submit_new_project_form" />
+    <a href="/projects/list" id="cancel_new_project_form">Cancel</a>
+</div>
+
+

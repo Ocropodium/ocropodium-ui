@@ -1,0 +1,51 @@
+{% extends "standard.html" %}
+{% load tagging_tags %}
+{% tags_for_model projects.OcrProject as projecttags %}
+
+{% block title %} OCRopodium - Projects {% endblock %}
+
+{% block headerscript %}
+    <script type="text/javascript" src="/static/js/projects_list.js"></script>
+    <link rel="stylesheet" href="/static/css/entity.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+
+<style type="text/css">
+    #formholder {
+        display: none;
+    }
+
+    #dialog_box {
+        display: none;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+    {% include "projects/includes/sidebar.html" %}
+
+
+{% if messages %}
+<ul class="messages">
+{% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<div class="widget">
+    <div class="widget_header">
+        <div class="new_link_container">
+            <a href="/projects/new" class="new_link">New Project</a>
+        </div>
+        Available Projects:
+    </div>
+    <div class="widget_content" id="projectlist">
+        {% include "projects/includes/project_list.html" %}
+    </div>
+</div>
+
+<div id="dialog_box"></div>
+
+{% endblock %}

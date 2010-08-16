@@ -1,0 +1,15 @@
+<div id="sidebar" class="widget">
+    <div class="widget_header">Project Tags</div>
+    <div class="widget_content">
+        {% load tagging_tags %}
+        {% tags_for_model projects.OcrProject as projecttags %}
+
+        <ul id="taglist">
+        <li><a class="project_tag_link" href="/projects/list">All</a></li>    
+        {% for tag in projecttags %}
+        <li><a class="project_tag_link" href="/projects/list?tag={{tag}}">{{tag|title}}</a></li>    
+        {% endfor %}
+        </ul>
+    </div>
+</div>
+
