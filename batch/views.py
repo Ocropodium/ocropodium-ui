@@ -216,13 +216,20 @@ def batch(request):
     subtasks = []
     try:
         for path in paths:
-            tid = ocrutils.get_new_task_id(path) 
-            ocrtask = OcrTask(task_id=tid, user=request.user, batch=batch, 
-                    page_name=os.path.basename(path), status="INIT")
+            tid = ocrutils.get_new_task_id(path)
+            args = (path.encode(), userparams)
+            kwargs = dict(task_id=tid, loglevel=60, retries=2)
+            ocrtask = OcrTask(
+                task_id=tid,
+                user=request.user,
+                batch=batch, 
+                args=args,
+                kwargs=kwargs,
+                page_name=os.path.basename(path),
+                status="INIT"
+            )
             ocrtask.save()
-            subtasks.append(
-                    celerytask.subtask(args=(path.encode(), userparams), 
-                        options=dict(task_id=tid, loglevel=60, retries=2)))
+            subtasks.append(celerytask.subtask(args=args, options=kwargs))
         tasksetresults = TaskSet(tasks=subtasks).apply_async()
     except Exception, e:
         transaction.rollback()

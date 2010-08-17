@@ -25,8 +25,6 @@ def on_task_prerun(**kwargs):
     Update the database when a task is about to run.
     """
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
-    task.args = kwargs.get("args")
-    task.kwargs = kwargs.get("kwargs")
     task.status = "STARTED"
     task.save()
 
