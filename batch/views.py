@@ -520,10 +520,16 @@ def _retry_celery_task(task):
     """
     Set a task re-running.
     """                                             
-    celerytask = tasks.ConvertPageTask
-    celerytask.retry(args=task.args, kwargs=task.kwargs,
-                options=dict(task_id=task.task_id, loglevel=60, retries=2), 
-                countdown=0, throw=False)
+    #celerytask = tasks.ConvertPageTask
+    #celerytask.retry(args=task.args, kwargs=task.kwargs,
+    #            options=dict(task_id=task.task_id, loglevel=60, retries=2), 
+    #            countdown=0, throw=False)
+    if task.is_abortable():
+        _abort_celery_task(task)
+    tid = ocrutils.get_new_task_id(task.page_name) 
+    async = tasks.ConvertPageTask.apply_async(
+            args=task.args, task_id=tid, loglevel=60, retries=2)
+    task.task_id = async.task_id
     task.status = "RETRY"
     task.progress = 0
     task.save()
