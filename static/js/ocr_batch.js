@@ -150,22 +150,12 @@ function OcrBatch(insertinto_id, batch_id) {
     });
 
 
+    // scroll up and down via buttons
     $("#scrolldown").live("click", function(event) {
-        m_taskoffset = Math.min(
-            m_batchdata.extras.task_count - m_maxtasks, 
-            m_taskoffset + 1);
-        if (self.isComplete()) {
-            manualRefresh();
-        }
-        setScrollHandlePosition();        
+        scrollDown(event);
     });
-
     $("#scrollup").live("click", function(event) {
-        m_taskoffset = Math.max(0, m_taskoffset - 1);
-        if (self.isComplete()) {
-            manualRefresh();
-        }        
-        setScrollHandlePosition();        
+        scrollUp(event);
     });
 
 
@@ -190,6 +180,27 @@ function OcrBatch(insertinto_id, batch_id) {
         event.preventDefault();   
         event.stopPropagation(); 
     });
+
+
+    var scrollDown = function(event) {
+        m_taskoffset = Math.min(
+            m_batchdata.extras.task_count - m_maxtasks, 
+            m_taskoffset + 1);
+        if (self.isComplete()) {
+            manualRefresh();
+        }
+        setScrollHandlePosition();        
+    }
+
+
+    var scrollUp = function(event) {
+        m_taskoffset = Math.max(0, m_taskoffset - 1);
+        if (self.isComplete()) {
+            manualRefresh();
+        }        
+        setScrollHandlePosition();        
+    }
+
 
     var setScrollHandlePosition = function() {
         var bar = $("#scrollbar");
@@ -335,6 +346,13 @@ function OcrBatch(insertinto_id, batch_id) {
         for (var i = 0; i < m_maxtasks; i++) {
             tasklist.append(task.clone());
         }
+
+        tlcontainer.mousewheel(function(event, delta) {
+            if (delta > 0)
+                scrollUp(event);
+            else if (delta < 0)
+                scrollDown(event);
+        });
 
         m_batchdiv.append(tlcontainer);        
     }
