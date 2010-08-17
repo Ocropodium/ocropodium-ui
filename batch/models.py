@@ -60,6 +60,7 @@ class OcrBatch(models.Model):
         """
         totallines = 0
         percentdone = 0
+        runningtasks = 0
         tasks = self.tasks.all()
         for t in tasks:
             totallines += t.lines or 50
@@ -71,8 +72,14 @@ class OcrBatch(models.Model):
             if t.status in ("ERROR", "ABORTED", "SUCCESS"):
                 percentdone += (weight * 100)            
             else:
+                runningtasks += 1
                 percentdone += (weight * t.progress)            
-        return min(100.0, percentdone)
+        done = min(100.0, percentdone)
+        # if there are running tasks, never go above
+        # 99%
+        if runningtasks > 0:
+            done -= 1.0
+        return done
 
 
 
