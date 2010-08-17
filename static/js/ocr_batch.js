@@ -94,6 +94,9 @@ function OcrBatch(insertinto_id, batch_id) {
             url: "/batch/retry_task/" + pk + "/",
             type: "POST",
             dataType: "json",
+            error: function(e, msg) {
+                alert(msg);
+            },
             success: function(data) {
                 if (data.ok) {
                 }
@@ -112,6 +115,9 @@ function OcrBatch(insertinto_id, batch_id) {
             dataType: "json",
             beforeSend: function(e) {
                 setTaskWaiting($("#task" + pk), true);
+            },
+            error: function(e, msg) {
+                alert(msg);
             },
             complete: function(e) {
                 setTaskWaiting($("#task" + pk), false);
@@ -142,6 +148,9 @@ function OcrBatch(insertinto_id, batch_id) {
             url: $(this).attr("href"),
             type: "POST",
             dataType: "json",
+            error: function(e, msg) {
+                alert(msg);
+            },
             beforeSend: function(e) {
                 setTaskWaiting($("#batch" + pk), true);
             },
