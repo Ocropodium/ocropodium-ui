@@ -310,7 +310,8 @@ def submit_viewer_binarization(request, pk):
     # that we don't want to remake an existing binary
     args = task.args
     args[1]["allowcache"] = True
-    async = tasks.BinarizePageTask.apply_async(args=args)
+    async = tasks.BinarizePageTask.apply_async(args=args,
+            queue="interactive")
     out = {
         "job_name": async.task_id,
         "status": async.status,

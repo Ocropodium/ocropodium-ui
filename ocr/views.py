@@ -171,7 +171,8 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         asynctasks.append(
             celerytask.apply_async(
                 args=(path.encode(), userparams),
-                    task_id=tid, loglevel=60, retries=2))            
+                    task_id=tid, loglevel=60, retries=2,
+                    queue="interactive"))            
     try:
         # aggregate the results
         out = []
