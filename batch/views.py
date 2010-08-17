@@ -22,7 +22,7 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.batch import utils as batchutils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch 
+from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript 
 
 from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params
@@ -71,7 +71,7 @@ def list(request):
     """
     List recent batches.
     """
-    excludes = ["args", "kwargs", "traceback", "results",]
+    excludes = ["args", "kwargs", "traceback", ]
     params = request.GET.copy()
     params["project__pk"] = request.session["project"].pk
     context = { 
@@ -273,7 +273,7 @@ def page_results(request, pk, page_index):
         [page],
         excludes=("results",), 
     )
-    taskssl[0]["fields"]["results"] = page.results
+    taskssl[0]["fields"]["results"] = page.latest_transcript()
     simplejson.dump(taskssl, response, cls=DjangoJSONEncoder)
     return response
 
@@ -289,12 +289,12 @@ def save_page_data(request, pk, page_index):
     except OcrBatch.DoesNotExist, e:
         raise e
 
-    json = request.POST.get("lines")
+    json = request.POST.get("data")
     if not json:
         raise Http505("No data passed to 'save' function.")
-    lines = simplejson.loads(json)
-    page.results["lines"] = lines
-    page.save()
+    data = simplejson.loads(json)
+    result = Transcript(data=data, task=page)
+    result.save()
 
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
@@ -343,8 +343,9 @@ def latest(request):
     """
     try:
         batch = OcrBatch.objects.filter(
-                user=request.user, project=request.session["project"])\
-                .order_by("-created_on")[0]
+            user=request.user, 
+            project=request.session["project"]
+        ).order_by("-created_on")[0]
     except OcrBatch.DoesNotExist:
         raise Http404
 
@@ -356,7 +357,11 @@ def show(request, pk):
     """
     View a batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=pk)
+    batch = get_object_or_404(
+        OcrBatch,
+        pk=pk,
+        project=request.session["project"]
+    )
     return _show_batch(request, batch)
 
 
@@ -519,7 +524,7 @@ def _serialize_batch(batch, start=0, limit=25):
     )
     taskssl = pyserializer.serialize(
         batch.tasks.all()[start:start + limit],
-        excludes=("args", "kwargs", "traceback", "results",),
+        excludes=("args", "kwargs", "traceback",),
     )
     batchsl[0]["fields"]["tasks"] = taskssl
     return batchsl

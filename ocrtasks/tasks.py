@@ -8,7 +8,7 @@ from celery.signals import task_sent, task_prerun, task_postrun
 from celery.datastructures import ExceptionInfo
 
 from ocradmin.ocr.tasks import ConvertPageTask, BinarizePageTask 
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrTask, Transcript
 
 
 def on_task_sent(**kwargs):
@@ -33,7 +33,8 @@ def on_task_prerun(**kwargs):
 
 def on_task_postrun(**kwargs):
     """
-    Update the database when a task is finished.
+    Update the database when a task is finished.  Create a new 
+    transcript entry with the retval of the task.
     """
     # don't know what we need to do here yet
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
@@ -43,9 +44,11 @@ def on_task_postrun(**kwargs):
         task.traceback = retval.traceback
         task.status = "ERROR"
     else:
-        task.results = retval
+        result = Transcript(task=task, data=retval)
+        result.save()
         task.status = "SUCCESS"
     task.save()
+
 
 # Connect up signals to the *PageTask
 for taskname in [ConvertPageTask.name]:

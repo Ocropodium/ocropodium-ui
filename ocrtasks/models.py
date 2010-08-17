@@ -28,12 +28,21 @@ class OcrTask(models.Model):
     progress = models.FloatField(default=0.0, blank=True, null=True)
     args = fields.PickledObjectField(blank=True, null=True)
     kwargs = fields.PickledObjectField(blank=True, null=True)
-    results = fields.PickledObjectField(blank=True, null=True)
     error = fields.PickledObjectField(blank=True, null=True)
     traceback = models.TextField(blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     updated_on = models.DateTimeField(auto_now_add=True, auto_now=True, editable=False)
 
+
+    def latest_transcript(self):
+        """
+        Return the latest transcript.
+        """
+        try:
+            result = self.transcripts.order_by("-version")[0].data
+        except IndexError:
+            result = None
+        return result
 
     def is_batch_task(self):
         """
@@ -54,4 +63,36 @@ class OcrTask(models.Model):
         """
         return self.status in ("STARTED", "RETRY")
 
+
+class Transcript(models.Model):
+    """
+    Results set for a task.
+    """
+    task = models.ForeignKey(OcrTask, related_name="transcripts")
+    version = models.IntegerField(default=0, editable=False)
+    data = fields.PickledObjectField()
+    is_retry = models.BooleanField(default=False, editable=False)
+    is_final = models.BooleanField(default=False)
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+
+
+    def save(self, force_insert=False, force_update=False):
+        """
+        Override save method to create the version number automatically.
+        """
+        if self.version == 0:
+            # increment version number
+            try:
+                recent = Transcript.objects.filter(
+                        task__exact=self.task).order_by("-version")[0]
+                self.version = recent.version + 1
+            except IndexError:
+                self.version = 1
+        # if final, set other transcripts for the same task to not final
+        if self.is_final:
+            others = Transcript.objects.filter(
+                    task__exact=self.task).exclude(
+                            version=self.version).update(is_final=False)    
+        # Call the "real" save() method
+        super(Transcript, self).save(force_insert, force_update)
 

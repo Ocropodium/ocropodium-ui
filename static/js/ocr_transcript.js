@@ -300,9 +300,10 @@ function OcrTranscript(insertinto_id, batch_id) {
                 box:  $(elem).data("bbox"),
             });
         });
+        m_pagedata.lines = lines;
         $.ajax({
             url: "/batch/save/" + m_batch_id + "/" + m_page + "/", 
-            data: {lines: JSON.stringify(lines)},
+            data: {data: JSON.stringify(m_pagedata)},
             dataType: "json",
             type: "POST",
             error: function(e) {
