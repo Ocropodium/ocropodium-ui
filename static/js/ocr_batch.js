@@ -127,29 +127,6 @@ function OcrBatch(insertinto_id, batch_id) {
     });
 
 
-    $(".abort_batch").live("click", function(event) {
-        var pk = $(this).data("pk");
-        $.ajax({
-            url: "/batch/abort_batch/" + pk + "/",
-            type: "POST",
-            dataType: "json",
-            beforeSend: function(e) {
-                setTaskWaiting($("#batch" + pk), true);
-            },
-            complete: function(e) {
-                setTaskWaiting($("#batch" + pk), false);
-            },
-            success: function(data) {
-                if (data.ok) {
-                } else {
-                }
-                manualRefresh();                
-            },
-        });
-        event.preventDefault();    
-    });
-
-
     // scroll up and down via buttons
     $("#scrolldown").live("click", function(event) {
         scrollDown(event);
@@ -159,10 +136,10 @@ function OcrBatch(insertinto_id, batch_id) {
     });
 
 
-    $(".retry_batch").live("click", function(event) {
+    $(".retry_batch, .retry_errors, .abort_batch").live("click", function(event) {
         var pk = $(this).data("pk");
         $.ajax({
-            url: "/batch/retry_batch/" + pk + "/",
+            url: $(this).attr("href"),
             type: "POST",
             dataType: "json",
             beforeSend: function(e) {
@@ -278,6 +255,11 @@ function OcrBatch(insertinto_id, batch_id) {
         batch.append(
             $("<a></a>")
                 .attr("href", "#")
+                .addClass("retry_errors")
+                .text("Retry Errors"));
+        batch.append(
+            $("<a></a>")
+                .attr("href", "#")
                 .addClass("retry_batch")
                 .text("Retry All"));
         batch.append(
@@ -367,7 +349,10 @@ function OcrBatch(insertinto_id, batch_id) {
 
         // update links with the batch id
         batch.find(".retry_batch")
-            .attr("href", "/batch/retry_batch/" + batchdata.pk + "/") 
+            .attr("href", "/batch/retry/" + batchdata.pk + "/") 
+            .data("pk", batchdata.pk);
+        batch.find(".retry_errors")
+            .attr("href", "/batch/retry_errors/" + batchdata.pk + "/") 
             .data("pk", batchdata.pk);
         batch.find(".abort_batch")
             .attr("href", "/batch/abort_batch/" + batchdata.pk + "/") 

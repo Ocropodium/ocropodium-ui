@@ -453,12 +453,26 @@ def abort_batch(request, pk):
 
 @transaction.commit_manually
 @login_required
-def retry_batch(request, pk):
+def retry(request, pk):
     """
     Retry all tasks in a batch.
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
     for task in batch.tasks.all():
+        _retry_celery_task(task)        
+    transaction.commit()
+    return HttpResponse(simplejson.dumps({"ok": True}), 
+            mimetype="application/json")
+
+
+@transaction.commit_manually
+@login_required
+def retry_errors(request, pk):
+    """
+    Retry all errored tasks in a batch.
+    """
+    batch = get_object_or_404(OcrBatch, pk=pk)
+    for task in batch.tasks.filter(status="ERROR"):
         _retry_celery_task(task)        
     transaction.commit()
     return HttpResponse(simplejson.dumps({"ok": True}), 

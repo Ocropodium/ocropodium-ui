@@ -73,7 +73,7 @@
     width: 100px;
 }
 
-.retry_task, .retry_batch, .abort_task, .abort_batch {
+.retry_task, .retry_batch, .retry_errors, .abort_task, .abort_batch {
     text-decoration: none;
     color: #999;
     float: right;
