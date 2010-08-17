@@ -422,7 +422,12 @@ def retry_task(request, pk):
     Retry a batch task.
     """
     task = get_object_or_404(OcrTask, pk=pk)
-    _retry_celery_task(task)
+    try:
+        _retry_celery_task(task)
+    except Exception, e:
+        return HttpResponse(simplejson.dumps({"error": e.message}), 
+                mimetype="application/json")
+
     return HttpResponse(simplejson.dumps({"ok": True}), 
             mimetype="application/json")
 
