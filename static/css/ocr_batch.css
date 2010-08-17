@@ -222,3 +222,29 @@
     color: #045FB4;
 }
 
+.list_popup {
+    float: right;
+    position: absolute;
+    background-color: #FFF;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+    padding: 3px;
+}
+
+.list_popup div.status_filter * {    
+    float: left;
+}
+
+.list_popup label {
+    width: 5em;
+    text-align: right;
+}
+
+.toggle_button {
+}
+
+.filter_container {
+    float: right;
+   font-size: 0.8em;
+}

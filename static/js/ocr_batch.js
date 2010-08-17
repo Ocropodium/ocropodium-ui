@@ -71,9 +71,7 @@ function OcrBatch(insertinto_id, batch_id) {
 
     this.setBatchId = function(batch_id) {
         m_batch_id = batch_id;
-        if (self.isComplete()) {
-            manualRefresh();
-        }
+        refreshUnlessPolling();
     }
 
 
@@ -99,8 +97,8 @@ function OcrBatch(insertinto_id, batch_id) {
             },
             success: function(data) {
                 if (data.ok) {
+                    refreshUnlessPolling();
                 }
-                manualRefresh();                
             },
         });
         event.preventDefault();    
@@ -126,7 +124,7 @@ function OcrBatch(insertinto_id, batch_id) {
                 if (data.ok) {
                 } else {
                 }
-                manualRefresh();                
+                refreshUnlessPolling();
             },
         });
         event.preventDefault();    
@@ -160,7 +158,7 @@ function OcrBatch(insertinto_id, batch_id) {
             success: function(data) {
                 if (data.ok) {
                 }
-                manualRefresh();                
+                refreshUnlessPolling();
             },
         });
         event.preventDefault();   
@@ -168,22 +166,24 @@ function OcrBatch(insertinto_id, batch_id) {
     });
 
 
+    var refreshUnlessPolling = function() {
+        if (self.isComplete()) {
+            manualRefresh();
+        }
+    }
+
     var scrollDown = function(event) {
         m_taskoffset = Math.min(
             m_batchdata.extras.task_count - m_maxtasks, 
             m_taskoffset + 1);
-        if (self.isComplete()) {
-            manualRefresh();
-        }
+        refreshUnlessPolling();
         setScrollHandlePosition();        
     }
 
 
     var scrollUp = function(event) {
         m_taskoffset = Math.max(0, m_taskoffset - 1);
-        if (self.isComplete()) {
-            manualRefresh();
-        }        
+        refreshUnlessPolling();
         setScrollHandlePosition();        
     }
 
@@ -240,12 +240,82 @@ function OcrBatch(insertinto_id, batch_id) {
 
     var onScrollStop = function(event, ui) {
         m_scrollwin.remove();
-        if (self.isComplete()) {
-            manualRefresh();
-        }
+        refreshUnlessPolling();
     }
 
     var updateScrollButtons = function(event) {
+    }
+
+
+    var buildTaskFilterList = function() {
+        var statuses = ["INIT", "PENDING", "RETRY", "STARTED", "SUCCESS", "ERROR", "ABORTED"]; 
+        var filterlist = $("<div></div>")
+            .addClass("list_popup")
+            .attr("id", "filter_list")
+            .hide();
+        var statustemp = $("<div></div>")
+            .addClass("status_filter")
+            .append(
+                $("<label></label>")
+                    .addClass("status_label")
+                    .attr("for", "ALL")
+                    .text("ALL"))
+            .append(
+                $("<input></input>")
+                    .attr("type", "checkbox"));
+        
+        var allfilter = statustemp
+            .clone()
+            .attr("checked", true)
+            .appendTo(filterlist)
+            .find("input")
+            .attr("name", "ALL")
+            .attr("id", "filter_none")
+            .attr("checked", true)
+            .click(function(event) {
+                if ($(this).attr("checked")) {
+                    $(".filter_type").removeAttr("checked");
+                }
+            });
+            
+        $.each(statuses, function(i, status) {
+            var statbox = statustemp
+                .clone()
+                .find("label")
+                .attr("for", status)
+                .text(status)
+                .end()
+                .find("input")
+                .attr("name", status)
+                .addClass("filter_type")
+                .click(function(event) {
+                    if ($(this).attr("checked")) {
+                        $("#filter_none:checked").removeAttr("checked");
+                    }
+                })
+                .end()
+                .appendTo(filterlist);
+        });
+
+        var filterbutton = $("<div></div>")
+            .addClass("toggle_button")
+            .attr("id", "filter_button")
+            .toggle(function(event) {
+                $(this).addClass("open");
+                filterlist.show();
+            }, function(event) {
+                $(this).addClass("closed");
+                filterlist.hide();
+            }).button({
+                text: true,        
+                label: "Filter Tasks",
+            }).button("widget");
+        var container = $("<div></div>")
+            .addClass("filter_container")
+            .append(filterbutton)
+            .append(filterlist);
+
+        return container;
     }
 
 
@@ -276,6 +346,7 @@ function OcrBatch(insertinto_id, batch_id) {
                 .attr("href", "#")
                 .addClass("abort_batch")
                 .text("Abort Batch"));
+        batch.append(buildTaskFilterList());
         m_batchdiv.append(batch);
     }
 
@@ -497,9 +568,14 @@ function OcrBatch(insertinto_id, batch_id) {
     
     // check the server for complete results...
     var pollForResults = function(polltime) {
+        params = "start=" + m_taskoffset + "&limit=" + m_maxtasks;
+        $(".filter_type:checked").each(function(i, elem) {
+            params += "&status=" + $(elem).attr("name");
+        });
+
         $.ajax({
             url: "/batch/results/" + m_batch_id,
-            data: {start: m_taskoffset, limit: m_maxtasks},
+            data: params,
             type: "GET",
             dataType: "json",
             success: function(data) {

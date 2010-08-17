@@ -250,8 +250,11 @@ def results(request, pk):
         limit = max(1, int(request.GET.get("limit", 25)))
     except ValueError:
         limit = 25
+    statuses = request.GET.getlist("status")
+    if "ALL" in statuses:
+        statuses = None
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch, start, limit), 
+    simplejson.dump(_serialize_batch(batch, start, limit, statuses), 
             response, cls=DjangoJSONEncoder)
     return response
 
@@ -535,23 +538,29 @@ def _retry_celery_task(task):
     task.save()
 
 
-def _serialize_batch(batch, start=0, limit=25):
+def _serialize_batch(batch, start=0, limit=25, statuses=None):
     """
     Hack around the problem of serializing
     an object AND it's child objects.
     """
+    if statuses:
+        taskqset = batch.tasks.filter(status__in=statuses)
+    else:
+        taskqset = batch.tasks.all()
+    task_count = taskqset.count()
     pyserializer = serializers.get_serializer("python")()     
     batchsl = pyserializer.serialize(
         [batch],
-        extras=("estimate_progress", "is_complete", "task_count",),
+        extras=("estimate_progress", "is_complete",),
         relations={
             "user":  { "fields": ("username") }
         },
     )
     taskssl = pyserializer.serialize(
-        batch.tasks.all()[start:start + limit],
+        taskqset[start:start + limit],
         excludes=("args", "kwargs", "traceback",),
     )
     batchsl[0]["fields"]["tasks"] = taskssl
+    batchsl[0]["extras"]["task_count"] = task_count
     return batchsl
     
