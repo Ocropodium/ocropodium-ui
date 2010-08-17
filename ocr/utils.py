@@ -721,9 +721,10 @@ class TessWrapper(OcropusWrapper):
             proc = sp.Popen(tessargs, stderr=sp.PIPE)
             err = proc.stderr.read()
             if proc.wait() != 0:
-                raise RuntimeError(
-                    "tesseract failed with errno %d: %s" % (
-                        proc.returncode, err))
+                return "!!! TESSERACT CONVERSION ERROR %d !!!" % proc.returncode
+                #raise RuntimeError(
+                #    "tesseract failed with errno %d: %s" % (
+                #        proc.returncode, err))
             
             # read and delete Tesseract's temp text file
             # whilst writing to our file
