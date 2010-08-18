@@ -316,6 +316,19 @@ def _get_preset_data(param):
     return data
 
 
+def _cleanup_params(postdict, unused):
+    """
+    Remove anything in the params that we don't want
+    to store as part of the convert job.  Note: the
+    dict param IS mutable.
+    """
+    for p in unused:
+        try:
+            del postdict[p]
+        except KeyError:
+            pass
+    return postdict
+
 
 def _get_best_params(postdict):
     """

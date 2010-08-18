@@ -79,8 +79,12 @@ class OcrBatch(models.Model):
         # 99%
         if runningtasks > 0:
             done -= 1.0
-        return done
+        return max(0, done)
 
 
-
+    def errored_tasks(self):
+        """
+        Get all errored tasks.
+        """
+        return self.tasks.filter(status="ERROR")
 

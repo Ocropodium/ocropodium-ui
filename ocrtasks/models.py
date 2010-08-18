@@ -63,6 +63,12 @@ class OcrTask(models.Model):
         """
         return self.status in ("STARTED", "RETRY")
 
+    def is_active(self):
+        """
+        The task is running or awaiting running.
+        """
+        return self.status in ("INIT", "PENDING", "RETRY", "STARTED")
+
 
 class Transcript(models.Model):
     """

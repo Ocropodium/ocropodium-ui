@@ -25,7 +25,7 @@ from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript 
 
 from ocradmin.projects.utils import project_required
-from ocradmin.ocr.views import _get_best_params
+from ocradmin.ocr.views import _get_best_params, _cleanup_params
 
 
 PER_PAGE = 10
@@ -139,7 +139,8 @@ def create(request):
                 mimetype="application/json")     
     
     # wrangle the params - this needs improving
-    userparams = _get_best_params(request.POST.copy())
+    userparams = _get_best_params(
+            _cleanup_params(request.POST.copy(), ("files", "batch_name", "batch_name")))
 
     # create a batch db job
     batch_name = request.POST.get("batch_name", "%s %s" % (tasktype, datetime.now()))
@@ -512,16 +513,14 @@ def _abort_celery_task(task):
     """
     Abort a task.
     """
+    if not task.is_active():
+        return False
+    
     asyncres = AbortableAsyncResult(task.task_id)
-    print asyncres
-    print asyncres.__dict__    
-    #asyncres.revoke()
-    print "STATUS PRE:", asyncres.backend.get_status(task.task_id)
-    print asyncres.abort()
-    print "STATUS POST:", asyncres.backend.get_status(task.task_id)
+    asyncres.revoke()
+    asyncres.abort()
     if asyncres.is_aborted():
         task.status = "ABORTED"
-        task.progress = 0
         task.save()
     return asyncres.is_aborted()
 
