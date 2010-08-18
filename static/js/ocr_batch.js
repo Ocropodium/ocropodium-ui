@@ -442,7 +442,8 @@ function OcrBatch(insertinto_id, batch_id) {
 
 
     var setProgressStatus = function(task, progress, status) {
-        task.find(".progress").css("width", progress + "%");
+        var progstr = Math.round(progress) + "%";
+        task.find(".progress").css("width", progstr).attr("title", progstr);
         if (status) {
             task.find(".progressbar").attr("class", "progressbar " + status.toLowerCase());
         } else if (progress > 99.5) {
