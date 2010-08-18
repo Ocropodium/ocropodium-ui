@@ -184,7 +184,7 @@ body {
     font-size: 1.0em;
     font-weight: bold;
     color: #666;
-    padding: 7px;
+    padding: 5px;
     background-color: #FBFBFC;
     border-bottom: 1px solid #DDD;
     background: -webkit-gradient(
@@ -199,6 +199,7 @@ body {
         rgb(240,240,240) 35%,
         rgb(245,245,245) 50%
     );
+    overflow: auto;
 
 }
 
@@ -253,3 +254,18 @@ legend.expanded {
     background-image: url("/static/hz_scroll_down.gif");
 }
 
+
+a.button {
+    background: #E6E6E6 url(/static/gradient_grey.png) repeat-x 50% 50%;
+    border: 1px solid #D2D2D2;
+    border-radius: 2px 2px;
+    font-size: 0.8em;
+    margin: 0px 0px 0px 5px;
+    padding: 1px 2px;
+    cursor: pointer;    
+}
+
+a.button:hover {
+    border: 1px solid #B2B2B2;
+    
+}

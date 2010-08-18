@@ -43,6 +43,7 @@ function OcrPage(insertinto_id, page_id, jobname) {
     var viewlink = $("<a></a>")
         .attr("target", "_blank")
         .addClass("result_link")
+        .addClass("button")
         .text("View Layout")
         .click(function(event) {
             if ($(this).text() == "View Layout") {
