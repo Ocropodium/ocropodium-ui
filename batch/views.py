@@ -140,7 +140,7 @@ def create(request):
     
     # wrangle the params - this needs improving
     userparams = _get_best_params(
-            _cleanup_params(request.POST.copy(), ("files", "batch_name", "batch_name")))
+            _cleanup_params(request.POST.copy(), ("files", "batch_name", "batch_desc")))
 
     # create a batch db job
     batch_name = request.POST.get("batch_name", "%s %s" % (tasktype, datetime.now()))
@@ -151,13 +151,20 @@ def create(request):
     subtasks = []
     try:
         for path in paths:
-            tid = ocrutils.get_new_task_id(path) 
-            ocrtask = OcrTask(task_id=tid, user=request.user, batch=batch, 
-                    page_name=os.path.basename(path), status="INIT")
+            tid = ocrutils.get_new_task_id(path)
+            args = (path.encode(), userparams)
+            kwargs = dict(task_id=tid, loglevel=60, retries=2)
+            ocrtask = OcrTask(
+                task_id=tid,
+                user=request.user,
+                batch=batch, 
+                page_name=os.path.basename(path),
+                status="INIT",
+                args=args,
+                kwargs=kwargs,
+            )
             ocrtask.save()
-            subtasks.append(
-                    celerytask.subtask(args=(path.encode(), userparams), 
-                        options=dict(task_id=tid, loglevel=60, retries=2)))
+            subtasks.append(celerytask.subtask(args=args, options=kwargs))
         tasksetresults = TaskSet(tasks=subtasks).apply_async()
     except Exception, e:
         transaction.rollback()
@@ -488,7 +495,7 @@ def retry_errors(request, pk):
     Retry all errored tasks in a batch.
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
-    for task in batch.tasks.filter(status="ERROR"):
+    for task in batch.errored_tasks():
         _retry_celery_task(task)        
     transaction.commit()
     return HttpResponse(simplejson.dumps({"ok": True}), 
