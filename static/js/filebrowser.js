@@ -19,7 +19,7 @@ function FileBrowser(container_id) {
         "Size": FSIZE,
         "Last Modified": FCMOD,    
     };
-    var m_lastselected = null;
+    var m_current = null;
     var m_sort = FNAME;
     var m_desc = false;
 
@@ -38,17 +38,19 @@ function FileBrowser(container_id) {
 
     // double clicked directory entry
     $(".entry.dir").live("dblclick", function(e) {
-        if (m_dir == "")
-            m_dir = $(this).data("name");
-        else
-            m_dir = m_dir + "/" + $(this).data("name");
-        self.refresh();            
+        navDir($(this).data("name"));
     });
 
     // hit backspace key = go up a level
     $(window).keydown(function(event) {
         if (event.which == 8) {
             navUp();
+        } else if (event.which == 13) {
+            // navigate inside a single selected directory
+            var seldirs = $(".entry.selected.dir");
+            if (seldirs.length > 0) {
+                navDir(seldirs.first().data("name"));
+            }
         }
     });
 
@@ -114,16 +116,25 @@ function FileBrowser(container_id) {
     // handle task selection and multiselection
     $(".entry").live("click", function(event) {
         var id = $(this).attr("id");
-        selectEntry($(this), true);
+
+        // if ctrl is down TOGGLE selection, else select item
+        selectEntry($(this), event.ctrlKey 
+            ? !$(this).hasClass("selected") 
+            : true
+        );
 
         // if shift is down, select up the page
         if (event.shiftKey) {
-            if (m_lastselected) {
-                var traverser = parseInt($(m_lastselected).data("index")) >
+            // deselect everything
+            $(".selected").not($(this)).not(m_current).removeClass("selected");
+            // if there's a current element and it's not the
+            // one we've just clicked on, select everything in between
+            if (m_current && $(m_current).get(0) != this) {
+                var traverser = parseInt($(m_current).data("index")) >
                     parseInt($(this).data("index")) 
                     ? "nextUntil"
                     : "prevUntil";
-                $(this)[traverser](m_lastselected).each(function(i, elem) {
+                $(this)[traverser](m_current).each(function(i, elem) {
                     selectEntry($(elem), true);                        
                 });
             }
@@ -137,7 +148,8 @@ function FileBrowser(container_id) {
         }
         // store the selector of the current element
         // to use when selecting a range
-        m_lastselected = "#" + $(this).attr("id");
+        if (m_current == null || !event.shiftKey)
+            m_current = "#" + $(this).attr("id");
         updateButtonState();
     });
 
@@ -239,6 +251,15 @@ function FileBrowser(container_id) {
 
     this.setWaiting = function(wait) {
         m_container.toggleClass("waiting", wait);
+    }
+
+
+    var navDir = function(dir) {
+        if (m_dir == "")
+            m_dir = dir;
+        else
+            m_dir = m_dir + "/" + dir;
+        self.refresh();            
     }
 
 

@@ -111,6 +111,7 @@
 
 .filelist td {
     border: none;
+    padding: 5px;
 }
 
 .filelist tr td.n {
