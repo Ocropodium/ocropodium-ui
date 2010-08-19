@@ -84,20 +84,20 @@ $(function() {
         if ($(this).val() == "") {
             return false;
         }
-
-        //alert($(this).attr("value"));
-        $("#uploadform").submit();
+        $("#uploadform").ajaxForm({
+            data : {_iframe: 1},
+            dataType: "json",
+            success: function(data, responseText, xhr) {            
+                onXHRLoad(data, responseText, xhr);
+                $("#singleupload").val("");
+            },
+            error: function(xhr, err) {
+                alert(err);
+            },
+        }).submit();
+        return false;
     });
 
-    $("#uploadform").ajaxForm({
-        data : { _iframe: 1 },
-        dataType: "json",
-        success: function(data, responseText, xhr) {
-            //$("#pageout").html("");
-            onXHRLoad(data, responseText, xhr);
-            $("#singleupload").val("");
-        },
-    });
 
     // hide the drag-drop zone for browsers other than firefox
     if (!($.browser.mozilla && 
@@ -120,9 +120,11 @@ $(function() {
     function updateButtons() {
         var gotname = $.trim($("#batch_name").val()).length > 0;
         $("#submit_batch, #tabs_2_next").attr("disabled", !gotname);
+        $("#tabs").tabs(gotname ? "enable" : "disable", 1);
 
         var gotfiles = $("#batch_file_list").children().length > 0;
         $("#submit_batch, #tabs_3_next").attr("disabled", !(gotfiles && gotname));
+        $("#tabs").tabs((gotname && gotfiles) ? "enable" : "disable", 2);
     };
 
     function stripeFileList() {
@@ -217,7 +219,6 @@ $(function() {
             // save the job names of the current pages...
             data = event_or_response;
         }
-
         if (data.error) {
             alert("Error: " + data.error + "\n\n" + data.trace);
             $("#dropzone").text("Drop images here...").removeClass("waiting");
@@ -236,7 +237,7 @@ $(function() {
         var tabid = $(this).attr("id").replace(/_next/, "_link");
         $("#" + tabid).trigger("click");
     });
-    $("#tabs").tabs();
+    $("#tabs").tabs( { disabled: [2], } );
 
     // load state stored from last time
     loadState();

@@ -230,6 +230,10 @@
     width: 300px;
 }
 
+#batchform #batch_desc {
+    height: 100px;
+}
+
 #batchform .file_item {
     padding: 3px;
     color: #333;
