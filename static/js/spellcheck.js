@@ -36,6 +36,51 @@ function Spellchecker(selector) {
     });
 
 
+    this.init = function() {
+        buildUi();
+    }
+
+    var buildUi = function() {
+        var container = $("<div></div>")
+            .attr("id", "sp_container");
+        var buttoncontainer = $("<div></div>")
+            .attr("id", "sp_buttoncontainer");
+        var textcontainer = $("<div></div>")
+            .attr("id", "sp_textcontainer");
+
+        var lineedit = $("<input></input>")
+            .attr("type", "text")
+            .attr("id", "sp_lineedit");
+        var sugglist = $("<div></div>")
+            .attr("id", "sp_suggestionlist");
+
+        textcontainer
+            .append(lineedit)
+            .append(sugglist);
+        
+        var buttons = {
+            sp_next: "Next",
+            sp_prev: "Prev",
+            sp_all: "Something",
+            sp_adddict: "Add to Dict",
+        };
+        $.each(buttons, function(key, val) {
+            buttoncontainer.append(
+                $("<input></input>")
+                    .attr("type", "button")
+                    .attr("id", key)
+                    .val(val)
+            );
+        });
+
+        container
+            .append(buttoncontainer)
+            .append(textcontainer);
+
+        container.appendTo($("body")).dialog({model: true});
+    }
+
+
     var closeSuggestionWindow = function() {
         $("#suggestion_list").remove();
         $(window).unbind("click.spellcheck");
@@ -77,16 +122,16 @@ function Spellchecker(selector) {
     }
 
     this.spellCheck = function() {
-        var txt = $.map($(m_selector), function(c) {
+        var text = $.map($(m_selector), function(c) {
             return $(c).text();
         }).join("\n");
 
         $.ajax({
             url: "/batch/spellcheck",
             type: "POST",
-            data: {text: txt},
+            data: {text: text},
             dataType: "json",
-            error: function(e) {
+            error: function(xhr, err) {
                 alert("Spellcheck failed.  Unable to reach server: " + e);
             },
             success: function(data) {

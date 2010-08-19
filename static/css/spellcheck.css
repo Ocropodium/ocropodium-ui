@@ -39,3 +39,35 @@
     margin-bottom: 20px;
 }
 
+
+#sp_container {
+    overflow: auto;
+    padding: 10px;    
+}
+
+#sp_buttoncontainer {
+    float: right;
+    height: 300px;
+}
+
+#sp_buttoncontainer {
+    width: 120px;
+}
+
+#sp_buttoncontainer input[type=button] {
+    width: 100%;
+}
+
+#sp_textcontainer {
+    margin-right: 130px;
+}
+
+#sp_textcontainer input {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+#sp_suggestionlist {
+}
+
+
