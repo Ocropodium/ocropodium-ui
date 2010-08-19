@@ -346,6 +346,8 @@ class OcropusParams(UserDict.DictMixin):
         self.binclean0 = "AutoInvert"
         self.binclean1 = "RmHalftone"
         self.binclean2 = "RmBig"
+        self.binout = None
+        self.segout = None
 
         for key, val in dct.iteritems():
             if isinstance(val, (list, tuple)):

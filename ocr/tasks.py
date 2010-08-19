@@ -75,7 +75,7 @@ class ConvertPageTask(AbortableTask):
 
         # if we need to write intermediate files, determine the binpath
         # and the segpath needed
-        outdir = paramdict.get("intermediate_outdir").encode()
+        outdir = paramdict.get("intermediate_outdir")
         if outdir is not None:
             logger.info("WORKING OUT BIN & SEG paths")
             stdpath = os.path.join(outdir, os.path.basename(filepath))
