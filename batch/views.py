@@ -299,7 +299,7 @@ def page_results(request, pk, page_index):
     response = HttpResponse(mimetype="application/json")
     taskssl = pyserializer.serialize(
         [page],
-        excludes=("results",), 
+        excludes=("transcripts", "args", "kwargs",), 
     )
     taskssl[0]["fields"]["results"] = page.latest_transcript()
     simplejson.dump(taskssl, response, cls=DjangoJSONEncoder)
@@ -526,10 +526,26 @@ def spellcheck(request):
     data = request.POST.get("text")
     if not data:
         data = request.GET.get("text", "")
+#    replacepunc = {}
+#    for line in data.split("\n"):
+#        for word in line.split(" "):
+#            pmatch = re.match("([a-zA-Z])[\[\]\|\.,\"'!;]([a-zA-Z])", word)
+#            if pmatch:
+#                repl = "%sZZZ%s" % pmatch.groups() 
+#                print "Got spell match: %s -> %s" % (word, repl)
+#                replacepunc[word] = repl
+#                data = data.replace(word, repl, 1)
 
     aspell = batchutils.Aspell()
+    spelldata = aspell.spellcheck(data)
+#    for word in spelldata.keys():
+#        if replacepunc.get(word):
+#            print "Replacing %s -> %s" % (replacepunc[word], word)
+#            spelldata[replacepunc[word]] = spelldata[word]
+#            del spelldata[word]
+
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(aspell.spellcheck(data), response)
+    simplejson.dump(spelldata, response)
     return response
 
 def _abort_celery_task(task):
