@@ -20,6 +20,38 @@ from PIL import Image
 from django.conf import settings
 
 
+class FileWrangler(object):
+    """
+    Determine the most appropriate place to put new files
+    and uploaded files, based on OCR/batch parameters.
+    """
+    def __init__(self, username=None, batch_id=None, action="test", temp=True, stamp=False):
+        self.username = username
+        self.action = action
+        self.batch_id = batch_id
+        self.temp = temp
+        self.stamp = stamp
+
+    def __call__(self, infile=None):
+        base = settings.MEDIA_ROOT
+        if self.temp:
+            base = os.path.join(base, "temp")
+        else:
+            base = os.path.join(base, "files")
+        if self.username:
+            base = os.path.join(base, self.username)
+        if self.batch_id:
+            base = os.path.join(base, "batch%06d" % self.batch_id)
+        else:
+            if self.stamp:
+                base = os.path.join(base, datetime.now().strftime("%Y%m%d%H%M%S"))
+            if self.action:
+                base = os.path.join(base, self.action)
+        if infile:
+            base = os.path.join(base, os.path.basename(infile)) 
+        return os.path.abspath(base)
+
+
 def get_tesseract():
     """
     Try and find where Tesseract is installed.
@@ -57,12 +89,11 @@ def get_ocr_path(user=None, temp=True, subdir="test", unique=False, timestamp=Tr
 
 
 
-def save_ocr_images(images, user=None, temp=True, name="test", timestamp=True):
+def save_ocr_images(images, path):
     """
     Save OCR images to the media directory...
     """                         
     paths = []
-    path = get_ocr_path(user=user, temp=temp, subdir=name, timestamp=timestamp)
     if not os.path.exists(path):
         os.makedirs(path, 0777)
         os.chmod(path, 0777)
@@ -195,14 +226,17 @@ def get_image_dims(inpath):
                 stdout=sp.PIPE).communicate()[0].split()
     
 
-def make_png(inpath):
+def make_png(inpath, outdir=None):
     """
     PIL has problems with some TIFFs so this is
     a quick way of converting an image.
     """
     if inpath.lower().endswith(".png"):
         return inpath
-    outpath = "%s.png" % os.path.splitext(inpath)[0]
+    if outdir is None:
+        outdir = os.path.dirname(inpath)
+    fname = os.path.basename(inpath)
+    outpath = "%s/%s.png" % (outdir, os.path.splitext(fname)[0])
     sp.call(["convert", inpath, outpath]) 
     return outpath
 
@@ -388,6 +422,22 @@ class OcropusWrapper(object):
         self.logger = logger if logger else self.get_default_logger()
         self.params = OcropusParams(params) if params \
                 else OcropusParams({})
+
+
+    @classmethod
+    def write_binary(cls, path, data):
+        """
+        Write a binary image.
+        """
+        iulib.write_image_binary(path, data)
+
+
+    @classmethod
+    def write_packed(cls, path, data):
+        """
+        Write a packed image.
+        """
+        iulib.write_image_packed(path, data)
 
 
     def init(self):

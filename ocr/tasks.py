@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from ocradmin.ocr import utils
 from ocradmin.vendor import deepzoom
-import iulib
 
 
 def make_deepzoom_proxies(logger, inpath, outpath, type, params):
@@ -64,7 +63,7 @@ class ConvertPageTask(AbortableTask):
     name = "convert.page"
     max_retries = None
 
-    def run(self, filepath, paramdict, **kwargs):
+    def run(self, filepath, outdir, paramdict, **kwargs):
         """
         Runs the convert action.
         """
@@ -104,7 +103,7 @@ class BinarizePageTask(AbortableTask):
     """
     name = "binarize.page"
 
-    def run(self, filepath, paramdict, **kwargs):
+    def run(self, filepath, outdir, paramdict, **kwargs):
         """
         Runs the binarize action.
         """
@@ -119,20 +118,29 @@ class BinarizePageTask(AbortableTask):
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
 
-        filepath = utils.make_png(filepath)
+        filepath = utils.make_png(filepath, outdir)
+        binname = os.path.basename(
+                utils.get_media_output_path(filepath, "bin", ".png")) 
+        if not os.path.exists(outdir):
+            os.makedirs(outdir, 0777)
+            os.chmod(outdir, 0777)
 
-        binpath = utils.get_media_output_path(filepath, "bin", ".png")
+        binpath = os.path.join(outdir, binname)
         # hack - this is to save time when doing the transcript editor
         # work - don't rebinarize of there's an existing file
         if os.path.exists(binpath) and paramdict.get("allowcache"):
+            logger.info("NOT NOT NOT rebinarizing")
             pagewidth, pageheight = utils.get_image_dims(binpath)
         else:
+            logger.info("REBINARIZING: exists: %s, cache: %s" % (
+                os.path.exists(binpath), 
+                paramdict.get("allowcache")))
             converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
                     logger=logger, abort_func=abort_func, params=paramdict)
             grey, page_bin = converter.standard_preprocess(filepath)
             pagewidth = page_bin.dim(0)
             pageheight = page_bin.dim(1)
-            iulib.write_image_binary(binpath, page_bin)
+            converter.write_binary(binpath, page_bin)
         
         pagedata = { 
             "page" : os.path.basename(filepath) ,
@@ -160,7 +168,7 @@ class SegmentPageTask(AbortableTask):
     """
     name = "segment.page"
 
-    def run(self, filepath, paramdict, **kwargs):
+    def run(self, filepath, outdir, paramdict, **kwargs):
         """
         Runs the segment action.
         """
@@ -175,7 +183,13 @@ class SegmentPageTask(AbortableTask):
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
 
-        filepath = utils.make_png(filepath)
+        filepath = utils.make_png(filepath, outdir)
+        segname = os.path.basename(
+                utils.get_media_output_path(filepath, "seg", ".png")) 
+        if not os.path.exists(outdir):
+            os.makedirs(outdir, 0777)
+            os.chmod(outdir, 0777)
+        segpath = os.path.join(outdir, segname)        
 
         converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
                 logger=logger, abort_func=abort_func, params=paramdict)
@@ -184,8 +198,7 @@ class SegmentPageTask(AbortableTask):
 
         pagewidth = page_seg.dim(0)
         pageheight = page_seg.dim(1)
-        segpath = utils.get_media_output_path(filepath, "seg", ".png")
-        iulib.write_image_packed(segpath, page_seg)
+        converter.write_packed(segpath, page_seg)
 
         pagedata = { 
             "page" : os.path.basename(filepath) ,
@@ -225,6 +238,8 @@ class CleanupTempTask(PeriodicTask):
             return
 
         for userdir in glob.glob("%s/*/*" % tempdir):
+            if not os.path.isdir(userdir):
+                continue
             logger.debug("Checking dir: %s" % userdir)
             fdirs = [d for d in sorted(os.listdir(userdir)) if re.match("\d{14}", d)]
 

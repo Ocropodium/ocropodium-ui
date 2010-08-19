@@ -53,9 +53,16 @@ def new(request):
     """
     Present a new batch form.
     """
-    template = "batch/new.html"
+    template = "batch/new.html" if not request.is_ajax() \
+        else "batch/includes/new_form.html"
     # add available seg and bin presets to the context
+    # work out the name of the batch - start with how
+    # many other batches there are in the projects
+    project = request.session["project"]
+    batchname = "%s - Batch %d" % (project.name,
+            project.ocrbatch_set.count())
     context = {
+        "batchname": batchname,
         "binpresets": OcrPreset.objects.filter(
             type="binarize").order_by("name"),
         "segpresets": OcrPreset.objects.filter(
@@ -128,16 +135,6 @@ def create(request):
         return render_to_response("batch/new.html", context, 
                         context_instance=RequestContext(request))
 
-    filenames = request.POST.get("files", "").split(",")
-    dirpath = ocrutils.get_ocr_path(user=request.user.username, 
-            temp=False, subdir=None, timestamp=False)
-    paths = [os.path.join(dirpath, f) for f in filenames]
-    
-    if not paths:
-        return HttpResponse(
-                simplejson.dumps({"error": "no valid images found"}),
-                mimetype="application/json")     
-    
     # wrangle the params - this needs improving
     userparams = _get_best_params(
             _cleanup_params(request.POST.copy(), ("files", "batch_name", "batch_desc")))
@@ -146,13 +143,26 @@ def create(request):
     batch_name = request.POST.get("batch_name", "%s %s" % (tasktype, datetime.now()))
     batch_desc = request.POST.get("batch_desc", "")
     batch = OcrBatch(user=request.user, name=batch_name, description=batch_desc,
-            task_type=celerytask.name, batch_type="MULTI", project=request.session["project"])
+            task_type=celerytask.name, batch_type="MULTI", project=request.session["project"])    
     batch.save()
+
+    filenames = request.POST.get("files", "").split(",")
+    dirpath = ocrutils.get_ocr_path(user=request.user.username, 
+            temp=False, subdir=None, timestamp=False)
+    outdir = ocrutils.FileWrangler(
+            username=request.user.username, temp=True, batch_id=batch.pk, )()
+    paths = [os.path.join(dirpath, f) for f in sorted(filenames)]
+    if not paths:
+        transaction.rollback()
+        return HttpResponse(
+                simplejson.dumps({"error": "no valid images found"}),
+                mimetype="application/json")     
+
     subtasks = []
     try:
         for path in paths:
             tid = ocrutils.get_new_task_id(path)
-            args = (path.encode(), userparams)
+            args = (path.encode(), outdir.encode(), userparams)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             ocrtask = OcrTask(
                 task_id=tid,
@@ -200,11 +210,10 @@ def batch(request):
     if not request.method == "POST":
         return render_to_response("batch/batch.html", context, 
                         context_instance=RequestContext(request))
-
+    outdir = ocrutils.FileWrangler(
+            username=request.user.username, temp=True, action="batch")()
     try:
-        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), 
-                temp=True, user=request.user.username,
-                name=tasktype.lower())
+        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -225,7 +234,7 @@ def batch(request):
     try:
         for path in paths:
             tid = ocrutils.get_new_task_id(path)
-            args = (path.encode(), userparams)
+            args = (path.encode(), outdir.encode(), userparams)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             ocrtask = OcrTask(
                 task_id=tid,
@@ -327,7 +336,7 @@ def submit_viewer_binarization(request, pk):
     # hack!  add an allowcache to the params dict to indicate
     # that we don't want to remake an existing binary
     args = task.args
-    args[1]["allowcache"] = True
+    args[2]["allowcache"] = True
     async = tasks.BinarizePageTask.apply_async(args=args,
             queue="interactive")
     out = {
@@ -390,10 +399,16 @@ def upload_files(request):
     """
     Upload files to the server for batch-processing.
     """
+    print request.POST
+    print request.FILES
+    mimetype = "application/json" if not request.POST.get("_iframe") \
+            else "text/html"
+
     try:
-        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), 
-                temp=False, user=request.user.username,
-                name=None, timestamp=False)
+        outdir = ocrutils.FileWrangler(
+                username=request.user.username, temp=False, stamp=False, action=None)()
+        print "OUTDIR: ", outdir
+        paths = ocrutils.save_ocr_images(request.FILES.iteritems(),  outdir)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -403,7 +418,7 @@ def upload_files(request):
                 mimetype="application/json")     
     pathlist = [os.path.basename(p) for p in paths]
     return HttpResponse(simplejson.dumps(pathlist),
-            mimetype="application/json")
+            mimetype=mimetype)
 
 
 @login_required

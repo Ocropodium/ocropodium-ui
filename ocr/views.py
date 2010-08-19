@@ -142,13 +142,13 @@ def _ocr_task(request, template, context, tasktype, celerytask):
                         context_instance=RequestContext(request))
 
     # save our files to the DFS and return a list of addresses
+    outdir = ocrutils.FileWrangler(
+            username=request.user.username, temp=True, action=tasktype.lower())()
     if request.POST.get("png"):
         paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
     else:
         try:
-            paths = ocrutils.save_ocr_images(request.FILES.iteritems(), 
-                    temp=True, user=request.user.username,
-                    name=tasktype.lower(), timestamp=True)
+            paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
         except AppException, err:
             return HttpResponse(simplejson.dumps({"error": err.message}),
                 mimetype="application/json")
@@ -164,15 +164,19 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     # init the job from our params
     asynctasks = []
     for path in paths:
-        tid = ocrutils.get_new_task_id(path) 
-        ocrtask = OcrTask(task_id=tid, user=request.user,
-                page_name=os.path.basename(path), status="INIT")
+        tid = ocrutils.get_new_task_id(path)
+        args = (path.encode(), outdir.encode(), userparams)
+        kwargs = dict(task_id=tid, loglevel=60, retries=2, queue="interactive")
+        ocrtask = OcrTask(
+            task_id=tid,
+            user=request.user,
+            page_name=os.path.basename(path),
+            status="INIT",
+            args=args,
+            kwargs=kwargs,
+        )
         ocrtask.save()
-        asynctasks.append(
-            celerytask.apply_async(
-                args=(path.encode(), userparams),
-                    task_id=tid, loglevel=60, retries=2,
-                    queue="interactive"))            
+        asynctasks.append(celerytask.apply_async(args=args, **kwargs))            
     try:
         # aggregate the results
         out = []
