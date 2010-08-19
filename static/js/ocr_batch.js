@@ -70,6 +70,7 @@ function OcrBatch(insertinto_id, batch_id) {
 
 
     this.setBatchId = function(batch_id) {
+        m_taskoffset = 0;
         m_batch_id = batch_id;
         refreshUnlessPolling();
     }
