@@ -95,10 +95,7 @@ $(function() {
         });
     }
 
-    transcript.onClickPosition = function(position) {
-        if (!($("#link_viewer").attr("checked") && sdviewer.activeViewer().viewport))
-            return;
-
+    var positionViewer = function(position) {
         // ensure the given line is centred in the viewport
         var bounds = transcript.pageData().fields.results.box;
         var fw = bounds[2], fh = bounds[3];
@@ -109,6 +106,20 @@ $(function() {
         sdviewer.activeViewer().viewport.fitBounds(rect, true);
         sdviewer.activeViewer().drawer.clearOverlays(); 
         sdviewer.activeViewer().drawer.addOverlay(overlaydiv, rect);         
+    }
+
+    transcript.onHoverPosition = function(position) {
+        if (!($("#link_viewer").val() == "hover" 
+                    && sdviewer.activeViewer().viewport))
+            return;
+        positionViewer(position);
+    }
+
+    transcript.onClickPosition = function(position) {
+        if (!($("#link_viewer").val() == "click" 
+                    && sdviewer.activeViewer().viewport))
+            return;
+        positionViewer(position);
     }
 
     $("#spellcheck").click(function(event) {

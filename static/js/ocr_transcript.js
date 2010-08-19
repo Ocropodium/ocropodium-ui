@@ -245,6 +245,10 @@ function OcrTranscript(insertinto_id, batch_id) {
         setCurrentLine($(this));
     });
 
+    $(".ocr_line").live("mouseover", function(event) {
+        self.onHoverPosition($(this).data("bbox"));
+    });
+
 
     // check is an element is visible - returns -1 if the elem
     // is above the viewport, 0 if visible, 1 if below
@@ -292,6 +296,7 @@ function OcrTranscript(insertinto_id, batch_id) {
 
 
     this.save = function() {
+        var results = m_pagedata.fields.results;
         var lines = [];
         m_pagediv.find(".ocr_line").each(function(i, elem) {
             lines.push({
@@ -300,10 +305,10 @@ function OcrTranscript(insertinto_id, batch_id) {
                 box:  $(elem).data("bbox"),
             });
         });
-        m_pagedata.lines = lines;
+        results.lines = lines;
         $.ajax({
             url: "/batch/save/" + m_batch_id + "/" + m_page + "/", 
-            data: {data: JSON.stringify(m_pagedata)},
+            data: {data: JSON.stringify(results)},
             dataType: "json",
             type: "POST",
             error: function(e) {
@@ -484,6 +489,12 @@ OcrTranscript.prototype.onPageChange = function() {
 
 
 OcrTranscript.prototype.onClickPosition = function(position) {
+
+
+}
+
+
+OcrTranscript.prototype.onHoverPosition = function(position) {
 
 
 }

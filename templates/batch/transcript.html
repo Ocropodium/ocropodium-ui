@@ -27,7 +27,12 @@
             <input class="toolbar_item" type="button" value="Save Text" id="save_data" />
             <input class="toolbar_item" type="button" value="Spellcheck" id="spellcheck" />
             <div class="toolbar_item">
-                Link Viewer: <input checked="checked" type="checkbox" name="link_viewer" id="link_viewer" />
+                Link Viewer: 
+                <select name="link_viewer" id="link_viewer">
+                    <option value="off">Off</option>
+                    <option value="click" selected="selected">Click</option>
+                    <option value="hover">Hover</option>
+                </select>                    
             </div>
             <div class="toolbar_item" id="page_slider"></div>
             <input class="toolbar_item" type="button" value="Prev" id="prev_page" disabled="disabled" />
