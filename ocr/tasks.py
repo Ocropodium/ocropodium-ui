@@ -25,10 +25,11 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
                             image_quality=1, resize_filter="nearest")
 
     # source DZI path gets passed in again so we don't have to remake it
-    srcdzipath = utils.media_url_to_path(params.get("src"))
-    if srcdzipath is None or not os.path.exists(srcdzipath):
-        srcdzipath = "%s.dzi" % os.path.splitext(inpath)[0]
-        creator.create(inpath, srcdzipath)
+    srcdzipath = utils.media_url_to_path(params.get("src"))    
+    if params.get("allowcache") is None:
+        if srcdzipath is None or not os.path.exists(srcdzipath):
+            srcdzipath = "%s_src.dzi" % os.path.splitext(outpath)[0]
+            creator.create(inpath, srcdzipath)
 
 
     # get an A or B output path that DOESN'T match the one
@@ -71,6 +72,18 @@ class ConvertPageTask(AbortableTask):
         # to end execution early
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
+
+        # if we need to write intermediate files, determine the binpath
+        # and the segpath needed
+        outdir = paramdict.get("intermediate_outdir").encode()
+        if outdir is not None:
+            logger.info("WORKING OUT BIN & SEG paths")
+            stdpath = os.path.join(outdir, os.path.basename(filepath))
+            if not os.path.exists(outdir):
+                os.makedirs(outdir, 0777)
+                os.chmod(outdir, 0777)
+            paramdict["binout"] = utils.get_media_output_path(stdpath, "bin", ".png")
+            paramdict["segout"] = utils.get_media_output_path(stdpath, "seg", ".png")
         
         def abort_func():
             # TODO: this should be possible via a simple 'self.is_aborted()'

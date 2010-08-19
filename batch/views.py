@@ -151,6 +151,7 @@ def create(request):
             temp=False, subdir=None, timestamp=False)
     outdir = ocrutils.FileWrangler(
             username=request.user.username, temp=True, batch_id=batch.pk, )()
+    userparams["intermediate_outdir"] = outdir
     paths = [os.path.join(dirpath, f) for f in sorted(filenames)]
     if not paths:
         transaction.rollback()

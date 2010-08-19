@@ -467,7 +467,7 @@ class OcropusWrapper(object):
         #        param = cmatch.groups()[0]
         #        self.logger.info("Setting: %s.%s -> %s" % (self.params.psegmenter, param, val))
         #        self._linerec.pset(param, val)
-            
+
     
     def convert(self, filepath, progress_func=None, callback=None, **cbkwargs):
         """
@@ -478,7 +478,13 @@ class OcropusWrapper(object):
         passed to the callback.
         """
         _, page_bin = self.standard_preprocess(filepath)
+        if self.params.binout:
+            self.logger.info("Writing binary: %s" % self.params.binout)
+            self.write_binary(self.params.binout, page_bin)
         page_seg = self.get_page_seg(page_bin)
+        if self.params.segout:
+            self.logger.info("Writing segmentation: %s" % self.params.segout)
+            self.write_packed(self.params.segout, page_seg)
         pagewidth = page_seg.dim(0)
         pageheight = page_seg.dim(1)
         
