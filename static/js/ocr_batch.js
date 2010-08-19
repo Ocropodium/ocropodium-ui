@@ -277,6 +277,7 @@ function OcrBatch(insertinto_id, batch_id) {
                 if ($(this).attr("checked")) {
                     $(".filter_type").removeAttr("checked");
                 }
+                refreshUnlessPolling();
             });
             
         $.each(statuses, function(i, status) {
@@ -293,6 +294,7 @@ function OcrBatch(insertinto_id, batch_id) {
                     if ($(this).attr("checked")) {
                         $("#filter_none:checked").removeAttr("checked");
                     }
+                    refreshUnlessPolling();
                 })
                 .end()
                 .appendTo(filterlist);
