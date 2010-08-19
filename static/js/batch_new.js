@@ -115,28 +115,38 @@ $(function() {
     });
 
     // enable the submit button if appropriate
-    $("#batch_name").keyup(updateSubmitButton);
+    $("#batch_name").keyup(updateButtons);
 
-    function updateSubmitButton() {
+    function updateButtons() {
         var gotname = $.trim($("#batch_name").val()).length > 0;
+        $("#submit_batch, #tabs_2_next").attr("disabled", !gotname);
+
         var gotfiles = $("#batch_file_list").children().length > 0;
-        $("#submit_batch").attr("disabled", !(gotfiles && gotname));
+        $("#submit_batch, #tabs_3_next").attr("disabled", !(gotfiles && gotname));
     };
+
+    function stripeFileList() {
+        $(".file_item").each(function(i, elem) {
+            var iseven = i % 2 == 0;
+            $(elem)
+                .toggleClass("odd", !iseven)
+                .toggleClass("even", iseven);
+        });
+    }
 
     function removeSelectedBatchFiles() {
         $(".file_item.selected").remove();
+        stripeFileList();
     }
 
     function addBatchFiles(filelist) {
         var fileitem = $("<div></div>").addClass("file_item");
-        var filecount = $("#batch_file_list").children().length;
         $.each(filelist, function(i, filename) {
             $("#batch_file_list").append(
-                fileitem.clone().text(filename)
-                    .addClass(filecount % 2 ? "even" : "odd"));
-            filecount++;    
+                fileitem.clone().text(filename));
         });
-        updateSubmitButton();
+        stripeFileList();
+        updateButtons();
     }
 
     $("#browse").click(function(event) {
@@ -151,7 +161,13 @@ $(function() {
     $(window).keydown(function(event) {
         if (event.keyCode == 46) {
             removeSelectedBatchFiles();
+            updateButtons();
         } 
+    });
+
+    // disallow text selection of file_items
+    $("#batch_file_list").bind("mouseup", function(event) {
+        return false;
     });
     
     $("#submit_batch").click(function(event) {
@@ -162,11 +178,10 @@ $(function() {
         }).join(",");
         
         // standard OCR options
-        var options = $("#optionsform").serialize();
         var batchopts = $("#batchform").serialize();
         
         // build full string...
-        var params = options + "&" + batchopts + "&files=" + paths;
+        var params =  batchopts + "&files=" + paths;
         $.ajax({
             url: "/batch/create/",
             type: "POST",
@@ -215,6 +230,13 @@ $(function() {
     // initialise the uploader...
     uploader  = new AjaxBatchUploader("/batch/upload_files/", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
+
+    // make steps into tabs
+    $(".next_tab").click(function(event) {
+        var tabid = $(this).attr("id").replace(/_next/, "_link");
+        $("#" + tabid).trigger("click");
+    });
+    $("#tabs").tabs();
 
     // load state stored from last time
     loadState();

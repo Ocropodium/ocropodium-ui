@@ -33,10 +33,10 @@
                 <h3 class="top"><a href="/projects/list/">Project</a></h3>                
                 <ul>
                     <li>
-                        <a href="/projects/new/">New Project</a>
+                        <a id="new_project" href="/projects/new/">New Project</a>
                     </li>
                     <li>
-                        <a href="/projects/open/">Open Project</a>
+                        <a id="open_project" href="/projects/open/">Open Project</a>
                     </li>
                     <li>
                         <h3 class="right">Recent</h3>
@@ -64,12 +64,10 @@
                     <h3 class="top">Batch</h3>
                     <ul>
                         <li>
-                            <a {% ifequal request.path "/batch/new/" %}class="current"{% endifequal %}
-                                href="/batch/new/">New</a>
+                            <a id="new_batch" href="/batch/new/">New</a>
                         </li>
                         <li>
-                            <a {% ifequal request.path "/batch/latest/" %}class="current"{% endifequal %}
-                                href="/batch/latest/">Latest</a>
+                            <a id="latest_batch" href="/batch/latest/">Latest</a>
                         </li>
                     </ul>
 
@@ -121,6 +119,7 @@
                     {% block content %}{% endblock %}
             
         </div>
+        <div id="dialog_box"></div>
     </div>
 </body>
 </html>

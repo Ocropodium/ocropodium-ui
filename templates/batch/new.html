@@ -31,56 +31,6 @@
                 </div>
             </div>
         </form>            
-        <form id="optionsform" name="convertoptions" method="POST">
-            <h4>Options:</h4>
-             <p>
-             OCR Engine:&nbsp;
-                <input type="radio" name="engine" value="ocropus">Ocropus&nbsp;
-                <input type="radio" name="engine" value="tesseract" checked>Tesseract
-            </p>
-            <p>        
-                Segmenter:&nbsp;
-                <select id="form_segmenter" name="psegmenter">
-                    <optgroup label="Basic">
-                        <option value="SegmentPageByRAST" selected="selected">RAST</option>
-                        <option value="SegmentPageByRAST1">RAST1</option>
-                        <option value="SegmentPageBy1CP">1CP</option>
-                        <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
-                        <option value="SegmentPageByXYCUTS">XYCUTS</option>
-                    </optgroup>
-                    {% if segpresets %}
-                        <optgroup label="Presets">
-                        {% for p in segpresets %}
-                            <option value="preset_{{p.pk}}">{{p.name}}</option>                        
-                        {% endfor %}            
-                        </optgroup>
-                    {% endif %}            
-                </select>
-            </p>
-            <p>
-                Pre-processing:&nbsp;
-                <select id="form_clean" name="clean">
-                    <option value="StandardPreprocessing" selected="selected">Standard</option>
-                    {% if binpresets %}
-                        <optgroup label="Presets">
-                        {% for p in binpresets %}
-                            <option value="preset_{{p.pk}}">{{p.name}}</option>                        
-                        {% endfor %}            
-                        </optgroup>
-                    {% endif %}            
-                </select>
-            </p>
-            <p>
-                Character Model:&nbsp;
-                <select id="form_cmodel" name="cmodel">
-                </select>
-            </p>
-            <p>
-                Language Model:&nbsp;
-                <select id="form_lmodel" name="lmodel">
-                </select>
-            </p>
-        </form>
     </div>
 </div>
 
@@ -88,28 +38,7 @@
     <div class="widget" id="new_batch">
         <div class="widget_header">New Batch</div>
         <div class="widget_content">
-            <form name="batchform" type="POST" action="{{request.path}}" id="batchform">
-                <div class="form_field">
-                    <label for="batch_name">Batch Identifier:</label>
-                    <br />
-                    <input type="text" name="batch_name" id="batch_name" />
-                </div>
-                <div class="form_field">
-                    <label for="batch_desc">Description:</label>
-                    <br />
-                    <textarea name="batch_desc" id="batch_desc"></textarea>
-                </div>
-                <div class="form_field">
-                    <label for="batch_files">Files:</label>
-                    <br />
-                    <div id="batch_file_list">
-
-                    </div>
-                    <input type="button" value="Browse Server" id="browse" />
-                </div>
-                <br />
-                <input type="SUBMIT" value="Submit Batch" id="submit_batch" disabled="disabled" />
-            </form>
+            {% include "batch/includes/new_form.html" %}
         </div>
     </div>
 </div>

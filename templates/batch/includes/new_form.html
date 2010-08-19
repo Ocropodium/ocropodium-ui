@@ -1,0 +1,105 @@
+<form name="batchform" type="POST" action="{{request.path}}" id="batchform">
+    <div id="tabs">
+        <ul>
+            <li><a id="tabs_1_link" href="#tabs_1">Naming &amp; Tags</a></li>
+            <li><a id="tabs_2_link" href="#tabs_2">Select Files</a></li>
+            <li><a id="tabs_3_link" href="#tabs_3">OCR Options</a></li>
+        </ul>
+        <div id="tabs_1">
+            <div class="form_body">
+                <h3>Create New OCR Batch</h3>
+                <div class="form_field">
+                    <label for="batch_name">Identifier:</label>
+                    <br />
+                    <input type="text" name="batch_name" id="batch_name" value="{{batchname}}" />
+                </div>
+                <br />
+                <div class="form_field">
+                    <label for="batch_tags">Tags:</label>
+                    <br />
+                    <input type="text" name="batch_tags" id="batch_name" />
+                </div>
+                <br />
+                <div class="form_field">
+                    <label for="batch_desc">Notes:</label>
+                    <br />
+                    <textarea name="batch_desc" id="batch_desc"></textarea>
+                </div>
+            </div>
+            <div class="form_footer">
+                <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Files" />
+            </div>
+        </div>
+        <div id="tabs_2">
+            <div class="form_body">
+                <h3>Select Files</h3>
+                <div class="form_field">
+                    <div id="batch_file_list">
+
+                    </div>
+                    <input type="button" value="Browse Server" id="browse" />
+                </div>
+            </div>
+            <div class="form_footer">
+
+                <input type="button" disabled="disabled" class="next_tab" id="tabs_3_next" value="Next - OCR Settings" />
+            </div>
+        </div>
+        <div id="tabs_3">
+            <div class="form_body">
+                <h3>OCR Options</h3>
+                 <p>
+                 OCR Engine:&nbsp;
+                    <input type="radio" name="engine" value="ocropus">Ocropus&nbsp;
+                    <input type="radio" name="engine" value="tesseract" checked>Tesseract
+                </p>
+                <p>        
+                    Segmenter:&nbsp;
+                    <select id="form_segmenter" name="psegmenter">
+                        <optgroup label="Basic">
+                            <option value="SegmentPageByRAST" selected="selected">RAST</option>
+                            <option value="SegmentPageByRAST1">RAST1</option>
+                            <option value="SegmentPageBy1CP">1CP</option>
+                            <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
+                            <option value="SegmentPageByXYCUTS">XYCUTS</option>
+                        </optgroup>
+                        {% if segpresets %}
+                            <optgroup label="Presets">
+                            {% for p in segpresets %}
+                                <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+                            {% endfor %}            
+                            </optgroup>
+                        {% endif %}            
+                    </select>
+                </p>
+                <p>
+                    Pre-processing:&nbsp;
+                    <select id="form_clean" name="clean">
+                        <option value="StandardPreprocessing" selected="selected">Standard</option>
+                        {% if binpresets %}
+                            <optgroup label="Presets">
+                            {% for p in binpresets %}
+                                <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+                            {% endfor %}            
+                            </optgroup>
+                        {% endif %}            
+                    </select>
+                </p>
+                <p>
+                    Character Model:&nbsp;
+                    <select id="form_cmodel" name="cmodel">
+                    </select>
+                </p>
+                <p>
+                    Language Model:&nbsp;
+                    <select id="form_lmodel" name="lmodel">
+                    </select>
+                </p>
+            </div>
+            <div class="form_footer">
+                <input type="button" id="submit_batch" value="Submit Batch" />
+            </div>
+        </div>
+    </div>
+</form>
+
