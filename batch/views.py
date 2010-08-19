@@ -290,7 +290,7 @@ def page_results(request, pk, page_index):
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
     try:
-        page = batch.tasks.all()[int(page_index)]
+        page = batch.tasks.all().order_by("page_name")[int(page_index)]
     except OcrBatch.DoesNotExist, e:
         raise e
 
@@ -312,7 +312,7 @@ def save_page_data(request, pk, page_index):
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
     try:
-        page = batch.tasks.all()[int(page_index)]
+        page = batch.tasks.all().order_by("page_name")[int(page_index)]
     except OcrBatch.DoesNotExist, e:
         raise e
 
@@ -585,7 +585,7 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None):
         },
     )
     taskssl = pyserializer.serialize(
-        taskqset[start:start + limit],
+        taskqset.order_by("page_name")[start:start + limit],
         excludes=("args", "kwargs", "traceback",),
     )
     batchsl[0]["fields"]["tasks"] = taskssl
