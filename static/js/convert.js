@@ -142,6 +142,7 @@ $(function() {
         $.each(data, function(pagenum, pageresults) {
             pageobjects[pagenum] = new OcrPage("workspace", pagenum, pageresults.job_name);
             pageobjects[pagenum].pollForResults((300 * uploader.size()) + (pagenum * 250));
+            layoutWidgets();
         }); 
     };
 

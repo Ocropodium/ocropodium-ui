@@ -147,6 +147,7 @@ body {
 
 #workspace {
     min-height: 300px;
+    overflow: auto;
 }
 
 .widget {
@@ -172,7 +173,7 @@ body {
     padding-bottom: 20px;
     float: right;
     width: 600px;
-    margin: 10px;
+    margin: 10px 10px 0px 10px;
 }
 
 .widget_header {

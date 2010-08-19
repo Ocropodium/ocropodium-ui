@@ -10,10 +10,10 @@ function layoutWidgets() {
     $(".widget:not(#sideviewer, #sidebar)").each(function(i, widget) {
         var margin = $(widget).outerWidth(true) - $(widget).width();
         $(widget).width(availablewidth - (sideoutwidth + margin))
-            .css("position", "absolute").
-            css("top", wtop)
+            .css("position", "absolute")
+            .css("top", wtop)
             .css("left", wleft);
-        wtop += $(widget).height();
+        wtop += $(widget).outerHeight(true);
 
     });
 }
@@ -24,4 +24,8 @@ $(function() {
     });
     layoutWidgets();
     $(window).trigger("resize");
+
+    $("#workspace").invalidateLayout = function(event) {
+        layoutWidgets();            
+    }
 });

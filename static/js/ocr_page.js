@@ -52,7 +52,8 @@ function OcrPage(insertinto_id, page_id, jobname) {
             } else {
                 me.insertBreaks();
                 $(this).text("View Layout");
-            } 
+            }
+           layoutWidgets(); 
         })
         .appendTo(phead);
     var textlink = viewlink.clone()
