@@ -484,11 +484,11 @@ function OcrBatch(insertinto_id, batch_id) {
         var progstr = Math.round(progress) + "%";
         task.find(".progress").css("width", progstr).attr("title", progstr);
         if (status) {
-            task.find(".progressbar").addClass("progressbar " + status.toLowerCase());
+            task.find(".progressbar").attr("class", "progressbar " + status.toLowerCase());
         } else if (progress > 99.5) {
-            task.find(".progressbar").addClass("progressbar success");
+            task.find(".progressbar").attr("class", "progressbar success");
         } else {
-            task.find(".progressbar").addClass("progressbar started");
+            task.find(".progressbar").attr("class", "progressbar started");
         }       
     }
 
