@@ -1,6 +1,5 @@
 var transcript = null;
 var sdviewer = null;
-var speller = null;
 var polltimeout = -1;
 
 
@@ -122,9 +121,10 @@ $(function() {
         positionViewer(position);
     }
 
-    $("#spellcheck").click(function(event) {
-        speller.init();
-        speller.spellCheck();
+    $("#spellcheck").toggle(function(event) {
+        transcript.startSpellcheck();
+    }, function(event) {
+        transcript.endSpellcheck();
     });
 
     $("#save_data").click(function(event) {
@@ -153,8 +153,9 @@ $(function() {
     sdviewer = new ImageWindow("sideviewer"); 
     sdviewer.init();
 
-    speller = new Spellchecker(".ocr_line");
-
     layoutWidgets();
+
+    // maximise the height of the transcript page
+    
 });        
 

@@ -4,9 +4,6 @@
 
 function SuggestionList() {
 
-    this.parent = parent;
-
-
     var 
     self = this,
     m_focus = false,
@@ -133,17 +130,19 @@ function SuggestionList() {
 
 
 
-function Spellchecker(selector) {
+function Spellchecker(parent, selector) {
 
     var 
     self = this,    
-    m_data = null,
-    m_selector = selector,
+    m_data = {},
+    m_parent = parent,
     m_suggestions = new SuggestionList(),
     m_lineedit = $("<input></input>")
             .attr("type", "text")
             .addClass("spell_line")
-            .attr("id", "sp_lineedit");
+            .attr("id", "sp_lineedit"),
+    m_container = $("<div></div>")
+        .attr("id", "sp_container");
 
     const
     DOWN    = 40,
@@ -177,14 +176,19 @@ function Spellchecker(selector) {
 
 
     this.init = function() {
-        buildUi();
+        m_container.html("");
+        return buildUi();
+    }
+
+    this.widgetHeight = function() {
+        return m_container.outerHeight(true);
     }
 
     var findNextSpellcheckWord = function(current, reverse) {
         traverser = reverse ? "prev" : "next";
         endpoint  = reverse ? "last" : "first"; 
         if (!current || !current.length)
-            return $(m_selector).find(".badspell")[endpoint]();
+            return $(".badspell")[endpoint]();
         var next = current[traverser]();
         if (!next.length) {
             var nextline = current.parent()[traverser]();
@@ -198,13 +202,11 @@ function Spellchecker(selector) {
             }
         }
         if (!next || !next.length)
-            return $(m_selector)
-                .find(".badspell")
+            return $(".badspell")
                 .not(current)[endpoint]();
 
         return next; 
     }
-
 
     var setNextSpellcheckWord = function(reverse) {
         var current = m_lineedit.data("current");
@@ -227,35 +229,13 @@ function Spellchecker(selector) {
     }
 
 
-    var buildUi = function() {
-        var container = $("<div></div>")
-            .attr("id", "sp_container")
-            .hide();
+    var buildUi = function(parent) {
         var buttoncontainer = $("<div></div>")
             .attr("id", "sp_buttoncontainer");
         var textcontainer = $("<div></div>")
             .attr("id", "sp_textcontainer");
         var linecontainer = $("<div></div>")
             .attr("id", "sp_linecontainer");
-
-        m_lineedit.unbind("keydown.le");
-        m_lineedit.bind("keydown.le", function(event) {
-            if (event.keyCode == UP || event.keyCode == DOWN) {
-                $(this).blur();
-                m_suggestions.takeFocus(event);
-                return false;
-            } else if (event.keyCode == ENTER) {
-                var correctelem = $(this).data("current");
-                var correcttext = $(this).val();
-                setNextSpellcheckWord(event.shiftKey);
-                if (!event.ctrlKey && correcttext && correctelem) {
-                    if (correctelem.text() != correcttext)
-                        correctelem.replaceWith(correcttext);
-                }
-                return false;
-            }
-        });
-
 
         textcontainer
             .append(linecontainer.append(m_lineedit));
@@ -305,22 +285,44 @@ function Spellchecker(selector) {
             );
         });
 
-        container
+        m_container
             .append(buttoncontainer)
             .append(textcontainer);
 
-        $(document).find("#sp_container").remove();
-        container.insertAfter($("#scroll_container")).show(200);
-        //container.appendTo($("body")).dialog({model: true});
+        return m_container;
+    }
+
+    this.takeFocus = function() {
+        m_lineedit.unbind("keydown.le");
+        m_lineedit.bind("keydown.le", function(event) {
+            if (event.keyCode == UP || event.keyCode == DOWN) {
+                $(this).blur();
+                m_suggestions.takeFocus(event);
+                return false;
+            } else if (event.keyCode == ENTER) {
+                var correctelem = $(this).data("current");
+                var correcttext = $(this).val();
+                setNextSpellcheckWord(event.shiftKey);
+                if (!event.ctrlKey && correcttext && correctelem) {
+                    if (correctelem.text() != correcttext)
+                        correctelem.replaceWith(correcttext);
+                }
+                return false;
+            }
+        });
     }
 
 
-    this.spellCheck = function() {
-        var text = $.map($(m_selector), function(c) {
+    this.looseFocus = function() {
+        m_lineedit.unbind("keydown.le");
+    }
+
+
+    this.spellCheck = function(lines) {
+        var text = $.map(lines, function(c) {
             return $(c).text();
         }).join("\n");
         json = JSON.stringify(text);
-
         $.ajax({
             url: "/batch/spellcheck",
             type: "POST",
@@ -330,15 +332,17 @@ function Spellchecker(selector) {
                 alert("Spellcheck failed.  Unable to reach server: " + err);
             },
             success: function(data) {
-                m_data = data;
-                highlightWords();
+                $.each(data, function(k, v) {
+                    m_data[k] = v;
+                })
+                highlightWords(lines);
             }
         });
     }
 
 
-    var highlightWords = function() {
-        $(m_selector).each(function(i, elem) {
+    var highlightWords = function(lines) {
+        lines.each(function(i, elem) {
             var html = $.map($(elem).html().split(/\b/), function(word) {
                 if (m_data[word]) {
                     return "<span class='badspell'>" + word + "</span>";

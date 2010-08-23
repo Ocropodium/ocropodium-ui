@@ -9,7 +9,13 @@ function OcrTranscript(insertinto_id, batch_id) {
     var m_batchdata = null;
 
     // editor for each line
-    var m_editor = new OcrLineEditor(insertinto_id); 
+    var m_editor = new OcrLineEditor(insertinto_id);
+
+    // spellchecker object
+    var m_speller = new Spellchecker(".ocr_line");
+
+    // currently doing a spellcheck?
+    var m_spellchecking = false;
 
     // page data cache
     var m_pagedata = null;
@@ -36,10 +42,9 @@ function OcrTranscript(insertinto_id, batch_id) {
 //            handle: "#batch_head",
          .resizable({
             minWidth: 300,
-            resize: function(e, ui) {
-                $("#scroll_container")
-                    .css("height", $(this).height() - 45);
-            },        
+            resize: function() {
+                self.refreshSize();
+            },
         }); //.sortable({connectWith: ".widget"});  
     var m_header = $("<div></div>")
         .addClass("batch_head")
@@ -50,7 +55,7 @@ function OcrTranscript(insertinto_id, batch_id) {
         .attr("id", "page_name");
     var m_pagecount = $("<span></span>")
         .attr("id", "page_count");
-    var m_scroller = $("<div></div>")
+    var m_scrollcontainer = $("<div></div>")
         .attr("id", "scroll_container");
     var m_pagediv = $("<div></div>")
         .addClass("waiting")
@@ -62,11 +67,43 @@ function OcrTranscript(insertinto_id, batch_id) {
     this.init = function() {
         self.buildUi();
         self.refresh();
+        self.refreshSize();
     }
 
     this.refresh = function() {
         setData();
     }
+
+    this.refreshSize = function() {
+        m_scrollcontainer
+            .css("height", 
+                    m_container.height() 
+                    - m_speller.widgetHeight() 
+                    - 25
+            );
+    }
+
+    this.startSpellcheck = function() {
+        var spellwidget = m_speller.init(m_container);
+        m_container.append(spellwidget);
+        m_scrollcontainer.height(
+                m_scrollcontainer.height() - m_speller.widgetHeight());
+        m_speller.spellCheck($(".ocr_line"));
+        m_speller.takeFocus();
+        m_spellchecking = true;
+    }
+
+    this.endSpellcheck = function() {
+        var height = m_speller.widgetHeight();
+        m_scrollcontainer.height(
+                m_scrollcontainer.height() + height);
+        $("#sp_container").remove();
+        $(".badspell").each(function(i, elem) {
+            $(elem).replaceWith($(elem).text());
+        });
+        m_spellchecking = false;
+    }
+
 
     this.setBatchId = function(batch_id) {
         m_batch_id = batch_id;
@@ -151,7 +188,7 @@ function OcrTranscript(insertinto_id, batch_id) {
 
         m_container.append(
                 m_header.append(m_pagecount).append(m_pagename))
-            .append(m_scroller.append(m_pagediv))
+            .append(m_scrollcontainer.append(m_pagediv))
             .appendTo("#" + insertinto_id);
     }
 
@@ -202,6 +239,17 @@ function OcrTranscript(insertinto_id, batch_id) {
             return false;
         }
     });
+
+    m_editor.onEditingStarted = function(element) {
+        $("#sp_container").find("*").attr("disabled", true);
+        m_speller.looseFocus();
+    }
+
+    m_editor.onEditingFinished = function(element) {
+        $("#sp_container").find("*").attr("disabled", false);
+        m_speller.spellCheck($(element));
+        m_speller.takeFocus();
+    }
 
     m_editor.onEditNextElement = function() {
         var next = m_editor.element().nextAll(".ocr_line").first();

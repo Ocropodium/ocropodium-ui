@@ -3,6 +3,12 @@
 
 }
 
+.waiting {
+    background-image: url(/static/ajax-loader-large.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 
 #page_slider {
     width: 200px;

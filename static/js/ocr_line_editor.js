@@ -407,8 +407,9 @@ function OcrLineEditor(insertinto_id) {
 
 
     var finishEditing = function(withtext) {
+        var element = m_elem;
         releaseElement(withtext);
-        self.onEditingFinished();
+        self.onEditingFinished(element);
     }
 
 
@@ -419,6 +420,7 @@ function OcrLineEditor(insertinto_id) {
         m_elem = $(element);
         m_inittext = m_elem.text();        
         grabElement(clickevent);
+        self.onEditingStarted(element);
     }
 
     this.element = function() {
@@ -538,6 +540,10 @@ OcrLineEditor.prototype.onEditNextElement = function(event) {
 }
 
 OcrLineEditor.prototype.onEditPrevElement = function(event) {
+
+}
+
+OcrLineEditor.prototype.onEditingStarted = function(event) {
 
 }
 
