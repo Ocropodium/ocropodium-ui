@@ -18,14 +18,3 @@ function layoutWidgets() {
     });
 }
 
-$(function() {
-    $(window).resize(function(event) {
-        layoutWidgets();
-    });
-    layoutWidgets();
-    $(window).trigger("resize");
-
-    $("#workspace").invalidateLayout = function(event) {
-        layoutWidgets();            
-    }
-});
