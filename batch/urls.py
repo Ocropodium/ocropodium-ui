@@ -1,7 +1,6 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
-   (r'^/?$', 'ocradmin.batch.views.index'),
     (r'^abort_task/(?P<pk>\d+)/?$', 'ocradmin.batch.views.abort_task'),
     (r'^abort_batch/(?P<pk>\d+)/?$', 'ocradmin.batch.views.abort_batch'),
 	(r'^batch/?$', 'ocradmin.batch.views.batch'),
