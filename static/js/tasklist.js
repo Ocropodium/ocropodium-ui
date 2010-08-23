@@ -170,15 +170,22 @@ function TaskList(list_container_id, param_container_id) {
 
     // pop up task details when the user double-clicks on a task
     var showTask = function(task) {
-        $("#dialog_box")
-            .load(
+        var dialog = $("<div></div>")
+            .attr("id", "task_details_dialog")
+            .appendTo($("body"));
+
+        dialog.load(
                 showurl + $(task).attr("id").replace("task_", ""),
                 null,
                 function(data) {
-                    $("#dialog_box").dialog({
+                    dialog.tabs().dialog({
                         width: 700,
+                        height: 500,
                         modal: true,
                         title: "Task Details",                        
+                        close: function(event, ui) {
+                            dialog.remove();
+                        },
                     });
                 }
             );
@@ -309,6 +316,7 @@ function TaskList(list_container_id, param_container_id) {
             var task = task_list[i];
             var id = "task_" + task.pk;
             var row = $("<tr></tr>")
+                .addClass(i % 2 == 0 ? "even" : "odd")
                 .addClass("task_item")
                 .attr("id", id)
                 .data("index", i)
