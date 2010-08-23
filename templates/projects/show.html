@@ -6,10 +6,15 @@
 {% endblock %}
 
 
-{% block innercontent %}
+{% block content %}
 
-<div class="innercontent">
-    {% include "ocrmodels/includes/show_model.html" %}
+<div class="widget">
+    <div class="widget_header">
+        {{project.name}}
+    </div>
+    <div class="widget_content">
+        {% include "ocrmodels/includes/show_model.html" %}
+    </div>
 </div>
 
 
