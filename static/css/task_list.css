@@ -57,6 +57,22 @@
 
 .task_item.selected {
     background-color: #F2F2F2;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.35, rgb(135,176,255)),
+        color-stop(0.48, rgb(143,184,255))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(135,180,255) 35%,
+        rgb(143,184,255) 48%
+    );
+}
+
+.task_item.odd {
+    background-color: #F3F3F3;
 }
 
 .task_item.todelete {
