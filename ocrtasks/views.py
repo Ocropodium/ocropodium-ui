@@ -17,6 +17,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks import utils as taskutils
 
 PER_PAGE = 20
 
@@ -229,8 +230,15 @@ def show(request, pk):
     """
 
     task = get_object_or_404(OcrTask, pk=pk)
+    params = [(k, task.args[-1][k]) for k in \
+                sorted(task.args[-1].keys())] if task.args \
+                else []
 
-    context = {"task": task}
+    context = {
+        "task": task,
+        "params": params,
+        "transcript": task.latest_transcript(),
+    }
     template = "ocrtasks/show.html" if not request.is_ajax() \
             else "ocrtasks/includes/show_task.html"
     return render_to_response(template, context, 
