@@ -136,7 +136,7 @@ def create(request):
         project.user = request.user
         project.full_clean()
         project.save()
-    return HttpResponseRedirect("/projects/list")
+    return HttpResponseRedirect("/projects/load/%s/" % project.pk)
 
 
 
@@ -198,26 +198,18 @@ def open(request):
     """
     
     # this is not complete yet
-    return list(request)
+    #if not request.is_ajax():
+    #    return list(request)
 
     params = request.GET.copy()
-    allprojects = project_query(params)
-    paginator = Paginator(allprojects, PER_PAGE) 
-    try:
-        page = int(request.GET.get('page', '1'))
-    except ValueError:
-        page = 1
+    projects = project_query(request.user, params)
     
-    try:
-        tasks = paginator.page(page)
-    except (EmptyPage, InvalidPage):
-        tasks = paginator.page(paginator.num_pages)
+    serializer = serializers.get_serializer("json")()
+    json = serializer.serialize(
+        projects,
+    )
+    return HttpResponse(json, mimetype="application/json")
 
-    context = {"projects": projects}
-    template = "projects/open.html" if not request.is_ajax() \
-            else "projects/includes/open_list.html"
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
 
 
 @login_required
@@ -226,9 +218,8 @@ def load(request, pk):
     Open a project (load it in the session).
     """
     project = get_object_or_404(OcrProject, pk=pk)
-    next = request.META.get("HTTP_REFERER", "/ocr/")
     request.session["project"] = project
-    return HttpResponseRedirect(next)
+    return HttpResponseRedirect("/projects/show/%s/" % pk)
 
 
 def close(request):
