@@ -116,7 +116,8 @@ def list(request):
     ) 
 
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(serializedpage, response, cls=DjangoJSONEncoder)
+    simplejson.dump(serializedpage, response,
+            cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
     
@@ -185,7 +186,8 @@ def create(request):
     # return a serialized result
     transaction.commit()
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch), response, cls=DjangoJSONEncoder)
+    simplejson.dump(_serialize_batch(batch), response, 
+            cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
 
@@ -257,7 +259,8 @@ def batch(request):
     # return a serialized result
     transaction.commit()
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch), response, cls=DjangoJSONEncoder)
+    simplejson.dump(_serialize_batch(batch), response,
+            cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
 
@@ -280,7 +283,7 @@ def results(request, pk):
         statuses = None
     response = HttpResponse(mimetype="application/json")
     simplejson.dump(_serialize_batch(batch, start, limit, statuses), 
-            response, cls=DjangoJSONEncoder)
+            response, cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
 
@@ -302,7 +305,8 @@ def page_results(request, pk, page_index):
         excludes=("transcripts", "args", "kwargs",), 
     )
     taskssl[0]["fields"]["results"] = page.latest_transcript()
-    simplejson.dump(taskssl, response, cls=DjangoJSONEncoder)
+    simplejson.dump(taskssl, response, 
+            cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
 
@@ -546,7 +550,7 @@ def spellcheck(request):
 #            del spelldata[word]
 
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(spelldata, response)
+    simplejson.dump(spelldata, response, ensure_ascii=False)
     return response
 
 def _abort_celery_task(task):
