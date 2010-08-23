@@ -145,6 +145,37 @@ function OcrBatch(insertinto_id, batch_id) {
     });
 
 
+    $(".task_info").live("click", function(event) {
+        var pk = $(this).data("pk");
+        $.ajax({
+            url: "/ocrtasks/show/" + pk + "/",
+            type: "GET",
+            dataType: "html",
+            error: function(e, msg) {
+                alert(msg);
+            },
+            success: function(data) {
+                var dialog = $("<div></div>")
+                    .html(data)
+                    .appendTo($("body"))
+                    .find("#tabs")
+                    .tabs()
+                    .end()
+                    .dialog({
+                        modal: true,
+                        title: "Task Details",
+                        width: 700,
+                        height: 500,
+                        close: function(e, ui) {
+                            dialog.remove();
+                        },
+                    });
+            },
+        });
+        event.preventDefault();    
+    });
+
+
     $(".abort_task").live("click", function(event) {
         var pk = $(this).data("pk");
         $.ajax({
