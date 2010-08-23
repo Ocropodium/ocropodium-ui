@@ -6,10 +6,13 @@
 {% endblock %}
 
 
-{% block innercontent %}
+{% block content %}
 
-<div class="innercontent">
-    {% include "ocrtasks/includes/show_task.html" %}
+<div class="widget">
+    <div class="widget_header">Task Details</div>
+    <div class="widget_content">        
+        {% include "ocrtasks/includes/show_task.html" %}
+    </div>
 </div>
 
 
