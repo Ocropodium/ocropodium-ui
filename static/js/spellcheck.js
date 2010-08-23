@@ -319,11 +319,12 @@ function Spellchecker(selector) {
         var text = $.map($(m_selector), function(c) {
             return $(c).text();
         }).join("\n");
+        json = JSON.stringify(text);
 
         $.ajax({
             url: "/batch/spellcheck",
             type: "POST",
-            data: {text: text},
+            data: {data: json},
             dataType: "json",
             error: function(xhr, err) {
                 alert("Spellcheck failed.  Unable to reach server: " + err);

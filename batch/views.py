@@ -523,9 +523,10 @@ def spellcheck(request):
     """
     Spellcheck some POST data.
     """
-    data = request.POST.get("text")
-    if not data:
-        data = request.GET.get("text", "")
+    json = request.POST.get("data")
+    if not json:
+        raise Http505("No data passed to 'spellcheck' function.")
+    data = simplejson.loads(json)
 #    replacepunc = {}
 #    for line in data.split("\n"):
 #        for word in line.split(" "):
