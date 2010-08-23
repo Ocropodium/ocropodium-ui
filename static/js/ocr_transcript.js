@@ -27,20 +27,20 @@ function OcrTranscript(insertinto_id, batch_id) {
 
     // UI bits it's useful to keep a reference to:
     var m_container = $("<div></div>")
-        .addClass("widget");
+        .addClass("widget")
 //        .css("width", "400px")
 //        .css("height", "200px")
 //        .draggable({
 //            stack: ".widget",
 //            snap: "#workspace",
 //            handle: "#batch_head",
-//        }).resizable({
-//            minWidth: 300,
-//            resize: function(e, ui) {
-//                $(".transcript_lines")
-//                    .css("min-height", $(this).height() - 45);
-//            },        
-//        }).sortable({connectWith: ".widget"});  
+         .resizable({
+            minWidth: 300,
+            resize: function(e, ui) {
+                $("#scroll_container")
+                    .css("height", $(this).height() - 45);
+            },        
+        }); //.sortable({connectWith: ".widget"});  
     var m_header = $("<div></div>")
         .addClass("batch_head")
         .addClass("widget_header")
