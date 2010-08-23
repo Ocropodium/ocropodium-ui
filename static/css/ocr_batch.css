@@ -73,11 +73,16 @@
     width: 100px;
 }
 
-.retry_task, .retry_batch, .retry_errors, .abort_task, .abort_batch {
+.button_link {
     text-decoration: none;
     color: #999;
     float: right;
     margin: 0px 5px;
+    opacity: 0.5;
+}
+
+.retry_errored {
+    background-color: #FFDDDD;
 }
 
 .tl_container {

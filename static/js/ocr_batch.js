@@ -51,6 +51,36 @@ function OcrBatch(insertinto_id, batch_id) {
     var m_scrollwin = $("<span></span>")
         .addClass("scroll_viewer")
         .attr("id", "scroll_viewer");
+    var m_button_template = $("<a></a>")
+        .attr("href", "#")
+        .addClass("ui-state-default")
+        .addClass("ui-corner-all")
+        .addClass("button_link")
+        .addClass("ui-icon");
+
+    var m_batch_buttons = [ {
+            title: "Retry Errored Tasks",
+            classes: "ui-icon-refresh retry_errored",
+        }, {
+            title: "Retry All Tasks",
+            classes: "ui-icon-refresh retry_batch",
+        }, {
+            title: "Abort Entire Batch",
+            classes: "ui-icon-circle-close retry_batch",
+        },
+    ];
+
+    var m_task_buttons = [ {
+            title: "Retry Task",
+            classes: "ui-icon-refresh retry_task",
+        }, {
+            title: "Abort Task",
+            classes: "ui-icon-circle-close abort_task",
+        }, {
+            title: "Show Task Info",
+            classes: "ui-icon-info task_info",
+        },
+    ];
 
 
     this.buildUi = function() {
@@ -87,6 +117,15 @@ function OcrBatch(insertinto_id, batch_id) {
     });
 
 
+    $(".ui-icon").live("mouseover mouseout", function(event) {
+        if (event.type == "mouseover") {
+            $(this).addClass("ui-state-hover");
+        } else {
+            $(this).removeClass("ui-state-hover");
+        }
+    });
+
+
     $(".retry_task").live("click", function(event) {
         var pk = $(this).data("pk");
         $.ajax({
@@ -112,7 +151,7 @@ function OcrBatch(insertinto_id, batch_id) {
             url: "/batch/abort_task/" + pk + "/",
             type: "POST",
             dataType: "json",
-            beforeSend: function(e) {
+            beforeSend: function(e) {                
                 setTaskWaiting($("#task" + pk), true);
             },
             error: function(e, msg) {
@@ -141,8 +180,9 @@ function OcrBatch(insertinto_id, batch_id) {
     });
 
 
-    $(".retry_batch, .retry_errors, .abort_batch").live("click", function(event) {
+    $(".retry_batch, .retry_errored, .abort_batch").live("click", function(event) {
         var pk = $(this).data("pk");
+        var action = $(this).attr("title").toLowerCase();
         $.ajax({
             url: $(this).attr("href"),
             type: "POST",
@@ -151,6 +191,8 @@ function OcrBatch(insertinto_id, batch_id) {
                 alert(msg);
             },
             beforeSend: function(e) {
+                if (!confirm("Really " + action + "?"))
+                    return false;
                 setTaskWaiting($("#batch" + pk), true);
             },
             complete: function(e) {
@@ -323,6 +365,7 @@ function OcrBatch(insertinto_id, batch_id) {
 
 
     var createBatchHeaderUi = function() {
+
         var batch = $("<div></div>")
             .addClass("batch")
             .addClass("expanded");
@@ -334,21 +377,12 @@ function OcrBatch(insertinto_id, batch_id) {
         batch.append(
             $("<span></span>")
                 .addClass("page_info"));
-        batch.append(
-            $("<a></a>")
-                .attr("href", "#")
-                .addClass("retry_errors")
-                .text("Retry Errors"));
-        batch.append(
-            $("<a></a>")
-                .attr("href", "#")
-                .addClass("retry_batch")
-                .text("Retry All"));
-        batch.append(
-            $("<a></a>")
-                .attr("href", "#")
-                .addClass("abort_batch")
-                .text("Abort Batch"));
+        $.each(m_batch_buttons, function(i, button) {
+            m_button_template.clone()
+                .attr("title", button.title)
+                .addClass(button.classes)
+                .appendTo(batch);
+        });
         batch.append(buildTaskFilterList());
         m_batchdiv.append(batch);
     }
@@ -395,16 +429,14 @@ function OcrBatch(insertinto_id, batch_id) {
             $("<span></span>")
                 .addClass("page_name"));
         addProgressBar(task);
-        task.append(
-            $("<a></a>")
-                .attr("href", "#")
-                .addClass("retry_task")
-                .text("Retry"));
-        task.append(
-            $("<a></a>")
-                .attr("href", "#")
-                .addClass("abort_task")
-                .text("Abort"));
+
+        $.each(m_task_buttons, function(i, button) {
+            m_button_template.clone()
+                .attr("title", button.title)
+                .addClass(button.classes)
+                .appendTo(task);
+        });
+
         task.append(
             $("<span></span>")
                 .addClass("page_info"));
@@ -434,8 +466,8 @@ function OcrBatch(insertinto_id, batch_id) {
         batch.find(".retry_batch")
             .attr("href", "/batch/retry/" + batchdata.pk + "/") 
             .data("pk", batchdata.pk);
-        batch.find(".retry_errors")
-            .attr("href", "/batch/retry_errors/" + batchdata.pk + "/") 
+        batch.find(".retry_errored")
+            .attr("href", "/batch/retry_errored/" + batchdata.pk + "/") 
             .data("pk", batchdata.pk);
         batch.find(".abort_batch")
             .attr("href", "/batch/abort_batch/" + batchdata.pk + "/") 
