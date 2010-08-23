@@ -1,0 +1,40 @@
+
+
+#scroll_container {
+    height: 400px;
+    overflow: auto;
+    border: 1px solid #D0D0D0;
+}
+
+.project_item {
+    padding: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+}
+
+.project_item.odd {
+    background-color: #F4F4F4;
+}
+
+.project_item.selected {
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.35, rgb(135,180,255)),
+        color-stop(0.48, rgb(143,184,255))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(135,180,255) 35%,
+        rgb(143,184,255) 48%
+    );
+}
+
+.button_box {
+    overflow: auto;
+}
+
+.button_box input {
+    float: right;
+}
