@@ -219,6 +219,11 @@
    font-size: 0.8em;
 }
 
+#filter_list {
+    z-index: 1000;
+    background-color: #FFF;
+}
+
 
 /* New batch form -> /batch/new */
 #batch_file_list {
