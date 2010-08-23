@@ -345,16 +345,20 @@ function OcrBatch(insertinto_id, batch_id) {
         var filterbutton = $("<div></div>")
             .addClass("toggle_button")
             .attr("id", "filter_button")
+            .text("Filter Tasks")
+            .addClass("ui-state-default ui-corner-all")
+            .hover(function(event) {
+                $(this).addClass("ui-state-hover");
+            }, function(event) {
+                $(this).removeClass("ui-state-hover");
+            })
             .toggle(function(event) {
-                $(this).addClass("open");
+                $(this).addClass("ui-state-active");
                 filterlist.show();
             }, function(event) {
-                $(this).addClass("closed");
+                $(this).removeClass("ui-state-active");
                 filterlist.hide();
-            }).button({
-                text: true,        
-                label: "Filter Tasks",
-            }).button("widget");
+            });
         var container = $("<div></div>")
             .addClass("filter_container")
             .append(filterbutton)
@@ -480,11 +484,11 @@ function OcrBatch(insertinto_id, batch_id) {
         var progstr = Math.round(progress) + "%";
         task.find(".progress").css("width", progstr).attr("title", progstr);
         if (status) {
-            task.find(".progressbar").attr("class", "progressbar " + status.toLowerCase());
+            task.find(".progressbar").addClass("progressbar " + status.toLowerCase());
         } else if (progress > 99.5) {
-            task.find(".progressbar").attr("class", "progressbar success");
+            task.find(".progressbar").addClass("progressbar success");
         } else {
-            task.find(".progressbar").attr("class", "progressbar started");
+            task.find(".progressbar").addClass("progressbar started");
         }       
     }
 
