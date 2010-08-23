@@ -248,9 +248,9 @@ function OcrLineEditor(insertinto_id) {
                 self.onEditPrevElement();
             return false;
         } else if (event.which == ESCAPE) {
-            self.releaseElement(m_inittext);
+            finishEditing(m_inittext);
         } else if (event.which == RETURN) {
-            self.releaseElement();
+            finishEditing();
         } else if (event.which == RIGHT) {
             keyNav(RIGHT);
         } else if (event.which == LEFT) {
@@ -406,20 +406,26 @@ function OcrLineEditor(insertinto_id) {
     }
 
 
+    var finishEditing = function(withtext) {
+        releaseElement(withtext);
+        self.onEditingFinished();
+    }
+
+
     this.setElement = function(element, clickevent) {
         if (m_elem != null) {
-            self.releaseElement();
+            releaseElement();
         }
         m_elem = $(element);
         m_inittext = m_elem.text();        
-        self.grabElement(clickevent);
+        grabElement(clickevent);
     }
 
     this.element = function() {
         return m_elem;
     }
 
-    this.grabElement = function(clickevent) {
+    var grabElement = function(clickevent) {
         m_elem.addClass("selected");    
         m_elem.addClass("editing");
         
@@ -443,7 +449,7 @@ function OcrLineEditor(insertinto_id) {
                     && event.pageX <= (left + m_elem.width())
                     && event.pageY >= top
                     && event.pageY <= (top + m_elem.height()))) {
-                self.releaseElement();
+                finishEditing();
             }
         });
 
@@ -499,7 +505,7 @@ function OcrLineEditor(insertinto_id) {
     }
 
 
-    this.releaseElement = function(settext) {
+    var releaseElement = function(settext) {
         m_elem.children()
             .die("click.clearselect")
             .die("click.positioncursor");
@@ -534,4 +540,9 @@ OcrLineEditor.prototype.onEditNextElement = function(event) {
 OcrLineEditor.prototype.onEditPrevElement = function(event) {
 
 }
+
+OcrLineEditor.prototype.onEditingFinished = function(event) {
+
+}
+
 
