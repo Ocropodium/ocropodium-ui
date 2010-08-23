@@ -326,7 +326,7 @@ function Spellchecker(selector) {
             data: {text: text},
             dataType: "json",
             error: function(xhr, err) {
-                alert("Spellcheck failed.  Unable to reach server: " + e);
+                alert("Spellcheck failed.  Unable to reach server: " + err);
             },
             success: function(data) {
                 m_data = data;
