@@ -123,6 +123,7 @@ $(function() {
     }
 
     $("#spellcheck").click(function(event) {
+        speller.init();
         speller.spellCheck();
     });
 

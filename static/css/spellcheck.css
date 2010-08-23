@@ -47,7 +47,6 @@
 
 #sp_buttoncontainer {
     float: right;
-    height: 300px;
 }
 
 #sp_buttoncontainer {
@@ -68,6 +67,50 @@
 }
 
 #sp_suggestionlist {
+    min-height: 100px;
+    max-height: 100px;
+    overflow: auto;
+    padding: 5px;
+    background-color: #FFF;
+    border: 1px solid #999;
 }
 
+#sp_suggestionlist.focus {
+    outline: 5px auto -webkit-focus-ring-color;
+}
 
+#sp_linecontainer {
+    overflow: none;
+}
+
+.spell_line {
+    border: 1px solid #999;
+    overflow: none;
+}
+
+.active_word {
+    background-color: #FFAAAA;
+}
+
+.sp_suggestion.selected {
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.35, rgb(135,180,255)),
+        color-stop(0.48, rgb(143,184,255))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(135,180,255) 35%,
+        rgb(143,184,255) 48%
+    );
+}
+
+#sp_lineedit {
+    font-size: 1.2em;
+}
+
+.badspell.current {
+    background-color: #FF8888;
+}

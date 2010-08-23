@@ -6,19 +6,19 @@ function OcrLineEditor(insertinto_id) {
     var m_elem = null;
 
     // useful key codes
-    var ESCAPE = 27;
-    var RETURN = 13;
-    var LEFT = 37;
-    var RIGHT = 39;
-    var DELETE = 46;
-    var BACKSPACE = 8;
-    var SHIFT = 16;
-    var CTRL = 17;
-    var ALT = 18;
-    var CAPSLOCK = 20;
-    var TAB = 9;
-    var END = 35;
-    var HOME = 36;
+    const ESCAPE = 27;
+    const RETURN = 13;
+    const LEFT = 37;
+    const RIGHT = 39;
+    const DELETE = 46;
+    const BACKSPACE = 8;
+    const SHIFT = 16;
+    const CTRL = 17;
+    const ALT = 18;
+    const CAPSLOCK = 20;
+    const TAB = 9;
+    const END = 35;
+    const HOME = 36;
 
 
     // selection start & end 
