@@ -60,7 +60,7 @@ def new(request):
     # many other batches there are in the projects
     project = request.session["project"]
     batchname = "%s - Batch %d" % (project.name,
-            project.ocrbatch_set.count())
+            project.ocrbatch_set.count() + 1)
     context = {
         "batchname": batchname,
         "binpresets": OcrPreset.objects.filter(
