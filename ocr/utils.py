@@ -24,22 +24,32 @@ class FileWrangler(object):
     """
     Determine the most appropriate place to put new files
     and uploaded files, based on OCR/batch parameters.
+    TODO: Include the project in these considerations.
     """
-    def __init__(self, username=None, batch_id=None, action="test", temp=True, stamp=False):
+    def __init__(self, username=None, batch_id=None, 
+            project_id=None, action="test", temp=True, 
+            training=False, stamp=False):
         self.username = username
         self.action = action
         self.batch_id = batch_id
+        self.project_id = project_id
         self.temp = temp
         self.stamp = stamp
+        self.training = training
 
     def __call__(self, infile=None):
         base = settings.MEDIA_ROOT
         if self.temp:
             base = os.path.join(base, "temp")
         else:
-            base = os.path.join(base, "files")
+            if self.training:
+                base = os.path.join(base, "training")
+            else:
+                base = os.path.join(base, "files")
         if self.username:
             base = os.path.join(base, self.username)
+        if self.project_id:
+            base = os.path.join(base, "project%06d" % self.project_id)
         if self.batch_id:
             base = os.path.join(base, "batch%06d" % self.batch_id)
         else:
