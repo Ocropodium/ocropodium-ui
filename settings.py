@@ -147,6 +147,7 @@ INSTALLED_APPS = (
     'ocrmodels',
     'ocrpresets',
     'ocrtasks',
+    'ocrtraining',
     'projects',
     'tagging',
 )
