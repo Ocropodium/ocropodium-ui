@@ -171,6 +171,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             task_id=tid,
             user=request.user,
             page_name=os.path.basename(path),
+            task_type=tasktype.lower(),
             status="INIT",
             args=args,
             kwargs=kwargs,

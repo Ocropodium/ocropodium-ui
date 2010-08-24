@@ -170,8 +170,10 @@ def create(request):
             ocrtask = OcrTask(
                 task_id=tid,
                 user=request.user,
-                batch=batch, 
+                batch=batch,
+                project=request.session["project"],
                 page_name=os.path.basename(path),
+                task_type="convert",
                 status="INIT",
                 args=args,
                 kwargs=kwargs,
@@ -244,9 +246,11 @@ def batch(request):
                 task_id=tid,
                 user=request.user,
                 batch=batch, 
+                project=request.session["project"],
                 args=args,
                 kwargs=kwargs,
                 page_name=os.path.basename(path),
+                task_type="convert",
                 status="INIT"
             )
             ocrtask.save()

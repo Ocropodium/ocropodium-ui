@@ -2,6 +2,8 @@ from django.db import models
 from picklefield import fields
 
 from ocradmin.batch.models import OcrBatch
+from ocradmin.projects.models import OcrProject
+
 from django.contrib.auth.models import User
 
 
@@ -20,8 +22,10 @@ class OcrTask(models.Model):
 
     user = models.ForeignKey(User)
     batch = models.ForeignKey(OcrBatch, related_name="tasks", blank=True, null=True)
+    project = models.ForeignKey(OcrProject, related_name="tasks", blank=True, null=True)
     task_id = models.CharField(max_length=100)
     task_name = models.CharField(max_length=100)
+    task_type = models.CharField(max_length=100)
     page_name = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     lines = models.IntegerField(blank=True, null=True)
