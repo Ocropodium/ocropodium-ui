@@ -5,6 +5,7 @@ and Tesseract tools.
 
 import os
 import re
+import traceback
 from datetime import datetime
 import logging
 import shutil
@@ -162,12 +163,15 @@ def get_ab_output_path(inpath):
         outpath = "%s_001%s" % (base, ext)
     return outpath
 
-def get_new_task_id(filepath):
+def get_new_task_id(filepath=None):
     """
     Get a unique id for a new page task, given it's
     file path.
     """
-    return "%s::%s" % (os.path.basename(filepath), uuid.uuid1()) 
+    if filepath:
+        return "%s::%s" % (os.path.basename(filepath), uuid.uuid1()) 
+    else:
+        return uuid.uuid1()
 
 
 def find_file_with_basename(pathbase):
@@ -285,6 +289,13 @@ def get_converter(engine_type, *args, **kwargs):
         return OcropusWrapper(*args, **kwargs)
     else:
         return TessWrapper(*args, **kwargs)
+
+
+def get_trainer(*args, **kwargs):
+    """
+    Get the appropriate class to do the conversion.
+    """
+    return OcropusWrapper(*args, **kwargs)
 
 
 def get_ocropus_components(oftypes=None, withnames=None):
@@ -431,6 +442,7 @@ class OcropusWrapper(object):
         self.abort_func = abort_func
         self._linerec = None
         self._lmodel = None
+        self.training = False
         self.logger = logger if logger else self.get_default_logger()
         self.params = OcropusParams(params) if params \
                 else OcropusParams({})
@@ -452,7 +464,7 @@ class OcropusWrapper(object):
         iulib.write_image_packed(path, data)
 
 
-    def init(self):
+    def init_converter(self):
         """
         Load the line-recogniser and the lmodel FST objects.
         """
@@ -480,7 +492,38 @@ class OcropusWrapper(object):
         #        self.logger.info("Setting: %s.%s -> %s" % (self.params.psegmenter, param, val))
         #        self._linerec.pset(param, val)
 
-    
+
+    def init_trainer(self):
+        """
+        Load the cmodel for training.
+        """
+        from ocropy import linerec
+        try:
+            #self._linerec = ocropus.load_linerec(self.params.cmodel)
+            self._linerec = linerec.LineRecognizer()
+            self._linerec.load(self.params.cmodel)
+        except (StandardError, RuntimeError), err:
+            raise err
+        self._linerec.startTraining()        
+        self.training = True
+
+
+    def finalize_trainer(self):
+        """
+        Stop training.
+        """
+        self._linerec.finishTraining()
+
+
+    def save_trained_model(self):
+        """
+        Save the results of training.
+        """
+        #self._linerec.save(self.params.outmodel)
+        ocropus.save_component(self.params.outmodel, self._linerec.cmodel)
+        
+
+
     def convert(self, filepath, progress_func=None, callback=None, **cbkwargs):
         """
         Convert an image file into text.  A callback can be supplied that
@@ -583,7 +626,7 @@ class OcropusWrapper(object):
         single line.
         """
         if self._lmodel is None:
-            self.init()
+            self.init_converter()
         fst = ocropus.make_OcroFST()
         self._linerec.recognizeLine(fst, line)
         result = iulib.ustrg()
@@ -682,6 +725,7 @@ class OcropusWrapper(object):
                 pageout.move(tmp)
         return gray, pageout
 
+
     @check_aborted
     def batch_clean(self, components, pagedata):
         tmp = iulib.bytearray()
@@ -700,7 +744,61 @@ class OcropusWrapper(object):
 
         return pageout
 
- 
+
+    def load_training_binary(self, imagepath):
+        """
+        Load an image to use for training.
+        """
+        self.trainbin = iulib.bytearray()
+        iulib.read_image_gray(self.trainbin, imagepath)                
+
+
+    def train_line(self, bbox, text):
+        """
+        Train on a line, using the bbox to extract the line
+        from the given page.
+        """
+        if not self.training:
+            self.init_trainer()
+        # need to invert the bbox for the time being
+        # we should really store it the right way 
+        # round in the first place
+        w = self.trainbin.dim(0)
+        h = self.trainbin.dim(1)
+
+        ibox = (bbox[0], h - bbox[1],
+                bbox[0] + bbox[2] + 1,
+                (h - bbox[1]) + bbox[3] + 1)
+        sub = iulib.bytearray()
+        iulib.extract_subimage(sub, self.trainbin, *ibox)
+
+        try:
+            self._linerec.addTrainingLine1(sub, text.encode())
+        except Exception, e:
+            traceback.print_exc()
+            self.logger.error("Skipping training line: %s: %s" % (text, e.message))
+
+    def save_new_model(self):
+        """
+        Finalise training and save model.
+        """
+        self.logger.info("Attempting to finalise training")
+        tries = 5
+        while (tries > 0):
+            try:
+                self.finalize_trainer()
+                break
+            except Exception, e:
+                self.logger.error("Encounter runtime error: %s" % e.message)
+                self.logger.info("Tries left: %d" % tries)
+            tries -= 1
+
+        self.logger.info("Saving trained model")
+        self.save_trained_model()
+
+
+
+
 
 
 class TessWrapper(OcropusWrapper):
@@ -718,7 +816,7 @@ class TessWrapper(OcropusWrapper):
         super(TessWrapper, self).__init__(*args, **kwargs)
 
 
-    def init(self):
+    def init_converter(self):
         """
         Extract the lmodel to a temporary directory.  This is
         cleaned up in the destructor.
@@ -778,7 +876,7 @@ class TessWrapper(OcropusWrapper):
         TODO: Fix hardcoded path to Tesseract.
         """
         if self._tessdata is None:
-            self.init()
+            self.init_converter()
 
         lines = []
         with tempfile.NamedTemporaryFile() as tmp:
