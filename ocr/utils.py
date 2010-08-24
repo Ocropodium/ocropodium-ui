@@ -171,7 +171,7 @@ def get_new_task_id(filepath=None):
     if filepath:
         return "%s::%s" % (os.path.basename(filepath), uuid.uuid1()) 
     else:
-        return uuid.uuid1()
+        return str(uuid.uuid1())
 
 
 def find_file_with_basename(pathbase):
