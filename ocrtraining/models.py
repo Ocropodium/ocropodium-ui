@@ -35,7 +35,7 @@ class TrainingPage(models.Model):
     """
     user = models.ForeignKey(User)
     project = models.ForeignKey(OcrProject, related_name="training_sets")
-    lines = fields.PickledObjectField()
+    data = fields.PickledObjectField()
     binary_image_path = models.CharField(max_length=255)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
 

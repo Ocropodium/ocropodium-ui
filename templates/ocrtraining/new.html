@@ -1,0 +1,18 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+
+{% endblock %}
+
+{% block content %}
+
+    <div id="document_window">
+        <div class="widget">
+            <div class="widget_header">New Training Job</div>
+            <div class="widget_content">
+                <form action="/ocrtraining/create" method="POST">
+                    {% include "ocrtraining/includes/training_form.html" %}
+                </form>
+            </div>
+    </div>
+{% endblock %}

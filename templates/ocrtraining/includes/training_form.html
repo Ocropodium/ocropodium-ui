@@ -1,0 +1,20 @@
+
+{% include "includes/form_errors.html" %}
+
+
+<div class="field_wrapper">
+    <label for="id_name">Name:</label>
+    {{ form.name }}
+</div>
+
+<div class="field_wrapper">
+    <label for="id_name">Inital Character Model:</label>
+    {{ form.cmodel }}
+</div>
+
+<div class="form_submit_buttons">
+    <input type="submit" value="Submit" id="submit_new_training_form" />
+    <a href="/projects/list" id="cancel_new_training_form">Cancel</a>
+</div>
+
+
