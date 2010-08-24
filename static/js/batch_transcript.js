@@ -34,6 +34,7 @@ function pollForResults(data, polltime) {
             },
         });
     } else if (data.status == "SUCCESS") {
+        $(sdviewer).data("binpath", data.results.out);
         sdviewer.setSource(data.results.src);
         sdviewer.setOutput(data.results.dst);
         sdviewer.setWaiting(false);
@@ -129,6 +130,28 @@ $(function() {
 
     $("#save_data").click(function(event) {
         transcript.save();
+    });
+
+    $("#save_training_data").click(function(event) {
+        var pk = transcript.pageData().pk;
+        var binurl = $(sdviewer).data("binpath");
+        $.ajax({
+            url: "/ocrtraining/save_task/" + pk + "/",
+            data: {binary_image: binurl},
+            dataType: "json",
+            type: "POST",
+            error: function(xhr, err, str) {
+                alert(err + "  " + str);
+            },
+            success: function(data) {
+                if (data.error)
+                    return alert("Error: " + data.error);
+                alert("Saved!");
+            },
+            complete: function() {
+
+            },
+        });
     });
 
     $("#page_slider").slider({

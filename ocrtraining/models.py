@@ -39,3 +39,5 @@ class TrainingPage(models.Model):
     binary_image_path = models.CharField(max_length=255)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
 
+    class Meta:
+        unique_together = ("project", "binary_image_path")
