@@ -13,7 +13,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseServerError 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
@@ -22,7 +22,8 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.batch import utils as batchutils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript 
+from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
+from ocradmin.ocrtraining.models import TrainingPage
 
 from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params, _cleanup_params
@@ -323,7 +324,7 @@ def save_page_data(request, pk, page_index):
 
     json = request.POST.get("data")
     if not json:
-        raise Http505("No data passed to 'save' function.")
+        return HttpResponseServerError("No data passed to 'save' function.")
     data = simplejson.loads(json)
     result = Transcript(data=data, task=page)
     result.save()
@@ -529,7 +530,7 @@ def spellcheck(request):
     """
     json = request.POST.get("data")
     if not json:
-        raise Http505("No data passed to 'spellcheck' function.")
+        return HttpResponseServerError("No data passed to 'spellcheck' function.")
     data = simplejson.loads(json)
 #    replacepunc = {}
 #    for line in data.split("\n"):
