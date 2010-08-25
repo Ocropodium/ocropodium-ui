@@ -91,7 +91,7 @@ def create(request):
     
     # make us a new task entry
     tid = ocrutils.get_new_task_id()
-    args = ([ts.pk for ts in project.training_sets.all()], cmodel.pk, outpath)
+    args = (project.training_sets.all(), cmodel, outpath)
     kwargs = dict(task_id=tid, loglevel=60, retries=2,) # could add a 'queue' param here
     task = OcrTask(
         task_id=tid,
@@ -104,7 +104,6 @@ def create(request):
         kwargs=kwargs,        
     )
     task.save()
-    print "SENDING: %s, %s" % (args, kwargs)
     LineTrainTask.apply_async(args=args, **kwargs)
 
     return HttpResponseRedirect("/projects/list")

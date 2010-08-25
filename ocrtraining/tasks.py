@@ -12,8 +12,8 @@ from celery.task import PeriodicTask
 from datetime import datetime, timedelta
 from django.core.files.base import File
 from django.conf import settings
-from ocradmin.ocr import utils
 
+from ocradmin.ocr import utils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.projects.models import OcrProject
 from ocradmin.ocrtraining.models import TrainingPage
@@ -29,19 +29,16 @@ class LineTrainTask(AbortableTask):
     name = "cmodel.training"
     max_retries = None
     
-    def run(self, dataset_ids, cmodel_id, outdir, **kwargs):
+    def run(self, datasets, cmodel, outdir, **kwargs):
         """
         Run line train task.
         """
 
-        cmodel = OcrModel.objects.get(pk=cmodel_id)
+        #cmodel = OcrModel.objects.get(pk=cmodel_id)
         paramdict = dict(
             cmodel=cmodel.file.path.encode(),
             outmodel=os.path.join(outdir, os.path.basename(cmodel.file.path.encode())),
         )
-        #paramdict["cmodel"] = "/media/data/stormont_train/book/stormont_1.cmodel"
-        #paramdict["cmodel"] = "/home/michaelb/dev/ocropodium/build/ocropy/ocropus-0.0.0/multi3.cmodel"
-        #paramdict["outmodel"] = "test.pymodel"
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
 
@@ -71,8 +68,8 @@ class LineTrainTask(AbortableTask):
         # init progress to zero (for when retrying tasks)
         #progress_func(0)
         
-        for pk in dataset_ids:
-            pagedata = TrainingPage.objects.get(pk=pk)
+        for pagedata in datasets:
+            #pagedata = TrainingPage.objects.get(pk=pk)
             trainer.load_training_binary(pagedata.binary_image_path.encode())
             # we've got a Training page.  Go through it, and 
             # train on each line
@@ -82,20 +79,21 @@ class LineTrainTask(AbortableTask):
         trainer.save_new_model()
         logger.info("SAVING MODEL: test.cmodel")
 
-        with open(paramdict["outmodel"], "rb") as fh:
-            derivednum = cmodel.ocrmodel_set.count() + 1
-            newmodel = OcrModel(
-                user=cmodel.user,
-                name="%s Retrain %d" % (cmodel.name, derivednum),
-                derived_from=cmodel,
-                description="<DERIVED FROM %s>\n\n%s" % (cmodel.name, cmodel.description),
-                public=cmodel.public,
-                type=cmodel.type,
-                app=cmodel.app,
-                file=File(fh),             
-            )
-            newmodel.save()
-            return { "new_model_pk": newmodel.pk }
+        fh = open(paramdict["outmodel"], "rb")
+        derivednum = cmodel.ocrmodel_set.count() + 1
+        newmodel = OcrModel(
+            user=cmodel.user,
+            name="%s Retrain %d" % (cmodel.name, derivednum),
+            derived_from=cmodel,
+            description="<DERIVED FROM %s>\n\n%s" % (cmodel.name, cmodel.description),
+            public=cmodel.public,
+            type=cmodel.type,
+            app=cmodel.app,
+            file=File(fh),             
+        )
+        newmodel.save()
+        fh.close()
+        return { "new_model_pk": newmodel.pk }
 
 
 
