@@ -16,7 +16,7 @@ from django.conf import settings
 from ocradmin.ocr import utils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.projects.models import OcrProject
-from ocradmin.ocrtraining.models import TrainingPage
+from ocradmin.training.models import TrainingPage
 
 
 
