@@ -23,7 +23,7 @@ from ocradmin.batch import utils as batchutils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
-from ocradmin.ocrtraining.models import TrainingPage
+from ocradmin.training.models import TrainingPage
 
 from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params, _cleanup_params

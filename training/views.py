@@ -24,11 +24,11 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
 from ocradmin.projects.models import OcrProject
-from ocradmin.ocrtraining.models import TrainingPage
+from ocradmin.training.models import TrainingPage
 
 from ocradmin.projects.utils import project_required
 
-from ocradmin.ocrtraining.tasks import LineTrainTask
+from ocradmin.training.tasks import LineTrainTask
 
 
 class TrainingSetForm(forms.Form):
@@ -52,7 +52,7 @@ def new(request):
     trainnum = project.tasks.filter(task_type="train").count() + 1
     name = "%s Training %d" % (project.name, trainnum)
 
-    template = "ocrtraining/new.html"
+    template = "training/new.html"
     context = {
         "form": TrainingSetForm(initial=dict(name=name)),
         "project": request.session["project"],
@@ -70,7 +70,7 @@ def create(request):
     project = request.session["project"]
     form = TrainingSetForm(request.POST)
     if not form.is_valid():
-        template = "ocrtraining/new.html"          
+        template = "training/new.html"          
         context = {
             "form": form,
             "project": project,
