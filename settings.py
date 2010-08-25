@@ -81,6 +81,9 @@ SITE_ID = 1
 # to load the internationalization machinery.
 USE_I18N = True
 
+# Path to some random binary tools
+BIN_PATH = "%s/bin" % SITE_ROOT
+
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = "%s/media" % SITE_ROOT if not SERVER else "/media/share"
