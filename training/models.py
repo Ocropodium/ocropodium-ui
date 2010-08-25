@@ -4,6 +4,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from picklefield import fields
 from ocradmin.projects.models import OcrProject
+from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.batch.models import OcrBatch
+from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocr import utils as ocrutils
 
 
@@ -41,3 +44,33 @@ class TrainingPage(models.Model):
 
     class Meta:
         unique_together = ("project", "binary_image_path")
+
+
+class OcrModelScore(models.Model):
+    """
+    A record of a job scoring a model on a given
+    ground truth.
+    """
+    comparison = models.ForeignKey("OcrModelScoreComparison", 
+            related_name="modelscores")
+    model = models.ForeignKey(OcrModel, related_name="comparisons")
+    task  = models.OneToOneField(OcrTask, related_name="modelscore") 
+    ground_truth = models.ForeignKey(TrainingPage)
+    score = models.FloatField(null=True, blank=True)
+    score_internals = models.TextField(null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_on = models.DateTimeField(auto_now_add=True, auto_now=True, editable=False)
+    error = fields.PickledObjectField(blank=True, null=True)
+
+
+class OcrModelScoreComparison(models.Model):
+    """
+    A comparison between two model scores
+    """
+    name = models.CharField(max_length=255)
+    batch = models.ForeignKey(OcrBatch)
+    notes = models.TextField(null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+
+
+

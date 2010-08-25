@@ -8,6 +8,7 @@ from celery.signals import task_sent, task_prerun, task_postrun
 from celery.datastructures import ExceptionInfo
 
 from ocradmin.ocr.tasks import ConvertPageTask, BinarizePageTask 
+from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 from ocradmin.ocrtasks.models import OcrTask, Transcript
 
 
@@ -49,7 +50,8 @@ def on_task_postrun(**kwargs):
 
 
 # Connect up signals to the *PageTask
-for taskname in [ConvertPageTask.name]:
+for taskname in [ConvertPageTask.name, LineTrainTask.name, 
+        ComparisonTask.name]:
     task_sent.connect(on_task_sent, tasks[taskname])
     task_prerun.connect(on_task_prerun, tasks[taskname])
     task_postrun.connect(on_task_postrun, tasks[taskname])

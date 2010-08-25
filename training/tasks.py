@@ -13,10 +13,13 @@ from datetime import datetime, timedelta
 from django.core.files.base import File
 from django.conf import settings
 
-from ocradmin.ocr import utils
+from ocradmin.ocr import utils as ocrutils
+from ocradmin.training import utils
+
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.projects.models import OcrProject
 from ocradmin.training.models import TrainingPage
+from ocradmin.ocrtasks.models import OcrTask
 
 
 
@@ -54,7 +57,7 @@ class LineTrainTask(AbortableTask):
             return asyncres.is_aborted()
 
 
-        trainer = utils.get_trainer(logger=logger, abort_func=abort_func,
+        trainer = ocrutils.get_trainer(logger=logger, abort_func=abort_func,
                 params=paramdict)
 
         # function for the converter to update progress
@@ -94,6 +97,66 @@ class LineTrainTask(AbortableTask):
         newmodel.save()
         fh.close()
         return { "new_model_pk": newmodel.pk }
+
+
+
+
+class ComparisonTask(AbortableTask):
+    """
+    Run a comparison of a given model on a 
+    binarized image and compare output to
+    a ground-truth.
+    """
+    name = "compare.groundtruth"
+    max_retries = None
+
+    def run(self, groundtruth, outdir, paramdict, **kwargs):
+        """
+        Runs the model comparison action.
+        """
+        # function for the converted to call periodically to check whether 
+        # to end execution early
+        logger = self.get_logger(**kwargs)
+        logger.info(paramdict)
+        task = OcrTask.objects.get(task_id=kwargs["task_id"])
+
+        def abort_func():
+            # TODO: this should be possible via a simple 'self.is_aborted()'
+            # Find out why it isn't.
+            asyncres = AbortableAsyncResult(kwargs["task_id"])            
+            return asyncres.backend.get_status(kwargs["task_id"]) == "ABORTED" 
+
+        # ground truth is already a binary, so tell the converter not
+        # to redo it...
+        paramdict["prebinarized"] = True
+        converter = ocrutils.get_converter("ocropus", 
+                logger=logger, abort_func=abort_func, params=paramdict)
+        
+        # function for the converter to update progress
+        def progress_func(progress, lines=None):
+            task.progress = progress
+            if lines is not None:
+                task.lines = lines
+            task.save()
+        # init progress to zero (for when retrying tasks)
+        progress_func(0)
+
+        outdata = converter.convert(groundtruth.binary_image_path.encode(),
+                progress_func=progress_func)
+        assert(outdata.get("lines"))
+
+        accuracy, details = utils.isri_accuracy(
+                ocrutils.output_to_plain_text(groundtruth.data),
+                ocrutils.output_to_plain_text(outdata))
+        # there's be no details if something went wrong
+        assert(details)
+        task.modelscore.score = accuracy
+        task.modelscore.score_interals = details
+        task.modelscore.save()
+
+        return accuracy
+
+        
 
 
 

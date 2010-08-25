@@ -24,11 +24,11 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
 from ocradmin.projects.models import OcrProject
-from ocradmin.training.models import TrainingPage
+from ocradmin.training.models import *
 
 from ocradmin.projects.utils import project_required
 
-from ocradmin.training.tasks import LineTrainTask
+from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 
 
 class TrainingSetForm(forms.Form):
@@ -107,6 +107,150 @@ def create(request):
     LineTrainTask.apply_async(args=args, **kwargs)
 
     return HttpResponseRedirect("/projects/list")
+
+
+
+@project_required
+@login_required
+def compare(request):
+    """
+    Show a form allowing the user to
+    submit a job comparing the results
+    of two cmodels on a training set.
+    """
+    template = "training/compare.html"
+    context = dict(
+        project=request.session["project"],
+        cmodels=OcrModel.objects.filter(app="ocropus", type="char"),
+        lmodels=OcrModel.objects.filter(app="ocropus", type="lang"),
+        tsets=request.session["project"].training_sets.all(),
+    )
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
+
+
+@transaction.commit_on_success
+@project_required
+@login_required
+def score_models(request):
+    """
+    Run a comparison between two models.
+    """
+
+    name = request.POST.get("name", "")
+    notes = request.POST.get("notes", "")
+    lmodel = get_object_or_404(OcrModel, pk=request.POST.get("lmodel", 0))
+
+    cmodel_a = get_object_or_404(OcrModel, pk=request.POST.get("cmodel_a", 0))
+    cmodel_b = get_object_or_404(OcrModel, pk=request.POST.get("cmodel_b", 0))
+    print request.POST
+    try:
+        tsets = TrainingPage.objects.filter(pk__in=request.POST.getlist("tset"))
+    except TrainingPage.DoesNotExist:
+        # FIXME: remove code dup!
+        template = "training/compare.html"
+        context = dict(
+            project=request.session["project"],
+            cmodels=OcrModel.objects.filter(app="ocropus", type="char"),
+            lmodels=OcrModel.object.filter(app="ocropus", type="lang"),
+            tsets=project.training_set.all(),
+        )
+        return render_to_response(template, context,
+                context_instance=RequestContext(request))
+
+    
+    outdir = ocrutils.FileWrangler(
+            username=request.user.username, temp=True, action="compare")()
+
+    asyncparams = []
+
+    # create a batch db job
+    batch = OcrBatch(user=request.user, name="%s Job Batch" % name, description="",
+            task_type=ComparisonTask.name, batch_type="COMPARISON", project=request.session["project"])    
+    batch.save()
+
+    comparison = OcrModelScoreComparison(
+        name=name,
+        notes=notes,
+        batch=batch,
+    )
+    comparison.save()
+    for gt in tsets:
+        path = gt.binary_image_path
+        for model in (cmodel_a, cmodel_b):
+            # create a task with the given gt/model
+            params = {"cmodel": model.file.path.encode(), "lmodel": lmodel.file.path.encode()}
+            tid = ocrutils.get_new_task_id(path)
+            args = (gt, outdir.encode(), params)
+            kwargs = dict(task_id=tid, loglevel=60, retries=2)
+            task = OcrTask(
+                task_id=tid,
+                user=request.user,
+                batch=batch,
+                project=request.session["project"],
+                page_name=os.path.basename(path),
+                task_type="compare",
+                status="INIT",
+                args=args,
+                kwargs=kwargs,
+            )
+            task.save()
+            asyncparams.append((args, kwargs))            
+
+            # create a score record for this task
+            score = OcrModelScore(
+                comparison=comparison,
+                ground_truth=gt,
+                task=task,
+                model=model,                
+            )
+            score.save()
+    # launch all the tasks (as comparisons, not converts)
+    for args, kwargs in asyncparams:
+        ComparisonTask.apply_async(args=args, **kwargs)
+
+    return HttpResponseRedirect("/training/comparison/%s/" % comparison.pk) 
+    
+
+@project_required
+@login_required
+def comparison(request, pk):
+    """
+    View details of a model comparison.
+    """
+    comparison = get_object_or_404(OcrModelScoreComparison, pk=pk)
+    scores = comparison.modelscores.order_by("pk", "ground_truth", "model")
+    ordered = {}
+    for score in scores:
+        if ordered.get(score.ground_truth.pk):
+            ordered[score.ground_truth.pk].append(score)
+        else:
+            ordered[score.ground_truth.pk] \
+                = [score.ground_truth.data["page"], score,]
+
+    model_a = scores[0].model
+    model_b = scores[1].model
+
+    # this is really dodgy - total the scores for each model
+    total_a = total_b = 0
+    for i in range(0, len(scores)):
+        if i % 2 == 0:
+            total_a += scores[i].score or 0
+        else:
+            total_b += scores[i].score or 0
+    if not total_a is None and not total_b is None:
+        total_a /= len(scores) / 2
+        total_b /= len(scores) / 2
+
+    template = "training/comparison.html"
+    context = dict(
+        comparison=comparison,
+        ordered=ordered,
+        total_a=total_a,
+        total_b=total_b,
+    )
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
 
 
 

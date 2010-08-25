@@ -1,0 +1,17 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+
+{% endblock %}
+
+{% block content %}
+
+    <div id="document_window">
+        <div class="widget">
+            <div class="widget_header">OCR Model Comparison</div>
+            <div class="widget_content">
+                {% include "training/includes/comparison_details.html" %}
+            </div>
+    </div>
+{% endblock %}
+

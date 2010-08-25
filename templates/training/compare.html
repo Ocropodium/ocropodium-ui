@@ -1,0 +1,70 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+
+{% endblock %}
+
+{% block content %}
+
+    <div id="document_window">
+        <div class="widget">
+            <div class="widget_header">OCR Model Comparison</div>
+            <div class="widget_content">
+                <form id="compare_form" action="/training/score_models/" method="POST"> 
+                    {% include "includes/form_errors.html" %}
+
+                    <div class="field_wrapper">
+                        <label for="id_name">Name:</label>
+                        <input name="name" type="text" />
+                    </div>
+                    <div class="field_wrapper">
+                        <label for="id_notes">Notes:</label>
+                        <input name="notes" type="text" />
+                    </div>
+                    <div class="field_wrapper">
+                        <label for="lmodel">Language Model:</label>
+                        <select name="lmodel">
+                            {% for lm in lmodels %}
+                            <option value="{{lm.pk}}">{{lm}}</option>
+                            {% endfor %} 
+                        </select>
+                    </div>
+                    <br />
+                    <div class="field_wrapper">
+                        <label for="id_cmodel_a">Model A:</label>
+                        <select name="cmodel_a">
+                            {% for cm in cmodels %}
+                            <option value="{{cm.pk}}">{{cm}}</option>
+                            {% endfor %} 
+                        </select>
+                    </div>
+                    <div class="field_wrapper">
+                        <label for="id_cmodel_b">Model B:</label>
+                        <select name="cmodel_b">
+                            {% for cm in cmodels %}
+                            <option value="{{cm.pk}}">{{cm}}</option>
+                            {% endfor %} 
+                        </select>
+                    </div>
+
+                    <div class="field_wrapper">
+                        <label for="id_tset">Training Sets</label><br />
+                        {% for tset in tsets %}
+                            <div>
+                                {{tset.data.page}}
+                                <input type="checkbox" name="tset" value="{{tset.pk}}" checked="checked" />
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="form_submit_buttons">
+                        <input type="submit" value="Submit" id="submit_new_comparison_form" />
+                        <a href="/projects/list" id="cancel_new_comparison_form">Cancel</a>
+                    </div>
+            
+                </form>            
+            </div>
+    </div>
+{% endblock %}
+
+
