@@ -90,6 +90,10 @@ $(function() {
         // get the extra params
         var pdata = pbuilder.data();
         pdata.engine = $("input[@name=engine]:checked").val();
+        pdata.psegmenter = $("#form_segmenter").val();
+        pdata.clean = $("#form_clean").val();
+        pdata.cmodel = $("#form_cmodel").val();
+        pdata.lmodel = $("#form_lmodel").val();
         // server-size hack so we know it's using the iframe method
         pdata._iframe = 1;
 
