@@ -369,6 +369,7 @@ class OcropusParams(UserDict.DictMixin):
         self.binclean2 = "RmBig"
         self.binout = None
         self.segout = None
+        self.prebinarized = False
 
         for key, val in dct.iteritems():
             if isinstance(val, (list, tuple)):
@@ -532,10 +533,14 @@ class OcropusWrapper(object):
         results gathered up to that point.  Keyword arguments can also be
         passed to the callback.
         """
-        _, page_bin = self.standard_preprocess(filepath)
-        if self.params.binout:
-            self.logger.info("Writing binary: %s" % self.params.binout)
-            self.write_binary(self.params.binout, page_bin)
+        if not self.params.prebinarized:
+            _, page_bin = self.standard_preprocess(filepath)
+            if self.params.binout:
+                self.logger.info("Writing binary: %s" % self.params.binout)
+                self.write_binary(self.params.binout, page_bin)
+        else:
+            page_bin = iulib.bytearray()
+            iulib.read_image_binary(page_bin, filepath)
         page_seg = self.get_page_seg(page_bin)
         if self.params.segout:
             self.logger.info("Writing segmentation: %s" % self.params.segout)
