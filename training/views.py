@@ -100,7 +100,7 @@ def create(request):
     
     # make us a new task entry
     tid = ocrutils.get_new_task_id()
-    args = (tsets, cmodel, outpath)
+    args = ([t.pk for t in tsets], cmodel.pk, outpath)
     kwargs = dict(task_id=tid, loglevel=60, retries=2,) # could add a 'queue' param here
     task = OcrTask(
         task_id=tid,
@@ -190,7 +190,7 @@ def score_models(request):
             # create a task with the given gt/model
             params = {"cmodel": model.file.path.encode(), "lmodel": lmodel.file.path.encode()}
             tid = ocrutils.get_new_task_id(path)
-            args = (gt, outdir.encode(), params)
+            args = (gt.pk, outdir.encode(), params)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             task = OcrTask(
                 task_id=tid,
@@ -199,6 +199,7 @@ def score_models(request):
                 project=request.session["project"],
                 page_name=os.path.basename(path),
                 task_type="compare",
+                task_name=ComparisonTask.name,
                 status="INIT",
                 args=args,
                 kwargs=kwargs,

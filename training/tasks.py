@@ -32,11 +32,12 @@ class LineTrainTask(AbortableTask):
     name = "cmodel.training"
     max_retries = None
     
-    def run(self, datasets, cmodel, outdir, **kwargs):
+    def run(self, dataset_ids, cmodel_id, outdir, **kwargs):
         """
         Run line train task.
         """
-
+        datasets = TrainingPage.objects.filter(pk__in=dataset_ids)
+        cmodel = OcrModel.objects.get(pk=cmodel_id)
         #cmodel = OcrModel.objects.get(pk=cmodel_id)
         paramdict = dict(
             cmodel=cmodel.file.path.encode(),
@@ -110,10 +111,12 @@ class ComparisonTask(AbortableTask):
     name = "compare.groundtruth"
     max_retries = None
 
-    def run(self, groundtruth, outdir, paramdict, **kwargs):
+    def run(self, gt_id, outdir, paramdict, **kwargs):
         """
         Runs the model comparison action.
         """
+        groundtruth = TrainingPage.objects.get(pk=gt_id)
+
         # function for the converted to call periodically to check whether 
         # to end execution early
         logger = self.get_logger(**kwargs)
@@ -134,6 +137,7 @@ class ComparisonTask(AbortableTask):
         
         # function for the converter to update progress
         def progress_func(progress, lines=None):
+            task = OcrTask.objects.get(task_id=kwargs["task_id"])
             task.progress = progress
             if lines is not None:
                 task.lines = lines
