@@ -161,7 +161,7 @@ def create(request):
                 simplejson.dumps({"error": "no valid images found"}),
                 mimetype="application/json")     
 
-    subtasks = []
+    asyncparams = []
     try:
         for path in paths:
             tid = ocrutils.get_new_task_id(path)
@@ -179,8 +179,16 @@ def create(request):
                 kwargs=kwargs,
             )
             ocrtask.save()
-            subtasks.append(celerytask.subtask(args=args, options=kwargs))
-        tasksetresults = TaskSet(tasks=subtasks).apply_async()
+            asyncparams.append((args, kwargs))
+
+        publisher = celerytask.get_publisher(connect_timeout=5)
+        try:
+            for args, kwargs in asyncparams:
+                celerytask.apply_async(args=args, publisher=publisher, **kwargs)
+        finally:
+            publisher.close()
+            publisher.connection.close()
+
     except Exception, e:
         transaction.rollback()
         print e.message
@@ -515,7 +523,7 @@ def retry(request, pk):
 
 @transaction.commit_manually
 @login_required
-def retry_errors(request, pk):
+def retry_errored(request, pk):
     """
     Retry all errored tasks in a batch.
     """
