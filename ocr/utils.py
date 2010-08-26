@@ -645,7 +645,7 @@ class OcropusWrapper(object):
         Mimic OCRopus's StandardPreprocessing component but
         allow more flexible param setting.  Somehow.
         """
-        components = get_ocropus_components(
+        complookup = get_ocropus_components(
                 oftypes=["IBinarize", "ICleanupGray", "ICleanupBinary"])
         pagegray = iulib.bytearray()
         pageout = iulib.bytearray()
@@ -670,21 +670,8 @@ class OcropusWrapper(object):
                     except IndexError, err:
                         self.logger.error(err.message)
 
-        # set all the parameters on our components
-        for component in [binarizer, bindeskew, graydeskew] + \
-                cleanups["grayclean"] + cleanups["binclean"]:
-            if component is None:
-                continue
-            for name, val in self.params.iteritems():
-                # find the 'long' name for the component with the given short
-                # name, i.e: binsauvola -> BinarizeBySauvola
-                compname = [comp["name"] for comp in components.itervalues() \
-                        if comp["shortname"] == component.name()][0]
-                cmatch = re.match("%s__(.+)" % compname, name, re.I)
-                if cmatch:
-                    param = cmatch.groups()[0]
-                    self.logger.info("Setting: %s.%s -> %s" % (compname, param, val))
-                    component.pset(param, val)
+        self._set_component_parameters(complookup, [binarizer, bindeskew, graydeskew] 
+                + cleanups["grayclean"] + cleanups["binclean"])
 
         # onwards with cleanup
         pageout = pagegray
@@ -802,6 +789,26 @@ class OcropusWrapper(object):
         self.save_trained_model()
 
 
+    def _set_component_parameters(self, complookup, components):
+        """
+        Set parameters from the params object on the
+        components passed in *args.
+        """
+        # set all the parameters on our components
+        for component in components:
+            if component is None:
+                continue
+            for name, val in self.params.iteritems():
+                # find the 'long' name for the component with the given short
+                # name, i.e: binsauvola -> BinarizeBySauvola
+                compname = [comp["name"] for comp in complookup.itervalues() \
+                        if comp["shortname"] == component.name()][0]
+                cmatch = re.match("%s__(.+)" % compname, name, re.I)
+                if cmatch:
+                    param = cmatch.groups()[0]
+                    self.logger.info("Setting: %s.%s -> %s" % (compname, param, val))
+                    component.pset(param, val)
+        
 
 
 
