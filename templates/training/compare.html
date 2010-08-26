@@ -17,8 +17,7 @@
                     <div id="tabs">
                         <ul>
                             <li><a id="tabs_1_link" href="#tabs_1">Comparison Models</a></li>
-                            <li><a id="tabs_2_link" href="#tabs_2">Ground Truth Sets</a></li>
-                            <li><a id="tabs_3_link" href="#tabs_3">OCR Options</a></li>
+                            <li><a id="tabs_2_link" href="#tabs_2">OCR Options</a></li>
                         </ul>
                         <div id="tabs_1">
                             <div class="form_body">
@@ -40,13 +39,7 @@
                                         {% endfor %} 
                                     </select>
                                 </div>
-                            </div>
-                            <div class="form_footer">
-                                <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Ground Truth" />
-                            </div>
-                        </div>
-                        <div id="tabs_2">
-                            <div class="form_body">
+                                <h4>Select Ground Truth</h4>
                                 <div class="toggle_box" id="ground_truth_list">
                                     <div class="field_wrapper">
                                         {% for tset in tsets %}
@@ -60,10 +53,10 @@
                                 </div>
                             </div>
                             <div class="form_footer">
-                                <input type="button" class="next_tab" id="tabs_3_next" value="Next - OCR Options" />
+                                <input type="button" class="next_tab" id="tabs_2_next" value="Next - OCR Options" />
                             </div>
                         </div>
-                        <div id="tabs_3">
+                        <div id="tabs_2">
                             <div class="form_body">
                                 <div class="toggle_box" id="conversion_options">
                                     <div class="field_wrapper">
@@ -80,9 +73,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="form_submit_buttons">
-                                <input type="submit" value="Submit" id="submit_new_comparison_form" disabled="disabled" />
-                                <a href="/projects/list" id="cancel_new_comparison_form">Cancel</a>
+                            <div class="form_footer">
+                                <div class="form_submit_buttons">
+                                    <input type="submit" value="Submit Model Comparison" 
+                                        id="submit_new_comparison_form" disabled="disabled" />
+                                </div>
                             </div>
                         </div>
                     </div>            

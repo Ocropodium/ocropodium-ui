@@ -11,12 +11,9 @@ function updateButtons() {
     var a = parseInt($("#cmodel_a").val()), 
         b = parseInt($("#cmodel_b").val());
     var gotmodels = (a && b && a != b);
-    $("#submit_new_comparison_form, #tabs_2_next").attr("disabled", !gotmodels);
-    $("#tabs").tabs(gotmodels ? "enable" : "disable", 1);
-
     var gotgt = $("input.ground_truth_enabled[@type=checkbox][checked]").length;
-    $("#submit_new_comparison_form, #tabs_3_next").attr("disabled", !(gotmodels && gotgt));
-    $("#tabs").tabs((gotmodels && gotgt) ? "enable" : "disable", 2);
+    $("#submit_new_comparison_form, #tabs_2_next").attr("disabled", !(gotmodels && gotgt));
+    $("#tabs").tabs((gotmodels && gotgt) ? "enable" : "disable", 1);
 };
 
 

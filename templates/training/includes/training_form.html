@@ -3,8 +3,7 @@
 <div id="new_training" class="ui-tabs ui-tabs-panel ui-widget-content ui-corner-bottom">
     <div id="tabs">
         <ul>
-            <li><a id="tabs_1_link" href="#tabs_1">Select Source Model</a></li>
-            <li><a id="tabs_2_link" href="#tabs_2">Select Ground Truth</a></li>
+            <li><a id="tabs_1_link" href="#tabs_1">Training Options</a></li>
         </ul>
         <div id="tabs_1">
             <div class="form_body">
@@ -17,17 +16,13 @@
                     <label for="id_cmodel">Inital Character Model:</label>
                     {{ form.cmodel }}
                 </div>
+                <br />
+                <br />
                 <div class="field_wrapper">
                     <label for="id_notes">Output Model Notes:</label>
                     {{ form.notes }}
                 </div>
-            </div>
-            <div class="form_footer">
-                <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Ground Truth" />
-            </div>
-        </div>
-        <div id="tabs_2">
-            <div class="form_body">
+                <h4>Select Ground Truth</h4>
                 <div class="toggle_box" id="ground_truth_list">
                     <div class="field_wrapper">
                         {% for tset in tsets %}

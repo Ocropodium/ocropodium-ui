@@ -1,16 +1,13 @@
 
 $(function() {
 
-    $("#id_name, #id_cmodel").change(function(event) {
+    $("#id_name, #id_cmodel, .ground_truth_enabled").change(function(event) {
         var ok = $.trim($("#id_name").val()) 
             && parseInt($("#id_cmodel").val());
-        $("#submit_new_training_form").attr("disabled", !ok);
+        // check at least one groundtruth is selected
+        var gotgt = $("input.ground_truth_enabled[@type=checkbox][checked]").length;
+        $("#submit_new_training_form").attr("disabled", !(gotgt && ok));
     });
 
     $("#tabs").tabs();
-    // make steps into tabs
-    $(".next_tab").click(function(event) {
-        var tabid = $(this).attr("id").replace(/_next/, "_link");
-        $("#" + tabid).trigger("click");
-    });
 });
