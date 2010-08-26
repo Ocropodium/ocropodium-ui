@@ -87,7 +87,6 @@ function OcrBatch(insertinto_id, batch_id) {
         // create container structure
         createBatchHeaderUi();    
         createTaskListUi();
-        // add the containter to the
         m_container.append(m_header).append(m_batchdiv).appendTo("#" + insertinto_id);
     }
 
@@ -389,7 +388,7 @@ function OcrBatch(insertinto_id, batch_id) {
             }, function(event) {
                 $(this).removeClass("ui-state-active");
                 filterlist.hide();
-            });
+           2});
         var container = $("<div></div>")
             .addClass("filter_container")
             .append(filterbutton)
@@ -408,17 +407,20 @@ function OcrBatch(insertinto_id, batch_id) {
             $("<span></span>")
                 .addClass("batch_name")
                 .text("Batch"));
-        addProgressBar(batch);
-        batch.append(
+        var controls = $("<div></div>")
+            .addClass("batch_controls");
+        batch.append(controls);
+        addProgressBar(controls);
+        controls.append(
             $("<span></span>")
                 .addClass("page_info"));
         $.each(m_batch_buttons, function(i, button) {
             m_button_template.clone()
                 .attr("title", button.title)
                 .addClass(button.classes)
-                .appendTo(batch);
+                .appendTo(controls);
         });
-        batch.append(buildTaskFilterList());
+        controls.append(buildTaskFilterList());
         m_batchdiv.append(batch);
     }
 
@@ -628,7 +630,7 @@ function OcrBatch(insertinto_id, batch_id) {
     }
 
     // set a waiting spinner when doing something
-    this.setWaiting = function(waiting) {
+    this.setWaiting = function(waiting) {        
         if (waiting) {
             m_batchdiv.addClass("waiting");
         } else {
@@ -643,12 +645,14 @@ function OcrBatch(insertinto_id, batch_id) {
         $(".filter_type:checked").each(function(i, elem) {
             params += "&status=" + $(elem).attr("name");
         });
-
         $.ajax({
             url: "/batch/results/" + m_batch_id,
             data: params,
             type: "GET",
             dataType: "json",
+            beforeSend: function() {
+                self.setWaiting(true);
+            },
             success: function(data) {
                 if (!processData(data)) {
                     m_polltimeout = setTimeout(function() {
@@ -660,7 +664,10 @@ function OcrBatch(insertinto_id, batch_id) {
             },
             error: function(xhr, statusText, errorThrown) {
                 alert("Http Error " + statusText + "\n\n" + errorThrown);
-            }
+            },
+            complete: function() {
+                self.setWaiting(false);
+            },
         }); 
     }
 
