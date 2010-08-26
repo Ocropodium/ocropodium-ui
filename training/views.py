@@ -215,8 +215,13 @@ def score_models(request):
             )
             score.save()
     # launch all the tasks (as comparisons, not converts)
-    for args, kwargs in asyncparams:
-        ComparisonTask.apply_async(args=args, **kwargs)
+    publisher = ComparisonTask.get_publisher(connect_timeout=5)    
+    try:
+        for args, kwargs in asyncparams:
+            ComparisonTask.apply_async(args=args, publisher=publisher, **kwargs)
+    finally:
+        publisher.close()
+        publisher.connection.close()
 
     return HttpResponseRedirect("/training/comparison/%s/" % comparison.pk) 
     
