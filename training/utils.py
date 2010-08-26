@@ -1,9 +1,11 @@
 import os
 import sys
 import re
+import codecs
 import subprocess as sp
 import tempfile
 from django.utils import simplejson
+from django.utils.encoding import smart_str, smart_unicode
 from django.conf import settings
 
 
@@ -15,10 +17,10 @@ def isri_accuracy(gttext, text):
     """
     accuracybin = os.path.join(settings.BIN_PATH, "accuracy")
     with tempfile.NamedTemporaryFile() as gtf:
-        gtf.write(gttext)
+        gtf.write(smart_str(gttext))
         gtf.flush()
         with tempfile.NamedTemporaryFile() as f:
-            f.write(text)
+            f.write(smart_str(text))
             f.flush()
             #print accuracybin, gtf.name, f.name
             score, err = sp.Popen(["%s %s %s" % (accuracybin, gtf.name, f.name)],
