@@ -274,16 +274,5 @@
     );
 }
 
-#batchform .form_body {
-    min-height: 400px;
-}
-
-#batchform .form_footer {
-    overflow: auto;
-}
-
-#batchform .form_footer input {
-    float: right;
-}
 
 

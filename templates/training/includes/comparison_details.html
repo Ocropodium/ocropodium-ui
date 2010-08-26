@@ -1,7 +1,7 @@
 {% if comparison.batch.is_complete %}
     <h3>Model Comparison</h3>    
 {% else %}
-    <h3>Model Comparison - In Progress: {{comparison.batch.estimate_progress|floatformat:2}}% </h3>
+    <h3 class="inprogress">Model Comparison - In Progress: {{comparison.batch.estimate_progress|floatformat:2}}% </h3>
 {% endif %}
 
 <table id="comparison_details" class="properties_table">
@@ -30,11 +30,11 @@
     <tr>
         <td></td>
         <td></td>
-        <td>{{total_a|floatformat:2|default_if_none:"-"}}</td>
+        <td class="totals">{{total_a|floatformat:2|default_if_none:"-"}}</td>
     </tr>        
     <tr>
         <td></td>
         <td></td>
-        <td>{{total_b|floatformat:2|default_if_none:"-"}}</td>
+        <td class="totals">{{total_b|floatformat:2|default_if_none:"-"}}</td>
     </tr>
 </table>

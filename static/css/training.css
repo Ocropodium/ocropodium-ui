@@ -1,0 +1,19 @@
+
+.toggle_box {
+}
+
+#ground_truth_list {
+    width: 330px;
+    padding-right: 5px;
+    margin-left: 3em;
+}
+
+.ground_truth_item {
+    overflow: auto;    
+}
+
+.ground_truth_item input {
+    float: right;
+}
+
+

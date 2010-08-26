@@ -27,3 +27,15 @@
     border-top: 1px;
 }
 
+.form_body {
+    min-height: 400px;
+}
+
+.form_footer {
+    overflow: auto;
+}
+
+.form_footer input {
+    float: right;
+}
+
