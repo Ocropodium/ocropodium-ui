@@ -7,6 +7,26 @@ $(".recent_batch_link").live("click", function(event) {
     event.preventDefault();
 });
 
+
+function ellipsise(elem) {
+    var text = $(elem).text();
+    var test1 = $("<span></span>").text("|")
+        .insertBefore($(elem));
+    var test2 = $("<span></span>").text("|")
+        .insertAfter($(elem));
+    var starttext = text.substring(0, text.length - 10);
+    var endtext = text.substring(text.length - 10, text.length)
+    var count = 0;
+    while (test1.offset().top != test2.offset().top) {
+        starttext = starttext.substring(0, starttext.length - 1);
+        $(elem).text(starttext + "..." + endtext);        
+        count++;
+    }
+    test1.remove();
+    test2.remove();
+}
+
+
 function populateBatchList(data) {
     var list = $("#recent_batches");
     var tbatch = $("<div></div>").addClass("recent_batch");
@@ -24,20 +44,22 @@ function populateBatchList(data) {
             .css("float", "right")
             .data("pk", batch.pk)
             .text("Transcript");
-        list.append(tbatch.clone().append(span.append(link).append(trans)));        
+        list.append(tbatch.clone().append(span.append(trans).append(link)));        
+        ellipsise(link);
     });
 }
 
 $(function() {
     batch = new OcrBatch("workspace", $("#batch_id").val());    
     batch.init();
-
+    
     $.ajax({
         url: "/batch/list?order_by=-created_on",
         data: {},
         dataType: "json",
         success: populateBatchList,
     });
+
 });        
 
 
