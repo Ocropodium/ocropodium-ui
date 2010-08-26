@@ -38,6 +38,7 @@ class TrainingSetForm(forms.Form):
     name = forms.CharField()
     cmodel = forms.ModelChoiceField(
             queryset=OcrModel.objects.filter(type="char", app="ocropus"))
+    notes = forms.CharField(required=False)
 
 
 
@@ -53,10 +54,11 @@ def new(request):
     name = "%s Training %d" % (project.name, trainnum)
 
     template = "training/new.html"
-    context = {
-        "form": TrainingSetForm(initial=dict(name=name)),
-        "project": request.session["project"],
-    }
+    context = dict(
+        form=TrainingSetForm(initial=dict(name=name)),
+        project=request.session["project"],
+        tsets=request.session["project"].training_sets.all(),
+    )
     return render_to_response(template, context, 
             context_instance=RequestContext(request))
 
@@ -69,12 +71,19 @@ def create(request):
     """
     project = request.session["project"]
     form = TrainingSetForm(request.POST)
-    if not form.is_valid():
+    formok = form.is_valid()
+    try: 
+        tsets = TrainingPage.objects.filter(pk__in=request.POST.getlist("tset"))
+    except TrainPage.DoesNotExist:
+        formok = False
+
+    if not formok:
         template = "training/new.html"          
-        context = {
-            "form": form,
-            "project": project,
-        }
+        context = dict(
+            form=form,
+            tsets=project.training_sets.all(),
+            project=project,
+        )
         return render_to_response(template, context, 
                 context_instance=RequestContext(request))
     
@@ -91,7 +100,7 @@ def create(request):
     
     # make us a new task entry
     tid = ocrutils.get_new_task_id()
-    args = (project.training_sets.all(), cmodel, outpath)
+    args = (tsets, cmodel, outpath)
     kwargs = dict(task_id=tid, loglevel=60, retries=2,) # could add a 'queue' param here
     task = OcrTask(
         task_id=tid,
@@ -137,12 +146,12 @@ def score_models(request):
     Run a comparison between two models.
     """
 
-    name = request.POST.get("name", "")
     notes = request.POST.get("notes", "")
     lmodel = get_object_or_404(OcrModel, pk=request.POST.get("lmodel", 0))
-
     cmodel_a = get_object_or_404(OcrModel, pk=request.POST.get("cmodel_a", 0))
     cmodel_b = get_object_or_404(OcrModel, pk=request.POST.get("cmodel_b", 0))
+    name = "%s %s" % (cmodel_a.name, cmodel_b.name)
+
     print request.POST
     try:
         tsets = TrainingPage.objects.filter(pk__in=request.POST.getlist("tset"))
@@ -242,7 +251,9 @@ def comparison(request, pk):
         total_a /= len(scores) / 2
         total_b /= len(scores) / 2
 
-    template = "training/comparison.html"
+    template = "training/comparison.html" if not request.is_ajax() \
+            else "training/includes/comparison_details.html"
+        
     context = dict(
         comparison=comparison,
         ordered=ordered,
