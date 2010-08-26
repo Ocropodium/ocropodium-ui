@@ -3,12 +3,20 @@
 .batch_task {
     margin: 5px 5px 5px 5px;
     border: 1px solid #999;
-    border-radius: 1px;
-    -moz-border-radius: 1px;
+    border-radius: 2px;
+    -moz-border-radius: 2px;
     padding: 5px;
     background-color: #FCFCFC;
     height: 15px;
     vertical-align: middle;
+    min-width: 540px;
+}
+
+#overlay {
+    background-color: #000;
+    opacity: 0.3;
+    position: absolute;
+    display: none;
 }
 
 .progressbar_container {
@@ -90,6 +98,7 @@
     border: 1px solid #999;
     height: 490px;
     margin: 10px 0px 10px 20px;
+    background-color: #FFF;
 }
 
 .tl_scrollcontainer {
@@ -151,12 +160,17 @@
 .batch {
     padding-left: 15px;
     background-image: url("/static/vt_scroll_right.gif");
-    background-position: left center;
+    background-position: left top;
     background-repeat: no-repeat;
 }
 
 .batch.expanded {
     background-image: url("/static/hz_scroll_down.gif");
+}
+
+.batch_controls {
+    overflow: auto;
+    padding: 10px 10px 0px 10px;
 }
 
 
@@ -187,7 +201,7 @@
 
 .recent_batch .recent_batch_link {
     text-decoration: none;
-    font-size: 1.1em;
+    font-size: 0.8em;
     color: #045FB4;
 }
 
