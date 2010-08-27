@@ -238,12 +238,14 @@ $(function() {
         $("#page_slider").slider("option", "value", curr + 1);
     });
     
+    // line formatter object
     formatter = new OcrLineFormatter();
     
+    // viewer object
     sdviewer = new ImageWindow("sideviewer"); 
     sdviewer.init();
 
-    layoutWidgets();
+    //layoutWidgets();
 
     // maximise the height of the transcript page
     maximiseWidgets(transcript, sdviewer);
