@@ -42,9 +42,7 @@ function saveState() {
     var jobnames = $(".ocr_page").map(function(i, d) {
         return $(d).data("jobname");
     }).get().join(",");
-    if (jobnames) {
-        $.cookie("jobnames", jobnames);
-    }
+    $.cookie("jobnames", jobnames);
 }
 
 
@@ -60,14 +58,20 @@ function loadState() {
         }
     });
 
-    /*var jobnames = $.cookie("jobnames");
+    var jobnames = $.cookie("jobnames");
     if (jobnames) {
         var joblist = jobnames.split(",");
         $.each(joblist, function(index, jobname) {
             pageobjects[index] = new OcrPage("workspace", index, jobname);
+            pageobjects[index].onLinesReady = function() {
+                // trigger a reformat
+                $("input[name=format]:checked").click();
+            }
             pageobjects[index].pollForResults();            
         });
-    }*/
+        layoutWidgets();
+        updateButtons();
+    }
 }
 
 // save state on leaving the page... at least try to...
@@ -131,7 +135,7 @@ function updateButtons() {
 
 var pageobjects = [];
 var uploader = null;
-var pbuilder = null;
+//var pbuilder = null;
 var formatter = null;
 
 $(function() {
@@ -154,7 +158,7 @@ $(function() {
         }
 
         // get the extra params
-        var pdata = pbuilder.data();
+        var pdata = {}; //pbuilder.data();
         pdata.engine = $("input[@name=engine]:checked").val();
         pdata.psegmenter = $("#form_segmenter").val();
         pdata.clean = $("#form_clean").val();
@@ -226,9 +230,9 @@ $(function() {
     rebuildModelLists($("input[name=engine]:checked").val());    
 
     // initialise the controls
-    pbuilder = new ParameterBuilder("options", ["ISegmentLine", "IGrouper"]);
-    pbuilder.registerComponent("grouper", "Grouper", "StandardGrouper");
-    pbuilder.registerComponent("segmenter", "Line Segmenter", "DpSegmenter");
-    pbuilder.init();
+    //pbuilder = new ParameterBuilder("options", ["ISegmentLine", "IGrouper"]);
+    //pbuilder.registerComponent("grouper", "Grouper", "StandardGrouper");
+    //pbuilder.registerComponent("segmenter", "Line Segmenter", "DpSegmenter");
+    //pbuilder.init();
 });
 
