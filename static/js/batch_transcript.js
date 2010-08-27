@@ -1,5 +1,6 @@
 var transcript = null;
 var sdviewer = null;
+var formatter = null;
 var polltimeout = -1;
 
 
@@ -98,6 +99,15 @@ $(function() {
     });
     $("#vlink").buttonset();
 
+    $("#format_block").click(function(event) {
+        formatter.blockLayout($(".transcript_lines"));
+    });
+    $("#format_line").click(function(event) {
+        formatter.lineLayout($(".transcript_lines"));
+    });
+    $("#format_column").click(function(event) {
+        formatter.columnLayout($(".transcript_lines"));
+    });
 
     $("#page_slider").slider({min: 1, value: 1});
 
@@ -120,6 +130,7 @@ $(function() {
     // This is likely to be horribly inefficient, at least
     // at first...
     transcript.onPageLoad = function() {
+
         // get should-be-hidden implementation details
         // i.e. the task id that process the page.  We
         // want to rebinarize with the same params
@@ -142,6 +153,11 @@ $(function() {
                 alert(e);
             },
         });
+    }
+
+    transcript.onLinesReady = function() {
+        // trigger a reformat
+        $("input[name=format]:checked").click();
     }
 
     var positionViewer = function(position) {
@@ -222,7 +238,7 @@ $(function() {
         $("#page_slider").slider("option", "value", curr + 1);
     });
     
-    
+    formatter = new OcrLineFormatter();
     
     sdviewer = new ImageWindow("sideviewer"); 
     sdviewer.init();

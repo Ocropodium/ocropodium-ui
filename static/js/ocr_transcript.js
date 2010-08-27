@@ -351,7 +351,8 @@ function OcrTranscript(insertinto_id, batch_id) {
                 .data("num", line.line);
             m_pagediv.append(lspan);                        
         });
-        self.insertBreaks();
+        //self.insertBreaks();
+        self.onLinesReady();
     }
 
 
@@ -381,151 +382,9 @@ function OcrTranscript(insertinto_id, batch_id) {
             },
         });
     }
+}
 
-
-    //
-    // Layout: Functions for arranging the lines in certain ways
-    // TODO: Remove code dup between this and the ocr_page.js
-    // file.
-    //
-
-    // parse bbox="0 20 500 300" into [0, 20, 500, 300]
-    var parseBoundingBoxAttr = function(bbox) {
-        var dims = [-1, -1, -1, -1];
-        if (bbox.match(boxpattern)) {
-            dims[0] = parseInt(RegExp.$1);
-            dims[1] = parseInt(RegExp.$2); 
-            dims[2] = parseInt(RegExp.$3);
-            dims[3] = parseInt(RegExp.$4);            
-        }
-        return dims;
-    }
-
-    // Fudgy function to insert line breaks (<br />) in places
-    // where there are large gaps between lines.  Significantly
-    // improves the look of a block of OCR'd text.
-    this.insertBreaks = function() {
-        // insert space between each line
-        $("<span></span>").text("\u00a0").insertBefore(
-        m_pagediv.find(".ocr_line").first().nextAll());
-
-        var lastyh = -1;
-        var lasth = -1;
-        var lastitem;
-        m_pagediv.removeClass("literal");
-        m_pagediv.children(".ocr_line").each(function(lnum, item) {
-            var dims = $(item).data("bbox");
-            var y = dims[1];  // bbox x, y, w, h
-            var h = dims[3];
-            if (dims[0] != -1) {
-                $(item).attr("style", "");
-                $(item).children("br").remove();
-                if ((lastyh != -1 && lasth != -1) 
-                        && (y - (h * 0.75) > lastyh || lasth < (h * 0.75))) {
-                    $(lastitem).after($("<br />")).after($("<br />"));
-                }
-                lastitem = item;                
-                lastyh = y + h;
-                lasth = h;
-            }                        
-        });
-        m_pagediv.css("height", null);
-    }
-
-    var resizeToTarget = function(span, targetheight, targetwidth) {
-        var iheight = span.height();
-        var iwidth = span.width();
-        var count = 0
-        if (iheight < targetheight && iheight) {
-            //alert("grow! ih: " + iheight + " th: " + targetheight);
-            while (iheight < targetheight && iwidth < targetwidth) {
-                var cfs = parseInt(span.css("font-size").replace("px", ""));
-                span = span.css("font-size", (cfs + 1) + "px");
-                iheight = span.height();
-                count++;
-                if (count > 50) {
-                    //alert("growing too long: iheight: " + iheight + " th: " + targetheight);
-                    break;
-                }
-            }
-        } else if (iheight > targetheight) {
-            while (iheight && iheight > targetheight) {
-                var cfs = parseInt(span.css("font-size").replace("px", ""));
-                span = span.css("font-size", (cfs - 1) + "px");
-                iheight = span.height();
-                //alert("ih: " + iheight + " fs:" + cfs + " th: " + targetheight);
-                //alert("iheight: " + iheight + " fs: " + span.css("font-size") + " cfs: " + (cfs - 1));
-                count++;
-                if (count > 50) {
-                    //alert("shrinking too long: iheight: " + iheight + " th: " + targetheight);
-                    break;
-                }
-            }
-        }
-        return span.css("font-size");
-    }
-
-
-    // Horrid function to try and position lines how they would be on
-    // the source material.  TODO: Make this not suck.
-    this.positionByBounds = function() {
-
-        var dims  = m_pagediv.data("bbox");
-        var scale = (m_pagediv.outerWidth(true)) / dims[2];
-        var offx = m_pagediv.offset().left;
-        var offy = m_pagediv.offset().top;
-        m_pagediv.height(((dims[3] - dims[1]) * scale) + 20);
-
-        var heights = [];
-        var orderedheights = [];
-        var orderedwidths = [];        
-
-        m_pagediv.addClass("literal");
-        m_pagediv.children(".ocr_line").each(function(position, item) {
-            $(item).children("br").remove();
-            var lspan = $(item);
-            var linedims = lspan.data("bbox");
-            var x = ((linedims[0] - dims[0]) * scale) + offx;
-            var y = ((linedims[1] - dims[1]) * scale) + offy; 
-            var w = (linedims[2] * scale);
-            var h = (linedims[3] * scale);
-            lspan.css("top",    y).css("left",   x)
-                .css("position", "absolute");
-            heights.push(h);
-            orderedheights.push(h);
-            orderedwidths.push(w);
-        });
-
-
-
-        var stats = new Stats(heights);
-        var medianfs = null;
-        m_pagediv.children(".ocr_line").each(function(position, item) {
-            //var lspan = $(item);
-            //var iheight = lspan.height();
-            //var iwidth = lspan.width();
-            
-            // if 'h' is within .25% of median, use the median instead    
-            var h = orderedheights[position];
-            var w = orderedwidths[position];
-            var ismedian = false;
-            if ((h / stats.median - 1) < 0.25) {
-                h = stats.median;
-                ismedian = true;
-            } 
-
-            // also clamp 'h' is min 3
-            h = Math.max(h, 3);
-            if (medianfs != null && ismedian) {
-                $(item).css("font-size", medianfs);
-            } else {            
-                var fs = resizeToTarget($(item), h, w);
-                if (medianfs == null && ismedian) {
-                    medianfs = fs;
-                }
-            }
-        });       
-    }
+OcrTranscript.prototype.onLinesReady = function() {
 
 }
 
