@@ -42,6 +42,7 @@ function OcrTranscript(insertinto_id, batch_id) {
 //            handle: "#batch_head",
          .resizable({
             minWidth: 300,
+            minHeight: 300,
             resize: function() {
                 self.refreshSize();
             },
@@ -63,6 +64,7 @@ function OcrTranscript(insertinto_id, batch_id) {
         .attr("id", "transcript_lines");
         //.css("min-height", m_container.height() - 45); 
 
+    var m_footerheight = 25;
 
     this.init = function() {
         self.buildUi();
@@ -79,8 +81,18 @@ function OcrTranscript(insertinto_id, batch_id) {
             .css("height", 
                     m_container.height() 
                     - m_speller.widgetHeight() 
-                    - 25
+                    - m_footerheight
             );
+    }
+
+    this.setHeight = function(newheight) {
+        m_container.height(newheight);
+        self.refreshSize();
+            
+    }
+
+    this.container = function() {
+        return m_container;
     }
 
     this.startSpellcheck = function() {

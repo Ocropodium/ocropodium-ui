@@ -23,23 +23,37 @@
 
 {% block subtoolbar %}
     <div class="sub_toolbar" id="transcript_toolbar">
-        <form id="tsnavform" >
-            <input class="toolbar_item" type="button" value="Save Training Page" id="save_training_data" />
-            <input class="toolbar_item" type="button" value="Save Text" id="save_data" />
-            <input class="toolbar_item" type="button" value="Spellcheck" id="spellcheck" />
-            <div class="toolbar_item">
-                Link Viewer: 
-                <select name="link_viewer" id="link_viewer">
-                    <option value="off">Off</option>
-                    <option value="click" selected="selected">Click</option>
-                    <option value="hover">Hover</option>
-                </select>                    
-            </div>
-            <div class="toolbar_item" id="page_slider"></div>
-            <input class="toolbar_item" type="button" value="Prev" id="prev_page" disabled="disabled" />
-            <input class="toolbar_item" type="button" value="Next" id="next_page" />
+        <div id="tsnavform" >
+            <span id="format">
+                <input type="radio" id="format_block" name="format" checked="checked" />
+                <label for="format_block">Block</label>
+                <input type="radio" id="format_line" name="format" />
+                <label for="format_line">Line</label>
+                <input type="radio" id="format_column" name="format" />
+                <label for="format_column">Column</label>
+            </span>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <input type="checkbox" id="spellcheck" />
+            <label for="spellcheck">Spellcheck</label>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <span id="vlink">
+                <input type="radio" id="vlink_off" name="vlink" value="off"  />
+                <label for="vlink_off">Off</label>
+                <input type="radio" id="vlink_click" name="vlink" value="click" checked="checked" />
+                <label for="vlink_click">click</label>  
+                <input type="radio" id="vlink_hover" name="vlink" value="hover"  />
+                <label for="vlink_hover">Hover</label>  
+            </span>
+            <div id="page_slider"></div>
+            <button id="prev_page">Previous</button>
+            <button id="next_page">Next</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <button id="save_data">Save Text</button>
+            <button id="save_training_data">Save Training Page</button>
+            
             <input type="hidden" name="batch_id" value="{{batch.pk}}" id="batch_id" />
-        </form>        
+
+        </div>        
     </div>
 {% endblock %}
 

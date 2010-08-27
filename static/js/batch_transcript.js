@@ -3,6 +3,23 @@ var sdviewer = null;
 var polltimeout = -1;
 
 
+function maximiseWidgets() {
+
+    var winheight = $(window).height();
+    var margin = 10;
+    for (var i in arguments) {
+        var widget = arguments[i];
+        if (widget.container != undefined && widget.setHeight != undefined) {
+            var container = widget.container();
+            var pad = container.outerHeight(true) - container.height();
+            var top = container.position().top;
+            var newheight = winheight - top - pad - margin;
+            widget.setHeight(newheight);    
+        }
+    }
+}
+
+
 function onBinaryFetchResult(data) {
 
 
@@ -50,6 +67,38 @@ $(function() {
 
     //$("#sidebar").css("width", "600px");
 
+    // setup toolbar
+    $("#spellcheck").button();
+    $("#format").buttonset();
+    $("#next_page").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-seek-next",
+        },
+    });
+    $("#prev_page").button({
+        disabled: true,
+        text: false,
+        icons: {
+            primary: "ui-icon-seek-prev",
+        },
+    });
+    $("#save_data").button({
+        disabled: true,
+        text: false,
+        icons: {
+            primary: "ui-icon-disk",
+        },
+    });
+    $("#save_training_data").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-check",
+        },
+    });
+    $("#vlink").buttonset();
+
+
     $("#page_slider").slider({min: 1, value: 1});
 
     transcript = new OcrTranscript("workspace", $("#batch_id").val());   
@@ -62,8 +111,8 @@ $(function() {
         var ismax = $("#page_slider").slider("option", "value") 
                 == transcript.pageCount();
         var ismin = $("#page_slider").slider("option", "value") == 1; 
-        $("#next_page").attr("disabled", ismax);         
-        $("#prev_page").attr("disabled", ismin);
+        $("#next_page").button({disabled: ismax});         
+        $("#prev_page").button({disabled: ismin});
     }
 
     // When a page loads, read the data and request the source
@@ -109,23 +158,25 @@ $(function() {
     }
 
     transcript.onHoverPosition = function(position) {
-        if (!($("#link_viewer").val() == "hover" 
+        if (!($("input[name=vlink]:checked").val() == "hover" 
                     && sdviewer.activeViewer().viewport))
             return;
         positionViewer(position);
     }
 
     transcript.onClickPosition = function(position) {
-        if (!($("#link_viewer").val() == "click" 
+        if (!($("input[name=vlink]:checked").val() == "click" 
                     && sdviewer.activeViewer().viewport))
             return;
         positionViewer(position);
     }
 
-    $("#spellcheck").toggle(function(event) {
-        transcript.startSpellcheck();
-    }, function(event) {
-        transcript.endSpellcheck();
+    $("#spellcheck").change(function(event) {
+        if ($(this).attr("checked")) {
+            transcript.startSpellcheck();
+        } else {
+            transcript.endSpellcheck();
+        }
     });
 
     $("#save_data").click(function(event) {
@@ -179,6 +230,9 @@ $(function() {
     layoutWidgets();
 
     // maximise the height of the transcript page
-    
+    maximiseWidgets(transcript, sdviewer);
+    $(window).resize(function(event) {
+        maximiseWidgets(transcript, sdviewer);
+    });
 });        
 

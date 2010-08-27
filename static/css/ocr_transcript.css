@@ -1,5 +1,5 @@
-#tsnaxform {
-
+#tsnavform * {
+    float: left;    
 
 }
 
@@ -13,6 +13,7 @@
 #page_slider {
     width: 200px;
     margin: 7px 10px 0px 20px;
+    display: inline;
 }
 
 

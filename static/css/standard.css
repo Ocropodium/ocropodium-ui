@@ -128,6 +128,7 @@ body {
 }
 
 .sub_toolbar {
+    font-size: 0.7em;
     overflow: auto;
     padding: 5px;
     background-color: #87B4FF;
@@ -135,8 +136,8 @@ body {
         linear,
         left bottom,
         left top,
-        color-stop(0.35, rgb(135,180,255)),
-        color-stop(0.48, rgb(143,184,255))
+        color-stop(0.35, rgb(75,120,195)),
+        color-stop(0.48, rgb(83,124,195))
     );
     background: -moz-linear-gradient(
         center bottom,
@@ -146,8 +147,7 @@ body {
 }
 
 #workspace {
-    min-height: 300px;
-    overflow: auto;
+    min-height: 100%;
 }
 
 .widget {

@@ -18,3 +18,8 @@ function layoutWidgets() {
     });
 }
 
+function maximiseVertical() {
+
+
+}
+

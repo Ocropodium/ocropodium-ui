@@ -13,7 +13,8 @@ function ImageWindow(container_id, config) {
 
     // basic config options
     config = config || {};
-    var height = $("#" + container_id).height() - 35 || 450; ;
+    var footheight = 35;
+    var height = $("#" + container_id).height() - footheight || 450; ;
     var width  = $("#" + container_id).width() || 500;
     var label = config.label || "Viewer - Output A";
     var id = config.id || "imagewindow";
@@ -69,19 +70,20 @@ function ImageWindow(container_id, config) {
         .css("width", width)
         .css("position", "relative");
     var imgwindow = $("#" + container_id)
-        .addClass("imagewindow_container");
-//        .resizable({
-//            handles: 'se, sw, w, e, n, s',
-//            resize: function(e, ui) {
-//                height = $("#" + container_id).height() - 35;
-//               updateSize(); 
-//            },
-//            stop: function(e, ui) {
-//                width = $("#" + container_id).width();
-//                overlay.css("width", width + "px");
-//                updateSize();
-//            },        
-//        }).draggable({
+        .addClass("imagewindow_container")
+        .resizable({
+            handles: 'se, sw, w, e, n, s',
+            resize: function(e, ui) {
+                height = $("#" + container_id).height() - footheight;
+                self.updateSize();
+            },
+            stop: function(e, ui) {
+                width = $("#" + container_id).width();
+                overlay.css("width", width + "px");
+                self.updateSize();
+            },        
+        });
+//        .draggable({
 //            handle: ".widget_header",
 //            cancel: ".imagewindow_viewport",
 //            stack: ".widget",
@@ -90,10 +92,18 @@ function ImageWindow(container_id, config) {
 
     // update size when image window changes
     $(window).resize(function(event) {
-        updateSize();
+        self.updateSize();
     });
 
+    this.setHeight = function(newheight) {
+        imgwindow.height(newheight);
+        height = newheight - footheight;
+        self.updateSize();
+    }
 
+    this.container = function() {
+        return imgwindow;
+    }
 
     // overlay a spinner thing when waiting for something
     // to happen
@@ -130,7 +140,7 @@ function ImageWindow(container_id, config) {
         }
     }
 
-    var updateSize = function() {
+    this.updateSize = function() {
         width  = $("#" + container_id).width();
         var divs = [viewport, aportal, bportal, sportal];
         for (var i in  divs) {

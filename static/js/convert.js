@@ -82,6 +82,15 @@ var pbuilder = null;
 
 $(function() {
 
+    // style toolbar
+    $("#clear").button({
+        icons: {
+            primary: "ui-icon-closethick",
+        }
+    });
+    $("#format").buttonset();
+
+
     $("#singleupload").change(function(event) {
         if ($(this).val() == "") {
             return false;
