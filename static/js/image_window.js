@@ -254,6 +254,14 @@ function ImageWindow(container_id, config) {
         }
     }
 
+    this.showNativeDashboard = function(show) {
+        var viewers = [aviewer, bviewer, sviewer];
+        for (var i in viewers) {
+            viewers[i].setDashboardEnabled(show);
+        }            
+    }
+
+
     this.activeOutputPath = function() {
         if (activeout == A) {
             return apath;
@@ -302,6 +310,31 @@ function ImageWindow(container_id, config) {
         }
     }
 
+
+    this.viewSource = function() {
+        if (showing != S) {
+            self.toggleSrc();
+        } 
+    }
+
+
+    this.viewOutputA = function() {
+        if (showing != A) {
+            activeout = B;
+            self.toggleAB();
+        } 
+        if (showing != A)
+           self.toggleSrc(); 
+    }
+
+    this.viewOutputB = function() {
+        if (activeout != B) {
+            activeout = A;
+            self.toggleAB();
+        }
+        if (showing != B)
+           self.toggleSrc(); 
+    }
 
     // switch between viewers...
     this.toggleSrc = function() {

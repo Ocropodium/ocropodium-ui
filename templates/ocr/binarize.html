@@ -18,9 +18,12 @@
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
 {% endblock %}
 
-{% block content %}
-
-    {% include "ocr/includes/viewing_sidebar.html" %}
- 
+{% block subtoolbar %}
+    {% include "ocr/includes/viewing_toolbar.html" %}
 {% endblock %}
+
+{% block content %}
+    {% include "ocr/includes/viewing_sidebar.html" %}
+{% endblock %}
+
 

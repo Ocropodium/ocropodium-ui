@@ -42,7 +42,7 @@ function saveState() {
     var jobnames = $(".ocr_page").map(function(i, d) {
         return $(d).data("jobname");
     }).get().join(",");
-    $.cookie("jobnames", jobnames);
+    $.cookie("jobnames", jobnames, {expires: 7});
 }
 
 
@@ -70,7 +70,7 @@ function loadState() {
             pageobjects[index].pollForResults();            
         });
         layoutWidgets();
-        updateButtons();
+        updateUiState();
     }
 }
 
@@ -113,7 +113,7 @@ function onXHRLoad(event_or_response) {
 
         pageobjects[pagenum].pollForResults(timeout);
         layoutWidgets();
-        updateButtons();
+        updateUiState();
     }); 
 };
 
@@ -127,9 +127,10 @@ function relayoutPages() {
     });
 }
 
-function updateButtons() {
+function updateUiState() {
     var pcount = $(".ocr_page_container").length;
     $(".tbbutton").button({disabled: pcount < 1});
+    $(".ocr_page").css("font-size", $("#font_size").val() + "px");
 }
 
 
@@ -137,6 +138,9 @@ var pageobjects = [];
 var uploader = null;
 //var pbuilder = null;
 var formatter = null;
+
+const MINFONTSIZE = 6;
+const MAXFONTSIZE = 40;
 
 $(function() {
 
@@ -188,7 +192,42 @@ $(function() {
     $("#clear").click(function(event) {
         pageobjects = [];
         $(".ocr_page_container").remove();
-        updateButtons();
+        $.cookie("jobnames", null);
+        updateUiState();
+    });
+
+    $("#download").click(function(event) {
+        var jobnames = [];
+        $(".ocr_page").each(function(i, elem) {
+            jobnames.push("task=" + $(elem).data("jobname"));
+        });
+        $("#download").attr("href", "/ocr/zipped_results/?" + jobnames.join("&"));
+    });
+
+    $("#zoomin").click(function(event) {
+        $("#font_size").val(parseInt($("#font_size").val()) + 2);
+        $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
+        $("#zoomout").button({"disabled": $("#font_size").val() <= MINFONTSIZE});
+        $(".ocr_page").css("font-size", $("#font_size").val() + "px");
+        relayoutPages();
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomin",
+        }
+    });
+
+    $("#zoomout").click(function(event) {
+        $("#font_size").val(parseInt($("#font_size").val()) - 2);
+        $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
+        $("#zoomout").button({"disabled": $("#font_size").val() <= MINFONTSIZE});
+        $(".ocr_page").css("font-size", $("#font_size").val() + "px");
+        relayoutPages();
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomout",
+        }
     });
 
     $("input[name=engine]").change(function(e) {

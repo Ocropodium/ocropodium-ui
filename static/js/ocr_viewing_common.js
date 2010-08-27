@@ -178,6 +178,42 @@ $(function() {
     // initialise the viewer
     sdviewer = new ImageWindow("viewerwindow"); 
     sdviewer.init();
+    sdviewer.showNativeDashboard(false);
+
+    // build toolbar
+    $(".tbbutton").button({});
+    $("#output").buttonset();
+    $("#zoomin").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomin",
+        }
+    });
+    $("#zoomout").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomout",
+        }
+    });
+    $("#centre").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-home",
+        }
+    });
+    $("#fullscreen").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-arrow-4-diag",
+        }
+    });
+
+    $("#refresh").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-refresh",
+        }
+    });
 
     // refrwesh on compparm enter
     $(".compparam > input").live("keydown", function(event) {
@@ -237,6 +273,45 @@ $(function() {
 
     // resubmit the form...
     $("#refresh").click(refreshImage);
+
+    $("#output_s").click(function(event) {
+        sdviewer.viewSource();
+    });
+
+    $("#output_a").click(function(event) {
+        sdviewer.viewOutputA();
+    });
+
+    $("#output_b").click(function(event) {
+        sdviewer.viewOutputB();
+    });
+
+    $("#zoomin").click(function(event) {
+        sdviewer.activeViewer().viewport.zoomBy(2);
+    });
+
+    $("#zoomout").click(function(event) {
+        sdviewer.activeViewer().viewport.zoomBy(0.5);
+    });
+
+    $("#centre").click(function(event) {
+        sdviewer.activeViewer().viewport.goHome();
+    });
+
+    $("#fullscreen").click(function(event) {
+        sdviewer.activeViewer().setFullPage(true);
+    });
+
+    // bind 1-2-3 and a-b-s to viewer outputs
+    $(window).bind("keypress.viewer", function(event) {
+        if (String.fromCharCode(event.which).toLowerCase().match(/[a2]/)) {
+            $("#output_a").click().button("refresh");
+        } else if (String.fromCharCode(event.which).toLowerCase().match(/[b3]/)) {
+            $("#output_b").click().button("refresh");
+        } else if (String.fromCharCode(event.which).toLowerCase().match(/[s1]/)) {
+            $("#output_s").click().button("refresh");
+        }  
+    });
 
 
     // initialize the preset manager
