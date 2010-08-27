@@ -12,10 +12,11 @@
 } */
 
 .ocr_page {
-    margin: 10px;
-    font-size: 0.9em;
-    padding-bottom: 10px;
-    min-height: 30px;    
+    font-size: 1.1em;
+    min-height: 40px;
+    background-color: #FDFDFD;
+    padding: 10px;
+    height: 100%;    
 }
 
 .literal {
@@ -52,4 +53,6 @@
     background-color: #FFDDDD;
 }
 
+.inner_container {
+}
 

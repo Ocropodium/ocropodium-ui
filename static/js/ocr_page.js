@@ -30,6 +30,8 @@ function OcrPage(insertinto_id, page_id, jobname) {
         .addClass("ocr_page_head")
         .attr("id", "ocr_page_" + page_id + "_head")
         .text(pagename);
+    var pagecontainer = $("<div></div>")
+        .addClass("inner_container");
     var pdiv = $("<div></div>")
         .addClass("ocr_page")        
         .addClass("waiting")
@@ -50,7 +52,9 @@ function OcrPage(insertinto_id, page_id, jobname) {
         .text("Json")
         .appendTo(phead);
     // add the containter to the 
-    container.append(phead).append(pdiv).appendTo("#" + insertinto_id); 
+    container.append(phead)
+        .append(pagecontainer.append(pdiv))
+        .appendTo("#" + insertinto_id); 
 
 
     // show an error
