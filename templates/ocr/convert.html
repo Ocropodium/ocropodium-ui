@@ -9,6 +9,7 @@
 	<script type='application/javascript' src='/static/js/ocr_parameters.js'></script>
 	<script type='application/javascript' src='/static/js/ocr_page.js'></script>
 	<script type='application/javascript' src='/static/js/convert.js'></script>
+	<script type='application/javascript' src='/static/js/ocr_line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
@@ -17,13 +18,13 @@
 
 {% block subtoolbar %}
     <div class="sub_toolbar" id="transcript_toolbar">
-        <button id="clear">Clear</button>
+        <button class="tbbutton" id="clear">Clear</button>
         <span id="format">
-            <input type="radio" id="format_block" name="format" checked="checked" />
+            <input type="radio" class="tbbutton" id="format_block" name="format" checked="checked" />
             <label for="format_block">Block</label>
-            <input type="radio" id="format_line" name="format" />
+            <input type="radio" class="tbbutton" id="format_line" name="format" />
             <label for="format_line">Line</label>
-            <input type="radio" id="format_column" name="format" />
+            <input type="radio" class="tbbutton" id="format_column" name="format" />
             <label for="format_column">Column</label>
         </span>
     </div>

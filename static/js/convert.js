@@ -1,4 +1,3 @@
-var pageobjects = [];
 
 // Function to build the lang & char models selects when
 // the engine type is changed.
@@ -77,12 +76,70 @@ window.onbeforeunload = function(event) {
 }
 
 
+function onXHRLoad(event_or_response) {
+    var data;
+    if (event_or_response.target != null) {
+        var xhr = event_or_response.target;
+        if (!xhr.responseText) {
+            return;
+        }                
+        if (xhr.status != 200) {
+            return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
+        } 
+        data = $.parseJSON(xhr.responseText);
+    } else {
+        // then it must be a single upload...
+        // save the job names of the current pages...
+        var jobnames = [];
+        data = event_or_response;
+    }
+
+    if (data.error) {
+        alert("Error: " + data.error + "\n\n" + data.trace);
+        $("#dropzone").text("Drop images here...").removeClass("waiting");
+        return;
+    }
+    $.each(data, function(pagenum, pageresults) {
+        pageobjects[pagenum] = new OcrPage("workspace", pagenum, pageresults.job_name);
+        var timeout = (300 * Math.max(1, uploader.size())) + (pagenum * 250);
+        pageobjects[pagenum].onLinesReady = function() {
+            // trigger a reformat
+            $("input[name=format]:checked").click();
+        }
+
+        pageobjects[pagenum].pollForResults(timeout);
+        layoutWidgets();
+        updateButtons();
+    }); 
+};
+
+
+function relayoutPages() {
+    var top = $(".ocr_page_container").first();
+    var start = top.position().top + top.outerHeight(true);
+    top.nextAll().each(function(i, elem) {
+        $(elem).css("top", start + "px");
+        start = start + $(elem).outerHeight(true);
+    });
+}
+
+function updateButtons() {
+    var pcount = $(".ocr_page_container").length;
+    $(".tbbutton").button({disabled: pcount < 1});
+}
+
+
+var pageobjects = [];
 var uploader = null;
 var pbuilder = null;
+var formatter = null;
 
 $(function() {
 
     // style toolbar
+    $(".tbbutton").button({
+        disabled: true,
+    });
     $("#clear").button({
         icons: {
             primary: "ui-icon-closethick",
@@ -124,40 +181,29 @@ $(function() {
             $("#dragdrop").hide();
     }
 
+    $("#clear").click(function(event) {
+        pageobjects = [];
+        $(".ocr_page_container").remove();
+        updateButtons();
+    });
+
     $("input[name=engine]").change(function(e) {
         rebuildModelLists($(this).val());
     });
 
+    $("#format_block").click(function(event) {
+        formatter.blockLayout($(".ocr_page"));
+        relayoutPages();
+    });
+    $("#format_line").click(function(event) {
+        formatter.lineLayout($(".ocr_page"));
+        relayoutPages();
+    });
+    $("#format_column").click(function(event) {
+        formatter.columnLayout($(".ocr_page"));
+        relayoutPages();
+    });
 
-    function onXHRLoad(event_or_response) {
-        var data;
-        if (event_or_response.target != null) {
-            var xhr = event_or_response.target;
-            if (!xhr.responseText) {
-                return;
-            }                
-            if (xhr.status != 200) {
-                return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
-            } 
-            data = $.parseJSON(xhr.responseText);
-        } else {
-            // then it must be a single upload...
-            // save the job names of the current pages...
-            var jobnames = [];
-            data = event_or_response;
-        }
-
-        if (data.error) {
-            alert("Error: " + data.error + "\n\n" + data.trace);
-            $("#dropzone").text("Drop images here...").removeClass("waiting");
-            return;
-        }
-        $.each(data, function(pagenum, pageresults) {
-            pageobjects[pagenum] = new OcrPage("workspace", pagenum, pageresults.job_name);
-            pageobjects[pagenum].pollForResults((300 * uploader.size()) + (pagenum * 250));
-            layoutWidgets();
-        }); 
-    };
 
 
     // initialise the uploader...
@@ -172,6 +218,9 @@ $(function() {
 
     // load state stored from last time
     loadState();
+
+    // line formatter object
+    formatter = new OcrLineFormatter();
 
     // fetch the appropriate models...
     rebuildModelLists($("input[name=engine]:checked").val());    
