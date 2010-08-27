@@ -115,6 +115,36 @@ def results(request, job_name):
 
 
 @login_required
+def zipped_results(request):
+    """
+    Send back quicky results for several
+    pages in a zip.
+    """
+    ctasks = request.GET.getlist("task");
+    import cStringIO, gzip
+    zbuf = cStringIO.StringIO()
+    zfile = gzip.GzipFile(mode='wb', compresslevel=6, fileobj=zbuf)
+    for task in ctasks:
+        async = celeryresult.AsyncResult(task)
+        data = _json_or_text_data(
+            request, {
+                "job_name": async.task_id,
+                "status": async.status,
+                "results": async.result
+            }
+        )[0]        
+        zfile.write(data)
+    zfile.close()
+
+    compressed_content = zbuf.getvalue()
+    response = HttpResponse(compressed_content)
+    response['Content-Encoding'] = 'application/octet-stream'
+    response['Content-Length'] = str(len(compressed_content))
+    response['Content-Disposition'] = "attachment; filename=results.tar.gz;"
+    return response
+
+
+@login_required
 def components(request):
     """
     List OCRopus components - either all or those
@@ -261,7 +291,7 @@ def _should_wait(request):
     return request.GET.get("wait", False)
 
 
-def _json_or_text_response(request, json):
+def _json_or_text_data(request, json):
     """
     Format the output string accordingly.
     """
@@ -295,6 +325,14 @@ def _json_or_text_response(request, json):
                 result += "\n"
     else:
         result = simplejson.dumps(json)
+    return result, mimetype
+
+
+def _json_or_text_response(request, json):
+    """
+    Return the appropriate mimetype
+    """
+    result, mimetype = _json_or_text_data(request, json)
     return HttpResponse(result, mimetype=mimetype)
 
 
