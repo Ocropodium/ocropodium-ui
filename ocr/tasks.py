@@ -211,15 +211,17 @@ class SegmentPageTask(AbortableTask):
 
         pagewidth = page_seg.dim(0)
         pageheight = page_seg.dim(1)
+        boxes = converter.extract_boxes(page_seg)
         converter.write_packed(segpath, page_seg)
 
-        pagedata = { 
-            "page" : os.path.basename(filepath) ,
-            "png" : None,
-            "src" : None,
-            "dst" : None,
-            "box": [0, 0, pagewidth, pageheight]
-        }
+        pagedata = dict( 
+            page=os.path.basename(filepath),
+            png=None,
+            src=None,
+            dst=None,
+            box=[0, 0, pagewidth, pageheight],
+            **boxes
+        )
 
         src, dst = make_deepzoom_proxies(logger, filepath, segpath, "seg", paramdict)
         pagedata["png"] = utils.media_path_to_url(filepath)

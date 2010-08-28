@@ -524,6 +524,26 @@ class OcropusWrapper(object):
         ocropus.save_component(self.params.outmodel, self._linerec.cmodel)
         
 
+    def extract_boxes(self, page_seg):
+        """
+        Extract line/paragraph geometry info.
+        """
+        regions = ocropus.RegionExtractor()
+        out = dict(columns=[], lines=[], paragraphs=[])
+        exfuncs = dict(
+            columns=regions.setPageColumns,
+            lines=regions.setPageLines,
+            paragraphs=regions.setPageParagraphs,
+        )
+        pageheight = page_seg.dim(1)
+
+        for box, func in exfuncs.iteritems():
+            func(page_seg)
+            for i in range(1, regions.length()):
+                out[box].append([regions.x0(i), pageheight - regions.y0(i),
+                    regions.x1(i) - regions.x0(i), regions.y1(i) - regions.y0(i)])
+        return out            
+
 
     def convert(self, filepath, progress_func=None, callback=None, **cbkwargs):
         """
