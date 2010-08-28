@@ -24,109 +24,6 @@ body {
     display: inline;
 }
 
-#main_toolbar {
-    vertical-align: middle;
-    background-color: #F0F0F0;
-    margin: 0px 0px 0px 0px;
-    text-align: left;
-    background: -webkit-gradient(
-        linear,
-        left bottom,
-        left top,
-        color-stop(0.50, rgb(245,245,245)),
-        color-stop(0.35, rgb(230,230,230))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(230,230,230) 35%,
-        rgb(245,245,245) 50%
-    );
-
-    box-shadow: 2px 3px 3px #919598;
-    -webkit-box-shadow: 2px 3px 3px #919598;
-    -moz-box-shadow: 2px 3px 3px #919598;
-}
-
-#main_toolbar_menu {
-    margin: 0px;
-    padding: 0px;
-    overflow: auto;
-    z-index: 10000;
-}
-
-#main_toolbar_menu li {
-    list-style-type: none;
-    list-style-position: inside;
-    list-style: block; 
-    float: left;
-    padding: 5px 5px;
-
-}
-
-#main_toolbar_menu li a {
-    text-decoration: none;
-    color: #666;
-    font-size: 1em;
-    padding: 10px 10px 10px 10px;
-}
-
-#main_toolbar_menu li a:hover, #main_toolbar_menu li a.current {
-    text-decoration: none;
-    color: #333;
-    font-size: 1em;
-    padding: 10px 10px 10px 10px;
-    background: -webkit-gradient(
-        linear,
-        left bottom,
-        left top,
-        color-stop(0.50, rgb(235,235,235)),
-        color-stop(0.35, rgb(225,225,225))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(230,230,230) 35%,
-        rgb(235,235,235) 50%
-    );
-}
-
-.menu_dropdown {
-    display: none;
-    float: right;
-    z-index: 2000;
-    text-decoration: none;
-    position: absolute;
-    color: #333;
-    font-size: 1em;
-    padding: 10px 10px 10px 10px;
-    background: -webkit-gradient(
-        linear,
-        left bottom,
-        left top,
-        color-stop(0.50, rgb(225,225,225)),
-        color-stop(0.35, rgb(235,235,235))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(235,235,235) 35%,
-        rgb(230,230,230) 50%
-    );
-    margin: 5px -5px 0px 0px;
-}
-
-#main_toolbar_menu li .menu_dropdown li {
-    display: block;
-    clear: left;
-}
-
-#main_toolbar_menu li a:hover {
-    color: #333;
-}
-
-#main_toolbar_menu li:hover .menu_dropdown {
-    display: block;
-    float: right;
-}
-
 .sub_toolbar {
     font-size: 0.7em;
     overflow: auto;
@@ -274,4 +171,19 @@ a.button:hover {
     
 }
 
+.viewer_highlight.lines {
+    background-color: #FF2222;
+    opacity: 0.2;
+}
+
+.viewer_highlight.paragraphs {
+    border: 5px solid #2222FF;
+    opacity: 0.5;
+    border-radius: 3px;
+}
+
+.viewer_highlight.columns {
+    background-color: #FFFF22;
+    opacity: 0.2;
+}
 
