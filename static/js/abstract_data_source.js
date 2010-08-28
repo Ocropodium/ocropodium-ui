@@ -14,31 +14,31 @@ function AbstractDataSource() {
 
     this.__headers = [{
             name: "Col1",
-            sortAs: String,
+            sortAs: "num",
         }, {
             name: "Col2",
-            sortAs: Number,
+            sortAs: "str",
         }, {
             name: "Col3",
-            sortAs: Boolean,
+            sortAs: "bool",
         }, {
             name: "Col4",
-            sortAs: String,
+            sortAs: "str",
         }, 
     ];
 
     this.__data = [
-        ["data0", 0, true, "a"],
-        ["data1", 1, false, "b"],        
-        ["data2", 2, true, "c"],
-        ["data3", 3, false, "d"],
-        ["data4", 4, true, "e"],
-        ["data5", 5, false, "f"],
-        ["data6", 6, true, "g"],
-        ["data7", 7, false, "h"],
-        ["data8", 8, true, "i"],
-        ["data9", 9, false, "j"],
-        ["data10", 10, true, "k"],
+        [0, "data0", true,  "a"],
+        [1, "data1", false, "b"],        
+        [2, "data2", true,  "c"],
+        [3, "data3", false, "d"],
+        [4, "data4", true,  "e"],
+        [5, "data5", false, "f"],
+        [6, "data6", true,  "g"],
+        [7, "data7", false, "h"],
+        [8, "data8", true,  "i"],
+        [9, "data9", false, "j"],
+        [10,"data10",true,  "k"],
     ];
 }
 
@@ -59,42 +59,66 @@ AbstractDataSource.prototype.reverseOrder = function() {
 }
 
 AbstractDataSource.prototype.dataLength = function() {
-    return self.__data.length;
+    return this.__data.length;
 }
 
 AbstractDataSource.prototype.columnCount = function() {
-    return self.__headers.length;
+    return this.__headers.length;
+}
+
+AbstractDataSource.prototype.headerLabel = function(col) {
+    return this.__headers[col].name;
 }
 
 AbstractDataSource.prototype.data = function() {
-    return self.__data;
+    return this.__data;
 }
 
 AbstractDataSource.prototype.getData = function(row, col) {
     return this.__data[row][col];
 }
 
-AbstractDataSource.prototype.getDataString = function(row, col) {
+AbstractDataSource.prototype.rowMetadata = function(row) {
+    return {};
+}
+
+AbstractDataSource.prototype.cellMetadata = function(row, col) {
+    return {};
+}
+
+AbstractDataSource.prototype.rowKey = function(row) {
+    return this.__data[row][0];
+}
+
+AbstractDataSource.prototype.cellLabel = function(row, col) {
+    // check if a specialised renderer exists for the
+    // given column.  If not, default to a plain string.
+    if (this["renderCellAt" + col] !== undefined)
+        return this["renderCellAt" + col](row);
     return this.__data[row][col].toString();
 }
 
 AbstractDataSource.prototype.getHeaderData = function(col) {
-    return self.__headers[col];
+    return this.__headers[col];
 }
 
 AbstractDataSource.prototype.sortByColumn = function(col) {
-    if (col == this.__sortcol)
+    if (col == this.__sortcol) {
         this.__desc = !this.__desc;
+    } else {
+        this.__desc = false;
+    }
+    this.__sortcol = col;
     var self = this;
     self.__data.sort(function(a, b) {
-        if (self.__headers[col].sortBy === Boolean)
-            return this.booleanSort(a, b)
-        if (self.__headers[col].sortBy === Number)
-            return this.numericSort(a, b)
-        if (self.__headers[col].sortBy === String)
-            return this.stringSort(a, b)
-        if (typeof self.__headers[col].sortBy == "function")
-            return self.__headers[col].sortBy(a, b);
+        if (self.__headers[col].sortAs == "bool")
+            return self.booleanSort(a[col], b[col])
+        if (self.__headers[col].sortAs == "num")
+            return self.numericSort(a[col], b[col])
+        if (self.__headers[col].sortAs == "str")
+            return self.stringSort(a[col], b[col])
+        if (typeof self.__headers[col].sortAs == "function")
+            return self.__headers[col].sortAs(a[col], b[col]);
     });
     self.callListeners("dataChanged");        
 }
@@ -113,22 +137,24 @@ AbstractDataSource.prototype.callListeners = function(key) {
 
 AbstractDataSource.prototype.numericSort = function(a, b) {
     if (!this.__desc)
-        return a[this.__sortcol] - b[this.__sortcol];
+        return a - b;
     else
-        return b[this.__sortcol] - a[this.__sortcol];    
+        return b - a;    
 }
 
 AbstractDataSource.prototype.stringSort = function(a, b) {
     if (!this.__desc)
-        return a[this.__sortcol] > b[this.__sortcol] ? -1 : 1;
+        return a < b ? -1 : 1;
     else
-        return b[this.__sortcol] > a[this.__sortcol] ? -1 : 1; 
+        return b < a ? -1 : 1;
+    return 0; 
 }
 
 AbstractDataSource.prototype.booleanSort = function(a, b) {
-    if (a[this.__sortcol] && !b[this.__sortcol])
+    //alert(a + " " + b);
+    if (a && !b)
         return this.__desc ? 1 : -1;
-    else if (b[this.__sortcol] && !a[this.__sortcol])
+    else if (b && !a)
         return this.__desc ? -1 : 1;
     else
         return 0;
@@ -137,8 +163,8 @@ AbstractDataSource.prototype.booleanSort = function(a, b) {
 // Callbacks
 
 AbstractDataSource.prototype.refreshData = function(params) {
-    return this.__data;
     this.callListeners("dataChanged");
+    return this.__data;
 }
 
 AbstractDataSource.prototype.onRefreshStarted = function(params) {

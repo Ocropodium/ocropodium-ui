@@ -1,24 +1,83 @@
 // class for browsing and selecting files on the server
 
 function AbstractListWidget() {
-    this.parent = parent;   
-    this.data = AbstractDataSource(); 
 }
 
-AbstractListWidget.prototype.setupEvents = function() {
+AbstractListWidget.prototype.init = function(parent, options) {
+    this.parent = parent;   
+    this.data = new AbstractDataSource();
 
+    this.options = {
+        multiselect: true,                     
+    };
+    $.extend(this.options, options);
 
-    /*
-     *  Events
-     */
+    // currently selected list entry
+    // (the last one clicked)
+    this.__current = null;
+    this.__selected = {};
+    this.__listeners = {
+        rowClicked: [],
+        cellClicked: [],
+        rowDoubleClicked: [],
+    };
+
+    var self = this;
+    this.data.addListener("dataChanged", function() {
+        self.refreshEntries(); 
+    });
+    $(this.parent).html("");
+    $(this.parent).append(this.buildUi());
+    this.setupMouseEvents();
+    this.data.refreshData();
+}
+
+AbstractListWidget.prototype.addListener = function(key, func) {
+    if (this.__listeners[key] == undefined)
+        throw "Unknown callback: '" + key + "'";
+    this.__listeners[key].push(func);
+}
+
+AbstractListWidget.prototype.callListeners = function() {
+    var args = Array.prototype.slice.call(arguments);
+    var key = args.shift();
+    $.each(this.__listeners[key], function(i, func) {
+        func.apply(func.callee, args.concat(Array.prototype.slice.call(arguments)));
+    });
+}
+
+AbstractListWidget.prototype.setupMouseEvents = function() {
+
+    var self = this;
 
     // sync the headers when container size changes
-    $(this.parent).resize(this.syncHeadWidths);
+    $(this.parent).resize(function() {
+        self.syncHeadWidths();
+    });
+
+    // sort when the header is clicked
+    function headSort(event) {
+        self.data.sortByColumn($(this).data("index"));
+        $(".sort_arrow").removeClass("order").removeClass("order_desc");
+        $(this).find(".sort_arrow").addClass(
+            self.data.descending() ? "order_desc" : "order");
+    }
+    // re-sort the list when the user clicks a column header
+    $("th").bind("click.headsort", headSort);
+
+    // we don't want to sort the headers 
+    $(".header_drag").bind("mouseover mouseout", function(event) {
+        if (event.type == "mouseover") {
+            $("th").unbind("click.headsort");
+        } else {
+            $("th").bind("click.headsort", headSort);
+        }
+    });
 
 
     // when the user clicks on a header separator, bind the mouse move
     // event to resize the columns of both header and entry tables.
-    $(".header_drag").live("mousedown", function(event) {
+    $(".header_drag").bind("mousedown", function(event) {
         var head = $(this).parent();
         var cell = $($("#entrytable").find("td").get(head.data("index")));
         var leftpos = head.offset().left;
@@ -26,6 +85,7 @@ AbstractListWidget.prototype.setupEvents = function() {
         // correct events to the document.  This allows us the
         // move the mouse anywhere and be sure of not missing
         // the mouseup event
+        
         $(document).bind("mouseup.headsize", function(upevent) {
             $(document)
                 .unbind("mousemove.headsize")
@@ -35,7 +95,7 @@ AbstractListWidget.prototype.setupEvents = function() {
         $(document).bind("mousemove.headsize", function(moveevent) {            
             var celldiff = cell.outerWidth(true) - cell.width();
             cell.width(moveevent.pageX - leftpos - celldiff);
-            syncHeadWidths();
+            self.syncHeadWidths();
         });
         event.preventDefault();
     });
@@ -51,21 +111,6 @@ AbstractListWidget.prototype.setupEvents = function() {
     });
 
 
-    // re-sort the list when the user clicks a column header
-    $("th").live("click", function(event) {
-        if (m_sort == $(this).data("sort")) {
-            m_desc = !m_desc;
-        } else {
-            m_sort = $(this).data("sort");
-            m_desc = false;
-        }
-        $(".sort_arrow").removeClass("order").removeClass("order_desc");
-        $(this).find(".sort_arrow").addClass(m_desc ? "order_desc" : "order");
-        m_filedata.sort(directoryFirstSort);
-        updateFileList();
-    });
-
-
     // don't allow selecting the list - it looks bad and makes
     // working with item selections dodgy
     $(".entry, th").live("mousedown", function(e) { return false; });
@@ -73,152 +118,123 @@ AbstractListWidget.prototype.setupEvents = function() {
 
     // handle task selection and multiselection
     $(".entry").live("click", function(event) {
-        var id = $(this).attr("id");
-
         // if ctrl is down TOGGLE selection, else select item
-        selectEntry($(this), event.ctrlKey 
+        self.selectEntry(this, event.ctrlKey 
             ? !$(this).hasClass("selected") 
             : true
         );
 
-        // if shift is down, select up the page
-        if (event.shiftKey) {
+        // if shift is down, select between the new click
+        // recipient and the 'current' (last selected) item.
+        if (event.shiftKey && self.options.multiselect) {
             // deselect everything
-            $(".selected").not($(this)).not(m_current).removeClass("selected");
+            $(".selected").not($(this)).not(self.__current).removeClass("selected");
             // if there's a current element and it's not the
             // one we've just clicked on, select everything in between
-            if (m_current && $(m_current).get(0) != this) {
-                var traverser = parseInt($(m_current).data("index")) >
-                    parseInt($(this).data("index")) 
-                    ? "nextUntil"
-                    : "prevUntil";
-                $(this)[traverser](m_current).each(function(i, elem) {
-                    selectEntry($(elem), true);                        
+            if (self.__current && self.__current != this) {
+                var traverser = parseInt($(self.__current).data("row")) >
+                    parseInt($(this).data("row")) 
+                    ? "prevUntil"
+                    : "nextUntil";
+                $(self.__current)[traverser]("#" + this.id).each(function(i, elem) {
+                    self.selectEntry(elem, true);                        
                 });
             }
         // if ctrl is down, don't clear the last selection 
-        } else if (!event.ctrlKey) {
+        } else if (!self.options.multiselect || !event.ctrlKey) {
+            var id = this.id;
             $(".selected").each(function(i, entry) {
-                if ($(entry).attr("id") != id) {
-                    selectEntry($(entry), false);
+                if (entry.id != id) {
+                    self.selectEntry(entry, false);
                 }
             });                                          
         }
         // store the selector of the current element
         // to use when selecting a range
-        if (m_current == null || !event.shiftKey)
-            m_current = "#" + $(this).attr("id");
-        updateButtonState();
+        if (self.__current == null || !event.shiftKey)
+            self.__current = this;
+
+        // finally, trigger any user callbacks
+        self.__rowClicked(event, parseInt($(this).data("row")));
     });
 
-    // Open button clicked
-    $("#openbutton").live("click", function(event) {
-        m_value = self.getValue();
-        m_container.dialog("close");
-        self.onClose(event);    
+    $(".entry").live("dblclick", function(event) {
+        self.__rowDoubleClicked(event, parseInt($(this).data("row")));
     });
 
-    $("#cancelbutton").live("click", function(event) {
-        if (m_container.dialog("isOpen")) {
-            m_container.dialog("close");
-        }
+    $(".entry > td").live("click", function(event) {
+        self.__cellClicked(event, parseInt($(this).parent().data("row")),
+                parseInt($(this).data("col")));
     });
+
 }
 
-
-AbstractListWidget.prototype.init = function() {
-    m_container.html("");
-    m_value = [];
-    m_container.append(this.buildUi());
-    this.data.refresh();
-}
 
 AbstractListWidget.prototype.onClose = function(event) {
 
 }
 
-
-AbstractListWidget.prototype.refresh = function() {
-    $.ajax({
-        url: m_lsurl,
-        dataType: "json",
-        data: "dir=" + m_dir,
-        beforeSend: function(e) {
-            self.setWaiting(true);
-            $(".entry").hide();
-        },
-        complete: function(e) {
-            self.setWaiting(false);
-            $(".entry").removeClass("selected");
-        },
-        success: function(data) {
-            if (data.length && data[0].error) {
-                alert("Error: " + data[0].error);
-                return;
-            }
-            m_filedata = data;
-            m_filedata.sort(directoryFirstSort);
-            updateFileList();
-            $("#headtable").trigger("click");
-        },
-        error: function(xhr, error) {
-            alert(error);
-        },
-    });
-}
-
-
 AbstractListWidget.prototype.resized = function(event) {
-    syncHeadWidths();
+    this.syncHeadWidths();
 }
 
 AbstractListWidget.prototype.setWaiting = function(wait) {
     m_container.toggleClass("waiting", wait);
 }
 
-
-
-// set the buttons disabled/enabled according to the
-// current filebrowser state
-AbstractListWidget.prototype.updateButtonState = function() {
-    $("#openbutton").attr("disabled", $(".selected.file").length == 0);
-}
-
-
 // set a task in the list selected and store it's id
 // so the selection can be preserved after refresh
 AbstractListWidget.prototype.selectEntry = function(entry, select) {
-    entry.toggleClass("selected", select);
+    $(entry).toggleClass("selected", select);
+    var key = $(entry).data("key");
+    if (key) {
+        if (select) {
+            this.__selected[key] = true;
+        } else {
+            this.__selected[key] = undefined;
+        }
+    }
 }
 
 
 // update the data in the table when the file
 // data changes
-AbstractListWidget.prototype.updateFileList = function() {
-    this.setTableLength(this.data.dataLength());
+AbstractListWidget.prototype.refreshEntries = function() {
+    this.setTableLength();
     
     var entries = $(".entry");
-    for (var i = 0; i < this.data.dataLength(); i++) {
-
-        // there must be a better way of settings the date...
-        var date = new Date();
-        date.setTime(parseFloat(m_filedata[i][FCMOD]) * 1000);
-
-        $(entries.get(i))
+    var data = this.data;
+    //var entry, cells, cell;
+    var key, entry, cells, cell;
+    for (var row = 0; row < data.dataLength(); row++) {
+        key = data.rowKey(row);
+        entry = entries.slice(row);
+        cells = entry.find("td");
+        entry
             .attr("class", "entry")
-            .data("index", i)
-            .attr("id", "file" + i)
-            .addClass(m_filedata[i][FTYPE])
-            .addClass(i % 2 ? "odd" : "")
-            .data("name", m_filedata[i][FNAME])
-            .find("td")
-            .first().text(m_filedata[i][FNAME])
-            .addClass("n")
-            .next().text(reportSize(m_filedata[i][FSIZE]))
-            .next().text(date.toString().replace(/GMT.+/, ""));            
+            .data("row", row)
+            .data("key", key)
+            .attr("id", "entry" + row)
+            .addClass(row % 2 ? "odd" : "");
+        $.each(data.rowMetadata(row), function(k, v) {
+            entry.data(k, v);
+        });
+        for (var col = 0; col < data.columnCount(); col++) {
+            cell = cells.slice(col);
+            cell.data("col", col).text(data.cellLabel(row, col));
+            $.each(data.cellMetadata(row, col), function(k, v) {
+                cell.data(k, v);
+            }); 
+        }
+        // if the data source defines a usable key, re-select
+        // those elements that might've been selected before
+        if (key && this.__selected[key]) {
+            entry.addClass("selected");
+        }
     };
+
     $(".entry").show();
-    syncHeadWidths();
+    this.syncHeadWidths();
 }
 
 
@@ -235,23 +251,23 @@ AbstractListWidget.prototype.syncHeadWidths = function() {
 
 // insert the appropriate number of empty rows
 // into the filetable
-AbstractListWidget.prototype.setTableLength = function(length) {
+AbstractListWidget.prototype.setTableLength = function() {
     var row = $("<tr></tr>")
         .addClass("entry")
-        .css("MozUserSelect", "none")
-        .append($("<td></td>"))
-        .append($("<td></td>"))
-        .append($("<td></td>"));
+        .css("MozUserSelect", "none");
+    for (var col = 0; col < this.data.columnCount(); col++) {
+        row.append($("<td></td>"));
+    }
 
     var entrytable = $("#entrytable");
     var entries = entrytable.find(".entry");
-    var diff = entries.length - length;
+    var diff = entries.length - this.data.dataLength();
     if (diff < 0) {
         while (diff++) {
             entrytable.append(row.clone());
         }
     } else {
-        for (var i = length; i < entries.length; i++) {
+        for (var i = this.data.dataLength(); i < entries.length; i++) {
             $(entries.get(i)).remove();
         }
     }
@@ -271,30 +287,9 @@ AbstractListWidget.prototype.buildUi = function(data) {
 
     var innercontainer = $("<div></div>")
         .addClass("fbcontainer")
-        .append(buildHeaderTable())
-        .append(tablescroll)
-        .append(buildButtonBar());
+        .append(this.buildHeaderTable())
+        .append(tablescroll);
     return innercontainer;
-}
-
-
-AbstractListWidget.prototype.buildButtonBar = function() {
-    var openbutton = $("<input type='button' />")            
-                        .addClass("fbcontrol")
-                        .attr("name", "confirm")
-                        .attr("disabled", true)
-                        .attr("value", "Open")
-                        .attr("id", "openbutton");
-    var cancelbutton = $("<input type='button' />")            
-                        .addClass("fbcontrol")
-                        .attr("name", "cancel")
-                        .attr("value", "Cancel")
-                        .attr("id", "cancelbutton");
-    var buttonbar = $("<div></div>")
-        .addClass("fbcontrols")
-        .append(openbutton)
-        .append(cancelbutton);
-    return buttonbar;
 }
 
 
@@ -306,28 +301,26 @@ AbstractListWidget.prototype.buildHeaderTable = function() {
     var headrow = $("<tr></tr>");
     headtable.append(thead.append(headrow));
     
-    var count = 0;
-    $.each(m_headers, function(k, v) {
+    var self = this;
+    for (var col = 0; col < self.data.columnCount(); col++) {
         var th = $("<th></th>")
-            .text(k)
-            .data("sort", v)
-            .data("index", count);
+            .data("sort", col)
+            .data("index", col);
+        th.text(self.data.headerLabel(col));
         // add a dragger to all but the last column
-        // TODO: fix the hard-coded header number
-        if (count < 2) {
+        if (col < self.data.columnCount() - 1) {
             th.append(
                 $("<div></div>").addClass("header_drag")
                     .append($("<div></div>").addClass("header_line"))
             );
         }
         var sortdiv = $("<div></div>").addClass("sort_arrow");
-        if (m_sort == v) {
-            sortdiv.addClass(m_desc ? "order_desc" : "order");
+        if (col == self.data.sortColumn()) {
+            sortdiv.addClass(self.data.descending() ? "order_desc" : "order");
         }
         th.append(sortdiv);
         headrow.append(th);
-        count++;
-    });
+    }
     return headtable;
 }
 
@@ -341,4 +334,18 @@ AbstractListWidget.prototype.reportSize = function(size) {
     else
         return (Math.round(size / 104857.6) / 10) + " MB";
 }    
+
+
+AbstractListWidget.prototype.__cellClicked = function(event, row, col) {
+    this.callListeners("cellClicked", row, col);
+}
+
+AbstractListWidget.prototype.__rowClicked = function(event, row) {
+    this.callListeners("rowClicked", row);
+}
+
+AbstractListWidget.prototype.__rowDoubleClicked = function(event, row) {
+    this.callListeners("rowDoubleClicked", row);
+}
+
 
