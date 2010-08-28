@@ -61,13 +61,6 @@ function pollForResults(data, polltime) {
 
 
 $(function() {
-
-    // FIXME FIXME FIXME FIXME
-    // Setting the width of the sidebar to be bigger, since it's holding
-    // a viewer.
-
-    //$("#sidebar").css("width", "600px");
-
     // setup toolbar
     $("#spellcheck").button();
     $("#format").buttonset();

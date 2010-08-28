@@ -19,7 +19,9 @@
 {% endblock %}
 
 {% block subtoolbar %}
-    {% include "ocr/includes/viewing_toolbar.html" %}
+    <div class="sub_toolbar" id="viewing_toolbar">
+        {% include "ocr/includes/viewing_toolbar.html" %}
+    </div>
 {% endblock %}
 
 {% block content %}

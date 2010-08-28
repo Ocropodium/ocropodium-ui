@@ -19,12 +19,20 @@
 {% endblock %}
 
 {% block subtoolbar %}
-    {% include "ocr/includes/viewing_toolbar.html" %}
+    <div class="sub_toolbar" id="viewing_toolbar">
+        {% include "ocr/includes/viewing_toolbar.html" %}
+
+        <span>&nbsp;&nbsp;&nbsp;</span>
+        <input type="checkbox" class="tbbutton" id="hl_lines" checked="checked" />
+        <label for="hl_lines">Lines</label>
+        <input type="checkbox" class="tbbutton" id="hl_paragraphs" checked="checked">
+        <label for="hl_paragraphs">Paragraphs</label>
+        <input type="checkbox" class="tbbutton" id="hl_columns" checked="checked">
+        <label for="hl_columns">Columns</label>
+    </div>
 {% endblock %}
 
 {% block content %}
-
     {% include "ocr/includes/viewing_sidebar.html" %}
- 
 {% endblock %}
 

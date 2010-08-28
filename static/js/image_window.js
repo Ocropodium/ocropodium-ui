@@ -74,12 +74,15 @@ function ImageWindow(container_id, config) {
         .resizable({
             handles: 'se, sw, w, e, n, s',
             resize: function(e, ui) {
+                width = $("#" + container_id).width();
                 height = $("#" + container_id).height() - footheight;
                 self.updateSize();
             },
             stop: function(e, ui) {
                 width = $("#" + container_id).width();
+                height = $("#" + container_id).height() - footheight;
                 overlay.css("width", width + "px");
+                overlay.css("height", height + "px");
                 self.updateSize();
             },        
         });
@@ -214,6 +217,43 @@ function ImageWindow(container_id, config) {
             });
         }
         viewer.openDzi(dzipath);        
+    }
+
+    var drawViewerOverlays = function(viewer) {
+        if (!viewer.drawer || !viewer.overlays)
+            return;
+        viewer.drawer.clearOverlays();
+        var overlaydiv;
+        $.each(viewer.overlays, function(class, rects) {
+            for (var i in rects) {
+                overlaydiv = document.createElement("div");
+                $(overlaydiv).addClass("viewer_highlight " + class);
+                viewer.drawer.addOverlay(overlaydiv, rects[i]);         
+            }            
+        }); 
+    }
+
+    this.setViewerOverlays = function(viewer, class, rects) {
+        if (!viewer.overlays)
+            viewer.overlays = {};
+        viewer.overlays[class] = rects;
+    }
+
+    this.viewerOverlays = function(viewer, class) {
+        if (!viewer.overlays)
+            return [];
+        return viewer.overlays[class] || [];            
+    }
+
+    this.setOutputOverlays = function(overlayhash) {
+        if (!aviewer.overlays)
+            aviewer.overlays = {};
+        bviewer.overlays = aviewer.overlays ? aviewer.overlays : overlayhash;
+        aviewer.overlays = overlayhash;
+        setTimeout(function() {
+            drawViewerOverlays(aviewer);
+            drawViewerOverlays(bviewer);
+        }, 500);        
     }
 
     // the path to source and output DZIs

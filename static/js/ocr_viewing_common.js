@@ -85,6 +85,22 @@ function refreshImage() {
     });
 }
 
+// convert a list of page-coordinate rectangles into
+// a list of seadragon normalized rect objects
+function getViewerCoordinateRects(bounds, pagerects) {
+    var fw = bounds[2], fh = bounds[3];
+    var x, y, w, h, box;
+    var outrects = [];
+    for (var i in pagerects) {
+        box = pagerects[i];
+        x = box[0]; y = box[1]; w = box[2]; h = box[3];        
+        outrects.push(
+            new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw));
+    }
+    return outrects;
+}
+
+
 // Process the data completed results data... in this case
 // set the viewer source and output paths
 function processData(element, data) {
@@ -113,7 +129,17 @@ function processData(element, data) {
         sdviewer.setSource(data.results.src);
         sdviewer.setWaiting(false);
         pbuilder.setWaiting(false);
-        $(".interact_param").attr("disabled", false);
+        
+        var overlays = {};
+        $.each(["lines", "paragraphs", "columns"], function(i, class) {
+            if (data.results[class]) {
+                overlays[class] = getViewerCoordinateRects(
+                    data.results.box, data.results[class]);
+            }
+        });
+        sdviewer.setOutputOverlays(overlays);
+
+        $(".tbbutton").button({disabled: false});
     } else {
         alert("Oops.  Task finished with bad status: " + data.status);
     }
@@ -223,6 +249,12 @@ $(function() {
         }
     });
 
+    $("#hl_lines, #hl_paragraphs, #hl_columns").click(function(event) {
+        var class = this.id.replace(/hl_/, "");
+        $(".viewer_highlight." + class).globalcss(
+            "display", $(this).attr("checked") ? "block" : "none");
+    });
+
     $("#singleupload").change(function(event) {
         if ($(this).val() == "") {
             return false;
@@ -258,7 +290,7 @@ $(function() {
     }
 
     // make interactive params disabled at the start
-    $(".interact_param").attr("disabled", true);
+    $(".tbbutton").button({disabled: true});
 
 
 
