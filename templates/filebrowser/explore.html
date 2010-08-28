@@ -7,7 +7,9 @@
 	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
 	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
 	<script type='application/javascript' src='/static/js/stats.js'></script>
-	<script type='application/javascript' src='/static/js/filebrowser.js'></script>
+	<script type='application/javascript' src='/static/js/abstract_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/abstract_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/filebrowser2.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
     <link rel="stylesheet" href="/static/css/filebrowser.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
@@ -17,17 +19,7 @@
 var fbrowser = null;
 
 $(function() {
-        fbrowser = new FileBrowser("file_browser");
-
-        $("#browse").live("click", function(e) {
-            fbrowser.onClose = function(e) {
-                $.each(fbrowser.getValue(), function(i, v) {
-                    $("#files").append($("<div></div>").text(v));
-                });
-            };
-            fbrowser.showModal();
-            return false;
-        });
+        fbrowser = new FileBrowser2($("#file_browser").get(0), {multiselect: true});
 });
 
 
@@ -52,14 +44,7 @@ $(function() {
 {% block content %}
 
 <div class="innercontent">
-    <div id="files">
-    </div>
-    <a href="#" id="browse">Browse</a>
-    <div id="dialog">
-        <div class="filewindow" id="file_browser">
-
-        </div>
-    </div>
+    <div class="filewindow" id="file_browser"> </div>
 </div>
 
 
