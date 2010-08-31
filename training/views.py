@@ -189,6 +189,13 @@ def score_models(request):
         for model in (cmodel_a, cmodel_b):
             # create a task with the given gt/model
             params = {"cmodel": model.file.path.encode(), "lmodel": lmodel.file.path.encode()}
+            if model.name == "Tesseract":
+                params["tesseract"] = True
+                try:
+                    lmod = OcrModel.objects.get(type="lang", app="tesseract")
+                    params["lmodel"] = lmod.file.path.encode()
+                except OcrModel.DoesNotExist:
+                    pass
             tid = ocrutils.get_new_task_id(path)
             args = (gt.pk, outdir.encode(), params)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)

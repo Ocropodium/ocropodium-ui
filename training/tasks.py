@@ -132,7 +132,9 @@ class ComparisonTask(AbortableTask):
         # ground truth is already a binary, so tell the converter not
         # to redo it...
         paramdict["prebinarized"] = True
-        converter = ocrutils.get_converter("ocropus", 
+        convertapp = "ocropus" if not paramdict.get("tesseract") \
+                else "tesseract"
+        converter = ocrutils.get_converter(convertapp, 
                 logger=logger, abort_func=abort_func, params=paramdict)
         
         # function for the converter to update progress
