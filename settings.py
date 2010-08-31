@@ -11,7 +11,12 @@ djcelery.setup_loader()
 SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 # flag whether we're on a server.  Really need a better way of doing this.
-SERVER = socket.gethostname().startswith("ocr") 
+# ocr1 is the db master
+SERVER = False
+MASTERNAME = "ocr1"
+if SITE_ROOT.find("/dev/") != -1:
+    SERVER = True
+
 
 # don't run in debug mode on the servers
 DEBUG = TEMPLATE_DEBUG = not SERVER
@@ -29,7 +34,7 @@ MANAGERS = ADMINS
 #DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
 #DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
-DATABASE_HOST = "localhost" if not SERVER else "ocr1"
+DATABASE_HOST = "localhost" if not SERVER else MASTERNAME
 DATABASES = {
     'default' : {
         'ENGINE'    : 'django.db.backends.mysql',
@@ -44,7 +49,7 @@ DATABASES = {
 # mysql
 CELERY_RESULT_BACKEND = "database"
 CELERY_RESULT_DBURI = "mysql://celery:celery@localhost/celeryresults"
-BROKER_HOST = "localhost" if not SERVER else "ocr1"
+BROKER_HOST = "localhost" if not SERVER else MASTERNAME
 BROKER_PORT = 5672
 BROKER_VHOST = "/"
 BROKER_USER = "guest"
