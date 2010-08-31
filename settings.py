@@ -14,7 +14,7 @@ SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 # ocr1 is the db master
 SERVER = False
 MASTERNAME = "ocr1"
-if SITE_ROOT.find("/dev/") != -1:
+if SITE_ROOT.find("/dev/") == -1:
     SERVER = True
 
 
