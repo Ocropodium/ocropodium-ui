@@ -2,6 +2,7 @@
 
 
 import os
+import sys
 import socket
 
 # Ensure celery/lazy loading Django models play nice 
@@ -15,6 +16,9 @@ SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 SERVER = False
 MASTERNAME = "ocr1"
 if SITE_ROOT.find("/dev/") == -1:
+    # WSGI can't print to stdout, so map
+    # it to stderr
+    sys.stdout = sys.stderr
     SERVER = True
 
 
@@ -22,7 +26,7 @@ if SITE_ROOT.find("/dev/") == -1:
 DEBUG = TEMPLATE_DEBUG = not SERVER
 
 ADMINS = (
-    # ('Your Name', 'your_email@domain.com'),
+    ('Michael Bryant', 'mikesname@gmail.com'),
 )
 
 MANAGERS = ADMINS
