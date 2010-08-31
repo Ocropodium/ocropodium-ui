@@ -21,6 +21,14 @@ from PIL import Image
 from django.conf import settings
 
 
+class AppException(StandardError):
+    """
+    Most generic app error.
+    """
+    pass
+
+
+
 class FileWrangler(object):
     """
     Determine the most appropriate place to put new files
