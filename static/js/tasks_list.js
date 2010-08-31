@@ -57,8 +57,24 @@ window.onbeforeunload = function(event) {
 $(function() {
     
     //loadState();
-    tasks = new TaskList("task_list", "task_filter_form");
-    tasks.init();
+    //tasks = new TaskList("task_list", "task_filter_form");
+    //tasks.init();
+
+    $("#task_list_widget").resizable({
+        resize: function(e, ui) {
+            tasks.setHeight($(this).height() - 80);
+        },        
+    });
+
+    tasks = new TaskListWidget(
+        $("#task_list").get(0), 
+        new TaskDataSource(),
+        {
+            multiselect: true,
+        }
+    );
+    tasks.setupEvents();
+    
 });
 
 

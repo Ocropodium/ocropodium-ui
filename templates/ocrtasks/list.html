@@ -4,8 +4,12 @@
     <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/task_list.css" type="text/css" media="screen" />
 	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
-    <script type="text/javascript" src="/static/js/tasklist.js"></script>
+	<script type='application/javascript' src='/static/js/abstract_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/task_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/abstract_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/task_list_widget.js'></script>
     <script type="text/javascript" src="/static/js/tasks_list.js"></script>
+    <link rel="stylesheet" href="/static/css/filebrowser.css" type="text/css" media="screen" />
 
     <style type="text/css">
         #dialog_box {
@@ -56,7 +60,7 @@
 </ul>
 {% endif %}
 
-<div class="widget">
+<div class="widget" id="task_list_widget">
     <div class="widget_header">Tasks:</div>
     <div class="widget_content">
         <div id="task_list_controls">

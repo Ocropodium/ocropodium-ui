@@ -51,6 +51,7 @@ AbstractDataSource.prototype.page = function() {
 }
 
 AbstractDataSource.prototype.setPage  = function(page) {
+    alert(page);
     this.__page = page;
 }
 
@@ -127,7 +128,7 @@ AbstractDataSource.prototype.cellMetadata = function(row, col) {
 }
 
 AbstractDataSource.prototype.rowKey = function(row) {
-    return this.__data[row][0];
+    return row;
 }
 
 AbstractDataSource.prototype.columnToData = function(col) {

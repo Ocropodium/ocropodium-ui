@@ -165,7 +165,11 @@ AbstractListWidget.prototype.setupMouseEvents = function() {
         self.cellClicked(event, parseInt($(this).parent().data("row")),
                 parseInt($(this).data("col")));
     });
-
+    
+    $(".page_link").live("click", function(event) {
+        self.data.setPage(parseInt($(this).data("page")));
+        event.preventDefault();
+    });
 }
 
 
@@ -179,7 +183,7 @@ AbstractListWidget.prototype.resized = function(event) {
 
 AbstractListWidget.prototype.setHeight = function(height) {
     var diff = height - $("#tscroll").height();
-    $("#tscroll").height(height - 30);
+    $("#tscroll").height(height - 60);
 }
 
 AbstractListWidget.prototype.setWaiting = function(wait) {
@@ -266,6 +270,11 @@ AbstractListWidget.prototype.syncHeadWidths = function() {
 // insert the appropriate number of empty rows
 // into the filetable
 AbstractListWidget.prototype.setTableLength = function() {
+    $(".paginators", this.parent).remove();
+    if (this.data.isPaginated()) {
+        $(this.parent).append(this.buildPaginators());
+    }
+
     var row = $("<tr></tr>")
         .addClass("entry")
         .css("MozUserSelect", "none");
@@ -301,8 +310,7 @@ AbstractListWidget.prototype.buildUi = function(data) {
     var innercontainer = $("<div></div>")
         .addClass("fbcontainer")
         .append(this.buildHeaderTable())
-        .append(tablescroll)
-        .append(this.buildPaginators());
+        .append(tablescroll);
 
     return innercontainer;
 }
@@ -341,39 +349,33 @@ AbstractListWidget.prototype.buildHeaderTable = function() {
 
 AbstractListWidget.prototype.buildPaginators = function() {
     var data = this.data;
-    if (!data.isPaginated()) {
-        return $();
-    }
     var container = $("<div></div>").addClass("paginators"); 
     var pag = $("<div></div>")
         .addClass("pagination")
-        .addClass("step_links");
-    if (data.hasPrev()) {
-        pag.append($("<a>Previous</a>")
-                .attr("href", url + "?page="
-                    + data.prevPage()));
-    }
+        .addClass("step_links")
+            
     pag.append($("<span></span>")
-            .text("Page " + data.page() + " of " + data.numPages()).html());
-    if (data.has_next) {
-        pag.append($("<a>Next</a>")
-                .attr("href", url + "?page="
-                    + data.nextPage()));
+            .text("Page " + data.page() + " of " + data.numPages()));
+    if (data.hasPrev()) {
+        pag.prepend(
+            $("<a></a>")                
+                .attr("href", data.url() + "?page=" + data.prevPage())
+                .addClass("page_link")
+                .data("page", data.prevPage())
+                .text("Previous")
+        );
+    }
+    if (data.hasNext()) {
+        pag.append(
+            $("<a></a>")
+                .attr("href", data.url() + "?page=" + data.nextPage())
+                .addClass("page_link")
+                .data("page", data.nextPage())
+                .text("Next")                
+        );
     }
     return container.append(pag);
 }
-
-
-// translate size in bytes into a human-readable one
-AbstractListWidget.prototype.reportSize = function(size) {
-    if (size < 1024)
-        return size + " bytes";
-    else if (size < 1024 * 1024)
-        return (Math.round(size / 102.4) / 10) + " KB";
-    else
-        return (Math.round(size / 104857.6) / 10) + " MB";
-}    
-
 
 AbstractListWidget.prototype.cellClicked = function(event, row, col) {
 }

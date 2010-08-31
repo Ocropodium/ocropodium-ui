@@ -8,8 +8,9 @@
 	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
 	<script type='application/javascript' src='/static/js/stats.js'></script>
 	<script type='application/javascript' src='/static/js/abstract_data_source.js'></script>
-	<script type='application/javascript' src='/static/js/file_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/task_data_source.js'></script>
 	<script type='application/javascript' src='/static/js/abstract_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/task_list_widget.js'></script>
 	<script type='application/javascript' src='/static/js/filebrowser2.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
     <link rel="stylesheet" href="/static/css/filebrowser.css" type="text/css" media="screen" />
@@ -20,9 +21,9 @@
 var fbrowser = null;
 
 $(function() {
-        fbrowser = new FileBrowser2(
+        fbrowser = new TaskListWidget(
             $("#file_browser").get(0), 
-            new FileDataSource(),
+            new TaskDataSource(),
             {multiselect: true}
             );
         fbrowser.setupEvents();
