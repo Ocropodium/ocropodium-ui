@@ -229,8 +229,8 @@ function FileBrowser(container_id) {
                 $(".entry").removeClass("selected");
             },
             success: function(data) {
-                if (data.length && data[0].error) {
-                    alert("Error: " + data[0].error);
+                if (data.error) {
+                    alert("Error: " + data.error);
                     return;
                 }
                 m_filedata = data;
