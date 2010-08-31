@@ -44,9 +44,9 @@ function OcrBatch(insertinto_id, batch_id) {
         .attr("id", "batch_head")
         .text("OCR Batch");
     var m_batchdiv = $("<div></div>")
-        .addClass("ocr_page")
+        .addClass("ocr_batch")
         .addClass("waiting")
-        .attr("id", "ocr_page");
+        .attr("id", "ocr_batch");
 
     var m_scrollwin = $("<span></span>")
         .addClass("scroll_viewer")
