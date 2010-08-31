@@ -3,7 +3,7 @@
 function AbstractDataSource() {
     this.__sortcol = 0;
     this.__desc = false;
-
+    this.__page = 0;
     this.__rowclass = "abstract_entry";
 
     this.__listeners = {
@@ -42,6 +42,38 @@ function AbstractDataSource() {
     ];
 }
 
+AbstractDataSource.prototype.isPaginated = function() {
+    return false;
+}
+
+AbstractDataSource.prototype.page = function() {
+    return this.__page;
+}
+
+AbstractDataSource.prototype.setPage  = function(page) {
+    this.__page = page;
+}
+
+AbstractDataSource.prototype.nextPage = function() {
+    return 1;
+}
+
+AbstractDataSource.prototype.prevPage = function() {
+    return -1;
+}
+
+AbstractDataSource.prototype.hasPrev = function() {
+    return false;
+}
+
+AbstractDataSource.prototype.hasNext = function() {
+    return false;
+}
+
+AbstractDataSource.prototype.numPages = function() {
+    return 1;
+}
+
 AbstractDataSource.prototype.sortColumn = function() {
     return this.__sortcol;
 }
@@ -75,11 +107,19 @@ AbstractDataSource.prototype.data = function() {
 }
 
 AbstractDataSource.prototype.getData = function(row, col) {
-    return this.__data[row][col];
+    return this.__data[row][this.c2d(col)];
 }
 
 AbstractDataSource.prototype.rowMetadata = function(row) {
     return {};
+}
+
+AbstractDataSource.prototype.rowClassNames = function(row) {
+    return [];
+}
+
+AbstractDataSource.prototype.cellClassNames = function(row, col) {
+    return [];
 }
 
 AbstractDataSource.prototype.cellMetadata = function(row, col) {
@@ -90,12 +130,18 @@ AbstractDataSource.prototype.rowKey = function(row) {
     return this.__data[row][0];
 }
 
+AbstractDataSource.prototype.columnToData = function(col) {
+    return col;
+}
+
+AbstractDataSource.prototype.c2d = AbstractDataSource.prototype.columnToData;
+
 AbstractDataSource.prototype.cellLabel = function(row, col) {
     // check if a specialised renderer exists for the
     // given column.  If not, default to a plain string.
     if (this["renderCellAt" + col] !== undefined)
         return this["renderCellAt" + col](row);
-    return this.__data[row][col].toString();
+    return this.__data[row][this.c2d(col)].toString();
 }
 
 AbstractDataSource.prototype.getHeaderData = function(col) {
@@ -109,16 +155,24 @@ AbstractDataSource.prototype.sortByColumn = function(col) {
         this.__desc = false;
     }
     this.__sortcol = col;
+    this.sort();
+}
+
+AbstractDataSource.prototype.sort = function() {
+    var col = this.__sortcol;
     var self = this;
     self.__data.sort(function(a, b) {
+        var ps = self.preSort(a, b);
+        if (ps != 0)
+            return ps;
         if (self.__headers[col].sortAs == "bool")
-            return self.booleanSort(a[col], b[col])
+            return self.booleanSort(a[self.c2d(col)], b[self.c2d(col)])
         if (self.__headers[col].sortAs == "num")
-            return self.numericSort(a[col], b[col])
+            return self.numericSort(parseFloat(a[self.c2d(col)]), parseFloat(b[self.c2d(col)]))
         if (self.__headers[col].sortAs == "str")
-            return self.stringSort(a[col], b[col])
+            return self.stringSort(a[self.c2d(col)], b[self.c2d(col)])
         if (typeof self.__headers[col].sortAs == "function")
-            return self.__headers[col].sortAs(a[col], b[col]);
+            return self.__headers[col].sortAs(a[self.c2d(col)], b[self.c2d(col)]);
     });
     self.callListeners("dataChanged");        
 }
@@ -129,10 +183,16 @@ AbstractDataSource.prototype.addListener = function(key, func) {
     this.__listeners[key].push(func);
 }
 
-AbstractDataSource.prototype.callListeners = function(key) {
+AbstractDataSource.prototype.callListeners = function() {
+    var args = Array.prototype.slice.call(arguments);
+    var key = args.shift();
     $.each(this.__listeners[key], function(i, func) {
-        func.apply(func.callee);
+        func.apply(func.callee, args.concat(Array.prototype.slice.call(arguments)));
     });
+}
+
+AbstractDataSource.prototype.preSort = function(a, b) {
+    return 0;
 }
 
 AbstractDataSource.prototype.numericSort = function(a, b) {

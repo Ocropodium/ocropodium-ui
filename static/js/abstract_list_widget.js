@@ -3,9 +3,9 @@
 function AbstractListWidget() {
 }
 
-AbstractListWidget.prototype.init = function(parent, options) {
+AbstractListWidget.prototype.init = function(parent, datasource, options) {
     this.parent = parent;   
-    this.data = new AbstractDataSource();
+    this.data = datasource;
 
     this.options = {
         multiselect: true,                     
@@ -16,11 +16,6 @@ AbstractListWidget.prototype.init = function(parent, options) {
     // (the last one clicked)
     this.__current = null;
     this.__selected = {};
-    this.__listeners = {
-        rowClicked: [],
-        cellClicked: [],
-        rowDoubleClicked: [],
-    };
 
     var self = this;
     this.data.addListener("dataChanged", function() {
@@ -30,6 +25,10 @@ AbstractListWidget.prototype.init = function(parent, options) {
     $(this.parent).append(this.buildUi());
     this.setupMouseEvents();
     this.data.refreshData();
+}
+
+AbstractListWidget.prototype.dataSource = function() {
+    return this.data;
 }
 
 AbstractListWidget.prototype.addListener = function(key, func) {
@@ -155,15 +154,15 @@ AbstractListWidget.prototype.setupMouseEvents = function() {
             self.__current = this;
 
         // finally, trigger any user callbacks
-        self.__rowClicked(event, parseInt($(this).data("row")));
+        self.rowClicked(event, parseInt($(this).data("row")));
     });
 
     $(".entry").live("dblclick", function(event) {
-        self.__rowDoubleClicked(event, parseInt($(this).data("row")));
+        self.rowDoubleClicked(event, parseInt($(this).data("row")));
     });
 
     $(".entry > td").live("click", function(event) {
-        self.__cellClicked(event, parseInt($(this).parent().data("row")),
+        self.cellClicked(event, parseInt($(this).parent().data("row")),
                 parseInt($(this).data("col")));
     });
 
@@ -176,6 +175,11 @@ AbstractListWidget.prototype.onClose = function(event) {
 
 AbstractListWidget.prototype.resized = function(event) {
     this.syncHeadWidths();
+}
+
+AbstractListWidget.prototype.setHeight = function(height) {
+    var diff = height - $("#tscroll").height();
+    $("#tscroll").height(height - 30);
 }
 
 AbstractListWidget.prototype.setWaiting = function(wait) {
@@ -208,7 +212,7 @@ AbstractListWidget.prototype.refreshEntries = function() {
     var key, entry, cells, cell;
     for (var row = 0; row < data.dataLength(); row++) {
         key = data.rowKey(row);
-        entry = entries.slice(row);
+        entry = $(entries.get(row));
         cells = entry.find("td");
         entry
             .attr("class", "entry")
@@ -219,11 +223,17 @@ AbstractListWidget.prototype.refreshEntries = function() {
         $.each(data.rowMetadata(row), function(k, v) {
             entry.data(k, v);
         });
+        $.each(data.rowClassNames(row), function(i, v) {
+            entry.addClass(v);
+        });
         for (var col = 0; col < data.columnCount(); col++) {
-            cell = cells.slice(col);
+            cell = $(cells.get(col));
             cell.data("col", col).text(data.cellLabel(row, col));
             $.each(data.cellMetadata(row, col), function(k, v) {
                 cell.data(k, v);
+            });
+            $.each(data.cellClassNames(row, col), function(i, v) {
+                cell.addClass(v);
             }); 
         }
         // if the data source defines a usable key, re-select
@@ -237,6 +247,10 @@ AbstractListWidget.prototype.refreshEntries = function() {
     this.syncHeadWidths();
 }
 
+AbstractListWidget.prototype.clearSelection = function() {
+    this.__selected = {};
+    $("#entrytable").find("entry").removeClass("selected");
+}
 
 // sync the header table's columns with the file list's widths
 AbstractListWidget.prototype.syncHeadWidths = function() {
@@ -258,7 +272,6 @@ AbstractListWidget.prototype.setTableLength = function() {
     for (var col = 0; col < this.data.columnCount(); col++) {
         row.append($("<td></td>"));
     }
-
     var entrytable = $("#entrytable");
     var entries = entrytable.find(".entry");
     var diff = entries.length - this.data.dataLength();
@@ -266,9 +279,9 @@ AbstractListWidget.prototype.setTableLength = function() {
         while (diff++) {
             entrytable.append(row.clone());
         }
-    } else {
+    } else if (diff > 0) {
         for (var i = this.data.dataLength(); i < entries.length; i++) {
-            $(entries.get(i)).remove();
+            entries.slice(i).remove();
         }
     }
 }
@@ -288,7 +301,9 @@ AbstractListWidget.prototype.buildUi = function(data) {
     var innercontainer = $("<div></div>")
         .addClass("fbcontainer")
         .append(this.buildHeaderTable())
-        .append(tablescroll);
+        .append(tablescroll)
+        .append(this.buildPaginators());
+
     return innercontainer;
 }
 
@@ -324,6 +339,30 @@ AbstractListWidget.prototype.buildHeaderTable = function() {
     return headtable;
 }
 
+AbstractListWidget.prototype.buildPaginators = function() {
+    var data = this.data;
+    if (!data.isPaginated()) {
+        return $();
+    }
+    var container = $("<div></div>").addClass("paginators"); 
+    var pag = $("<div></div>")
+        .addClass("pagination")
+        .addClass("step_links");
+    if (data.hasPrev()) {
+        pag.append($("<a>Previous</a>")
+                .attr("href", url + "?page="
+                    + data.prevPage()));
+    }
+    pag.append($("<span></span>")
+            .text("Page " + data.page() + " of " + data.numPages()).html());
+    if (data.has_next) {
+        pag.append($("<a>Next</a>")
+                .attr("href", url + "?page="
+                    + data.nextPage()));
+    }
+    return container.append(pag);
+}
+
 
 // translate size in bytes into a human-readable one
 AbstractListWidget.prototype.reportSize = function(size) {
@@ -336,16 +375,13 @@ AbstractListWidget.prototype.reportSize = function(size) {
 }    
 
 
-AbstractListWidget.prototype.__cellClicked = function(event, row, col) {
-    this.callListeners("cellClicked", row, col);
+AbstractListWidget.prototype.cellClicked = function(event, row, col) {
 }
 
-AbstractListWidget.prototype.__rowClicked = function(event, row) {
-    this.callListeners("rowClicked", row);
+AbstractListWidget.prototype.rowClicked = function(event, row) {
 }
 
-AbstractListWidget.prototype.__rowDoubleClicked = function(event, row) {
-    this.callListeners("rowDoubleClicked", row);
+AbstractListWidget.prototype.rowDoubleClicked = function(event, row) {
 }
 
 
