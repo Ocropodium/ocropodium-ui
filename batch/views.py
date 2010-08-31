@@ -24,12 +24,15 @@ from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
 from ocradmin.training.models import TrainingPage
+from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 
 from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params, _cleanup_params
 
 
 PER_PAGE = 10
+
+
 
 
 def batch_query(params):
@@ -228,7 +231,7 @@ def batch(request):
             username=request.user.username, temp=True, action="batch")()
     try:
         paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
-    except AppException, err:
+    except ocrutils.AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
     if not paths:
@@ -592,8 +595,13 @@ def _retry_celery_task(task):
     #            countdown=0, throw=False)
     if task.is_abortable():
         _abort_celery_task(task)
-    tid = ocrutils.get_new_task_id(task.page_name) 
-    async = tasks.ConvertPageTask.apply_async(
+    tid = ocrutils.get_new_task_id(task.page_name)
+
+    # FIXME: Figure the appropriate class out properly
+    # via Celery registry inspection
+    celerytask = tasks.ConvertPageTask if task.task_name \
+            != "compare.groundtruth" else ComparisonTask
+    async = celerytask.apply_async(
             args=task.args, task_id=tid, loglevel=60, retries=2)
     task.task_id = async.task_id
     task.status = "RETRY"
