@@ -12,7 +12,7 @@ from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseServerError 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -30,9 +30,7 @@ from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params, _cleanup_params
 
 
-PER_PAGE = 10
-
-
+PER_PAGE = 25
 
 
 def batch_query(params):
@@ -40,6 +38,7 @@ def batch_query(params):
     Query the batch db.
     """
     order = [x for x in params.getlist("order_by") if x != ""] or ["created_on"]
+
     query =  Q()
     for key, val in params.items():
         if key.find("__") == -1 and \
@@ -48,7 +47,10 @@ def batch_query(params):
         if not val:
             continue
         query = query & Q(**{str(key): str(val)})
-    return OcrBatch.objects.select_related().filter(query).order_by(*order)
+    query = OcrBatch.objects.select_related().filter(query)
+    if order and order[0].replace("-", "", 1) == "task_count":
+        query = query.annotate(task_count=Count("tasks"))
+    return query.order_by(*order)
 
 
 @login_required
@@ -84,10 +86,14 @@ def list(request):
     """
     excludes = ["args", "kwargs", "traceback", ]
     params = request.GET.copy()
-    params["project__pk"] = request.session["project"].pk
+    params["project"] = request.session["project"].pk
     context = { 
         "params" : params,
     }
+    if not request.is_ajax():
+        return render_to_response("batch/list.html", context,
+                context_instance=RequestContext(request))
+
     
     paginator = Paginator(batch_query(params), PER_PAGE) 
     try:
@@ -116,7 +122,7 @@ def list(request):
     serializedpage["params"] = params
     serializedpage["object_list"] = pythonserializer.serialize(
         batches.object_list, 
-        extras=( "username", ),
+        extras=( "username", "is_complete", "task_count",),
     ) 
 
     response = HttpResponse(mimetype="application/json")

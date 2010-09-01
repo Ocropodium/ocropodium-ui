@@ -20,7 +20,7 @@ while [ $i -lt ${#HOSTS[*]} ]; do
     if [ $host = $MASTER ]; then
         echo $host is master
         ssh $host "cd ${BASEPATH}/${APPNAME} ; python manage.py syncdb"
-        #ssh $host "sudo /etc/init.d/apache2 restart ; sudo /etc/init.d/celerybeat reload"
+        ssh $host "sudo /etc/init.d/apache2 restart" # ; sudo /etc/init.d/celerybeat reload"
     fi
 
     ssh $host "sudo /etc/init.d/celeryd reload"
