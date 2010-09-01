@@ -2,23 +2,32 @@
     padding: 5px;
 }
 
-.field_wrapper textfield {
-
-}
-
 .field_wrapper label {
     float: left;
-    width: 7em;
-    text-align: right;
+    width: 10em;
     padding-right: 5px;
 }
 
 .textfield_wrapper label {
-    width: 7em;
+    width: 10em;
     text-align: left;
 }
 
 .field_wrapper input[type="text"] {
+    width: 20em;
+}
+
+.field_wrapper textarea {
+    width: 20em;
+}
+
+fieldset label {
+    float: left;
+    width: 10em;
+    padding-right: 5px;
+}
+
+fieldset input, select {
     width: 20em;
 }
 

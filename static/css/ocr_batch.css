@@ -67,12 +67,13 @@
     background-color: #FA5858;
 }
 
-.page_name, .batch_name {
+.batch_name {
     font-weight: bold;
+    cursor: pointer;
 }
 
-.batch_name {
-    cursor: pointer;
+.page_name {
+    font-size: 0.9em;
 }
 
 .page_info {
