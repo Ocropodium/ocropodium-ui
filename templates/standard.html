@@ -42,18 +42,6 @@
                     <li>
                         <a id="open_project" href="/projects/open/">Open Project</a>
                     </li>
-                    <li>
-                        <h3 class="right">Recent</h3>
-                        <ul>
-                            {% if request.session.recent_projects %}
-                                {% for recent in request.session.recent_projects %}
-                                    <li>
-                                        <a href="/projects/open/{{recent.pk}}/">{{recent.name}}</a>
-                                    </li>
-                                {% endfor %}
-                            {% endif %}
-                        </ul>
-                    </li>
                     {% if request.session.project %}
                         <li><a href="/projects/close/">Close</a></li>
                     {% else %}

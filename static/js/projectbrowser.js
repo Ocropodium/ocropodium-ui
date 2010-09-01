@@ -7,6 +7,23 @@ $(function() {
         p.init();
         event.preventDefault();
     });
+
+    $("#new_project").click(function(event) {
+        var dialog = $("<div></div>")
+            .attr("id", "dialog")
+            .css("width", "700px")
+            .css("height", "500px")
+            .dialog({
+                width: 700,
+                height: 500,
+                title: "New Project...",
+                close: function() {
+                    $(this).remove();
+                },
+                modal: true,
+            }).load("/projects/new/");
+        event.preventDefault();
+    });
 });
 
 
