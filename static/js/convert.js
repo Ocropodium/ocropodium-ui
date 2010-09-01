@@ -185,6 +185,7 @@ $(function() {
     });
     $("#format").buttonset();
 
+    $("#engine").buttonset();
 
     $("#singleupload").change(function(event) {
         doIframeUpload(this);
