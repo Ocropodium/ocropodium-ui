@@ -1,6 +1,7 @@
 syntax: glob
 
 .svn/*
+.svnignore
 *.o
 *.pro.user
 *.swp
