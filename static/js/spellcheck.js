@@ -162,13 +162,6 @@ function Spellchecker(parent, selector) {
     });
 
 
-    $(".suggestion").live("click", function(event) {
-        var replace = $(this).text();
-        $("#suggestion_list").parent().replaceWith(replace);
-        closeSuggestionWindow();        
-    });
-
-
     m_lineedit.focus(function(){
         // Select field contents
         this.select();
@@ -187,8 +180,9 @@ function Spellchecker(parent, selector) {
     var findNextSpellcheckWord = function(current, reverse) {
         traverser = reverse ? "prev" : "next";
         endpoint  = reverse ? "last" : "first"; 
-        if (!current || !current.length)
+        if (!current || !current.length)  {
             return $(".badspell")[endpoint]();
+        }
         var next = current[traverser]();
         if (!next.length) {
             var nextline = current.parent()[traverser]();
@@ -201,9 +195,10 @@ function Spellchecker(parent, selector) {
                 nextline = nextline[traverser]();        
             }
         }
-        if (!next || !next.length)
+        if (!next || !next.length) {
             return $(".badspell")
                 .not(current)[endpoint]();
+        }
 
         return next; 
     }
@@ -214,6 +209,8 @@ function Spellchecker(parent, selector) {
         if (current)
             current.removeClass("current");
         elem.addClass("current");
+        elem.get(0).scrollIntoView(false);
+        
         m_lineedit.data("current", elem);
         
         m_suggestions.looseFocus();
@@ -245,8 +242,10 @@ function Spellchecker(parent, selector) {
             var correctelem = m_lineedit.data("current");
             setNextSpellcheckWord();
             if (correcttext && correctelem) {
-                if (correctelem.text() != correcttext)
+                if (correctelem.text() != correcttext) {
                     correctelem.replaceWith(correcttext);
+                    self.onWordCorrection();
+                }
             }
             if (!m_lineedit.data("current").length) {
                 m_lineedit
@@ -304,8 +303,10 @@ function Spellchecker(parent, selector) {
                 var correcttext = $(this).val();
                 setNextSpellcheckWord(event.shiftKey);
                 if (!event.ctrlKey && correcttext && correctelem) {
-                    if (correctelem.text() != correcttext)
+                    if (correctelem.text() != correcttext) {
                         correctelem.replaceWith(correcttext);
+                        self.onWordCorrection();
+                    }
                 }
                 return false;
             }
@@ -354,4 +355,10 @@ function Spellchecker(parent, selector) {
         });
         setNextSpellcheckWord();
     }
+}
+
+
+// events
+Spellchecker.prototype.onWordCorrection = function() {
+    
 }

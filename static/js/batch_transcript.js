@@ -131,6 +131,18 @@ $(function() {
         });
     }
 
+    transcript.onTextChanged = function() {
+        $("#save_data").button({
+            disabled: false,
+        });
+    }
+
+    transcript.onSave = function() {
+        $("#save_data").button({
+            disabled: true,
+        });
+    }
+
     transcript.onLinesReady = function() {
         // trigger a reformat
         $("input[name=format]:checked").click();

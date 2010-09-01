@@ -14,6 +14,9 @@ function OcrTranscript(insertinto_id, batch_id) {
     // spellchecker object
     var m_speller = new Spellchecker(".ocr_line");
 
+    // copy of the latest state of the line text
+    var m_textbuffer = null;
+
     // currently doing a spellcheck?
     var m_spellchecking = false;
 
@@ -28,6 +31,7 @@ function OcrTranscript(insertinto_id, batch_id) {
 
     // Ugh, keycodes
     var TAB = 9,
+        S = 83,
         F2 = 113;
 
 
@@ -143,6 +147,13 @@ function OcrTranscript(insertinto_id, batch_id) {
     this.pageData = function() {
         return m_pagedata;
     }
+
+    m_speller.onWordCorrection = function() {
+        if (m_pagediv.text() != m_textbuffer) {
+            self.onTextChanged();
+        }
+    }
+
 
     this.refresh = function() {
         $.ajax({
@@ -261,6 +272,7 @@ function OcrTranscript(insertinto_id, batch_id) {
         $("#sp_container").find("*").attr("disabled", false);
         m_speller.spellCheck($(element));
         m_speller.takeFocus();
+        self.onTextChanged();
     }
 
     m_editor.onEditNextElement = function() {
@@ -279,20 +291,17 @@ function OcrTranscript(insertinto_id, batch_id) {
         prev.trigger("click");
     }
 
-
+    
     $(window).bind("keyup.lineedit", function(event) {
         if (m_currentline && event.keyCode == F2) {
             m_editor.setElement(m_currentline, event);
-        }        
+        } else if (event.shiftKey && event.ctrlKey && event.keyCode == S) {
+            if (m_spellchecking)
+                self.endSpellcheck();
+            else
+                self.startSpellcheck();            
+        }       
     });
-
-//    $(".ocr_line").live("mouseover.hoverline mouseout.hoverline", function(event) {
-//        if (event.type == "mouseover") {
-//            $(this).addClass("hover");
-//        } else {
-//            $(this).removeClass("hover");
-//        }
-//    });
 
     $(".ocr_line").live("dblclick.editline", function(event) {
             
@@ -352,6 +361,7 @@ function OcrTranscript(insertinto_id, batch_id) {
             m_pagediv.append(lspan);                        
         });
         //self.insertBreaks();
+        m_textbuffer = m_pagediv.text();
         self.onLinesReady();
     }
 
@@ -377,7 +387,8 @@ function OcrTranscript(insertinto_id, batch_id) {
             },
             success: function(data) {
                 if (data && data.ok) {
-                    alert("Saved ok!");
+                    m_textbuffer = m_pagediv.text();
+                    self.onSave();
                 }
             },
         });
@@ -385,6 +396,11 @@ function OcrTranscript(insertinto_id, batch_id) {
 }
 
 OcrTranscript.prototype.onLinesReady = function() {
+
+}
+
+
+OcrTranscript.prototype.onTextChanged = function() {
 
 }
 
@@ -415,6 +431,10 @@ OcrTranscript.prototype.onClickPosition = function(position) {
 
 OcrTranscript.prototype.onHoverPosition = function(position) {
 
+
+}
+
+OcrTranscript.prototype.onSave = function() {
 
 }
 
