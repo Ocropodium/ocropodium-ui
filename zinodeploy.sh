@@ -3,7 +3,7 @@
 BASEPATH=/home/michaelb/webapps
 APPNAME=ocradmin
 MASTER=ocr1
-HOSTS=(ocr1 localhost)
+HOSTS=(ocr1 zino)
 
 
 
