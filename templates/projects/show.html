@@ -1,8 +1,9 @@
-{% extends "ocrmodels/standard.html" %}
+{% extends "standard.html" %}
 
 {% block headerscript %}
 
-
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+    <script type="text/javascript" src="/static/js/projects_show.js"></script>
 {% endblock %}
 
 
@@ -13,7 +14,7 @@
         {{project.name}}
     </div>
     <div class="widget_content">
-        {% include "ocrmodels/includes/show_model.html" %}
+        {% include "projects/includes/project_info.html" %}
     </div>
 </div>
 

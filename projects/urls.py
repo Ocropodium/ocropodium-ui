@@ -10,5 +10,7 @@ urlpatterns = patterns('',
 	(r'^edit/(?P<pk>\d+)/$', 'ocradmin.projects.views.edit'),
 	(r'^load/(?P<pk>\d+)/$', 'ocradmin.projects.views.load'),
 	(r'^open/?$', 'ocradmin.projects.views.open'),
-	(r'^update/(?P<pk>\d+)/$', 'ocradmin.projects.views.update'),
+    (r'^update/(?P<pk>\d+)/$', 'ocradmin.projects.views.update'),
+    (r'^training_sets/(?P<pk>\d+)/$', 
+                'ocradmin.projects.views.training_sets'),
 )

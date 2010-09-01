@@ -186,7 +186,9 @@ def show(request, pk):
     Show request details.
     """
     project = get_object_or_404(OcrProject, pk=pk)
-    context = {"project": project}
+    form = OcrProjectForm(instance=project)
+    defform = OcrProjectDefaultsForm(instance=project)
+    context = {"project": project, "form": form, "defform": defform}
     template = "projects/show.html"
     return render_to_response(template, context,
             context_instance=RequestContext(request))
@@ -232,4 +234,6 @@ def close(request):
     except KeyError:
         pass
     return HttpResponseRedirect("/ocr/")
+
+
 
