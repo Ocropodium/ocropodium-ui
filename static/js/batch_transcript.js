@@ -4,23 +4,6 @@ var formatter = null;
 var polltimeout = -1;
 
 
-function maximiseWidgets() {
-
-    var winheight = $(window).height();
-    var margin = 10;
-    for (var i in arguments) {
-        var widget = arguments[i];
-        if (widget.container != undefined && widget.setHeight != undefined) {
-            var container = widget.container();
-            var pad = container.outerHeight(true) - container.height();
-            var top = container.position().top;
-            var newheight = winheight - top - pad - margin;
-            widget.setHeight(newheight);    
-        }
-    }
-}
-
-
 function onBinaryFetchResult(data) {
 
 
