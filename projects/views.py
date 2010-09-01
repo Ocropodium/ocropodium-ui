@@ -106,7 +106,8 @@ def new(request):
     form = OcrProjectForm()
     defform = OcrProjectDefaultsForm()
     context = {"form": form, "defform": defform}
-    template = "projects/new.html"
+    template = "projects/new.html" if not request.is_ajax() \
+            else "projects/includes/project_form.html"
     return render_to_response(template, context,
             context_instance=RequestContext(request))
 
