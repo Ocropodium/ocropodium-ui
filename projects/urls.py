@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
+	(r'^/?$', 'ocradmin.projects.views.index'),
 	(r'^list/?$', 'ocradmin.projects.views.list'),
 	(r'^new/?$', 'ocradmin.projects.views.new'),
 	(r'^close/?$', 'ocradmin.projects.views.close'),
