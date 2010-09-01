@@ -33,7 +33,7 @@ function rebuildModelLists(appname) {
 
 
 function saveState() {
-    $.cookie("engine", $("input[@name=engine]:checked").attr("value"));
+    $.cookie("engine", $("input[name=engine]:checked").attr("value"));
     $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         $.cookie(item, $("select[name=" + item + "]").attr("value"));     
     });
@@ -163,7 +163,7 @@ $(function() {
 
         // get the extra params
         var pdata = {}; //pbuilder.data();
-        pdata.engine = $("input[@name=engine]:checked").attr("value")
+        pdata.engine = $("input[name=engine]:checked").attr("value");
         pdata.psegmenter = $("#form_segmenter").val();
         pdata.clean = $("#form_clean").val();
         pdata.cmodel = $("#form_cmodel").val();
@@ -253,7 +253,7 @@ $(function() {
     uploader  = new AjaxUploader("/ocr/convert", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
-        uploader.registerTextParameter("input[@name=engine]:checked"); 
+        uploader.registerTextParameter("input[name=engine]:checked"); 
         $("#optionsform input[type='text'], #optionsform select").each(function() {
             uploader.registerTextParameter("#" + $(this).attr("id"));
         });

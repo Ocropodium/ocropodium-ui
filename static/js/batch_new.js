@@ -32,7 +32,7 @@ function rebuildModelLists(appname) {
 
 
 function saveState() {
-    $.cookie("engine", $("input[@name=engine]:checked").attr("value"));
+    $.cookie("engine", $("input[name=engine]:checked").attr("value"));
     $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         $.cookie(item, $("select[name=" + item + "]").attr("value"));     
     });

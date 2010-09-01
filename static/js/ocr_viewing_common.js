@@ -262,7 +262,6 @@ $(function() {
 
         // get the extra params
         var pdata = pbuilder.data();
-        pdata.engine = $("input[@name=engine]:checked").val();
 
         // hack to pull in the cleanup option on the segment page
         if ($("#form_clean").length) {

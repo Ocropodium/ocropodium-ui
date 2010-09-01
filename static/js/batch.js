@@ -34,7 +34,7 @@ function rebuildModelLists(appname) {
 
 
 function saveState() {
-    $.cookie("engine", $("input[@name=engine]:checked").attr("value"));
+    $.cookie("engine", $("input[name=engine]:checked").attr("value"));
     $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         $.cookie(item, $("select[name=" + item + "]").attr("value"));     
     });
@@ -144,7 +144,7 @@ $(function() {
     uploader  = new AjaxBatchUploader("/batch/batch", "dropzone");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
-        uploader.registerTextParameter("input[@name=engine]:checked"); 
+        uploader.registerTextParameter("input[name=engine]:checked"); 
         uploader.registerTextParameter("#form_clean"); 
         uploader.registerTextParameter("#form_segmenter"); 
         uploader.registerTextParameter("#form_cmodel"); 
