@@ -39,8 +39,8 @@ MANAGERS = ADMINS
 #DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
 DATABASE_HOST = "localhost" if not SERVER else MASTERNAME
-DATABASE_NAME = "ocr_testing" if not DEBUG else "ocr_production"
-DATABASE_USER = "ocr_testing" if not DEBUG else "ocr_production"
+DATABASE_NAME = "ocr_testing" if DEBUG else "ocr_production"
+DATABASE_USER = "ocr_testing" if DEBUG else "ocr_production"
 DATABASES = {
     'default' : {
         'ENGINE'    : 'django.db.backends.mysql',
