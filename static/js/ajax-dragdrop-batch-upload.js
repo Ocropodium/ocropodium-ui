@@ -139,10 +139,10 @@ function AjaxBatchUploader(url, dropzone_id) {
     // target element is triggered
     dropzone.addEventListener('drop', upload, false);
     dropzone.addEventListener('dragenter', function(event) { 
-            $(this).css("background-color", "#ffc"); 
+            $(this).addClass("hover"); 
         }, false);
     dropzone.addEventListener('dragexit', function(event) { 
-            $(this).css("background-color", "#fff"); 
+            $(this).removeClass("hover"); 
         }, false);
     dropzone.addEventListener('dragover', function(event) { 
             event.preventDefault(); 

@@ -161,11 +161,11 @@ function AjaxUploader(url, dropzone_id) {
     // Register the drag-drop functions to be called when the
     // target element is triggered
     dropzone.addEventListener('drop', upload, false);
-    dropzone.addEventListener('dragenter', function(event) { 
-            $(this).css("background-color", "#ffc"); 
+    dropzone.addEventListener('dragenter', function(event) {
+            $(this).addClass("hover"); 
         }, false);
     dropzone.addEventListener('dragexit', function(event) { 
-            $(this).css("background-color", "#fff"); 
+            $(this).removeClass("hover"); 
         }, false);
     dropzone.addEventListener('dragover', function(event) { 
             event.preventDefault(); 

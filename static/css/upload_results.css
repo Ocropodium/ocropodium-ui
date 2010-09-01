@@ -11,9 +11,13 @@
     color: #000;
     margin-top: auto;
     margin-bottom: auto;
-    font-size: 2em;
+    font-size: 1.3em;
     background-color: #FFF;
     color: #F0F0F0;
+}
+
+#dropzone.hover {
+    background-color: #FFC;
 }
 
 #dropprompt {

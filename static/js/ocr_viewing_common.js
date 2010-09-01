@@ -198,6 +198,32 @@ function onXHRLoad(event_or_response) {
 };
 
 
+function doIframeUpload(elem) {
+    if ($(elem).val() == "") {
+        return false;
+    }
+
+    // get the extra params
+    var pdata = pbuilder.data();
+
+    // hack to pull in the cleanup option on the segment page
+    if ($("#form_clean").length) {
+        pdata.clean = $("#form_clean").val();
+    }
+    // server-size hack so we know it's using the iframe method
+    pdata._iframe = 1;
+
+    $("#uploadform").ajaxForm({
+        data : pdata,
+        dataType: "json",
+        success: function(data, responseText, xhr) {
+            onXHRLoad(data, responseText, xhr);
+            $(elem).val("");
+        },
+    });
+    $("#uploadform").submit();
+}
+
 
 $(function() {
 
@@ -256,36 +282,36 @@ $(function() {
     });
 
     $("#singleupload").change(function(event) {
-        if ($(this).val() == "") {
-            return false;
-        }
-
-        // get the extra params
-        var pdata = pbuilder.data();
-
-        // hack to pull in the cleanup option on the segment page
-        if ($("#form_clean").length) {
-            pdata.clean = $("#form_clean").val();
-        }
-        // server-size hack so we know it's using the iframe method
-        pdata._iframe = 1;
-
-        $("#uploadform").ajaxForm({
-            data : pdata,
-            dataType: "json",
-            success: function(data, responseText, xhr) {
-                onXHRLoad(data, responseText, xhr);
-                $("#singleupload").val("");
-            },
-        });
-        $("#uploadform").submit();
+        doIframeUpload(this);
     });
 
 
     // hide the drag-drop zone for browsers other than firefox
     if (!($.browser.mozilla && 
                 parseFloat($.browser.version.slice(0, 3)) >= 1.9)) {
-            $("#dragdrop").hide();
+        //$("#dragdrop").hide();
+        var dd = $("#dragdrop");
+        var hiddenupload = $("<input></input>")
+            .attr("type", "file")
+            .attr("id", "hiddenupload")
+            .attr("name", "upload[]")
+            .attr("multiple", "multiple")
+            .css("opacity", "0.0")
+            .css("z-index", 1000)
+            .css("position", "absolute")
+            .css("width", dd.outerWidth(true) + "px")
+            .css("height", dd.outerHeight(true) + "px")
+            .css("top", dd.offset().top + "px")
+            .css("left", dd.offset().left + "px")
+            .live("mouseenter mouseleave", function(event) {
+                if (event.type == "mouseover") {
+                    dd.addClass("hover");
+                } else {
+                    dd.removeClass("hover");
+                }
+            }).change(function(event) {
+                doIframeUpload(this);
+            }).appendTo($("#uploadform"));
     }
 
     // make interactive params disabled at the start
