@@ -187,3 +187,60 @@ a.button:hover {
     opacity: 0.2;
 }
 
+
+.training_set_list {
+    min-height: 400px;
+    overflow: auto;
+    background-color: #FFF;
+}
+
+.training_page {
+    float: left;
+    margin:10px;
+    border-top: 1px solid #F6F6F6;
+    border-left: 1px solid #F6F6F6;
+    box-shadow: 2px 2px 3px #AAA;
+    -webkit-box-shadow: 2px 2px 3px #AAA;
+    -moz-box-shadow: 2px 2px 3px #AAA;
+    padding: 10px;
+    background-color: #FAFAFE;
+    background: -webkit-gradient(
+        linear,
+        right bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(240,240,240))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(240,240,240) 35%,
+        rgb(245,245,245) 50%
+    );
+    border-radius: 3px;
+}
+
+.training_page a {
+}
+
+.training_page_center {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.training_page_image {
+    margin-top: 10px;
+}
+
+.training_page_info {
+    font-size: 0.9em;    
+}
+
+.training_page_info .key {
+    font-weight: bolder;    
+}
+
+.training_page_image img {
+    border: 1px solid #D6D6D6;
+}
+

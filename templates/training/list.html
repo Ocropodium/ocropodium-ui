@@ -1,0 +1,22 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+{% endblock %}
+
+
+{% block content %}
+
+<div class="widget">
+    <div class="widget_header">
+        {{project.name}}
+    </div>
+    <div class="widget_content">
+        {% include "training/includes/training_set_list.html" %}
+    </div>
+</div>
+
+
+{% endblock %}
+

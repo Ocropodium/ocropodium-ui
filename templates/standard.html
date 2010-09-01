@@ -43,6 +43,8 @@
                         <a id="open_project" href="/projects/open/">Open Project</a>
                     </li>
                     {% if request.session.project %}
+                        <li><a href="/projects/show/{{request.session.project.pk}}/">Information</a></li>
+                        <li><a href="/projects/show/{{request.session.project.pk}}/#tab_3">Export</a></li>
                         <li><a href="/projects/close/">Close</a></li>
                     {% else %}
                         <li class="disabled_option">Close</li>
@@ -74,6 +76,9 @@
                         </li>
                         <li>
                             <a id="new_comparison" href="/training/compare/">Compare Models</a>
+                        </li>
+                        <li>
+                        <a id="list_training" href="/training/list/">Training Sets</a>
                         </li>
                     </ul>
 

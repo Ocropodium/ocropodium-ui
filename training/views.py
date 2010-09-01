@@ -28,7 +28,7 @@ from ocradmin.training.models import *
 
 from ocradmin.projects.utils import project_required
 
-from ocradmin.training.tasks import LineTrainTask, ComparisonTask
+from ocradmin.training.tasks import LineTrainTask, ComparisonTask, MakeThumbnailTask
 
 
 class TrainingSetForm(forms.Form):
@@ -307,14 +307,24 @@ def save_task(request, pk):
     trainpath = os.path.join(outpath, os.path.basename(binpath))
     import shutil
     shutil.copy2(binpath, trainpath)
+
+    # try and create a thumbnail of the file
+    MakeThumbnailTask.apply_async((trainpath, settings.THUMBNAIL_SIZE), 
+            queue="interactive", retries=2)
     
+    # create or update the model
     try:
-        tp = TrainingPage(
-            user=request.user,
-            project=request.session["project"],
-            data=task.latest_transcript(),
-            binary_image_path=trainpath,            
-        )
+        tp = TrainingPage.objects.get(project=request.session["project"], 
+                user=request.user, binary_image_path=trainpath)
+    except TrainingPage.DoesNotExist:
+        tp = TrainingPage()
+
+    try:
+        tp.page_name = task.page_name
+        tp.user = request.user
+        tp.project = request.session["project"]
+        tp.data = task.latest_transcript()
+        tp.binary_image_path = trainpath
         tp.save()
     except IntegrityError, e:
         return HttpResponse(simplejson.dumps({"error": str(e)}),
@@ -325,5 +335,35 @@ def save_task(request, pk):
             mimetype="application/json")
 
     
+@project_required
+@login_required
+def list(request):
+    """
+    List training page info.
+    """
+    project = request.session["project"]
+    context = dict(
+        project=project,
+        training_sets=project.training_sets.all(),
+    )
+    template = "training/list.html" if not request.is_ajax() \
+            else "training/includes/training_set_list.html"
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
 
-    
+
+
+@project_required
+@login_required
+def show(request, pk):
+    """
+    Show training page info.
+    """    
+    ts = get_object_or_404(TrainingPage, pk=pk)
+    context = dict(trainpage=ts)
+    template = "training/show.html" if not request.is_ajax() \
+            else "training/includes/show_info.html"
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
+
+

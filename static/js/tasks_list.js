@@ -78,7 +78,6 @@ $(function() {
 
     // FIXME!  Get rid of this overridden hacked function
     function maximiseWidgets() {
-
         var winheight = $(window).height();
         var margin = 10;
         for (var i in arguments) {

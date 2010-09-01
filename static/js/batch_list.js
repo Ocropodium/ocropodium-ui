@@ -91,7 +91,6 @@ $(function() {
     }
 
     maximiseWidgets(batchlist);
-    
 });
 
 

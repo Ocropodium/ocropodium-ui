@@ -164,5 +164,24 @@ class ComparisonTask(AbortableTask):
 
         
 
+class MakeThumbnailTask(AbortableTask):
+    """
+    Create a thumbnail of a given image.
+    """
+    name = "image.thumbnail"
+    max_retries = None
+    ignore_result = True
 
+    def run(self, path, size, **kwargs):
+        """
+        Runs the model comparison action.
+        """
+        logger = self.get_logger(**kwargs)
+        from PIL import Image
+        base, ext = os.path.splitext(path)
+        im = Image.open(path)
+        im.thumbnail(size, Image.ANTIALIAS)
+        thumbpath = "%s.thumb.jpg" % base
+        im.save(thumbpath, "JPEG")
+        logger.info("Generated thumb: %s" % thumbpath)
 

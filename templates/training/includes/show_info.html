@@ -1,0 +1,19 @@
+<div class="training_page" id="pageinfo_{{trainpage.pk}}">
+    <h4>{{trainpage.page_name}}</h4>
+    <table class="training_page_info">
+        <tr>
+            <td class="key">First Saved:</td><td>{{trainpage.created_on}}</td>
+        </tr>
+        <tr>
+            <td class="key">Last Update:</td><td>{{trainpage.updated_on|default_if_none:"-"}}</td>
+        </tr>
+    </table>
+    <div class="training_page_center">
+        <div class="training_page_image">
+            <atitle="Binary Image" href="{{trainpage.binary_image_url}}" target="_blank" >
+                <img  src="{{trainpage.thumbnail_url}}" />
+            </a>
+        </div>
+    </div>
+</div>
+
