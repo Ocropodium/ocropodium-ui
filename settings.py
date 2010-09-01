@@ -99,10 +99,17 @@ BIN_PATH = "%s/bin" % SITE_ROOT
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = "%s/media" % SITE_ROOT if not SERVER else "/media/share"
 
+# Absolute path to the directory that holds media.
+# Example: "/home/media/media.lawrence.com/"
+ADMIN_MEDIA_ROOT = "%s/media" % SITE_ROOT if not SERVER else "/media/share"
+
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = '/media/'
+
+# Size for thumbnails
+THUMBNAIL_SIZE = (256, 256)
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
