@@ -21,7 +21,7 @@
 }
 
 #options * {
-    font-size: 0.9em;
+    font-size: 0.95em;
 }
 
 #options label {
@@ -36,7 +36,7 @@
 
 .component_opts {
     /*display: none;*/
-    font-size: 0.8em;
+    font-size: 0.9em;
     margin-bottom: 20px;        
 }
 .component_opts label {

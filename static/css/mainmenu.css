@@ -35,11 +35,10 @@
 }
 
 #menu h3 {
-    font: bold 90%/205% tahoma,arial,helvetica,sans-serif;
     display: block;
     white-space: nowrap;
     margin: 0;
-    padding: 0px 20px 0px 5px;
+    padding: 5px 20px 5px 5px;
     color: #333;
 }
 
