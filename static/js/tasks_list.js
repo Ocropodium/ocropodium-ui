@@ -63,6 +63,7 @@ $(function() {
     $("#task_list_widget").resizable({
         resize: function(e, ui) {
             tasks.setHeight($(this).height() - 80);
+            tasks.resized();
         },        
     });
 
@@ -74,6 +75,8 @@ $(function() {
         }
     );
     tasks.setupEvents();
+
+    maximiseWidgets(tasks);
     
 });
 
