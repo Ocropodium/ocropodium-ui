@@ -1,9 +1,12 @@
+import os
+from datetime import datetime
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
+from django.template.defaultfilters import slugify
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -13,6 +16,10 @@ from django.utils import simplejson
 
 from tagging.models import TaggedItem
 from ocradmin.projects.models import OcrProject, OcrProjectDefaults
+from fedora.adaptor import fcobject, fcdatastream 
+from ordereddict import OrderedDict
+
+from ocradmin.projects.tasks import IngestTask
 
 PER_PAGE = 10
 
@@ -234,6 +241,50 @@ def close(request):
     except KeyError:
         pass
     return HttpResponseRedirect("/ocr/")
+
+
+@login_required
+def export(request, pk):
+    """
+    Export a project.
+    """
+    project = get_object_or_404(OcrProject, pk=pk)
+    template = "projects/export.html" if not request.is_ajax() \
+            else "projects/includes/export_form.html"
+    dublincore = OrderedDict([(v, "") for v in fcobject.FedoraObject.DUBLINCORE])
+    dublincore["title"] = "<page_name>"
+    dublincore["creator"] = request.user.get_full_name()
+    dublincore["description"] = project.description
+    dublincore["subject"] = project.name
+    dublincore["date"] = datetime.today()
+
+    context = dict(
+        project=project,
+        dublincore=dublincore
+    )
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
+
+
+@login_required
+def ingest(request, pk):
+    """
+    Ingest project training data into fedora.
+    """
+    project = get_object_or_404(OcrProject, pk=pk)
+    if not request.method == "POST":
+        return export(request)
+
+    namespace = request.POST.get("fedora_namespace", slugify(project.name))
+    dublincore = OrderedDict()
+    for key, val in request.POST.iteritems():
+        if key.startswith("dc_"):
+            dublincore[key.replace("dc_", "", 1)] = val
+    for ts in project.training_sets.all():
+        args = (ts.pk, namespace, dublincore)
+        IngestTask.apply_async(args=args, queue="interactive")
+
+    return HttpResponseRedirect("/projects/show/%d/" % project.pk)
 
 
 

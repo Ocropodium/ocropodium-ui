@@ -1,0 +1,22 @@
+<form method="POST" id="export_form" action="/projects/ingest/{{project.pk}}/">
+    <div class="form_body">
+        <div class="field_wrapper">
+            <label for="fedora_namespace">Namespace:</label>
+            <input type="text" name="fedora_namespace" value="{{project.name|slugify}}" id="fedora_namespace" />
+        </div>
+
+        {% for key, value in dublincore.items %}
+        <div class="field_wrapper">
+            <label for="dc_{{key}}">{{key|title}}:</label>
+            <input class="dc_metadata_input" id="dc_{{key}}" 
+                type="text" name="dc_{{key}}" value="{{value}}" />
+        </div>
+        {% endfor %}                
+    </div>
+    <div class="form_footer">
+        <div class="form_submit_buttons">
+            <input type="submit" id="export" value="Export" />
+        </div>
+    </div>
+</form>        
+
