@@ -55,11 +55,13 @@
         </form>
         <form id="optionsform" name="options" action="{{request.path}}" method="POST">
             <h4>Options:</h4>
-             <p>
-             OCR Engine:&nbsp;
-                <input type="radio" name="engine" value="ocropus">Ocropus&nbsp;
-                <input type="radio" name="engine" value="tesseract" checked>Tesseract
-            </p>
+            <span id="engine">
+                 Engine:&nbsp;
+                    <input type="radio" id="engine_ocropus" name="engine" value="ocropus">
+                    <label for="engine_ocropus">Ocropus</label>
+                    <input type="radio" id="engine_tesseract" name="engine" value="tesseract" checked>
+                    <label for="engine_tesseract">Tesseract</label>
+            </span>
             <p>        
                 Segmenter:&nbsp;
                 <select id="form_segmenter" name="psegmenter">
