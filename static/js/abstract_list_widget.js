@@ -45,6 +45,10 @@ AbstractListWidget.prototype.callListeners = function() {
     });
 }
 
+AbstractListWidget.prototype.container = function() {
+    return $(this.parent);
+}
+
 AbstractListWidget.prototype.setupMouseEvents = function() {
 
     var self = this;

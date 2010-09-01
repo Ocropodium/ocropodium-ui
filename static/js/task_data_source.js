@@ -6,6 +6,9 @@ function TaskDataSource() {
     this.__url = "/ocrtasks/list";
     this.__dir = "";
     this.__headers = [{
+            name: "#",
+            sortAs: "num",
+        }, {
             name: "Page File",
             sortAs: "str",
         }, {
@@ -25,10 +28,11 @@ function TaskDataSource() {
     this.__desc = true;
     this.__sortcol = 2;
     this.__col2sort = {
-        0: "page_name",
-        1: "user__username",
-        2: "updated_on",
-        3: "status",
+        0: "pk",
+        1: "page_name",
+        2: "user__username",
+        3: "updated_on",
+        4: "status",
     };
 }
 
@@ -78,11 +82,13 @@ TaskDataSource.prototype.dataLength = function() {
 
 TaskDataSource.prototype.rowMetadata = function(row) {
     return {
+        pk: this.__data.object_list[row].pk,
     };
 }
 
 TaskDataSource.prototype.rowClassNames = function(row) {
     return [
+        this.__data.object_list[row].fields.status.toLowerCase(),
     ];
 }
 
@@ -92,12 +98,14 @@ TaskDataSource.prototype.cellClassNames = function(row, col) {
 
 TaskDataSource.prototype.cellLabel = function(row, col) {
     if (col == 0)
-        return this.__data.object_list[row].fields.page_name;
+        return this.__data.object_list[row].pk;
     if (col == 1)
-        return this.__data.object_list[row].fields.user.fields.username;
+        return this.__data.object_list[row].fields.page_name;
     if (col == 2)
-        return this.__data.object_list[row].fields.updated_on;
+        return this.__data.object_list[row].fields.user.fields.username;
     if (col == 3)
+        return this.__data.object_list[row].fields.updated_on;
+    if (col == 4)
         return this.__data.object_list[row].fields.status;
 }
 
