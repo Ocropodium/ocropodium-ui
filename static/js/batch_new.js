@@ -75,34 +75,65 @@ window.onbeforeunload = function(event) {
 }
 
 
+function doIframeUpload(elem) {
+    if ($(elem).val() == "") {
+        return false;
+    }
+
+    // get the extra params
+    var pdata = {};
+    // server-size hack so we know it's using the iframe method
+    pdata._iframe = 1;
+
+    $("#uploadform").ajaxForm({
+        data : pdata,
+        dataType: "json",
+        success: function(data, responseText, xhr) {
+            onXHRLoad(data, responseText, xhr);
+            $(elem).val("");
+        },
+    });
+    $("#uploadform").submit();
+}
+
+
+
+
 
 $(function() {
     var uploader = null;
 
 
     $("#singleupload").change(function(event) {
-        if ($(this).val() == "") {
-            return false;
-        }
-        $("#uploadform").ajaxForm({
-            data : {_iframe: 1},
-            dataType: "json",
-            success: function(data, responseText, xhr) {            
-                onXHRLoad(data, responseText, xhr);
-                $("#singleupload").val("");
-            },
-            error: function(xhr, err) {
-                alert(err);
-            },
-        }).submit();
-        return false;
+        doIframeUpload(this);
     });
 
 
     // hide the drag-drop zone for browsers other than firefox
     if (!($.browser.mozilla && 
                 parseFloat($.browser.version.slice(0, 3)) >= 1.9)) {
-            $("#dragdrop").hide();
+        var dd = $("#dropzone");
+        var hiddenupload = $("<input></input>")
+            .attr("type", "file")
+            .attr("id", "hiddenupload")
+            .attr("name", "upload[]")
+            .attr("multiple", "multiple")
+            .css("opacity", "0.0")
+            .css("z-index", 1000)
+            .css("position", "absolute")
+            .css("width", dd.outerWidth(true) + "px")
+            .css("height", dd.outerHeight(true) + "px")
+            .css("top", dd.offset().top + "px")
+            .css("left", dd.offset().left + "px")
+            .live("mouseenter mouseleave", function(event) {
+                if (event.type == "mouseover") {
+                    dd.addClass("hover");
+                } else {
+                    dd.removeClass("hover");
+                }
+            }).change(function(event) {
+                doIframeUpload(this);
+            }).appendTo($("#uploadform"));
     }
 
     $("input[name=engine]").change(function(e) {
