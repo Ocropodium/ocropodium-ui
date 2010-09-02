@@ -87,10 +87,13 @@ $(function() {
 
     $("#page_slider").slider({min: 1, value: 1});
 
-    transcript = new OcrTranscript("workspace", $("#batch_id").val());   
+    transcript = new OcrTranscript("workspace", $("#batch_id").val(), $("#initial").val());   
     transcript.init();
     transcript.onBatchLoad = function() {
-        $("#page_slider").slider({max: transcript.pageCount()});
+        $("#page_slider").slider({
+            max: transcript.pageCount(),
+            value: transcript.page() + 1,
+        });
     }
 
     transcript.onPageChange = function() {
@@ -210,7 +213,7 @@ $(function() {
     });
 
     $("#page_slider").slider({
-        change: function(e, ui) {
+        stop: function(e, ui) {
             transcript.setPage($("#page_slider").slider("option", "value") - 1);
         },
         
