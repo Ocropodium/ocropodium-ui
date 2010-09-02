@@ -6,19 +6,19 @@ function OcrLineEditor(insertinto_id) {
     var m_elem = null;
 
     // useful key codes
-    const ESCAPE = 27;
-    const RETURN = 13;
-    const LEFT = 37;
-    const RIGHT = 39;
-    const DELETE = 46;
-    const BACKSPACE = 8;
-    const SHIFT = 16;
-    const CTRL = 17;
-    const ALT = 18;
-    const CAPSLOCK = 20;
-    const TAB = 9;
-    const END = 35;
-    const HOME = 36;
+    const KC_ESCAPE = 27;
+    const KC_RETURN = 13;
+    const KC_LEFT = 37;
+    const KC_RIGHT = 39;
+    const KC_DELETE = 46;
+    const KC_BACKSPACE = 8;
+    const KC_SHIFT = 16;
+    const KC_CTRL = 17;
+    const KC_ALT = 18;
+    const KC_CAPSLOCK = 20;
+    const KC_TAB = 9;
+    const KC_END = 35;
+    const KC_HOME = 36;
 
     const LONGKEY = 500;
     const SHORTKEY = 70;
@@ -142,23 +142,23 @@ function OcrLineEditor(insertinto_id) {
                 m_selectstart = $(m_char.get(0));
         }
 
-        if (code == RIGHT) {
+        if (code == KC_RIGHT) {
             moveCursorRight(false);
             if($.browser.mozilla) {
                 m_navtimer = setTimeout(function() {
                     moveCursorRight(true)
                 }, LONGKEY);
             }
-        } else if (code == LEFT) {
+        } else if (code == KC_LEFT) {
             moveCursorLeft(false);
             if($.browser.mozilla) {
                 m_navtimer = setTimeout(function() {
                     moveCursorLeft(true)
                 }, LONGKEY);
             }
-        } else if (code == HOME)
+        } else if (code == KC_HOME)
             moveCursorToStart();
-        else if (code == END)
+        else if (code == KC_END)
             moveCursorToEnd();
         if (m_keyevent.shiftKey)
             updateSelection(m_selectstart.get(0), m_char.get(0));
@@ -277,32 +277,32 @@ function OcrLineEditor(insertinto_id) {
         if (event.ctrlKey || event.altKey)
             return;
 
-        if (event.which == ALT || event.which == CTRL
-            || event.which == CAPSLOCK) {
+        if (event.which == KC_ALT || event.which == KC_CTRL
+            || event.which == KC_CAPSLOCK) {
 
-        } else if (event.which == TAB) {
+        } else if (event.which == KC_TAB) {
             if (!event.shiftKey)             
                 self.onEditNextElement();
             else
                 self.onEditPrevElement();
             return false;
-        } else if (event.which == ESCAPE) {
+        } else if (event.which == KC_ESCAPE) {
             finishEditing(m_inittext);
-        } else if (event.which == RETURN) {
+        } else if (event.which == KC_RETURN) {
             finishEditing();
-        } else if (event.which == RIGHT) {
-            keyNav(RIGHT);
-        } else if (event.which == LEFT) {
-            keyNav(LEFT);
-        } else if (event.which == HOME) {
-            keyNav(HOME);
-        } else if (event.which == END) {
-            keyNav(END);
-        } else if (event.which == DELETE) {
+        } else if (event.which == KC_RIGHT) {
+            keyNav(KC_RIGHT);
+        } else if (event.which == KC_LEFT) {
+            keyNav(KC_LEFT);
+        } else if (event.which == KC_HOME) {
+            keyNav(KC_HOME);
+        } else if (event.which == KC_END) {
+            keyNav(KC_END);
+        } else if (event.which == KC_DELETE) {
             deleteChar();
-        } else if (event.which == BACKSPACE) {
+        } else if (event.which == KC_BACKSPACE) {
             backspace();
-        } else if (event.which == SHIFT) {
+        } else if (event.which == KC_SHIFT) {
         } else {
             //alert(event.which);
         }

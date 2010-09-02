@@ -1,4 +1,10 @@
 // Browser for opening projects
+function validateProjectForm(scope) {
+    var bad = $.trim($("#id_name", scope).val()) == "";
+    $("#submit_new_project_form", scope).attr("disabled", bad);
+}
+
+
 
 // global opener hook
 $(function() {
@@ -21,7 +27,11 @@ $(function() {
                     $(this).remove();
                 },
                 modal: true,
-            }).load("/projects/new/");
+            }).load("/projects/new/", function() {
+                $("#id_name").live("keyup", function(event) {
+                    validateProjectForm(dialog);
+                });
+            });
         event.preventDefault();
     });
 });
@@ -45,11 +55,6 @@ function ProjectBrowser() {
             .val("Open Project");
 
 
-    const ENTER = 13;
-    const ESCAPE = 27;
-    const UP = 38;
-    const DOWN = 40;
-
     /* 
      *  Events
      */
@@ -62,12 +67,34 @@ function ProjectBrowser() {
     });
 
     $(".project_item").live("dblclick.item", function(event) {
-
         $(this).click();
         m_openbutton.click();
     });
 
-    m_cancelbutton.click(function(event) {
+    $(window).bind("keydown.projnav", function(event) {
+        if (event.keyCode == KC_DOWN || event.keyCode == KC_UP) {
+            var traverser = event.keyCode == KC_DOWN ? "next" : "prev";
+            var endpoint =  event.keyCode == KC_DOWN ? "first" : "last"; 
+            if (!$(".project_item.selected").length) {
+                $(".project_item")[endpoint]().addClass("selected");        
+            } else {
+                var next = $(".project_item.selected")[traverser]();
+                if (next.length) {
+                    $(".project_item.selected").removeClass("selected");
+                    next.addClass("selected");    
+                }
+            }
+            updateButtons();
+        } else if (event.keyCode == KC_ESCAPE) {
+            self.close();
+        }
+    });
+
+    var unbindEvents = function() {
+        $(window).unbind("keydown.projnav");
+    }
+
+    m_cancelbutton.click(function(event) {            
         self.close();
     });
 
@@ -96,6 +123,9 @@ function ProjectBrowser() {
             title: "Open Project",
             modal: true,
             width: 600,
+            close: function(event) {
+                self.close();
+            },
         });
 
         $.ajax({
@@ -130,12 +160,14 @@ function ProjectBrowser() {
 
 
     this.close = function() {
+        unbindEvents();
         m_container.remove();    
     }
 
 
     var updateButtons = function() {
-        m_openbutton.attr("disabled", $(".project_item.selected").length != 1);
+        m_openbutton.attr("disabled", $(".project_item.selected").length != 1)
+            .focus();
     }
 
 
