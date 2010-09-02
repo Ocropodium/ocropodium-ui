@@ -25,6 +25,7 @@ from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
 from ocradmin.training.models import TrainingPage
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
+from ocradmin.projects.tasks import IngestTask
 
 from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params, _cleanup_params
@@ -605,8 +606,12 @@ def _retry_celery_task(task):
 
     # FIXME: Figure the appropriate class out properly
     # via Celery registry inspection
-    celerytask = tasks.ConvertPageTask if task.task_name \
-            != "compare.groundtruth" else ComparisonTask
+    celerytask = tasks.ConvertPageTask
+    if task.task_name == "compare.groundtruth":
+        celerytask = ComparisonTask
+    elif task.task_name == "fedora.ingest":
+        celerytask = IngestTask
+
     async = celerytask.apply_async(
             args=task.args, task_id=tid, loglevel=60, retries=2)
     task.task_id = async.task_id
