@@ -129,7 +129,7 @@ function OcrBatch(insertinto_id, batch_id) {
         $(".batch_task").bind("dblclick", function(event) {
             var index = $(this).data("index");            
             document.location.href = "/batch/transcript/" + m_batchdata.pk
-                + "/?page=" + (index + m_taskoffset + 1);
+                + "/?page=" + (index + m_taskoffset);
         });
 
         $(".batch_task").bind("click", function(event) {
