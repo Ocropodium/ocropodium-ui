@@ -48,7 +48,8 @@ function SuggestionList() {
         m_container.find(".selected").removeClass("selected");
         sel.addClass("selected");
         if (sel.length) {
-            sel.get(0).scrollIntoView(false);
+            if(sel.get(0))
+                sel.get(0).scrollIntoView(false);
             self.suggestionSelected(sel.text());
         }
     }
@@ -209,7 +210,8 @@ function Spellchecker(parent, selector) {
         if (current)
             current.removeClass("current");
         elem.addClass("current");
-        elem.get(0).scrollIntoView(false);
+        if (elem.get(0))
+            elem.get(0).scrollIntoView(false);
         
         m_lineedit.data("current", elem);
         
@@ -333,6 +335,8 @@ function Spellchecker(parent, selector) {
                 alert("Spellcheck failed.  Unable to reach server: " + err);
             },
             success: function(data) {
+                if (data == null)
+                    return;
                 $.each(data, function(k, v) {
                     m_data[k] = v;
                 })

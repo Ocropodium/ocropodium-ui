@@ -20,6 +20,8 @@ function OcrLineEditor(insertinto_id) {
     const END = 35;
     const HOME = 36;
 
+    const LONGKEY = 500;
+    const SHORTKEY = 70;
 
     // selection start & end 
     var m_selectstart = null;
@@ -31,6 +33,9 @@ function OcrLineEditor(insertinto_id) {
     var m_keyevent = null;
 
     var m_blinktimer = -1;
+
+    // timer for sending scroll events for mozilla
+    var m_navtimer = -1;
 
     var m_proxycontainer = $("<span></span>")
         .attr("id", "proxy_container");
@@ -57,7 +62,7 @@ function OcrLineEditor(insertinto_id) {
             m_cursor.toggleClass("blink");
             m_blinktimer = setTimeout(function() {
                 blinkCursor(true);        
-            }, 500);
+            }, LONGKEY);
         } else {
             clearTimeout(m_blinktimer);
             m_blinktimer = -1;
@@ -65,6 +70,13 @@ function OcrLineEditor(insertinto_id) {
     }
 
     var positionCursorTo = function(elem) {
+        var mintop = m_elem.offset().top;
+        var minleft = m_elem.offset().left;
+        // anchor to either the prev element or the parent
+        if (elem.prev().length) {
+            mintop = Math.max(mintop, elem.prev().offset().top);
+            minleft = Math.max(minleft, elem.prev().offset().left);
+        }
         // if there's no char elem, set to back of
         // the container box
         if (elem.length == 0 || elem.get(0).tagName == "DIV") {
@@ -82,7 +94,8 @@ function OcrLineEditor(insertinto_id) {
                 .css("left", (m_endmarker.offset().left + m_endmarker.width()) + "px");
             return;
         }
-        var top = elem.offset().top;
+        var top = Math.max(mintop, elem.offset().top);
+        var left = Math.max(minleft, elem.offset().left);
         m_cursor
             .css("top", top + "px")
             .css("left", elem.offset().left + "px");
@@ -95,9 +108,16 @@ function OcrLineEditor(insertinto_id) {
         return done;
     }
 
-    var moveCursorLeft = function() {
+    var moveCursorLeft = function(repeat) {
         if (!m_keyevent.shiftKey)
             clearSelection();
+        if (repeat && m_navtimer != -1) {
+            m_navtimer = setTimeout(function() {
+                if (m_navtimer != -1)
+                    clearTimeout(m_navtimer);   
+                m_navtimer = moveCursorLeft(repeat);
+            }, SHORTKEY);
+        }
         // check if we're at the end
         // or at the beginning...
         if (!m_char.length) {
@@ -121,11 +141,22 @@ function OcrLineEditor(insertinto_id) {
             if (m_selectstart == null)
                 m_selectstart = $(m_char.get(0));
         }
-        if (code == RIGHT)
-            moveCursorRight();
-        else if (code == LEFT)
-            moveCursorLeft();
-        else if (code == HOME)
+
+        if (code == RIGHT) {
+            moveCursorRight(false);
+            if($.browser.mozilla) {
+                m_navtimer = setTimeout(function() {
+                    moveCursorRight(true)
+                }, LONGKEY);
+            }
+        } else if (code == LEFT) {
+            moveCursorLeft(false);
+            if($.browser.mozilla) {
+                m_navtimer = setTimeout(function() {
+                    moveCursorLeft(true)
+                }, LONGKEY);
+            }
+        } else if (code == HOME)
             moveCursorToStart();
         else if (code == END)
             moveCursorToEnd();
@@ -148,10 +179,18 @@ function OcrLineEditor(insertinto_id) {
         }
     }
 
-    var moveCursorRight = function() {
+    var moveCursorRight = function(repeat) {
         if (!m_char.length)
             return false;
         m_char = m_char.next();
+        if (repeat && m_navtimer != -1) {
+            m_navtimer = setTimeout(function() {
+                if (m_navtimer != -1)
+                    clearTimeout(m_navtimer);   
+                m_navtimer = moveCursorRight(repeat);
+            }, SHORTKEY);
+        }
+        // check if we're at the end
         positionCursorTo(m_char);
         return true;
     }
@@ -185,13 +224,13 @@ function OcrLineEditor(insertinto_id) {
         if (eraseSelection())
             return;
         var next = m_char.first().next();
-        m_char.first().remove();
+        m_char.first().not(".endmarker").remove();
         m_char = next;
         positionCursorTo(m_char);
     }
 
     var eraseSelection = function() {
-        var delset = m_elem.children(".sl");
+        var delset = m_elem.children("span.sl");
         if (delset.length == 0)
             return false;
         m_char = delset.last().next();
@@ -206,7 +245,7 @@ function OcrLineEditor(insertinto_id) {
                 }
             }
         }
-        delset.remove();
+        delset.not(".endmarker").remove();
         positionCursorTo(m_char);
         return true;
     }
@@ -221,7 +260,7 @@ function OcrLineEditor(insertinto_id) {
         if (m_char.length) {
             char.insertBefore(m_char.first());
         } else {
-            char.append(m_elem);
+            char.insertBefore(m_endmarker);
         }
         positionCursorTo(m_char);
     }
@@ -496,7 +535,9 @@ function OcrLineEditor(insertinto_id) {
 
         $(window).bind("keyup.editortype", function(event) {
             if (m_blinktimer == -1)
-                blinkCursor(true);  
+                blinkCursor(true);
+            clearTimeout(m_navtimer);
+            m_navtimer = -1;
         });
 
         m_elem.find("span").live("click.positioncursor", charClicked);
