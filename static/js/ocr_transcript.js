@@ -2,9 +2,9 @@
 //
 
 
-function OcrTranscript(insertinto_id, batch_id) {
+function OcrTranscript(insertinto_id, batch_id, initial) {
     var m_batch_id = batch_id;
-    var m_page = 0;
+    var m_page = initial;
 
     var m_batchdata = null;
 
@@ -180,8 +180,9 @@ function OcrTranscript(insertinto_id, batch_id) {
 
     
     this.refreshPageData = function() {
+        var url ="/batch/results/" + m_batch_id + "/" + m_page + "/"; 
         $.ajax({
-            url: "/batch/results/" + m_batch_id + "/" + m_page + "/",
+            url: url,
             data: {},
             dataType: "json",
             beforeSend: function(e) {
@@ -265,14 +266,17 @@ function OcrTranscript(insertinto_id, batch_id) {
 
     m_editor.onEditingStarted = function(element) {
         $("#sp_container").find("*").attr("disabled", true);
-        m_speller.looseFocus();
+        if (m_spellchecking)
+            m_speller.looseFocus();
     }
 
     m_editor.onEditingFinished = function(element) {
         $("#sp_container").find("*").attr("disabled", false);
-        m_speller.spellCheck($(element));
-        m_speller.takeFocus();
         self.onTextChanged();
+        if (m_spellchecking) {
+            m_speller.spellCheck($(element));
+            m_speller.takeFocus();
+        }
     }
 
     m_editor.onEditNextElement = function() {
@@ -300,7 +304,10 @@ function OcrTranscript(insertinto_id, batch_id) {
                 self.endSpellcheck();
             else
                 self.startSpellcheck();            
-        }       
+        } else if (event.keyCode == KC_ESCAPE) {
+            if (m_spellchecking)
+                self.endSpellcheck();
+        }
     });
 
     $(".ocr_line").live("dblclick.editline", function(event) {

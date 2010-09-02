@@ -135,6 +135,7 @@ function Spellchecker(parent, selector) {
 
     var 
     self = this,    
+    m_wordindex = 0,
     m_data = {},
     m_parent = parent,
     m_suggestions = new SuggestionList(),
@@ -179,6 +180,7 @@ function Spellchecker(parent, selector) {
     }
 
     var findNextSpellcheckWord = function(current, reverse) {
+        var badcount = $(".badspell").length;
         traverser = reverse ? "prev" : "next";
         endpoint  = reverse ? "last" : "first"; 
         if (!current || !current.length)  {
@@ -200,7 +202,11 @@ function Spellchecker(parent, selector) {
             return $(".badspell")
                 .not(current)[endpoint]();
         }
-
+        if (reverse)
+            m_wordindex = Math.max(0, m_wordindex - 1);
+        else
+            m_wordindex = Math.min(badcount, m_wordindex + 1);
+        alert(m_wordindex);
         return next; 
     }
 

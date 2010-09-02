@@ -2,30 +2,30 @@
 {% include "includes/form_errors.html" %}
 
 <form action="/projects/create" method="POST">
+    <div class="form_body">
+        <div class="field_wrapper">
+            <label for="id_name">Name:</label>
+            {{ form.name }}
+        </div>
+        <div class="field_wrapper">
+            <label for="id_tags">Tags:</label>
+            {{ form.tags }}
+        </div>
+        <div class="field_wrapper">
+            <label for="id_description">Description:</label>
+            {{ form.description }}
+        </div>
 
-    <div class="field_wrapper">
-        <label for="id_name">Name:</label>
-        {{ form.name }}
+        <fieldset>
+            <legend class="collapsed">Project Default Settings</legend>
+
+            <div>{{defform.as_p}}</div>
+        </fieldset>
     </div>
-    <div class="field_wrapper">
-        <label for="id_tags">Tags:</label>
-        {{ form.tags }}
+    <div class="form_footer">
+        <div class="form_submit_buttons">
+            <input disabled="disabled" type="submit" value="Submit" id="submit_new_project_form" />
+        </div>
     </div>
-    <div class="field_wrapper">
-        <label for="id_description">Description:</label>
-        {{ form.description }}
-    </div>
-
-    <fieldset>
-        <legend class="collapsed">Project Default Settings</legend>
-
-        <div>{{defform.as_p}}</div>
-    </fieldset>
-
-    <div class="form_submit_buttons">
-        <input type="submit" value="Submit" id="submit_new_project_form" />
-        <a href="/projects/list" id="cancel_new_project_form">Cancel</a>
-    </div>
-
 </form>
 

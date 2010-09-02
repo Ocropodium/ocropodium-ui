@@ -457,7 +457,7 @@ def transcript(request, pk):
     """
     batch = get_object_or_404(OcrBatch, pk=pk)
     template = "batch/transcript.html"
-    context = {"batch": batch}
+    context = dict(batch=batch, initial=request.GET.get("page"))
 
     return render_to_response(template, context, 
             context_instance=RequestContext(request))

@@ -13,6 +13,20 @@
 // repeatedly polls /batch/results/<batch-pk> until to status
 // changes (to SUCCESS or ERROR) at which point to displays
 // whatever is in 'results'.
+//
+
+jQuery.fn.extend({ 
+    disableSelection : function() { 
+        this.each(function() { 
+            this.onselectstart = function() { return false; }; 
+            this.unselectable = "on"; 
+            jQuery(this).css('-moz-user-select', 'none'); 
+        }); 
+    } 
+});
+
+
+
 
 function OcrBatch(insertinto_id, batch_id) {
     var m_batch_id = batch_id;
@@ -88,6 +102,8 @@ function OcrBatch(insertinto_id, batch_id) {
         createBatchHeaderUi();    
         createTaskListUi();
         m_container.append(m_header).append(m_batchdiv).appendTo("#" + insertinto_id);
+        $(".batch_task").disableSelection();
+        setupEvents();
     }
 
 
@@ -109,134 +125,136 @@ function OcrBatch(insertinto_id, batch_id) {
      *  Events
      */
 
-    $(".batch_name").live("click", function(event) {
-        $(this).toggleClass("expanded");
-        m_batchdiv.find(".tl_container").toggle();
-        setScrollHandleHeight();
-    });
+    var setupEvents = function() {
+        $(".batch_task").bind("dblclick", function(event) {
+            var index = $(this).data("index");            
+            document.location.href = "/batch/transcript/" + m_batchdata.pk
+                + "/?page=" + (index + m_taskoffset + 1);
+        });
+
+        $(".batch_task").bind("click", function(event) {
+            return false;
+        });
+
+        $(".ui-icon").bind("mouseover mouseout", function(event) {
+            if (event.type == "mouseover") {
+                $(this).addClass("ui-state-hover");
+            } else {
+                $(this).removeClass("ui-state-hover");
+            }
+        });
 
 
-    $(".ui-icon").live("mouseover mouseout", function(event) {
-        if (event.type == "mouseover") {
-            $(this).addClass("ui-state-hover");
-        } else {
-            $(this).removeClass("ui-state-hover");
-        }
-    });
+        $(".retry_task").bind("click", function(event) {
+            var pk = $(this).data("pk");
+            $.ajax({
+                url: "/batch/retry_task/" + pk + "/",
+                type: "POST",
+                dataType: "json",
+                error: function(e, msg) {
+                    alert(msg);
+                },
+                success: function(data) {
+                    if (data.ok) {
+                        refreshUnlessPolling();
+                    }
+                },
+            });
+            event.preventDefault();    
+        });
 
 
-    $(".retry_task").live("click", function(event) {
-        var pk = $(this).data("pk");
-        $.ajax({
-            url: "/batch/retry_task/" + pk + "/",
-            type: "POST",
-            dataType: "json",
-            error: function(e, msg) {
-                alert(msg);
-            },
-            success: function(data) {
-                if (data.ok) {
+        $(".task_info").bind("click", function(event) {
+            var pk = $(this).data("pk");
+            $("#dialog_box").dialog({
+                    modal: true,
+                    title: "Task Details",
+                    width: 700,
+                    height: 500,
+                    close: function(e, ui) {
+                        $(this).html();
+                    },
+                });
+            $.ajax({
+                url: "/ocrtasks/show/" + pk + "/",
+                type: "GET",
+                dataType: "html",
+                error: function(e, msg) {
+                    alert(msg);
+                },
+                success: function(data) {
+                    $("#dialog_box").html(data)                    
+                        .find("#tabs")
+                        .tabs();
+                },
+            });
+            event.preventDefault();    
+        });
+
+
+        $(".abort_task").bind("click", function(event) {
+            var pk = $(this).data("pk");
+            $.ajax({
+                url: "/batch/abort_task/" + pk + "/",
+                type: "POST",
+                dataType: "json",
+                beforeSend: function(e) {                
+                    setTaskWaiting($("#task" + pk), true);
+                },
+                error: function(e, msg) {
+                    alert(msg);
+                },
+                complete: function(e) {
+                    setTaskWaiting($("#task" + pk), false);
+                },
+                success: function(data) {
+                    if (data.ok) {
+                    } else {
+                    }
                     refreshUnlessPolling();
-                }
-            },
+                },
+            });
+            event.preventDefault();    
         });
-        event.preventDefault();    
-    });
 
 
-    $(".task_info").live("click", function(event) {
-        var pk = $(this).data("pk");
-        $.ajax({
-            url: "/ocrtasks/show/" + pk + "/",
-            type: "GET",
-            dataType: "html",
-            error: function(e, msg) {
-                alert(msg);
-            },
-            success: function(data) {
-                var dialog = $("<div></div>")
-                    .html(data)
-                    .appendTo($("body"))
-                    .find("#tabs")
-                    .tabs()
-                    .end()
-                    .dialog({
-                        modal: true,
-                        title: "Task Details",
-                        width: 700,
-                        height: 500,
-                        close: function(e, ui) {
-                            dialog.remove();
-                        },
-                    });
-            },
+        // scroll up and down via buttons
+        $("#scrolldown").bind("click", function(event) {
+            scrollDown(event);
         });
-        event.preventDefault();    
-    });
-
-
-    $(".abort_task").live("click", function(event) {
-        var pk = $(this).data("pk");
-        $.ajax({
-            url: "/batch/abort_task/" + pk + "/",
-            type: "POST",
-            dataType: "json",
-            beforeSend: function(e) {                
-                setTaskWaiting($("#task" + pk), true);
-            },
-            error: function(e, msg) {
-                alert(msg);
-            },
-            complete: function(e) {
-                setTaskWaiting($("#task" + pk), false);
-            },
-            success: function(data) {
-                if (data.ok) {
-                } else {
-                }
-                refreshUnlessPolling();
-            },
+        $("#scrollup").bind("click", function(event) {
+            scrollUp(event);
         });
-        event.preventDefault();    
-    });
 
 
-    // scroll up and down via buttons
-    $("#scrolldown").live("click", function(event) {
-        scrollDown(event);
-    });
-    $("#scrollup").live("click", function(event) {
-        scrollUp(event);
-    });
-
-
-    $(".retry_batch, .retry_errored, .abort_batch").live("click", function(event) {
-        var pk = $(this).data("pk");
-        var action = $(this).attr("title").toLowerCase();
-        $.ajax({
-            url: $(this).attr("href"),
-            type: "POST",
-            dataType: "json",
-            error: function(e, msg) {
-                alert(msg);
-            },
-            beforeSend: function(e) {
-                if (!confirm("Really " + action + "?"))
-                    return false;
-                setTaskWaiting($("#batch" + pk), true);
-            },
-            complete: function(e) {
-                setTaskWaiting($("#batch" + pk), false);
-            },
-            success: function(data) {
-                if (data.ok) {
-                }
-                refreshUnlessPolling();
-            },
+        $(".retry_batch, .retry_errored, .abort_batch").bind("click", function(event) {
+            var pk = $(this).data("pk");
+            var action = $(this).attr("title").toLowerCase();
+            $.ajax({
+                url: $(this).attr("href"),
+                type: "POST",
+                dataType: "json",
+                error: function(e, msg) {
+                    alert(msg);
+                },
+                beforeSend: function(e) {
+                    if (!confirm("Really " + action + "?"))
+                        return false;
+                    setTaskWaiting($("#batch" + pk), true);
+                },
+                complete: function(e) {
+                    setTaskWaiting($("#batch" + pk), false);
+                },
+                success: function(data) {
+                    if (data.ok) {
+                    }
+                    refreshUnlessPolling();
+                },
+            });
+            event.preventDefault();   
+            event.stopPropagation(); 
         });
-        event.preventDefault();   
-        event.stopPropagation(); 
-    });
+    }
 
 
     var refreshUnlessPolling = function() {
@@ -401,15 +419,14 @@ function OcrBatch(insertinto_id, batch_id) {
     var createBatchHeaderUi = function() {
 
         var batch = $("<div></div>")
-            .addClass("batch")
-            .addClass("expanded");
-        batch.append(
-            $("<span></span>")
-                .addClass("batch_name")
-                .text("Batch"));
+            .addClass("batch");
         var controls = $("<div></div>")
             .addClass("batch_controls");
         batch.append(controls);
+        controls.append(
+            $("<div></div>")
+                .addClass("batch_name")
+                .text("Batch"));
         addProgressBar(controls);
         controls.append(
             $("<span></span>")
@@ -482,6 +499,8 @@ function OcrBatch(insertinto_id, batch_id) {
         }
 
         tlcontainer.mousewheel(function(event, delta) {
+            if (m_maxtasks < m_batchdata.extras.task_count)
+                return;
             if (delta > 0)
                 scrollUp(event);
             else if (delta < 0)
@@ -588,6 +607,8 @@ function OcrBatch(insertinto_id, batch_id) {
             }
 
             task.attr("id", "task" + taskdata.pk)
+                .data("pk", taskdata.pk)
+                .data("index", i);
             task.find(".page_name")
                 .text(taskdata.fields.page_name);
             task.find("a").data("pk", taskdata.pk);
