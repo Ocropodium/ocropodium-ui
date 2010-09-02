@@ -147,7 +147,7 @@ def create(request):
         project.user = request.user
         project.full_clean()
         project.save()
-    return HttpResponseRedirect("/projects/load/%s/" % project.pk)
+        return HttpResponseRedirect("/projects/load/%s/" % project.pk)
 
 
 
