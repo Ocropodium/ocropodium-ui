@@ -13,6 +13,7 @@ from django.conf import settings
 
 from ocradmin.projects.models import OcrProject
 from ocradmin.training.models import TrainingPage
+from ocrtasks.models import OcrTask
 
 from fedora.adaptor import fcobject, fcdatastream
 from fedora.adaptor.utils import FedoraException
@@ -26,7 +27,6 @@ class IngestTask(AbortableTask):
 
     name = "fedora.ingest"
     max_retries = None
-    ignore_result=True
     
     def run(self, trainingpage_id, namespace, dublincore, **kwargs):
         """
@@ -34,6 +34,9 @@ class IngestTask(AbortableTask):
         """
         logger = self.get_logger(**kwargs)
         logger.info((trainingpage_id, namespace, kwargs))
+        task = OcrTask.objects.get(task_id=kwargs["task_id"])
+        task.progess = 0
+        task.save()
 
         trainingpage = TrainingPage.objects.get(pk=trainingpage_id)
         dublincore["title"] = trainingpage.page_name
@@ -51,7 +54,10 @@ class IngestTask(AbortableTask):
             content_type="image/png"):
             raise FedoraException("Unable to add datastream.")
         imagedata.close()
+        task.progress = 100
+        task.save()
         logger.info("Ingested: %s" % fc.pid)
+        return fc.pid
 
 
 

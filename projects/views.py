@@ -15,6 +15,9 @@ from django.template import RequestContext
 from django.utils import simplejson
 
 from tagging.models import TaggedItem
+from ocradmin.ocr import utils as ocrutils
+from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject, OcrProjectDefaults
 from fedora.adaptor import fcobject, fcdatastream 
 from ordereddict import OrderedDict
@@ -266,6 +269,7 @@ def export(request, pk):
             context_instance=RequestContext(request))
 
 
+@transaction.commit_on_success
 @login_required
 def ingest(request, pk):
     """
@@ -280,11 +284,44 @@ def ingest(request, pk):
     for key, val in request.POST.iteritems():
         if key.startswith("dc_"):
             dublincore[key.replace("dc_", "", 1)] = val
-    for ts in project.training_sets.all():
-        args = (ts.pk, namespace, dublincore)
-        IngestTask.apply_async(args=args, queue="interactive")
 
-    return HttpResponseRedirect("/projects/show/%d/" % project.pk)
+    asyncparams = []
+
+    # create a batch db job
+    batch = OcrBatch(user=request.user, name="Fedora Ingest: %s" % namespace, description="",
+            task_type=IngestTask.name, batch_type="INGEST", project=project)    
+    batch.save()
+
+
+    for ts in project.training_sets.all():
+        tid = ocrutils.get_new_task_id()
+        args = (ts.pk, namespace, dublincore)
+        kwargs = dict(task_id=tid, queue="interactive")
+        task = OcrTask(
+            task_id=tid,
+            user=request.user,
+            batch=batch,
+            project=project,
+            page_name=os.path.basename(ts.page_name),
+            task_type="ingest",
+            task_name=IngestTask.name,
+            status="INIT",
+            args=args,
+            kwargs=kwargs,
+        )
+        task.save()
+        asyncparams.append((args, kwargs))            
+
+    # launch all the tasks
+    publisher = IngestTask.get_publisher(connect_timeout=5)    
+    try:
+        for args, kwargs in asyncparams:
+            IngestTask.apply_async(args=args, publisher=publisher, **kwargs)
+    finally:
+        publisher.close()
+        publisher.connection.close()
+
+    return HttpResponseRedirect("/batch/show/%d/" % batch.pk)
 
 
 

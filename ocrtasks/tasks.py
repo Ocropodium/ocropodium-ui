@@ -9,6 +9,7 @@ from celery.datastructures import ExceptionInfo
 
 from ocradmin.ocr.tasks import ConvertPageTask, BinarizePageTask 
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
+from ocradmin.projects.tasks import IngestTask
 from ocradmin.ocrtasks.models import OcrTask, Transcript
 
 
@@ -37,7 +38,7 @@ def on_task_postrun(**kwargs):
     """
     # don't know what we need to do here yet
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
-    retval = kwargs.get("retval")
+    retval = kwargs.get("retval", "")
     if isinstance(retval, ExceptionInfo):
         task.error = retval.exception
         task.traceback = retval.traceback
@@ -51,7 +52,7 @@ def on_task_postrun(**kwargs):
 
 # Connect up signals to the *PageTask
 for taskname in [ConvertPageTask.name, LineTrainTask.name, 
-        ComparisonTask.name]:
+        ComparisonTask.name, IngestTask.name]:
     task_sent.connect(on_task_sent, tasks[taskname])
     task_prerun.connect(on_task_prerun, tasks[taskname])
     task_postrun.connect(on_task_postrun, tasks[taskname])
