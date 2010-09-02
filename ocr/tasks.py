@@ -29,6 +29,7 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
     if params.get("allowcache") is None:
         if srcdzipath is None or not os.path.exists(srcdzipath):
             srcdzipath = "%s_src.dzi" % os.path.splitext(outpath)[0]
+            logger.info("Creating source DZI: %s -> %s" % (inpath, srcdzipath))
             creator.create(inpath, srcdzipath)
 
 
@@ -42,6 +43,7 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
     if os.path.exists(dstdzipath) and params.get("allowcache"):
         pass
     else:
+        logger.info("Creating output DZI: %s -> %s" % (outpath, dstdzipath))
         creator.create(outpath, dstdzipath)
 
     logger.info(srcdzipath)
@@ -105,7 +107,15 @@ class ConvertPageTask(AbortableTask):
         # init progress to zero (for when retrying tasks)
         progress_func(0)
 
-        return converter.convert(filepath, progress_func=progress_func)
+        out = converter.convert(filepath, progress_func=progress_func)
+        if paramdict.get("binout") and os.path.exists(paramdict["binout"]):
+            dzipath = re.sub("\.png$", "_a.dzi", paramdict["binout"])
+            logger.info("Making binary DZI: %s" % dzipath)
+            creator = deepzoom.ImageCreator(tile_size=512, tile_overlap=2, tile_format="png",
+                            image_quality=1, resize_filter="nearest")
+            creator.create(paramdict["binout"], dzipath)
+        return out
+
 
 class BinarizePageTask(AbortableTask):
     """
@@ -142,10 +152,10 @@ class BinarizePageTask(AbortableTask):
         # hack - this is to save time when doing the transcript editor
         # work - don't rebinarize of there's an existing file
         if os.path.exists(binpath) and paramdict.get("allowcache"):
-            logger.info("NOT NOT NOT rebinarizing")
+            logger.info("Not rebinarizing - file exists and allowcache is ON")
             pagewidth, pageheight = utils.get_image_dims(binpath)
         else:
-            logger.info("REBINARIZING: exists: %s, cache: %s" % (
+            logger.info("Rebinarising - file exists: %s, cache: %s" % (
                 os.path.exists(binpath), 
                 paramdict.get("allowcache")))
             converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
