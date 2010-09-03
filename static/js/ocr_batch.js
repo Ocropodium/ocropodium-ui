@@ -425,8 +425,17 @@ function OcrBatch(insertinto_id, batch_id) {
         batch.append(controls);
         controls.append(
             $("<div></div>")
-                .addClass("batch_name")
-                .text("Batch"));
+                .addClass("batch_header")
+                .append($("<div></div>")
+                    .addClass("batch_name")
+                )
+                .append($("<a></a>")
+                    .attr("href", "#")
+                    .text("View Transcripts")
+                    .addClass("transcript_link")
+                    .attr("title", "View Transcript")
+                )
+        );
         addProgressBar(controls);
         controls.append(
             $("<span></span>")
@@ -516,7 +525,12 @@ function OcrBatch(insertinto_id, batch_id) {
         batch.attr("id", "batch" + batchdata.pk)
 
         // set titles
-        batch.find("#batch_head, .batch_name").text(batchdata.fields.name);
+        batch
+            .find(".batch_name")
+            .text(batchdata.fields.name)
+            .end()        
+            .find(".transcript_link")
+            .attr("href", "/batch/transcript/" + batchdata.pk + "/");
 
         // update links with the batch id
         batch.find(".retry_batch")
