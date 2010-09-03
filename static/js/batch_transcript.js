@@ -172,13 +172,17 @@ $(function() {
 
     var positionViewer = function(position) {
         // ensure the given line is centred in the viewport
+        //var zoom = sdviewer.activeViewer().viewport.getZoom();
         var bounds = transcript.pageData().fields.results.box;
         var fw = bounds[2], fh = bounds[3];
         var x = position[0], y = position[1], w = position[2], h = position[3];        
         var rect = new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw);
         var overlaydiv = document.createElement("div");
-        $(overlaydiv).addClass("viewer_highlight");
+        $(overlaydiv).addClass("viewer_highlight");        
         sdviewer.activeViewer().viewport.fitBounds(rect, true);
+        //var center = sdviewer.activeViewer().viewport.getCenter()
+        //sdviewer.activeViewer().viewport.zoomTo(zoom, true);
+        //sdviewer.activeViewer().viewport.panTo(center, true);
         sdviewer.activeViewer().drawer.clearOverlays(); 
         sdviewer.activeViewer().drawer.addOverlay(overlaydiv, rect);         
     }
@@ -233,7 +237,10 @@ $(function() {
 
     $("#page_slider").slider({
         stop: function(e, ui) {
-            transcript.setPage($("#page_slider").slider("option", "value") - 1);
+            var val = $("#page_slider").slider("option", "value") - 1;
+            if (val != transcript.page()) {
+                transcript.setPage();
+            }
         },
         
     });
