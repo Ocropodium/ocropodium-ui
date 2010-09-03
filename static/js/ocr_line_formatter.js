@@ -45,32 +45,24 @@ function OcrLineFormatter() {
     this.columnLayout = function(pagediv) {
         resetState(pagediv);
         var dims  = pagediv.data("bbox");
-        var scale = (pagediv.outerWidth(true)) / dims[2];
-        var offx = pagediv.offset().left;
-        var offy = pagediv.offset().top;
-        pagediv.height(((dims[3] - dims[1]) * scale) + 20);
-
-        var heights = [];
-        var orderedheights = [];
-        var orderedwidths = [];        
-
+        var scale = pagediv.width() / dims[2];
         pagediv.addClass("literal");
-        pagediv.children(".ocr_line").each(function(position, item) {
+        var heights = [];
+        var ypositions = [];
+        var orderedheights = [];
+        var orderedwidths = [];
+        var sizedheights = [];        
+        // counteract the relative shifting down of each line
+        // by summing the height of previous lines and subtracting
+        // that from the relative Y position.
+        $(".ocr_line", pagediv).each(function(position, item) {
             $(item).children("br").remove();
-            var lspan = $(item);
-            var linedims = lspan.data("bbox");
-            var x = ((linedims[0] - dims[0]) * scale) + offx;
-            var y = ((linedims[1] - dims[1]) * scale) + offy; 
-            var w = (linedims[2] * scale);
-            var h = (linedims[3] * scale);
-            lspan.css("top",    y).css("left",   x)
-                .css("position", "absolute");
-            heights.push(h);
+            var linedims = $(item).data("bbox");
+            var h = linedims[3] * scale;
             orderedheights.push(h);
-            orderedwidths.push(w);
+            heights.push(h);
+            orderedwidths.push(linedims[2] * scale);
         });
-
-
 
         var stats = new Stats(heights);
         var medianfs = null;
@@ -98,7 +90,36 @@ function OcrLineFormatter() {
                     medianfs = fs;
                 }
             }
-        });       
+            // after extensive trial and error have determined this
+            // to be the correct formula
+            // FIXME: The  minus 1 (px) fudge here relates (I think)
+            // to the element border size, in the case 1px solid trans.
+            sizedheights[position] = $(item).height() - 1; // fudge!
+        });
+
+        var upshift = 0;
+        $(".ocr_line", pagediv).each(function(position, item) {
+            var lspan = $(item);
+            var linedims = lspan.data("bbox");
+            var x = (linedims[0] - dims[0]) * scale;
+            var y = (linedims[1] - dims[1]) * scale;
+            var w = orderedwidths[position];
+            var h = sizedheights[position];
+            // reset the upshift for new columns
+            if (y < ypositions[ypositions.length - 1]) {
+                var yindex = ypositions.length;
+                while (yindex--) {
+                    if (y > ypositions[yindex]) 
+                        break;
+                }
+                for (var i = Math.max(0, yindex); i < position; i++) {
+                    upshift += sizedheights[i];    
+                }
+            }
+            lspan.css("top", y - upshift).css("left", x).attr("upshift", upshift);
+            ypositions.push(y);
+            upshift += h;
+        });
     }
 
     var resetState = function(pagediv) {
@@ -110,8 +131,6 @@ function OcrLineFormatter() {
         pagediv.removeClass("literal");
         pagediv.css("height", null);
         $(".ocr_line", pagediv).css("display", null);
-
-
     }
 
 

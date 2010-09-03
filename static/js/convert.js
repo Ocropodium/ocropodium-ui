@@ -274,7 +274,9 @@ $(function() {
         relayoutPages();
     });
     $("#format_column").click(function(event) {
-        formatter.columnLayout($(".ocr_page"));
+        $(".ocr_page").each(function(pos, elem) {
+            formatter.columnLayout($(elem));
+        });
         relayoutPages();
     });
 

@@ -13,14 +13,12 @@
 
 .ocr_page {
     font-size: 1.1em;
-    min-height: 40px;
     background-color: #FDFDFD;
     padding: 10px;
-    height: 100%;    
+    overflow: auto;
 }
 
 .literal {
-    font-family: monospace;
 }
 
 .waiting {
