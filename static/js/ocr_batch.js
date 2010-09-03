@@ -46,6 +46,13 @@ function OcrBatch(insertinto_id, batch_id) {
     // store the id for the next timeout
     var m_polltimeout = -1;
 
+    // status filter widget
+    var m_statusfilter = new MultiFilterList(
+        "status",
+        ["INIT", "PENDING", "RETRY", "STARTED", "SUCCESS", "ERROR", "ABORTED"],
+        true
+    );
+
     // alias 'this' for use from within callbacks
     var self = this;
 
@@ -226,6 +233,10 @@ function OcrBatch(insertinto_id, batch_id) {
             scrollUp(event);
         });
 
+        m_statusfilter.onChange = function() {
+            refreshUnlessPolling();
+        }
+
 
         $(".retry_batch, .retry_errored, .abort_batch").bind("click", function(event) {
             var pk = $(this).data("pk");
@@ -337,85 +348,6 @@ function OcrBatch(insertinto_id, batch_id) {
     var updateScrollButtons = function(event) {
     }
 
-
-    var buildTaskFilterList = function() {
-        var statuses = ["INIT", "PENDING", "RETRY", "STARTED", "SUCCESS", "ERROR", "ABORTED"]; 
-        var filterlist = $("<div></div>")
-            .addClass("list_popup")
-            .attr("id", "filter_list")
-            .hide();
-        var statustemp = $("<div></div>")
-            .addClass("status_filter")
-            .append(
-                $("<label></label>")
-                    .addClass("status_label")
-                    .attr("for", "ALL")
-                    .text("ALL"))
-            .append(
-                $("<input></input>")
-                    .attr("type", "checkbox"));
-        
-        var allfilter = statustemp
-            .clone()
-            .attr("checked", true)
-            .appendTo(filterlist)
-            .find("input")
-            .attr("name", "ALL")
-            .attr("id", "filter_none")
-            .attr("checked", true)
-            .click(function(event) {
-                if ($(this).attr("checked")) {
-                    $(".filter_type").removeAttr("checked");
-                }
-                refreshUnlessPolling();
-            });
-            
-        $.each(statuses, function(i, status) {
-            var statbox = statustemp
-                .clone()
-                .find("label")
-                .attr("for", status)
-                .text(status)
-                .end()
-                .find("input")
-                .attr("name", status)
-                .addClass("filter_type")
-                .click(function(event) {
-                    if ($(this).attr("checked")) {
-                        $("#filter_none:checked").removeAttr("checked");
-                    }
-                    refreshUnlessPolling();
-                })
-                .end()
-                .appendTo(filterlist);
-        });
-
-        var filterbutton = $("<div></div>")
-            .addClass("toggle_button")
-            .attr("id", "filter_button")
-            .text("Filter Tasks")
-            .addClass("ui-state-default ui-corner-all")
-            .hover(function(event) {
-                $(this).addClass("ui-state-hover");
-            }, function(event) {
-                $(this).removeClass("ui-state-hover");
-            })
-            .toggle(function(event) {
-                $(this).addClass("ui-state-active");
-                filterlist.show();
-            }, function(event) {
-                $(this).removeClass("ui-state-active");
-                filterlist.hide();
-           2});
-        var container = $("<div></div>")
-            .addClass("filter_container")
-            .append(filterbutton)
-            .append(filterlist);
-
-        return container;
-    }
-
-
     var createBatchHeaderUi = function() {
 
         var batch = $("<div></div>")
@@ -446,7 +378,7 @@ function OcrBatch(insertinto_id, batch_id) {
                 .addClass(button.classes)
                 .appendTo(controls);
         });
-        controls.append(buildTaskFilterList());
+        controls.append(m_statusfilter.ui());
         m_batchdiv.append(batch);
     }
 
