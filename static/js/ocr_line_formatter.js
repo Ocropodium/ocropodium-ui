@@ -116,7 +116,7 @@ function OcrLineFormatter() {
                     upshift += sizedheights[i];    
                 }
             }
-            lspan.css("top", y - upshift).css("left", x).attr("upshift", upshift);
+            lspan.css("top", y - upshift).css("left", x);
             ypositions.push(y);
             upshift += h;
         });

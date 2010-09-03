@@ -139,6 +139,9 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
             .data("num", m_currentline.data("num"))
             .addClass("ocr_line")
             .attr("class", m_currentline.attr("class"))
+            .css("top", m_currentline.css("top"))
+            .css("left", m_currentline.css("left"))
+            .css("font-size", m_currentline.css("font-size"))
             .html(m_currentline.html());
         m_currentline.replaceWith(newline);
         m_currentline = newline;

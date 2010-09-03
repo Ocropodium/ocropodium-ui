@@ -118,7 +118,7 @@ function onXHRLoad(event_or_response) {
 };
 
 
-function relayoutPages() {
+function relayoutPages(maxheight) {
     var top = $(".ocr_page_container").first();
     var start = top.position().top + top.outerHeight(true);
     top.nextAll().each(function(i, elem) {
