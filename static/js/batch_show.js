@@ -50,15 +50,17 @@ function populateBatchList(data) {
 }
 
 $(function() {
-    batch = new OcrBatch("workspace", $("#batch_id").val());    
-    batch.init();
+    if ($("#batch_id").length) {
+        batch = new OcrBatch("workspace", $("#batch_id").val());    
+        batch.init();
     
-    $.ajax({
-        url: "/batch/list?order_by=-created_on",
-        data: {},
-        dataType: "json",
-        success: populateBatchList,
-    });
+        $.ajax({
+            url: "/batch/list?order_by=-created_on",
+            data: {},
+            dataType: "json",
+            success: populateBatchList,
+        });
+    }
 
 });        
 
