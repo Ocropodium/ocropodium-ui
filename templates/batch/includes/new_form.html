@@ -7,24 +7,23 @@
         </ul>
         <div id="tabs_1">
             <div class="form_body">
-                <h3>Create New OCR Batch</h3>
-                <div class="form_field">
-                    <label for="batch_name">Identifier:</label>
+                <fieldset>
+                    <legend class="collapsed">Information</legend>
+                    <div class="field_wrapper">
+                        <label for="batch_name">Identifier:</label>
+                        <input type="text" name="batch_name" id="batch_name" value="{{batchname}}" />
+                    </div>
                     <br />
-                    <input type="text" name="batch_name" id="batch_name" value="{{batchname}}" />
-                </div>
-                <br />
-                <div class="form_field">
-                    <label for="batch_tags">Tags:</label>
+                    <div class="field_wrapper">
+                        <label for="batch_tags">Tags:</label>
+                        <input type="text" name="batch_tags" id="batch_name" />
+                    </div>
                     <br />
-                    <input type="text" name="batch_tags" id="batch_name" />
-                </div>
-                <br />
-                <div class="form_field">
-                    <label for="batch_desc">Notes:</label>
-                    <br />
-                    <textarea name="batch_desc" id="batch_desc"></textarea>
-                </div>
+                    <div class="field_wrapper">
+                        <label for="batch_desc">Notes:</label>
+                        <textarea name="batch_desc" id="batch_desc"></textarea>
+                    </div>
+                </fieldset>
             </div>
             <div class="form_footer">
                 <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Files" />
@@ -47,54 +46,59 @@
         </div>
         <div id="tabs_3">
             <div class="form_body">
-                <h3>OCR Options</h3>
-                 <p>
-                 OCR Engine:&nbsp;
-                    <input type="radio" name="engine" value="ocropus">Ocropus&nbsp;
-                    <input type="radio" name="engine" value="tesseract" checked>Tesseract
-                </p>
-                <p>        
-                    Segmenter:&nbsp;
-                    <select id="form_segmenter" name="psegmenter">
-                        <optgroup label="Basic">
-                            <option value="SegmentPageByRAST" selected="selected">RAST</option>
-                            <option value="SegmentPageByRAST1">RAST1</option>
-                            <option value="SegmentPageBy1CP">1CP</option>
-                            <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
-                            <option value="SegmentPageByXYCUTS">XYCUTS</option>
-                        </optgroup>
-                        {% if segpresets %}
-                            <optgroup label="Presets">
-                            {% for p in segpresets %}
-                                <option value="preset_{{p.pk}}">{{p.name}}</option>                        
-                            {% endfor %}            
+                <fieldset>
+                    <legend>OCR Information</legend>
+                    <div class="field_wrapper">        
+                        <label>OCR Engine:</label>
+                        <div id="engine">
+                            <input type="radio" id="engine_ocropus" name="engine" value="ocropus">Ocropus
+                            <input type="radio" id="engine_tesseract" name="engine" value="tesseract" checked>Tesseract
+                        </div>
+                    </div>
+                    <br />
+                    <div class="field_wrapper">        
+                        <label for="form_segmenter">Page Segmenter:</label>
+                        <select id="form_segmenter" name="psegmenter">
+                            <optgroup label="Basic">
+                                <option value="SegmentPageByRAST" selected="selected">RAST</option>
+                                <option value="SegmentPageByRAST1">RAST1</option>
+                                <option value="SegmentPageBy1CP">1CP</option>
+                                <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
+                                <option value="SegmentPageByXYCUTS">XYCUTS</option>
                             </optgroup>
-                        {% endif %}            
-                    </select>
-                </p>
-                <p>
-                    Pre-processing:&nbsp;
-                    <select id="form_clean" name="clean">
-                        <option value="StandardPreprocessing" selected="selected">Standard</option>
-                        {% if binpresets %}
-                            <optgroup label="Presets">
-                            {% for p in binpresets %}
-                                <option value="preset_{{p.pk}}">{{p.name}}</option>                        
-                            {% endfor %}            
-                            </optgroup>
-                        {% endif %}            
-                    </select>
-                </p>
-                <p>
-                    Character Model:&nbsp;
-                    <select id="form_cmodel" name="cmodel">
-                    </select>
-                </p>
-                <p>
-                    Language Model:&nbsp;
-                    <select id="form_lmodel" name="lmodel">
-                    </select>
-                </p>
+                            {% if segpresets %}
+                                <optgroup label="Presets">
+                                {% for p in segpresets %}
+                                    <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+                                {% endfor %}            
+                                </optgroup>
+                            {% endif %}            
+                        </select>
+                    </div>
+                    <div class="field_wrapper">        
+                        <label for="form_clean">Preprocessing:</label>
+                        <select id="form_clean" name="clean">
+                            <option value="StandardPreprocessing" selected="selected">Standard</option>
+                            {% if binpresets %}
+                                <optgroup label="Presets">
+                                {% for p in binpresets %}
+                                    <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+                                {% endfor %}            
+                                </optgroup>
+                            {% endif %}            
+                        </select>
+                    </div>
+                    <div class="field_wrapper">        
+                        <label for="form_cmodel">Character Model:</label>
+                        <select id="form_cmodel" name="cmodel">
+                        </select>
+                    </div>
+                    <div class="field_wrapper">        
+                        <label for="form_lmodel">Language Model:</label>
+                        <select id="form_lmodel" name="lmodel">
+                        </select>
+                    </div>
+                </fieldset>
             </div>
             <div class="form_footer">
                 <input type="button" disabled="disabled" id="submit_batch" value="Submit Batch" />

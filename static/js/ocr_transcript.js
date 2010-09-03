@@ -4,7 +4,7 @@
 
 function OcrTranscript(insertinto_id, batch_id, initial) {
     var m_batch_id = batch_id;
-    var m_page = initial;
+    var m_page = initial != null ? initial : 0;
 
     var m_batchdata = null;
 
@@ -129,6 +129,20 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
     this.setPage = function(page_index) {
         m_page = page_index;
         self.refreshPageData();
+    }
+
+    this.setCurrentLineType = function(type) {
+        if (!m_currentline.length)
+            return;
+        var newline = $("<" + type + "></" + type + ">")
+            .data("bbox", m_currentline.data("bbox"))
+            .data("num", m_currentline.data("num"))
+            .addClass("ocr_line")
+            .attr("class", m_currentline.attr("class"))
+            .html(m_currentline.html());
+        m_currentline.replaceWith(newline);
+        m_currentline = newline;
+        self.onTextChanged();
     }
 
     // set a waiting spinner when doing something
@@ -351,6 +365,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
             line.get(0).scrollIntoView(pos == -1);
         }        
         self.onClickPosition(line.data("bbox"));
+        self.onLineSelected(line.get(0).tagName.toLowerCase());
     }
 
 
@@ -360,7 +375,8 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
         m_pagediv.children().remove();
         m_pagediv.data("bbox", data.fields.results.box);
         $.each(data.fields.results.lines, function(linenum, line) {
-            lspan = $("<span></span>")
+            var type = line.type ? line.type : "span";
+            lspan = $("<" + type + "></" + type + ">")
                 .text(line.text)
                 .addClass("ocr_line")
                 .data("bbox", line.box)
@@ -377,11 +393,14 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
         var results = m_pagedata.fields.results;
         var lines = [];
         m_pagediv.find(".ocr_line").each(function(i, elem) {
-            lines.push({
+            var line = {
                 text: $(elem).text(),
                 line: $(elem).data("num"),
                 box:  $(elem).data("bbox"),
-            });
+            };
+            if (elem.tagName != "SPAN")
+                line["type"] = elem.tagName.toLowerCase();
+            lines.push(line);
         });
         results.lines = lines;
         $.ajax({
@@ -442,6 +461,16 @@ OcrTranscript.prototype.onHoverPosition = function(position) {
 }
 
 OcrTranscript.prototype.onSave = function() {
+
+}
+
+
+OcrTranscript.prototype.onLineSelected = function(linetype) {
+
+}
+
+
+OcrTranscript.prototype.onLineDeselected = function() {
 
 }
 

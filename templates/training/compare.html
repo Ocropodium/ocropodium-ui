@@ -21,36 +21,41 @@
                         </ul>
                         <div id="tabs_1">
                             <div class="form_body">
-                                <div class="field_wrapper">
-                                    <label for="cmodel_a">Model A:</label>
-                                    <select id="cmodel_a" name="cmodel_a">
-                                        <option value="0">-----</option>
-                                        {% for cm in cmodels %}
-                                        <option value="{{cm.pk}}">{{cm}}</option>
-                                        {% endfor %} 
-                                    </select>
-                                </div>
-                                <div class="field_wrapper">
-                                    <label for="cmodel_b">Model B:</label>
-                                    <select id="cmodel_b" name="cmodel_b">
-                                        <option value="0">-----</option>
-                                        {% for cm in cmodels %}                            
-                                        <option value="{{cm.pk}}">{{cm}}</option>
-                                        {% endfor %} 
-                                    </select>
-                                </div>
-                                <h4>Select Ground Truth</h4>
-                                <div class="toggle_box" id="ground_truth_list">
+                                <fieldset>
+                                    <legend>Model Information</legend>
                                     <div class="field_wrapper">
-                                        {% for tset in tsets %}
-                                            <div class="ground_truth_item">
-                                                {{tset.data.page}}
-                                                <input type="checkbox" class="ground_truth_enabled"
-                                                    name="tset" value="{{tset.pk}}" />
-                                            </div>
-                                        {% endfor %}
+                                        <label for="cmodel_a">Model A:</label>
+                                        <select id="cmodel_a" name="cmodel_a">
+                                            <option value="0">-----</option>
+                                            {% for cm in cmodels %}
+                                            <option value="{{cm.pk}}">{{cm}}</option>
+                                            {% endfor %} 
+                                        </select>
                                     </div>
-                                </div>
+                                    <div class="field_wrapper">
+                                        <label for="cmodel_b">Model B:</label>
+                                        <select id="cmodel_b" name="cmodel_b">
+                                            <option value="0">-----</option>
+                                            {% for cm in cmodels %}                            
+                                            <option value="{{cm.pk}}">{{cm}}</option>
+                                            {% endfor %} 
+                                        </select>
+                                    </div>
+                                </fieldset>
+                                <fieldset>
+                                    <legend>Ground Truth</legend>
+                                    <div class="toggle_box" id="ground_truth_list">
+                                        <div class="field_wrapper">
+                                            {% for tset in tsets %}
+                                                <div class="ground_truth_item">
+                                                    {{tset.data.page}}
+                                                    <input type="checkbox" class="ground_truth_enabled"
+                                                        name="tset" value="{{tset.pk}}" />
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </fieldset>
                             </div>
                             <div class="form_footer">
                                 <input type="button" class="next_tab" id="tabs_2_next" value="Next - OCR Options" />

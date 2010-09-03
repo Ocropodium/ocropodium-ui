@@ -1,20 +1,25 @@
 {% extends "standard.html" %}
 
 {% block headerscript %}
-
-
+    <script type="application/javascript" src="/static/js/ocrmodels/new.js"></script>
 {% endblock %}
 
 {% block content %}
     {% include "ocrmodels/includes/sidebar.html" %}
-
     <div id="document_window">
         <div class="widget">
-            <div class="widget_header">Upload New Model:</div>
-            <div class="widget_content">
-                {% include "ocrmodels/includes/new_model_form.html" %}
+            <div class="widget_header">OCR Models</div>
+                <div class="widget_content">
+                    <div id="tabs">
+                        <ul>
+                            <li><a id="tabs_1_link" href="#tabs_1">New OCR Model</a></li>
+                        </ul>
+                        <div id="tabs_1">
+                            {% include "ocrmodels/includes/new_model_form.html" %}
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
     </div>
-
-
 {% endblock %}

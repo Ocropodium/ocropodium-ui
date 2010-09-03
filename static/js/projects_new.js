@@ -1,9 +1,3 @@
-function validateProjectForm() {
-    var bad = $.trim($("#id_name").text()) == "";
-    $("submit_new_project").attr("disabled", bad);
-}
-
-
 $(function() {
 
     $("#id_name").bind("keyup", function(event) {

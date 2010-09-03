@@ -73,6 +73,10 @@ $(function() {
             primary: "ui-icon-check",
         },
     });
+    $("#heading").button({
+        disabled: true,
+        text: true,
+    });
     $("#vlink").buttonset();
 
     $("#format_block").click(function(event) {
@@ -87,7 +91,11 @@ $(function() {
 
     $("#page_slider").slider({min: 1, value: 1});
 
-    transcript = new OcrTranscript("workspace", $("#batch_id").val(), $("#initial").val());   
+    transcript = new OcrTranscript(
+        "workspace", 
+        parseInt($("#batch_id").val()),
+        parseInt($("#initial").val())
+    );   
     transcript.init();
     transcript.onBatchLoad = function() {
         $("#page_slider").slider({
@@ -102,7 +110,18 @@ $(function() {
         var ismin = $("#page_slider").slider("option", "value") == 1; 
         $("#next_page").button({disabled: ismax});         
         $("#prev_page").button({disabled: ismin});
+        $("#heading").button({disabled: true});
     }
+
+    transcript.onLineSelected = function(type) {
+        $("#heading").button({disabled: false});
+        $("#heading").attr("checked", type == "h1")
+            .button("refresh");
+    }
+
+    $("#heading").change(function() {
+        transcript.setCurrentLineType($(this).attr("checked") ? "h1" : "span");        
+    });
 
     // When a page loads, read the data and request the source
     // image is rebinarized so we can view it in the viewer

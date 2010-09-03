@@ -1,6 +1,10 @@
 
 <div class="training_set_list">
-    {% for trainpage in training_sets %}
-        {% include "training/includes/show_info.html" %}
-    {% endfor %}
+    {% if training_sets %}
+        {% for trainpage in training_sets %}
+            {% include "training/includes/show_info.html" %}
+        {% endfor %}
+    {% else %}
+        <h3>No saved transcriptions sets.</h3>
+    {% endif %}
 </div>

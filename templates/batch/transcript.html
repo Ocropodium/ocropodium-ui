@@ -25,6 +25,15 @@
 {% block subtoolbar %}
     <div class="sub_toolbar" id="transcript_toolbar">
         <div id="tsnavform" >
+            <span id="vlink">
+                <input type="radio" id="vlink_off" name="vlink" value="off"  />
+                <label for="vlink_off">Off</label>
+                <input type="radio" id="vlink_click" name="vlink" value="click" checked="checked" />
+                <label for="vlink_click">click</label>  
+                <input type="radio" id="vlink_hover" name="vlink" value="hover"  />
+                <label for="vlink_hover">Hover</label>  
+            </span>
+            <span>&nbsp;&nbsp;&nbsp;</span>
             <span id="format">
                 <input type="radio" id="format_block" name="format" checked="checked" />
                 <label for="format_block">Block</label>
@@ -37,23 +46,19 @@
             <input type="checkbox" id="spellcheck" />
             <label for="spellcheck">Spellcheck</label>
             <span>&nbsp;&nbsp;&nbsp;</span>
-            <span id="vlink">
-                <input type="radio" id="vlink_off" name="vlink" value="off"  />
-                <label for="vlink_off">Off</label>
-                <input type="radio" id="vlink_click" name="vlink" value="click" checked="checked" />
-                <label for="vlink_click">click</label>  
-                <input type="radio" id="vlink_hover" name="vlink" value="hover"  />
-                <label for="vlink_hover">Hover</label>  
-            </span>
+            <input type="checkbox" id="heading" />
+            <label for="heading">H</label>
+            <span>&nbsp;&nbsp;&nbsp;</span>
             <div id="page_slider"></div>
             <button id="prev_page">Previous</button>
             <button id="next_page">Next</button>
             <span>&nbsp;&nbsp;&nbsp;</span>
             <button id="save_data">Save Text</button>
             <button id="save_training_data">Save Training Page</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
             
             <input type="hidden" name="batch_id" value="{{batch.pk}}" id="batch_id" />
-            <input type="hidden" name="initial" value="{{initial}}" id="initial" />
+            <input type="hidden" name="initial" value="{{initial|default_if_none:0}}" id="initial" />
 
         </div>        
     </div>

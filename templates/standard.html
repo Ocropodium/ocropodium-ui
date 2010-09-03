@@ -64,8 +64,10 @@
                         <li>
                             <a id="list_batch" href="/batch/list/">List</a>
                         </li>
+                        <li>
+                            <a href="/ocrtasks/">All Tasks</a>
+                        </li>
                     </ul>
-
                 </li> 
             </ul>
             <ul>
@@ -76,10 +78,7 @@
                             <a id="new_training" href="/training/new/">Submit Training Job</a>
                         </li>
                         <li>
-                            <a id="new_comparison" href="/training/compare/">Compare Models</a>
-                        </li>
-                        <li>
-                        <a id="list_training" href="/training/list/">Training Sets</a>
+                            <a id="list_training" href="/training/list/">Training Sets</a>
                         </li>
                     </ul>
 
@@ -88,15 +87,19 @@
             {% endif %}
             <ul>
                 <li>
-                    <h3><a {% ifequal request.path "/ocrmodels/" %}class="current"{% endifequal %}
-                        href="/ocrmodels/">Models</a></h3>
+                    <h3 class="top">Models</h3>
+                    <ul>
+                        <li>
+                            <a id="new_batch" href="/ocrmodels/new/">New</a>
+                        </li>
+                        <li>
+                            <a id="list_batch" href="/ocrmodels/list/">List</a>
+                        </li>
+                        <li>
+                            <a id="new_comparison" href="/training/compare/">Compare Models</a>
+                        </li>
+                    </ul>
                 </li> 
-            </ul>
-            <ul>
-                <li>
-                    <h3><a {% ifequal request.path "/ocrtasks/" %}class="current"{% endifequal %}
-                        href="/ocrtasks/">Tasks</a></h3>
-                </li>
             </ul>
             <ul>
                 <li>

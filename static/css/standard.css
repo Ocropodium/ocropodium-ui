@@ -137,23 +137,6 @@ body {
 }
 
 
-legend.collapsed, legend.expanded {
-    padding-left: 15px;
-    background-repeat: no-repeat;
-    background-position: left center;
-    cursor: pointer;
-}
-
-legend.collapsed {
-    background-image: url("/static/vt_scroll_right.gif");
-}
-
-
-legend.expanded {
-    background-image: url("/static/hz_scroll_down.gif");
-}
-
-
 a.button {
     background: #E6E6E6 url(/static/gradient_grey.png) repeat-x 50% 50%;
     border: 1px solid #D2D2D2;

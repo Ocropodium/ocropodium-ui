@@ -1,12 +1,13 @@
 
 {% include "includes/form_errors.html" %}
-<div id="new_training" class="ui-tabs ui-tabs-panel ui-widget-content ui-corner-bottom">
-    <div id="tabs">
-        <ul>
-            <li><a id="tabs_1_link" href="#tabs_1">Training Options</a></li>
-        </ul>
-        <div id="tabs_1">
-            <div class="form_body">
+<div id="tabs">
+    <ul>
+        <li><a id="tabs_1_link" href="#tabs_1">Training Options</a></li>
+    </ul>
+    <div id="tabs_1">
+        <div class="form_body">
+            <fieldset>
+                <legend>Model Information</legend>
                 <div class="field_wrapper">
                     <label for="id_name">Ref Name:</label>
                     {{ form.name }}
@@ -22,7 +23,9 @@
                     <label for="id_notes">Output Model Notes:</label>
                     {{ form.notes }}
                 </div>
-                <h4>Select Ground Truth</h4>
+            </fieldset>
+            <fieldset>
+                <legend>Ground Truth</legend>
                 <div class="toggle_box" id="ground_truth_list">
                     <div class="field_wrapper">
                         {% for tset in tsets %}
@@ -34,12 +37,12 @@
                         {% endfor %}
                     </div>
                 </div>
-            </div>
-            <div class="form_footer">
-                <div class="form_submit_buttons">
-                    <input type="submit" value="Submit Model Training Job" disabled="disabled"
-                        id="submit_new_training_form" />
-                </div>
+            </fieldset>
+        </div>
+        <div class="form_footer">
+            <div class="form_submit_buttons">
+                <input type="submit" value="Submit Model Training Job" disabled="disabled"
+                    id="submit_new_training_form" />
             </div>
         </div>
     </div>

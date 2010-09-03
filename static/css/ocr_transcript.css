@@ -32,6 +32,11 @@
     margin: 3px 0px;
 }
 
+h1.ocr_line {
+    font-size: 1.5em;
+    margin: 10px 0px;
+}
+
 .toolbar_item {
     float: left;
 }
