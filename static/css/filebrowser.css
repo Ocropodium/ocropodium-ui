@@ -41,6 +41,7 @@ td {
     border-bottom: 1px solid #D0D0D0;
     border-top: 1px solid #D0D0D0;
     float: left;
+    background-color: #FFF;
 }
 
 .fbcontrols {
@@ -186,3 +187,71 @@ td {
         rgb(240,240,240) 50%
     );
 }
+
+.paginators * {
+    color: #999;
+}
+
+.paginators a:visited {
+    color: #999;
+}
+
+.list_controls {
+    font-size: 0.9em;
+    color: #999999;
+    height: 30px;
+    padding: 5px 5px 0px 5px;
+}
+
+.list_controls_right {
+    overflow: auto;
+}
+
+.list_controls_right .filter_container {
+    float: right;
+}
+
+.list_controls input[type="text"] {
+    width: 20px;
+    border: 1px solid #999999;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    background-color: #FDFDFF;
+} 
+
+.list_controls input[type="text"]:disabled {
+    background-color: #FCFCFC;
+}
+
+.list_controls input[type="button"] {
+    height: 20px;
+    font-size: 10px;
+}
+
+.list_popup {
+    float: right;
+    position: absolute;
+    background-color: #FFF;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+    padding: 3px;
+}
+
+.list_popup div.status_filter * {    
+    float: left;
+}
+
+.list_popup label {
+    color: #000;
+    width: 5em;
+    text-align: right;
+}
+
+.toggle_button {
+    padding: 2px 5px;
+    margin: 0px 5px;
+    cursor: pointer;
+}
+
+

@@ -67,13 +67,30 @@ $(function() {
         },        
     });
 
-    tasks = new TaskListWidget(
-        $("#task_list").get(0), 
-        new TaskDataSource(),
-        {
-            multiselect: true,
+    // init filters
+    var statusfilter = $("#status_filter");
+    $(".filter_type", statusfilter).click(function(event) {
+        if ($(this).attr("checked")) {
+            $("#filter_none:checked", statusfilter).removeAttr("checked");
         }
-    );
+    });  
+    $(".filter_button", statusfilter).hover(function(event) {
+        $(this).addClass("ui-state-hover");
+    }, function(event) {
+        $(this).removeClass("ui-state-hover");
+    })
+    $(".toggle_button", statusfilter).toggle(function(event) {
+        $(this).addClass("ui-state-active");
+        $(".list_popup", statusfilter).show();
+    }, function(event) {
+        $(this).removeClass("ui-state-active");
+        $(".list_popup", statusfilter).hide();
+    });
+
+    var taskds = new TaskDataSource();
+    tasks = new TaskListWidget($("#task_list").get(0), taskds, {
+        multiselect: true,
+    });
     tasks.setupEvents();
 
     // FIXME!  Get rid of this overridden hacked function

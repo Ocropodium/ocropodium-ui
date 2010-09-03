@@ -63,10 +63,9 @@
 <div class="widget" id="batch_list_widget">
     <div class="widget_header">Project Batches:</div>
     <div class="widget_content">
-        <div id="batch_list_controls">
-            <div id="batch_list_controls_right">            
-                <form name="controls" id="batch_list_controls_form" action="/batch/list/" method="GET">
-                    <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
+        <div class="list_controls">
+            <div class="list_controls_right">            
+                <form name="controls" class="list_controls_form" action="/batch/list/" method="GET">
                     Auto-Refresh:
                     <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
                     <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />

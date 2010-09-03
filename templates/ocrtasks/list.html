@@ -61,12 +61,51 @@
 {% endif %}
 
 <div class="widget" id="task_list_widget">
-    <div class="widget_header">Tasks:</div>
+    <div class="widget_header">OCR Tasks</div>
     <div class="widget_content">
-        <div id="task_list_controls">
-            <div id="task_list_controls_right">            
-                <form name="controls" id="task_list_controls_form" action="/ocrtasks/list/" method="GET">
-                    <input type="button" name="clear" id="clear_tasks" value="Clear" disabled="disabled" />
+        <div class="list_controls">
+            <div class="list_controls_right">
+                <div id="status_filter" class="filter_container">
+                    <div class="toggle_button ui-state-default ui-corner-all">
+                        Filter Tasks
+                    </div>
+                    <div class="list_popup" style="display: none; ">
+                        <div class="status_filter" checked="true">
+                            <label class="status_label" for="ALL">ALL</label>
+                            <input type="checkbox" name="ALL" id="filter_none">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="INIT">INIT</label>
+                            <input type="checkbox" name="INIT" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="PENDING">PENDING</label>
+                            <input type="checkbox" name="PENDING" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="RETRY">RETRY</label>
+                            <input type="checkbox" name="RETRY" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="STARTED">STARTED</label>
+                            <input type="checkbox" name="STARTED" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="SUCCESS">SUCCESS</label>
+                            <input type="checkbox" name="SUCCESS" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="ERROR">ERROR</label>
+                            <input type="checkbox" name="ERROR" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="ABORTED">ABORTED</label>
+                            <input type="checkbox" name="ABORTED" class="filter_type">
+                        </div>
+                    </div>
+                </div>
+
+                <form name="controls" class="list_controls_form" action="/ocrtasks/list/" method="GET">
                     Auto-Refresh:
                     <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
                     <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
