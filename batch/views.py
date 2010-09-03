@@ -402,8 +402,8 @@ def latest(request):
             user=request.user, 
             project=request.session["project"]
         ).order_by("-created_on")[0]
-    except OcrBatch.DoesNotExist:
-        raise Http404
+    except (OcrBatch.DoesNotExist, IndexError), e:
+        batch = None
 
     return _show_batch(request, batch)
 
