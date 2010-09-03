@@ -269,7 +269,7 @@ $(function() {
 
     // refrwesh on compparm enter
     $(".compparam > input").live("keydown", function(event) {
-        if (event.keyCode == 13) {
+        if (event.keyCode == KC_RETURN) {
            refreshImage();            
            return false;
         }
@@ -360,14 +360,24 @@ $(function() {
     });
 
     // bind 1-2-3 and a-b-s to viewer outputs
-    $(window).bind("keypress.viewer", function(event) {
-        if (String.fromCharCode(event.which).toLowerCase().match(/[a2]/)) {
-            $("#output_a").click().button("refresh");
-        } else if (String.fromCharCode(event.which).toLowerCase().match(/[b3]/)) {
-            $("#output_b").click().button("refresh");
-        } else if (String.fromCharCode(event.which).toLowerCase().match(/[s1]/)) {
-            $("#output_s").click().button("refresh");
-        }  
+    $("#viewerwindow").bind("mouseenter mouseleave", function(mouseevent) {
+        if (mouseevent.type == "mouseenter") {
+            $(window).bind("keypress.viewer", function(event) {
+                if (String.fromCharCode(event.which).toLowerCase().match(/[a]/)) {
+                    $("#output_a").click().button("refresh");
+                } else if (String.fromCharCode(event.which).toLowerCase().match(/[b]/)) {
+                    $("#output_b").click().button("refresh");
+                } else if (String.fromCharCode(event.which).toLowerCase().match(/[s]/)) {
+                    $("#output_s").click().button("refresh");
+                } else if (String.fromCharCode(event.which).toLowerCase().match(/[t]/)) {
+                    sdviewer.toggleSrc();
+                } else if (String.fromCharCode(event.which).toLowerCase().match(/[o]/)) {
+                    sdviewer.toggleAB();
+                }  
+            });
+        } else {
+            $(window).unbind("keypress.viewer");
+        }
     });
 
 
