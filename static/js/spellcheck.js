@@ -10,13 +10,6 @@ function SuggestionList() {
     m_container = $("<div></div>")
         .attr("id", "sp_suggestionlist");
 
-    const
-    DOWN    = 40,
-    UP      = 38,
-    ESCAPE  = 27,
-    ENTER   = 13;
-
-
     // events
     $(".sp_suggestion").live("click", function(event) {
         selectSuggestion($(this));
@@ -65,26 +58,25 @@ function SuggestionList() {
     
     this.keyEvent = function(event) {
         if (event.type != "keydown")
-            return false;
-        if (event.keyCode == DOWN) {
+        if (event.keyCode == KC_DOWN) {
             var sel = m_container.find(".selected").next();
             if (sel.length == 0) {
                 sel = m_container.find(".sp_suggestion").first();
             }
             selectSuggestion(sel);
-        } else if (event.keyCode == UP) {
+        } else if (event.keyCode == KC_UP) {
             var sel = m_container.find(".selected").prev();
             if (sel.length == 0) {
                 self.looseFocus();
             }
             selectSuggestion(sel);
-        } else if (event.keyCode == ENTER) {
+        } else if (event.keyCode == KC_ENTER) {
             var sel = m_container.find(".selected").first();
             self.suggestionChosen(sel.text());
-        } else if (event.keyCode == ESCAPE) {
+        } else if (event.keyCode == KC_ESCAPE) {
             self.looseFocus();
         }
-        return false;
+        event.preventDefault();
     }
 
 
@@ -146,12 +138,6 @@ function Spellchecker(parent, selector) {
     m_container = $("<div></div>")
         .attr("id", "sp_container");
 
-    const
-    DOWN    = 40,
-    UP      = 38,
-    ESCAPE  = 27,
-    ENTER   = 13;
-
     
     /*
      *  Events...
@@ -206,7 +192,6 @@ function Spellchecker(parent, selector) {
             m_wordindex = Math.max(0, m_wordindex - 1);
         else
             m_wordindex = Math.min(badcount, m_wordindex + 1);
-        alert(m_wordindex);
         return next; 
     }
 
@@ -280,8 +265,9 @@ function Spellchecker(parent, selector) {
         var buttons = {
             sp_next: "Next",
             sp_prev: "Prev",
-            sp_all: "Something",
-            sp_adddict: "Add to Dict",
+            sp_ignore: "Ignore Word",
+            sp_ignoreall: "Ignore All",
+            sp_adddict: "Add to Dictionary",
         };
         $.each(buttons, function(key, val) {
             buttoncontainer.append(
@@ -302,11 +288,14 @@ function Spellchecker(parent, selector) {
     this.takeFocus = function() {
         m_lineedit.unbind("keydown.le");
         m_lineedit.bind("keydown.le", function(event) {
-            if (event.keyCode == UP || event.keyCode == DOWN) {
+            if (event.keyCode == KC_UP || event.keyCode == KC_DOWN) {
                 $(this).blur();
                 m_suggestions.takeFocus(event);
-                return false;
-            } else if (event.keyCode == ENTER) {
+                event.preventDefault();
+            } else if (event.keyCode == KC_TAB) {
+                setNextSpellcheckWord(event.shiftKey);
+                event.preventDefault();
+            } else if (event.keyCode == KC_RETURN) {
                 var correctelem = $(this).data("current");
                 var correcttext = $(this).val();
                 setNextSpellcheckWord(event.shiftKey);
@@ -316,7 +305,7 @@ function Spellchecker(parent, selector) {
                         self.onWordCorrection();
                     }
                 }
-                return false;
+                event.preventDefault();
             }
         });
     }

@@ -289,9 +289,11 @@ function OcrLineEditor(insertinto_id) {
             backspace();
         } else if (event.which == KC_SHIFT) {
         } else {
+            return;
             //alert(event.which);
         }
         blinkCursor(false);    
+        event.preventDefault();
     }
 
     var charClicked = function(event) {
@@ -484,7 +486,8 @@ function OcrLineEditor(insertinto_id) {
             if (event.charCode == 0)
                 return;
             m_keyevent = event;
-            insertChar();        
+            insertChar();
+            event.preventDefault();        
         });
         window.getSelection().removeAllRanges();
                 

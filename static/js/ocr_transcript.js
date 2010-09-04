@@ -4,7 +4,7 @@
 
 function OcrTranscript(insertinto_id, batch_id, initial) {
     var m_batch_id = batch_id;
-    var m_page = initial != null ? initial : 0;
+    var m_page = initial || 0;
 
     var m_batchdata = null;
 
@@ -127,7 +127,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
     }
 
     this.setPage = function(page_index) {
-        m_page = page_index;
+        m_page = page_index || 0;
         self.refreshPageData();
     }
 
@@ -260,7 +260,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
 //    });
 
     $(window).bind("keydown.tabshift", function(event) {        
-        if (event.keyCode == TAB) {
+        if (!m_spellchecking && event.keyCode == TAB) {
             var elem;
             if (m_currentline) {
                 elem = event.shiftKey
@@ -321,10 +321,11 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
                 self.endSpellcheck();
             else
                 self.startSpellcheck();            
-        } else if (event.keyCode == KC_ESCAPE) {
-            if (m_spellchecking)
-                self.endSpellcheck();
         }
+        //else if (event.keyCode == KC_ESCAPE) {
+        //    if (m_spellchecking)
+        //        self.endSpellcheck();
+        //}
     });
 
     $(".ocr_line").live("dblclick.editline", function(event) {
