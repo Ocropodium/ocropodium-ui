@@ -15,6 +15,7 @@
     padding: 0px;
 }
 
+    <link rel="stylesheet" href="/static/css/standard.css" type="text/css" media="screen" />
 .suggestion_window ul {
     margin: 0px;
     padding: 0px;
@@ -90,21 +91,6 @@
 
 .active_word {
     background-color: #FFAAAA;
-}
-
-.sp_suggestion.selected {
-    background: -webkit-gradient(
-        linear,
-        left bottom,
-        left top,
-        color-stop(0.35, rgb(135,180,255)),
-        color-stop(0.48, rgb(143,184,255))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(135,180,255) 35%,
-        rgb(143,184,255) 48%
-    );
 }
 
 #sp_lineedit {

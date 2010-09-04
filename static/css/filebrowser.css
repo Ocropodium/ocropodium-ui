@@ -97,21 +97,6 @@ td {
     );
 }
 
-.selected {
-    background: -webkit-gradient(
-        linear,
-        left bottom,
-        left top,
-        color-stop(0.35, rgb(135,180,255)),
-        color-stop(0.48, rgb(143,184,255))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(135,180,255) 35%,
-        rgb(143,184,255) 48%
-    );
-}
-
 .listhead th {
     padding: 5px 0px 5px 5px;
 }

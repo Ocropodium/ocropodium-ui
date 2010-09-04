@@ -41,11 +41,6 @@ a.preset_control:hover {
     background-color: #FBFBFB;
 }
 
-.pm_preset_list li.selected {
-    background-color: #6A94B2;
-    color: #F0F0F0; 
-}
-
 .pm_preset_details {
     margin-bottom: 5px;
     padding: 5px;

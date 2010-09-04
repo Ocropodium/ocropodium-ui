@@ -29,7 +29,7 @@
 
 .ocr_line.selected {
     color: #000;
-    background-color: #FFFFAA;
+    background: #FFFFAA;
 }
 
 .ocr_line span.sl {

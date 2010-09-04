@@ -44,6 +44,7 @@ h1.ocr_line {
 .transcript_lines {
     background-color: #FFF;
     padding: 10px;
+    min-height: 200px;
 }
 
 #scroll_container {

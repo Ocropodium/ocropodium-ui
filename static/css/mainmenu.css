@@ -28,6 +28,10 @@
     );
 }
 
+#menu ul {
+    cursor: pointer;
+}
+
 #menu a {
     display: block;
     white-space: nowrap;
@@ -39,7 +43,12 @@
     white-space: nowrap;
     margin: 0;
     padding: 5px 20px 5px 5px;
-    color: #333;
+    font-weight: normal;
+}
+
+#menu ul ul a, .disabled_option {
+    padding: 5px 40px 5px 5px;
+    font-size: 1.1em;
 }
 
 #menu h3.top {
@@ -54,24 +63,23 @@
     border-left: 1px solid transparent;
 }
 
-#menu ul li.selected {
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    border-top: 1px solid #666;
-    border-right: 1px solid #666;
-    border-left: 1px solid #666;
-    background: -webkit-gradient(
-        linear,
-        left bottom,
-        left top,
-        color-stop(0.35, rgb(135,180,255)),
-        color-stop(0.48, rgb(143,184,255))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(135,180,255) 35%,
-        rgb(143,184,255) 48%
-    );
+#menu ul {
+    border: 1px solid transparent;
+}
+
+#menu ul.selected {
+    color: #FFF;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    -moz-border-radius-topleft: 3px;
+    -moz-border-radius-topright: 3px;
+    border-top: 1px solid #4B6E99;
+    border-right: 1px solid #4B6E99;
+    border-left: 1px solid #4B6E99;
+}
+
+#menu.selected * {
+    color: #FFF;
 }
 
 #menu h3.right {
@@ -84,12 +92,12 @@
     text-decoration: none;
 }
 
-#menu a, #menu a:visited {
+#menu ul a, #menu a:visited {
     color: #060606;
 }
 
-#menu a:hover {
-    color: #333;
+#menu ul a:hover {
+    color: #FFF;
 }
 
 #menu a:active {
@@ -104,7 +112,6 @@
 
 #menu li {
     position: relative;
-    padding: 0px 5px 0px 5px;
 }
 
 #menu ul ul {
@@ -124,62 +131,30 @@
 }
 
 #menu ul ul li {
-    padding: 5px 20px 5px 5px;
+    border: 1px solid transparent;
 }
 
 #menu ul ul li:hover {
+    color: #FFF;
     background-color: #F8F8F8;
+    border: 1px solid #4B6E99;
+    background: -webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        color-stop(0.95, rgb(132,170,216)),
+        color-stop(0.25, rgb(161,192,231))
+    );
+    background: -moz-linear-gradient(
+        left bottom,
+        rgb(132,170,216) 25%,
+        rgb(161,192,231) 95%
+    );
 }
 
 .disabled_option {
     color: #BBB;
-    cursor: text;
-}
-
-/* Begin non-anchor hover selectors */
-
-/* Enter the more specific element (div) selector
-on non-anchor hovers for IE5.x to comply with the
-older version of csshover.htc - V1.21.041022. It
-improves IE's performance speed to use the older
-file and this method */
-
-div#menu h3:hover {
-}
-
-div#menu li:hover {
-cursor: pointer;
-z-index: 100;
-}
-
-div#menu li:hover ul ul,
-div#menu li li:hover ul ul,
-div#menu li li li:hover ul ul,
-div#menu li li li li:hover ul ul
-{display: none;}
-
-
-/* The following commented out section makes the menu
- * open on hover.  We don't want this for now. */
-/*div#menu li:hover ul,*/
-div#menu li li:hover ul,
-div#menu li li li:hover ul,
-div#menu li li li li:hover ul
-{display: block;}
-
-/* End of non-anchor hover selectors */
-
-/* Styling for Expand */
-
-#menu a.x, #menu a.x:visited {
-    color: #020202;
-    font-weight: normal;
-}
-
-#menu a.x:hover {
-    color: #020202;
-}
-
-#menu a.x:active {
+    background: inherit;
+    cursor: auto;
 }
 

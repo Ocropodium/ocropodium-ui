@@ -11,17 +11,21 @@ body {
 }
 
 #login_info {
-    margin-top: 5px;
+    margin-top: 8px;
     margin-right: 5px;
     color: #999;
     float: right;
-    font-size: 0.8em;
+    font-size: 0.9em;
 }
 
 #login_info a {
-    color: #666;
-    font-weight: bold;
+    margin-left: 5px;
     display: inline;
+    text-decoration: underline;
+}
+
+#login_info a:hover {
+    background-color: #FFFFDD;
 }
 
 .sub_toolbar {
@@ -235,4 +239,20 @@ a.button:hover {
     float: left;
     clear: left;
     position: relative;
+}
+
+.selected {
+    background: -webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        color-stop(0.95, rgb(132,170,216)),
+        color-stop(0.25, rgb(161,192,231))
+    );
+    background: -moz-linear-gradient(
+        left bottom,
+        rgb(132,170,216) 25%,
+        rgb(161,192,231) 95%
+    );
+
 }
