@@ -239,7 +239,7 @@ $(function() {
         stop: function(e, ui) {
             var val = $("#page_slider").slider("option", "value") - 1;
             if (val != transcript.page()) {
-                transcript.setPage();
+                transcript.setPage(val);
             }
         },
         
@@ -248,11 +248,14 @@ $(function() {
     $("#prev_page").click(function(event) {
         var curr = $("#page_slider").slider("option", "value");
         $("#page_slider").slider("option", "value", curr - 1);
+        transcript.setPage(transcript.page() -1);
     });
+        
 
     $("#next_page").click(function(event) {
         var curr = $("#page_slider").slider("option", "value");
         $("#page_slider").slider("option", "value", curr + 1);
+        transcript.setPage(transcript.page() + 1);
     });
     
     // line formatter object
