@@ -10,12 +10,13 @@ from django.conf import settings
 
 
 
-def isri_accuracy(gttext, text):
+def isri_accuracy(logger, gttext, text):
     """
     Run the ISRI accuracy tool on a groundtruth
     and some random text.
     """
-    accuracybin = os.path.join(settings.BIN_PATH, "accuracy")
+    accuracybin = os.path.join(settings.BIN_PATH, settings.ARCH, "accuracy")
+
     with tempfile.NamedTemporaryFile() as gtf:
         gtf.write(smart_str(gttext))
         gtf.flush()

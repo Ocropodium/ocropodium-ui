@@ -219,6 +219,8 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
                     m_pagedata = data[0];
                     self.onPageLoad();
                     setPageLines(data[0]);
+                    if (m_spellchecking)
+                        m_speller.spellCheck($(".ocr_line"));
                 }               
             },
         });    

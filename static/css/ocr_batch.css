@@ -76,7 +76,14 @@
     background-position: center left;
     background-repeat: no-repeat;
     float: left;
+}
 
+.batch_header.fedora {
+    background-image: url(/static/icons/fedora.png);
+}
+
+.batch_header.compare {
+    background-image: url(/static/icons/compare.png);
 }
 
 .batch_name {

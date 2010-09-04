@@ -236,6 +236,21 @@ def score_models(request):
 
 @project_required
 @login_required
+def comparison_from_batch(request):
+    """
+    View details of a model comparison.
+    """
+    batch = get_object_or_404(OcrBatch, pk=request.GET.get("batch", 0))
+    try:
+        cpk = batch.ocrcomparison.pk
+    except OcrComparison.DoesNotExist:
+        cpk = 0
+    return comparison(request, cpk)
+
+
+
+@project_required
+@login_required
 def comparison(request, pk):
     """
     View details of a model comparison.

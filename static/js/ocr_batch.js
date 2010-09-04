@@ -134,9 +134,17 @@ function OcrBatch(insertinto_id, batch_id) {
 
     var setupEvents = function() {
         $(".batch_task").bind("dblclick", function(event) {
-            var index = $(this).data("index");            
-            document.location.href = "/batch/transcript/" + m_batchdata.pk
+            var index = $(this).data("index");
+            var batchclass = getBatchClass(m_batchdata.fields.task_type);
+            if (batchclass == "compare") {
+                document.location.href = "/training/comparison?batch=" + 
+                    m_batchdata.pk;
+            } else if (batchclass == "fedora") {
+
+            } else {
+                document.location.href = "/batch/transcript/" + m_batchdata.pk
                 + "/?page=" + (index + m_taskoffset);
+            }
         });
 
         $(".batch_task").bind("click", function(event) {
@@ -453,16 +461,28 @@ function OcrBatch(insertinto_id, batch_id) {
 
 
     var setBatchResults = function(batchdata) {
+        var batchclass = getBatchClass(m_batchdata.fields.task_type);
         var batch = m_batchdiv.find(".batch");
         batch.attr("id", "batch" + batchdata.pk)
+        batch.find(".batch_header").attr("class", "batch_header " + batchclass);
 
         // set titles
         batch
             .find(".batch_name")
             .text(batchdata.fields.name)
-            .end()        
-            .find(".transcript_link")
-            .attr("href", "/batch/transcript/" + batchdata.pk + "/");
+        var link = batch
+            .find(".transcript_link");
+        if (batchclass == "compare") {
+            link
+                .attr("href", "/training/comparison?batch=" + batchdata.pk)
+                .text("Comparison Results");
+        } else if (batchclass == "fedora") {
+
+        } else {
+            link
+                .attr("href", "/batch/transcript/" + batchdata.pk + "/")
+                .text("View Transcripts")
+        }
 
         // update links with the batch id
         batch.find(".retry_batch")
@@ -654,5 +674,10 @@ function OcrBatch(insertinto_id, batch_id) {
     // objects seem to get jumbled up.
     this.pollForResults = function(polltime) {
         pollForResults(polltime);
+    }
+
+    var getBatchClass = function(task_type) {
+        return task_type.substr(0, 
+                task_type.search(/\./));
     }
 }

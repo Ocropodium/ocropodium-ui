@@ -435,7 +435,6 @@ def upload_files(request):
     try:
         outdir = ocrutils.FileWrangler(
                 username=request.user.username, temp=False, stamp=False, action=None)()
-        print "OUTDIR: ", outdir
         paths = ocrutils.save_ocr_images(request.FILES.iteritems(),  outdir)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
@@ -635,7 +634,8 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None):
         [batch],
         extras=("estimate_progress", "is_complete",),
         relations={
-            "user":  { "fields": ("username") }
+            "user":  { "fields": ("username") },
+            "ocrcomparison": {"fields": () },
         },
     )
     taskssl = pyserializer.serialize(

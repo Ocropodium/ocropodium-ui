@@ -71,7 +71,7 @@ class OcrModelScore(models.Model):
     A record of a job scoring a model on a given
     ground truth.
     """
-    comparison = models.ForeignKey("OcrModelScoreComparison", 
+    comparison = models.ForeignKey("OcrComparison", 
             related_name="modelscores")
     model = models.ForeignKey(OcrModel, related_name="comparisons")
     task  = models.OneToOneField(OcrTask, related_name="modelscore") 
@@ -83,12 +83,12 @@ class OcrModelScore(models.Model):
     error = fields.PickledObjectField(blank=True, null=True)
 
 
-class OcrModelScoreComparison(models.Model):
+class OcrComparison(models.Model):
     """
     A comparison between two model scores
     """
     name = models.CharField(max_length=255)
-    batch = models.ForeignKey(OcrBatch)
+    batch = models.OneToOneField(OcrBatch)
     notes = models.TextField(null=True, blank=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
 

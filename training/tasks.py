@@ -152,6 +152,7 @@ class ComparisonTask(AbortableTask):
         assert(outdata.get("lines"))
 
         accuracy, details = utils.isri_accuracy(
+                logger, 
                 ocrutils.output_to_plain_text(groundtruth.data),
                 ocrutils.output_to_plain_text(outdata))
         # there's be no details if something went wrong

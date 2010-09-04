@@ -149,7 +149,9 @@ def create(request):
     """
         Create a new model.
     """
-
+    print request.POST, request.FILES
+    for n, f in request.FILES.iteritems():
+        print n, f, f.content_type
     form = OcrModelForm(request.POST, request.FILES)
     if not form.is_valid():
         context = {"form": form}        
