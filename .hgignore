@@ -5,6 +5,7 @@ syntax: glob
 *.o
 *.pro.user
 *.swp
+*.swo
 *.pyc
 
 syntax: regexp
