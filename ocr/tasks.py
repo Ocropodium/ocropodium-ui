@@ -82,7 +82,17 @@ class ConvertPageTask(AbortableTask):
             logger.info("WORKING OUT BIN & SEG paths")
             stdpath = os.path.join(outdir, os.path.basename(filepath))
             if not os.path.exists(outdir):
-                os.makedirs(outdir, 0777)
+                try:
+                    os.makedirs(outdir, 0777)
+                except OSError, (errno, strerr):
+                    # counter weird error when other tasks can make
+                    # the directory after the test but before the
+                    # operation.  Errno 17 is the already exists
+                    # error.
+                    if errno == 17:
+                        pass
+                    else:
+                        raise OSError(errno, strerr)
                 os.chmod(outdir, 0777)
             paramdict["binout"] = utils.get_media_output_path(stdpath, "bin", ".png")
             paramdict["segout"] = utils.get_media_output_path(stdpath, "seg", ".png")
