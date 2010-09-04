@@ -150,7 +150,7 @@ def score_models(request):
     lmodel = get_object_or_404(OcrModel, pk=request.POST.get("lmodel", 0))
     cmodel_a = get_object_or_404(OcrModel, pk=request.POST.get("cmodel_a", 0))
     cmodel_b = get_object_or_404(OcrModel, pk=request.POST.get("cmodel_b", 0))
-    name = "%s %s" % (cmodel_a.name, cmodel_b.name)
+    name = "%s/%s" % (cmodel_a.name, cmodel_b.name)
 
     print request.POST
     try:
@@ -174,11 +174,11 @@ def score_models(request):
     asyncparams = []
 
     # create a batch db job
-    batch = OcrBatch(user=request.user, name="%s Job Batch" % name, description="",
+    batch = OcrBatch(user=request.user, name="Model Scoring", description="",
             task_type=ComparisonTask.name, batch_type="COMPARISON", project=request.session["project"])    
     batch.save()
 
-    comparison = OcrModelScoreComparison(
+    comparison = OcrComparison(
         name=name,
         notes=notes,
         batch=batch,
@@ -240,7 +240,7 @@ def comparison(request, pk):
     """
     View details of a model comparison.
     """
-    comparison = get_object_or_404(OcrModelScoreComparison, pk=pk)
+    comparison = get_object_or_404(OcrComparison, pk=pk)
     scores = comparison.modelscores.order_by("pk", "ground_truth", "model")
     ordered = {}
     for score in scores:
@@ -270,6 +270,8 @@ def comparison(request, pk):
     context = dict(
         comparison=comparison,
         ordered=ordered,
+        model_a=model_a,
+        model_b=model_b,
         total_a=total_a,
         total_b=total_b,
     )
