@@ -231,7 +231,7 @@ def score_models(request):
         publisher.close()
         publisher.connection.close()
 
-    return HttpResponseRedirect("/training/comparison/%s/" % comparison.pk) 
+    return HttpResponseRedirect("/batch/show/%s/" % batch.pk) 
     
 
 @project_required
