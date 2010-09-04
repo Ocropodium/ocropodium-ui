@@ -16,7 +16,7 @@
 //
 
 jQuery.fn.extend({ 
-    disableSelection : function() { 
+    disallowSelection : function() { 
         this.each(function() { 
             this.onselectstart = function() { return false; }; 
             this.unselectable = "on"; 
@@ -109,7 +109,7 @@ function OcrBatch(insertinto_id, batch_id) {
         createBatchHeaderUi();    
         createTaskListUi();
         m_container.append(m_header).append(m_batchdiv).appendTo("#" + insertinto_id);
-        $(".batch_task").disableSelection();
+        $(".batch_task").disallowSelection();
         setupEvents();
     }
 
