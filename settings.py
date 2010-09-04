@@ -4,6 +4,7 @@
 import os
 import sys
 import socket
+import subprocess as sp
 
 # Ensure celery/lazy loading Django models play nice 
 import djcelery
@@ -24,9 +25,17 @@ if SITE_ROOT.find("/dev/") == -1:
     sys.stdout = sys.stderr
     SERVER = True
 
-
 # don't run in debug mode on the servers
 DEBUG = TEMPLATE_DEBUG = not SERVER
+
+# get architecture for the system we're running
+# on - this is mainly for choosing the correct
+# executable for the isri tools in bin/
+ARCH = sp.Popen(
+    ["uname -m"],
+    shell=True,
+    stdout=sp.PIPE
+).communicate()[0].strip()
 
 ADMINS = (
     ('Michael Bryant', 'mikesname@gmail.com'),
