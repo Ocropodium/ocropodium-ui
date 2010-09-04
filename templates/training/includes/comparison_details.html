@@ -1,40 +1,50 @@
-{% if comparison.batch.is_complete %}
-    <h3>Model Comparison</h3>    
-{% else %}
-    <h3 class="inprogress">Model Comparison - In Progress: {{comparison.batch.estimate_progress|floatformat:2}}% </h3>
-{% endif %}
+<div id="tabs">
+    <ul>
+        <li><a href="#tab_1">
+                {% if comparison.batch.is_complete %}
+                    Model Comparison
+                {% else %}
+                    <span class="inprogress">Model Comparison - In Progress:
+                        {{comparison.batch.estimate_progress|floatformat:2}}% </span>
+                {% endif %}
+            </a>
+        </li>
+    </ul>
+    <div id="tab_1">
+        <div id="comparison">
+            <table id="comparison_details" class="properties_table">
+                {% for pk, tup in ordered.items %}
+                    <tr class="{% cycle 'odd' 'even' %}">
+                        <td>{{tup.0}}</td>
+                        <td>{{model_a.name}}</td>
+                        <td>{{tup.1.score|default_if_none:"-"}}</td>
+                    </tr>        
+                    <tr>
+                        <td></td>
+                        <td>{{model_b.name}}</td>
+                        <td>{{tup.2.score|default_if_none:"-"}}</td>
+                    </tr>
+               {% endfor %}
+               <tr>
+                   <td></td>
+                   <td></td>
+                   <td></td>
+               </tr>
+                <tr>
+                   <td class="totals">Aggregate</td>
+                    <td class="totals">{{model_a.name}}</td>
+                    <td class="totals">{{total_a|floatformat:2|default_if_none:"-"}}</td>
+                </tr>        
+                <tr>
+                    <td></td>
+                    <td class="totals">{{model_b.name}}</td>
+                    <td class="totals">{{total_b|floatformat:2|default_if_none:"-"}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
 
-<table id="comparison_details" class="properties_table">
-    {% for pk, tup in ordered.items %}
-        <tr>
-            <td>{{tup.0}}</td>
-            <td></td>
-            <td></td>
-        </tr>        
-        <tr>
-            <td></td>
-            <td>{{tup.1.model.name}}</td>
-            <td>{{tup.1.score|default_if_none:"-"}}</td>
-        </tr>        
-        <tr>
-            <td></td>
-            <td>{{tup.2.model.name}}</td>
-            <td>{{tup.2.score|default_if_none:"-"}}</td>
-        </tr>
-   {% endfor %}
-   <tr>
-       <td class="totals">Aggregate</td>
-       <td></td>
-       <td></td>
-   </tr>
-    <tr>
-        <td></td>
-        <td></td>
-        <td class="totals">{{total_a|floatformat:2|default_if_none:"-"}}</td>
-    </tr>        
-    <tr>
-        <td></td>
-        <td></td>
-        <td class="totals">{{total_b|floatformat:2|default_if_none:"-"}}</td>
-    </tr>
-</table>
+
+
+

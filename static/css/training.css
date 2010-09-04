@@ -16,4 +16,26 @@
     float: right;
 }
 
+#comparison {
+    min-height: 400px;
+}
+
+#comparison_details {
+    font-size: 1.1em;
+    background-color: #FFF;
+    padding: 10px;    
+}
+
+#comparison_details tr {
+}
+
+#comparison_details td {
+    padding: 10px;
+}
+
+#comparison_details .totals {
+    font-size: 1.2em;
+    font-weight: bolder;
+}
+
 
