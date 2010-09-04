@@ -12,33 +12,42 @@ $(function() {
         layoutWidgets();            
     }
 
-    function activeMenu() {
+    function deactivateMenu(menu) {
+        $(menu).removeClass("selected")
+            .unbind("click.menuclose")
+            .find("ul").hide();
+        $("div#menu ul.top").unbind("mouseenter.menuover");
+        $(menu).bind("click.menuopen", function(event) {
+            activateMenu(this);        
+        });        
+    }
 
+    function activateMenu(menu) {
+        $(menu).unbind("click.menuopen");
+        $("div#menu ul.top").not($(menu))
+            .removeClass("selected")
+            .unbind("mouseenter.menuover")
+            .bind("mouseenter.menuover", function(event) {
+                activateMenu(this);
+            }).bind("click.menuopen", function(event) {
+                activateMenu(this);    
+            }).find("ul").hide();
+        $(menu).addClass("selected")
+            .bind("click.menuclose", function(event) {
+                deactivateMenu(menu);
+            }).find("ul").show();
+        $(window).bind("keydown.menuclose", function(event) {
+            if (event.keyCode == KC_ESCAPE) {
+                deactivateMenu(menu);
+                $("div#menu ul.top").unbind("click.menuclose");
+                $(window).unbind("keydown.menuclose");
+            }
+        });
     }
 
     // active main menu click dropdown
-    $("div#menu li h3").bind("click.menuopen", function(e1) {
-        $(window).bind("keydown.closemenu", function(event) {
-            if (event.keyCode == 27) 
-                $("div#menu li h3").parent().removeClass("selected").children("ul").hide();
-          
-        });
-        if (!$(this).parent().children("ul").length) 
-            return true;
-        $(this).parent().addClass("selected").children("ul").show();
-        $("div#menu li h3").bind("mouseover.menumove", function(e2) {
-            $("div#menu li h3").parent().removeClass("selected").children("ul").hide();
-        });
-        $("div#menu li h3").bind("mouseover.menushow", function(e3) {
-            $(this).parent().addClass("selected").children("ul").show();
-        });
-        $("div#menu li.selected").add(this).bind("click.menuhide", function(e4) {
-            $(this).removeClass("selected").children("ul").hide();
-            $("div#menu li h3").unbind("mouseout.menumove");
-            $("div#menu li h3").unbind("mouseover.menushow");
-            $("div#menu li").unbind("click.menuhide");
-        });
-        return false;
+    $("div#menu ul.top").bind("click.menuopen", function(e1) {
+        activateMenu(this);
     });
 });
 

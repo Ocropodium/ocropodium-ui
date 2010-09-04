@@ -15,7 +15,6 @@
 	<script type='application/javascript' src='/static/js/constants.js'></script>
     <link rel="stylesheet" href="/static/css/custom-theme/jquery-ui-1.8.4.custom.css" />
     <link rel="stylesheet" href="/static/css/mainmenu.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/standard.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/forms.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/messages.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/projectbrowser.css" type="text/css" media="screen" />
@@ -25,17 +24,22 @@
 
 	{% block headerscript %}{% endblock %}
 	
+    <link rel="stylesheet" href="/static/css/standard.css" type="text/css" media="screen" />
 	<script type='application/javascript' src='/static/js/loadall.js'></script>
 </head>
 <body>
     <div id="app_container">
         <div id="menu">
-            <span id="login_info">
-                Logged in as {{request.user.username}}. <a href="/accounts/logout" alt="Logout">Logout</a>
-            </span>
-            <ul>
+            {% if request.user.username %}
+                <span id="login_info">
+                    Logged in as {{request.user.username}}. <a href="/accounts/logout" alt="Logout">Logout</a>
+                    <a alt="Account Admin" href="/admin/">Admin</a>
+                </span>
+
+            {% endif %}
+            <ul class="top">
                 <li>
-                <h3 class="top"><a href="/projects/list/">Project</a></h3>                
+                <h3>Project</h3>                
                 <ul>
                     <li>
                         <a id="new_project" href="/projects/new/">New Project</a>
@@ -54,9 +58,9 @@
                 </li>
             </ul>
             {% if request.session.project %}
-            <ul>
+            <ul class="top">
                 <li> 
-                    <h3 class="top">Batch</h3>
+                    <h3>Batch</h3>
                     <ul>
                         <li>
                             <a id="new_batch" href="/batch/new/">New</a>
@@ -73,9 +77,9 @@
                     </ul>
                 </li> 
             </ul>
-            <ul>
+            <ul class="top">
                 <li> 
-                    <h3 class="top">Training</h3>
+                    <h3>Training</h3>
                     <ul>
                         <li>
                             <a id="new_training" href="/training/new/">Submit Training Job</a>
@@ -88,9 +92,9 @@
                 </li> 
             </ul>
             {% endif %}
-            <ul>
+            <ul class="top">
                 <li>
-                    <h3 class="top">Models</h3>
+                    <h3>Models</h3>
                     <ul>
                         <li>
                             <a id="new_batch" href="/ocrmodels/new/">New</a>
@@ -104,9 +108,9 @@
                     </ul>
                 </li> 
             </ul>
-            <ul>
+            <ul class="top">
                 <li>
-                <h3 class="top">Tools</h3>
+                <h3>Tools</h3>
                     <ul>
                         <li>
                             <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}
@@ -122,12 +126,6 @@
                         </li>
                     </ul>
                 </li>
-            </ul>
-            <ul>
-                <li>
-                    <h3><a {% ifequal request.path "/admin/" %}class="current"{% endifequal %}
-                        href="/admin/">Admin</a></h3>
-                </li>              
             </ul>
         </div>
         <div style="clear:both"></div>
