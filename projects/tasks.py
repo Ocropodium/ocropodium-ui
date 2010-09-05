@@ -15,6 +15,8 @@ from ocradmin.projects.models import OcrProject
 from ocradmin.training.models import TrainingPage
 from ocrtasks.models import OcrTask
 
+from ocradmin.ocr import utils as ocrutils
+
 from fedora.adaptor import fcobject, fcdatastream
 from fedora.adaptor.utils import FedoraException
 
@@ -54,6 +56,13 @@ class IngestTask(AbortableTask):
             content_type="image/png"):
             raise FedoraException("Unable to add datastream.")
         imagedata.close()
+        task.progress = 50
+        task.save()
+
+        hocr = ocrutils.output_to_hocr(trainingpage.data)
+        if not fc.add_datastream("HOCR", label="%s HOCR" % dublincore["title"], 
+            content=hocr.decode("unicode_escape"), content_type="text/html"):
+            raise FedoraException("Unable to add datastream.")
         task.progress = 100
         task.save()
         logger.info("Ingested: %s" % fc.pid)
