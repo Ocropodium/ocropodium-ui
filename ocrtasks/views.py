@@ -229,9 +229,12 @@ def show(request, pk):
     """
 
     task = get_object_or_404(OcrTask, pk=pk)
-    params = [(k, task.args[-1][k]) for k in \
+    try:
+        params = [(k, task.args[-1][k]) for k in \
                 sorted(task.args[-1].keys())] if task.args \
-                else []
+                    else []
+    except AttributeError:
+        params = []
 
     context = {
         "task": task,
