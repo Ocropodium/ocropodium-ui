@@ -13,14 +13,20 @@
     <div id="tab_1">
         <div id="comparison">
             <table id="comparison_details" class="properties_table">
+                <tr>
+                    <th>Page</th>
+                    <th>Model</th>
+                    <th>Score</th>
+                    <th></th>
+                </tr>
                 {% for pk, tup in ordered.items %}
-                    <tr class="{% cycle 'odd' 'even' %}">
+                    <tr class="odd">
                         <td>{{tup.0}}</td>
                         <td>{{model_a.name}}</td>
                         <td>{{tup.1.score|default_if_none:"-"}}</td>
                         <td><a class="score_details" href="/training/show_modelscore/{{tup.1.pk}}/">Details</a></td>
                     </tr>        
-                    <tr class="{% cycle 'odd' 'even' %}">
+                    <tr class="even">
                         <td></td>
                         <td>{{model_b.name}}</td>
                         <td>{{tup.2.score|default_if_none:"-"}}</td>
