@@ -61,7 +61,7 @@ class IngestTask(AbortableTask):
 
         hocr = ocrutils.output_to_hocr(trainingpage.data)
         if not fc.add_datastream("HOCR", label="%s HOCR" % dublincore["title"], 
-            content=hocr.decode("unicode_escape"), content_type="text/html"):
+            content=hocr.encode("latin-1", "replace"), content_type="text/html"):
             raise FedoraException("Unable to add datastream.")
         task.progress = 100
         task.save()
