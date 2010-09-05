@@ -148,8 +148,7 @@ class ComparisonTask(AbortableTask):
         progress_func(0)
 
         outdata = converter.convert(groundtruth.binary_image_path.encode(),
-                progress_func=progress_func)
-        assert(outdata.get("lines"))
+                progress_func=progress_func)        
 
         accuracy, details = utils.isri_accuracy(
                 logger, 
@@ -158,10 +157,9 @@ class ComparisonTask(AbortableTask):
         # there's be no details if something went wrong
         assert(details)
         task.modelscore.score = accuracy
-        task.modelscore.score_interals = details
+        task.modelscore.score_internals = details.decode("unicode_escape")
         task.modelscore.save()
-
-        return accuracy
+        return outdata
 
         
 

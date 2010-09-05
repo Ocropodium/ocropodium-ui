@@ -29,7 +29,7 @@ def isri_accuracy(logger, gttext, text):
             pmatch = re.search('\s+(?P<percent>\d+\.\d+)%\s+Accuracy After Correction',
                     score, re.MULTILINE)
             if pmatch:
-                return float(pmatch.groups("percent")[0]), score
+                return float(pmatch.groups("percent")[0]), smart_str(score)
             return err, None    
                 
 
