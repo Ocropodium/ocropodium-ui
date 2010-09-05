@@ -23,24 +23,16 @@
                             <div class="form_body">
                                 <fieldset>
                                     <legend>Model Information</legend>
-                                    <div class="field_wrapper">
-                                        <label for="cmodel_a">Model A:</label>
-                                        <select id="cmodel_a" name="cmodel_a">
-                                            <option value="0">-----</option>
-                                            {% for cm in cmodels %}
-                                            <option value="{{cm.pk}}">{{cm}}</option>
-                                            {% endfor %} 
-                                        </select>
-                                    </div>
-                                    <div class="field_wrapper">
-                                        <label for="cmodel_b">Model B:</label>
-                                        <select id="cmodel_b" name="cmodel_b">
-                                            <option value="0">-----</option>
-                                            {% for cm in cmodels %}                            
-                                            <option value="{{cm.pk}}">{{cm}}</option>
-                                            {% endfor %} 
-                                        </select>
-                                    </div>
+                                    {% for modindex in initialmods %}
+                                        <div class="field_wrapper">
+                                            <label for="cmodel_{{modindex}}">Model {{modindex}}:</label>                                                                          <select id="cmodel_{{modindex}}" name="cmodel">
+                                                <option value="0">-----</option>
+                                                {% for cm in cmodels %}
+                                                <option value="{{cm.pk}}">{{cm}}</option>
+                                                {% endfor %} 
+                                            </select>
+                                        </div>
+                                    {% endfor %}    
                                 </fieldset>
                                 <fieldset>
                                     <legend>Ground Truth</legend>

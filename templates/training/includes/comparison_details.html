@@ -18,14 +18,17 @@
                         <td>{{tup.0}}</td>
                         <td>{{model_a.name}}</td>
                         <td>{{tup.1.score|default_if_none:"-"}}</td>
+                        <td><a class="score_details" href="/training/show_modelscore/{{tup.1.pk}}/">Details</a></td>
                     </tr>        
                     <tr>
                         <td></td>
                         <td>{{model_b.name}}</td>
                         <td>{{tup.2.score|default_if_none:"-"}}</td>
+                        <td><a class="score_details" href="/training/show_modelscore/{{tup.2.pk}}/">Details</a></td>
                     </tr>
                {% endfor %}
                <tr>
+                   <td></td>
                    <td></td>
                    <td></td>
                    <td></td>
@@ -34,11 +37,13 @@
                    <td class="totals">Aggregate</td>
                     <td class="totals">{{model_a.name}}</td>
                     <td class="totals">{{total_a|floatformat:2|default_if_none:"-"}}</td>
+                   <td></td>
                 </tr>        
                 <tr>
                     <td></td>
                     <td class="totals">{{model_b.name}}</td>
                     <td class="totals">{{total_b|floatformat:2|default_if_none:"-"}}</td>
+                   <td></td>
                 </tr>
             </table>
         </div>

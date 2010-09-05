@@ -8,9 +8,16 @@ function validateForm() {
 }
 
 function updateButtons() {
-    var a = parseInt($("#cmodel_a").val()), 
-        b = parseInt($("#cmodel_b").val());
-    var gotmodels = (a && b && a != b);
+    var models = [];
+    var jqmodels = $();
+    $("select[name=cmodel]").each(function(i, elem) {
+        if (parseInt($(elem).val()) > 0) {
+            models.push($(elem).val());
+            jqmodels.push(elem);
+        }
+    });
+    models = $.unique(models);
+    var gotmodels = models.length == jqmodels.length && models.length > 1;
     var gotgt = $("input.ground_truth_enabled[@type=checkbox][checked]").length;
     $("#submit_new_comparison_form, #tabs_2_next").attr("disabled", !(gotmodels && gotgt));
     $("#tabs").tabs((gotmodels && gotgt) ? "enable" : "disable", 1);
@@ -18,7 +25,7 @@ function updateButtons() {
 
 
 $(function() {
-    $("#cmodel_a, #cmodel_b, .ground_truth_enabled").change(function(event) {
+    $("select[name=cmodel], .ground_truth_enabled").change(function(event) {
         updateButtons();
     });
 

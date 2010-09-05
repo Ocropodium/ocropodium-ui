@@ -13,5 +13,25 @@ function refreshData() {
 
 $(function() {
     $("#tabs").tabs();
+
+    $(".score_details").live("click", function(event) {
+        var dialog = $("<div></div>")
+            .attr("id", "dialog")
+            .appendTo($("body"))
+            .load($(this).attr("href"), function() {
+                $("#scoretabs", dialog).tabs();    
+            })
+            .dialog({
+                width: 600,
+                height: 500,
+                modal: true,
+                title: "Model Score Details",
+                close: function() {
+                    dialog.remove();
+                },
+            });
+        event.preventDefault();
+    });
+
     refreshData();    
 });
