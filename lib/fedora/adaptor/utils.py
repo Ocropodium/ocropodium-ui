@@ -10,7 +10,7 @@ from xml.dom import minidom
 
 
 DEFAULTS = {
-        "repository_url": 'http://localhost:8080/fedora',
+        "repository_url": 'http://optiplex:8080/fedora',
         "username": 'fedoraAdmin',
         "password": 'fedora',
         "realm": 'any',
