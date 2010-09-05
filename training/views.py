@@ -204,7 +204,7 @@ def score_models(request):
                 user=request.user,
                 batch=batch,
                 project=request.session["project"],
-                page_name=os.path.basename(path),
+                page_name="%s / %s" % (os.path.basename(path), cmodel.name),
                 task_type="compare",
                 task_name=ComparisonTask.name,
                 status="INIT",
