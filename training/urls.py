@@ -9,4 +9,5 @@ urlpatterns = patterns('',
 	(r'^list/?$', 'ocradmin.training.views.list'),
 	(r'^create/?$', 'ocradmin.training.views.create'),
 	(r'^save_task/(?P<pk>\d+)/$', 'ocradmin.training.views.save_task'),
+	(r'^show_modelscore/(?P<pk>\d+)/$', 'ocradmin.training.views.show_modelscore'),
 )

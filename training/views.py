@@ -133,6 +133,7 @@ def compare(request):
         cmodels=OcrModel.objects.filter(app="ocropus", type="char"),
         lmodels=OcrModel.objects.filter(app="ocropus", type="lang"),
         tsets=request.session["project"].training_sets.all(),
+        initialmods=[1,2]
     )
     return render_to_response(template, context,
             context_instance=RequestContext(request))
@@ -146,16 +147,16 @@ def score_models(request):
     Run a comparison between two models.
     """
 
+    name = "Model Comparison"
     notes = request.POST.get("notes", "")
     lmodel = get_object_or_404(OcrModel, pk=request.POST.get("lmodel", 0))
-    cmodel_a = get_object_or_404(OcrModel, pk=request.POST.get("cmodel_a", 0))
-    cmodel_b = get_object_or_404(OcrModel, pk=request.POST.get("cmodel_b", 0))
-    name = "%s/%s" % (cmodel_a.name, cmodel_b.name)
+
 
     print request.POST
     try:
         tsets = TrainingPage.objects.filter(pk__in=request.POST.getlist("tset"))
-    except TrainingPage.DoesNotExist:
+        cmodels = OcrModel.objects.filter(pk__in=request.POST.getlist("cmodel"))
+    except (TrainingPage.DoesNotExist, OcrModel.DoesNotExist):
         # FIXME: remove code dup!
         template = "training/compare.html"
         context = dict(
@@ -167,15 +168,14 @@ def score_models(request):
         return render_to_response(template, context,
                 context_instance=RequestContext(request))
 
-    
     outdir = ocrutils.FileWrangler(
             username=request.user.username, temp=True, action="compare")()
 
     asyncparams = []
-
     # create a batch db job
     batch = OcrBatch(user=request.user, name="Model Scoring", description="",
-            task_type=ComparisonTask.name, batch_type="COMPARISON", project=request.session["project"])    
+            task_type=ComparisonTask.name, batch_type="COMPARISON", 
+            project=request.session["project"])
     batch.save()
 
     comparison = OcrComparison(
@@ -186,10 +186,10 @@ def score_models(request):
     comparison.save()
     for gt in tsets:
         path = gt.binary_image_path
-        for model in (cmodel_a, cmodel_b):
+        for cmodel in cmodels:
             # create a task with the given gt/model
-            params = {"cmodel": model.file.path.encode(), "lmodel": lmodel.file.path.encode()}
-            if model.name == "Tesseract":
+            params = {"cmodel": cmodel.file.path.encode(), "lmodel": lmodel.file.path.encode()}
+            if cmodel.name == "Tesseract":
                 params["tesseract"] = True
                 try:
                     lmod = OcrModel.objects.get(type="lang", app="tesseract")
@@ -219,7 +219,7 @@ def score_models(request):
                 comparison=comparison,
                 ground_truth=gt,
                 task=task,
-                model=model,                
+                model=cmodel,                
             )
             score.save()
     # launch all the tasks (as comparisons, not converts)
@@ -293,6 +293,27 @@ def comparison(request, pk):
     return render_to_response(template, context,
             context_instance=RequestContext(request))
 
+
+
+@project_required
+@login_required
+def show_modelscore(request, pk):
+    """
+    Display the accuracy internals of a model score.
+    """
+    score = get_object_or_404(OcrModelScore, pk=pk)
+    result = score.task.latest_transcript()
+    context = dict(
+        modelscore=score,
+        task=score.task,
+        text=ocrutils.output_to_plain_text(result),
+        json=result
+    )
+    template = "training/show_modelscore.html" if not request.is_ajax() \
+            else "training/includes/modelscore.html"
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
+            
 
 
 
