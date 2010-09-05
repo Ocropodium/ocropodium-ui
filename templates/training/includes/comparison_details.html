@@ -20,7 +20,7 @@
                         <td>{{tup.1.score|default_if_none:"-"}}</td>
                         <td><a class="score_details" href="/training/show_modelscore/{{tup.1.pk}}/">Details</a></td>
                     </tr>        
-                    <tr>
+                    <tr class="{% cycle 'odd' 'even' %}">
                         <td></td>
                         <td>{{model_b.name}}</td>
                         <td>{{tup.2.score|default_if_none:"-"}}</td>
