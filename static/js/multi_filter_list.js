@@ -3,7 +3,6 @@
 function MultiFilterList(name, states, includeall) {
     var self = this;
     this.ui = function() {
-        var statuses = ["INIT", "PENDING", "RETRY", "STARTED", "SUCCESS", "ERROR", "ABORTED"]; 
         var filterlist = $("<div></div>")
             .addClass("list_popup")
             .hide();
@@ -48,6 +47,8 @@ function MultiFilterList(name, states, includeall) {
                 .click(function(event) {
                     if ($(this).attr("checked")) {
                         $(".filter_none:checked").removeAttr("checked");
+                    } else {
+                        $(".filter_none").attr("checked", $(".filter_type:checked").length == 0);
                     }
                     self.onChange();
                 })
@@ -78,6 +79,16 @@ function MultiFilterList(name, states, includeall) {
             .append(filterlist);
 
         return container;
+    }
+
+    this.value = function() {
+        var vals = [];
+        $("#" + name + "_filter").find(".filter_type").each(function(i, elem) {
+            if ($(elem).attr("checked")) {
+                vals.push($(elem).attr("name").replace(name + "_", ""));
+            }
+        });
+        return vals;    
     }
 }
 

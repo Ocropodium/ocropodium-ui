@@ -1,5 +1,4 @@
-# Random useful functions.
-
+import subprocess as sp
 
 def get_ocropus_model_info(path):
     """

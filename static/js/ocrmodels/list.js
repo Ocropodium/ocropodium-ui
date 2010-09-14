@@ -19,9 +19,14 @@ $(document).ready(function() {
 
     // show new & edit forms in a dialog...
     $(".show_model_link, .edit_model_link").live("click", function(e) {
-            $("#dialog_box").dialog(
-                {width:600, height:500, title: $(this).attr("title")}
-            ).load($(this).attr("href"));
+            $("#dialog_box").dialog({
+                width:600,
+                height:500,
+                title: $(this).attr("title"),
+                close: function() {
+                    $("#dialog_box").html("");
+                }
+            }).load($(this).attr("href"));
             return false;
     });
 

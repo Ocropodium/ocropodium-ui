@@ -629,8 +629,8 @@ function OcrBatch(insertinto_id, batch_id) {
     // check the server for complete results...
     var pollForResults = function(polltime) {
         params = "start=" + m_taskoffset + "&limit=" + m_maxtasks;
-        $(".filter_type:checked").each(function(i, elem) {
-            params += "&status=" + $(elem).attr("name");
+        $.each(m_statusfilter.value(), function(i, val) {
+            params += "&status=" + val;
         });
         $.ajax({
             url: "/batch/results/" + m_batch_id,

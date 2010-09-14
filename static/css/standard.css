@@ -106,6 +106,14 @@ body {
 
 }
 
+.widget_content a {
+    color: #000;
+}
+
+.widget_content a:visited {
+    color: #555;
+}
+
 #sidebar {
     min-height: 500px;
 }

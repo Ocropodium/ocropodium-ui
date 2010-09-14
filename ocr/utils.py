@@ -278,7 +278,8 @@ def make_png(inpath, outdir=None):
         outdir = os.path.dirname(inpath)
     fname = os.path.basename(inpath)
     outpath = "%s/%s.png" % (outdir, os.path.splitext(fname)[0])
-    sp.call(["convert", inpath, outpath]) 
+    if not os.path.exists(outpath):
+        sp.call(["convert", inpath, outpath]) 
     return outpath
 
 

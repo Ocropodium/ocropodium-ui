@@ -97,10 +97,11 @@ def list(request):
     # add a 'invert token' if we're ordering by the
     # same field again
     fields = map(lambda x: "-%s" % x if x == order else x, fields)
-    context = {
-        "projects" : project_query(request.user, [order, "created_on"], tag=tag),
-        "fields" : fields,
-    }
+    context = dict(
+        projects=project_query(request.user, [order, "created_on"], tag=tag),
+        fields=fields,
+        order=order
+    )
     template = "projects/list.html" if not request.is_ajax() \
             else "projects/includes/project_list.html"
 
@@ -323,5 +324,14 @@ def ingest(request, pk):
 
     return HttpResponseRedirect("/batch/show/%d/" % batch.pk)
 
+
+@login_required
+def delete(request, pk):
+    """
+    Show a form for editing the project.
+    """
+    project = get_object_or_404(OcrProject, pk=pk)
+    project.delete()
+    return HttpResponseRedirect("/projects/list/")
 
 

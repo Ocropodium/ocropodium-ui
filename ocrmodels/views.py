@@ -105,10 +105,11 @@ def list(request):
     # add a 'invert token' if we're ordering by the
     # same field again
     fields = map(lambda x: "-%s" % x if x == order else x, fields)
-    context = {
-        "models" : model_query(request.user, [order, "created_on"], tag=tag),
-        "fields" : fields,
-    }
+    context = dict(
+        models=model_query(request.user, [order, "created_on"], tag=tag),
+        fields=fields,
+        order=order,
+    )
 
     template = "ocrmodels/list.html" if not request.is_ajax() \
             else "ocrmodels/includes/model_list.html"

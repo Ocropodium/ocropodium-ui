@@ -127,7 +127,7 @@ td {
 
 .sort_arrow {
     float: right;
-    height: 15px;
+    height: 1em;
     width: 15px;
     background-position: right;
     background-repeat: no-repeat;
@@ -154,7 +154,7 @@ td {
 .header_line {
     float: right;
     width: 1px;
-    height: 15px;
+    height: 1em;
     background-color: #D0D0D0;
 }
 

@@ -12,7 +12,7 @@ from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction, IntegrityError
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseServerError 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -39,6 +39,29 @@ class TrainingSetForm(forms.Form):
     cmodel = forms.ModelChoiceField(
             queryset=OcrModel.objects.filter(type="char", app="ocropus"))
     notes = forms.CharField(required=False)
+
+
+def comparison_query(order, **params):
+    """
+        Query the comparison set.
+    """
+
+    tag = params.get("tag")
+    try:
+        del params["tag"]
+    except KeyError:
+        pass
+
+    query = Q()
+    for key, val in params.items():
+        ld = {key:val}
+        query = query & Q(**ld)
+
+    # if there's a tag present search by tagged item
+    return OcrComparison.objects\
+            .filter(query)\
+            .order_by(*order)\
+            .annotate(groundtruths=Count("modelscores__ground_truth"))
 
 
 
@@ -115,7 +138,7 @@ def create(request):
     task.save()
     LineTrainTask.apply_async(args=args, **kwargs)
 
-    return HttpResponseRedirect("/projects/list")
+    return HttpResponseRedirect("/ocrtasks/list")
 
 
 
@@ -270,14 +293,21 @@ def comparison(request, pk):
 
     # this is really dodgy - total the scores for each model
     total_a = total_b = 0
+    count_a = count_b = 0
     for i in range(0, len(scores)):
         if i % 2 == 0:
-            total_a += scores[i].score or 0
+            if scores[i].score is None:
+                continue
+            total_a += scores[i].score
+            count_a += 1
         else:
-            total_b += scores[i].score or 0
+            if scores[i].score is None:
+                continue
+            total_b += scores[i].score
+            count_b += 1
     if not total_a is None and not total_b is None:
-        total_a /= len(scores) / 2
-        total_b /= len(scores) / 2
+        total_a /= count_a
+        total_b /= count_b
 
     template = "training/comparison.html" if not request.is_ajax() \
             else "training/includes/comparison_details.html"
@@ -388,6 +418,29 @@ def list(request):
             else "training/includes/training_set_list.html"
     return render_to_response(template, context,
             context_instance=RequestContext(request))
+
+
+@project_required
+@login_required
+def comparisons(request):
+    """
+    List the Model comparisons.
+    """
+    order = request.GET.get("order", "created_on")
+    fields = [ "name", "created_on", "groundtruths",]
+    # add a 'invert token' if we're ordering by the
+    # same field again
+    fields = map(lambda x: "-%s" % x if x == order else x, fields)
+    context = dict(
+        comparisons=comparison_query([order, "created_on"]),
+        fields=fields,
+        order=order,
+    )
+    template = "training/comparisons.html" if not request.is_ajax() \
+            else "training/includes/comparison_list.html"
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
+
 
 
 

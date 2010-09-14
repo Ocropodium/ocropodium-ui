@@ -2,14 +2,30 @@
 
 {% if models %}
     <table id="charmodel_list" class="model_list info_table" cellspacing="0" cellpadding="0">
-        <tr class="header_row">
-        {% for field in fields %}
-            <th><a class="sort_table" href="/ocrmodels/list?order={{field}}">{{field|title|cut:"-"|cut:"_"}}</a></th>
-        {% endfor %}
-        <th colspan="3"></th>
-        </tr>
+        <thead>
+            <tr class="listhead">
+            {% for field in fields %}
+                <th >
+                    <a class="sort_table" href="/ocrmodels/list?order={{field}}">
+                        {{field|title|cut:"-"|cut:"_"|cut:"Pk"}}
+                        {% if order in field or field in order %}
+                            {% if "-" in field %}
+                                <div class="sort_arrow order"></div>
+                            {% endif %}
+                            {% if "-" in order %}
+                                <div class="sort_arrow order_desc"></div>
+                            {% endif %}
+                        {% else %}
+                            <div class="sort_arrow"></div>
+                        {% endif %}
+                    </a>
+                </th>
+            {% endfor %}
+            <th colspan="3"></th>
+            </tr>
+        </thead>
         {% for cm in models %}
-        <tr class="model_item" id="mod_{{cm.pk}}">
+        <tr class="model_item entry {% cycle 'even' 'odd' %}" id="mod_{{cm.pk}}">
             <td>{{cm.name}}</td>
             <td>{{cm.app}}</td>        
             <td>{{cm.type|upper}}</td>        
