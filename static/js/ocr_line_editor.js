@@ -7,6 +7,8 @@ function OcrLineEditor(insertinto_id) {
 
     const LONGKEY = 500;
     const SHORTKEY = 70;
+    const NAVKEYS  = [KC_LEFT, KC_RIGHT, KC_HOME, KC_END];
+    const METAKEYS = [KC_ALT, KC_CTRL, KC_CAPSLOCK, KC_SHIFT];
 
     // selection start & end 
     var m_selectstart = null;
@@ -57,10 +59,13 @@ function OcrLineEditor(insertinto_id) {
     var positionCursorTo = function(elem) {
         var mintop = m_elem.offset().top;
         var minleft = m_elem.offset().left;
-        // anchor to either the prev element or the parent
+        // anchor to either the prev element or the parent.  This is to
+        // hack around the fact that breaking chars (spaces) in Webkit
+        // seem to have no position
         if (elem.prev().length) {
             mintop = Math.max(mintop, elem.prev().offset().top);
-            minleft = Math.max(minleft, elem.prev().offset().left);
+            minleft = Math.max(minleft, elem.prev().offset().left
+                   + elem.prev().width());
         }
         // if there's no char elem, set to back of
         // the container box
@@ -79,11 +84,10 @@ function OcrLineEditor(insertinto_id) {
                 .css("left", (m_endmarker.offset().left + m_endmarker.width()) + "px");
             return;
         }
+
         var top = Math.max(mintop, elem.offset().top);
         var left = Math.max(minleft, elem.offset().left);
-        m_cursor
-            .css("top", top + "px")
-            .css("left", elem.offset().left + "px");
+        m_cursor.css("top", top + "px").css("left", left + "px");
     }
 
     var clearSelection = function() {
@@ -262,9 +266,8 @@ function OcrLineEditor(insertinto_id) {
         if (event.ctrlKey || event.altKey)
             return;
 
-        if (event.which == KC_ALT || event.which == KC_CTRL
-            || event.which == KC_CAPSLOCK) {
-
+        if ($.inArray(event.which, METAKEYS) != -1) {
+            // do nothing!
         } else if (event.which == KC_TAB) {
             if (!event.shiftKey)             
                 self.onEditNextElement();
@@ -275,19 +278,12 @@ function OcrLineEditor(insertinto_id) {
             finishEditing(m_inittext);
         } else if (event.which == KC_RETURN) {
             finishEditing();
-        } else if (event.which == KC_RIGHT) {
-            keyNav(KC_RIGHT);
-        } else if (event.which == KC_LEFT) {
-            keyNav(KC_LEFT);
-        } else if (event.which == KC_HOME) {
-            keyNav(KC_HOME);
-        } else if (event.which == KC_END) {
-            keyNav(KC_END);
+        } else if ($.inArray(event.which, NAVKEYS) != -1) {
+            keyNav(event.which);
         } else if (event.which == KC_DELETE) {
             deleteChar();
         } else if (event.which == KC_BACKSPACE) {
             backspace();
-        } else if (event.which == KC_SHIFT) {
         } else {
             return;
             //alert(event.which);
