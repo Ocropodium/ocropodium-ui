@@ -9,7 +9,6 @@ var MultiFilterList = Base.extend({
 
     ui: function() {
         var self = this;
-
         var filterlist = $("<div></div>")
             .addClass("list_popup")
             .hide();
@@ -89,6 +88,7 @@ var MultiFilterList = Base.extend({
     },
 
     value: function() {
+        var self = this;
         var vals = [];
         $("#" + self.name + "_filter").find(".filter_type").each(function(i, elem) {
             if ($(elem).attr("checked")) {
@@ -101,6 +101,6 @@ var MultiFilterList = Base.extend({
     onChange: function() {
 
     },
-}
+});
 
 
