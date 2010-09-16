@@ -8,11 +8,11 @@
 	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
 	<script type='application/javascript' src='/static/js/stats.js'></script>
 	<script type='application/javascript' src='/static/js/abstract_data_source.js'></script>
-	<script type='application/javascript' src='/static/js/task_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/file_data_source.js'></script>
 	<script type='application/javascript' src='/static/js/abstract_list_widget.js'></script>
-	<script type='application/javascript' src='/static/js/task_list_widget.js'></script>
-	<script type='application/javascript' src='/static/js/filebrowser2.js'></script>
+	<script type='application/javascript' src='/static/js/file_list_widget.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
+    <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/filebrowser.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <script type="application/javascript">
@@ -20,13 +20,12 @@
 
 var fbrowser = null;
 
-$(function() {
-        fbrowser = new TaskListWidget(
+$(function() {        
+        fbrowser = new FileListWidget(
             $("#file_browser").get(0), 
-            new TaskDataSource(),
+            new FileDataSource(),
             {multiselect: true}
             );
-        fbrowser.setupEvents();
         $("#file_browser").dialog({
             width: 700,
             minHeight: 300,
