@@ -189,8 +189,8 @@ var AbstractListWidget = Base.extend({
     },
 
     setHeight: function(height) {
-        var diff = height - $("#tscroll").height();
-        $("#tscroll").height(height - 60);
+        var diff = height - $("#lwscroll").height();
+        $("#lwscroll").height(height - 60);
     },
 
     setWaiting: function(wait) {
@@ -307,15 +307,15 @@ var AbstractListWidget = Base.extend({
         // we need a separate table for the header because
         // we don't want it to scroll when the table does
         var entrytable = $("<table></table>")
-            .addClass("filelist")
+            .addClass("entrylist")
             .attr("id", "entrytable");
 
         var tablescroll = $("<div></div>")
-            .attr("id", "tscroll")
+            .attr("id", "lwscroll")
             .append(entrytable);
 
         var innercontainer = $("<div></div>")
-            .addClass("fbcontainer")
+            .addClass("lwcontainer")
             .append(this.buildHeaderTable())
             .append(tablescroll);
 
