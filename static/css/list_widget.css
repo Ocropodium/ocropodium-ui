@@ -142,6 +142,15 @@
     color: #999;
 }
 
+.buttoncontrols {
+    padding: 10px;
+    overflow: auto;
+}
+
+.buttoncontrols * {
+    float: right;
+}
+
 .list_controls {
     font-size: 0.9em;
     color: #999999;

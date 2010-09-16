@@ -9,12 +9,3 @@
     background-image: url("/static/icons/folder.png");
 }
 
-.fbcontrols {
-    padding: 10px;
-    overflow: auto;
-}
-
-.fbcontrols * {
-    float: right;
-}
-

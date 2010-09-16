@@ -57,7 +57,7 @@ var AbstractListWidget = Base.extend({
         var self = this;
 
         // sync the headers when container size changes
-        $(this.parent).resize(function() {
+        $(self.parent).resize(function() {
             self.syncHeadWidths();
         });
 
@@ -69,23 +69,23 @@ var AbstractListWidget = Base.extend({
                 self.data.descending() ? "order_desc" : "order");
         }
         // re-sort the list when the user clicks a column header
-        $("th").bind("click.headsort", headSort);
+        $("th", self.parent).bind("click.headsort", headSort);
 
         // we don't want to sort the headers 
-        $(".header_drag").bind("mouseover mouseout", function(event) {
+        $(".header_drag", self.parent).bind("mouseover.sizenter mouseout.sizeleave", function(event) {
             if (event.type == "mouseover") {
-                $("th").unbind("click.headsort");
+                $("th", self.parent).unbind("click.headsort");
             } else {
-                $("th").bind("click.headsort", headSort);
+                $("th", self.parent).bind("click.headsort", headSort);
             }
         });
 
 
         // when the user clicks on a header separator, bind the mouse move
         // event to resize the columns of both header and entry tables.
-        $(".header_drag").bind("mousedown", function(event) {
+        $(".header_drag", self.parent).bind("mousedown.headsize", function(event) {
             var head = $(this).parent();
-            var cell = $($("#entrytable").find("td").get(head.data("index")));
+            var cell = $($(".entrylist", self.parent).find("td").get(head.data("index")));
             var leftpos = head.offset().left;
             // Note: using event namespaces here to add/remove the
             // correct events to the document.  This allows us the
@@ -107,7 +107,7 @@ var AbstractListWidget = Base.extend({
         });
 
         // highlight the header when the mouse is down.
-        $("th").live("mousedown", function(event) {
+        $("th", self.parent).live("mousedown.headclick", function(event) {
             var cell = $(this);
             cell.addClass("pressed");
             $(document).bind("mouseup.press", function(mue) {
@@ -119,11 +119,11 @@ var AbstractListWidget = Base.extend({
 
         // don't allow selecting the list - it looks bad and makes
         // working with item selections dodgy
-        $(".entry, th").live("mousedown", function(e) { return false; });
+        $(".entry, th", self.parent).live("mousedown.noselect", function(e) { return false; });
         
 
         // handle task selection and multiselection
-        $(".entry").live("click", function(event) {
+        $(".entry", self.parent).live("click.entryselect", function(event) {
             // if ctrl is down TOGGLE selection, else select item
             self.selectEntry(this, event.ctrlKey 
                 ? !$(this).hasClass("selected") 
@@ -134,7 +134,7 @@ var AbstractListWidget = Base.extend({
             // recipient and the 'current' (last selected) item.
             if (event.shiftKey && self.options.multiselect) {
                 // deselect everything
-                $(".selected").not($(this)).not(self.__current).removeClass("selected");
+                $(".selected", self.parent).not($(this)).not(self.__current).removeClass("selected");
                 // if there's a current element and it's not the
                 // one we've just clicked on, select everything in between
                 if (self.__current && self.__current != this) {
@@ -149,7 +149,7 @@ var AbstractListWidget = Base.extend({
             // if ctrl is down, don't clear the last selection 
             } else if (!self.options.multiselect || !event.ctrlKey) {
                 var id = this.id;
-                $(".selected").each(function(i, entry) {
+                $(".selected", self.parent).each(function(i, entry) {
                     if (entry.id != id) {
                         self.selectEntry(entry, false);
                     }
@@ -164,21 +164,33 @@ var AbstractListWidget = Base.extend({
             self.rowClicked(event, parseInt($(this).data("row")));
         });
 
-        $(".entry").live("dblclick", function(event) {
+        $(".entry", self.parent).live("dblclick.rowdckick", function(event) {
             self.rowDoubleClicked(event, parseInt($(this).data("row")));
         });
 
-        $(".entry > td").live("click", function(event) {
+        $(".entry > td", self.parent).live("click.rowclick", function(event) {
             self.cellClicked(event, parseInt($(this).parent().data("row")),
                     parseInt($(this).data("col")));
         });
         
-        $(".page_link").live("click", function(event) {
+        $(".page_link", self.parent).live("click.linkclick", function(event) {
             self.data.setPage(parseInt($(this).data("page")));
             event.preventDefault();
         });
     },
 
+    teardownEvents: function() {
+        $(".entry", this.parent).die("dblclick.rowdckick");
+        $(".entry > td", this.parent).die("click.rowclick");
+        $(".page_link", this.parent).die("click.linkclick");
+        $(".entry, th", this.parent).die("mousedown.noselect");
+        $(".entry", this.parent).die("click.entryselect");
+        $("th", this.parent).die("mousedown.headclick");
+        $(".header_drag", this.parent).unbind("mousedown.headsize");
+        $(".header_drag", this.parent).unbind("mouseover mouseout");             
+        $("th", this.parent).unbind("click.headsort");
+        $(".header_drag", this.parent).unbind("mouseover.sizenter mouseout.sizeleave");            
+    },                      
 
     onClose: function(event) {
 
@@ -217,7 +229,7 @@ var AbstractListWidget = Base.extend({
     refreshEntries: function() {
         this.setTableLength();
         
-        var entries = $(".entry");
+        var entries = $(".entry", this.parent);
         var data = this.data;
         //var entry, cells, cell;
         var key, entry, cells, cell;
@@ -260,15 +272,15 @@ var AbstractListWidget = Base.extend({
 
     clearSelection: function() {
         this.__selected = {};
-        $("#entrytable").find(".entry.selected").removeClass("selected");
+        $(".entrylist", this.parent).find(".entry.selected").removeClass("selected");        
     },
 
     // sync the header table's columns with the file list's widths
     syncHeadWidths: function() {
         for (var i in [0, 1, 2]) {
-            var head = $($("#headtable").find("th").get(i));
+            var head = $($("#headtable", this.parent).find("th").get(i));
             var pad = head.outerWidth() - head.width();
-            var w =  $($("#entrytable").find("td").get(i)).outerWidth(true) - pad;
+            var w =  $($(".entrylist", this.parent).find("td").get(i)).outerWidth(true) - pad;
             head.css("width", w);
         }
     },
@@ -288,7 +300,7 @@ var AbstractListWidget = Base.extend({
         for (var col = 0; col < this.data.columnCount(); col++) {
             row.append($("<td></td>"));
         }
-        var entrytable = $("#entrytable");
+        var entrytable = $(".entrylist", this.parent).first();
         var entries = entrytable.find(".entry");
         var diff = entries.length - this.data.dataLength();
         if (diff < 0) {

@@ -1,22 +1,23 @@
+// Project list widget
 
-var FileListWidget = AbstractListWidget.extend({
+var ProjectListWidget = AbstractListWidget.extend({
     constructor: function(parent, datasource, options) {
         this.base(parent, datasource, options);
     },
 
-    files: function() {
-        return $.map($(".selected.file"), function(elem, i) {
-            return $(elem).data("value");    
-        });
+    project: function() {
+        return $(".selected", this.parent).first().data("pk");
     },
 
     setupEvents: function() {
         this.base();
         var self = this;
-        $(window).bind("keydown.dirnav", function(event) {
-            if (event.keyCode == KC_BACKSPACE) {
-                self.dataSource().backDir();                
-                event.preventDefault();
+
+        $(window).bind("keydown.enteropen", function(event) {
+            if (event.keyCode == KC_RETURN) {
+                if (self.project()) {
+                    $("#fbopenbutton").click();
+                }
             } else {
                 return true;
             }
@@ -28,7 +29,13 @@ var FileListWidget = AbstractListWidget.extend({
 
         $("#fbclosebutton").click(function() {
             self.close();
-        });        
+        });
+    },
+
+    teardownEvents: function() {
+        $(window).unbind("keydown.enteropen");
+        $("#fbopenbutton, #fbclosebutton").unbind("click");
+        this.base();
     },
 
     buildUi: function() {
@@ -42,7 +49,7 @@ var FileListWidget = AbstractListWidget.extend({
                         $("<input></input>")
                             .attr("type", "button")
                             .attr("id", "fbopenbutton")
-                            .attr("value", "Open")
+                            .attr("value", "Open Project")
                             .attr("disabled", true)
                     ).append(
                         $("<input></input>")
@@ -58,18 +65,13 @@ var FileListWidget = AbstractListWidget.extend({
     rowDoubleClicked: function(event, row) {
         this.base();                          
         var row = $(event.target).parent();
-        if (row.data("type") == "dir") {
-            this.dataSource().setCwd(row.data("name"));
-            this.clearSelection();
-        } else {
-            $("#fbopenbutton").click();           
-        }
+        $("#fbopenbutton").click();           
     },
 
     rowClicked: function(event, row) {
         this.base();
         $("#fbopenbutton").attr(
-                "disabled", $(".selected.file", this.parent).length == 0);
+                "disabled", $(".selected", this.parent).length == 0);
     },
 
     open: function(event) {
@@ -80,8 +82,6 @@ var FileListWidget = AbstractListWidget.extend({
     
     },               
 });
-
-
 
 
 
