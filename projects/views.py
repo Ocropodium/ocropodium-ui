@@ -64,6 +64,9 @@ def project_query(user, order, **params):
 
     query = Q()
     for key, val in params.items():
+        if key.find("__") == -1 and \
+                not key in OcrProject._meta.get_all_field_names():
+            continue
         ld = {key:val}
         query = query & Q(**ld)
 
@@ -215,8 +218,9 @@ def open(request):
     #if not request.is_ajax():
     #    return list(request)
 
+    order = request.GET.getlist("order_by");
     params = request.GET.copy()
-    projects = project_query(request.user, params)
+    projects = project_query(request.user, order, **params)
     
     serializer = serializers.get_serializer("json")()
     json = serializer.serialize(
