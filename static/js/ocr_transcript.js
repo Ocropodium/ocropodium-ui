@@ -299,7 +299,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
     }
 
     m_editor.onEditNextElement = function() {
-        var next = m_editor.element().nextAll(".ocr_line").first();
+        var next = $(m_editor.element()).nextAll(".ocr_line").first();
         if (!next.length)
             next = $(".ocr_line").first();
         m_editor.setElement(next.get(0));
@@ -307,7 +307,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
     }
 
     m_editor.onEditPrevElement = function() {
-        var prev = m_editor.element().prevAll(".ocr_line").first();
+        var prev = $(m_editor.element()).prevAll(".ocr_line").first();
         if (!prev.length)
             prev = $(".ocr_line").last();
         m_editor.setElement(prev.get(0));
@@ -332,7 +332,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
 
     $(".ocr_line").live("dblclick.editline", function(event) {
             
-        if (!(m_editor.element() && m_editor.element().get(0) === this)) {
+        if (!(m_editor.element() && m_editor.element() === this)) {
             m_editor.setElement(this, event);
         }
     });
