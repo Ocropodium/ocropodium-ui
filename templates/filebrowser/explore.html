@@ -25,7 +25,14 @@ $(function() {
             $("#file_browser").get(0), 
             new FileDataSource(),
             {multiselect: true}
-            );
+        );
+        fbrowser.open = function() {
+            alert(fbrowser.files());
+            fbrowser.close();
+        }
+        fbrowser.close = function() {
+            $("#file_browser").dialog("close");
+        }
         $("#file_browser").dialog({
             width: 700,
             minHeight: 300,
@@ -34,7 +41,7 @@ $(function() {
                 fbrowser.setHeight($(this).height());   
             },
             close: function(e) {
-                $("#file_browser").html("");
+            
             },            
             modal: true,
         });

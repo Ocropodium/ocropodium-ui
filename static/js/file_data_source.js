@@ -38,10 +38,18 @@ var FileDataSource = AbstractDataSource.extend({
         return date.toString();
     },
 
+    rowKey: function(row) {
+        return this.__data[row][0];
+    },
+
     rowMetadata: function(row) {
+        var value = this.__dir == ""
+            ? this.__data[row][0]
+            : this.__dir + "/" + this.__data[row][0];
         return {
             name: this.__data[row][0],
             type: this.__data[row][1],
+            value: value,
         };
     },
 

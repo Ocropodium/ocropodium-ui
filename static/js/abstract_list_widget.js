@@ -260,7 +260,7 @@ var AbstractListWidget = Base.extend({
 
     clearSelection: function() {
         this.__selected = {};
-        $("#entrytable").find("entry").removeClass("selected");
+        $("#entrytable").find(".entry.selected").removeClass("selected");
     },
 
     // sync the header table's columns with the file list's widths

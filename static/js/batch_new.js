@@ -102,6 +102,48 @@ function doIframeUpload(elem) {
 
 $(function() {
     var uploader = null;
+    var filebrowser = null;
+
+    // set up filebrowser
+    $("#browse").click(function(event) {
+        if (!filebrowser) {
+            $("#file_browser").hide();
+            filebrowser = new FileListWidget(
+                $("#file_browser").get(0), 
+                new FileDataSource(),
+                {multiselect: true}
+            );
+            filebrowser.open = function() {
+                addBatchFiles(filebrowser.files());
+                filebrowser.close();
+            }
+            filebrowser.close = function() {
+                $("#file_browser").dialog("close");
+            }
+        }
+
+        $("#file_browser").dialog({
+            width: 700,
+            minHeight: 300,
+            resize: function(e, ui) {
+                filebrowser.resized(e);
+                filebrowser.setHeight($(this).height());   
+            },
+            close: function(e) {
+                filebrowser.clearSelection();
+            },            
+            modal: true,
+        });
+        event.preventDefault();
+    });
+
+    // HACK!  Can't work how to achieve these styling
+    // bits without munging the dialog content css 
+    // directly.  Obviously this is fragile
+    $(".ui-dialog-content")
+        .css("padding", "5px 2px 10px 2px")
+        .css("margin-top", "0px")
+        .css("overflow", "hidden");
 
 
     $("#singleupload").change(function(event) {
@@ -181,15 +223,6 @@ $(function() {
         stripeFileList();
         updateButtons();
     }
-
-    $("#browse").click(function(event) {
-        var fbrowser = new FileBrowser("file_browser");
-        fbrowser.onClose = function(e) {
-            addBatchFiles(fbrowser.getValue());
-        };
-        fbrowser.showModal();
-        event.preventDefault();
-    });
 
     $(window).keydown(function(event) {
         if (event.keyCode == 46) {
