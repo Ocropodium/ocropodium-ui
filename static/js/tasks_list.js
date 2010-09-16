@@ -91,7 +91,6 @@ $(function() {
     tasks = new TaskListWidget($("#task_list").get(0), taskds, {
         multiselect: true,
     });
-    tasks.setupEvents();
 
     // FIXME!  Get rid of this overridden hacked function
     function maximiseWidgets() {
