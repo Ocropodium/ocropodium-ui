@@ -1,8 +1,15 @@
 
 
-function MultiFilterList(name, states, includeall) {
-    var self = this;
-    this.ui = function() {
+var MultiFilterList = Base.extend({
+    constructor: function(name, states, includeall) {
+        this.name = name;
+        this.states = states;
+        this.includeall = includeall;        
+    },
+
+    ui: function() {
+        var self = this;
+
         var filterlist = $("<div></div>")
             .addClass("list_popup")
             .hide();
@@ -17,7 +24,7 @@ function MultiFilterList(name, states, includeall) {
                 $("<input></input>")
                     .attr("type", "checkbox"));
         
-        if (includeall) {
+        if (self.includeall) {
             var allfilter = statetemp
                 .clone()
                 .attr("checked", true)
@@ -34,7 +41,7 @@ function MultiFilterList(name, states, includeall) {
                 });
         }
             
-        $.each(states, function(i, state) {
+        $.each(self.states, function(i, state) {
             var statbox = statetemp
                 .clone()
                 .find("label")
@@ -42,7 +49,7 @@ function MultiFilterList(name, states, includeall) {
                 .text(state)
                 .end()
                 .find("input")
-                .attr("name", name + "_" + state)
+                .attr("name", self.name + "_" + state)
                 .addClass("filter_type")
                 .click(function(event) {
                     if ($(this).attr("checked")) {
@@ -74,25 +81,26 @@ function MultiFilterList(name, states, includeall) {
             });
         var container = $("<div></div>")
             .addClass("filter_container")
-            .attr("id", name + "_filter")
+            .attr("id", self.name + "_filter")
             .append(filterbutton)
             .append(filterlist);
 
         return container;
-    }
+    },
 
-    this.value = function() {
+    value: function() {
         var vals = [];
-        $("#" + name + "_filter").find(".filter_type").each(function(i, elem) {
+        $("#" + self.name + "_filter").find(".filter_type").each(function(i, elem) {
             if ($(elem).attr("checked")) {
-                vals.push($(elem).attr("name").replace(name + "_", ""));
+                vals.push($(elem).attr("name").replace(self.name + "_", ""));
             }
         });
         return vals;    
-    }
+    },
+
+    onChange: function() {
+
+    },
 }
 
 
-MultiFilterList.prototype.onChange = function() {
-
-}
