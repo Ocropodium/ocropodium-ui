@@ -3,50 +3,30 @@
 
 function OcrLineEditor(insertinto_id) {
     "use strict"
-    // the element we're operating on
-    var m_elem = null;
-
     const LONGKEY = 500;
     const SHORTKEY = 70;
     const NAVKEYS  = [KC_LEFT, KC_RIGHT, KC_HOME, KC_END];
     const METAKEYS = [KC_ALT, KC_CTRL, KC_CAPSLOCK, KC_SHIFT];
-
-    // selection start & end 
-    var m_selectstart = null;
-
-    // initial text of selected element
-    var m_inittext = null;
-
-    // capture the last key event
-    var m_keyevent = null;
-
-    // undo stack object
-    var m_undostack = new OCRJS.UndoStack(this);
-
-    var m_blinktimer = -1;
-
-    // timer for sending scroll events for mozilla
-    var m_navtimer = -1;
-
-    var m_proxycontainer = $("<span></span>")
-        .attr("id", "proxy_container");
-
-    // the current character in front of the cursor
-    var m_char = null;
-
-    // the point dragging started
-    var m_dragpoint = null;
-
-    var m_cursor = $("<div></div>")
-        .addClass("editcursor")
-        .text("|");
     
-    // anchor for the end of the line
-    var m_endmarker = $("<div></div>")
+    var self = this,            // alias 'this' 
+        m_elem = null,          // the element we're operating on 
+        m_char = null,          // the current character in front of the cursor 
+        m_selectstart = null,   // selection start & end  
+        m_inittext = null,      // initial text of selected element 
+        m_keyevent = null,      // capture the last key event 
+        m_blinktimer = -1,      // timer for cursor flashing
+        m_navtimer = -1,        // timer for sending scroll events for mozilla 
+        m_dragpoint = null,     // the point dragging started 
+        m_undostack = new OCRJS.UndoStack(this), // undo stack object 
+        m_cursor = $("<div></div>") // cursor element
+            .addClass("editcursor")
+            .text("|"),
+        m_endmarker = $("<div></div>")  // anchor for the end of the line 
             .addClass("endmarker");
 
-    // alias 'this'
-    var self = this;
+
+
+    // functions
 
     var blinkCursor = function(blink) {
         if (blink) {
@@ -61,7 +41,7 @@ function OcrLineEditor(insertinto_id) {
     }
 
     // Undoable commands - note that these depend
-    // on the outer object scope
+    // on the outer object scope, which is not ideal
     var InsertCommand = OCRJS.UndoCommand.extend({
         constructor: function(char, curr) {
             this.base("typing");
@@ -149,7 +129,7 @@ function OcrLineEditor(insertinto_id) {
         m_cursor.css("top", top + "px").css("left", left + "px");
     }
 
-    var clearSelection = function() {
+    var deselectAll = function() {
         m_selectstart = null;
         var done = $(m_elem).children(".sl").length > 0;
         $(m_elem).children().removeClass("sl");
@@ -159,10 +139,10 @@ function OcrLineEditor(insertinto_id) {
     var keyNav = function(code) {
         m_undostack.breakCompression();
         if (!m_keyevent.shiftKey) {
-            clearSelection();
+            deselectAll();
         } else {
             if (m_selectstart == null)
-                m_selectstart = $(m_char);
+                m_selectstart = m_char;
         }
 
         if (code == KC_RIGHT) {
@@ -184,7 +164,7 @@ function OcrLineEditor(insertinto_id) {
         else if (code == KC_END)
             moveCursorToEnd();
         if (m_keyevent.shiftKey)
-            updateSelection(m_selectstart.get(0), m_char);
+            updateSelection(m_selectstart, m_char);
     }
 
     var updateSelection = function(s, e) {
@@ -203,7 +183,7 @@ function OcrLineEditor(insertinto_id) {
 
     var moveCursorLeft = function(repeat) {
         if (!m_keyevent.shiftKey)
-            clearSelection();
+            deselectAll();
         if (repeat && m_navtimer != -1) {
             m_navtimer = setTimeout(function() {
                 if (m_navtimer != -1)
@@ -245,14 +225,14 @@ function OcrLineEditor(insertinto_id) {
 
     var moveCursorToStart = function() {
         if (!m_keyevent.shiftKey)
-            clearSelection();
+            deselectAll();
         m_char = $(m_elem).children().get(0);
         positionCursorTo(m_char);
     }                   
 
     var moveCursorToEnd = function() {
         if (!m_keyevent.shiftKey)
-            clearSelection();
+            deselectAll();
         m_char = null;
         positionCursorTo(m_char);
     }
@@ -309,7 +289,13 @@ function OcrLineEditor(insertinto_id) {
             }
         }
         var elems = delset.not(".endmarker").get();
-        m_undostack.push(new DeleteCommand(elems, elems, false));
+        elems.reverse();
+        var nexts = [];
+        for (var i in elems)
+            nexts.push(elems[i].nextElementSibling);
+
+        m_undostack.push(new DeleteCommand(elems, nexts, false));
+        m_undostack.breakCompression();
         positionCursorTo(m_char);
         return true;
     }
@@ -405,7 +391,7 @@ function OcrLineEditor(insertinto_id) {
     var selectCurrentWord = function(event) {
         // this is TERRIBLE!  Whatever, too late, will
         // fix it in the cold light of day.
-        clearSelection();
+        deselectAll();
         if (!m_char)
             return;
         var startchar = m_char;
@@ -443,6 +429,7 @@ function OcrLineEditor(insertinto_id) {
             break;
         }
         positionCursorTo(m_char);
+        m_undostack.breakCompression();
     }
 
 
@@ -562,8 +549,8 @@ function OcrLineEditor(insertinto_id) {
 
         $(window).bind("keydown.editortype", keyPressDetection);
         $(window).bind("keypress.editortype", function(event) {
-            if (event.charCode == 0)
-                return;
+            if (event.ctrlKey || event.charCode == 0)
+                return true;
             m_keyevent = event;
             insertChar();
             event.preventDefault();        
@@ -612,7 +599,7 @@ function OcrLineEditor(insertinto_id) {
         });
 
         $(m_elem).find("span").live("click.positioncursor", charClicked);
-        $(m_elem).find("span").live("click.clearselect", clearSelection);
+        $(m_elem).find("span").live("click.clearselect", deselectAll);
 
         initialiseCursor();
         selectCharUnderClick(clickevent);
@@ -641,6 +628,8 @@ function OcrLineEditor(insertinto_id) {
             .unbind("mouseup.selecttext");
         $(m_elem).unbind("mousedown.noselection");
 
+        m_char = null;
+        m_selectstart = null;        
         m_elem = null;
         blinkCursor(false);
         m_cursor.remove();
