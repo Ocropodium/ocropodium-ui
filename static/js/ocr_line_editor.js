@@ -322,6 +322,7 @@ function OcrLineEditor(insertinto_id) {
     var keyPressDetection = function(event) {
         m_keyevent = event;
 
+        // handle undo/redo with ctrl-z, ctrl-shift-z
         if (event.ctrlKey && event.which == 90) {
             if (!event.shiftKey) {
                 m_undostack.undo();
