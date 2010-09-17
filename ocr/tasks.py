@@ -53,7 +53,7 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
         os.chmod(dstdzipath, 0777)
         os.chmod(srcdzipath, 0777)
     except Exception:
-        pass
+        logger.error("CHMOD FAILED: %s" % outpath)
 
     return srcdzipath, dstdzipath
 
@@ -93,7 +93,10 @@ class ConvertPageTask(AbortableTask):
                         pass
                     else:
                         raise OSError(errno, strerr)
-                os.chmod(outdir, 0777)
+                try:
+                    os.chmod(outdir, 0777)
+                except Exception:
+                    logger.error("CHMOD FAILED: %s" % outdir)
             paramdict["binout"] = utils.get_media_output_path(stdpath, "bin", ".png")
             paramdict["segout"] = utils.get_media_output_path(stdpath, "seg", ".png")
         
@@ -155,8 +158,11 @@ class BinarizePageTask(AbortableTask):
         binname = os.path.basename(
                 utils.get_media_output_path(filepath, "bin", ".png")) 
         if not os.path.exists(outdir):
-            os.makedirs(outdir, 0777)
-            os.chmod(outdir, 0777)
+            try:
+                os.makedirs(outdir, 0777)
+                os.chmod(outdir, 0777)
+            except Exception:
+                logger.error("CHMOD FAILED: %s" % outdir)
 
         binpath = os.path.join(outdir, binname)
         # hack - this is to save time when doing the transcript editor
@@ -220,8 +226,11 @@ class SegmentPageTask(AbortableTask):
         segname = os.path.basename(
                 utils.get_media_output_path(filepath, "seg", ".png")) 
         if not os.path.exists(outdir):
-            os.makedirs(outdir, 0777)
-            os.chmod(outdir, 0777)
+            try:
+                os.makedirs(outdir, 0777)
+                os.chmod(outdir, 0777)
+            except Exception:
+                logger.error("CHMOD FAILED: %s" % outdir)
         segpath = os.path.join(outdir, segname)        
 
         converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 

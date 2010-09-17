@@ -134,7 +134,10 @@ def save_ocr_images(images, path):
     paths = []
     if not os.path.exists(path):
         os.makedirs(path, 0777)
-        os.chmod(path, 0777)
+        try:
+            os.chmod(path, 0777)
+        except Exception:
+            print "CHMOD FAILED: %s" % path
 
     for _, handle in images:
         filepath = os.path.join(path, handle.name)
@@ -142,7 +145,10 @@ def save_ocr_images(images, path):
             for chunk in handle.chunks():
                 outfile.write(chunk)
             paths.append(filepath)
-            os.chmod(filepath, 0777)
+            try:
+                os.chmod(filepath, 0777)
+            except Exception:
+                print "CHMOD FAILED: %s" % filepath
     return paths
 
 
