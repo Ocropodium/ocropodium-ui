@@ -2,6 +2,7 @@
 
 
 function OcrLineEditor(insertinto_id) {
+    "use strict"
     // the element we're operating on
     var m_elem = null;
 
@@ -18,6 +19,9 @@ function OcrLineEditor(insertinto_id) {
 
     // capture the last key event
     var m_keyevent = null;
+
+    // undo stack object
+    var m_undostack = new OCRJS.UndoStack(this);
 
     var m_blinktimer = -1;
 
@@ -55,6 +59,60 @@ function OcrLineEditor(insertinto_id) {
             m_blinktimer = -1;
         }
     }
+
+    // Undoable commands - note that these depend
+    // on the outer object scope
+    var InsertCommand = OCRJS.UndoCommand.extend({
+        constructor: function(char, curr) {
+            this.base("typing");
+            this.curr = curr;
+            this.char = char;
+            var self = this;
+            this.redo = function() {
+                self.char.insertBefore(self.curr);
+                positionCursorTo(self.curr);
+            };
+            this.undo = function() {
+                self.char.remove();
+                m_char = self.curr;
+                positionCursorTo(self.curr);
+            };
+            this.mergeWith = function(other) {
+                self.char = self.char.add(other.char.get());                    
+                return true;                
+            };
+        },
+    });
+
+    var DeleteCommand = OCRJS.UndoCommand.extend({
+        constructor: function(elems, nexts, back) {
+            this.base("delete");
+            this.elems = elems;
+            this.nexts = nexts;
+            this.back = back;
+            var self = this;
+            this.redo = function() {
+                $(self.elems).not(".endmarker").detach();
+                m_char = self.nexts[0];
+                positionCursorTo(m_char);
+            };
+            this.undo = function() {
+                for (var i in self.elems) {
+                    $(self.elems[i]).insertBefore(self.nexts[i]);
+                    m_char = self.back 
+                            ? self.elems[i].nextElementSibling : self.elems[i];
+                    positionCursorTo(m_char);
+                }
+            };
+            this.mergeWith = function(other) {
+                for (var i in other.elems) {
+                    self.elems.push(other.elems[i]);
+                    self.nexts.push(other.nexts[i]);
+                }
+                return true;    
+            };
+        },
+    });
 
     var positionCursorTo = function(elem) {
         var mintop = $(m_elem).offset().top;
@@ -99,6 +157,7 @@ function OcrLineEditor(insertinto_id) {
     }
 
     var keyNav = function(code) {
+        m_undostack.breakCompression();
         if (!m_keyevent.shiftKey) {
             clearSelection();
         } else {
@@ -189,7 +248,7 @@ function OcrLineEditor(insertinto_id) {
             clearSelection();
         m_char = $(m_elem).children().get(0);
         positionCursorTo(m_char);
-    }
+    }                   
 
     var moveCursorToEnd = function() {
         if (!m_keyevent.shiftKey)
@@ -206,16 +265,31 @@ function OcrLineEditor(insertinto_id) {
         positionCursorTo(m_char);
         $("body").append(m_cursor);
         blinkCursor(true);
-
     }
 
-    var deleteChar = function() {
+    var deleteChar = function(back) {
         if (eraseSelection())
             return;
-        var next = m_char.nextElementSibling;
-        $(m_char).not(".endmarker").remove();
-        m_char = next;
-        positionCursorTo(m_char);
+
+        // if we're already at the end, return
+        if (!back && !m_char)
+            return;
+
+        // if we're at the beginning, return
+        if (back && m_char && !m_char.previousElementSibling)
+            return;
+
+        // if we're at the end and backspacing, move back and delete
+        if (back && !m_char && $(m_elem).children("span").length) {
+            back = false;
+            m_char = $(m_elem).children("span").last().get(0);
+        }
+
+        var next = back ? m_char : m_char.nextElementSibling;
+        var curr = back
+            ? m_char.previousElementSibling 
+            : m_char;
+        m_undostack.push(new DeleteCommand([curr], [next], back));
     }
 
     var eraseSelection = function() {
@@ -234,7 +308,8 @@ function OcrLineEditor(insertinto_id) {
                 }
             }
         }
-        delset.not(".endmarker").remove();
+        var elems = delset.not(".endmarker").get();
+        m_undostack.push(new DeleteCommand(elems, elems, false));
         positionCursorTo(m_char);
         return true;
     }
@@ -242,24 +317,34 @@ function OcrLineEditor(insertinto_id) {
     var insertChar = function() {
         var charcode = m_keyevent.which;        
         eraseSelection();
+        
+        var curr = m_char ? m_char : m_endmarker;
         var char = $("<span></span>")
             .text(m_keyevent.charCode == 32
                     ? "\u00a0"
                     : String.fromCharCode(m_keyevent.charCode));
-        var curr = m_char ? m_char : m_endmarker;
-        char.insertBefore(curr);
-        positionCursorTo(m_char);
+
+        m_undostack.push(new InsertCommand(char, curr));
     }
     
     var backspace = function(event) {
         if (eraseSelection())
             return;
-        if (moveCursorLeft())
-            deleteChar();
+        deleteChar(true);
     }
 
     var keyPressDetection = function(event) {
         m_keyevent = event;
+
+        if (event.ctrlKey && event.which == 90) {
+            if (!event.shiftKey) {
+                m_undostack.undo();
+            } else {
+                m_undostack.redo();
+            }
+            event.preventDefault();
+            return;    
+        }
 
         if (event.ctrlKey || event.altKey)
             return;
