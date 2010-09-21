@@ -6,7 +6,7 @@ function OcrLineEditor(insertinto_id) {
     const LONGKEY = 500;
     const SHORTKEY = 70;
     const NAVKEYS  = [KC_LEFT, KC_RIGHT, KC_HOME, KC_END];
-    const METAKEYS = [KC_ALT, KC_CTRL, KC_CAPSLOCK, KC_SHIFT];
+    const METAKEYS = [KC_ALT, KC_CTRL, KC_CAPSLOCK, KC_SHIFT];    
     
     var self = this,            // alias 'this' 
         m_elem = null,          // the element we're operating on 
@@ -15,14 +15,21 @@ function OcrLineEditor(insertinto_id) {
         m_inittext = null,      // initial text of selected element 
         m_keyevent = null,      // capture the last key event 
         m_blinktimer = -1,      // timer for cursor flashing
-        m_navtimer = -1,        // timer for sending scroll events for mozilla 
         m_dragpoint = null,     // the point dragging started 
         m_undostack = new OCRJS.UndoStack(this), // undo stack object 
         m_cursor = $("<div></div>") // cursor element
             .addClass("editcursor")
             .text("|"),
         m_endmarker = $("<div></div>")  // anchor for the end of the line 
-            .addClass("endmarker");
+            .addClass("endmarker"),
+
+        // lookup for key navigation functions
+        m_navtable = {
+            KC_LEFT: self.moveCursorLeft,
+            KC_RIGHT: self.moveCursorRight,
+            KC_HOME:  self.moveCursorToStart,
+            KC_END: self.moveCursorToEnd,
+        };
 
 
 
@@ -146,19 +153,9 @@ function OcrLineEditor(insertinto_id) {
         }
 
         if (code == KC_RIGHT) {
-            moveCursorRight(false);
-            if($.browser.mozilla) {
-                m_navtimer = setTimeout(function() {
-                    moveCursorRight(true)
-                }, LONGKEY);
-            }
+            moveCursorRight();
         } else if (code == KC_LEFT) {
-            moveCursorLeft(false);
-            if($.browser.mozilla) {
-                m_navtimer = setTimeout(function() {
-                    moveCursorLeft(true)
-                }, LONGKEY);
-            }
+            moveCursorLeft();
         } else if (code == KC_HOME)
             moveCursorToStart();
         else if (code == KC_END)
@@ -181,16 +178,10 @@ function OcrLineEditor(insertinto_id) {
         }
     }
 
-    var moveCursorLeft = function(repeat) {
+    var moveCursorLeft = function() {
         if (!m_keyevent.shiftKey)
             deselectAll();
-        if (repeat && m_navtimer != -1) {
-            m_navtimer = setTimeout(function() {
-                if (m_navtimer != -1)
-                    clearTimeout(m_navtimer);   
-                m_navtimer = moveCursorLeft(repeat);
-            }, SHORTKEY);
-        }
+        
         // check if we're at the end
         // or at the beginning...
         if (!m_char) {
@@ -207,17 +198,10 @@ function OcrLineEditor(insertinto_id) {
         return true;
     }
 
-    var moveCursorRight = function(repeat) {
+    var moveCursorRight = function() {
         if (!m_char)
             return false;
         m_char = m_char.nextElementSibling;
-        if (repeat && m_navtimer != -1) {
-            m_navtimer = setTimeout(function() {
-                if (m_navtimer != -1)
-                    clearTimeout(m_navtimer);   
-                m_navtimer = moveCursorRight(repeat);
-            }, SHORTKEY);
-        }
         // check if we're at the end
         positionCursorTo(m_char);
         return true;
@@ -595,8 +579,6 @@ function OcrLineEditor(insertinto_id) {
         $(window).bind("keyup.editortype", function(event) {
             if (m_blinktimer == -1)
                 blinkCursor(true);
-            clearTimeout(m_navtimer);
-            m_navtimer = -1;
         });
 
         $(m_elem).find("span").live("click.positioncursor", charClicked);

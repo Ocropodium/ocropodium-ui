@@ -21,5 +21,6 @@ urlpatterns = patterns('',
     (r'^viewer_binarization_results/(?P<task_id>[^\/]+)/?$',
         'ocradmin.batch.views.viewer_binarization_results'),
     (r'^transcript/(?P<pk>\d+)/?$', 'ocradmin.batch.views.transcript'),
+    (r'^test/?$', 'ocradmin.batch.views.test'),
 	(r'^upload_files/?$', 'ocradmin.batch.views.upload_files'),
 )

@@ -1,0 +1,49 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/undo/command.js'></script>
+	<script type='application/javascript' src='/static/js/undo/stack.js'></script>
+    <script type="text/javascript" src="/static/js/line_editor.js"></script>
+    
+    <link rel="stylesheet" href="/static/css/ocr_transcript.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/ocr_line_editor.css" type="text/css" media="screen" />
+
+    <style type="text/css">
+        #dialog_box {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+
+<div id="sidebar" class="widget">
+    <div class="widget_header" id="filter_head">Filter Batches:</div>
+    <div class="widget_content">
+    </div>
+</div>
+
+{% if messages %}
+<ul class="messages">
+{% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<div class="widget" id="batch_list_widget">
+    <div class="widget_header">Project Batches:</div>
+    <div class="widget_content">
+        <div style="background-color: #FFFFFF; padding: 20px; font-size: 1.3em">
+            <span class="ocr_line">This is a line of editable text</span>
+        </div>
+    </div> 
+</div>
+
+
+{% endblock %}
+
+
+

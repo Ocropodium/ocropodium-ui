@@ -6,6 +6,7 @@ from datetime import datetime
 from celery import result as celeryresult
 from celery.contrib.abortable import AbortableAsyncResult
 from celery.task.sets import TaskSet, subtask
+from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
@@ -52,6 +53,22 @@ def batch_query(params):
     if order and order[0].replace("-", "", 1) == "task_count":
         query = query.annotate(task_count=Count("tasks"))
     return query.order_by(*order)
+
+
+class OcrBatchForm(forms.ModelForm):
+    """
+        New project form.
+    """
+    def __init__(self, *args, **kwargs):
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+
+        # change a widget attribute:
+        self.fields['description'].widget.attrs["rows"] = 2
+        self.fields['description'].widget.attrs["cols"] = 40
+
+    class Meta:
+        model = OcrBatch
+        exclude = ["user", "created_on", "project", "task_type", "batch_type"]
 
 
 @login_required
@@ -544,6 +561,15 @@ def retry_errored(request, pk):
             mimetype="application/json")
 
 
+def test(request):
+    """
+    Test action
+    """
+    return render_to_response("batch/test.html", 
+            {}, context_instance=RequestContext(request))
+
+    
+    
 @login_required
 def spellcheck(request):
     """
