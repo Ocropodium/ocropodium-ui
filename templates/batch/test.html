@@ -14,6 +14,27 @@
             display: none;
         }
     </style>
+
+    <script type="text/javascript">
+        // test code
+        var editor = null;
+        $(function() {
+
+            editor = new OCRJS.LineEditor();        
+
+            $(window).bind("keyup.lineedit", function(event) {
+                var line = $(".ocr_line").first().get(0);
+                if (event.keyCode == 113) {
+                    editor.edit(line, event);
+                }
+            });
+            $(".ocr_line").bind("dblclick.lineedit", function(event) {
+                editor.edit(this, event);
+            });
+        });
+
+
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -36,8 +57,11 @@
 <div class="widget" id="batch_list_widget">
     <div class="widget_header">Project Batches:</div>
     <div class="widget_content">
-        <div style="background-color: #FFFFFF; padding: 20px; font-size: 1.3em">
+        <div style="background-color: #FFFFFF; padding: 20px; font-size: 3em">
             <span class="ocr_line">This is a line of editable text</span>
+            <span class="ocr_line">This is another line of editable text</span>
+            <span class="ocr_line">Blah blah blah blah</span>
+            <span class="ocr_line">Bibbly bibbly bibbly boo...</span>
         </div>
     </div> 
 </div>
