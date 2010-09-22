@@ -13,6 +13,9 @@ $(function() {
             editor.edit(line, event);
         }
     });
+    $(".ocr_line").bind("dblclick.lineedit", function(event) {
+        editor.edit(this, event);
+    });
 });
 
 if (OCRJS === undefined) {
@@ -140,7 +143,8 @@ OCRJS.LineEditor = Base.extend({
             .allowSelection(false);
 
         this._initialiseCursor();
-        //this.selectCharUnderClick(event);
+        if (event.type.match(/click/))
+            this._selectCharUnderPoint(event);
     },
 
     finishEditing: function(withtext) {
@@ -224,10 +228,7 @@ OCRJS.LineEditor = Base.extend({
         });
         // handler to track mouse moves when selecting text
         $(this._e).bind("mousedown.selecttext", function(event) {
-            // not sure why this happens, but sometimes the
-            // selecttext bind errors...
-            //if (!m_elem)
-            //    return;
+            self.deselectAll();
             self._dragpoint = { x: event.pageX, y: event.pageY };
             $(self._e).bind("mousemove.selecttext", function(event) {
                 //self._expandSelectedChars(event);
