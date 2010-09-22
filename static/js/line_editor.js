@@ -1,23 +1,6 @@
 // Make a span editable.  Second attempt
 
 
-// test code
-var editor = null;
-$(function() {
-
-    editor = new OCRJS.LineEditor();        
-
-    $(window).bind("keyup.lineedit", function(event) {
-        var line = $(".ocr_line").first().get(0);
-        if (event.keyCode == 113) {
-            editor.edit(line, event);
-        }
-    });
-    $(".ocr_line").bind("dblclick.lineedit", function(event) {
-        editor.edit(this, event);
-    });
-});
-
 if (OCRJS === undefined) {
     var OCRJS = {};
 }
@@ -100,15 +83,16 @@ var DeleteCommand = OCRJS.UndoCommand.extend({
 const LONGKEY = 500;
 OCRJS.LineEditor = Base.extend({
 
-    _e: null,          // the element we're operating on 
-    _c: null,          // the current character in front of the cursor
+    _elem: null,          // the element we're operating on 
+    _char: null,          // the current character in front of the cursor
     _top: null,         // reference to initial top of elem
     _left: null,        // reference to initial left of elem 
     _selectstart: null,   // selection start & end  
     _inittext: null,      // initial text of selected element 
     _keyevent: null,      // capture the last key event 
     _blinktimer: -1,      // timer for cursor flashing
-    _dragpoint: null,     // the point dragging started 
+    _dragpoint: null,     // the point dragging started
+    _editing: false,      // we're currently doing something 
     _undostack: new OCRJS.UndoStack(this), // undo stack object
     _notemptyre: new RegExp("\S"), 
     _cursor: $("<div></div>") // cursor element
@@ -117,17 +101,25 @@ OCRJS.LineEditor = Base.extend({
     _endmarker: $("<div></div>")  // anchor for the end of the line 
             .addClass("endmarker").get(0),
 
+    constructor: function(log) {
+        this._log = log;
+    },    
 
     /*
      * Setup and teardown functions
      *
      */
 
-    edit: function(elem, event) {
+    edit: function(elem, event, log) {
+        if (this._editing)
+            this.finishEditing();                
+        if (!elem)
+            throw "Attempt to edit null element";
         this._e = elem;
         this._top = $(elem).offset().top;
         this._left = $(elem).offset().left;
         this._inittext = $(elem).text();        
+        this._editing = true;
 
         this.setupEvents()
 
@@ -144,8 +136,9 @@ OCRJS.LineEditor = Base.extend({
             .allowSelection(false);
 
         this._initialiseCursor();
-        if (event.type.match(/click/))
+        if (event && event.type.match(/click/))
             this._selectCharUnderPoint(event);
+        this._logger("Current char: " + $(this._c).text() + " Full: " + $(this._e).text());
         this.onEditingStarted(elem);
     },
 
@@ -156,22 +149,33 @@ OCRJS.LineEditor = Base.extend({
             .removeClass("editing")
             .allowSelection(true)        
             .html(withtext ? withtext : $(this._e).text());
-        this._c = null;
-        this._e = null;
         this._selectstart = null;        
         $(this._cursor).detach();
         this._undostack.clear();
+        if (this._blinktimer != -1) {
+            clearTimeout(this._blinktimer);
+            this._blinkcursor = -1;
+        }
         this.teardownEvents();
+        this._editing = false;
         this.onEditingFinished(elem);
     },
 
     setCurrentChar: function(charelem) {
         if (!$.inArray(this._e.children, charelem))
             throw "Char element is not a childen of line";
+        if (!charelem)
+            throw "Attempt to set null element as current char";
         this._c = charelem;
         this._mungeSpaces();
         this.positionCursorTo(this._c);
-    },                   
+        this._logger("Current char: " + $(this._c).text() + " Full: " + $(this._e).text());
+        //this._logger("Current char: " + $(this._c).text());
+    },
+
+    element: function() {
+        return this._e;
+    },        
 
     setupEvents: function() {
         var self = this;
@@ -310,7 +314,11 @@ OCRJS.LineEditor = Base.extend({
     },
 
     moveCursorToStart: function() {
-        this.setCurrentChar(this._e.children[0]);
+        this._logger($(this._e).text());
+        var char = $(this._e).children().first().get(0);
+        if (!char)
+            throw "First child of elem is null: " + this._e.firstChild + "  (" + this._e + ")";        
+        this.setCurrentChar(char);
     },                   
 
     moveCursorToEnd: function() {
@@ -692,6 +700,8 @@ OCRJS.LineEditor = Base.extend({
     },                          
 
     _logger: function(text) {
+        if (!this._log)
+            return;            
         var log = $("#logwin");
         if (!log.length) {
             log = $("<span></span>")
@@ -712,5 +722,4 @@ OCRJS.LineEditor = Base.extend({
         }
         log.text((new Date()).getTime() + ":   " + text);
     },             
-
 });
