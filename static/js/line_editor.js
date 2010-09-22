@@ -150,6 +150,7 @@ OCRJS.LineEditor = Base.extend({
         this._selectstart = null;        
         this.blinkCursor(false);
         $(this._cursor).remove();
+        this._undostack.clear();
 
         this.teardownEvents();
     },
