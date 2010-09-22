@@ -9,7 +9,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
     var m_batchdata = null;
 
     // editor for each line
-    var m_editor = new OcrLineEditor(insertinto_id);
+    var m_editor = new OCRJS.LineEditor(insertinto_id, null, true);
 
     // spellchecker object
     var m_speller = new Spellchecker(".ocr_line");
@@ -302,7 +302,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
         var next = $(m_editor.element()).nextAll(".ocr_line").first();
         if (!next.length)
             next = $(".ocr_line").first();
-        m_editor.setElement(next.get(0));
+        m_editor.edit(next.get(0));
         next.trigger("click");
     }
 
@@ -310,14 +310,14 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
         var prev = $(m_editor.element()).prevAll(".ocr_line").first();
         if (!prev.length)
             prev = $(".ocr_line").last();
-        m_editor.setElement(prev.get(0));
+        m_editor.edit(prev.get(0));
         prev.trigger("click");
     }
 
     
     $(window).bind("keyup.lineedit", function(event) {
         if (m_currentline && event.keyCode == F2) {
-            m_editor.setElement(m_currentline, event);
+            m_editor.edit(m_currentline, event);
         } else if (event.shiftKey && event.ctrlKey && event.keyCode == S) {
             if (m_spellchecking)
                 self.endSpellcheck();
@@ -333,7 +333,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
     $(".ocr_line").live("dblclick.editline", function(event) {
             
         if (!(m_editor.element() && m_editor.element() === this)) {
-            m_editor.setElement(this, event);
+            m_editor.edit(this, event);
         }
     });
 
