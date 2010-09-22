@@ -40,10 +40,10 @@
 .editcursor {
     float: right;
     position: absolute;
-    width: 0.3em;
+    width: 1px;
+    height: 20px;
     background-color: #000;
     color: #000;
-    margin-left: -0.2em;
 }
 
 .editcursor.blink {

@@ -94,7 +94,7 @@ OCRJS.LineEditor = Base.extend({
     _undostack: new OCRJS.UndoStack(this), // undo stack object 
     _cursor: $("<div></div>") // cursor element
             .addClass("editcursor")
-            .text("|").get(0),
+            .text("").get(0),
     _endmarker: $("<div></div>")  // anchor for the end of the line 
             .addClass("endmarker").get(0),
 
@@ -151,7 +151,6 @@ OCRJS.LineEditor = Base.extend({
         this.blinkCursor(false);
         $(this._cursor).remove();
         this._undostack.clear();
-
         this.teardownEvents();
     },
 
