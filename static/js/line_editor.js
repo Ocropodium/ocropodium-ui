@@ -26,8 +26,6 @@ jQuery.fn.extend({
  *
  */
 
-// Undoable commands - note that these depend
-// on the outer object scope, which is not ideal
 var InsertCommand = OCRJS.UndoCommand.extend({
     constructor: function(editor, char, curr) {
         this.base("typing");
@@ -36,7 +34,7 @@ var InsertCommand = OCRJS.UndoCommand.extend({
         this.char = char;
         var self = this;
         this.redo = function() {
-            $(self.char).insertBefore(self.curr);
+            $(self.char).insertAfter(self.curr.previousElementSibling);
             self.editor.setCurrentChar(self.curr);
         };
         this.undo = function() {
@@ -142,6 +140,7 @@ OCRJS.LineEditor = Base.extend({
         this.onEditingStarted(elem);
     },
 
+
     finishEditing: function(withtext) {
         var elem = this._e;
         $(this._e)
@@ -161,6 +160,7 @@ OCRJS.LineEditor = Base.extend({
         this.onEditingFinished(elem);
     },
 
+
     setCurrentChar: function(charelem) {
         if (!$.inArray(this._e.children, charelem))
             throw "Char element is not a childen of line";
@@ -173,9 +173,11 @@ OCRJS.LineEditor = Base.extend({
         //this._logger("Current char: " + $(this._c).text());
     },
 
+
     element: function() {
         return this._e;
     },        
+
 
     setupEvents: function() {
         var self = this;
@@ -248,29 +250,23 @@ OCRJS.LineEditor = Base.extend({
                 $(window).unbind("mouseup.selecttext");
                 self._dragpoint = null;
             });            
-        });
-
-        
-
+        });        
     },
 
+
     teardownEvents: function() {
-        $(window).unbind("click.editorblur");
         $(this._e).children()
             .die("click.clearselect")
             .die("click.positioncursor");
         $(this._e)
             .unbind("dblclick.selectword")
             .unbind("mousedown.noselection")
-            .unbind("mousemove.selecttext")
-            .unbind("mouseup.textsel");
+            .unbind("mousemove.selecttext");
         $(window)
             .unbind("click.editorblur")
             .unbind("keydown.editortype")
             .unbind("keypress.editortype")
             .unbind("keyup.editortype")
-            .unbind("mousemove.noselection")
-            .unbind("mouseup.checkselection")
             .unbind("mouseup.selecttext");
     },
 
@@ -333,7 +329,8 @@ OCRJS.LineEditor = Base.extend({
         // anchor to either the prev element or the parent.  This is to
         // hack around the fact that breaking chars (spaces) in Webkit
         // seem to have no position
-        if (elem && elem.previousElementSibling) {
+        if (elem && elem.previousElementSibling 
+                    && $.trim($(elem.previousElementSibling).text())) {
             var prev = $(elem).prevAll().filter(function(i) {
                 return $.trim($(this).text());
             }).first();
@@ -502,6 +499,8 @@ OCRJS.LineEditor = Base.extend({
      * Private Functions
      */
 
+    // handle key event - return true IF the event
+    // IS handled                       
     _handleKeyEvent: function(event) {
         // BROWSER HACK - FIXME: Firefox only receives
         // repeat key events for keypress, but ALSO 
@@ -518,10 +517,10 @@ OCRJS.LineEditor = Base.extend({
                         ? this._undostack.redo()
                         : this._undostack.undo();
                     event.preventDefault();
-                    return false;
+                    return true;
                 default:
             }
-            return true;
+            return false;
         }
 
         switch (event.keyCode) {
@@ -553,9 +552,11 @@ OCRJS.LineEditor = Base.extend({
                 if (!event.charCode)
                     return false;
                 this.insertChar(event);
+                event.preventDefault();
         }
         return true;
     },
+
 
     _initialiseCursor: function(clickevent) {
         // find the first letter in the series (ignore spaces)        
@@ -567,6 +568,7 @@ OCRJS.LineEditor = Base.extend({
         $("body").append(this._cursor);
         this.blinkCursor(true);
     },
+
 
     _keyNav: function(event) {
         this._logger("Nav -> " + event.type + ": " + event.keyCode); 
@@ -604,6 +606,7 @@ OCRJS.LineEditor = Base.extend({
         }
     },
 
+
     _charClicked: function(event) {
         this._logger("Char clicked: " + $(event.target).text());
         var elem = event.target;
@@ -630,6 +633,7 @@ OCRJS.LineEditor = Base.extend({
         this.setCurrentChar(elem);
     },
 
+
     // ensure that is the last char in the line is a space
     // that it's a non-breaking one.  Otherwise ensure that
     // all spaces are breaking entities.                 
@@ -652,6 +656,7 @@ OCRJS.LineEditor = Base.extend({
         });
     },                  
 
+
     _selectCurrentWord: function(event) {
         // this is TERRIBLE!  Whatever, too late, will
         // fix it in the cold light of day.
@@ -669,6 +674,7 @@ OCRJS.LineEditor = Base.extend({
         }
         this.updateSelection(startchar, endchar);
     },
+
 
     _selectCharUnderPoint: function(event) {
         if (!event)
@@ -698,6 +704,7 @@ OCRJS.LineEditor = Base.extend({
         }
         this.positionCursorTo(this._c);
     },                          
+
 
     _logger: function(text) {
         if (!this._log)
