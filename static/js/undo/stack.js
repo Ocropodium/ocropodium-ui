@@ -8,13 +8,18 @@ if (OCRJS === undefined) {
 OCRJS.UndoStack = Base.extend({
     constructor: function(context) {
         this.__stack = [];
-        this.index = -1;
+        this.index = 0;
         this.__context = context;
         this.__nocomp = false;
     },
 
+    clear: function() {
+        this.index = 0;
+        this.__stack = [];
+    },
+
     push: function(cmd) {
-        while (this.__stack.length > this.index + 1) {
+        while (this.__stack.length > this.index) {
             this.__stack.pop();
         }
         cmd.redo.call(this.__context);
@@ -38,14 +43,14 @@ OCRJS.UndoStack = Base.extend({
 
     undoText: function() {
         if (this.__stack.length) {
-            return "Undo " + this.__stack[this.index].text();
+            return "Undo " + this.__stack[this.index - 1].text();
         }
         return "Nothing to undo";
     },    
 
     redoText: function() {
-        if (this.__stack.length && this.index < this.__stack.length - 1) {
-            return "Redo " + this.__stack[this.index + 1].text();
+        if (this.__stack.length && this.index < this.__stack.length) {
+            return "Redo " + this.__stack[this.index].text();
         }
         return "Nothing to redo";
     },    
@@ -53,7 +58,7 @@ OCRJS.UndoStack = Base.extend({
     undo: function() {
         if (!this.canUndo())
             return;
-        this.__stack[this.index].undo.call(this.__context);    
+        this.__stack[this.index - 1].undo.call(this.__context);    
         this.index--;
     },
 
@@ -61,15 +66,15 @@ OCRJS.UndoStack = Base.extend({
         if (!this.canRedo())
             return;
         this.index++;
-        this.__stack[this.index].redo.call(this.__context);
+        this.__stack[this.index - 1].redo.call(this.__context);
     },
 
     canUndo: function() {
-        return this.index >= 0;    
+        return this.index > 0;    
     },
 
     canRedo: function() {
-        return this.__stack.length > this.index + 1;
+        return this.__stack.length > this.index;
     },
 
     breakCompression: function() {
