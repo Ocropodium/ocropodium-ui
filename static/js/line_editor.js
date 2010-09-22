@@ -134,8 +134,7 @@ OCRJS.LineEditor = Base.extend({
         this._c = null;
         this._e = null;
         this._selectstart = null;        
-        this.blinkCursor(false);
-        $(this._cursor).remove();
+        $(this._cursor).detach();
         this._undostack.clear();
         this.teardownEvents();
     },
@@ -188,9 +187,11 @@ OCRJS.LineEditor = Base.extend({
         });
 
         $(window).bind("keyup.editortype", function(event) {
-            self._blinktimer = setTimeout(function() {
-                self.blinkCursor(true);
-            }, 2 * LONGKEY);
+            if (self._blinktimer == -1) {                
+                self._blinktimer = setTimeout(function() {
+                    self.blinkCursor(true);
+                }, 2 * LONGKEY);
+            }
         });
 
 
@@ -270,16 +271,19 @@ OCRJS.LineEditor = Base.extend({
         // if there's no char elem, set to back of
         // the container box
         if (elem.tagName == "DIV") {
-            //this._logger("Positioninging by end");
+            this._logger("Positioning by end");
             var top = $(this._endmarker).offset().top;
             var left = ($(this._endmarker).offset().left);
+            minleft = this._left + $(this._e).width();
             // hack around Firefox float drop bug
             if ($.browser.mozilla) {
-                if (this._e.children > 1) {
-                    top = $(this._e).children().slice(-2).offset().top;
-                } else {
-                    top = ($(this._e).offset().top + $(this._e).height()) - $(this._endmarker).height();
-                }               
+                this._logger("Positioning for FF by end");
+                var lastchar = $(this._e).children("span").filter(function(index) {
+                    return $(this).text() != " ";                            
+                }).last();
+                if (lastchar.length) {
+                    top = lastchar.offset().top;
+                }
             }
             $(this._cursor)
                 .css("top", Math.max(top, mintop) + "px")
@@ -388,7 +392,6 @@ OCRJS.LineEditor = Base.extend({
         var nexts = [];
         for (var i in elems)
             nexts.push(elems[i].nextElementSibling);
-
         this._undostack.push(new DeleteCommand(this, elems, nexts, false));
         this._undostack.breakCompression();
         this.positionCursorTo(this._c);
