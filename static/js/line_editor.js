@@ -99,22 +99,6 @@ OCRJS.LineEditor = Base.extend({
             .addClass("endmarker").get(0),
 
 
-    blinkCursor: function(blink) {
-        var self = this;
-        if (blink) {
-            $(self._cursor).toggleClass("blinkoff");
-            self._blinktimer = setTimeout(function() {
-                self.blinkCursor(true);        
-            }, LONGKEY);
-        } else {
-            $(self._cursor).removeClass("blinkoff");
-            clearTimeout(self._blinktimer);
-            self._blinktimer = -1;
-        }
-    },
-
-
-
     /*
      * Setup and teardown functions
      *
@@ -159,7 +143,6 @@ OCRJS.LineEditor = Base.extend({
     setCurrentChar: function(charelem) {
         if (!$.inArray(this._e.children, charelem))
             throw "Char element is not a childen of line";
-
         this._c = charelem;
         this.positionCursorTo(this._c);
     },                   
@@ -310,6 +293,21 @@ OCRJS.LineEditor = Base.extend({
     },
 
 
+    blinkCursor: function(blink) {
+        var self = this;
+        if (blink) {
+            $(self._cursor).toggleClass("blinkoff");
+            self._blinktimer = setTimeout(function() {
+                self.blinkCursor(true);        
+            }, LONGKEY);
+        } else {
+            $(self._cursor).removeClass("blinkoff");
+            clearTimeout(self._blinktimer);
+            self._blinktimer = -1;
+        }
+    },
+
+
     /*
      * Selection functions
      *
@@ -405,7 +403,6 @@ OCRJS.LineEditor = Base.extend({
             .text(event.charCode == 32
                     ? "\u00a0"
                     : String.fromCharCode(event.charCode)).get(0);
-
         this._undostack.push(new InsertCommand(this, char, curr));
     },
     
