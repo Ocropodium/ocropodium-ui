@@ -46,7 +46,7 @@
     color: #000;
 }
 
-.editcursor.blink {
+.editcursor.blinkoff {
     background-color: transparent;
 }
 

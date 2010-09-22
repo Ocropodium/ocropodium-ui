@@ -102,15 +102,17 @@ OCRJS.LineEditor = Base.extend({
     blinkCursor: function(blink) {
         var self = this;
         if (blink) {
-            $(this._cursor).toggleClass("blink");
-            this._blinktimer = setTimeout(function() {
+            $(self._cursor).toggleClass("blinkoff");
+            self._blinktimer = setTimeout(function() {
                 self.blinkCursor(true);        
             }, LONGKEY);
         } else {
-            clearTimeout(this._blinktimer);
-            this._blinktimer = -1;
+            $(self._cursor).removeClass("blinkoff");
+            clearTimeout(self._blinktimer);
+            self._blinktimer = -1;
         }
     },
+
 
 
     /*
@@ -185,6 +187,7 @@ OCRJS.LineEditor = Base.extend({
 
         $(window).bind("keydown.editortype", function(event) {
             if (self._handleKeyEvent(event)) {
+                self.blinkCursor(false);    
                 event.preventDefault();
                 return false;
             }
@@ -201,7 +204,11 @@ OCRJS.LineEditor = Base.extend({
             //alert(typeof event.which);
         });
 
-
+        $(window).bind("keyup.editortype", function(event) {
+            self._blinktimer = setTimeout(function() {
+                self.blinkCursor(true);
+            }, 2 * LONGKEY);
+        });
 
 
     },
