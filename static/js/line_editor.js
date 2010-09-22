@@ -20,11 +20,72 @@ if (OCRJS === undefined) {
 }
 
 
+/*
+ * Undo Commands for insert/delete
+ *
+ */
+
+// Undoable commands - note that these depend
+// on the outer object scope, which is not ideal
+var InsertCommand = OCRJS.UndoCommand.extend({
+    constructor: function(editor, char, curr) {
+        this.base("typing");
+        this.editor = editor;
+        this.curr = curr;
+        this.char = char;
+        var self = this;
+        this.redo = function() {
+            $(self.char).insertBefore(self.curr);
+            self.editor.setCurrentChar(self.curr);
+        };
+        this.undo = function() {
+            $(self.char).remove();
+            self.editor.setCurrentChar(self.curr);
+        };
+        this.mergeWith = function(other) {
+            self.char = $(self.char).add(other.char).get();                    
+            return true;                
+        };
+    },
+});
+
+var DeleteCommand = OCRJS.UndoCommand.extend({
+    constructor: function(editor, elems, nexts, back) {
+        this.base("delete");
+        this.editor = editor;
+        this.elems = elems;
+        this.nexts = nexts;
+        this.back = back;
+        var self = this;
+        this.redo = function() {
+            $(self.elems).not(".endmarker").detach();
+            self.editor.setCurrentChar(self.nexts[0]);
+        };
+        this.undo = function() {
+            for (var i in self.elems) {
+                $(self.elems[i]).insertBefore(self.nexts[i]);
+                self.editor.setCurrentChar(self.back 
+                        ? self.elems[i].nextElementSibling : self.elems[i]);
+            }
+        };
+        this.mergeWith = function(other) {
+            for (var i in other.elems) {
+                self.elems.push(other.elems[i]);
+                self.nexts.push(other.nexts[i]);
+            }
+            return true;    
+        };
+    },
+});
+
+
 const LONGKEY = 500;
 OCRJS.LineEditor = Base.extend({
 
     _e: null,          // the element we're operating on 
-    _c: null,          // the current character in front of the cursor 
+    _c: null,          // the current character in front of the cursor
+    _top: null,         // reference to initial top of elem
+    _left: null,        // reference to initial left of elem 
     _selectstart: null,   // selection start & end  
     _inittext: null,      // initial text of selected element 
     _keyevent: null,      // capture the last key event 
@@ -33,15 +94,15 @@ OCRJS.LineEditor = Base.extend({
     _undostack: new OCRJS.UndoStack(this), // undo stack object 
     _cursor: $("<div></div>") // cursor element
             .addClass("editcursor")
-            .text("|"),
+            .text("|").get(0),
     _endmarker: $("<div></div>")  // anchor for the end of the line 
-            .addClass("endmarker"),
+            .addClass("endmarker").get(0),
 
 
     blinkCursor: function(blink) {
         var self = this;
         if (blink) {
-            this._cursor.toggleClass("blink");
+            $(this._cursor).toggleClass("blink");
             this._blinktimer = setTimeout(function() {
                 self.blinkCursor(true);        
             }, LONGKEY);
@@ -59,6 +120,8 @@ OCRJS.LineEditor = Base.extend({
 
     edit: function(elem, event) {
         this._e = elem;
+        this._top = $(elem).offset().top;
+        this._left = $(elem).offset().left;
         this._inittext = $(elem).text();        
 
         this.setupEvents()
@@ -67,7 +130,7 @@ OCRJS.LineEditor = Base.extend({
         $(this._e).html($.map($.trim($(this._e).text()), function(ch) {
             return "<span>" + ch + "</span>";
         }).join("")).append(
-            this._endmarker.height($(this._e).height())
+            $(this._endmarker).height($(this._e).height())
         );
 
         $(elem).addClass("selected");    
@@ -86,10 +149,18 @@ OCRJS.LineEditor = Base.extend({
         this._e = null;
         this._selectstart = null;        
         this.blinkCursor(false);
-        this._cursor.remove();
+        $(this._cursor).remove();
 
         this.teardownEvents();
     },
+
+    setCurrentChar: function(charelem) {
+        if (!$.inArray(this._e.children, charelem))
+            throw "Char element is not a childen of line";
+
+        this._c = charelem;
+        this.positionCursorTo(this._c);
+    },                   
 
     setupEvents: function() {
         var self = this;
@@ -117,7 +188,7 @@ OCRJS.LineEditor = Base.extend({
                 event.preventDefault();
                 return false;
             }
-            self._logger(event.type + ": " + event.which);
+            self._logger(event.type + ": " + event.keyCode + "  Char: " + event.charCode);
             //alert(typeof event.which);
         });
 
@@ -126,7 +197,7 @@ OCRJS.LineEditor = Base.extend({
                 event.preventDefault();
                 return false;
             }
-            self._logger(event.type + ": " + event.keyCode);
+            self._logger(event.type + ": " + event.keyCode + "  Char: " + event.charCode);
             //alert(typeof event.which);
         });
 
@@ -161,45 +232,42 @@ OCRJS.LineEditor = Base.extend({
      *
      */
 
+    // when at the end of the line, the current
+    // char is the endmarker div.  This should
+    // never be deleted                    
+    isAtEnd: function() {
+        return this._c.tagName == "DIV";
+    },
+                    
     moveCursorLeft: function() {
         // check if we're at the end
         // or at the beginning...
-        if (!this._c) {
-            this._c = $(this._e).find("span").get(-1);            
-        } else {
-            var prev = this._c.previousElementSibling;
-            if (!prev) {
-                // we're already at the start
-                return false;
-            }
-            this._c = prev;
-        }
-        this.positionCursorTo(this._c);
+        if (!this._c.previousElementSibling)
+            return;
+        this.setCurrentChar(this._c.previousElementSibling);
         return true;
     },
 
     moveCursorRight: function() {
-        if (!this._c)
+        if (this.isAtEnd())
             return false;
-        this._c = this._c.nextElementSibling;
-        // check if we're at the end
-        this.positionCursorTo(this._c);
+        this.setCurrentChar(this._c.nextElementSibling);
         return true;
     },
 
     moveCursorToStart: function() {
-        this._c = $(this._e).children().get(0);
-        this.positionCursorTo(this._c);
+        this.setCurrentChar(this._e.children[0]);
     },                   
 
     moveCursorToEnd: function() {
-        this._c = null;
-        this.positionCursorTo(this._c);
+        this.setCurrentChar(this._endmarker);
     },
 
     positionCursorTo: function(elem) {
-        var mintop = $(this._e).offset().top;
-        var minleft = $(this._e).offset().left;
+        if (!elem)
+            throw "Attempt to position cursor to null element";
+        var mintop = this._top; //$(this._e).offset().top;
+        var minleft = this._left; //$(this._e).offset().left;
         // anchor to either the prev element or the parent.  This is to
         // hack around the fact that breaking chars (spaces) in Webkit
         // seem to have no position
@@ -211,25 +279,27 @@ OCRJS.LineEditor = Base.extend({
         }
         // if there's no char elem, set to back of
         // the container box
-        if (!elem || elem.tagName == "DIV") {
-            var top = this._endmarker.offset().top;
+        if (elem.tagName == "DIV") {
+            //this._logger("Positioninging by end");
+            var top = $(this._endmarker).offset().top;
+            var left = ($(this._endmarker).offset().left);
             // hack around Firefox float drop bug
             if ($.browser.mozilla) {
-                if ($(this._e).children().length > 1) {
+                if (this._e.children > 1) {
                     top = $(this._e).children().slice(-2).offset().top;
                 } else {
-                    top = ($(this._e).offset().top + $(this._e).height()) - this._endmarker.height();
-                }
+                    top = ($(this._e).offset().top + $(this._e).height()) - $(this._endmarker).height();
+                }               
             }
-            this._cursor
-                .css("top", top + "px")
-                .css("left", (this._endmarker.offset().left + this._endmarker.width()) + "px");
+            $(this._cursor)
+                .css("top", Math.max(top, mintop) + "px")
+                .css("left", Math.max(left, minleft) + "px");
             return;
         }
 
         var top = Math.max(mintop, $(elem).offset().top);
         var left = Math.max(minleft, $(elem).offset().left);
-        this._cursor.css("top", top + "px").css("left", left + "px");
+        $(this._cursor).css("top", top + "px").css("left", left + "px");
     },
 
 
@@ -265,7 +335,7 @@ OCRJS.LineEditor = Base.extend({
      *
      */
     deleteChar: function(back) {
-        if (eraseSelection())
+        if (this.eraseSelection())
             return;
 
         // if we're already at the end, return
@@ -286,7 +356,9 @@ OCRJS.LineEditor = Base.extend({
         var curr = back
             ? this._c.previousElementSibling 
             : this._c;
-        m_undostack.push(new DeleteCommand([curr], [next], back));
+        if (!curr)
+            return;
+        this._undostack.push(new DeleteCommand(this, [curr], [next], back));
     },
 
 
@@ -312,18 +384,50 @@ OCRJS.LineEditor = Base.extend({
         for (var i in elems)
             nexts.push(elems[i].nextElementSibling);
 
-        this._undostack.push(new DeleteCommand(elems, nexts, false));
+        this._undostack.push(new DeleteCommand(this, elems, nexts, false));
         this._undostack.breakCompression();
         this.positionCursorTo(this._c);
         return true;
     },
 
                       
+    insertChar: function(event) {
+        this.eraseSelection();        
+        var curr = this._c ? this._c : this._endmarker;
+        var char = $("<span></span>")
+            .text(event.charCode == 32
+                    ? "\u00a0"
+                    : String.fromCharCode(event.charCode)).get(0);
+
+        this._undostack.push(new InsertCommand(this, char, curr));
+    },
+    
     /*
      * Private Functions
      */
 
     _handleKeyEvent: function(event) {
+        // BROWSER HACK - FIXME: Firefox only receives
+        // repeat key events for keypress, but ALSO 
+        // fires keydown for non-char keys
+        if ($.browser.mozilla) {
+            if (!event.ctrlKey && event.type == "keydown")
+                return;
+        }
+
+        if (event.ctrlKey) {
+            switch (event.which) {
+                case 90: // Z-key, for undo/redo
+                    event.shiftKey
+                        ? this._undostack.redo()
+                        : this._undostack.undo();
+                    event.preventDefault();
+                    return false;
+                default:
+            }
+            return true;
+        }
+
         switch (event.keyCode) {
             case KC_LEFT:
             case KC_RIGHT:
@@ -335,14 +439,18 @@ OCRJS.LineEditor = Base.extend({
                 break;
             case KC_ESCAPE: // abandon changes
                 this.finishEditing(this._inittext);
+                break;
             case KC_RETURN: // accept changes
                 this.finishEditing();
-            case KC_DELETE:
-
+                break;
+            case KC_DELETE: 
+            case KC_BACKSPACE: // delete or backspace
+                this.deleteChar(event.keyCode == KC_BACKSPACE);
+                break;
             default:
-                return false;
-                
-
+                if (!event.charCode)
+                    return false;
+                this.insertChar(event);
         }
         return true;
     },
@@ -359,14 +467,6 @@ OCRJS.LineEditor = Base.extend({
 
     _keyNav: function(event) {
         this._logger("Nav -> " + event.type + ": " + event.keyCode); 
-
-        // BROWSER HACK - FIXME: Firefox only receives
-        // repeat key events for keypress, but ALSO 
-        // fires keydown for non-char keys
-        if ($.browser.mozilla) {
-            if (event.type == "keydown")
-                return;
-        }
 
         // break command compressions so further deletes/inserts
         // are undone/redone discretely
