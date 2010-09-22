@@ -20,6 +20,21 @@ if (OCRJS === undefined) {
 }
 
 
+// Jquery, disallow selection
+jQuery.fn.extend({ 
+    allowSelection : function(allow) { 
+        this.each(function() { 
+            this.onselectstart = function() { return allow; }; 
+            this.unselectable = allow ? "" : "on"; 
+            jQuery(this).css('-moz-user-select', allow ?  null : 'none'); 
+        });
+        return this; 
+    } 
+});
+
+
+
+
 /*
  * Undo Commands for insert/delete
  *
@@ -119,8 +134,10 @@ OCRJS.LineEditor = Base.extend({
             $(this._endmarker).height($(this._e).height())
         );
 
-        $(elem).addClass("selected");    
-        $(elem).addClass("editing");
+        $(elem)
+            .addClass("selected")
+            .addClass("editing")
+            .allowSelection(false);
 
         this._initialiseCursor();
         //this.selectCharUnderClick(event);
@@ -129,7 +146,8 @@ OCRJS.LineEditor = Base.extend({
     finishEditing: function(withtext) {
         $(this._e)
             .removeClass("selected")
-            .removeClass("editing")        
+            .removeClass("editing")
+            .allowSelection(true)        
             .html(withtext ? withtext : $(this._e).text());
         this._c = null;
         this._e = null;
@@ -194,6 +212,35 @@ OCRJS.LineEditor = Base.extend({
             }
         });
 
+        // Mouse events
+        $(this._e).find("span").live("click.positioncursor", function(event) {
+            self._charClicked(event);
+        });
+        $(this._e).find("span").live("click.clearselect", function(event) {
+            self.deselectAll();
+        });
+        $(this._e).bind("dblclick.selectword", function(event) {
+            self._selectCurrentWord(event);
+        });
+        // handler to track mouse moves when selecting text
+        $(this._e).bind("mousedown.selecttext", function(event) {
+            // not sure why this happens, but sometimes the
+            // selecttext bind errors...
+            //if (!m_elem)
+            //    return;
+            self._dragpoint = { x: event.pageX, y: event.pageY };
+            $(self._e).bind("mousemove.selecttext", function(event) {
+                //self._expandSelectedChars(event);
+                self._selectCharUnderPoint(event);
+            });
+            $(window).bind("mouseup.selecttext", function(event) {
+                $(self._e).unbind("mousemove.selecttext");
+                $(window).unbind("mouseup.selecttext");
+                self._dragpoint = null;
+            });            
+        });
+
+        
 
     },
 
@@ -268,6 +315,8 @@ OCRJS.LineEditor = Base.extend({
             minleft = Math.max(minleft, prev.offset().left
                    + prev.width());
         }
+
+       
         // if there's no char elem, set to back of
         // the container box
         if (elem.tagName == "DIV") {
@@ -276,6 +325,7 @@ OCRJS.LineEditor = Base.extend({
             var left = ($(this._endmarker).offset().left);
             minleft = this._left + $(this._e).width();
             // hack around Firefox float drop bug
+            /*
             if ($.browser.mozilla) {
                 this._logger("Positioning for FF by end");
                 var lastchar = $(this._e).children("span").filter(function(index) {
@@ -284,7 +334,7 @@ OCRJS.LineEditor = Base.extend({
                 if (lastchar.length) {
                     top = lastchar.offset().top;
                 }
-            }
+            }*/
             $(this._cursor)
                 .css("top", Math.max(top, mintop) + "px")
                 .css("left", Math.max(left, minleft) + "px");
@@ -292,6 +342,16 @@ OCRJS.LineEditor = Base.extend({
         }
 
         var top = Math.max(mintop, $(elem).offset().top);
+        if ($.browser.mozilla && !$(elem).text().match(/\w+/)) {
+            var traverser = elem.previousElementSibling
+                ? "prevAll"
+                : "nextAll";
+            var neartext = $(elem)[traverser]().filter(function(index) {
+                return $(this).text().match(/\w+/);                            
+            }).first();
+            top = neartext.offset().top;
+        }
+
         var left = Math.max(minleft, $(elem).offset().left);
         $(this._cursor).css("top", top + "px").css("left", left + "px");
     },
@@ -463,10 +523,11 @@ OCRJS.LineEditor = Base.extend({
     },
 
     _initialiseCursor: function(clickevent) {
-        // find the first letter in the series (ignore spaces)
+        // find the first letter in the series (ignore spaces)        
         this._c = $(this._e).find("span").filter(function(index) {
             return $(this).text() != " ";                            
         }).get(0);
+        $(this._cursor).css("height", $(this._c).height());
         this.positionCursorTo(this._c);
         $("body").append(this._cursor);
         this.blinkCursor(true);
@@ -507,6 +568,79 @@ OCRJS.LineEditor = Base.extend({
             this.updateSelection(this._selectstart, this._c);
         }
     },
+
+    _charClicked: function(event) {
+        this._logger("Char clicked: " + $(event.target).text());
+        var elem = event.target;
+        var offset = $(elem).offset();            
+        var mid = $(elem).width() / 2;
+        var atend = $(elem).next().length == 0;
+
+        // if we've clicked on the first char, position the
+        // cursor, set the start marker
+        if (!elem.previousElementSibling) {
+            this.setCurrentChar(elem);
+            return;    
+        }
+
+        // if we click on latter half of the last element
+        if ($(elem).next("span").length == 0 && event.pageX > (offset.left + mid)) {
+            this.setCurrentChar(this._endmarker);
+            return;
+        }
+
+        // otherwise, we're in the middle somewhere
+        if (event.pageX >= (offset.left + mid)) 
+            elem = elem.nextElementSibling;
+        this.setCurrentChar(elem);
+    },
+
+    _selectCurrentWord: function(event) {
+        // this is TERRIBLE!  Whatever, too late, will
+        // fix it in the cold light of day.
+        if (!event.shiftDown)
+            this.deselectAll();
+        var startchar = this._c;
+        while (startchar.previousElementSibling 
+                && startchar.previousElementSibling.textContent.match(/^\w$/)) {
+            startchar = startchar.previousElementSibling;
+        }
+        var endchar = this._c;        
+        while (endchar && endchar != this._endmarker
+                && endchar.textContent.match(/^\w$/)) {
+            endchar = endchar.nextElementSibling;
+        }
+        this.updateSelection(startchar, endchar);
+    },
+
+    _selectCharUnderPoint: function(event) {
+        if (!event)
+            return;
+        // find the 'new' span element that would've
+        // been under the mouse when clicked
+        for (var i = 0; i < $(this._e).children("span").length; i++) {
+            var elem = $(this._e.children[i]);
+            var elemoffset = elem.offset();
+            if (event.pageX < elemoffset.left)
+                continue;
+            if (event.pageX > elemoffset.left + elem.width())
+                continue;
+            if (event.pageY < elemoffset.top)
+                continue;
+            if (event.pageY > elemoffset.top + elem.height())
+                continue;
+            this._c = elem.get(0);
+            if (event.pageX > (elemoffset.left + (elem.width() / 2)))
+                this._c = elem.next().get(0);
+            break;
+        }
+        if (!this._selectstart) {
+            this._selectstart = this._c;
+        } else {
+            this.updateSelection(this._selectstart, this._c);
+        }
+        this.positionCursorTo(this._c);
+    },                          
 
     _logger: function(text) {
         var log = $("#logwin");
