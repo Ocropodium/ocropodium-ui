@@ -109,7 +109,8 @@ OCRJS.LineEditor = Base.extend({
     _keyevent: null,      // capture the last key event 
     _blinktimer: -1,      // timer for cursor flashing
     _dragpoint: null,     // the point dragging started 
-    _undostack: new OCRJS.UndoStack(this), // undo stack object 
+    _undostack: new OCRJS.UndoStack(this), // undo stack object
+    _notemptyre: new RegExp("\S"), 
     _cursor: $("<div></div>") // cursor element
             .addClass("editcursor")
             .text("").get(0),
@@ -145,9 +146,11 @@ OCRJS.LineEditor = Base.extend({
         this._initialiseCursor();
         if (event.type.match(/click/))
             this._selectCharUnderPoint(event);
+        this.onEditingStarted(elem);
     },
 
     finishEditing: function(withtext) {
+        var elem = this._e;
         $(this._e)
             .removeClass("selected")
             .removeClass("editing")
@@ -159,12 +162,14 @@ OCRJS.LineEditor = Base.extend({
         $(this._cursor).detach();
         this._undostack.clear();
         this.teardownEvents();
+        this.onEditingFinished(elem);
     },
 
     setCurrentChar: function(charelem) {
         if (!$.inArray(this._e.children, charelem))
             throw "Char element is not a childen of line";
         this._c = charelem;
+        this._mungeSpaces();
         this.positionCursorTo(this._c);
     },                   
 
@@ -277,6 +282,16 @@ OCRJS.LineEditor = Base.extend({
     isAtEnd: function() {
         return this._c.tagName == "DIV";
     },
+
+    // determine if the line is wrapping.  Assumes
+    // there are a least 2 chars (+ the endmarker)             
+    isWrapping: function() {
+        if (this._e.children < 3)
+            return false;
+        var first = this._e.children[0];
+        var last = this._endmarker.previousElementSibling;
+        return $(first).offset().top != $(last).offset().top;
+    },             
                     
     moveCursorLeft: function() {
         // check if we're at the end
@@ -311,35 +326,14 @@ OCRJS.LineEditor = Base.extend({
         // hack around the fact that breaking chars (spaces) in Webkit
         // seem to have no position
         if (elem && elem.previousElementSibling) {
-            var prev = $(elem.previousElementSibling);
-            mintop = Math.max(mintop, prev.offset().top);
-            minleft = Math.max(minleft, prev.offset().left
-                   + prev.width());
-        }
-
-       
-        // if there's no char elem, set to back of
-        // the container box
-        if (elem.tagName == "DIV") {
-            this._logger("Positioning by end");
-            var top = $(this._endmarker).offset().top;
-            var left = ($(this._endmarker).offset().left);
-            minleft = this._left + $(this._e).width();
-            // hack around Firefox float drop bug
-            /*
-            if ($.browser.mozilla) {
-                this._logger("Positioning for FF by end");
-                var lastchar = $(this._e).children("span").filter(function(index) {
-                    return $(this).text() != " ";                            
-                }).last();
-                if (lastchar.length) {
-                    top = lastchar.offset().top;
-                }
-            }*/
-            $(this._cursor)
-                .css("top", Math.max(top, mintop) + "px")
-                .css("left", Math.max(left, minleft) + "px");
-            return;
+            var prev = $(elem).prevAll().filter(function(i) {
+                return $.trim($(this).text());
+            }).first();
+            if (prev.length) {
+                mintop = Math.max(mintop, prev.offset().top);
+                minleft = Math.max(minleft, prev.offset().left
+                       + prev.width());
+            }
         }
 
         var top = Math.max(mintop, $(elem).offset().top);
@@ -350,7 +344,9 @@ OCRJS.LineEditor = Base.extend({
             var neartext = $(elem)[traverser]().filter(function(index) {
                 return $(this).text().match(/\w+/);                            
             }).first();
-            top = neartext.offset().top;
+            if (neartext.length) {
+                top = neartext.offset().top;
+            }
         }
 
         var left = Math.max(minleft, $(elem).offset().left);
@@ -469,7 +465,31 @@ OCRJS.LineEditor = Base.extend({
                     : String.fromCharCode(event.charCode)).get(0);
         this._undostack.push(new InsertCommand(this, char, curr));
     },
-    
+
+
+    /*
+     * Overridable events
+     *
+     */
+
+    onEditNextElement: function(event) {
+
+    },
+
+    onEditPrevElement: function(event) {
+
+    },
+
+    onEditingStarted: function(event) {
+
+    },
+
+    onEditingFinished: function(event) {
+
+    },
+
+
+
     /*
      * Private Functions
      */
@@ -514,6 +534,12 @@ OCRJS.LineEditor = Base.extend({
             case KC_DELETE: 
             case KC_BACKSPACE: // delete or backspace
                 this.deleteChar(event.keyCode == KC_BACKSPACE);
+                break;
+            case KC_TAB: // finish and go to next
+                this.finishEditing();
+                event.shiftKey 
+                    ? this.onEditPrevElement()
+                    : this.onEditNextElement();
                 break;
             default:
                 if (!event.charCode)
@@ -595,6 +621,28 @@ OCRJS.LineEditor = Base.extend({
             elem = elem.nextElementSibling;
         this.setCurrentChar(elem);
     },
+
+    // ensure that is the last char in the line is a space
+    // that it's a non-breaking one.  Otherwise ensure that
+    // all spaces are breaking entities.                 
+    _mungeSpaces: function(event) {
+        var self = this;
+        if (this._endmarker.previousElementSibling) {
+            var pes = this._endmarker.previousElementSibling;
+            if ($(pes).text() == " ") {
+                $(pes).text("\u00a0");
+            }
+        }
+        $(this._endmarker).prevAll().filter(function(i) {
+            if ($(this).text() == "\u00a0") {
+                if ($(this).next().text().match(/\S/)) {
+                    return true;                    
+                }
+            }
+        }).each(function(i, elem) {
+            $(elem).text(" ");    
+        });
+    },                  
 
     _selectCurrentWord: function(event) {
         // this is TERRIBLE!  Whatever, too late, will
