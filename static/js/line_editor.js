@@ -641,7 +641,7 @@ OCRJS.LineEditor = Base.extend({
     _elementPos: function(elem) {
         var offset = $(elem).offset();
         var mintop = $(elem).parent().offset().top;
-        if ($(elem).text() != " " || ($.browser.webkit && offset.top)) {
+        if ($(elem).text() != " " || ($.browser.webkit && offset.top >= mintop)) {
             return {top: offset.top, left: offset.left};
         }
         // if not, find the nearest a sibling either side
