@@ -27,22 +27,31 @@ jQuery.fn.extend({
  */
 
 var InsertCommand = OCRJS.UndoCommand.extend({
-    constructor: function(editor, char, curr) {
+    constructor: function(editor, chars, curr) {
         this.base("typing");
         this.editor = editor;
         this.curr = curr;
-        this.char = char;
+        this.chars = chars;
         var self = this;
         this.redo = function() {
-            $(self.char).insertAfter(self.curr.previousElementSibling);
+            
+            $(self.chars).insertBefore(self.curr);
+            // hack around Chrome not doing a reflow when inserting 
+            // after a breaking element - toggle overflow to force it
+            if ($.browser.webkit && self.editor.isWrapping()) {                
+                $(self.curr).css("overflow", "auto");
+                setTimeout(function() {
+                    $(self.curr).css("overflow", null);
+                }, 0);
+            } 
             self.editor.setCurrentChar(self.curr);
         };
         this.undo = function() {
-            $(self.char).remove();
+            $(self.chars).remove();
             self.editor.setCurrentChar(self.curr);
         };
         this.mergeWith = function(other) {
-            self.char = $(self.char).add(other.char).get();                    
+            self.chars = $(self.chars).add(other.chars).get();                    
             return true;                
         };
     },
@@ -114,8 +123,6 @@ OCRJS.LineEditor = Base.extend({
         if (!elem)
             throw "Attempt to edit null element";
         this._e = elem;
-        this._top = $(elem).offset().top;
-        this._left = $(elem).offset().left;
         this._inittext = $(elem).text();        
         this._editing = true;
 
@@ -128,6 +135,11 @@ OCRJS.LineEditor = Base.extend({
             $(this._endmarker).height($(this._e).height())
         );
 
+        // set initial position of first element so we can later
+        // anchor the line if necessary
+        this._top = $(elem).children().first().offset().top;
+        this._left = $(elem).children().first().offset().left;
+
         $(elem)
             .addClass("selected")
             .addClass("editing")
@@ -136,7 +148,6 @@ OCRJS.LineEditor = Base.extend({
         this._initialiseCursor();
         if (event && event.type.match(/click/))
             this._selectCharUnderPoint(event);
-        this._logger("Current char: " + $(this._c).text() + " Full: " + $(this._e).text());
         this.onEditingStarted(elem);
     },
 
@@ -169,7 +180,7 @@ OCRJS.LineEditor = Base.extend({
         this._c = charelem;
         this._mungeSpaces();
         this.positionCursorTo(this._c);
-        this._logger("Current char: " + $(this._c).text() + " Full: " + $(this._e).text());
+        //this._logger("Current char: " + $(this._c).text() + " Full: " + $(this._e).text());
         //this._logger("Current char: " + $(this._c).text());
     },
 
@@ -201,17 +212,18 @@ OCRJS.LineEditor = Base.extend({
         });
 
         $(window).bind("keydown.editortype", function(event) {
+            self.blinkCursor(false);    
             if (self._handleKeyEvent(event)) {
-                self.blinkCursor(false);    
                 event.preventDefault();
                 return false;
             }
-            self._logger(event.type + ": " + event.keyCode + "  Char: " + event.charCode);
+            //self._logger(event.type + ": " + event.keyCode + "  Char: " + event.charCode);
             //alert(typeof event.which);
         });
 
         $(window).bind("keypress.editortype", function(event) {
             if (self._handleKeyEvent(event)) {
+                //self.blinkCursor(false);    
                 event.preventDefault();
                 return false;
             }
@@ -288,7 +300,7 @@ OCRJS.LineEditor = Base.extend({
     isWrapping: function() {
         if (this._e.children < 3)
             return false;
-        var first = this._e.children[0];
+        var first = $(this._e).children().first().get(0);
         var last = this._endmarker.previousElementSibling;
         return $(first).offset().top != $(last).offset().top;
     },             
@@ -324,38 +336,24 @@ OCRJS.LineEditor = Base.extend({
     positionCursorTo: function(elem) {
         if (!elem)
             throw "Attempt to position cursor to null element";
-        var mintop = this._top; //$(this._e).offset().top;
-        var minleft = this._left; //$(this._e).offset().left;
-        // anchor to either the prev element or the parent.  This is to
-        // hack around the fact that breaking chars (spaces) in Webkit
-        // seem to have no position
-        if (elem && elem.previousElementSibling 
-                    && $.trim($(elem.previousElementSibling).text())) {
-            var prev = $(elem).prevAll().filter(function(i) {
-                return $.trim($(this).text());
-            }).first();
-            if (prev.length) {
-                mintop = Math.max(mintop, prev.offset().top);
-                minleft = Math.max(minleft, prev.offset().left
-                       + prev.width());
+        var os = this._elementPos(elem);
+        if (elem.tagName == "DIV") {
+            if (elem.previousElementSibling) {
+                var neartext = $(elem).prevAll().filter(function(index) {
+                    return $(this).text() != " ";                            
+                }).first();
+                if (neartext.length) {
+                    os.top = neartext.offset().top;               
+                } else {
+                    os.top = this._elementPos(this._e).top;
+                }
+            } else {
+                os.top = this._top;
+                os.left = this._left;
             }
         }
 
-        var top = Math.max(mintop, $(elem).offset().top);
-        if ($.browser.mozilla && !$(elem).text().match(/\w+/)) {
-            var traverser = elem.previousElementSibling
-                ? "prevAll"
-                : "nextAll";
-            var neartext = $(elem)[traverser]().filter(function(index) {
-                return $(this).text().match(/\w+/);                            
-            }).first();
-            if (neartext.length) {
-                top = neartext.offset().top;
-            }
-        }
-
-        var left = Math.max(minleft, $(elem).offset().left);
-        $(this._cursor).css("top", top + "px").css("left", left + "px");
+        $(this._cursor).css("top", os.top + "px").css("left", os.left + "px");
     },
 
 
@@ -465,9 +463,9 @@ OCRJS.LineEditor = Base.extend({
         this.eraseSelection();        
         var curr = this._c ? this._c : this._endmarker;
         var char = $("<span></span>")
-            .text(event.charCode == 32
+            .text(event.which == 32
                     ? "\u00a0"
-                    : String.fromCharCode(event.charCode)).get(0);
+                    : String.fromCharCode(event.which)).get(0);
         this._undostack.push(new InsertCommand(this, char, curr));
     },
 
@@ -505,7 +503,7 @@ OCRJS.LineEditor = Base.extend({
         // BROWSER HACK - FIXME: Firefox only receives
         // repeat key events for keypress, but ALSO 
         // fires keydown for non-char keys
-        if ($.browser.mozilla) {
+        if (!$.browser.webkit) {
             if (!event.ctrlKey && event.type == "keydown")
                 return;
         }
@@ -538,6 +536,8 @@ OCRJS.LineEditor = Base.extend({
             case KC_RETURN: // accept changes
                 this.finishEditing();
                 break;
+            case KC_CAPSLOCK:   // produces funny chars on Mozilla                
+                break;
             case KC_DELETE: 
             case KC_BACKSPACE: // delete or backspace
                 this.deleteChar(event.keyCode == KC_BACKSPACE);
@@ -549,7 +549,8 @@ OCRJS.LineEditor = Base.extend({
                     : this.onEditNextElement();
                 break;
             default:
-                if (!event.charCode)
+                // char handlers - only use keypress for this                
+                if (event.type == "keydown")
                     return false;
                 this.insertChar(event);
                 event.preventDefault();
@@ -633,6 +634,59 @@ OCRJS.LineEditor = Base.extend({
         this.setCurrentChar(elem);
     },
 
+    // get the top and left position of an element
+    // looking, if necessary, at it's sibling's
+    // position.  This is for when breaking elements
+    // report erroneous positions
+    _elementPos: function(elem) {
+        var offset = $(elem).offset();
+        var mintop = $(elem).parent().offset().top;
+        if ($(elem).text() != " " || ($.browser.webkit && offset.top)) {
+            return {top: offset.top, left: offset.left};
+        }
+        // if not, find the nearest a sibling either side
+        // that has position
+        if (elem.previousElementSibling) {
+            var back = 0;
+            var prev = elem.previousElementSibling;
+            while (prev) {
+                back++;
+                if ($(prev).text() != " ") {
+                    break;
+                }
+                prev = prev.previousElementSibling;
+            }
+            var poffset = $(prev).offset();
+            if (poffset.top >= mintop) {
+                this._logger("Got pos off previous: '" + $(prev).text() + "'");
+                return {top: poffset.top, left: poffset.left + (back * $(prev).width())};
+            }
+        }
+        if (elem.nextElementSibling) {
+            var back = 0;
+            var next = elem.nextElementSibling;
+            while (next) {
+                back++;
+                if ($(next).text() != " ") {
+                    break;
+                }
+                next = next.nextElementSibling;
+            }
+            var poffset = $(next).offset();
+            if (poffset.top >= mintop) {
+                this._logger("Got pos off next: '" + $(next).text() + "'");
+                return {top: poffset.top, left: poffset.left};
+            }
+        }
+        // fall back on the parent's top/left
+        var parentoffset = $(elem).parent().offset();
+        if (parentoffset.top >= mintop) {
+            return {top: parentoffset.top, left: parentoffset.left};
+        }
+        this._logger("Failed to get top & left for element: " + $(elem));
+        throw "Unable to get usable position for elem: " 
+            + $(elem) + " (" + $(elem).text() + ")"; 
+    },                  
 
     // ensure that is the last char in the line is a space
     // that it's a non-breaking one.  Otherwise ensure that
@@ -647,13 +701,19 @@ OCRJS.LineEditor = Base.extend({
         }
         $(this._endmarker).prevAll().filter(function(i) {
             if ($(this).text() == "\u00a0") {
-                if ($(this).next().text().match(/\S/)) {
+                if ($(this).next().text().match(/\S/)
+                        && $(this).prev().text() != " ") {
                     return true;                    
                 }
             }
         }).each(function(i, elem) {
             $(elem).text(" ");    
         });
+        // replace a first breaking space with a hard breaking one
+        var firstelem = $(this._e).children().first();
+        if (firstelem.length && firstelem.text() == " ") {
+            firstelem.text("\u00a0");    
+        }
     },                  
 
 
