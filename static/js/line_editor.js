@@ -108,8 +108,9 @@ OCRJS.LineEditor = Base.extend({
     _endmarker: $("<div></div>")  // anchor for the end of the line 
             .addClass("endmarker").get(0),
 
-    constructor: function(log) {
-        this._log = log;
+    constructor: function(options) {
+        this.options = {};
+        $.extend(this.options, options);
     },    
 
     /*
@@ -117,7 +118,7 @@ OCRJS.LineEditor = Base.extend({
      *
      */
 
-    edit: function(elem, event, log) {
+    edit: function(elem, event) {
         if (this._editing)
             this.finishEditing();                
         if (!elem)
@@ -767,7 +768,7 @@ OCRJS.LineEditor = Base.extend({
 
 
     _logger: function(text) {
-        if (!this._log)
+        if (!this.options.log)
             return;            
         var log = $("#logwin");
         if (!log.length) {
