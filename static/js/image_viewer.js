@@ -9,6 +9,7 @@ if (OCRJS === undefined) {
 
 OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, options) {
+        this.base();
         this.parent = parent;
         this.options = {
             id: new Date().getTime(),
@@ -79,7 +80,7 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
 
     container: function() {
-        return $(this.parent).parent().parent();
+        return this.containerWidget();
     },
 
     setDashboardVisible: function(show) {
