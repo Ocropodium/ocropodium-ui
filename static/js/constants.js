@@ -1,18 +1,30 @@
 // useful key codes
-const KC_ESCAPE = 27;
-const KC_RETURN = 13;
-const KC_UP = 38;
-const KC_DOWN = 40;
-const KC_LEFT = 37;
-const KC_RIGHT = 39;
-const KC_DELETE = 46;
-const KC_BACKSPACE = 8;
-const KC_SHIFT = 16;
-const KC_CTRL = 17;
-const KC_ALT = 18;
-const KC_CAPSLOCK = 20;
-const KC_TAB = 9;
-const KC_END = 35;
-const KC_HOME = 36;
-
+const 
+KC_ESCAPE = 27,
+KC_RETURN = 13,
+KC_UP = 38,
+KC_DOWN = 40,
+KC_LEFT = 37,
+KC_RIGHT = 39,
+KC_DELETE = 46,
+KC_BACKSPACE = 8,
+KC_SHIFT = 16,
+KC_CTRL = 17,
+KC_ALT = 18,
+KC_CAPSLOCK = 20,
+KC_TAB = 9,
+KC_END = 35,
+KC_HOME = 36,
+KC_F1 = 112,
+KC_F2 = 113,
+KC_F3 = 114,
+KC_F4 = 115,
+KC_F5 = 116,
+KC_F6 = 117,
+KC_F7 = 118,
+KC_F8 = 119,
+KC_F9 = 120,
+KC_F10 = 121,
+KC_F11 = 122,
+KC_F12 = 123;
 
