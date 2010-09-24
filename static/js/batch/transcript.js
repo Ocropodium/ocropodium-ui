@@ -96,12 +96,11 @@ $(function() {
 
     $("#page_slider").slider({min: 1, value: 1});
 
-    transcript = new OcrTranscript(
-        "workspace", 
+    transcript = new OCRJS.TranscriptEditor(
+        $("#transcript").get(0), 
         parseInt($("#batch_id").val()),
         parseInt($("#initial").val())
     );   
-    transcript.init();
     transcript.onBatchLoad = function() {
         $("#page_slider").slider({
             max: transcript.pageCount(),
