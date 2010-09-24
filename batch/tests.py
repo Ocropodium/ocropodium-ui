@@ -39,7 +39,8 @@ class OcrBatchTest(TestCase):
         """
         Test the convert view as a standard GET (no processing.)
         """
-        self.assertEqual(self.client.get("/batch/batch").status_code, 200)
+        self.assertEqual(self.client.get("/batch/new").status_code, 200)
+
 
     def test_convert_action_basic(self):
         """
@@ -67,6 +68,7 @@ class OcrBatchTest(TestCase):
         self.assertEqual(
                 content[0]["fields"]["tasks"][0]["fields"]["page_name"], 
                 os.path.basename(TESTFILE))
+
 
     def _test_batch_action(self, params=None, headers={}):
         """
