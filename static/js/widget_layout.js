@@ -5,7 +5,9 @@ function layoutWidgets() {
     var sideoutwidth = sidewidget.outerWidth(true);
 
     var availablewidth = $("#workspace").width();
-    var wtop = $("#workspace").position().top;
+    var wtop = $("#workspace").position().top 
+        + $("#menu").outerHeight(true)
+        + $(".sub_toolbar").outerHeight(true);
     var wleft = $("#workspace").position().left;
     $(".widget:not(#sideviewer, #sidebar)").each(function(i, widget) {
         var margin = $(widget).outerWidth(true) - $(widget).width();

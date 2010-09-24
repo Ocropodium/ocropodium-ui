@@ -36,8 +36,7 @@ function pollForResults(data, polltime) {
         });
     } else if (data.status == "SUCCESS") {
         $(sdviewer).data("binpath", data.results.out);
-        sdviewer.setSource(data.results.src);
-        sdviewer.setOutput(data.results.dst);
+        sdviewer.setBufferPath(0, data.results.dst);
         sdviewer.setWaiting(false);
     }
 }
@@ -45,6 +44,12 @@ function pollForResults(data, polltime) {
 
 $(function() {
     // setup toolbar
+    $("#centre").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-link",
+        },
+    });
     $("#spellcheck").button();
     $("#format").buttonset();
     $("#next_page").button({
@@ -172,31 +177,28 @@ $(function() {
 
     var positionViewer = function(position) {
         // ensure the given line is centred in the viewport
-        //var zoom = sdviewer.activeViewer().viewport.getZoom();
         var bounds = transcript.pageData().fields.results.box;
         var fw = bounds[2], fh = bounds[3];
         var x = position[0], y = position[1], w = position[2], h = position[3];        
         var rect = new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw);
-        var overlaydiv = document.createElement("div");
-        $(overlaydiv).addClass("viewer_highlight");        
-        sdviewer.activeViewer().viewport.fitBounds(rect, true);
-        //var center = sdviewer.activeViewer().viewport.getCenter()
-        //sdviewer.activeViewer().viewport.zoomTo(zoom, true);
-        //sdviewer.activeViewer().viewport.panTo(center, true);
-        sdviewer.activeViewer().drawer.clearOverlays(); 
-        sdviewer.activeViewer().drawer.addOverlay(overlaydiv, rect);         
+        sdviewer.setBufferOverlays({
+            "current": [rect],
+        });
+        if ($("#centre").attr("checked")) {
+            sdviewer.fitBounds(rect, true); 
+        }
     }
 
     transcript.onHoverPosition = function(position) {
         if (!($("input[name=vlink]:checked").val() == "hover" 
-                    && sdviewer.activeViewer().viewport))
+                    && sdviewer.isReady()))
             return;
         positionViewer(position);
     }
 
     transcript.onClickPosition = function(position) {
         if (!($("input[name=vlink]:checked").val() == "click" 
-                    && sdviewer.activeViewer().viewport))
+                    && sdviewer.isReady()))
             return;
         positionViewer(position);
     }
@@ -262,10 +264,10 @@ $(function() {
     formatter = new OcrLineFormatter();
     
     // viewer object
-    sdviewer = new ImageWindow("sideviewer"); 
-    sdviewer.init();
+    sdviewer = new OCRJS.ImageViewer($("#viewer").get(0), {
+        numBuffers: 1,                
+    }); 
 
-    //layoutWidgets();
 
     // maximise the height of the transcript page
     maximiseWidgets(transcript, sdviewer);

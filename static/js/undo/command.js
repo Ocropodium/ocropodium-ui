@@ -1,6 +1,8 @@
 // Undo command object
 
-OCRJS = {};
+if (OCRJS === undefined) {
+    var OCRJS = {};
+}
 
 
 OCRJS.UndoCommand = Base.extend({

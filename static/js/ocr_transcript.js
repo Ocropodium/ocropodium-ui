@@ -9,7 +9,7 @@ function OcrTranscript(insertinto_id, batch_id, initial) {
     var m_batchdata = null;
 
     // editor for each line
-    var m_editor = new OCRJS.LineEditor(insertinto_id, null, true);
+    var m_editor = new OCRJS.LineEditor({log: false});
 
     // spellchecker object
     var m_speller = new Spellchecker(".ocr_line");

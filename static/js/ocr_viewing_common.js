@@ -107,7 +107,7 @@ function processData(element, data) {
     if (!data || !data.status || data.status == "PENDING") {
         setTimeout(function() {
             pollForResults(element);
-            }, 500);
+        }, 500);
     } else if (data.error) {
         sdviewer.setWaiting(true);
         element
@@ -125,8 +125,9 @@ function processData(element, data) {
         } else {
             element.data("outa", data.results.dst);
         }
-        sdviewer.setOutput(data.results.dst);
-        sdviewer.setSource(data.results.src);
+        sdviewer.setBufferPath(2, sdviewer.bufferPath(1));
+        sdviewer.setBufferPath(1, data.results.dst);
+        sdviewer.setBufferPath(0, data.results.src);
         sdviewer.setWaiting(false);
         pbuilder.setWaiting(false);
         
@@ -137,7 +138,8 @@ function processData(element, data) {
                     data.results.box, data.results[class]);
             }
         });
-        sdviewer.setOutputOverlays(overlays);
+        sdviewer.setBufferOverlays(sdviewer.bufferOverlays(1), 2);
+        sdviewer.setBufferOverlays(overlays, 1);
 
         $(".tbbutton").button({disabled: false});
     } else {
@@ -189,11 +191,11 @@ function onXHRLoad(event_or_response) {
 
     $.each(data, function(page, pageresults) {
         var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
-        sdviewer.setTitle(pagename);
+        //sdviewer.setTitle(pagename);
         sdviewer.setWaiting(true);
-        $("#viewerwindow")
+        $("#viewer")
             .data("jobname", pageresults.job_name);
-        pollForResults($("#viewerwindow"));
+        pollForResults($("#viewer"));
     }); 
 };
 
@@ -228,9 +230,12 @@ function doIframeUpload(elem) {
 $(function() {
 
     // initialise the viewer
-    sdviewer = new ImageWindow("viewerwindow"); 
-    sdviewer.init();
-    sdviewer.showNativeDashboard(false);
+    sdviewer = new OCRJS.ImageViewer($("#viewer").get(0), {
+        numBuffers: 3,
+        log: false,
+        dashboard: false,
+    });
+    sdviewer.setActiveBuffer(1); 
 
     // build toolbar
     $(".tbbutton").button({});
@@ -320,47 +325,48 @@ $(function() {
 
 
     // toggle the source and binary images
-    $("#togglesrc").click(sdviewer.toggleSrc);
-    $("#toggleab").click(sdviewer.toggleAB);
-
-    getCropRect = function() {
-        sdviewer.getCropRect();
-    }
-
+    $("#togglesrc").click(function(event) {
+        var active = sdviewer.activeBuffer();        
+        sdviewer.setActiveBuffer(active == 0 ? 1 : 0);        
+    });
+    $("#toggleab").click(function(event) {
+        var active = sdviewer.activeBuffer();
+        sdviewer.setActiveBuffer(active == 1 ? 2 : 1);
+    });
 
     // resubmit the form...
     $("#refresh").click(refreshImage);
 
     $("#output_s").click(function(event) {
-        sdviewer.viewSource();
+        sdviewer.setActiveBuffer(0);
     });
 
     $("#output_a").click(function(event) {
-        sdviewer.viewOutputA();
+        sdviewer.setActiveBuffer(1);
     });
 
     $("#output_b").click(function(event) {
-        sdviewer.viewOutputB();
+        sdviewer.setActiveBuffer(2);
     });
 
     $("#zoomin").click(function(event) {
-        sdviewer.activeViewer().viewport.zoomBy(2);
+        sdviewer.zoomBy(2);
     });
 
     $("#zoomout").click(function(event) {
-        sdviewer.activeViewer().viewport.zoomBy(0.5);
+        sdviewer.zoomBy(0.5);
     });
 
     $("#centre").click(function(event) {
-        sdviewer.activeViewer().viewport.goHome();
+        sdviewer.goHome();
     });
 
     $("#fullscreen").click(function(event) {
-        sdviewer.activeViewer().setFullPage(true);
+        sdviewer.setFullPage(true);
     });
 
     // bind 1-2-3 and a-b-s to viewer outputs
-    $("#viewerwindow").bind("mouseenter mouseleave", function(mouseevent) {
+    $("#viewer").bind("mouseenter mouseleave", function(mouseevent) {
         if (mouseevent.type == "mouseenter") {
             $(window).bind("keypress.viewer", function(event) {
                 if (String.fromCharCode(event.which).toLowerCase().match(/[a]/)) {
@@ -370,9 +376,17 @@ $(function() {
                 } else if (String.fromCharCode(event.which).toLowerCase().match(/[s]/)) {
                     $("#output_s").click().button("refresh");
                 } else if (String.fromCharCode(event.which).toLowerCase().match(/[t]/)) {
-                    sdviewer.toggleSrc();
+                    if ($("#output_s").attr("checked")) {
+                        $("#output_a").click().button("refresh");
+                    } else {
+                        $("#output_s").click().button("refresh");
+                    }
                 } else if (String.fromCharCode(event.which).toLowerCase().match(/[o]/)) {
-                    sdviewer.toggleAB();
+                    if ($("#output_a").attr("checked")) {
+                        $("#output_b").click().button("refresh");
+                    } else {
+                        $("#output_a").click().button("refresh");
+                    }
                 }  
             });
         } else {

@@ -3,7 +3,7 @@
 {% block title %} OCRopodium - Segment {% endblock %}
 
 {% block headerscript %}
-    <link rel="stylesheet" href="/static/css/image_window.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/preset_manager.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
@@ -12,7 +12,7 @@
 	<script type='application/javascript' src='/static/js/preset_manager.js'></script>
     <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
 	<script type='application/javascript' src='/static/js/ocr_parameters.js'></script>
-	<script type='application/javascript' src='/static/js/image_window.js'></script>
+	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
 	<script type='application/javascript' src='/static/js/segment.js'></script>
 	<script type='application/javascript' src='/static/js/ocr_viewing_common.js'></script>
 	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
@@ -34,5 +34,13 @@
 
 {% block content %}
     {% include "ocr/includes/viewing_sidebar.html" %}
+    
+    <div class="widget" id="viewercontainer">
+        <div class="widget_header">Segmenation Viewer</div>
+        <div class="widget_content">
+            <div id="viewer"></div>
+        </div> 
+    </div>
+    
 {% endblock %}
 

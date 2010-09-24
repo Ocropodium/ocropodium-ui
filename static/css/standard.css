@@ -1,8 +1,13 @@
+html {
+    height: 100%;
+}
+
 body {
     font-family: "Dejavu Sans", "Arial", "Helvetica", "sans-serif";
     font-size: 11px;
     background-color: #A1A5A8;
     margin: 0px;
+    height: 100%;
 }
 
 
@@ -47,7 +52,8 @@ body {
     );
 }
 
-#workspace {
+#workspace, #app_container {
+    height: 100%;
     min-height: 100%;
 }
 
@@ -126,6 +132,10 @@ body {
      */
 }
 
+#sidebar .widget_content {
+    padding: 10px;
+}
+
 #sideviewer {
     float: right;
     width: 40%;
@@ -139,7 +149,7 @@ body {
 }
 
 .widget_content {
-    padding: 10px;
+ /*   padding: 10px;  */
 }
 
 #document_window {
