@@ -265,7 +265,8 @@ $(function() {
     
     // viewer object
     sdviewer = new OCRJS.ImageViewer($("#viewer").get(0), {
-        numBuffers: 1,                
+        numBuffers: 1,
+        height: 300,
     }); 
 
 

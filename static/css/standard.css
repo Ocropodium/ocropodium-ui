@@ -133,13 +133,12 @@ body {
 }
 
 #sidebar .widget_content {
-    padding: 10px;
+    padding: 10px 10px 20px 10px;
 }
 
 #sideviewer {
     float: right;
     width: 40%;
-    height: 300px;
 }
 
 #viewerwindow {
@@ -272,5 +271,17 @@ a.button:hover {
         rgb(132,170,216) 25%,
         rgb(161,192,231) 95%
     );
-
 }
+
+#logwin {
+    opacity: 0.5;
+    background-color: #000;
+    font-size: 2em;
+    border-radius: 4px;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    float: left;
+    color: #FFF;
+}
+

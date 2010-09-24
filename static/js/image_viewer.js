@@ -7,7 +7,7 @@ if (OCRJS === undefined) {
 }
 
 
-OCRJS.ImageViewer = Base.extend({
+OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, options) {
         this.parent = parent;
         this.options = {
@@ -79,7 +79,7 @@ OCRJS.ImageViewer = Base.extend({
 
 
     container: function() {
-        return $(this.parent);
+        return $(this.parent).parent().parent();
     },
 
     setDashboardVisible: function(show) {
@@ -299,30 +299,6 @@ OCRJS.ImageViewer = Base.extend({
     fitBounds: function(rect, immediately) {
         this._buffers[this._cbuf].viewport.fitBounds(rect, immediately);        
     },                 
-
-    _logger: function(text) {
-        if (!this.options.log)
-            return;            
-        var log = $("#logwin");
-        if (!log.length) {
-            log = $("<span></span>")
-                .attr("id", "logwin")
-                .css({
-                    opacity: 0.5,
-                    backgroundColor: "#000",
-                    fontSize: "2em",
-                    borderRadius: "4px",
-                    position: "absolute",
-                    top: "20px",
-                    left: "20px",
-                    float: "left",
-                    color: "#FFF"
-                });
-
-            $("body").append(log);
-        }
-        log.text((new Date()).getTime() + ":   " + text);
-    },             
 });
 
 

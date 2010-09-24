@@ -21,13 +21,13 @@ function layoutWidgets() {
 }
 
 function maximiseWidgets() {
-
     var winheight = $(window).height();
     var margin = 10;
     for (var i in arguments) {
         var widget = arguments[i];
         var container = widget.container();
-        var pad = container.outerHeight(true) - container.height();
+        var pad = (container.outerHeight(true)
+                - container.height()) + $(".widget_header", container).outerHeight(true);
         var top = container.position().top;
         var newheight = winheight - top - pad - margin;
         widget.setHeight(newheight);

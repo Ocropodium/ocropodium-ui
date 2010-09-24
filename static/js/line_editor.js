@@ -88,8 +88,7 @@ var DeleteCommand = OCRJS.UndoCommand.extend({
 
 
 const LONGKEY = 500;
-OCRJS.LineEditor = Base.extend({
-
+OCRJS.LineEditor = OCRJS.OcrBase.extend({
     _elem: null,          // the element we're operating on 
     _char: null,          // the current character in front of the cursor
     _top: null,         // reference to initial top of elem
@@ -109,6 +108,7 @@ OCRJS.LineEditor = Base.extend({
             .addClass("endmarker").get(0),
 
     constructor: function(options) {
+        this.base();
         this.options = {};
         $.extend(this.options, options);
     },    
@@ -765,29 +765,4 @@ OCRJS.LineEditor = Base.extend({
         }
         this.positionCursorTo(this._c);
     },                          
-
-
-    _logger: function(text) {
-        if (!this.options.log)
-            return;            
-        var log = $("#logwin");
-        if (!log.length) {
-            log = $("<span></span>")
-                .attr("id", "logwin")
-                .css({
-                    opacity: 0.5,
-                    backgroundColor: "#000",
-                    fontSize: "2em",
-                    borderRadius: "4px",
-                    position: "absolute",
-                    top: "20px",
-                    left: "20px",
-                    float: "left",
-                    color: "#FFF"
-                });
-
-            $("body").append(log);
-        }
-        log.text((new Date()).getTime() + ":   " + text);
-    },             
 });
