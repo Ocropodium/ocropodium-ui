@@ -39,6 +39,6 @@ OCRJS.OcrBaseWidget = OCRJS.OcrBase.extend({
     },
 
     containerWidget: function() {
-        $(this.parent).closest(".widget");    
+        return $(this.parent).closest(".widget");    
     },
 });
