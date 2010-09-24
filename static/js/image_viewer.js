@@ -141,8 +141,8 @@ OCRJS.ImageViewer = Base.extend({
 
     setWaiting: function(wait) {
         this._overlay.css({
-            top: this._viewport.offset().top,
-            left: this._viewport.offset().left,
+            top: this._viewport.position().top,
+            left: this._viewport.position().left,
             width: this._viewport.width(),
             height: this._viewport.height(),
         }).toggle(wait);
