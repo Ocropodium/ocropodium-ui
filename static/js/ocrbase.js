@@ -7,6 +7,7 @@ if (OCRJS === undefined) {
 
 OCRJS.OcrBase = Base.extend({
     constructor: function(options) {
+        this._log = [];
         this.options = {
             log: false,
         }
@@ -15,13 +16,21 @@ OCRJS.OcrBase = Base.extend({
 
     _logger: function(text) {
         if (!this.options.log)
-            return;            
+            return;
+        this._log.push((new Date()).getTime() + ":  " + text);
+        if (this._log.length > 5)
+            this._log.shift();        
         var log = $("#logwin");
         if (!log.length) {
-            log = $("<span></span>").attr("id", "logwin");
+            log = $("<div></div>")
+                .attr("id", "logwin");
+                
             $("body").append(log);
         }
-        log.text((new Date()).getTime() + ":   " + text);
+        log.html("");
+        $.each(this._log, function(i, t) {
+            log.append($("<div>" + t + "</div>"));
+        });
     },             
 });
 
