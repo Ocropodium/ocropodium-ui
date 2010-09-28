@@ -1,0 +1,156 @@
+// Spellcheck widget suggestion list
+
+OCRJS.SuggestionList = OCRJS.OcrBase.extend({
+    constructor: function(parent, options) {
+        this.base(options);
+        this.parent = parent;
+
+        this._focus = false;
+        this._container = $("<div></div>")
+            .attr("id", "sp_suggestionlist");
+
+    },
+
+
+    setupEvents: function() {
+        var self = this;
+
+        // events
+        $(".sp_suggestion", this._container).live("click", function(event) {
+            self.selectSuggestion($(this));
+        });
+
+        $(".sp_suggestion", this._container).live("dblclick", function(event) {
+            self.suggestionChosen($(this).text());
+        });
+    },
+
+
+    teardownEvents: function() {
+        $(".sp_suggestion", this._container)
+            .die("click")
+            .die("dblclick");
+    },                 
+
+
+    init: function(parent) {
+        this.parent = parent;
+        this.setupEvents();            
+        this._container.appendTo($(this.parent));
+    },
+          
+
+    loadSuggestions: function(suggestions) {
+        this._container.html("");
+        if (suggestions) {
+            var tsugg = $("<div></div>")
+                .addClass("sp_suggestion");
+            for (var i in suggestions) {
+                this._container.append(                        
+                    tsugg.clone().text(suggestions[i])
+                );
+            }
+        }
+    },
+
+
+    selectSuggestion: function(sel) {
+        $(".selected", this._container).removeClass("selected");
+        sel.addClass("selected");
+        if (sel.length) {
+            if(sel.get(0))
+                sel.get(0).scrollIntoView(false);
+            this.suggestionSelected(sel.text());
+        }
+    },
+
+
+    clearSelection: function() {
+        $(".selected", this._container).removeClass("selected");
+    },
+
+
+    clear: function() {
+        this._container.html("");
+    },
+
+
+    keyEvent: function(event) {
+        switch (event.keyCode) {
+            case KC_DOWN:
+                var sel = $(".selected", this._container).next();
+                if (sel.length == 0) {
+                    sel = $(".sp_suggestion", this._container).first();
+                }
+                this.selectSuggestion(sel);
+                break;
+            case KC_UP:                                      
+                var sel = $(".selected", this._container).prev();
+                if (sel.length == 0) {
+                    this.looseFocus();
+                }
+                this.selectSuggestion(sel);
+                break;
+            case KC_RETURN:
+                var sel = $(".selected", this._container).first();
+                this.suggestionChosen(sel.text());
+                break;
+            case KC_ESCAPE:
+                this.looseFocus();
+                break;
+            default:
+                return true;
+        }
+        event.preventDefault();
+    },
+
+
+    navigateList: function(event) {
+        if (!this._focus) {
+            this._focus = true;
+            this._container.addClass("focus");
+            this.focusTaken();
+        }
+        this.keyEvent(event);
+    },
+    
+
+    looseFocus: function() {
+        this._focus = false;
+        $(".selected", this._container).removeClass("selected");         
+        this._container.removeClass("focus");
+        this.focusLost();
+    },
+
+
+    hasFocus: function() {
+        return this._focus;
+    },
+
+
+    currentSelection: function() {
+        return $(".selected", this.parent).text();
+    },
+
+
+    suggestionChosen: function(word) {
+        // typically overridden...
+        this.looseFocus();
+    },
+
+
+    focusTaken: function(event) {
+
+    },
+
+
+    focusLost: function(event) {
+
+    },
+
+
+    suggestionSelected: function(word) {
+
+    },
+});
+

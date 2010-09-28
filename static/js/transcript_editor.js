@@ -17,7 +17,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._editor = new OCRJS.LineEditor();
 
         // spell check widget
-        this._speller = new Spellchecker(".ocr_line");
+        this._speller = new OCRJS.Spellchecker(".ocr_line", {log: true});
 
         // are we currently spell checking?...
         this._spellchecking = false;
@@ -51,6 +51,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._container
             .append(this._scrollcontainer.append(
                 this._pagediv))
+            .append(this._speller.init().hide())
             .appendTo(this.parent);
     },
 
@@ -132,7 +133,6 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
 
         $(".ocr_line").live("dblclick.editline", function(event) {
-                
             if (!(self._editor.element() && self._editor.element() === this)) {
                 self._editor.edit(this, event);
             }
@@ -145,8 +145,6 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         $(".ocr_line").live("mouseover", function(event) {
             self.onHoverPosition($(this).data("bbox"));
         });
-
-
     },          
 
 
@@ -158,31 +156,27 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._scrollcontainer
             .css(
                 "height", 
-                this._container.height()  - this._speller.widgetHeight()                    
+                this._container.height() 
+                - this._speller.widgetHeight()
             );
     },
 
     setHeight: function(newheight) {
         this._container.height(newheight);
         this.refreshSize();
-            
     },
 
     startSpellcheck: function() {
-        var spellwidget = this._speller.init(this._container);
-        this._container.append(spellwidget);
-        this._scrollcontainer.height(
-                this._scrollcontainer.height() - this._speller.widgetHeight());
+        this._speller.show();
+        this.refreshSize();
         this._speller.spellCheck($(".ocr_line"));
         this._speller.takeFocus();
         this._spellchecking = true;
     },
 
     endSpellcheck: function() {
-        var height = this._speller.widgetHeight();
-        this._scrollcontainer.height(
-                this._scrollcontainer.height() + height);
-        $("#sp_container").remove();
+        this._speller.hide();
+        this.refreshSize();
         $(".badspell").each(function(i, elem) {
             $(elem).replaceWith($(elem).text());
         });
@@ -364,7 +358,6 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
     isScrolledIntoView: function(elem) {
         var docviewtop = this._scrollcontainer.scrollTop();
         var docviewbottom = docviewtop + this._scrollcontainer.height();
-
         var elemtop = $(elem).offset().top;
         var elembottom = elemtop + $(elem).height();
         if (elembottom > docviewbottom) 
@@ -384,7 +377,6 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
 
     onTextChanged: function() {
     },
-
 
     onBatchLoad: function() {
     },

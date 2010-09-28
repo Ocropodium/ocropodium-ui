@@ -130,7 +130,7 @@ function Spellchecker(parent, selector) {
     m_wordindex = 0,
     m_data = {},
     m_parent = parent,
-    m_suggestions = new SuggestionList(),
+    m_suggestions = new OCRJS.SuggestionList(),
     m_lineedit = $("<input></input>")
             .attr("type", "text")
             .addClass("spell_line")
@@ -290,7 +290,7 @@ function Spellchecker(parent, selector) {
         m_lineedit.bind("keydown.le", function(event) {
             if (event.keyCode == KC_UP || event.keyCode == KC_DOWN) {
                 $(this).blur();
-                m_suggestions.takeFocus(event);
+                m_suggestions.navigateList(event);
                 event.preventDefault();
             } else if (event.keyCode == KC_TAB) {
                 setNextSpellcheckWord(event.shiftKey);
