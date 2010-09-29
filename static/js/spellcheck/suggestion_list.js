@@ -12,7 +12,7 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
     },
 
 
-    setupEvents: function() {
+    _setupEvents: function() {
         var self = this;
 
         // events
@@ -26,7 +26,7 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
     },
 
 
-    teardownEvents: function() {
+    _teardownEvents: function() {
         $(".sp_suggestion", this._container)
             .die("click")
             .die("dblclick");
@@ -35,7 +35,7 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
 
     init: function(parent) {
         this.parent = parent;
-        this.setupEvents();            
+        this._setupEvents();            
         this._container.appendTo($(this.parent));
     },
           
@@ -132,6 +132,15 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
         return $(".selected", this.parent).text();
     },
 
+    disable: function() {
+        this._teardownEvents();                 
+        this._container.addClass("disabled")
+    },
+
+    enable: function() {
+        this._setupEvents();
+        this._container.removeClass("disabled");
+    },             
 
     suggestionChosen: function(word) {
         // typically overridden...

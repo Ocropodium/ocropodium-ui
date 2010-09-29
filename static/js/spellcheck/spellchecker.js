@@ -38,7 +38,6 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
         this._container = $("<div></div>")
             .attr("id", "sp_container")
             .hide();
-
     },
 
 
@@ -48,7 +47,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
     },          
 
 
-    setupEvents: function() {
+    _setupEvents: function() {
         var self = this;                     
         
         $("#sp_next, #sp_prev", this._container).bind("click", function(event) {
@@ -62,7 +61,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
 
         // handle certain key events in the replace word text edit
         this._lineedit.bind("keydown.navsuggestion", function(event) {
-            if (event.ctrlKey && event.keyCode == 90) {
+            if (event.ctrlKey && event.keyCode == 90) { // Z-key
                 if (!event.shiftKey)
                     self._undostack.undo();
                 else
@@ -105,7 +104,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
         }
     },
 
-    teardownEvents: function() {
+    _teardownEvents: function() {
         $("#sp_next, #sp_prev", this._container).unbind("click");
         this._lineedit.unbind("keydown.navsuggestion");
         this._lineedit.unbind("focus");
@@ -113,14 +112,20 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
 
     show: function() {
         this._container.show();
-        this.setupEvents();
+        this._setupEvents();
     },
 
     hide: function() {
         this._container.hide();
-        this.teardownEvents();
-    },          
+        this.reset();
+        this._teardownEvents();
+    },
 
+    reset: function() {
+        this._elements = [];
+        this._celement = -1;
+        this._undostack.clear();
+    },          
                      
     buildUi: function(parent) {
         var buttoncontainer = $("<div></div>")
@@ -162,7 +167,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
             : 0;
     },
 
-    spellCheck: function(lines) {
+    spellcheck: function(lines) {
         var self = this;
         var text = $.map(lines, function(c) {
             return $(c).text();
@@ -181,23 +186,20 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
                 $.each(data, function(k, v) {
                     self._data[k] = v;
                 })
-                self.highlightWords(lines);
+                self.highlight($(".ocr_line"));
             }
         });
-
     },
 
-    highlightWords: function(lines) {
 
-    },
-
-    highlightWords: function(lines) {
+    highlight: function(lines) {
         var self = this;
+        this._elements = [];
         lines.each(function(i, elem) {
             var badcount = 0;
             var nodes = [];
-            var partial = document.createTextNode();
-            $.each($(elem).html().split(/\b/), function(i, word) {
+            var partial = document.createTextNode();            
+            $.each($(elem).text().split(/\b/), function(i, word) {
                 if (self._data[word]) {
                     badcount++;
                     if (partial.textContent != "undefined") {
@@ -232,8 +234,14 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
                 }
             }
         });
-        this.setNextSpellcheckWord();
+        if (this._celement < 0) {
+            this.setNextSpellcheckWord();
+        } else {
+            this._logger("Setting current element!" + this._celement);
+            this.setCurrentElement(this._celement);
+        }
     },
+
 
     setNextSpellcheckWord: function(back) {
         if (this._elements.length) {
@@ -242,10 +250,12 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
                 curr = curr == 0
                     ? this._elements.length - 1
                     : curr - 1;
+                this._logger("Decrementing celement" + curr);
             } else {
                 curr = curr == this._elements.length - 1
                     ? 0
                     : curr + 1;
+                this._logger("Incrementing celement" + curr);
             }
             this.setCurrentElement(curr);
         }
@@ -262,6 +272,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
         this._lineedit.val($(element).text());
         this._lineedit.focus();
         this.updateSuggestions();
+        this.onWordHighlight(element);
     },
 
 
@@ -299,12 +310,25 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
         }
     },                           
 
-    takeFocus: function(lines) {
-
+    takeFocus: function(lines) {                           
+        this._suggestions.enable();
+        this._setupEvents();
+        this._lineedit.focus().select();
+        this._container.find("*").attr("disabled", false);
     },
+
+    looseFocus: function(lines) {                    
+        this._suggestions.disable();
+        this._teardownEvents();
+        this._lineedit.blur();        
+        this._container.find("*").attr("disabled", true);
+    },               
 
     onWordCorrection: function(word) {
 
-    },               
+    },
 
+    onWordHighlight: function(element) {
+
+    },                      
 });

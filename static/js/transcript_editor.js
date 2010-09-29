@@ -1,5 +1,20 @@
 // Editing window for transcript texts
 
+OCRJS.EditCommand = OCRJS.UndoCommand.extend({
+    constructor: function(editor, elem, origtext, newtext) {
+        this.base("Edit text");
+        this.redo = function() {
+            $(elem).html(newtext);
+            editor.setCurrentLine(elem);
+        };
+        this.undo = function() {
+            editor._logger("Undo for transcript editor");
+            $(elem).html(origtext);
+            editor.setCurrentLine(elem);
+        };
+    }
+});
+
 
 OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, batch_id, initial, options) {
@@ -13,26 +28,19 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._batch_id = batch_id;
         this._page = initial || 0;
 
-        // line editor widget
-        this._editor = new OCRJS.LineEditor();
+        this._editor = new OCRJS.LineEditor(); // line editor widget
+        this._speller = new OCRJS.Spellchecker(".ocr_line", {log: true}); // spell check widget
+        this._undostack = new OCRJS.UndoStack(this);
 
-        // spell check widget
-        this._speller = new OCRJS.Spellchecker(".ocr_line", {log: true});
-
-        // are we currently spell checking?...
-        this._spellchecking = false;
-
-        // initial state of the text buffer
-        this._textbuffer = null;
-
-        // page data cache
-        this._pagedata = null;
-
-        // store the current line
-        this._currentline = null;
+        this._spellchecking = false;    // are we currently spell checking?...
+        this._textbuffer = null;        // initial state of the text buffer
+        this._pagedata = null;          // page data cache
+        this._currentline = null;       // store the current line
 
         this.init();
-        this.setupEvents();        
+        this.setupMouseEvents();
+        this.setupKeyEvents();
+        this.setupCallbacks();        
         this.refresh();
         this.refreshSize();
     },
@@ -55,7 +63,26 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             .appendTo(this.parent);
     },
 
-    setupEvents: function() {
+    setupMouseEvents: function() {
+        var self = this;
+
+        $(".ocr_line").live("dblclick.editline", function(event) {
+            if (!(self._editor.element() && self._editor.element() === this)) {
+                self._editor.edit(this, event);
+            }
+        });
+
+        $(".ocr_line").live("click", function(event) {
+            self.setCurrentLine($(this));
+        });
+
+        $(".ocr_line").live("mouseover", function(event) {
+            self.onHoverPosition($(this).data("bbox"));
+        });
+    },
+
+
+    setupKeyEvents: function() {
         var self = this;
 
         $(window).bind("keydown.tabshift", function(event) {        
@@ -80,22 +107,58 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             }
         });
 
-        self._editor.onEditingStarted = function(element) {
-            $("#sp_container").find("*").attr("disabled", true);
+        $(window).bind("keyup.lineedit", function(event) {
+            if (self._currentline && event.keyCode == KC_F2) {
+                self._editor.edit(self._currentline, event);
+            } else if (event.ctrlKey && event.keyCode == 90) {
+                if (!event.shiftKey) {
+                    self._undostack.undo();
+                } else {
+                    self._undostack.redo();
+                }
+            } else if (event.shiftKey && event.ctrlKey && event.keyCode == 83) { // 's'
+                if (self._spellchecking)
+                    self.endSpellcheck();
+                else
+                    self.startSpellcheck();            
+            }
+            //else if (event.keyCode == KC_ESCAPE) {
+            //    if (self._spellchecking)
+            //        self.endSpellcheck();
+            //}
+        });
+    },                 
+
+    teardownKeyEvents: function() {
+        $(window)
+            .unbind("keyup.lineedit")
+            .unbind("keydown.tabshift");
+    },                 
+
+
+    setupCallbacks: function() {
+        var self = this;
+        this._editor.onEditingStarted = function(element) {
+            self.teardownKeyEvents();
             if (self._spellchecking)
                 self._speller.looseFocus();
         }
 
-        self._editor.onEditingFinished = function(element) {
-            $("#sp_container").find("*").attr("disabled", false);
-            self.onTextChanged();
+        this._editor.onEditingFinished = function(element, origtext, newtext) {
+            self._logger("Push stack: " + self._undostack.index);
+            self.setupKeyEvents();
+            if (origtext != newtext) {
+                self._undostack.push(
+                        new OCRJS.EditCommand(self, element, origtext, newtext));
+                self.onTextChanged(); 
+            }           
             if (self._spellchecking) {
-                self._speller.spellCheck($(element));
+                self._speller.spellcheck($(element));
                 self._speller.takeFocus();
             }
         }
 
-        self._editor.onEditNextElement = function() {
+        this._editor.onEditNextElement = function() {
             var next = $(self._editor.element()).nextAll(".ocr_line").first();
             if (!next.length)
                 next = $(".ocr_line").first();
@@ -103,7 +166,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             next.trigger("click");
         }
 
-        self._editor.onEditPrevElement = function() {
+        this._editor.onEditPrevElement = function() {
             var prev = $(self._editor.element()).prevAll(".ocr_line").first();
             if (!prev.length)
                 prev = $(".ocr_line").last();
@@ -116,36 +179,11 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                 self.onTextChanged();
             }
         }
-        
-        $(window).bind("keyup.lineedit", function(event) {
-            if (self._currentline && event.keyCode == KC_F2) {
-                self._editor.edit(self._currentline, event);
-            } else if (event.shiftKey && event.ctrlKey && event.keyCode == 83) { // 's'
-                if (self._spellchecking)
-                    self.endSpellcheck();
-                else
-                    self.startSpellcheck();            
-            }
-            //else if (event.keyCode == KC_ESCAPE) {
-            //    if (self._spellchecking)
-            //        self.endSpellcheck();
-            //}
-        });
 
-        $(".ocr_line").live("dblclick.editline", function(event) {
-            if (!(self._editor.element() && self._editor.element() === this)) {
-                self._editor.edit(this, event);
-            }
-        });
-
-        $(".ocr_line").live("click", function(event) {
-            self.setCurrentLine($(this));
-        });
-
-        $(".ocr_line").live("mouseover", function(event) {
-            self.onHoverPosition($(this).data("bbox"));
-        });
-    },          
+        this._speller.onWordHighlight = function(element) {
+            self.setCurrentLine($(element).parent());
+        }        
+    },                 
 
 
     container: function() {
@@ -169,8 +207,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
     startSpellcheck: function() {
         this._speller.show();
         this.refreshSize();
-        this._speller.spellCheck($(".ocr_line"));
-        this._speller.takeFocus();
+        this._speller.spellcheck($(".ocr_line"));
         this._spellchecking = true;
     },
 
@@ -277,8 +314,9 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                     self._pagedata = data[0];
                     self.onPageLoad();
                     self.setPageLines(data[0]);
-                    if (self._spellchecking)
-                        self._speller.spellCheck($(".ocr_line"));
+                    //if (self._spellchecking)
+                        //self.reset();
+                        //self._speller.spellCheck($(".ocr_line"));
                 }               
             },
         });    
@@ -356,6 +394,8 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
     // check is an element is visible - returns -1 if the elem
     // is above the viewport, 0 if visible, 1 if below
     isScrolledIntoView: function(elem) {
+        if (!elem)
+            return 0;            
         var docviewtop = this._scrollcontainer.scrollTop();
         var docviewbottom = docviewtop + this._scrollcontainer.height();
         var elemtop = $(elem).offset().top;

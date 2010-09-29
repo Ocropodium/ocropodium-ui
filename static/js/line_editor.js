@@ -89,28 +89,28 @@ var DeleteCommand = OCRJS.UndoCommand.extend({
 
 const LONGKEY = 500;
 OCRJS.LineEditor = OCRJS.OcrBase.extend({
-    _elem: null,          // the element we're operating on 
-    _char: null,          // the current character in front of the cursor
-    _top: null,         // reference to initial top of elem
-    _left: null,        // reference to initial left of elem 
-    _selectstart: null,   // selection start & end  
-    _inittext: null,      // initial text of selected element 
-    _keyevent: null,      // capture the last key event 
-    _blinktimer: -1,      // timer for cursor flashing
-    _dragpoint: null,     // the point dragging started
-    _editing: false,      // we're currently doing something 
-    _undostack: new OCRJS.UndoStack(this), // undo stack object
-    _notemptyre: new RegExp("\S"), 
-    _cursor: $("<div></div>") // cursor element
-            .addClass("editcursor")
-            .text("").get(0),
-    _endmarker: $("<div></div>")  // anchor for the end of the line 
-            .addClass("endmarker").get(0),
-
     constructor: function(options) {
         this.base();
-        this.options = {};
+        this.options = {log: true};
         $.extend(this.options, options);
+
+        this._e = null;          // the element we're operating on 
+        this._c = null;          // the current character in front of the cursor
+        this._top = null;         // reference to initial top of elem
+        this._left = null;        // reference to initial left of elem 
+        this._selectstart = null;   // selection start & end  
+        this._inittext = null;      // initial text of selected element 
+        this._keyevent = null;      // capture the last key event 
+        this._blinktimer = -1;      // timer for cursor flashing
+        this._dragpoint = null;     // the point dragging started
+        this._editing = false;      // we're currently doing something 
+        this._undostack = new OCRJS.UndoStack(this); // undo stack object
+        this._notemptyre = new RegExp("\S"); 
+        this._cursor = $("<div></div>") // cursor element
+                .addClass("editcursor")
+                .text("").get(0);
+        this._endmarker = $("<div></div>")  // anchor for the end of the line 
+                .addClass("endmarker").get(0);
     },    
 
     /*
@@ -154,12 +154,12 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
 
 
     finishEditing: function(withtext) {
-        var elem = this._e;
+        var endtext = $(this._e).text();
         $(this._e)
             .removeClass("selected")
             .removeClass("editing")
-            .allowSelection(true)        
-            .html(withtext ? withtext : $(this._e).text());
+            .allowSelection(true)
+            .html(this._inittext);        
         this._selectstart = null;        
         $(this._cursor).detach();
         this._undostack.clear();
@@ -169,7 +169,11 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         }
         this.teardownEvents();
         this._editing = false;
-        this.onEditingFinished(elem);
+        this.onEditingFinished(
+            this._e,
+            this._inittext,
+            withtext ? withtext : endtext
+        );
     },
 
 
@@ -488,7 +492,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
 
     },
 
-    onEditingFinished: function(event) {
+    onEditingFinished: function(element, origtext, newtext) {
 
     },
 
@@ -512,6 +516,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         if (event.ctrlKey) {
             switch (event.which) {
                 case 90: // Z-key, for undo/redo
+                    this._logger("Undo for line editor");
                     event.shiftKey
                         ? this._undostack.redo()
                         : this._undostack.undo();
