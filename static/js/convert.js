@@ -283,12 +283,12 @@ $(function() {
 
 
     // initialise the uploader...
-    uploader  = new AjaxUploader("/ocr/convert", "dropzone");
+    uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
         uploader.registerTextParameter("input[name=engine]:checked"); 
-        $("#optionsform input[type='text'], #optionsform select").each(function() {
-            uploader.registerTextParameter("#" + $(this).attr("id"));
+        $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
+            uploader.registerTextParameter(elem);
         });
     };
 
