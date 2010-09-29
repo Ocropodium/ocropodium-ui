@@ -379,6 +379,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
 
 
     setCurrentLine: function(line) {
+        line = $(line);                        
         this._currentline = line;
         $(".ocr_line", this._pagediv).removeClass("hover");
         line.addClass("hover");
