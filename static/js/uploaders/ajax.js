@@ -13,6 +13,8 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             multi: true,    // whether to accept multiple files
         };
         $.extend(this.options, options);
+        this.options.relay = false;
+
         this._boundary = '------multipartformboundary' + (new Date).getTime(),
         this._maxsize = 0;
         this._queue = [];
@@ -48,9 +50,6 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this.target.addEventListener("dragover", function(event) { 
             event.preventDefault(); 
         }, false);
-            
-
-    
     },
 
 
@@ -95,6 +94,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         //$(dropzone).text("Please wait...").addClass("waiting");
         
         var builder = "";
+        var donetext = false;
 
         for (var i = 0; i < data.files.length; i++) {
             var file = data.files[i];
@@ -109,18 +109,21 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             builder += crlf;
 
             // append text param values 
-            $.each(this.parameters(), function(key, value) {
-                builder += 'Content-Disposition: form-data; name="' + key + '"; ';
-                builder += 'Content-Type: text/plain';
-                builder += crlf;
-                builder += crlf;
-                builder += value;
-                builder += crlf;
-                builder += dashdash;
-                builder += boundary;
-                builder += crlf;
-            });
-            
+            if (this.options.relay || !donetext) {
+                $.each(this.parameters(), function(key, value) {
+                    builder += 'Content-Disposition: form-data; name="' + key + '"; ';
+                    builder += 'Content-Type: text/plain';
+                    builder += crlf;
+                    builder += crlf;
+                    builder += value;
+                    builder += crlf;
+                    builder += dashdash;
+                    builder += boundary;
+                    builder += crlf;
+                });
+                donetext = true;
+            }
+
             // Generate headers.
             builder += 'Content-Disposition: form-data; ';
             builder += 'name="userfile' + i + '[]"';
