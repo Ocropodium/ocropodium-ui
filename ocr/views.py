@@ -174,22 +174,16 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     # save our files to the DFS and return a list of addresses
     outdir = ocrutils.FileWrangler(
             username=request.user.username, temp=True, action=tasktype.lower())()
-    if request.POST.get("png"):
-        paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
-    else:
-        try:
-            paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
-        except AppException, err:
-            return HttpResponse(simplejson.dumps({"error": err.message}),
-                mimetype="application/json")
+
+    try:
+        paths, userparams = _handle_request(request, outdir)
+    except AppException, err:
+        return HttpResponse(simplejson.dumps({"error": err.message}),
+            mimetype="application/json")
     if not paths:
         return HttpResponse(
                 simplejson.dumps({"error": "no valid images found"}),
                 mimetype="application/json")     
-
-    
-    # wrangle the params - this needs improving
-    userparams = _get_best_params(request.POST.copy())
 
     # init the job from our params
     asynctasks = []
@@ -334,6 +328,44 @@ def _json_or_text_response(request, json):
     """
     result, mimetype = _json_or_text_data(request, json)
     return HttpResponse(result, mimetype=mimetype)
+
+
+def _handle_request(request, outdir):
+    """
+    Save files and extract parameters.  How this happens
+    depends on how the file was send - either multipart
+    of as the whole POST body.
+    """
+
+    if request.GET.get("qqfile"):
+        return _handle_streaming_upload(request, outdir)
+    else:
+        return _handle_multipart_upload(request, outdir)
+
+
+def _handle_streaming_upload(request, outdir):
+    """
+    Handle an upload where the params are in GET and
+    the whole of the POST body consists of the file.
+    """
+    fpath = os.path.join(outdir, request.GET.get("qqfile"))
+    tmpfile = file(fpath, "wb")
+    tmpfile.write(request.raw_post_data)
+    tmpfile.close()
+    return [fpath], _get_best_params(request.GET.copy())
+
+
+def _handle_multipart_upload(request, outdir):
+    """
+    Handle an upload where the file data is multipart
+    encoded in the POST body, along with the params.
+    """
+    if request.POST.get("png"):
+        paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
+    else:
+        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
+    return paths, _get_best_params(request.GET.copy())
+
 
 
 def _get_preset_data(param):
