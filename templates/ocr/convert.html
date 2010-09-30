@@ -11,6 +11,8 @@
 	<script type='application/javascript' src='/static/js/convert.js'></script>
 	<script type='application/javascript' src='/static/js/ocr_line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+	<script type='application/javascript' src='/static/js/fileuploader.js'></script>
+    <link rel="stylesheet" href="/static/css/fileuploader2.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/ocr_page.css" type="text/css" media="screen" />
@@ -51,6 +53,9 @@
                 <div id="dropzone">
                     Drop images here...
                 </div>
+            </div>
+            <div id="file_uploader">      
+                <noscript><p>Please enable JavaScript to use file uploader.</p></noscript>         
             </div>
         </form>
         <form id="optionsform" name="options" action="{{request.path}}" method="POST">

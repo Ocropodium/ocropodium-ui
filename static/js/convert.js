@@ -296,6 +296,21 @@ $(function() {
         $("#dropzone").text("Drop images here...").removeClass("waiting"); 
     };
 
+    var fuploader  = new qq.FileUploader({
+        element: $("#file_uploader").get(0), 
+        action: "/ocr/convert",
+        onSubmit: function(id, filename) {
+            var params = {};
+            $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
+                params[$(elem).attr("name")] = $(elem).val();
+            });
+            fuploader.setParams(params);
+        },
+        onComplete: function(id, filename, response) {
+            onXHRLoad(response);
+        },
+    });
+
     // load state stored from last time
     loadState();
 
