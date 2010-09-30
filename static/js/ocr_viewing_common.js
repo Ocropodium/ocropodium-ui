@@ -403,20 +403,30 @@ $(function() {
     presetmanager.onPresetClear = pbuilder.reinit;
 
     // initialise the uploader...
-    var uploader  = new AjaxUploader(window.location.pathname, "dropzone");
+    var uploader  = new OCRJS.AjaxUploader(
+        $("#dropzone").get(0),
+        window.location.pathname, {
+            multi: false
+        }
+    );
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
         // close anything that's already open in the viewer
         sdviewer.close();
         pbuilder.setWaiting(true);
-        
+        $("#dropzone").text("Please wait...").addClass("waiting");
         // slurp up the parameters.  Since the params are build 
         // dynamically this has to be done immediately before the
         // upload commences, hence in the onUploadsStarted handler
-        $("#optionsform input[type='text'], #optionsform select").each(function() {
-            uploader.registerTextParameter("#" + $(this).attr("id"));
+        $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
+            uploader.registerTextParameter(elem);
         });
     };
+    uploader.onUploadsFinished = function(e) {
+        pbuilder.setWaiting(false);        
+        $("#dropzone").text("Drop images here...").removeClass("waiting"); 
+    };
+
 
 
     loadState();

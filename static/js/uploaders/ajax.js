@@ -7,7 +7,11 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this.target = target;
         this.url = url;
         this.base();
-        
+        this.options = {
+            relay: true,    // whether to upload files in separate POSTs
+            log: true,      // whether to, uh, log
+            multi: true,    // whether to accept multiple files
+        };
         $.extend(this.options, options);
         this._boundary = '------multipartformboundary' + (new Date).getTime(),
         this._maxsize = 0;
@@ -30,6 +34,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
                 alert("Error occurred: " + err);
             }
             event.stopPropagation();
+            self.onUploadsFinished();
         }, false);
 
         this.target.addEventListener("dragenter", function(event) {
@@ -89,12 +94,16 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         // Nope - do this in the callback from the subscriber
         //$(dropzone).text("Please wait...").addClass("waiting");
         
+        var builder = "";
 
         for (var i = 0; i < data.files.length; i++) {
             var file = data.files[i];
 
             // Build RFC2388 string. 
-            var builder = "";
+            // in relay mode, reset the string
+            if (this.options.relay) {
+                builder = "";
+            }
             builder += dashdash;
             builder += boundary;
             builder += crlf;
@@ -137,36 +146,46 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             builder += boundary;
             builder += dashdash;
             builder += crlf;
-            try {
-                var xhr = new XMLHttpRequest();
-                xhr.builder = builder;
-                xhr.onload = this.onXHRLoad;
-                this._queue.push(xhr);
-            } catch (e) {
-                alert(e);
-            }
+
+            if (this.options.relay)
+                this._queue.push(builder);
+
+            // skip additional files in single mode
+            if (!this.options.multi)
+                break;
         }
+        
+        if (!this.options.relay)
+            this._queue.push(builder);
+
         // start uploading
         this.sendNextItem();
     },
 
     sendNextItem: function() {
-        if (this._queue.length) {
-            var fxhr = this._queue.shift();
-            this.onUploadStart()
-           
-            fxhr.open("POST", this.url, true);
-            fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + this._boundary); 
-            fxhr.sendAsBinary(fxhr.builder);
-        } else {
+        if (!this._queue.length) {
             this.onUploadsFinished();
-        }  
+            return false;
+        }
+
+        var self = this;                      
+        var builder = this._queue.shift();
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function(event) {
+            self.sendNextItem();
+            self.onXHRLoad(event);        
+        };
+
+        this.onUploadStart()
+        xhr.open("POST", this.url, true);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + this._boundary); 
+        xhr.sendAsBinary(builder);
     },            
 
     size: function() {
         return this._maxsize;
-    },        
+    },
 
     // callbacks:
     onXHRLoad: function(event) {

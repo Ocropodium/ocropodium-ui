@@ -23,10 +23,11 @@
 #dropprompt {
 }
 
-.waiting {
-    background-image: url('/static/ajax-loader.gif');
+#dropzone.waiting {
+    background-image: url('/static/ajax-loader-small2.gif');
     background-repeat: no-repeat;
     background-position: center;
+    min-height: inherit;
 }
 
 .error {

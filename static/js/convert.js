@@ -283,13 +283,17 @@ $(function() {
 
 
     // initialise the uploader...
-    uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
+    uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert", {relay: true});
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
+        $("#dropzone").text("Please wait...").addClass("waiting");
         uploader.registerTextParameter("input[name=engine]:checked"); 
         $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
             uploader.registerTextParameter(elem);
         });
+    };
+    uploader.onUploadsFinished = function(e) {
+        $("#dropzone").text("Drop images here...").removeClass("waiting"); 
     };
 
     // load state stored from last time
