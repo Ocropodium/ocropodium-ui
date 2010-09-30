@@ -9,6 +9,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this.base();
         
         $.extend(this.options, options);
+        this._boundary = '------multipartformboundary' + (new Date).getTime(),
         this._maxsize = 0;
         this._queue = [];
         this._params = [];
@@ -22,11 +23,13 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         var self = this;
 
         this.target.addEventListener("drop", function(event) {
+            var data = event.dataTransfer;
             try {
-                self.upload(event);            
+                self.upload(data);            
             } catch(err) {
-                alert(err);
+                alert("Error occurred: " + err);
             }
+            event.stopPropagation();
         }, false);
 
         this.target.addEventListener("dragenter", function(event) {
@@ -65,22 +68,19 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
 
 
     // actually do the upload!
-    upload: function(event) {
+    upload: function(data) {
         // upload-related bits
         var
-        boundary = "------multipartformboundary" + (new Date).getTime(),
-        dashdash = "--",
-        crlf     = "\r\n";
+        boundary = this._boundary,
+        dashdash = '--',
+        crlf     = '\r\n';
 
 
         this.onUploadsStarted();        
 
-        var data = event.dataTransfer;
         for (var i = 0; i < data.files.length; i++) {
             if (data.files[i].type.search("image/") == -1) {
-                alert("Error: invalid file type: " + data);
-                event.stopPropagation();
-                return;
+                throw("invalid file type: " + data);
             }
         }
         this._maxsize = data.files.length;
@@ -91,9 +91,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         
 
         for (var i = 0; i < data.files.length; i++) {
-
             var file = data.files[i];
-            var binaryReader = new FileReader();    
 
             // Build RFC2388 string. 
             var builder = "";
@@ -103,8 +101,8 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
 
             // append text param values 
             $.each(this.parameters(), function(key, value) {
-                builder += "Content-Disposition: form-data; name='" + key + "'; ";
-                builder += "Content-Type: text/plain";
+                builder += 'Content-Disposition: form-data; name="' + key + '"; ';
+                builder += 'Content-Type: text/plain';
                 builder += crlf;
                 builder += crlf;
                 builder += value;
@@ -115,10 +113,10 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             });
             
             // Generate headers.
-            builder += "Content-Disposition: form-data; ";
-            builder += "name='userfile" + i + "[]'";
+            builder += 'Content-Disposition: form-data; ';
+            builder += 'name="userfile' + i + '[]"';
             if (file.fileName) {
-              builder += "; filename='" + file.fileName + "'";
+                builder += '; filename="' + file.fileName + '"';
             }
             builder += crlf;
 
@@ -142,7 +140,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             try {
                 var xhr = new XMLHttpRequest();
                 xhr.builder = builder;
-                xhr.onload = onXHRLoad;
+                xhr.onload = this.onXHRLoad;
                 this._queue.push(xhr);
             } catch (e) {
                 alert(e);
@@ -150,30 +148,25 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         }
         // start uploading
         this.sendNextItem();
-        alert("Uploading...");
-
-        // Prevent FireFox opening the dragged file. 
-        event.stopPropagation();
-        
     },
 
     sendNextItem: function() {
         if (this._queue.length) {
-            var
-            boundary = "------multipartformboundary" + (new Date).getTime(),
-            fxhr = this._queue.shift();
-
+            var fxhr = this._queue.shift();
             this.onUploadStart()
            
             fxhr.open("POST", this.url, true);
             fxhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + boundary); 
+            fxhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + this._boundary); 
             fxhr.sendAsBinary(fxhr.builder);
         } else {
             this.onUploadsFinished();
         }  
     },            
 
+    size: function() {
+        return this._maxsize;
+    },        
 
     // callbacks:
     onXHRLoad: function(event) {
