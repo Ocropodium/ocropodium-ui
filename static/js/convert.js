@@ -146,16 +146,13 @@ $(function() {
         }
     });
     $("#format").buttonset();
-
     $("#engine").buttonset();
-
     $("#clear").click(function(event) {
         pageobjects = [];
         $(".ocr_page_container").remove();
         $.cookie("jobnames", null);
         updateUiState();
     });
-
     $("#download").click(function(event) {
         var jobnames = [];
         $(".ocr_page").each(function(i, elem) {
@@ -163,7 +160,6 @@ $(function() {
         });
         $("#download").attr("href", "/ocr/zipped_results/?" + jobnames.join("&"));
     });
-
     $("#zoomin").click(function(event) {
         $("#font_size").val(parseInt($("#font_size").val()) + 2);
         $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
@@ -176,7 +172,6 @@ $(function() {
             primary: "ui-icon-zoomin",
         }
     });
-
     $("#zoomout").click(function(event) {
         $("#font_size").val(parseInt($("#font_size").val()) - 2);
         $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
@@ -189,11 +184,9 @@ $(function() {
             primary: "ui-icon-zoomout",
         }
     });
-
     $("input[name=engine]").change(function(e) {
         rebuildModelLists($(this).val());
     });
-
     $("#format_block").click(function(event) {
         formatter.blockLayout($(".ocr_page"));
         relayoutPages();
@@ -208,7 +201,6 @@ $(function() {
         });
         relayoutPages();
     });
-
 
 
     // initialise the uploader...
