@@ -1,15 +1,13 @@
 // Object to hold various formatting functions that operate 
 // on an .ocr_page div, containing .ocr_line spans.
 
-function OcrLineFormatter() {
-    //
-    // Layout: Functions for arranging the lines in certain ways
-    // TODO: Remove code dup between this and the ocr_page.js
-    // file.
-    //
 
-    // parse bbox="0 20 500 300" into [0, 20, 500, 300]
-    var parseBoundingBoxAttr = function(bbox) {
+OCRJS.LineFormatter = OCRJS.OcrBase.extend({
+    constructor: function(options) {
+        this.base();
+    },
+
+    parseBoundingBoxAttr: function(bbox) {
         var dims = [-1, -1, -1, -1];
         if (bbox.match(boxpattern)) {
             dims[0] = parseInt(RegExp.$1);
@@ -18,32 +16,35 @@ function OcrLineFormatter() {
             dims[3] = parseInt(RegExp.$4);            
         }
         return dims;
-    }
+    },
 
     // Fudgy function to insert line breaks (<br />) in places
     // where there are large gaps between lines.  Significantly
     // improves the look of a block of OCR'd text.
-    this.blockLayout = function(pagediv) {
+    blockLayout: function(pagediv) {
         // insert space between each line
-        resetState(pagediv);
+        this._resetState(pagediv);
         $("<span></span>").text("\u00a0").insertBefore(
             pagediv.find(".ocr_line").first().nextAll());        
         pagediv.removeClass("literal");
         pagediv.css("height", null);
-        insertBreaks(pagediv);
-    }
+        this._insertBreaks(pagediv);
+    },
 
 
-    this.lineLayout = function(pagediv) {
-        resetState(pagediv);
-        insertBreaks(pagediv);
+    lineLayout: function(pagediv) {
+        this._resetState(pagediv);
+        this._insertBreaks(pagediv);
         $(".ocr_line", pagediv).css("display", "block");
-    }
+    },
 
     // Horrid function to try and position lines how they would be on
     // the source material.  TODO: Make this not suck.
-    this.columnLayout = function(pagediv) {
-        resetState(pagediv);
+    columnLayout: function(pagediv) {
+        if (!pagediv.data("bbox"))
+            return;                
+        var self = this;                      
+        this._resetState(pagediv);
         var dims  = pagediv.data("bbox");
         var scale = pagediv.width() / dims[2];
         pagediv.addClass("literal");
@@ -85,7 +86,7 @@ function OcrLineFormatter() {
             if (medianfs != null && ismedian) {
                 $(item).css("font-size", medianfs);
             } else {            
-                var fs = resizeToTarget($(item), h, w);
+                var fs = self._resizeToTarget($(item), h, w);
                 if (medianfs == null && ismedian) {
                     medianfs = fs;
                 }
@@ -120,9 +121,9 @@ function OcrLineFormatter() {
             ypositions.push(y);
             upshift += h;
         });
-    }
+    },
 
-    var resetState = function(pagediv) {
+    _resetState: function(pagediv) {
         $("span", pagediv).map(function(i, elem) {
             if ($.trim($(elem).text()) == "" || $.trim($(elem).text()) == "\u00a0") 
                 return $(elem);
@@ -131,10 +132,10 @@ function OcrLineFormatter() {
         pagediv.removeClass("literal");
         pagediv.css("height", null);
         $(".ocr_line", pagediv).css("display", null);
-    }
+    },
 
 
-    var insertBreaks = function(pagediv) {
+    _insertBreaks: function(pagediv) {
         var lastyh = -1;
         var lasth = -1;
         var lastitem;
@@ -154,9 +155,9 @@ function OcrLineFormatter() {
                 lasth = h;
             }                        
         });
-    }
+    },
 
-    var resizeToTarget = function(span, targetheight, targetwidth) {
+    _resizeToTarget: function(span, targetheight, targetwidth) {
         var iheight = span.height();
         var iwidth = span.width();
         var count = 0
@@ -187,5 +188,5 @@ function OcrLineFormatter() {
             }
         }
         return span.css("font-size");
-    }
-}
+    },
+});

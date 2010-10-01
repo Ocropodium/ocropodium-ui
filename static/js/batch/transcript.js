@@ -260,7 +260,7 @@ $(function() {
     });
     
     // line formatter object
-    formatter = new OcrLineFormatter();
+    formatter = new OCRJS.LineFormatter();
     
     // viewer object
     sdviewer = new OCRJS.ImageViewer($("#viewer").get(0), {

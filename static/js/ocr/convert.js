@@ -74,11 +74,6 @@ function loadState() {
     }
 }
 
-// save state on leaving the page... at least try to...
-window.onbeforeunload = function(event) {
-    saveState();
-}
-
 
 function onXHRLoad(event) {
     var xhr = event.target;
@@ -219,9 +214,15 @@ $(function() {
 
     // load state stored from last time
     loadState();
+    
+    // save state on leaving the page... at least try to...
+    window.onbeforeunload = function(event) {
+        saveState();
+    }
+
 
     // line formatter object
-    formatter = new OcrLineFormatter();
+    formatter = new OCRJS.LineFormatter();
 
     // fetch the appropriate models...
     rebuildModelLists($("input[name=engine]:checked").val());    
