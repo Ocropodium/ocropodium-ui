@@ -59,7 +59,7 @@
                         </li>
                         {% if request.session.project %}
                             <li><a href="/projects/show/{{request.session.project.pk}}/">Information</a></li>
-                            <li><a href="/projects/show/{{request.session.project.pk}}/#tab_3">Export</a></li>
+                            <li><a href="/projects/export/{{request.session.project.pk}}/">Export</a></li>
                             <li><a href="/projects/close/">Close</a></li>
                         {% else %}
                             <li class="disabled_option">Close</li>

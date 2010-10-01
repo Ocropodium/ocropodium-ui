@@ -1,15 +1,12 @@
 
 <div id="tabs">
     <ul>
+        <li><a href="#tab_1">Project Details</a></li>
         <li><a href="/training/list/">Training Sets</a></li>
-        <li><a href="#tab_2">Details</a></li>
-        <li><a href="/projects/export/{{project.pk}}/">Export</a></li>
     </ul>
-    <div class="contain_float" id="tab_1">
-    </div>
-    <div id="tab_2">
+    <div id="tab_1">
         {% include "projects/includes/project_form.html" %}
     </div>
-    <div id="tab_3">
+    <div class="contain_float" id="tab_2">
     </div>
 </div>
