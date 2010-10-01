@@ -80,24 +80,15 @@ window.onbeforeunload = function(event) {
 }
 
 
-function onXHRLoad(event_or_response) {
-    var data;
-    if (event_or_response.target != null) {
-        var xhr = event_or_response.target;
-        if (!xhr.responseText) {
-            return;
-        }                
-        if (xhr.status != 200) {
-            return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
-        } 
-        data = $.parseJSON(xhr.responseText);
-    } else {
-        // then it must be a single upload...
-        // save the job names of the current pages...
-        var jobnames = [];
-        data = event_or_response;
-    }
-
+function onXHRLoad(event) {
+    var xhr = event.target;
+    if (!xhr.responseText) {
+        return;
+    }                
+    if (xhr.status != 200) {
+        return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
+    } 
+    var data = $.parseJSON(xhr.responseText);
     if (data.error) {
         alert("Error: " + data.error + "\n\n" + data.trace);
         $("#dropzone").text("Drop images here...").removeClass("waiting");
@@ -134,35 +125,6 @@ function updateUiState() {
 }
 
 
-function doIframeUpload(elem) {
-    if ($(elem).val() == "") {
-        return false;
-    }
-
-    // get the extra params
-    var pdata = {};
-    pdata.engine = $("input[name=engine]:checked").attr("value");
-    pdata.psegmenter = $("#form_segmenter").val();
-    pdata.clean = $("#form_clean").val();
-    pdata.cmodel = $("#form_cmodel").val();
-    pdata.lmodel = $("#form_lmodel").val();
-
-    // server-size hack so we know it's using the iframe method
-    pdata._iframe = 1;
-
-    $("#uploadform").ajaxForm({
-        data : pdata,
-        dataType: "json",
-        success: function(data, responseText, xhr) {
-            onXHRLoad(data, responseText, xhr);
-            $(elem).val("");
-        },
-    });
-    $("#uploadform").submit();
-}
-
-
-
 
 var pageobjects = [];
 var uploader = null;
@@ -186,39 +148,6 @@ $(function() {
     $("#format").buttonset();
 
     $("#engine").buttonset();
-
-    $("#singleupload").change(function(event) {
-        doIframeUpload(this);
-    });
-
-
-    // hide the drag-drop zone for browsers other than firefox
-    if (!($.browser.mozilla && 
-                parseFloat($.browser.version.slice(0, 3)) >= 1.9)) {
-        //$("#dragdrop").hide();
-        var dd = $("#dropzone");
-        var hiddenupload = $("<input></input>")
-            .attr("type", "file")
-            .attr("id", "hiddenupload")
-            .attr("name", "upload[]")
-            .attr("multiple", "multiple")
-            .css("opacity", "0.0")
-            .css("z-index", 1000)
-            .css("position", "absolute")
-            .css("width", dd.outerWidth(true) + "px")
-            .css("height", dd.outerHeight(true) + "px")
-            .css("top", dd.offset().top + "px")
-            .css("left", dd.offset().left + "px")
-            .live("mouseenter mouseleave", function(event) {
-                if (event.type == "mouseover") {
-                    dd.addClass("hover");
-                } else {
-                    dd.removeClass("hover");
-                }
-            }).change(function(event) {
-                doIframeUpload(this);
-            }).appendTo($("#uploadform"));
-    }
 
     $("#clear").click(function(event) {
         pageobjects = [];
@@ -283,7 +212,7 @@ $(function() {
 
 
     // initialise the uploader...
-    uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert", {relay: true});
+    uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
         $("#dropzone").text("Please wait...").addClass("waiting");
@@ -295,21 +224,6 @@ $(function() {
     uploader.onUploadsFinished = function(e) {
         $("#dropzone").text("Drop images here...").removeClass("waiting"); 
     };
-
-    var fuploader  = new qq.FileUploader({
-        element: $("#file_uploader").get(0), 
-        action: "/ocr/convert",
-        onSubmit: function(id, filename) {
-            var params = {};
-            $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
-                params[$(elem).attr("name")] = $(elem).val();
-            });
-            fuploader.setParams(params);
-        },
-        onComplete: function(id, filename, response) {
-            onXHRLoad(response);
-        },
-    });
 
     // load state stored from last time
     loadState();

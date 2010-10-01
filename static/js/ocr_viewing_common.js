@@ -7,10 +7,10 @@ var pbuilder = null;
 
 function saveState() {
     if (sdviewer) {
-        var png = $("#viewerwindow").data("png");
-        var src = $("#viewerwindow").data("src");
-        var outa = $("#viewerwindow").data("outa");        
-        var outb = $("#viewerwindow").data("outb");        
+        var png = $(sdviewer).data("png");
+        var src = $(sdviewer).data("src");
+        var outa = $(sdviewer).data("outa");        
+        var outb = $(sdviewer).data("outb");        
 
         if (outa && png) {
             var winprefix = window.location.pathname.replace(/\//g, "");
@@ -56,9 +56,9 @@ window.onbeforeunload = function(event) {
 
 
 function refreshImage() {
-    var params = "src=" + $("#viewerwindow").data("src") 
-        + "&png=" + $("#viewerwindow").data("png") 
-        + "&dst=" + sdviewer.activeOutputPath()
+    var params = "src=" + $(sdviewer).data("src") 
+        + "&png=" + $(sdviewer).data("png") 
+        + "&dst=" + sdviewer.bufferPath(1)
         + "&" + pbuilder.serializedData();
 
     // have to disable the params AFTER building the param
@@ -74,8 +74,8 @@ function refreshImage() {
         beforeSend: function(data) {
         },
         success: function(data) {
-            $("#viewerwindow").data("jobname", data[0].job_name);
-            pollForResults($("#viewerwindow"));
+            $(sdviewer).data("jobname", data[0].job_name);
+            pollForResults($(sdviewer));
         },
         error: function(xhr, errorResponse, errorThrown) {
             alert("XHR failed: " + errorResponse);
@@ -118,12 +118,12 @@ function processData(element, data) {
                     .append("<pre>" + data.trace + "</pre>")                                
             );                            
     } else if (data.status == "SUCCESS") {
-        element.data("png", data.results.png);
-        element.data("src", data.results.src);
+        $(sdviewer).data("png", data.results.png);
+        $(sdviewer).data("src", data.results.src);
         if (data.results.dst.search("_b.dzi") != -1) {
-            element.data("outb", data.results.dst);
+            $(sdviewer).data("outb", data.results.dst);
         } else {
-            element.data("outa", data.results.dst);
+            $(sdviewer).data("outa", data.results.dst);
         }
         sdviewer.setBufferPath(2, sdviewer.bufferPath(1));
         sdviewer.setBufferPath(1, data.results.dst);
@@ -169,20 +169,15 @@ function pollForResults(element) {
 
 // process the INITIAL json data that arrives after the files
 // have been uploaded but before it has been processed.
-function onXHRLoad(event_or_response) {
-    if (event_or_response.target != null) {
-        var xhr = event_or_response.target;
-        if (!xhr.responseText) {
-            return;
-        }                
-        if (xhr.status != 200) {
-            return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
-        }        
-        data = $.parseJSON(xhr.responseText);
-    } else {
-        // then it must be a single upload...
-        data = event_or_response;
-    }
+function onXHRLoad(event) {
+    var xhr = event.target;
+    if (!xhr.responseText) {
+        return;
+    }                
+    if (xhr.status != 200) {
+        return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
+    } 
+    var data = $.parseJSON(xhr.responseText);
     if (data.error) {
         alert("Error: " + data.error + "\n\n" + data.trace);
         $("#dropzone").text("Drop images here...").removeClass("waiting");
@@ -199,32 +194,6 @@ function onXHRLoad(event_or_response) {
     }); 
 };
 
-
-function doIframeUpload(elem) {
-    if ($(elem).val() == "") {
-        return false;
-    }
-
-    // get the extra params
-    var pdata = pbuilder.data();
-
-    // hack to pull in the cleanup option on the segment page
-    if ($("#form_clean").length) {
-        pdata.clean = $("#form_clean").val();
-    }
-    // server-size hack so we know it's using the iframe method
-    pdata._iframe = 1;
-
-    $("#uploadform").ajaxForm({
-        data : pdata,
-        dataType: "json",
-        success: function(data, responseText, xhr) {
-            onXHRLoad(data, responseText, xhr);
-            $(elem).val("");
-        },
-    });
-    $("#uploadform").submit();
-}
 
 
 $(function() {
@@ -285,39 +254,6 @@ $(function() {
         $(".viewer_highlight." + class).globalcss(
             "display", $(this).attr("checked") ? "block" : "none");
     });
-
-    $("#singleupload").change(function(event) {
-        doIframeUpload(this);
-    });
-
-
-    // hide the drag-drop zone for browsers other than firefox
-    if (!($.browser.mozilla && 
-                parseFloat($.browser.version.slice(0, 3)) >= 1.9)) {
-        //$("#dragdrop").hide();
-        var dd = $("#dragdrop");
-        var hiddenupload = $("<input></input>")
-            .attr("type", "file")
-            .attr("id", "hiddenupload")
-            .attr("name", "upload[]")
-            .attr("multiple", "multiple")
-            .css("opacity", "0.0")
-            .css("z-index", 1000)
-            .css("position", "absolute")
-            .css("width", dd.outerWidth(true) + "px")
-            .css("height", dd.outerHeight(true) + "px")
-            .css("top", dd.offset().top + "px")
-            .css("left", dd.offset().left + "px")
-            .live("mouseenter mouseleave", function(event) {
-                if (event.type == "mouseover") {
-                    dd.addClass("hover");
-                } else {
-                    dd.removeClass("hover");
-                }
-            }).change(function(event) {
-                doIframeUpload(this);
-            }).appendTo($("#uploadform"));
-    }
 
     // make interactive params disabled at the start
     $(".tbbutton").button({disabled: true});
@@ -405,9 +341,8 @@ $(function() {
     // initialise the uploader...
     var uploader  = new OCRJS.AjaxUploader(
         $("#dropzone").get(0),
-        window.location.pathname, {
-            multi: false
-        }
+        window.location.pathname, 
+        { multi: false }
     );
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
@@ -426,8 +361,6 @@ $(function() {
         pbuilder.setWaiting(false);        
         $("#dropzone").text("Drop images here...").removeClass("waiting"); 
     };
-
-
 
     loadState();
 });

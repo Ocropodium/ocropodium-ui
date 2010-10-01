@@ -29,7 +29,9 @@ from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 from ocradmin.projects.tasks import IngestTask
 
 from ocradmin.projects.utils import project_required
-from ocradmin.ocr.views import _get_best_params, _cleanup_params
+from ocradmin.ocr.views import _get_best_params, _cleanup_params, \
+        _handle_request, _handle_streaming_upload, _handle_multipart_upload
+    
 
 
 PER_PAGE = 25
@@ -444,15 +446,13 @@ def upload_files(request):
     """
     Upload files to the server for batch-processing.
     """
-    print request.POST
-    print request.FILES
     mimetype = "application/json" if not request.POST.get("_iframe") \
             else "text/html"
 
-    try:
-        outdir = ocrutils.FileWrangler(
+    outdir = ocrutils.FileWrangler(
                 username=request.user.username, temp=False, stamp=False, action=None)()
-        paths = ocrutils.save_ocr_images(request.FILES.iteritems(),  outdir)
+    try:
+        paths, userparams = _handle_request(request, outdir)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -460,6 +460,7 @@ def upload_files(request):
         return HttpResponse(
                 simplejson.dumps({"error": "no valid images found"}),
                 mimetype="application/json")     
+
     pathlist = [os.path.basename(p) for p in paths]
     return HttpResponse(simplejson.dumps(pathlist),
             mimetype=mimetype)

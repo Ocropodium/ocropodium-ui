@@ -203,7 +203,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         ocrtask.save()
         asynctasks.append(celerytask.apply_async(args=args, **kwargs))            
     try:
-        # aggregate the results
+        # aggregate the results.  If necessary wait for tasks.
         out = []
         for async in asynctasks:
             result = async.wait() if _should_wait(request) else async.result
@@ -215,7 +215,6 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         # should be past the danger zone now...
         transaction.commit()
         return _json_or_text_response(request, out)
-
     except Exception, err:
         print err
         transaction.rollback()
@@ -364,7 +363,7 @@ def _handle_multipart_upload(request, outdir):
         paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
     else:
         paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
-    return paths, _get_best_params(request.GET.copy())
+    return paths, _get_best_params(request.POST.copy())
 
 
 

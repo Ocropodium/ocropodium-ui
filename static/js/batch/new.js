@@ -145,39 +145,6 @@ $(function() {
         .css("margin-top", "0px")
         .css("overflow", "hidden");
 
-
-    $("#singleupload").change(function(event) {
-        doIframeUpload(this);
-    });
-
-
-    // hide the drag-drop zone for browsers other than firefox
-    if (!($.browser.mozilla && 
-                parseFloat($.browser.version.slice(0, 3)) >= 1.9)) {
-        var dd = $("#dropzone");
-        var hiddenupload = $("<input></input>")
-            .attr("type", "file")
-            .attr("id", "hiddenupload")
-            .attr("name", "upload[]")
-            .attr("multiple", "multiple")
-            .css("opacity", "0.0")
-            .css("z-index", 1000)
-            .css("position", "absolute")
-            .css("width", dd.outerWidth(true) + "px")
-            .css("height", dd.outerHeight(true) + "px")
-            .css("top", dd.offset().top + "px")
-            .css("left", dd.offset().left + "px")
-            .live("mouseenter mouseleave", function(event) {
-                if (event.type == "mouseover") {
-                    dd.addClass("hover");
-                } else {
-                    dd.removeClass("hover");
-                }
-            }).change(function(event) {
-                doIframeUpload(this);
-            }).appendTo($("#uploadform"));
-    }
-
     $("input[name=engine]").change(function(e) {
         rebuildModelLists($(this).val());
     });
@@ -267,22 +234,15 @@ $(function() {
         event.preventDefault();
     });
 
-    function onXHRLoad(event_or_response) {
-        var data;
-        if (event_or_response.target != null) {
-            var xhr = event_or_response.target;
-            if (!xhr.responseText) {
-                return;
-            }                
-            if (xhr.status != 200) {
-                return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
-            } 
-            data = $.parseJSON(xhr.responseText);
-        } else {
-            // then it must be a single upload...
-            // save the job names of the current pages...
-            data = event_or_response;
-        }
+    function onXHRLoad(event) {
+        var xhr = event.target;
+        if (!xhr.responseText) {
+            return;
+        }                
+        if (xhr.status != 200) {
+            return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
+        } 
+        var data = $.parseJSON(xhr.responseText);
         if (data.error) {
             alert("Error: " + data.error + "\n\n" + data.trace);
             $("#dropzone").text("Drop images here...").removeClass("waiting");
@@ -293,12 +253,7 @@ $(function() {
 
 
     // initialise the uploader...
-    uploader  = new OCRJS.AjaxUploader(
-        $("#dropzone").get(0),
-        "/batch/upload_files/", {
-            relay: false,
-        }
-    );
+    uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/batch/upload_files/");
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
         $("#dropzone").text("Please wait...").addClass("waiting");

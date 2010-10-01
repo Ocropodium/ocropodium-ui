@@ -8,50 +8,82 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this.url = url;
         this.base();
         this.options = {
-            relay: true,    // whether to upload files in separate POSTs
             log: true,      // whether to, uh, log
             multi: true,    // whether to accept multiple files
         };
         $.extend(this.options, options);
-        this.options.relay = false;
 
-        this._boundary = '------multipartformboundary' + (new Date).getTime(),
         this._maxsize = 0;
         this._queue = [];
         this._params = [];
-        this._xhrqueue = [];
 
+        $(this.target).wrap($("<div></div>"));
+        this._fakeinput = $("<input></input>")
+            .attr("type", "file")
+            .attr("id", "fakeinput")
+            .attr("multiple", this.options.multi ? "multiple" : null)
+            .width($(this.target).outerWidth())
+            .height($(this.target).outerHeight())
+            .css({
+                position: "absolute",
+                opacity: 0.0,                
+                top: $(this.target).offset().top + "px",
+                left: $(this.target).offset().left + "px",
+            }).insertAfter(this.target);
+        this._cnt = $(this.target).parent().get(0);
+        
         this.setupEvents();
     },
-
 
     setupEvents: function() {
         var self = this;
 
-        this.target.addEventListener("drop", function(event) {
-            var data = event.dataTransfer;
+        this._cnt.addEventListener("drop", function(event) {
             try {
-                self.upload(data);            
+                self.uploadPost(event.dataTransfer.files);            
             } catch(err) {
                 alert("Error occurred: " + err);
             }
+            $(self.target).removeClass("hover"); 
             event.stopPropagation();
-            self.onUploadsFinished();
+            event.preventDefault();
         }, false);
 
-        this.target.addEventListener("dragenter", function(event) {
-            $(this).addClass("hover"); 
+        this._cnt.addEventListener("dragenter", function(event) {
+            $(self.target).addClass("hover"); 
         }, false);
 
-        this.target.addEventListener("dragexit", function(event) { 
-            $(this).removeClass("hover"); 
+        this._cnt.addEventListener("dragexit", function(event) { 
+            $(self.target).removeClass("hover"); 
         }, false);
 
-        this.target.addEventListener("dragover", function(event) { 
+        this._cnt.addEventListener("dragover", function(event) { 
             event.preventDefault(); 
         }, false);
-    },
 
+        this._cnt.addEventListener("dragleave", function(event) { 
+            $(self.target).removeClass("hover"); 
+            event.preventDefault(); 
+        }, false);
+
+        
+        $(this._cnt).bind("mouseenter mouseleave", function(event) {
+            if (event.type == "mouseenter") {
+                $(self.target).addClass("hover"); //.text("Click to upload images...");
+
+
+            } else if (event.type == "mouseleave") {
+                //self._fakeinput.detach();
+                $(self.target).removeClass("hover"); //.text("Drop images here...");
+            }
+        });
+
+        this._fakeinput.change(function(event) {
+            if (!this.files || this.files.length == 0)
+                return;
+            self.uploadPost(this.files);
+        });
+    },
 
     registerTextParameter: function(element) {
         if (!$(element).attr("name"))
@@ -61,7 +93,6 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         $.unique(this._params);
     },
 
-
     parameters: function() {
         var params = {};
         $.each(this._params, function(i, elem) {
@@ -70,121 +101,58 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         return params;    
     },
 
+    uploadPost: function(files) {
+        this.onUploadsStarted();
 
-    // actually do the upload!
-    upload: function(data) {
-        // upload-related bits
-        var
-        boundary = this._boundary,
-        dashdash = '--',
-        crlf     = '\r\n';
+        // chuck away all but the first file if not
+        // in multi mode
+        if (!this.options.multi)
+            files = [files[0]]
 
-
-        this.onUploadsStarted();        
-
-        for (var i = 0; i < data.files.length; i++) {
-            if (data.files[i].type.search("image/") == -1) {
-                throw("invalid file type: " + data);
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].type.search("image/") == -1) {
+                throw("invalid file type: " + files[i].type);
             }
         }
-        this._maxsize = data.files.length;
+        this._maxsize = files.length;
 
-        // Show spinner for each dropped file and say we're busy. 
-        // Nope - do this in the callback from the subscriber
-        //$(dropzone).text("Please wait...").addClass("waiting");
-        
-        var builder = "";
-        var donetext = false;
-
-        for (var i = 0; i < data.files.length; i++) {
-            var file = data.files[i];
-
-            // Build RFC2388 string. 
-            // in relay mode, reset the string
-            if (this.options.relay) {
-                builder = "";
-            }
-            builder += dashdash;
-            builder += boundary;
-            builder += crlf;
-
-            // append text param values 
-            if (this.options.relay || !donetext) {
-                $.each(this.parameters(), function(key, value) {
-                    builder += 'Content-Disposition: form-data; name="' + key + '"; ';
-                    builder += 'Content-Type: text/plain';
-                    builder += crlf;
-                    builder += crlf;
-                    builder += value;
-                    builder += crlf;
-                    builder += dashdash;
-                    builder += boundary;
-                    builder += crlf;
-                });
-                donetext = true;
-            }
-
-            // Generate headers.
-            builder += 'Content-Disposition: form-data; ';
-            builder += 'name="userfile' + i + '[]"';
-            if (file.fileName) {
-                builder += '; filename="' + file.fileName + '"';
-            }
-            builder += crlf;
-
-            builder += "Content-Type: " + file.type;
-            builder += crlf;
-            builder += crlf; 
-
-            // Append binary data. 
-            builder += file.getAsBinary() ;
-            builder += crlf;
-
-            // Write boundary. 
-            builder += dashdash;
-            builder += boundary;
-            builder += crlf;
-            // Mark end of the request. 
-            builder += dashdash;
-            builder += boundary;
-            builder += dashdash;
-            builder += crlf;
-
-            if (this.options.relay)
-                this._queue.push(builder);
-
-            // skip additional files in single mode
-            if (!this.options.multi)
-                break;
+        for (var i = 0; i < files.length; i++) {
+            this._queue.push(files[i]);
         }
-        
-        if (!this.options.relay)
-            this._queue.push(builder);
-
-        // start uploading
-        this.sendNextItem();
-    },
-
-    sendNextItem: function() {
+        this.postNextItem();
+    },                    
+                
+    postNextItem: function() {
         if (!this._queue.length) {
             this.onUploadsFinished();
             return false;
         }
 
         var self = this;                      
-        var builder = this._queue.shift();
+        var file = this._queue.shift();
         var xhr = new XMLHttpRequest();
         xhr.onload = function(event) {
-            self.sendNextItem();
+            self.postNextItem();
             self.onXHRLoad(event);        
         };
 
+        var params = this.parameters();
+        params["qqfile"] = file.fileName;
+        var urlstring = this.getQueryString(params);
         this.onUploadStart()
-        xhr.open("POST", this.url, true);
+        xhr.open("POST", urlstring, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + this._boundary); 
-        xhr.sendAsBinary(builder);
-    },            
+        xhr.setRequestHeader('content-type', file.type); 
+        xhr.send(file);
+    },
+
+    getQueryString: function(params) {
+        var p = [];
+        $.each(params, function(k, v) {
+            p.push(k + "=" + v);            
+        });
+        return (this.url + "?" + p.join("&")).replace(/\?$/, "");
+    },
 
     size: function() {
         return this._maxsize;
@@ -210,11 +178,6 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
     onUploadsFinished: function(event) {
 
     },
-
-
-
-    
-
 });
 
 

@@ -18,6 +18,7 @@
 
 #dropzone.hover {
     background-color: #FFC;
+    cursor: pointer;
 }
 
 #dropprompt {
