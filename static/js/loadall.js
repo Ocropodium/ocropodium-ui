@@ -17,9 +17,11 @@ $(function() {
             .unbind("click.menuclose")
             .find("ul").hide();
         $("div#menu ul.top").unbind("mouseenter.menuover");
+        $(window).unbind("click.menuclose");        
+        $(window).unbind("keydown.menuclose");        
         $(menu).bind("click.menuopen", function(event) {
             activateMenu(this);        
-        });        
+        });
     }
 
     function activateMenu(menu) {
@@ -41,7 +43,18 @@ $(function() {
                 deactivateMenu(menu);
                 $("div#menu ul.top").unbind("click.menuclose");
                 $(window).unbind("keydown.menuclose");
+            } 
+        });
+        $(window).bind("click.menuclose", function(event) {
+            if (event.pageX > $(menu).offset().left &&
+                event.pageX < $(menu).offset().left +
+                    $(menu).width() &&
+                event.pageY > $(menu).offset().top &&
+                event.pageY < $(menu).offset().top +
+                    $(menu).height()) {
+                return true;
             }
+            deactivateMenu(menu);            
         });
     }
 
