@@ -73,7 +73,7 @@ def ls(request):
     fulldir = os.path.join(root, dir)
     #fulldir = "/" + dir
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(entry_info(fulldir), response, cls=ExtJsonEncoder)
+    simplejson.dump(entry_info(fulldir), response) #cls=ExtJsonEncoder)
     return response
 
 
