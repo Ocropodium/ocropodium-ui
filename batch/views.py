@@ -351,7 +351,7 @@ def upload_files(request):
                 username=request.user.username, temp=False,
                 stamp=False, action=None)()
     try:
-        paths, _ = _handle_request(request, outdir)
+        paths = _handle_request(request, outdir)[0]
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
