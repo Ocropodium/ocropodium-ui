@@ -17,6 +17,7 @@ TESTFILE = "simple.png"
 class OcrBatchTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json",
             "projects/fixtures/test_fixtures.json"]
+
     def setUp(self):
         """
             Setup OCR tests.  Creates a test user.
@@ -30,6 +31,7 @@ class OcrBatchTest(TestCase):
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
         self.client.get("/projects/load/1/")
+
 
     def tearDown(self):
         """
@@ -65,6 +67,53 @@ class OcrBatchTest(TestCase):
         self.assertEqual(
                 content[0]["fields"]["tasks"][0]["fields"]["page_name"], 
                 os.path.basename(TESTFILE))
+        return pk
+
+
+    def test_page_results_page_action(self):
+        """
+        Test fetching task results.  Assume a page with offset 0
+        exists.
+        """
+        pk = self._test_batch_action()        
+        r = self.client.get("/batch/results/%s/0/" % pk)
+        self.assert_(r.content, "No content returned")
+        content = simplejson.loads(r.content)
+        self.assertEqual(
+                content[0]["fields"]["page_name"], 
+                os.path.basename(TESTFILE))
+
+
+    def test_save_transcript(self):
+        """
+        Test fetching task results.  Assume a page with offset 0
+        exists.
+        """
+        pk = self._test_batch_action()        
+        r = self.client.get("/batch/results/%s/0/" % pk)
+        self.assert_(r.content, "No content returned")
+        content = simplejson.loads(r.content)
+        self.assertEqual(
+                content[0]["fields"]["page_name"], 
+                os.path.basename(TESTFILE))
+
+
+    def test_transcript_action(self):
+        """
+        Test viewing the transcript for a new batch.
+        """
+        pk = self._test_batch_action()        
+        r = self.client.get("/batch/transcript/%s/" % pk)
+        self.assertEqual(r.status_code, 200)
+
+
+    def test_show_action(self):
+        """
+        Test viewing batch details.
+        """
+        pk = self._test_batch_action()        
+        r = self.client.get("/batch/show/%s/" % pk)
+        self.assertEqual(r.status_code, 200)
 
 
     def _test_batch_action(self, params=None, headers={}):
@@ -81,12 +130,20 @@ class OcrBatchTest(TestCase):
         self.assertTrue(pkmatch != None)        
         return pkmatch.groups()[0]
 
-        # check we recieve JSON back
-        self.assert_(r.content, "No content returned")
+
+    def test_file_upload(self):
+        """
+        Test uploading files to the server.
+        """
+        upload = os.path.join(settings.MEDIA_ROOT, "test", TESTFILE)
+        fh = file(upload, "rb")
+        params = {}
+        params["file1"] = fh
+        headers = {}
+        r = self.client.post("/batch/upload_files/", params, **headers)
+        fh.close()
         content = simplejson.loads(r.content)
-        self.assertEqual(len(content), 1)
-        self.assertTrue(content[0]["pk"] is not None, "Unable to get results")
-        return content[0]["pk"]
+        self.assertEqual(content, [TESTFILE])
       
 
     def _get_batch_response(self, params={}, headers={}):
@@ -94,7 +151,6 @@ class OcrBatchTest(TestCase):
         Post images for conversion with the given params, headers.
         """
         headers["follow"] = True
-        r = self.client.post("/batch/create/", params, **headers)
-        return r
+        return self.client.post("/batch/create/", params, **headers)
         
 
