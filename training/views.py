@@ -1,34 +1,22 @@
-import re
 import os
-import traceback
-from types import ClassType, MethodType
-from datetime import datetime
-from celery import result as celeryresult
-from celery.contrib.abortable import AbortableAsyncResult
-from celery.task.sets import TaskSet, subtask
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.core import serializers
-from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction, IntegrityError
 from django.db.models import Q, Count
-from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseServerError 
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
 from django import forms
-from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
-
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
-from ocradmin.projects.models import OcrProject
-from ocradmin.training.models import *
-
+from ocradmin.ocrtasks.models import OcrTask, OcrBatch
+from ocradmin.training.models import OcrComparison, OcrModelScore, \
+        TrainingPage        
 from ocradmin.projects.utils import project_required
-
-from ocradmin.training.tasks import LineTrainTask, ComparisonTask, MakeThumbnailTask
+from ocradmin.training.tasks import LineTrainTask, ComparisonTask, \
+        MakeThumbnailTask
 
 
 class TrainingSetForm(forms.Form):
@@ -46,7 +34,6 @@ def comparison_query(order, **params):
         Query the comparison set.
     """
 
-    tag = params.get("tag")
     try:
         del params["tag"]
     except KeyError:
@@ -97,7 +84,7 @@ def create(request):
     formok = form.is_valid()
     try: 
         tsets = TrainingPage.objects.filter(pk__in=request.POST.getlist("tset"))
-    except TrainPage.DoesNotExist:
+    except TrainingPage.DoesNotExist:
         formok = False
 
     if not formok:
@@ -122,9 +109,10 @@ def create(request):
     )()
     
     # make us a new task entry
-    tid = ocrutils.get_new_task_id()
+    tid = ocrutils.get_new_task_id()    
     args = ([t.pk for t in tsets], cmodel.pk, outpath)
-    kwargs = dict(task_id=tid, loglevel=60, retries=2,) # could add a 'queue' param here
+    # Note: could add a 'queue' param here
+    kwargs = dict(task_id=tid, loglevel=60, retries=2,) 
     task = OcrTask(
         task_id=tid,
         user = request.user,
@@ -173,9 +161,8 @@ def score_models(request):
     name = "Model Comparison"
     notes = request.POST.get("notes", "")
     lmodel = get_object_or_404(OcrModel, pk=request.POST.get("lmodel", 0))
+    project = request.session["project"]
 
-
-    print request.POST
     try:
         tsets = TrainingPage.objects.filter(pk__in=request.POST.getlist("tset"))
         cmodels = OcrModel.objects.filter(pk__in=request.POST.getlist("cmodel"))
@@ -207,11 +194,14 @@ def score_models(request):
         batch=batch,
     )
     comparison.save()
-    for gt in tsets:
-        path = gt.binary_image_path
+    for gtruth in tsets:
+        path = gtruth.binary_image_path
         for cmodel in cmodels:
             # create a task with the given gt/model
-            params = {"cmodel": cmodel.file.path.encode(), "lmodel": lmodel.file.path.encode()}
+            params = dict(
+                cmodel=cmodel.file.path.encode(), 
+                lmodel=lmodel.file.path.encode()
+            )
             if cmodel.name == "Tesseract":
                 params["tesseract"] = True
                 try:
@@ -220,14 +210,15 @@ def score_models(request):
                 except OcrModel.DoesNotExist:
                     pass
             tid = ocrutils.get_new_task_id(path)
-            args = (gt.pk, outdir.encode(), params)
+            args = (gtruth.pk, outdir.encode(), params)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             task = OcrTask(
                 task_id=tid,
                 user=request.user,
                 batch=batch,
                 project=request.session["project"],
-                page_name="%s/%s" % (os.path.basename(os.path.splitext(path)[0]), cmodel.name),
+                page_name="%s/%s" % (os.path.basename(
+                    os.path.splitext(path)[0]), cmodel.name),
                 task_type="compare",
                 task_name=ComparisonTask.name,
                 status="INIT",
@@ -240,7 +231,7 @@ def score_models(request):
             # create a score record for this task
             score = OcrModelScore(
                 comparison=comparison,
-                ground_truth=gt,
+                ground_truth=gtruth,
                 task=task,
                 model=cmodel,                
             )
@@ -274,11 +265,11 @@ def comparison_from_batch(request):
 
 @project_required
 @login_required
-def comparison(request, pk):
+def comparison(request, comparison_pk):
     """
     View details of a model comparison.
     """
-    comparison = get_object_or_404(OcrComparison, pk=pk)
+    comparison = get_object_or_404(OcrComparison, pk=comparison_pk)
     scores = comparison.modelscores.order_by("pk", "ground_truth", "model")
     ordered = {}
     for score in scores:
@@ -327,11 +318,11 @@ def comparison(request, pk):
 
 @project_required
 @login_required
-def show_modelscore(request, pk):
+def show_modelscore(request, modelscore_pk):
     """
     Display the accuracy internals of a model score.
     """
-    score = get_object_or_404(OcrModelScore, pk=pk)
+    score = get_object_or_404(OcrModelScore, pk=modelscore_pk)
     result = score.task.latest_transcript()
     context = dict(
         modelscore=score,
@@ -350,12 +341,12 @@ def show_modelscore(request, pk):
 
 @project_required
 @login_required
-def save_task(request, pk):
+def save_task(request, task_pk):
     """
     Save a page and it's binary image as 
     training data.
     """
-    task = get_object_or_404(OcrTask, pk=pk)
+    task = get_object_or_404(OcrTask, pk=task_pk)
     binurl = request.POST.get("binary_image")
     if not binurl:
         raise HttpResponseServerError("No binary image url given.")
@@ -382,20 +373,20 @@ def save_task(request, pk):
     
     # create or update the model
     try:
-        tp = TrainingPage.objects.get(project=request.session["project"], 
+        tpage = TrainingPage.objects.get(project=request.session["project"], 
                 user=request.user, binary_image_path=trainpath)
     except TrainingPage.DoesNotExist:
-        tp = TrainingPage()
+        tpage = TrainingPage()
 
     try:
-        tp.page_name = task.page_name
-        tp.user = request.user
-        tp.project = request.session["project"]
-        tp.data = task.latest_transcript()
-        tp.binary_image_path = trainpath
-        tp.save()
-    except IntegrityError, e:
-        return HttpResponse(simplejson.dumps({"error": str(e)}),
+        tpage.page_name = task.page_name
+        tpage.user = request.user
+        tpage.project = request.session["project"]
+        tpage.data = task.latest_transcript()
+        tpage.binary_image_path = trainpath
+        tpage.save()
+    except IntegrityError, err:
+        return HttpResponse(simplejson.dumps({"error": str(err)}),
                 mimetype="application/json")
 
 
@@ -446,12 +437,12 @@ def comparisons(request):
 
 @project_required
 @login_required
-def show(request, pk):
+def show(request, page_pk):
     """
     Show training page info.
     """    
-    ts = get_object_or_404(TrainingPage, pk=pk)
-    context = dict(trainpage=ts)
+    tpage = get_object_or_404(TrainingPage, pk=page_pk)
+    context = dict(trainpage=tpage)
     template = "training/show.html" if not request.is_ajax() \
             else "training/includes/show_info.html"
     return render_to_response(template, context,
