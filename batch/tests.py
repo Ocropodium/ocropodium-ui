@@ -2,6 +2,7 @@
     OCR batch tests.
 """
 import os
+import re
 import shutil
 from django.test import TestCase
 from django.test.client import Client
@@ -23,6 +24,8 @@ class OcrBatchTest(TestCase):
         shutil.copy2("media/models/mytessdata.tgz", "media/test/engtessdata.tgz")
         shutil.copy2("media/models/default.model", "media/test/default.model")
         shutil.copy2("media/models/default.fst", "media/test/default.fst")
+        os.makedirs("media/files/test_user/test")
+        shutil.copy2("media/test/%s" % TESTFILE, "media/files/test_user/test/%s" % TESTFILE)
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
@@ -33,27 +36,21 @@ class OcrBatchTest(TestCase):
             Cleanup a test.
         """
         self.testuser.delete()
+        shutil.rmtree("media/files/test_user")
 
 
-    def test_convert_view(self):
+    def test_batch_new(self):
         """
         Test the convert view as a standard GET (no processing.)
         """
         self.assertEqual(self.client.get("/batch/new").status_code, 200)
 
 
-    def test_convert_action_basic(self):
+    def test_batch_create(self):
         """
         Test OCRing with minimal parameters.
         """
         self._test_batch_action()        
-
-
-    def test_convert_action_seg(self):
-        """
-        Test OCRing with variable segmentation.
-        """
-        self._test_batch_action({"psegmenter": "SegmentPageByXYCUTS"})        
 
 
     def test_results_action(self):
@@ -75,17 +72,19 @@ class OcrBatchTest(TestCase):
         Testing actually OCRing a file.
         """
         if params is None:
-            params = {}
-        r = self._get_batch_response(params, headers) 
-        self.assertEqual(r.status_code, 200)
+            params = dict(name="Test Batch", 
+                    files=os.path.join("test/%s" % TESTFILE))
+        r = self._get_batch_response(params, headers)
+        # check the POST redirected as it should
+        self.assertEqual(r.redirect_chain[0][1], 302)
+        pkmatch = re.match(".+/batch/show/(\d+)/?", r.redirect_chain[0][0])
+        self.assertTrue(pkmatch != None)        
+        return pkmatch.groups()[0]
 
         # check we recieve JSON back
         self.assert_(r.content, "No content returned")
         content = simplejson.loads(r.content)
         self.assertEqual(len(content), 1)
-        # Note: we'd not normally expect any results here because we're
-        # not using the "nohang" parameter, but since tests are executed 
-        # locally we will
         self.assertTrue(content[0]["pk"] is not None, "Unable to get results")
         return content[0]["pk"]
       
@@ -94,13 +93,8 @@ class OcrBatchTest(TestCase):
         """
         Post images for conversion with the given params, headers.
         """
-        tf1 = open(os.path.join(settings.MEDIA_ROOT, "test", TESTFILE))
-        tf2 = open(os.path.join(settings.MEDIA_ROOT, "test", TESTFILE))
-        params["image1"] = tf1
-        params["image2"] = tf2
-        r = self.client.post("/batch/batch/", params, **headers)
-        tf1.close()
-        tf2.close()
+        headers["follow"] = True
+        r = self.client.post("/batch/create/", params, **headers)
         return r
         
 
