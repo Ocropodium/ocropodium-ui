@@ -11,17 +11,20 @@
                     <legend class="collapsed">Information</legend>
                     <div class="field_wrapper">
                         <label for="batch_name">Identifier:</label>
-                        <input type="text" name="batch_name" id="batch_name" value="{{batchname}}" />
+                        {{form.name}}
+                        <!--<input type="text" name="batch_name" id="batch_name" value="{{batchname}}" />-->
                     </div>
                     <br />
                     <div class="field_wrapper">
                         <label for="batch_tags">Tags:</label>
-                        <input type="text" name="batch_tags" id="batch_name" />
+                        {{form.tags}}
+                        <!--<input type="text" name="batch_tags" id="batch_name" />-->
                     </div>
                     <br />
                     <div class="field_wrapper">
                         <label for="batch_desc">Notes:</label>
-                        <textarea name="batch_desc" id="batch_desc"></textarea>
+                        {{form.description}}
+                        <!--<textarea name="batch_desc" id="batch_desc"></textarea>-->
                     </div>
                 </fieldset>
             </div>

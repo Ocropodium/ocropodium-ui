@@ -1,36 +1,31 @@
-import re
 import os
-import traceback
-from types import ClassType, MethodType
-from datetime import datetime
+from types import MethodType
+
 from celery import result as celeryresult
 from celery.contrib.abortable import AbortableAsyncResult
-from celery.task.sets import TaskSet, subtask
+from datetime import datetime
 from django import forms
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.db.models import Q, Count
-from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseServerError 
+from django.http import HttpResponse, HttpResponseServerError 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
+from ocradmin.batch import utils as batchutils
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
-from ocradmin.batch import utils as batchutils
-from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
-from ocradmin.training.models import TrainingPage
-from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 from ocradmin.projects.tasks import IngestTask
+from ocradmin.training.tasks import ComparisonTask
 
 from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params, _cleanup_params, \
-        _handle_request, _handle_streaming_upload, _handle_multipart_upload
+        _handle_request, AppException
     
 
 
@@ -81,20 +76,7 @@ def new(request):
     """
     template = "batch/new.html" if not request.is_ajax() \
         else "batch/includes/new_form.html"
-    # add available seg and bin presets to the context
-    # work out the name of the batch - start with how
-    # many other batches there are in the projects
-    project = request.session["project"]
-    batchname = "%s - Batch %d" % (project.name,
-            project.ocrbatch_set.count() + 1)
-    context = {
-        "batchname": batchname,
-        "binpresets": OcrPreset.objects.filter(
-            type="binarize").order_by("name"),
-        "segpresets": OcrPreset.objects.filter(
-            type="segment").order_by("name"),
-    }
-    return render_to_response(template, context, 
+    return render_to_response(template, _new_batch_context(request), 
             context_instance=RequestContext(request))    
 
 
@@ -104,17 +86,13 @@ def list(request):
     """
     List recent batches.
     """
-    excludes = ["args", "kwargs", "traceback", ]
     params = request.GET.copy()
     params["project"] = request.session["project"].pk
-    context = { 
-        "params" : params,
-    }
+    context = dict(params=params)
     if not request.is_ajax():
         return render_to_response("batch/list.html", context,
                 context_instance=RequestContext(request))
 
-    
     paginator = Paginator(batch_query(params), PER_PAGE) 
     try:
         page = int(request.GET.get('page', '1'))
@@ -132,11 +110,11 @@ def list(request):
     wanted = ("end_index", "has_next", "has_other_pages", "has_previous",
             "next_page_number", "number", "start_index", "previous_page_number")
     for attr in wanted:
-        v = getattr(batches, attr)
-        if isinstance(v, MethodType):
-            serializedpage[attr] = v()
-        elif isinstance(v, (str, int)):
-            serializedpage[attr] = v
+        want = getattr(batches, attr)
+        if isinstance(want, MethodType):
+            serializedpage[attr] = want()
+        elif isinstance(want, (str, int)):
+            serializedpage[attr] = want
     # This gets rather gnarly, see: 
     # http://code.google.com/p/wadofstuff/wiki/DjangoFullSerializers
     serializedpage["params"] = params
@@ -159,36 +137,36 @@ def create(request):
     Create a batch from pre-saved images convert them with Celery.
     """
 
-    tasktype = "Batch"
     celerytask = tasks.ConvertPageTask
 
-    if not request.method == "POST":
-        return render_to_response("batch/new.html", context, 
-                        context_instance=RequestContext(request))
-
-    # wrangle the params - this needs improving
-    userparams = _get_best_params(
-            _cleanup_params(request.POST.copy(), ("files", "batch_name", "batch_desc")))
+    # get the subject file paths from comma seperated POST data
+    paths = _get_batch_file_paths(request)
+    form = OcrBatchForm(request.POST)
+    if not request.method == "POST" or not form.is_valid() or not paths:
+        return render_to_response("batch/new.html",
+            _new_batch_context(request), 
+            context_instance=RequestContext(request))
 
     # create a batch db job
-    batch_name = request.POST.get("batch_name", "%s %s" % (tasktype, datetime.now()))
-    batch_desc = request.POST.get("batch_desc", "")
-    batch = OcrBatch(user=request.user, name=batch_name, description=batch_desc,
-            task_type=celerytask.name, batch_type="MULTI", project=request.session["project"])    
+    batch = OcrBatch(
+        user=request.user,
+        name=form.cleaned_data["name"],
+        description=form.cleaned_data["description"],
+        tags=form.cleaned_data["tags"],
+        task_type=celerytask.name,
+        batch_type="MULTI",
+        project=request.session["project"]
+    )    
     batch.save()
 
-    filenames = request.POST.get("files", "").split(",")
-    dirpath = ocrutils.get_ocr_path(user=request.user.username, 
-            temp=False, subdir=None, timestamp=False)
     outdir = ocrutils.FileWrangler(
             username=request.user.username, temp=True, batch_id=batch.pk, )()
+    # wrangle the params - this needs improving
+    userparams = _get_best_params(
+            _cleanup_params(request.POST.copy(),
+                ("files", "name", "description", "tags")))
     userparams["intermediate_outdir"] = outdir.encode()
-    paths = [os.path.join(dirpath, f) for f in sorted(filenames)]
-    if not paths:
-        transaction.rollback()
-        return HttpResponse(
-                simplejson.dumps({"error": "no valid images found"}),
-                mimetype="application/json")     
+
 
     asyncparams = []
     try:
@@ -218,10 +196,10 @@ def create(request):
             publisher.close()
             publisher.connection.close()
 
-    except Exception, e:
+    except Exception, err:
         transaction.rollback()
-        print e.message
-        return HttpResponse(e.message, mimetype="application/json")
+        print err.message
+        return HttpResponse(err.message, mimetype="application/json")
 
     # return a serialized result
     transaction.commit()
@@ -233,85 +211,11 @@ def create(request):
 
 
 @login_required
-@project_required
-@transaction.commit_manually
-def batch(request):
-    """
-    Save a batch of posted image to the DFS and convert them with Celery.
-    """
-
-    # add available seg and bin presets to the context
-    context = {
-        "binpresets": OcrPreset.objects.filter(
-            type="binarize").order_by("name"),
-        "segpresets": OcrPreset.objects.filter(
-            type="segment").order_by("name"),
-    }
-    tasktype = "Batch"
-    celerytask = tasks.ConvertPageTask
-
-    if not request.method == "POST":
-        return render_to_response("batch/batch.html", context, 
-                        context_instance=RequestContext(request))
-    outdir = ocrutils.FileWrangler(
-            username=request.user.username, temp=True, action="batch")()
-    try:
-        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
-    except ocrutils.AppException, err:
-        return HttpResponse(simplejson.dumps({"error": err.message}),
-            mimetype="application/json")
-    if not paths:
-        return HttpResponse(
-                simplejson.dumps({"error": "no valid images found"}),
-                mimetype="application/json")     
-    
-    # wrangle the params - this needs improving
-    userparams = _get_best_params(request.POST.copy())
-
-    # create a batch db job
-    batch_name = request.POST.get("name", "%s %s" % (tasktype, datetime.now()))
-    batch = OcrBatch(user=request.user, name=batch_name,
-            task_type=celerytask.name, batch_type="MULTI", project=request.session["project"])
-    batch.save()
-    subtasks = []
-    try:
-        for path in paths:
-            tid = ocrutils.get_new_task_id(path)
-            args = (path.encode(), outdir.encode(), userparams)
-            kwargs = dict(task_id=tid, loglevel=60, retries=2)
-            ocrtask = OcrTask(
-                task_id=tid,
-                user=request.user,
-                batch=batch, 
-                project=request.session["project"],
-                args=args,
-                kwargs=kwargs,
-                page_name=os.path.basename(path),
-                task_type="convert",
-                status="INIT"
-            )
-            ocrtask.save()
-            subtasks.append(celerytask.subtask(args=args, options=kwargs))
-        tasksetresults = TaskSet(tasks=subtasks).apply_async()
-    except Exception, e:
-        transaction.rollback()
-        print e.message
-        return HttpResponse(e.message, mimetype="application/json")
-
-    # return a serialized result
-    transaction.commit()
-    response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch), response,
-            cls=DjangoJSONEncoder, ensure_ascii=False)
-    return response
-
-
-@login_required
-def results(request, pk):
+def results(request, batch_pk):
     """
     Get results for a taskset.
     """
-    batch = get_object_or_404(OcrBatch, pk=pk)
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
     try:
         start = max(0, int(request.GET.get("start", 0)))
     except ValueError:
@@ -330,15 +234,15 @@ def results(request, pk):
 
 
 @login_required
-def page_results(request, pk, page_index):
+def page_results(request, batch_pk, page_index):
     """
     Get the results for a single page.
     """
-    batch = get_object_or_404(OcrBatch, pk=pk)
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
     try:
         page = batch.tasks.all().order_by("page_name")[int(page_index)]
-    except OcrBatch.DoesNotExist, e:
-        raise e
+    except OcrBatch.DoesNotExist, err:
+        raise err
 
     pyserializer = serializers.get_serializer("python")()
     response = HttpResponse(mimetype="application/json")
@@ -353,15 +257,15 @@ def page_results(request, pk, page_index):
 
 
 @login_required
-def save_page_data(request, pk, page_index):
+def save_page_data(request, batch_pk, page_index):
     """
     Save data for a single page.
     """
-    batch = get_object_or_404(OcrBatch, pk=pk)
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
     try:
         page = batch.tasks.all().order_by("page_name")[int(page_index)]
-    except OcrBatch.DoesNotExist, e:
-        raise e
+    except OcrBatch.DoesNotExist, err:
+        raise err
 
     json = request.POST.get("data")
     if not json:
@@ -370,29 +274,28 @@ def save_page_data(request, pk, page_index):
     result = Transcript(data=data, task=page)
     result.save()
 
-    return HttpResponse(simplejson.dumps({"ok": True}),
+    return HttpResponse(simplejson.dumps({"ok": True}), 
             mimetype="application/json")
 
 
 @login_required
-def submit_viewer_binarization(request, pk):
+def submit_viewer_binarization(request, batch_pk):
     """
     Trigger a re-binarization of the image for viewing purposes.
     """
-    task = get_object_or_404(OcrTask, pk=pk)
+    task = get_object_or_404(OcrTask, pk=batch_pk)
     # hack!  add an allowcache to the params dict to indicate
     # that we don't want to remake an existing binary
     args = task.args
     args[2]["allowcache"] = True
     async = tasks.BinarizePageTask.apply_async(args=args,
             queue="interactive")
-    out = {
-        "job_name": async.task_id,
-        "status": async.status,
-        "results": async.result,
-    }
-    return HttpResponse(simplejson.dumps(out),
-            mimetype="application/json")
+    out = dict(
+        job_name=async.task_id,
+        status=async.status,
+        results=async.result
+    )
+    return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
 @login_required
@@ -401,13 +304,12 @@ def viewer_binarization_results(request, task_id):
     Trigger a re-binarization of the image for viewing purposes.
     """
     async = celeryresult.AsyncResult(task_id)    
-    out = {
-        "job_name": async.task_id,
-        "status": async.status,
-        "results": async.result,
-    }
-    return HttpResponse(simplejson.dumps(out),
-            mimetype="application/json")
+    out = dict(
+        job_name=async.task_id,
+        status=async.status,
+        results=async.result
+    )
+    return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
 @login_required
@@ -421,20 +323,20 @@ def latest(request):
             user=request.user, 
             project=request.session["project"]
         ).order_by("-created_on")[0]
-    except (OcrBatch.DoesNotExist, IndexError), e:
+    except (OcrBatch.DoesNotExist, IndexError):
         batch = None
 
     return _show_batch(request, batch)
 
 
 @login_required
-def show(request, pk):
+def show(request, batch_pk):
     """
     View a batch.
     """
     batch = get_object_or_404(
         OcrBatch,
-        pk=pk,
+        pk=batch_pk,
         project=request.session["project"]
     )
     return _show_batch(request, batch)
@@ -450,9 +352,10 @@ def upload_files(request):
             else "text/html"
 
     outdir = ocrutils.FileWrangler(
-                username=request.user.username, temp=False, stamp=False, action=None)()
+                username=request.user.username, temp=False,
+                stamp=False, action=None)()
     try:
-        paths, userparams = _handle_request(request, outdir)
+        paths, _ = _handle_request(request, outdir)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -462,25 +365,21 @@ def upload_files(request):
                 mimetype="application/json")     
 
     pathlist = [os.path.basename(p) for p in paths]
-    return HttpResponse(simplejson.dumps(pathlist),
-            mimetype=mimetype)
+    return HttpResponse(simplejson.dumps(pathlist), mimetype=mimetype)
 
 
 @login_required
 @project_required
-def transcript(request, pk):
+def transcript(request, batch_pk):
     """
     View the transcription of a batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=pk)
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
     template = "batch/transcript.html"
     context = dict(batch=batch, initial=request.GET.get("page"))
 
     return render_to_response(template, context, 
             context_instance=RequestContext(request))
-
-
-
 
 
 def _show_batch(request, batch):
@@ -495,38 +394,38 @@ def _show_batch(request, batch):
 
 
 @login_required
-def retry_task(request, pk):
+def retry_task(request, task_pk):
     """
     Retry a batch task.
     """
-    task = get_object_or_404(OcrTask, pk=pk)
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    out = {"ok": True}
     try:
         _retry_celery_task(task)
-    except Exception, e:
-        return HttpResponse(simplejson.dumps({"error": e.message}), 
-                mimetype="application/json")
+    except Exception, err:
+        out = {"error": err.message}
 
-    return HttpResponse(simplejson.dumps({"ok": True}), 
+    return HttpResponse(simplejson.dumps(out), 
             mimetype="application/json")
 
 
 @login_required
-def abort_task(request, pk):
+def abort_task(request, task_pk):
     """
     Abort a batch task.
     """
-    task = get_object_or_404(OcrTask, pk=pk)
+    task = get_object_or_404(OcrTask, pk=task_pk)
     return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}), 
             mimetype="application/json")
 
     
 @transaction.commit_manually
 @login_required
-def abort_batch(request, pk):
+def abort_batch(request, batch_pk):
     """
     Abort an entire batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=pk)
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.tasks.all():
         _abort_celery_task(task)
     transaction.commit()
@@ -536,11 +435,11 @@ def abort_batch(request, pk):
 
 @transaction.commit_manually
 @login_required
-def retry(request, pk):
+def retry(request, batch_pk):
     """
     Retry all tasks in a batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=pk)
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.tasks.all():
         _retry_celery_task(task)        
     transaction.commit()
@@ -550,11 +449,11 @@ def retry(request, pk):
 
 @transaction.commit_manually
 @login_required
-def retry_errored(request, pk):
+def retry_errored(request, batch_pk):
     """
     Retry all errored tasks in a batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=pk)
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.errored_tasks():
         _retry_celery_task(task)        
     transaction.commit()
@@ -601,6 +500,8 @@ def spellcheck(request):
     response = HttpResponse(mimetype="application/json")
     simplejson.dump(spelldata, response, ensure_ascii=False)
     return response
+
+
 
 def _abort_celery_task(task):
     """
@@ -672,4 +573,33 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None):
     batchsl[0]["fields"]["tasks"] = taskssl
     batchsl[0]["extras"]["task_count"] = task_count
     return batchsl
-    
+   
+
+def _new_batch_context(request):
+    """
+    Template variables for a new batch form.
+    """
+    # add available seg and bin presets to the context
+    # work out the name of the batch - start with how
+    # many other batches there are in the projects
+    project = request.session["project"]
+    batchname = "%s - Batch %d" % (project.name, 
+            project.ocrbatch_set.count() + 1)
+    form = OcrBatchForm(initial={"name": batchname})
+    return dict(
+        form=form,
+        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
+        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
+    )
+
+
+def _get_batch_file_paths(request):
+    """
+    Extract the full file paths from the POST data.
+    """
+    dirpath = ocrutils.get_ocr_path(user=request.user.username, 
+            temp=False, subdir=None, timestamp=False)
+    filenames = request.POST.get("files", "").split(",")
+    return [os.path.join(dirpath, f) for f in sorted(filenames)]
+
+

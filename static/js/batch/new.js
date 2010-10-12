@@ -155,10 +155,10 @@ $(function() {
     });
 
     // enable the submit button if appropriate
-    $("#batch_name").keyup(updateButtons);
+    $("#id_name").keyup(updateButtons);
 
     function updateButtons() {
-        var gotname = $.trim($("#batch_name").val()).length > 0;
+        var gotname = $.trim($("#id_name").val()).length > 0;
         $("#submit_batch, #tabs_2_next").attr("disabled", !gotname);
         $("#tabs").tabs(gotname ? "enable" : "disable", 1);
 
