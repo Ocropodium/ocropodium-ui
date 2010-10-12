@@ -11,7 +11,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.db.models import Q, Count
-from django.http import HttpResponse, HttpResponseServerError 
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
@@ -167,7 +167,6 @@ def create(request):
                 ("files", "name", "description", "tags")))
     userparams["intermediate_outdir"] = outdir.encode()
 
-
     asyncparams = []
     try:
         for path in paths:
@@ -203,10 +202,7 @@ def create(request):
 
     # return a serialized result
     transaction.commit()
-    response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch), response, 
-            cls=DjangoJSONEncoder, ensure_ascii=False)
-    return response
+    return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
 
 
 

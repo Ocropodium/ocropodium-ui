@@ -75,29 +75,6 @@ window.onbeforeunload = function(event) {
 }
 
 
-function doIframeUpload(elem) {
-    if ($(elem).val() == "") {
-        return false;
-    }
-
-    // get the extra params
-    var pdata = {};
-    // server-size hack so we know it's using the iframe method
-    pdata._iframe = 1;
-
-    $("#uploadform").ajaxForm({
-        data : pdata,
-        dataType: "json",
-        success: function(data, responseText, xhr) {
-            onXHRLoad(data, responseText, xhr);
-            $(elem).val("");
-        },
-    });
-    $("#uploadform").submit();
-}
-
-
-
 
 
 $(function() {
@@ -206,32 +183,11 @@ $(function() {
     $("#submit_batch").click(function(event) {
         // munge filenames into a break-separated string... maybe
         // this will work...
-        var paths = $.map($("#batch_file_list").children(), function(val) {
+        var files = $.map($("#batch_file_list").children(), function(val) {
             return $(val).text();
         }).join(",");
-        
-        // standard OCR options
-        var batchopts = $("#batchform").serialize();
-        
-        // build full string...
-        var params =  batchopts + "&files=" + paths;
-        $.ajax({
-            url: "/batch/create/",
-            type: "POST",
-            data: params,
-            dataType: "json",
-            beforeSend: function() {
-                $("#batchform").addClass("waiting");
-            },
-            success: function(data) {
-                window.location = "/batch/latest/";
-            },
-            complete: function() {
-                $("#batchform").removeClass("waiting");
-            },
-        });
-        
-        event.preventDefault();
+        $("#id_files").val(files);
+        $("#batchform").addClass("waiting");
     });
 
     function onXHRLoad(event) {

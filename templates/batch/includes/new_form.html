@@ -1,4 +1,4 @@
-<form name="batchform" type="POST" action="{{request.path}}" id="batchform">
+<form name="batchform" method="POST" action="/batch/create/" id="batchform">
     <div id="tabs">
         <ul>
             <li><a id="tabs_1_link" href="#tabs_1">Naming &amp; Tags</a></li>
@@ -12,19 +12,16 @@
                     <div class="field_wrapper">
                         <label for="batch_name">Identifier:</label>
                         {{form.name}}
-                        <!--<input type="text" name="batch_name" id="batch_name" value="{{batchname}}" />-->
                     </div>
                     <br />
                     <div class="field_wrapper">
                         <label for="batch_tags">Tags:</label>
                         {{form.tags}}
-                        <!--<input type="text" name="batch_tags" id="batch_name" />-->
                     </div>
                     <br />
                     <div class="field_wrapper">
                         <label for="batch_desc">Notes:</label>
                         {{form.description}}
-                        <!--<textarea name="batch_desc" id="batch_desc"></textarea>-->
                     </div>
                 </fieldset>
             </div>
@@ -35,6 +32,7 @@
         <div id="tabs_2">
             <div class="form_body">
                 <h3>Select Files</h3>
+                <input type="hidden" id="id_files" name="files" />
                 <div class="form_field">
                     <div id="batch_file_list">
 
@@ -104,7 +102,7 @@
                 </fieldset>
             </div>
             <div class="form_footer">
-                <input type="button" disabled="disabled" id="submit_batch" value="Submit Batch" />
+                <input type="submit" disabled="disabled" id="submit_batch" value="Submit Batch" />
             </div>
         </div>
     </div>
