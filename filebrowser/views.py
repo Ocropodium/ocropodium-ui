@@ -32,10 +32,10 @@ def entry_info(path):
     try:
         flist = os.listdir(path)
     except OSError, (errno, strerr):
-        return {"error": strerr}
+        return {"error": "%s: %s" % (strerr, path)}
     except Exception, e:
         print e
-        return {"error": e.message}
+        return {"error": "%s: %s" % (e.message, path)}
 
     stats = []
     for entry in flist:

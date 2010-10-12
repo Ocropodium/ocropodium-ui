@@ -111,6 +111,10 @@ var FileDataSource = AbstractDataSource.extend({
                 self.callListeners("endRefresh");
             },
             success: function(data) {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
                 if (data.length && data[0].error) {
                     alert("Error: " + data[0].error);
                     return;
