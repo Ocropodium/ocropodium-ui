@@ -5,15 +5,11 @@ Basic OCR functions.  Submit OCR tasks and retrieve the result.
 import re
 import os
 import traceback
-from datetime import datetime
 from celery import result as celeryresult
-from celery.task.sets import TaskSet, subtask
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.core import serializers
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.ocr import tasks
@@ -120,7 +116,7 @@ def zipped_results(request):
     Send back quicky results for several
     pages in a zip.
     """
-    ctasks = request.GET.getlist("task");
+    ctasks = request.GET.getlist("task")
     import cStringIO, gzip
     zbuf = cStringIO.StringIO()
     zfile = gzip.GzipFile(mode='wb', compresslevel=6, fileobj=zbuf)
@@ -155,11 +151,13 @@ def components(request):
     return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
 
 
-def test(request):
+def test(request, ids):
     """
     Dummy action for running JS unit tests.  Probably needs to
     be put somewhere else.
     """
+
+    print "ARGS: %s" % ids
     return render_to_response("ocr/test.html", {})
 
 
@@ -173,7 +171,8 @@ def _ocr_task(request, template, context, tasktype, celerytask):
 
     # save our files to the DFS and return a list of addresses
     outdir = ocrutils.FileWrangler(
-            username=request.user.username, temp=True, action=tasktype.lower())()
+            username=request.user.username, temp=True, 
+            action=tasktype.lower())()
 
     try:
         paths, userparams = _handle_request(request, outdir)
@@ -201,7 +200,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             kwargs=kwargs,
         )
         ocrtask.save()
-        asynctasks.append(celerytask.apply_async(args=args, **kwargs))            
+        asynctasks.append(celerytask.apply_async(args=args, **kwargs))
     try:
         # aggregate the results.  If necessary wait for tasks.
         out = []
@@ -272,7 +271,7 @@ def _wants_png_format(request):
     """
     return (request.META.get("HTTP_ACCEPT", "") == "image/png" \
         or request.GET.get("format", "") == "png" \
-        or request.POST.get("format", "") == "png")                                                                    
+        or request.POST.get("format", "") == "png")
 
 
 
@@ -396,9 +395,9 @@ def _cleanup_params(postdict, unused):
     to store as part of the convert job.  Note: the
     dict param IS mutable.
     """
-    for p in unused:
+    for param in unused:
         try:
-            del postdict[p]
+            del postdict[param]
         except KeyError:
             pass
     return postdict
