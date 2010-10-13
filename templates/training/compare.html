@@ -21,6 +21,14 @@
                         </ul>
                         <div id="tabs_1">
                             <div class="form_body">
+
+                                {% for prefix in prefixes %}
+                                <fieldset>
+                                    <legend>Settings {{prefix|cut:"_"|capfirst}}</legend>
+                                    {% include "includes/ocr_settings.html" %}                
+                                </fieldset>
+                                {% endfor %}
+                                <!--
                                 <fieldset>
                                     <legend>Model Information</legend>
                                     {% for modindex in initialmods %}
@@ -33,7 +41,9 @@
                                             </select>
                                         </div>
                                     {% endfor %}    
+
                                 </fieldset>
+                                -->
                                 <fieldset>
                                     <legend>Ground Truth</legend>
                                     <div class="toggle_box" id="ground_truth_list">

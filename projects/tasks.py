@@ -11,8 +11,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from datetime import datetime, timedelta
 from django.conf import settings
 
-from ocradmin.projects.models import OcrProject
-from ocradmin.training.models import TrainingPage
+from ocradmin.projects.models import OcrProject, ReferencePage
 from ocrtasks.models import OcrTask
 
 from ocradmin.ocr import utils as ocrutils
@@ -40,7 +39,7 @@ class IngestTask(AbortableTask):
         task.progess = 0
         task.save()
 
-        trainingpage = TrainingPage.objects.get(pk=trainingpage_id)
+        trainingpage = ReferencePage.objects.get(pk=trainingpage_id)
         dublincore["title"] = trainingpage.page_name
 
         imagedata = open(trainingpage.binary_image_path, "rb")

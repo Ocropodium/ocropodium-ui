@@ -335,7 +335,7 @@ def _handle_request(request, outdir):
     of as the whole POST body.
     """
 
-    if request.GET.get("qqfile"):
+    if request.GET.get("inlinefile"):
         return _handle_streaming_upload(request, outdir)
     else:
         return _handle_multipart_upload(request, outdir)
@@ -346,7 +346,7 @@ def _handle_streaming_upload(request, outdir):
     Handle an upload where the params are in GET and
     the whole of the POST body consists of the file.
     """
-    fpath = os.path.join(outdir, request.GET.get("qqfile"))
+    fpath = os.path.join(outdir, request.GET.get("inlinefile"))
     tmpfile = file(fpath, "wb")
     tmpfile.write(request.raw_post_data)
     tmpfile.close()
@@ -403,25 +403,34 @@ def _cleanup_params(postdict, unused):
     return postdict
 
 
-def _get_best_params(postdict):
+def _get_best_params(postdict, with_prefix=None):
     """
     Attempt to determine the best params if not specified in
     POST.  This is contingent on data in the models table.
     TODO: Make this less horrible
     """
 
-    userparams = postdict    
-    userparams["engine"] = postdict.get("engine", "tesseract")
+    userparams = {}
+    cleanedparams = {}
+    if with_prefix is not None:
+        for key, value in postdict.iteritems():
+            if key.startswith(with_prefix):
+                cleanedparams[key.replace(with_prefix, "", 1)] = value
+    else:                
+        cleanedparams = userparams = postdict.copy()    
+
+    # default to tesseract if no 'engine' parameter...
+    userparams["engine"] = cleanedparams.get("engine", "tesseract")
 
     # get the bin and seg params.  These are either dicts or default strings
-    segparam = postdict.get("psegmenter", "SegmentPageByRAST")
+    segparam = cleanedparams.get("psegmenter", "SegmentPageByRAST")
     segdata = _get_preset_data(segparam)
     if segdata:
         userparams.update(segdata)
     else:
         userparams["psegmenter"] = segparam
 
-    binparam = postdict.get("clean", "StandardPreprocessing")
+    binparam = cleanedparams.get("clean", "StandardPreprocessing")
     bindata = _get_preset_data(binparam)
     if bindata:
         userparams.update(bindata)

@@ -192,13 +192,13 @@ a.button:hover {
 }
 
 
-.training_set_list {
+.reference_set_list {
     min-height: 400px;
     overflow: auto;
     background-color: #FFF;
 }
 
-.training_page {
+.reference_page {
     float: left;
     margin:10px;
     border-top: 1px solid #F6F6F6;
@@ -223,28 +223,28 @@ a.button:hover {
     border-radius: 3px;
 }
 
-.training_page a {
+.reference_page a {
 }
 
-.training_page_center {
+.reference_page_center {
     text-align: center;
     margin-left: auto;
     margin-right: auto;
 }
 
-.training_page_image {
+.reference_page_image {
     margin-top: 10px;
 }
 
-.training_page_info {
+.reference_page_info {
     font-size: 0.9em;    
 }
 
-.training_page_info .key {
+.reference_page_info .key {
     font-weight: bolder;    
 }
 
-.training_page_image img {
+.reference_page_image img {
     border: 1px solid #D6D6D6;
 }
 

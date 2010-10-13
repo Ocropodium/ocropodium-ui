@@ -137,7 +137,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         };
 
         var params = this.parameters();
-        params["qqfile"] = file.fileName;
+        params["inlinefile"] = file.fileName;
         var urlstring = this.getQueryString(params);
         this.onUploadStart()
         xhr.open("POST", urlstring, true);

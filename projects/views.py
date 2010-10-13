@@ -298,7 +298,7 @@ def ingest(request, pk):
     batch.save()
 
 
-    for ts in project.training_sets.all():
+    for ts in project.reference_sets.all():
         tid = ocrutils.get_new_task_id()
         args = (ts.pk, namespace, dublincore)
         kwargs = dict(task_id=tid, queue="interactive")

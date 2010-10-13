@@ -17,9 +17,8 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.training import utils
 
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.projects.models import OcrProject
-from ocradmin.training.models import TrainingPage
 from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.projects.models import OcrProject, ReferencePage
 
 
 
@@ -36,7 +35,7 @@ class LineTrainTask(AbortableTask):
         """
         Run line train task.
         """
-        datasets = TrainingPage.objects.filter(pk__in=dataset_ids)
+        datasets = ReferencePage.objects.filter(pk__in=dataset_ids)
         cmodel = OcrModel.objects.get(pk=cmodel_id)
         #cmodel = OcrModel.objects.get(pk=cmodel_id)
         paramdict = dict(
@@ -73,7 +72,7 @@ class LineTrainTask(AbortableTask):
         #progress_func(0)
         
         for pagedata in datasets:
-            #pagedata = TrainingPage.objects.get(pk=pk)
+            #pagedata = ReferencePage.objects.get(pk=pk)
             trainer.load_training_binary(pagedata.binary_image_path.encode())
             # we've got a Training page.  Go through it, and 
             # train on each line
@@ -115,7 +114,7 @@ class ComparisonTask(AbortableTask):
         """
         Runs the model comparison action.
         """
-        groundtruth = TrainingPage.objects.get(pk=gt_id)
+        groundtruth = ReferencePage.objects.get(pk=gt_id)
 
         # function for the converted to call periodically to check whether 
         # to end execution early
@@ -132,9 +131,7 @@ class ComparisonTask(AbortableTask):
         # ground truth is already a binary, so tell the converter not
         # to redo it...
         paramdict["prebinarized"] = True
-        convertapp = "ocropus" if not paramdict.get("tesseract") \
-                else "tesseract"
-        converter = ocrutils.get_converter(convertapp, 
+        converter = ocrutils.get_converter(paramdict.get("engine", "tesseract"), 
                 logger=logger, abort_func=abort_func, params=paramdict)
         
         # function for the converter to update progress
