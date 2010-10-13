@@ -1,0 +1,58 @@
+{% comment %}
+NOTE:  The form fields here are rendered with a 'prefix' variable, which defaults to nothing.  This is
+so several OCR settings forms can be embedded in a given page without variable collisions.
+{% endcomment %}
+
+<div class="field_wrapper">            
+    <label>OCR Engine:</label>
+    <div id="engine">
+        <input type="radio" id="{{prefix}}engine_ocropus" name="{{prefix}}engine" value="ocropus">
+        <label for="{{prefix}}engine_ocropus">Ocropus</label>
+        <input type="radio" id="{{prefix}}engine_tesseract" name="{{prefix}}engine" value="tesseract" checked>
+        <label for="{{prefix}}engine_tesseract">Tesseract</label>
+    </div>
+</div>
+<br />
+<div class="field_wrapper">        
+    <label for="{{prefix}}form_segmenter">Page Segmenter:</label>
+    <select id="{{prefix}}form_segmenter" name="{{prefix}}psegmenter">
+        <optgroup label="Basic">
+            <option value="SegmentPageByRAST" selected="selected">RAST</option>
+            <option value="SegmentPageByRAST1">RAST1</option>
+            <option value="SegmentPageBy1CP">1CP</option>
+            <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
+            <option value="SegmentPageByXYCUTS">XYCUTS</option>
+        </optgroup>
+        {% if segpresets %}
+            <optgroup label="Presets">
+            {% for p in segpresets %}
+                <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+            {% endfor %}            
+            </optgroup>
+        {% endif %}            
+    </select>
+</div>
+<div class="field_wrapper">        
+    <label for="{{prefix}}form_clean">Preprocessing:</label>
+    <select id="{{prefix}}form_clean" name="{{prefix}}clean">
+        <option value="StandardPreprocessing" selected="selected">Standard</option>
+        {% if binpresets %}
+            <optgroup label="Presets">
+            {% for p in binpresets %}
+                <option value="preset_{{p.pk}}">{{p.name}}</option>                        
+            {% endfor %}            
+            </optgroup>
+        {% endif %}            
+    </select>
+</div>
+<div class="field_wrapper">        
+    <label for="{{prefix}}form_cmodel">Character Model:</label>
+    <select id="{{prefix}}form_cmodel" name="{{prefix}}cmodel">
+    </select>
+</div>
+<div class="field_wrapper">        
+    <label for="{{prefix}}form_lmodel">Language Model:</label>
+    <select id="{{prefix}}form_lmodel" name="{{prefix}}lmodel">
+    </select>
+</div>
+

@@ -81,6 +81,10 @@ $(function() {
     var uploader = null;
     var filebrowser = null;
 
+    // decorate engine button toggle
+    $("#engine").buttonset();
+    
+
     // set up filebrowser
     $("#browse").click(function(event) {
         if (!filebrowser) {

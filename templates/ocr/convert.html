@@ -52,55 +52,7 @@
         </form>
         <form id="optionsform" name="options" action="{{request.path}}" method="POST">
             <h4>Options:</h4>
-            <span id="engine">
-                 Engine:&nbsp;
-                    <input type="radio" id="engine_ocropus" name="engine" value="ocropus">
-                    <label for="engine_ocropus">Ocropus</label>
-                    <input type="radio" id="engine_tesseract" name="engine" value="tesseract" checked>
-                    <label for="engine_tesseract">Tesseract</label>
-            </span>
-            <p>        
-                Segmenter:&nbsp;
-                <select id="form_segmenter" name="psegmenter">
-                    <optgroup label="Basic">
-                        <option value="SegmentPageByRAST" selected="selected">RAST</option>
-                        <option value="SegmentPageByRAST1">RAST1</option>
-                        <option value="SegmentPageBy1CP">1CP</option>
-                        <option value="SegmentPageByMorphTrivial">MorphTrivial</option>
-                        <option value="SegmentPageByXYCUTS">XYCUTS</option>
-                    </optgroup>
-                    {% if segpresets %}
-                        <optgroup label="Presets">
-                        {% for p in segpresets %}
-                            <option value="preset_{{p.pk}}">{{p.name}}</option>                        
-                        {% endfor %}            
-                        </optgroup>
-                    {% endif %}            
-                </select>
-            </p>
-            <p>
-                Pre-processing:&nbsp;
-                <select id="form_clean" name="clean">
-                    <option value="StandardPreprocessing" selected="selected">Standard</option>
-                    {% if binpresets %}
-                        <optgroup label="Presets">
-                        {% for p in binpresets %}
-                            <option value="preset_{{p.pk}}">{{p.name}}</option>                        
-                        {% endfor %}            
-                        </optgroup>
-                    {% endif %}            
-                </select>
-            </p>
-            <p>
-                Character Model:&nbsp;
-                <select id="form_cmodel" name="cmodel">
-                </select>
-            </p>
-            <p>
-                Language Model:&nbsp;
-                <select id="form_lmodel" name="lmodel">
-                </select>
-            </p>
+            {% include "includes/ocr_settings.html" %}
         </form>
     </div>
 </div>

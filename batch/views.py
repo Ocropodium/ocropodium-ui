@@ -148,6 +148,8 @@ def create(request):
             context_instance=RequestContext(request))
 
     # create a batch db job
+    # TODO: catch potential integrity error for a duplicate
+    # batch name within the given project
     batch = OcrBatch(
         user=request.user,
         name=form.cleaned_data["name"],
@@ -583,6 +585,7 @@ def _new_batch_context(request):
             project.ocrbatch_set.count() + 1)
     form = OcrBatchForm(initial={"name": batchname})
     return dict(
+        prefix="",
         form=form,
         binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
         segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
