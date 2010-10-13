@@ -88,3 +88,6 @@ class OcrBatch(models.Model):
         """
         return self.tasks.filter(status="ERROR")
 
+
+    class Meta:
+        unique_together = ("project", "name")

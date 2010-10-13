@@ -10,7 +10,7 @@ class OcrProject(models.Model):
     OCR Project model.
     """
     user = models.ForeignKey(User)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
     tags = TagField()
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
