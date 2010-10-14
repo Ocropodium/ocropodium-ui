@@ -15,7 +15,7 @@ from ocradmin.ocr.views import _get_best_params
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
-from ocradmin.training.models import OcrComparison, OcrModelScore
+from ocradmin.training.models import OcrComparison, ParameterScore
 from ocradmin.projects.models import ReferencePage        
 from ocradmin.projects.utils import project_required
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask, \
@@ -30,6 +30,21 @@ class ReferenceSetForm(forms.Form):
     cmodel = forms.ModelChoiceField(
             queryset=OcrModel.objects.filter(type="char", app="ocropus"))
     notes = forms.CharField(required=False)
+
+
+class ComparisonForm(forms.Form):
+    """
+    Form for submitting a new comparison job.
+    """
+    name = forms.CharField()
+    notes = forms.CharField(required=False, widget=forms.widgets.Textarea())
+
+    def __init__(self, *args, **kwargs):
+        super(forms.Form, self).__init__(*args, **kwargs)
+
+        # change a widget attribute:
+        self.fields['notes'].widget.attrs["rows"] = 2
+        self.fields['notes'].widget.attrs["cols"] = 40
 
 
 def comparison_query(order, **params):
@@ -51,7 +66,7 @@ def comparison_query(order, **params):
     return OcrComparison.objects\
             .filter(query)\
             .order_by(*order)\
-            .annotate(groundtruths=Count("modelscores__ground_truth"))
+            .annotate(groundtruths=Count("parameter_scores__ground_truth"))
 
 
 
@@ -132,7 +147,6 @@ def create(request):
     return HttpResponseRedirect("/ocrtasks/list")
 
 
-
 @project_required
 @login_required
 def compare(request):
@@ -142,17 +156,7 @@ def compare(request):
     of two cmodels on a training set.
     """
     template = "training/compare.html"
-    context = dict(
-        prefixes=["a_", "b_"],
-        project=request.session["project"],
-        cmodels=OcrModel.objects.filter(app="ocropus", type="char"),
-        lmodels=OcrModel.objects.filter(app="ocropus", type="lang"),
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
-        tsets=request.session["project"].reference_sets.all(),
-        initialmods=[1,2]
-    )
-    return render_to_response(template, context,
+    return render_to_response(template, _get_comparison_context(request),
             context_instance=RequestContext(request))
 
 
@@ -164,25 +168,17 @@ def score_models(request):
     Run a comparison between two sets of OCR parameters.
     """
 
-    name = "Settings Comparison"
-    notes = request.POST.get("notes", "")
-
-    params_a = _get_best_params(request.POST, with_prefix="a_")
-    params_b = _get_best_params(request.POST, with_prefix="b_")
+    form = ComparisonForm(request.POST)
     project = request.session["project"]
 
     try:
         tsets = ReferencePage.objects.filter(pk__in=request.POST.getlist("tset"))
-    except (ReferencePage.DoesNotExist, OcrModel.DoesNotExist):
+        print "VALID: %s" % form.is_valid()
+        assert(form.is_valid())
+    except (ReferencePage.DoesNotExist, AssertionError):
         # FIXME: remove code dup!
         template = "training/compare.html"
-        context = dict(
-            project=request.session["project"],
-            cmodels=OcrModel.objects.filter(app="ocropus", type="char"),
-            lmodels=OcrModel.objects.filter(app="ocropus", type="lang"),
-            tsets=project.reference_set.all(),
-        )
-        return render_to_response(template, context,
+        return render_to_response(template, _get_comparison_context(request),
                 context_instance=RequestContext(request))
 
     outdir = ocrutils.FileWrangler(
@@ -201,16 +197,19 @@ def score_models(request):
     batch.save()
 
     comparison = OcrComparison(
-        name=name,
-        notes=notes,
+        name=form.cleaned_data["name"],
+        notes=form.cleaned_data["notes"],
         batch=batch,
     )
     comparison.save()
+
+    # get parameter sets
+    paramsets = _get_paramset_list(request)
+    
     for gtruth in tsets:
         path = gtruth.binary_image_path
-        for params in [params_a, params_b]:
-            print params
-
+        for i in range(len(paramsets)):
+            params = paramsets[i]
             tid = ocrutils.get_new_task_id(path)
             args = (gtruth.pk, outdir.encode(), params)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
@@ -230,11 +229,11 @@ def score_models(request):
             asyncparams.append((args, kwargs))            
 
             # create a score record for this task
-            score = OcrModelScore(
-                comparison=comparison,
-                ground_truth=gtruth,
+            score = ParameterScore(
+                name="Settings %d" % (i+1),                
                 task=task,
-                model=OcrModel.objects.all()[0],                
+                comparison=comparison,
+                ground_truth=gtruth
             )
             score.save()
     # launch all the tasks (as comparisons, not converts)
@@ -245,7 +244,6 @@ def score_models(request):
     finally:
         publisher.close()
         publisher.connection.close()
-
     return HttpResponseRedirect("/batch/show/%s/" % batch.pk) 
     
 
@@ -263,7 +261,6 @@ def comparison_from_batch(request):
     return comparison(request, cpk)
 
 
-
 @project_required
 @login_required
 def comparison(request, comparison_pk):
@@ -271,7 +268,7 @@ def comparison(request, comparison_pk):
     View details of a model comparison.
     """
     comparison = get_object_or_404(OcrComparison, pk=comparison_pk)
-    scores = comparison.modelscores.order_by("pk", "ground_truth", "model")
+    scores = comparison.parameter_scores.order_by("pk", "name", "ground_truth")
     ordered = {}
     for score in scores:
         if ordered.get(score.ground_truth.pk):
@@ -280,8 +277,8 @@ def comparison(request, comparison_pk):
             ordered[score.ground_truth.pk] \
                 = [score.ground_truth.data["page"], score,]
 
-    model_a = scores[0].model
-    model_b = scores[1].model
+    name_a = scores[0].name
+    name_b = scores[1].name
 
     # this is really dodgy - total the scores for each model
     total_a = total_b = 0
@@ -307,8 +304,8 @@ def comparison(request, comparison_pk):
     context = dict(
         comparison=comparison,
         ordered=ordered,
-        model_a=model_a,
-        model_b=model_b,
+        model_a=name_a,
+        model_b=name_b,
         total_a=total_a,
         total_b=total_b,
     )
@@ -316,14 +313,13 @@ def comparison(request, comparison_pk):
             context_instance=RequestContext(request))
 
 
-
 @project_required
 @login_required
-def show_modelscore(request, modelscore_pk):
+def show_paramscore(request, paramscore_pk):
     """
     Display the accuracy internals of a model score.
     """
-    score = get_object_or_404(OcrModelScore, pk=modelscore_pk)
+    score = get_object_or_404(ParameterScore, pk=paramscore_pk)
     result = score.task.latest_transcript()
     context = dict(
         modelscore=score,
@@ -336,9 +332,6 @@ def show_modelscore(request, modelscore_pk):
     return render_to_response(template, context,
             context_instance=RequestContext(request))
             
-
-
-
 
 @project_required
 @login_required
@@ -389,8 +382,7 @@ def save_task(request, task_pk):
     except IntegrityError, err:
         return HttpResponse(simplejson.dumps({"error": str(err)}),
                 mimetype="application/json")
-
-
+    
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
 
@@ -434,8 +426,6 @@ def comparisons(request):
             context_instance=RequestContext(request))
 
 
-
-
 @project_required
 @login_required
 def show(request, page_pk):
@@ -450,3 +440,33 @@ def show(request, page_pk):
             context_instance=RequestContext(request))
 
 
+def _get_paramset_list(request):
+    """
+    Parse sets of distinct params from the POST data.
+    They all have a prefix p0_ .. pN_
+    """
+    paramsets = []
+    pinit = 0
+    while True:
+        params = _get_best_params(request.POST, with_prefix="p%d_" % pinit)
+        print "%s: %s" % (pinit, params)
+        if len(params) == 0:
+            break
+        paramsets.append(params)
+        pinit += 1
+    return paramsets
+
+
+def _get_comparison_context(request):
+    """
+    Get the context for rendering the compare form.
+    """
+    return dict(
+        form=ComparisonForm(initial={"name": "Parameter Comparison"}),
+        prefixes=["p0_", "p1_"],
+        project=request.session["project"],
+        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
+        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
+        tsets=request.session["project"].reference_sets.all(),
+    )
+    

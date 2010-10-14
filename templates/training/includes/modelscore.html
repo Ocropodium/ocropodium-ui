@@ -1,8 +1,9 @@
 <div id="scoretabs">
     <ul>
         <li><a href="#scoretab_1">Accuracy</a></li>
-        <li><a href="#scoretab_2">Text</a></li>
-        <li><a href="#scoretab_3">JSON</a></li>
+        <li><a href="#scoretab_2">Parameters</a></li>
+        <li><a href="#scoretab_3">Text</a></li>
+        <li><a href="#scoretab_4">JSON</a></li>
     </ul>
     <div id="scoretab_1">
         <h3>Overall Score: {{modelscore.score|floatformat:2|default_if_none:"-"}}%</h3>
@@ -11,9 +12,12 @@
         </pre>
     </div>
     <div id="scoretab_2">
+        {{modelscore.task.args}}
+    </div>
+    <div id="scoretab_3">
 {{text}}
     </div>
-    <div id="scoretab_3" class="literal">
+    <div id="scoretab_4" class="literal">
 {{json}}
     </div>
 </div>

@@ -1,3 +1,4 @@
+import os
 from picklefield import fields
 from django.db import models
 from django.contrib.auth.models import User
@@ -5,6 +6,7 @@ from tagging.fields import TagField
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 
+from ocradmin.ocr import utils as ocrutils
 
 class OcrProject(models.Model):
     """

@@ -17,33 +17,35 @@
                     <div id="tabs">
                         <ul>
                             <li><a id="tabs_1_link" href="#tabs_1">Comparison Models</a></li>
-                            <li><a id="tabs_2_link" href="#tabs_2">OCR Options</a></li>
+                            <li><a id="tabs_2_link" href="#tabs_2">Groundtruth</a></li>
                         </ul>
                         <div id="tabs_1">
                             <div class="form_body">
-
+                                <fieldset>
+                                    <legend>OCR Comparison</legend>
+                                    <div class="field_wrapper">
+                                        {{form.name.label_tag}}
+                                        {{form.name}}
+                                    </div>
+                                    <div class="field_wrapper">
+                                        {{form.notes.label_tag}}                                        
+                                        {{form.notes}}
+                                    </div>
+                                </fieldset>
                                 {% for prefix in prefixes %}
                                 <fieldset>
                                     <legend>Settings {{prefix|cut:"_"|capfirst}}</legend>
                                     {% include "includes/ocr_settings.html" %}                
                                 </fieldset>
                                 {% endfor %}
-                                <!--
-                                <fieldset>
-                                    <legend>Model Information</legend>
-                                    {% for modindex in initialmods %}
-                                        <div class="field_wrapper">
-                                            <label for="cmodel_{{modindex}}">Model {{modindex}}:</label>                                                                          <select id="cmodel_{{modindex}}" name="cmodel">
-                                                <option value="0">-----</option>
-                                                {% for cm in cmodels %}
-                                                <option value="{{cm.pk}}">{{cm}}</option>
-                                                {% endfor %} 
-                                            </select>
-                                        </div>
-                                    {% endfor %}    
 
-                                </fieldset>
-                                -->
+                            </div>
+                            <div class="form_footer">
+                                <input type="button" class="next_tab" id="tabs_2_next" value="Next - OCR Options" />
+                            </div>
+                        </div>
+                        <div id="tabs_2">
+                            <div class="form_body">
                                 <fieldset>
                                     <legend>Ground Truth</legend>
                                     <div class="toggle_box" id="ground_truth_list">
@@ -58,27 +60,6 @@
                                         </div>
                                     </div>
                                 </fieldset>
-                            </div>
-                            <div class="form_footer">
-                                <input type="button" class="next_tab" id="tabs_2_next" value="Next - OCR Options" />
-                            </div>
-                        </div>
-                        <div id="tabs_2">
-                            <div class="form_body">
-                                <div class="toggle_box" id="conversion_options">
-                                    <div class="field_wrapper">
-                                        <label for="lmodel">LModel:</label>
-                                        <select name="lmodel">
-                                            {% for lm in lmodels %}
-                                            <option value="{{lm.pk}}">{{lm}}</option>
-                                            {% endfor %} 
-                                        </select>
-                                    </div>
-                                    <div class="field_wrapper">
-                                        <label for="id_notes">Notes:</label>
-                                        <textarea name="notes"></textarea>
-                                    </div>
-                                </div>
                             </div>
                             <div class="form_footer">
                                 <div class="form_submit_buttons">

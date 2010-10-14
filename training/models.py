@@ -1,9 +1,12 @@
+"""
+Training-related database models.
+"""
+
 import os
 
 from django.db import models
-from django.contrib.auth.models import User
 from picklefield import fields
-from ocradmin.projects.models import OcrProject, ReferencePage
+from ocradmin.projects.models import ReferencePage
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.batch.models import OcrBatch
 from ocradmin.ocrmodels.models import OcrModel
@@ -30,20 +33,21 @@ def reference_page_location(instance, filename):
 
 
 
-class OcrModelScore(models.Model):
+class ParameterScore(models.Model):
     """
     A record of a job scoring a model on a given
     ground truth.
     """
     comparison = models.ForeignKey("OcrComparison", 
-            related_name="modelscores")
-    model = models.ForeignKey(OcrModel, related_name="comparisons")
-    task  = models.OneToOneField(OcrTask, related_name="modelscore") 
+            related_name="parameter_scores")
+    name = models.CharField(max_length=255)
+    task  = models.OneToOneField(OcrTask, related_name="parameter_score") 
     ground_truth = models.ForeignKey(ReferencePage)
     score = models.FloatField(null=True, blank=True)
     score_internals = models.TextField(null=True, blank=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
-    updated_on = models.DateTimeField(auto_now_add=True, auto_now=True, editable=False)
+    updated_on = models.DateTimeField(auto_now_add=True, 
+            auto_now=True, editable=False)
     error = fields.PickledObjectField(blank=True, null=True)
 
 

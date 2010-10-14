@@ -416,6 +416,8 @@ def _get_best_params(postdict, with_prefix=None):
         for key, value in postdict.iteritems():
             if key.startswith(with_prefix):
                 cleanedparams[key.replace(with_prefix, "", 1)] = value
+        if len(cleanedparams) == 0:
+            return {}
     else:                
         cleanedparams = userparams = postdict.copy()    
 

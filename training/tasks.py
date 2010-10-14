@@ -153,9 +153,9 @@ class ComparisonTask(AbortableTask):
                 ocrutils.output_to_plain_text(outdata))
         # there's be no details if something went wrong
         assert(details)
-        task.modelscore.score = accuracy
-        task.modelscore.score_internals = details.decode("unicode_escape")
-        task.modelscore.save()
+        task.parameter_score.score = accuracy
+        task.parameter_score.score_internals = details.decode("unicode_escape")
+        task.parameter_score.save()
         return outdata
 
         
