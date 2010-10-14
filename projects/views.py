@@ -312,7 +312,6 @@ def ingest(request, pk):
             batch=batch,
             project=project,
             page_name=os.path.basename(ts.page_name),
-            task_type="ingest",
             task_name=IngestTask.name,
             status="INIT",
             args=args,

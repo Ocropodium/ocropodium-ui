@@ -194,19 +194,22 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             task_id=tid,
             user=request.user,
             page_name=os.path.basename(path),
-            task_type=tasktype.lower(),
+            task_name=celerytask.name,
             status="INIT",
             args=args,
             kwargs=kwargs,
         )
         ocrtask.save()
-        asynctasks.append(celerytask.apply_async(args=args, **kwargs))
+        asynctasks.append(
+            (os.path.basename(path), celerytask.apply_async(args=args, **kwargs))
+        )
     try:
         # aggregate the results.  If necessary wait for tasks.
         out = []
-        for async in asynctasks:
+        for pagename, async in asynctasks:
             result = async.wait() if _should_wait(request) else async.result
             out.append({
+                "page_name": pagename,
                 "job_name": async.task_id,
                 "status": async.status,
                 "results": result,

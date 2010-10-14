@@ -180,7 +180,7 @@ def create(request):
                 batch=batch,
                 project=request.session["project"],
                 page_name=os.path.basename(path),
-                task_type="convert",
+                task_name=celerytask.name,
                 status="INIT",
                 args=args,
                 kwargs=kwargs,
