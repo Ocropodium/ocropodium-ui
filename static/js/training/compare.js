@@ -56,8 +56,8 @@ function updateButtons() {
     var gotgt = $("input.ground_truth_enabled[@type=checkbox][checked]").length;
 
     gotmodels = true;
-    $("#submit_new_comparison_form, #tabs_2_next").attr("disabled", !(gotmodels && gotgt));
-    $("#tabs").tabs((gotmodels && gotgt) ? "enable" : "disable", 1);
+    $("#submit_new_comparison_form").attr("disabled", !(gotmodels && gotgt));
+    $("#tabs").tabs(gotmodels ? "enable" : "disable", 1);
 };
 
 
