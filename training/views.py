@@ -456,7 +456,6 @@ def _get_paramset_list(request):
     pinit = 0
     while True:
         params = _get_best_params(request.POST, with_prefix="p%d_" % pinit)
-        print "%s: %s" % (pinit, params)
         if len(params) == 0:
             break
         paramsets.append(params)
