@@ -14,9 +14,9 @@
 // changes (to SUCCESS or ERROR) at which point to displays
 // whatever is in 'results'.
 
-function OcrPage(insertinto_id, page_id, jobname) {
+function OcrPage(insertinto_id, page_id, pagename, jobname) {
     // extract the pagename from the job name, delimited by "::"
-    var pagename = jobname.split("::")[0].replace(/\.[^\.]+$/, "");
+    var pagename = pagename;
     var resultsurl = "/ocr/results/" + jobname;
     var boxpattern = new RegExp(/(\d+) (\d+) (\d+) (\d+)/);
     var me = this;
@@ -36,6 +36,7 @@ function OcrPage(insertinto_id, page_id, jobname) {
         .addClass("ocr_page")        
         .addClass("waiting")
         .attr("id", "ocr_page_" + page_id)
+        .data("pagename", pagename)
         .data("jobname", jobname);
 
     // setup header buttons

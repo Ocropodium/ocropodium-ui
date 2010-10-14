@@ -40,7 +40,7 @@ function saveState() {
 
     // save the job names of the current pages...
     var jobnames = $(".ocr_page").map(function(i, d) {
-        return $(d).data("jobname");
+        return $(d).data("pagename") + ":" + $(d).data("jobname");
     }).get().join(",");
     $.cookie("jobnames", jobnames, {expires: 7});
 }
@@ -60,9 +60,9 @@ function loadState() {
 
     var jobnames = $.cookie("jobnames");
     if (jobnames) {
-        var joblist = jobnames.split(",");
-        $.each(joblist, function(index, jobname) {
-            pageobjects[index] = new OcrPage("workspace", index, jobname);
+        $.each(jobnames.split(","), function(index, pagejob) {
+            var page = pagejob.split(":")[0], job = pagejob.split(":")[1];
+            pageobjects[index] = new OcrPage("workspace", index, page, job);
             pageobjects[index].onLinesReady = function() {
                 // trigger a reformat
                 $("input[name=format]:checked").click();
@@ -90,7 +90,7 @@ function onXHRLoad(event) {
         return;
     }
     $.each(data, function(pagenum, pageresults) {
-        pageobjects[pagenum] = new OcrPage("workspace", pagenum, pageresults.job_name);
+        pageobjects[pagenum] = new OcrPage("workspace", pagenum, pageresults.page_name, pageresults.job_name);
         var timeout = (300 * Math.max(1, uploader.size())) + (pagenum * 250);
         pageobjects[pagenum].onLinesReady = function() {
             // trigger a reformat
