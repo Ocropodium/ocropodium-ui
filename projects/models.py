@@ -67,11 +67,17 @@ class ReferencePage(models.Model):
         """
         return ocrutils.media_path_to_url(self.binary_image_path)
 
+    def source_image_url(self):
+        """
+        Url to image resource.
+        """
+        return ocrutils.media_path_to_url(self.source_image_path)
+
     def thumbnail_path(self):
         """
         Path to where the thumbnail should be.
         """
-        return "%s.thumb.jpg" % os.path.splitext(self.binary_image_path)[0] 
+        return "%s.thumb.jpg" % os.path.splitext(self.source_image_path)[0] 
 
     def thumbnail_url(self):
         """

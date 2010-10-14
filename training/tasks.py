@@ -130,7 +130,7 @@ class ComparisonTask(AbortableTask):
 
         # ground truth is already a binary, so tell the converter not
         # to redo it...
-        paramdict["prebinarized"] = True
+        #paramdict["prebinarized"] = True
         converter = ocrutils.get_converter(paramdict.get("engine", "tesseract"), 
                 logger=logger, abort_func=abort_func, params=paramdict)
         
@@ -144,7 +144,7 @@ class ComparisonTask(AbortableTask):
         # init progress to zero (for when retrying tasks)
         progress_func(0)
 
-        outdata = converter.convert(groundtruth.binary_image_path.encode(),
+        outdata = converter.convert(groundtruth.source_image_path.encode(),
                 progress_func=progress_func)        
 
         accuracy, details = utils.isri_accuracy(

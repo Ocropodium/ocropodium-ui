@@ -173,7 +173,6 @@ def score_models(request):
 
     try:
         tsets = ReferencePage.objects.filter(pk__in=request.POST.getlist("tset"))
-        print "VALID: %s" % form.is_valid()
         assert(form.is_valid())
     except (ReferencePage.DoesNotExist, AssertionError):
         # FIXME: remove code dup!
@@ -207,7 +206,7 @@ def score_models(request):
     paramsets = _get_paramset_list(request)
     
     for gtruth in tsets:
-        path = gtruth.binary_image_path
+        path = gtruth.source_image_path
         for i in range(len(paramsets)):
             params = paramsets[i]
             tid = ocrutils.get_new_task_id(path)
@@ -341,6 +340,8 @@ def save_task(request, task_pk):
     training data.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
+
+    srcpath = task.args[0]
     binurl = request.POST.get("binary_image")
     if not binurl:
         raise HttpResponseServerError("No binary image url given.")
@@ -357,18 +358,23 @@ def save_task(request, task_pk):
     if not os.path.exists(outpath):
         os.makedirs(outpath)
         os.chmod(outpath, 0777)
-    trainpath = os.path.join(outpath, os.path.basename(binpath))
+    srcoutpath = os.path.join(outpath, os.path.basename(srcpath))    
+    binoutpath = os.path.join(outpath, os.path.basename(binpath))
     import shutil
-    shutil.copy2(binpath, trainpath)
+    shutil.copy2(srcpath, srcoutpath)
+    shutil.copy2(binpath, binoutpath)
 
     # try and create a thumbnail of the file
-    MakeThumbnailTask.apply_async((trainpath, settings.THUMBNAIL_SIZE), 
+    MakeThumbnailTask.apply_async((srcoutpath, settings.THUMBNAIL_SIZE), 
             queue="interactive", retries=2)
     
     # create or update the model
     try:
-        tpage = ReferencePage.objects.get(project=request.session["project"], 
-                user=request.user, binary_image_path=trainpath)
+        tpage = ReferencePage.objects.get(
+            project=request.session["project"], 
+            user=request.user,
+            binary_image_path=binoutpath
+        )
     except ReferencePage.DoesNotExist:
         tpage = ReferencePage()
 
@@ -377,7 +383,8 @@ def save_task(request, task_pk):
         tpage.user = request.user
         tpage.project = request.session["project"]
         tpage.data = task.latest_transcript()
-        tpage.binary_image_path = trainpath
+        tpage.source_image_path = srcoutpath
+        tpage.binary_image_path = binoutpath
         tpage.save()
     except IntegrityError, err:
         return HttpResponse(simplejson.dumps({"error": str(err)}),
