@@ -187,7 +187,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     # init the job from our params
     asynctasks = []
     for path in paths:
-        tid = ocrutils.get_new_task_id(path)
+        tid = ocrutils.get_new_task_id()
         args = (path.encode(), outdir.encode(), userparams)
         kwargs = dict(task_id=tid, loglevel=60, retries=2, queue="interactive")
         ocrtask = OcrTask(

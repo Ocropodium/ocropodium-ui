@@ -171,7 +171,7 @@ def create(request):
     asyncparams = []
     try:
         for path in paths:
-            tid = ocrutils.get_new_task_id(path)
+            tid = ocrutils.get_new_task_id()
             args = (path.encode(), outdir.encode(), userparams)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             ocrtask = OcrTask(
@@ -526,7 +526,7 @@ def _retry_celery_task(task):
     #            countdown=0, throw=False)
     if task.is_abortable():
         _abort_celery_task(task)
-    tid = ocrutils.get_new_task_id(task.page_name)
+    tid = ocrutils.get_new_task_id()
 
     # FIXME: Figure the appropriate class out properly
     # via Celery registry inspection

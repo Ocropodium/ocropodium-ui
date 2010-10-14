@@ -292,8 +292,13 @@ def ingest(request, pk):
     asyncparams = []
 
     # create a batch db job
-    batch = OcrBatch(user=request.user, name="Fedora Ingest: %s" % namespace, description="",
-            task_type=IngestTask.name, project=project)    
+    batch = OcrBatch(
+        user=request.user,
+        name="Fedora Ingest: %s" % namespace,
+        description="",
+        task_type=IngestTask.name,
+        project=project
+    )    
     batch.save()
 
 
