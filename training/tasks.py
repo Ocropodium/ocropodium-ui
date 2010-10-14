@@ -3,22 +3,15 @@ Celery functions to be processed in a non-blocking distributed manner.
 """
 
 import os
-import re
-import shutil
-import time
 from celery.contrib.abortable import AbortableTask
 from celery.contrib.abortable import AbortableAsyncResult
-from celery.task import PeriodicTask
-from datetime import datetime, timedelta
 from django.core.files.base import File
-from django.conf import settings
 
 from ocradmin.ocr import utils as ocrutils
 from ocradmin.training import utils
-
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.projects.models import OcrProject, ReferencePage
+from ocradmin.projects.models import ReferencePage
 
 
 
@@ -40,7 +33,8 @@ class LineTrainTask(AbortableTask):
         #cmodel = OcrModel.objects.get(pk=cmodel_id)
         paramdict = dict(
             cmodel=cmodel.file.path.encode(),
-            outmodel=os.path.join(outdir, os.path.basename(cmodel.file.path.encode())),
+            outmodel=os.path.join(outdir, 
+                os.path.basename(cmodel.file.path.encode())),
         )
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
@@ -51,26 +45,14 @@ class LineTrainTask(AbortableTask):
             os.chmod(outdir, 0777)
 
         def abort_func():
+            """Abort task if condition met."""
             # TODO: this should be possible via a simple 'self.is_aborted()'
             # Find out why it isn't.
             asyncres = AbortableAsyncResult(kwargs["task_id"])            
             return asyncres.is_aborted()
 
-
         trainer = ocrutils.get_trainer(logger=logger, abort_func=abort_func,
                 params=paramdict)
-
-        # function for the converter to update progress
-        from ocradmin.ocrtasks.models import OcrTask
-        def progress_func(progress, lines=None):
-            task = OcrTask.objects.get(task_id=kwargs["task_id"])
-            task.progress = progress
-            if lines is not None:
-                task.lines = lines
-            task.save()
-        # init progress to zero (for when retrying tasks)
-        #progress_func(0)
-        
         for pagedata in datasets:
             #pagedata = ReferencePage.objects.get(pk=pk)
             trainer.load_training_binary(pagedata.binary_image_path.encode())
@@ -82,20 +64,21 @@ class LineTrainTask(AbortableTask):
         trainer.save_new_model()
         logger.info("SAVING MODEL: test.cmodel")
 
-        fh = open(paramdict["outmodel"], "rb")
+        fhdl = open(paramdict["outmodel"], "rb")
         derivednum = cmodel.ocrmodel_set.count() + 1
         newmodel = OcrModel(
             user=cmodel.user,
             name="%s Retrain %d" % (cmodel.name, derivednum),
             derived_from=cmodel,
-            description="<DERIVED FROM %s>\n\n%s" % (cmodel.name, cmodel.description),
+            description="<DERIVED FROM %s>\n\n%s" % \
+                    (cmodel.name, cmodel.description),
             public=cmodel.public,
             type=cmodel.type,
             app=cmodel.app,
-            file=File(fh),             
+            file=File(fhdl),             
         )
         newmodel.save()
-        fh.close()
+        fhdl.close()
         return { "new_model_pk": newmodel.pk }
 
 
@@ -123,6 +106,7 @@ class ComparisonTask(AbortableTask):
         task = OcrTask.objects.get(task_id=kwargs["task_id"])
 
         def abort_func():
+            """Quit function if a condition met"""
             # TODO: this should be possible via a simple 'self.is_aborted()'
             # Find out why it isn't.
             asyncres = AbortableAsyncResult(kwargs["task_id"])            
@@ -131,11 +115,13 @@ class ComparisonTask(AbortableTask):
         # ground truth is already a binary, so tell the converter not
         # to redo it...
         #paramdict["prebinarized"] = True
-        converter = ocrutils.get_converter(paramdict.get("engine", "tesseract"), 
+        converter = ocrutils.get_converter(
+                paramdict.get("engine", "tesseract"), 
                 logger=logger, abort_func=abort_func, params=paramdict)
         
         # function for the converter to update progress
         def progress_func(progress, lines=None):
+            """Report project of running tasks"""
             task = OcrTask.objects.get(task_id=kwargs["task_id"])
             task.progress = progress
             if lines is not None:
@@ -174,10 +160,10 @@ class MakeThumbnailTask(AbortableTask):
         """
         logger = self.get_logger(**kwargs)
         from PIL import Image
-        base, ext = os.path.splitext(path)
-        im = Image.open(path)
-        im.thumbnail(size, Image.ANTIALIAS)
+        base = os.path.splitext(path)[0]
+        img = Image.open(path)
+        img.thumbnail(size, Image.ANTIALIAS)
         thumbpath = "%s.thumb.jpg" % base
-        im.save(thumbpath, "JPEG")
+        img.save(thumbpath, "JPEG")
         logger.info("Generated thumb: %s" % thumbpath)
 
