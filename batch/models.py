@@ -9,17 +9,10 @@ class OcrBatch(models.Model):
     """
     OCR Batch object.
     """
-    TYPE_CHOICES = (
-        ("ONESHOT", "One-Shot"),
-        ("BATCH", "Batch"),
-        ("TEST", "Test"),
-    )
-
     user = models.ForeignKey(User)
     name = models.CharField(max_length=255)
     project = models.ForeignKey(OcrProject)
     task_type = models.CharField(max_length=100)
-    batch_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     description = models.TextField(blank=True, null=True)
     tags = TagField()
     created_on = models.DateTimeField(auto_now_add=True, editable=False)

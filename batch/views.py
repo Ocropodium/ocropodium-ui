@@ -65,7 +65,7 @@ class OcrBatchForm(forms.ModelForm):
 
     class Meta:
         model = OcrBatch
-        exclude = ["user", "created_on", "project", "task_type", "batch_type"]
+        exclude = ["user", "created_on", "project", "task_type"]
 
 
 @login_required
@@ -156,7 +156,6 @@ def create(request):
         description=form.cleaned_data["description"],
         tags=form.cleaned_data["tags"],
         task_type=celerytask.name,
-        batch_type="MULTI",
         project=request.session["project"]
     )    
     batch.save()

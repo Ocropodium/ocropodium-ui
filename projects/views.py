@@ -144,7 +144,6 @@ def create(request):
             template = "projects/new.html"
             return render_to_response(template, context,
                     context_instance=RequestContext(request))
-        print "Trying to save forms"
         defaults = defform.save()
         project = form.instance
         project.defaults = defaults
@@ -294,7 +293,7 @@ def ingest(request, pk):
 
     # create a batch db job
     batch = OcrBatch(user=request.user, name="Fedora Ingest: %s" % namespace, description="",
-            task_type=IngestTask.name, batch_type="INGEST", project=project)    
+            task_type=IngestTask.name, project=project)    
     batch.save()
 
 
