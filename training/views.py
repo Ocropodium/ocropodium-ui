@@ -78,7 +78,7 @@ def new(request):
     """
     # initialize the training set name
     project = request.session["project"]
-    trainnum = project.tasks.filter(task_type="train").count() + 1
+    trainnum = project.tasks.filter(task_name="cmodel.training").count() + 1
     name = "%s Training %d" % (project.name, trainnum)
 
     template = "training/new.html"
