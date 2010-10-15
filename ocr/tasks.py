@@ -40,9 +40,7 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
         dstdzipath = "%s_a.dzi" % os.path.splitext(outpath)[0]
     else:
         dstdzipath = utils.get_ab_output_path(dstdzipath)
-    if os.path.exists(dstdzipath) and params.get("allowcache"):
-        pass
-    else:
+    if not os.path.exists(dstdzipath) or not params.get("allowcache"):
         logger.info("Creating output DZI: %s -> %s" % (outpath, dstdzipath))
         creator.create(outpath, dstdzipath)
 
