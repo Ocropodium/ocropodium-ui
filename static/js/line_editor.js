@@ -91,7 +91,7 @@ const LONGKEY = 500;
 OCRJS.LineEditor = OCRJS.OcrBase.extend({
     constructor: function(options) {
         this.base();
-        this.options = {log: true};
+        this.options = {log: false};
         $.extend(this.options, options);
 
         this._e = null;          // the element we're operating on 

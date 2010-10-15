@@ -20,8 +20,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, batch_id, initial, options) {
         this.base(parent, options);
         this.options = {
-
-            log: true,
+            log: false,
         },
         $.extend(this.options, options);
 
