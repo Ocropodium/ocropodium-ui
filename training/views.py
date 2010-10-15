@@ -190,7 +190,6 @@ def score_models(request):
         name="Model Scoring %s" % datetime.now(),
         description="",
         task_type=ComparisonTask.name,
-        batch_type="COMPARISON", 
         project=request.session["project"]
     )
     batch.save()
@@ -218,7 +217,6 @@ def score_models(request):
                 batch=batch,
                 project=request.session["project"],
                 page_name="%s" % os.path.basename(os.path.splitext(path)[0]),
-                task_type="compare",
                 task_name=ComparisonTask.name,
                 status="INIT",
                 args=args,
