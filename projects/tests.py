@@ -112,6 +112,7 @@ class OcrProjectsTest(TestCase):
             "/projects/update/1/",
             dict(
                 name="Test Update Project",
+                slug="test-update-project",
                 tags="test project update",
                 description="",
             ),

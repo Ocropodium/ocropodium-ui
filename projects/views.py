@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
+from django.template.defaultfilters import slugify
 from django.utils import simplejson
 
 from tagging.models import TaggedItem
@@ -21,9 +22,7 @@ from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject, OcrProjectDefaults
 from fedora.adaptor import fcobject, fcdatastream 
 from ordereddict import OrderedDict
-
 from ocradmin.projects.tasks import IngestTask
-
 PER_PAGE = 10
 
 
@@ -40,7 +39,7 @@ class OcrProjectForm(forms.ModelForm):
 
     class Meta:
         model = OcrProject
-        exclude = ["user", "created_on"]
+        exclude = ["user", "slug", "created_on"]
 
 
 class OcrProjectDefaultsForm(forms.ModelForm):
@@ -147,6 +146,7 @@ def create(request):
         defaults = defform.save()
         project = form.instance
         project.defaults = defaults
+        project.slug = slugify(project.name)
         project.user = request.user
         project.full_clean()
         project.save()
@@ -188,6 +188,7 @@ def update(request, pk):
         defaults = defform.save()
         project = form.instance
         project.defaults = defaults
+        project.slug = slugify(project.name)
         project.full_clean()
         project.save()
     return HttpResponseRedirect("/projects/list")

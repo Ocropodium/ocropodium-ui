@@ -14,6 +14,7 @@ class OcrProject(models.Model):
     """
     user = models.ForeignKey(User)
     name = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
     tags = TagField()
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
