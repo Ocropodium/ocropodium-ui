@@ -350,6 +350,8 @@ def _handle_streaming_upload(request, outdir):
     the whole of the POST body consists of the file.
     """
     fpath = os.path.join(outdir, request.GET.get("inlinefile"))
+    if not os.path.exists(outdir):
+        os.makedirs(outdir, 0777)
     tmpfile = file(fpath, "wb")
     tmpfile.write(request.raw_post_data)
     tmpfile.close()
