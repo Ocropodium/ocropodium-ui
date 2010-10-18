@@ -465,7 +465,18 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
 
                       
     insertChar: function(event) {
-        this.eraseSelection();        
+        this.eraseSelection(); 
+
+        // FIXME: Hack for converting webkit keypress
+        // deletes into periods, and adjusting the charcode
+        // accordingly.  JS keyCodes are a total mess, but
+        // there's got to be a better way.
+        if ($.browser.webkit) {
+            if (event.which == 190) {
+                event.which = event.shiftKey ? 62 : 46;
+            }
+        }
+
         var curr = this._c ? this._c : this._endmarker;
         var char = $("<span></span>")
             .text(event.which == 32
@@ -505,12 +516,27 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
     // handle key event - return true IF the event
     // IS handled                       
     _handleKeyEvent: function(event) {
+    
+        this._logger(event.type + " " + event.keyCode);                            
+
         // BROWSER HACK - FIXME: Firefox only receives
         // repeat key events for keypress, but ALSO 
         // fires keydown for non-char keys
         if (!$.browser.webkit) {
             if (!event.ctrlKey && event.type == "keydown")
                 return;
+        }
+
+        // FIXME: Another chrome hack, to prevent the 'period' key
+        // generating a keyCode 46 'delete' code.  The other part of
+        // this hack switches the charCodes in this.insertChar!
+        if (event.type == "keydown" && event.keyCode == 190) {
+            this._ignore_keypress_delete = true;
+            event.type = "keypress";
+        } else if (this._ignore_keypress_delete && event.type == "keypress"
+                && event.keyCode == KC_DELETE) {
+            delete this._ignore_keypress_delete;
+            return;
         }
 
         if (event.ctrlKey) {
