@@ -120,6 +120,12 @@ ADMIN_MEDIA_ROOT = "%s/media" % SITE_ROOT if not SERVER else "/media/share"
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = '/media/'
 
+# Base path for transitory files
+TEMP_ROOT = "%s/temp" % MEDIA_ROOT
+
+# Base path for user project files.
+USER_FILES_ROOT = "%s/files" % MEDIA_ROOT
+
 # Size for thumbnails
 THUMBNAIL_SIZE = (256, 256)
 
