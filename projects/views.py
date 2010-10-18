@@ -133,24 +133,22 @@ def create(request):
     """
     form = OcrProjectForm(request.POST)
     defform = OcrProjectDefaultsForm(request.POST)
-    if request.method == "POST":        
-        if not defform.is_valid() or not form.is_valid():
-            if not defform.is_valid():
-                print "Default Form invalid!"
-                print defform.errors
-            # if we get here there's an error
-            context = {"form": form, "defform": defform}
-            template = "projects/new.html"
-            return render_to_response(template, context,
-                    context_instance=RequestContext(request))
-        defaults = defform.save()
-        project = form.instance
-        project.defaults = defaults
-        project.slug = slugify(project.name)
-        project.user = request.user
-        project.full_clean()
-        project.save()
-        return HttpResponseRedirect("/projects/load/%s/" % project.pk)
+    if not request.method == "POST" \
+            or not defform.is_valid() or not form.is_valid():
+        # if we get here there's an error
+        context = {"form": form, "defform": defform}
+        template = "projects/new.html"
+        return render_to_response(template, context,
+                context_instance=RequestContext(request))
+
+    defaults = defform.save()
+    project = form.instance
+    project.defaults = defaults
+    project.slug = slugify(project.name)
+    project.user = request.user
+    project.full_clean()
+    project.save()
+    return HttpResponseRedirect("/projects/load/%s/" % project.pk)
 
 
 
