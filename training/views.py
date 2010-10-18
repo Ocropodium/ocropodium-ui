@@ -432,6 +432,15 @@ def show(request, page_pk):
             context_instance=RequestContext(request))
 
 
+def delete(request, page_pk):
+    """
+    Delete a reference page.
+    """
+    tpage = get_object_or_404(ReferencePage, pk=page_pk)
+    tpage.delete()
+    return HttpResponseRedirect("/training/list")
+
+
 def _get_paramset_list(request):
     """
     Parse sets of distinct params from the POST data.

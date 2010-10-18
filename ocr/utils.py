@@ -73,7 +73,9 @@ def saves_files(func):
             output_path = os.path.join(
                 settings.USER_FILES_ROOT, 
                 project.slug
-            )                    
+            )
+        if request.path.startswith("/training/save_task"):
+            output_path = os.path.join(output_path, "reference")
         request.__class__.output_path = output_path
         return func(request, *args, **kwargs)
     return wrapper
