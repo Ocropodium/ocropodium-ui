@@ -88,12 +88,43 @@ class OcrProjectsTest(TestCase):
         project = OcrProject.objects.get(pk=1)
         self.assertEqual(project.description, "")
 
+    def test_confirm_delete(self):
+        """
+        Test checking if the user wants to delete a project.
+        """
+        r = self._create_test_project()
+        project = OcrProject.objects.get(pk=1)
+        r = self.client.get("/projects/confirm_delete_project/1/")
+        self.assertEqual(r.status_code, 200)
+        
+    def test_delete_project(self):
+        """
+        Test actually deleting a project.
+        """
+        r = self._create_test_project()
+        before = OcrProject.objects.count()
+        r = self.client.post("/projects/delete_project/1/", {"confirm": "yes"})
+        self.assertEqual(r.status_code, 302)
+        after = OcrProject.objects.count()
+        self.assertEqual(before, after + 1)
+
+    def test_delete_project_without_confirm(self):
+        """
+        Test actually deleting a project.
+        """
+        r = self._create_test_project()
+        before = OcrProject.objects.count()
+        r = self.client.post("/projects/delete_project/1/", {"confirm": "no"})
+        self.assertEqual(r.status_code, 302)
+        after = OcrProject.objects.count()
+        self.assertEqual(before, after)
+
 
     def _create_test_project(self):
         """
         Insert a post test project view post
         """
-        r = self.client.post(
+        return self.client.post(
             "/projects/create",
             dict(
                 tags="test blah",
@@ -101,7 +132,6 @@ class OcrProjectsTest(TestCase):
                 description="Testing project creation",
             ),
         )
-        return r
 
 
     def _update_test_project(self):
