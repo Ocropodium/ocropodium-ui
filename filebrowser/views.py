@@ -70,7 +70,6 @@ def ls(request):
     dir = request.GET.get("dir", "")
     root = os.path.join(settings.USER_FILES_ROOT)
     fulldir = os.path.join(root, dir)
-    #fulldir = "/" + dir
     response = HttpResponse(mimetype="application/json")
     simplejson.dump(entry_info(fulldir), response) #cls=ExtJsonEncoder)
     return response
@@ -82,7 +81,5 @@ def explore(request):
     """
     Browse the server file system.
     """
-
-
     return render_to_response("filebrowser/explore.html",
             {}, context_instance=RequestContext(request))
