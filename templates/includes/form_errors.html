@@ -1,15 +1,12 @@
 {% if form.errors %}
-    <div id="form_errors">
-        <h4>There were problems with that form:</h4>
-        <ul class="error_list">
+        <ul class="messages">
         {% for field, errors in form.errors.items %}
             {% for error in errors %}
-                <li>
+                <li class="error">
                     <span class="error_field">{{field}}</span>: <span class="error_value">{{error}}</span>
                 </li>
             {% endfor %}
         {% endfor %}
         </ul>
-    </div>
 {% endif %}
 
