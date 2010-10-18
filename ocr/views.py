@@ -8,12 +8,14 @@ import traceback
 from celery import result as celeryresult
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
+from ocradmin.ocr.utils import saves_files
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask 
@@ -36,6 +38,7 @@ def index(request):
 
 
 @login_required
+@saves_files
 @transaction.commit_manually
 def binarize(request):
     """
@@ -53,6 +56,7 @@ def binarize(request):
 
 
 @login_required
+@saves_files
 @transaction.commit_manually
 def convert(request):
     """
@@ -77,6 +81,7 @@ def convert(request):
 
 
 @login_required
+@saves_files
 @transaction.commit_manually
 def segment(request):
     """
@@ -88,7 +93,6 @@ def segment(request):
         "binpresets": OcrPreset.objects.filter(
             type="binarize").order_by("name"),
     }
-
     return _ocr_task(
         request,
         "ocr/segment.html",
@@ -169,13 +173,8 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         return render_to_response(template, context, 
                         context_instance=RequestContext(request))
 
-    # save our files to the DFS and return a list of addresses
-    outdir = ocrutils.FileWrangler(
-            username=request.user.username, temp=True, 
-            action=tasktype.lower())()
-
     try:
-        paths, userparams = _handle_request(request, outdir)
+        paths, userparams = _handle_request(request, request.output_path)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -188,7 +187,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     asynctasks = []
     for path in paths:
         tid = ocrutils.get_new_task_id()
-        args = (path.encode(), outdir.encode(), userparams)
+        args = (path.encode(), request.output_path.encode(), userparams)
         kwargs = dict(task_id=tid, loglevel=60, retries=2, queue="interactive")
         ocrtask = OcrTask(
             task_id=tid,

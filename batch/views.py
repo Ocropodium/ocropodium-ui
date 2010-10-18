@@ -18,6 +18,7 @@ from django.utils import simplejson
 from ocradmin.batch import utils as batchutils
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
+from ocradmin.ocr.utils import saves_files
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
 from ocradmin.projects.tasks import IngestTask
@@ -131,6 +132,7 @@ def list(request):
     
 @login_required
 @project_required
+@saves_files
 @transaction.commit_manually
 def create(request):
     """
@@ -160,19 +162,17 @@ def create(request):
     )    
     batch.save()
 
-    outdir = ocrutils.FileWrangler(
-            username=request.user.username, temp=True, batch_id=batch.pk, )()
     # wrangle the params - this needs improving
     userparams = _get_best_params(
             _cleanup_params(request.POST.copy(),
                 ("files", "name", "description", "tags")))
-    userparams["intermediate_outdir"] = outdir.encode()
+    userparams["intermediate_outdir"] = request.output_path.encode()
 
     asyncparams = []
     try:
         for path in paths:
             tid = ocrutils.get_new_task_id()
-            args = (path.encode(), outdir.encode(), userparams)
+            args = (path.encode(), request.output_path.encode(), userparams)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             ocrtask = OcrTask(
                 task_id=tid,
@@ -341,18 +341,16 @@ def show(request, batch_pk):
 
 @login_required
 @project_required
+@saves_files
 def upload_files(request):
     """
     Upload files to the server for batch-processing.
     """
     mimetype = "application/json" if not request.POST.get("_iframe") \
             else "text/html"
-
-    outdir = ocrutils.FileWrangler(
-                username=request.user.username, temp=False,
-                stamp=False, action=None)()
+    assert(request.session["project"].slug)
     try:
-        paths = _handle_request(request, outdir)[0]
+        paths = _handle_request(request, request.output_path)[0]
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")

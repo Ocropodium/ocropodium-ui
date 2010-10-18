@@ -21,6 +21,10 @@ from PIL import Image
 from django.conf import settings
 
 
+
+
+
+
 class AppException(StandardError):
     """
     Most generic app error.
@@ -48,6 +52,35 @@ FOOTER_TEMPLATE = """
 """
 
 
+def saves_files(func):
+    """
+    Decorator function for other actions that
+    require a project to be open in the session.
+    """
+    def wrapper(request, *args, **kwargs):
+        temp = request.path.startswith("/ocr/")
+        project = request.session.get("project")
+        output_path = None
+        if project is None:
+            temp = True
+        if temp:
+            output_path = os.path.join(
+                settings.TEMP_ROOT,
+                request.user.username,
+                datetime.now().strftime("%Y%m%d%H%M%S")
+            )
+        else:
+            output_path = os.path.join(
+                settings.USER_FILES_ROOT, 
+                project.slug
+            )                    
+        request.__class__.output_path = output_path
+        return func(request, *args, **kwargs)
+    return wrapper
+
+
+
+
 class FileWrangler(object):
     """
     Determine the most appropriate place to put new files
@@ -67,6 +100,7 @@ class FileWrangler(object):
 
     def __call__(self, infile=None):
         base = settings.MEDIA_ROOT
+
         if self.temp:
             base = os.path.join(base, "temp")
         else:

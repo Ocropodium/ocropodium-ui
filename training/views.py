@@ -11,6 +11,7 @@ from django.template import RequestContext
 from django.utils import simplejson
 from django import forms
 from ocradmin.ocr import utils as ocrutils
+from ocradmin.ocr.utils import saves_files
 from ocradmin.ocr.views import _get_best_params
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrmodels.models import OcrModel
@@ -93,6 +94,7 @@ def new(request):
 
 @project_required
 @login_required
+@saves_files
 def create(request):
     """
     Create a new training task.
@@ -117,18 +119,10 @@ def create(request):
     
     name = form.cleaned_data["name"]
     cmodel = form.cleaned_data["cmodel"]
-    # we're ok with the params... now get a temporary
-    # output path:
-    outpath = ocrutils.FileWrangler(
-        username=request.user.username,
-        temp=True,
-        action="train",
-        stamp=True,        
-    )()
     
     # make us a new task entry
     tid = ocrutils.get_new_task_id()    
-    args = ([t.pk for t in tsets], cmodel.pk, outpath)
+    args = ([t.pk for t in tsets], cmodel.pk, request.output_path)
     # Note: could add a 'queue' param here
     kwargs = dict(task_id=tid, loglevel=60, retries=2,) 
     task = OcrTask(
@@ -162,6 +156,7 @@ def compare(request):
 
 @transaction.commit_on_success
 @project_required
+@saves_files
 @login_required
 def score_models(request):
     """
@@ -179,9 +174,6 @@ def score_models(request):
         template = "training/compare.html"
         return render_to_response(template, _get_comparison_context(request),
                 context_instance=RequestContext(request))
-
-    outdir = ocrutils.FileWrangler(
-            username=request.user.username, temp=True, action="compare")()
 
     asyncparams = []
     # create a batch db job
@@ -209,7 +201,7 @@ def score_models(request):
         for i in range(len(paramsets)):
             params = paramsets[i]
             tid = ocrutils.get_new_task_id(path)
-            args = (gtruth.pk, outdir.encode(), params)
+            args = (gtruth.pk, request.output_path.encode(), params)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             task = OcrTask(
                 task_id=tid,
@@ -332,6 +324,7 @@ def show_paramscore(request, paramscore_pk):
 
 @project_required
 @login_required
+@saves_files
 def save_task(request, task_pk):
     """
     Save a page and it's binary image as 
@@ -347,17 +340,11 @@ def save_task(request, task_pk):
     if not os.path.exists(binpath):
         raise HttpResponseServerError("Binary image does not exist")
 
-    outpath = ocrutils.FileWrangler(
-        username=request.user.username,
-        project_id=request.session["project"].pk,
-        training=True,
-        temp=False,
-    )()
-    if not os.path.exists(outpath):
-        os.makedirs(outpath)
+    if not os.path.exists(request.output_path):
+        os.makedirs(request.output_path)
         os.chmod(outpath, 0777)
-    srcoutpath = os.path.join(outpath, os.path.basename(srcpath))    
-    binoutpath = os.path.join(outpath, os.path.basename(binpath))
+    srcoutpath = os.path.join(request.output_path, os.path.basename(srcpath))    
+    binoutpath = os.path.join(request.output_path, os.path.basename(binpath))
     import shutil
     shutil.copy2(srcpath, srcoutpath)
     shutil.copy2(binpath, binoutpath)
