@@ -68,8 +68,7 @@ def ls(request):
     """
 
     dir = request.GET.get("dir", "")
-    root = os.path.join(
-            os.path.abspath(settings.MEDIA_ROOT), "files", request.user.username)
+    root = os.path.join(settings.USER_FILES_ROOT)
     fulldir = os.path.join(root, dir)
     #fulldir = "/" + dir
     response = HttpResponse(mimetype="application/json")
