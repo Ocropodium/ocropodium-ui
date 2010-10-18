@@ -33,7 +33,7 @@
             <td><a title="Project Details"  class="show_project_link" href="/projects/show/{{p.pk}}/">Show</a></td>
             {% if p.user == user %}
                 <td><a title="Edit Project" class="edit_project_link" href="/projects/edit/{{p.pk}}/">Edit</a></td>
-                <td><a title="Delete Project"  class="delete_project_link" href="/projects/delete/{{p.pk}}/">Delete</a></td>
+                <td><a title="Delete Project"  class="delete_project_link" href="/projects/confirm_delete_project/{{p.pk}}/">Delete</a></td>
             {% endif %} 
         </tr>
         {% endfor %}

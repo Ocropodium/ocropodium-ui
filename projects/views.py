@@ -3,6 +3,7 @@ from datetime import datetime
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
@@ -24,6 +25,14 @@ from fedora.adaptor import fcobject, fcdatastream
 from ordereddict import OrderedDict
 from ocradmin.projects.tasks import IngestTask
 PER_PAGE = 10
+
+
+class DeleteProjectForm(forms.Form):
+    """
+    Form to ensure the user really, really wants to
+    delete an entire project.
+    """
+    confirm = forms.CharField()
 
 
 class OcrProjectForm(forms.ModelForm):
@@ -332,12 +341,43 @@ def ingest(request, pk):
 
 
 @login_required
-def delete(request, pk):
+def confirm_delete_project(request, project_pk):
     """
-    Show a form for editing the project.
+    Confirm deletion of the current project.
     """
-    project = get_object_or_404(OcrProject, pk=pk)
-    project.delete()
-    return HttpResponseRedirect("/projects/list/")
+    project = get_object_or_404(OcrProject, pk=project_pk)
+    form = DeleteProjectForm()
+    template = "projects/delete.html" if not request.is_ajax() \
+            else "projects/includes/delete_form.html"
+    context = {"project": project, "form": form}
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
+
+
+@login_required
+def delete_project(request, project_pk):
+    """
+    Delete a project.
+    """
+    project = get_object_or_404(OcrProject, pk=project_pk)
+    form = DeleteProjectForm(request.POST)
+
+    if not request.method == "POST" or not form.is_valid() \
+            or not form.cleaned_data["confirm"] == "yes":
+        messages.info(request, "Project '%s' was NOT deleted." % project.name)
+    else:
+        project.delete()
+        messages.success(request, "Project '%s' deleted." % project.name)
+    return HttpResponseRedirect("/projects/list")                
+
+
+#@login_required
+#def delete(request, pk):
+#    """
+#    Show a form for editing the project.
+#    """
+#    project = get_object_or_404(OcrProject, pk=pk)
+#    project.delete()
+#    return HttpResponseRedirect("/projects/list/")
 
 

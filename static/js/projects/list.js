@@ -1,8 +1,8 @@
 $(document).ready(function() {
     $("li.success").slideDown(3000).delay(1000).fadeOut();
-    $(".delete_project_link").live("click", function(e) {
-        return confirm("Are you sure you want to delete this project?");
-    }); 
+//    $(".delete_project_link").live("click", function(e) {
+//        return confirm("Are you sure you want to delete this project?");
+//    }); 
     
     // filter table by tags
     $(".project_tag_link").live("click", function(e) {
