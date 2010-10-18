@@ -7,7 +7,7 @@ ul.messages li {
     padding: 5px;
     margin-bottom: 5px;
     font-weight: bold;
-    border-width: 2px;
+    border-width: 1px;
     border-style: solid;
     list-style-position: inside;    
 }
@@ -20,9 +20,9 @@ ul.messages li.success {
 }
 
 ul.messages li.error {
-    color: #8A0808; 
-    border-color: #8A0808;
-    background-color: #F8E0E0;
+    color: #FA5858; 
+    border-color: #FA5858;
+    background-color: #FBEFEF;
     list-style-image: url("/static/icons/error.gif");
 }
 
@@ -40,4 +40,8 @@ ul.messages li.info {
     list-style-image: url("/static/icons/info.gif");
 }
 
-
+ul.messages li li {
+    padding: inherit;
+    margin: inherit;
+    font-weight: inherit;
+}
