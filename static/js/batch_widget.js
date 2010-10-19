@@ -15,19 +15,25 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         this._batch_id = batch_id;
 
         // time to recheck running tasks
-        this._polltime = 500; 
+        this._polltime = 500;
 
         // max number of tasks to load
-        this._maxtasks = 15;
+        this._maxitems = 15;
 
         // start of first loaded task
-        this._taskoffset = 0;
+        this._itemoffset = 0;
 
         // cache of data, initially empty
         this._batchdata = null;
 
         // store the id for the next timeout
         this._polltimeout = -1;
+
+       // time stationary off the scroll drag  
+       this._scrolltimeout = -1;
+
+       // difference between scroll and loaded data
+       this._dataoffset = 0;
 
         // status filter widget
         this._statusfilter = new MultiFilterList(
@@ -112,7 +118,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
             } else {
                 document.location.href = "/batch/transcript/" + self._batchdata.pk
-                + "/?page=" + (index + self._taskoffset);
+                + "/?page=" + (index + self._itemoffset);
             }
         });
 
@@ -265,7 +271,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
 
     setBatchId: function(batch_id) {
-        this._taskoffset = 0;
+        this._itemoffset = 0;
         this._batch_id = batch_id;
         this.refreshUnlessPolling();
     },
@@ -278,6 +284,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             alert(data.error + "\n\n" +  data.trace);
         } else {
             this._batchdata = data[0];
+            this._dataoffset = 0;
             this.updateResults(this._batchdata);
             return this.isComplete(); 
         }
@@ -288,7 +295,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
     // check the server for complete results...
     pollForResults: function(polltime) {
         var self = this;                        
-        params = "start=" + this._taskoffset + "&limit=" + this._maxtasks;
+        params = "start=" + this._itemoffset + "&limit=" + this._maxitems;
         $.each(this._statusfilter.value(), function(i, val) {
             params += "&status=" + val;
         });
@@ -371,20 +378,27 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         this.setWaiting(false);
         this.setBatchResults(batchdata);
 
-        for (var i = 0; i < this._maxtasks; i++) {
+        var i = -this._dataoffset;
+        for (var count = 0; count < this._maxitems; count++) {
             var taskdata = batchdata.fields.tasks[i];
-            var task = this._tasklist.find(".batch_task").slice(i);
+            var task = this._tasklist.find(".batch_task").slice(count);
             // hide the task if we've run out of data - this happens
-            // if there are less than m_maxtasks tasks in the set.
-            if (taskdata == null) {
-                task.hide()
+            // if there are less than m_maxitems tasks in the set.
+            if (i < 0 || i > batchdata.fields.tasks.length - 1) {
+                task //.hide()
                     .attr("id", null)
+                    .find(".page_name, .page_info")
+                    .text("-")
+                    .end()
                     .find("a")
                     .removeData()
                     .attr("href", "#")
-                    .end()
-                    .find("page_name")
-                    .text("");
+                    .end();
+
+                if (i > batchdata.fields.tasks.length - 1)
+                    task.hide();
+
+                i++;
                 continue;                
             }
 
@@ -402,7 +416,8 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             if (taskdata.fields.lines != null) {
                 task.find(".page_info").text("Lines: " + taskdata.fields.lines);
             }
-            task.show()
+            task.show();
+            i++;
         }
 
         this.setScrollHandleHeight();
@@ -437,12 +452,11 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
     },
     
 
-    refreshUnlessPolling: function() {
+    refreshUnlessPolling: function() {                              
         if (this.isComplete()) {
             this.manualRefresh();
         }
-    },
-
+    },                          
                
     // check whether all tasks are complete
     isComplete: function() {
@@ -466,10 +480,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
     setScrollHandleHeight: function() {
         // work out how big the scroll handle should be
         var taskcount = this._batchdata.extras.task_count;
-        var percheight = this._maxtasks / taskcount;
+        var percheight = this._maxitems / taskcount;
         
         // hide the scrollbar if necessary
-        this.toggleScrollBar(taskcount > this._maxtasks);
+        this.toggleScrollBar(taskcount > this._maxitems);
         
         var pixheight = Math.max(30, $("#scrollbar").height() * percheight);
         $("#scrollhandle").animate({height: pixheight}, 100);
@@ -477,16 +491,16 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
 
     scrollDown: function(event) {
-        this._taskoffset = Math.min(
-            this._batchdata.extras.task_count - this._maxtasks, 
-            this._taskoffset + 1);
+        this._itemoffset = Math.min(
+            this._batchdata.extras.task_count - this._maxitems, 
+            this._itemoffset + 1);
         this.refreshUnlessPolling();
         this.setScrollHandlePosition();        
     },
 
 
     scrollUp: function(event) {
-        this._taskoffset = Math.max(0, this._taskoffset - 1);
+        this._itemoffset = Math.max(0, this._itemoffset - 1);
         this.refreshUnlessPolling();
         this.setScrollHandlePosition();        
     },
@@ -501,13 +515,13 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         var range = end - start + 1;
 
         // shortcuts for top and bottom of range 
-        if (this._taskoffset == 0) {
+        if (this._itemoffset == 0) {
             handle.css("top", "0px");
-        } else if (this._taskoffset + this._maxtasks == this._batchdata.extras.task_count) {
+        } else if (this._itemoffset + this._maxitems == this._batchdata.extras.task_count) {
             handle.css("top", ( bar.height() - handle.height() ) + "px");
         } else {
-            var maxoffset = this._batchdata.extras.task_count - this._maxtasks;
-            var current = (this._taskoffset / maxoffset) * range;
+            var maxoffset = this._batchdata.extras.task_count - this._maxitems;
+            var current = (this._itemoffset / maxoffset) * range;
             handle.css("top", current + "px");
         }
     },
@@ -524,13 +538,28 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         var range = end - start + 1;
         var percent =  (current / range) * 100;
 
-        var maxoffset = this._batchdata.extras.task_count - this._maxtasks;
-        this._taskoffset = Math.round(maxoffset * (current / range));
+        var maxoffset = this._batchdata.extras.task_count - this._maxitems;
+        var newoffset = Math.round(maxoffset * (current / range)); 
+        var diff = this._itemoffset - newoffset;
+        if (diff != 0) {
+            this._dataoffset += diff;
+            this.updateResults(this._batchdata); 
+        }
+        this._itemoffset = newoffset;
         // clamp it's range
-        this._taskoffset = Math.min(maxoffset, this._taskoffset);
-        this._taskoffset = Math.max(0, this._taskoffset);
-        this._scrollwin.text("Task " + (this._taskoffset + 1)); 
+        this._itemoffset = Math.min(maxoffset, this._itemoffset);
+        this._itemoffset = Math.max(0, this._itemoffset);
+        this._scrollwin.text("Task " + (this._itemoffset + 1));
+        
+        if (this._scrolltimeout != -1) {            
+            clearTimeout(this._scrolltimeout);
+        }
+        var self = this;
+        this._scrolltimeout = setTimeout(function() {
+            self.refreshUnlessPolling();
+        }, 100);
     },
+
 
     onScrollStart: function(event, ui) {
         $("body").append(this._scrollwin);
@@ -541,9 +570,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
     },
 
+
     onScrollStop: function(event, ui) {
         this._scrollwin.remove();
-        this.refreshUnlessPolling();
+        //this.refreshUnlessPolling();
     },
 
 
@@ -640,12 +670,12 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         task.append(
             $("<span></span>")
                 .addClass("page_info"));
-        for (var i = 0; i < this._maxtasks; i++) {
+        for (var i = 0; i < this._maxitems; i++) {
             this._tasklist.append(task.clone());
         }
 
         tlcontainer.mousewheel(function(event, delta) {
-            if (self._maxtasks < self._batchdata.extras.task_count)
+            if (self._maxitems < self._batchdata.extras.task_count)
                 return;
             if (delta > 0)
                 self.scrollUp(event);
