@@ -28,7 +28,7 @@
 
 .progressbar_container.waiting {
     background-image: url("/static/ajax-loader-small2.gif");
-    background-position: center left;
+    background-position: left center;
     background-repeat: no-repeat;
 }
 
