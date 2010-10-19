@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError 
@@ -593,8 +594,7 @@ def _get_batch_file_paths(request):
     """
     Extract the full file paths from the POST data.
     """
-    dirpath = ocrutils.get_ocr_path(user=request.user.username, 
-            temp=False, subdir=None, timestamp=False)
+    dirpath = settings.USER_FILES_ROOT
     filenames = request.POST.get("files", "").split(",")
     return [os.path.join(dirpath, f) for f in sorted(filenames)]
 
