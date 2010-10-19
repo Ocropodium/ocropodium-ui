@@ -35,4 +35,15 @@ function maximiseWidgets() {
 }
 
 
+jQuery.fn.extend({ 
+    disallowSelection : function() { 
+        this.each(function() { 
+            this.onselectstart = function() { return false; }; 
+            this.unselectable = "on"; 
+            jQuery(this).css('-moz-user-select', 'none'); 
+        }); 
+    } 
+});
+
+
 

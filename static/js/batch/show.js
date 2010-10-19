@@ -51,7 +51,7 @@ function populateBatchList(data) {
 
 $(function() {
     if ($("#batch_id").length) {
-        batch = new OcrBatch("workspace", $("#batch_id").val());    
+        batch = new OCRJS.BatchWidget($("#workspace").get(0), $("#batch_id").val());    
         batch.init();
     
         $.ajax({
