@@ -135,8 +135,14 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 url: "/batch/retry_task/" + pk + "/",
                 type: "POST",
                 dataType: "json",
+                beforeSend: function(e) { 
+                    self.setTaskWaiting($("#task" + pk), true);
+                },
                 error: function(e, msg) {
                     alert(msg);
+                },
+                complete: function(e) {
+                    self.setTaskWaiting($("#task" + pk), false);
                 },
                 success: function(data) {
                     if (data.ok) {
