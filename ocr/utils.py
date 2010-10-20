@@ -390,6 +390,10 @@ def get_converter(engine_type, *args, **kwargs):
     """
     if engine_type == "ocropus":
         return OcropusWrapper(*args, **kwargs)
+    elif engine_type == "cuneiform":
+        return CuneiformWrapper(*args, **kwargs)
+    elif engine_type == "gocr":
+        return GocrWrapper(*args, **kwargs)
     else:
         return TessWrapper(*args, **kwargs)
 
@@ -1052,3 +1056,93 @@ class TessWrapper(OcropusWrapper):
                 self.logger.error(
                     "RmTree raised error: %s, %s" % (errno, strerr))
 
+
+class GenericLineWrapper(OcropusWrapper):
+    """
+    Override certain methods of the OcropusWrapper to
+    use generic OCRs for recognition of individual lines.
+    """
+    binary = "unimplemented"
+
+    def get_command(self, *args, **kwargs):
+        """
+        Get the command line for converting a given image.
+        """
+        raise NotImplementedError
+
+
+    @check_aborted
+    def get_transcript(self, line):
+        """
+        Recognise each individual line by writing it as a temporary
+        PNG and calling self.binary on the image.  
+        """
+        with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
+            tmp.close()
+            iulib.write_image_binary(tmp.name, line)
+            text = self.process_line(tmp.name)
+            os.unlink(tmp.name)
+            return text            
+
+
+    @check_aborted
+    def process_line(self, imagepath):
+        """
+        Run OCR on image, using YET ANOTHER temporary
+        file to gather the output, which is then read back in. 
+        """
+        lines = []
+        with tempfile.NamedTemporaryFile() as tmp:
+            tmp.close()
+            args = self.get_command(outfile=tmp.name, image=imagepath)
+            self.logger.info(args)
+            proc = sp.Popen(args, stderr=sp.PIPE)
+            err = proc.stderr.read()
+            if proc.wait() != 0:
+                return "!!! %s CONVERSION ERROR %d: %s !!!" % (
+                        os.path.basename(self.binary).upper(),
+                        proc.returncode, err)
+            
+            # read and delete the temp text file
+            # whilst writing to our file
+            with open(tmp.name, "r") as txt:
+                lines = [line.rstrip() for line in txt.readlines()]
+                if lines and lines[-1] == "":
+                    lines = lines[:-1]
+                os.unlink(txt.name)        
+        return " ".join(lines)
+
+
+
+class CuneiformWrapper(GenericLineWrapper):
+    """
+    Override certain methods of the OcropusWrapper to
+    use Cuneiform for recognition of individual lines.
+    """
+
+    binary = "/usr/local/bin/cuneiform"
+
+    def get_command(self, outfile, image):
+        """
+        Cuneiform command line.  Simplified for now.
+        """
+        return [self.binary, "-o", outfile, image] 
+
+
+class GocrWrapper(GenericLineWrapper):
+    """
+    Override certain methods of the OcropusWrapper to
+    use Gocr for recognition of individual lines.
+    """
+
+    binary = "/usr/bin/gocr"
+
+    def get_command(self, outfile, image):
+        """
+        GOCR command line.  Simplified for now.
+        """
+        return [self.binary, "-o", outfile, "-i", image] 
+
+
+                
+                
