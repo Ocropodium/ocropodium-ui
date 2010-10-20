@@ -341,7 +341,7 @@ def save_task(request, task_pk):
 
     if not os.path.exists(request.output_path):
         os.makedirs(request.output_path)
-        os.chmod(outpath, 0777)
+        os.chmod(request.output_path, 0777)
     srcoutpath = os.path.join(request.output_path, os.path.basename(srcpath))    
     binoutpath = os.path.join(request.output_path, os.path.basename(binpath))
     import shutil
