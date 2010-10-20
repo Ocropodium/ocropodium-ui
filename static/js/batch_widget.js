@@ -126,7 +126,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             return false;
         });
 
-        $(".ui-icon").bind("mouseover mouseout", function(event) {
+        $(".ui-icon", this._batchdiv).bind("mouseover mouseout", function(event) {
             if (event.type == "mouseover") {
                 $(this).addClass("ui-state-hover");
             } else {
@@ -334,6 +334,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         this.pollForResults(this._polltime)
     },
 
+
     setBatchResults: function(batchdata) {
         var batchclass = this.getBatchClass(this._batchdata.fields.task_type);
         var batch = this._batchdiv.find(".batch");
@@ -391,29 +392,30 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                     .text("-")
                     .end()
                     .find("a")
-                    .removeData()
+                    .data("pk", null)
                     .attr("href", "#")
                     .end();
-
                 if (i > batchdata.fields.tasks.length - 1)
                     task.hide();
-
                 i++;
                 continue;                
             }
 
             task.attr("id", "task" + taskdata.pk)
                 .data("pk", taskdata.pk)
-                .data("index", i);
-            task.find(".page_name")
-                .text(taskdata.fields.page_name);
-            task.find("a").data("pk", taskdata.pk);
-            task.find(".retry_task")
-                .attr("href", "/batch/retry_task/" + taskdata.pk + "/");
-            task.find(".abort_task")
+                .data("index", i)
+                .find(".page_name")
+                .text(taskdata.fields.page_name)
+                .end()
+                .find("a").data("pk", taskdata.pk)
+                .end()
+                .find(".retry_task")
+                .attr("href", "/batch/retry_task/" + taskdata.pk + "/")
+                .end()
+                .find(".abort_task")
                 .attr("href", "/batch/abort_task/" + taskdata.pk + "/");
             this.setProgressStatus(task, taskdata.fields.progress, taskdata.fields.status);
-            if (taskdata.fields.lines != null) {
+            if (taskdata.fields.lines) {
                 task.find(".page_info").text("Lines: " + taskdata.fields.lines);
             }
             task.show();
@@ -464,8 +466,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
     },
 
 
+    //
     // Scrolling-related functions
     //
+
     toggleScrollBar: function(show) {
         if (show) {
             $(".tl_scrollcontainer").show(100);
@@ -670,6 +674,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         task.append(
             $("<span></span>")
                 .addClass("page_info"));
+
         for (var i = 0; i < this._maxitems; i++) {
             this._tasklist.append(task.clone());
         }
