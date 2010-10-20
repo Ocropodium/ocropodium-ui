@@ -19,19 +19,13 @@
                     <th>Score</th>
                     <th></th>
                 </tr>
-                {% for pk, tup in ordered.items %}
-                    <tr class="odd">
-                        <td>{{tup.0}}</td>
-                        <td>{{model_a}}</td>
-                        <td>{{tup.1.score|default_if_none:"-"}}</td>
-                        <td><a class="score_details" href="/training/show_paramscore/{{tup.1.pk}}/">Details</a></td>
+                {% for score in scores %}
+                    <tr class="{% cycle 'odd' 'even' %}">
+                        <td>{% if forloop.first %}{{score.ground_truth.page_name}}{% endif %}</td>
+                        <td>{{score.name}}</td>
+                        <td>{{score.score|default_if_none:"-"}}</td>
+                        <td><a class="score_details" href="/training/show_paramscore/{{score.pk}}/">Details</a></td>
                     </tr>        
-                    <tr class="even">
-                        <td></td>
-                        <td>{{model_b}}</td>
-                        <td>{{tup.2.score|default_if_none:"-"}}</td>
-                        <td><a class="score_details" href="/training/show_paramscore/{{tup.2.pk}}/">Details</a></td>
-                    </tr>
                {% endfor %}
                <tr>
                    <td></td>
@@ -39,18 +33,14 @@
                    <td></td>
                    <td></td>
                </tr>
+               {% for name, total in totals.iteritems %}
                 <tr>
-                   <td class="totals">Aggregate</td>
-                    <td class="totals">{{model_a}}</td>
-                    <td class="totals">{{total_a|floatformat:2|default_if_none:"-"}}</td>
+                    <td class="totals">{% if forloop.first %} Aggregate {% endif %}</td>
+                    <td class="totals">{{name}}</td>
+                    <td class="totals">{{total|floatformat:2|default_if_none:"-"}}</td>
                    <td></td>
-                </tr>        
-                <tr>
-                    <td></td>
-                    <td class="totals">{{model_b}}</td>
-                    <td class="totals">{{total_b|floatformat:2|default_if_none:"-"}}</td>
-                   <td></td>
-                </tr>
+               </tr>
+               {% endfor %}        
             </table>
         </div>
     </div>

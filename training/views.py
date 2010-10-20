@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from ordereddict import OrderedDict
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -257,48 +258,32 @@ def comparison(request, comparison_pk):
     """
     comparison = get_object_or_404(OcrComparison, pk=comparison_pk)
     scores = comparison.parameter_scores.order_by("pk", "name", "ground_truth")
-    ordered = {}
-    for score in scores:
-        if ordered.get(score.ground_truth.pk):
-            ordered[score.ground_truth.pk].append(score)
-        else:
-            ordered[score.ground_truth.pk] \
-                = [score.ground_truth.data["page"], score,]
-
-    name_a = scores[0].name
-    name_b = scores[1].name
 
     # this is really dodgy - total the scores for each model
-    total_a = total_b = 0
-    count_a = count_b = 0
-    for i in range(0, len(scores)):
-        if i % 2 == 0:
-            if scores[i].score is None:
-                continue
-            total_a += scores[i].score
-            count_a += 1
-        else:
-            if scores[i].score is None:
-                continue
-            total_b += scores[i].score
-            count_b += 1
-    if not total_a is None and not total_b is None:
-        total_a /= count_a
-        total_b /= count_b
+    totals = OrderedDict()
+    counts = OrderedDict()
+    for score in scores:
+        if not totals.get(score.name):
+            totals[score.name] = 0
+            counts[score.name] = 0
+        if not score.score is None:
+            totals[score.name] += score.score
+            counts[score.name] += 1
+    
+    for name, score in totals.iteritems():
+        totals[name] /= counts[name]
 
     template = "training/comparison.html" if not request.is_ajax() \
             else "training/includes/comparison_details.html"
         
     context = dict(
         comparison=comparison,
-        ordered=ordered,
-        model_a=name_a,
-        model_b=name_b,
-        total_a=total_a,
-        total_b=total_b,
+        scores=scores,
+        totals=totals,
     )
     return render_to_response(template, context,
             context_instance=RequestContext(request))
+
 
 
 @project_required
@@ -462,7 +447,7 @@ def _get_comparison_context(request):
     """
     return dict(
         form=ComparisonForm(initial={"name": "Parameter Comparison"}),
-        prefixes=["p0_", "p1_"],
+        prefixes=["p0_", "p1_",],
         project=request.session["project"],
         binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
         segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
