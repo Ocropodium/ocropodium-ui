@@ -170,7 +170,6 @@ def score_models(request):
         tsets = ReferencePage.objects.filter(pk__in=request.POST.getlist("tset"))
         assert(form.is_valid())
     except (ReferencePage.DoesNotExist, AssertionError):
-        # FIXME: remove code dup!
         template = "training/compare.html"
         return render_to_response(template, _get_comparison_context(request),
                 context_instance=RequestContext(request))
