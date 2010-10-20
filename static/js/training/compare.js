@@ -33,7 +33,6 @@ function rebuildModelLists(elem) {
 }
 
 
-
 function validateForm() {
     var a = parseInt($("#cmodel_a").val()), 
         b = parseInt($("#cmodel_b").val());
@@ -61,19 +60,82 @@ function updateButtons() {
 };
 
 
-$(function() {
-    // decorate engine button toggle
-    $("div[id$=engine]").buttonset();
-    
+function renumberParameterSets() {
+    $(".ocr_parameter_set").each(function(index, elem) {
+        var newprefix = "p" + index + "_";
+        var newtitle = "Settings P" + index;
+        if ($(elem).find("legend").text() != newtitle) {
+            $(elem).find("label").each(function(i, child) {
+                $(child)
+                    .attr("for", $(child).attr("for").replace(/^p\d+_/, newprefix));
+            });
+            $(elem).find("input, select").each(function(i, child) {
+                $(child)
+                    .attr("id", $(child).attr("id").replace(/^p\d+_/, newprefix))
+                    .attr("name", $(child).attr("name").replace(/^p\d+_/, newprefix));
+            });
+            $(elem).find("legend").text(
+                $(elem).find("legend").text().replace(/Settings P\d+/, newtitle)
+            );
+            rebuildModelLists($("select[name=$engine]"));
+        }
+    });
+}
+
+
+function copyParameterSet(pset) {
+    var newpset = pset.clone().hide();
+    newpset.insertAfter(pset).slideDown();
+    renumberParameterSets();
+    if ($(".ocr_parameter_set").length > 2) {
+        $(".del_paramset").button("enable");
+    }
+}
+
+function removeParameterSet(pset) {
+    pset.remove();
+    renumberParameterSets();
+    if ($(".ocr_parameter_set").length == 2) {
+        $(".del_paramset").button("disable");
+    }
+}
+
+
+function setupForm () {
+    $(".add_paramset").button({
+        icons: {
+            primary: "ui-icon-plus",
+        },
+        text: false,        
+    }).live("click", function(event) {
+        copyParameterSet($(this).parent());    
+    });
+
+    $(".del_paramset").button({
+        icons: {
+            primary: "ui-icon-minus",
+        },
+        text: false,
+        disabled: true,        
+    }).live("click", function(event) {
+        removeParameterSet($(this).parent());    
+    });
+
     // update each item's models when engine changes
-    $("input[name$=engine]").change(function(e) {
+    $("select[name$=engine]").live("change", function(e) {
         rebuildModelLists(this);
     });
 
 
-    $("select[name=cmodel], .ground_truth_enabled").change(function(event) {
+    $("select[name=cmodel], .ground_truth_enabled").live("change", function(event) {
         updateButtons();
     });
+
+}
+
+$(function() {
+
+    setupForm();
 
     $("#submit_new_comparison_form").click(function(event) {
         return validateForm();
@@ -89,7 +151,7 @@ $(function() {
 
     updateButtons();
 
-    $("input[name$=engine]:checked").each(function(i, elem) {
+    $("select[name$=engine]").each(function(i, elem) {
         rebuildModelLists(elem);
     });
 });

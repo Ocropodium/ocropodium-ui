@@ -51,4 +51,6 @@
     font-weight: bolder;
 }
 
-
+.add_paramset, .del_paramset {
+    float: right;
+}

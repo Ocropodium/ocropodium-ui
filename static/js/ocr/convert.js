@@ -141,7 +141,6 @@ $(function() {
         }
     });
     $("#format").buttonset();
-    $("#engine").buttonset();
     $("#clear").click(function(event) {
         pageobjects = [];
         $(".ocr_page_container").remove();
@@ -179,7 +178,7 @@ $(function() {
             primary: "ui-icon-zoomout",
         }
     });
-    $("input[name=engine]").change(function(e) {
+    $("select[name=engine]").change(function(e) {
         rebuildModelLists($(this).val());
     });
     $("#format_block").click(function(event) {

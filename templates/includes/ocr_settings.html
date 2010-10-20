@@ -4,15 +4,14 @@ so several OCR settings forms can be embedded in a given page without variable c
 {% endcomment %}
 
 <div class="field_wrapper">            
-    <label>OCR Engine</label>
-    <div id="{{prefix}}engine">
-        <input type="radio" id="{{prefix}}engine_ocropus" name="{{prefix}}engine" value="ocropus">
-        <label for="{{prefix}}engine_ocropus">Ocropus</label>
-        <input type="radio" id="{{prefix}}engine_tesseract" name="{{prefix}}engine" value="tesseract" checked>
-        <label for="{{prefix}}engine_tesseract">Tesseract</label>
-    </div>
+    <label for="{{prefix}}form_engine">OCR Engine</label>
+    <select id="{{prefix}}form_engine" name="{{prefix}}engine">
+        <option value="ocropus">OCRopus</option>
+        <option value="tesseract">Tesseract</option>
+        <option value="cuneiform">Cuneiform</option>
+        <option value="gocr">GOCR</option>
+    </select>
 </div>
-<br />
 <div class="field_wrapper">        
     <label for="{{prefix}}form_segmenter">Page Segmenter</label>
     <select id="{{prefix}}form_segmenter" name="{{prefix}}psegmenter">

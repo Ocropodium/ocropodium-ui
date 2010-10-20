@@ -32,9 +32,8 @@ function rebuildModelLists(appname) {
 
 
 function saveState() {
-    $.cookie("engine", $("input[name=engine]:checked").attr("value"));
-    $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
-        $.cookie(item, $("select[name=" + item + "]").attr("value"));     
+    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
+        $.cookie(item, $("select[name=" + item + "]").val());     
     });
 
     // save the job names of the current pages...
@@ -48,11 +47,7 @@ function saveState() {
 
 
 function loadState() {
-    var engine = $.cookie("engine");
-    if (engine) {
-        $("input[value='" + engine + "']").attr("checked", true);
-    }
-    $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
+    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         var val = $.cookie(item);
         if (val) {
             $("select[name=" + item + "]").val(val);
@@ -80,10 +75,6 @@ window.onbeforeunload = function(event) {
 $(function() {
     var uploader = null;
     var filebrowser = null;
-
-    // decorate engine button toggle
-    $("#engine").buttonset();
-    
 
     // set up filebrowser
     $("#browse").click(function(event) {
@@ -126,7 +117,7 @@ $(function() {
         .css("margin-top", "0px")
         .css("overflow", "hidden");
 
-    $("input[name=engine]").change(function(e) {
+    $("select[name=engine]").change(function(e) {
         rebuildModelLists($(this).val());
     });
 
@@ -233,6 +224,6 @@ $(function() {
     loadState();
 
     // fetch the appropriate models...
-    rebuildModelLists($("input[name=engine]:checked").val());    
+    rebuildModelLists($("select[name='engine']").val());    
 });
 
