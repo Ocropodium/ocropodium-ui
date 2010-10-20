@@ -251,9 +251,11 @@ class SegmentPageTask(AbortableTask):
         )
 
         src, dst = make_deepzoom_proxies(logger, filepath, segpath, "seg", paramdict)
-        pagedata["png"] = utils.media_path_to_url(filepath)
-        pagedata["src"] = utils.media_path_to_url(src)
-        pagedata["dst"] = utils.media_path_to_url(dst)
+        pagedata.update({
+            "png": utils.media_path_to_url(filepath),
+            "src": utils.media_path_to_url(src),
+            "dst": utils.media_path_to_url(dst),
+        })
     
         return pagedata
 
