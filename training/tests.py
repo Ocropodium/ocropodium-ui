@@ -80,5 +80,10 @@ class TrainingTest(TestCase):
         # check we were redirected to the batch page
         self.assertRedirects(r, "/batch/show/1/")
 
+        # check we can view the comparison results
+        r = self.client.get("/training/comparison/1")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Aggregate")
+
 
 
