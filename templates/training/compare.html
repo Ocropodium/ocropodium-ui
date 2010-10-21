@@ -6,14 +6,12 @@
 {% endblock %}
 
 {% block content %}
-
     <div id="document_window">
         <div class="widget">
             <div class="widget_header">Run Comparison</div>
             <div class="widget_content">
                 <form id="compare_form" action="/training/score_models/" method="POST"> 
                     {% include "includes/form_errors.html" %}
-
                     <div id="tabs">
                         <ul>
                             <li><a id="tabs_1_link" href="#tabs_1">Comparison Models</a></li>
@@ -33,36 +31,15 @@
                                     </div>
                                 </fieldset>
                                 {% for prefix in prefixes %}
-                                <fieldset class="ocr_parameter_set">
-                                    <legend>Settings {{prefix|cut:"_"|capfirst}}</legend>
-                                    {% include "includes/ocr_settings.html" %}                
-                                    <span class="del_paramset">Remove Parameter Set</span>
-                                    <span class="add_paramset">Copy Parameter Set</span>
-                                </fieldset>
+                                    {% include "training/includes/comparison_paramset.html" %}
                                 {% endfor %}
-
                             </div>
                             <div class="form_footer">
-                                <input type="button" class="next_tab" id="tabs_2_next" value="Next - OCR Options" />
+                                <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Groundtruth" />
                             </div>
                         </div>
                         <div id="tabs_2">
-                            <div class="form_body">
-                                <fieldset>
-                                    <legend>Ground Truth</legend>
-                                    <div class="toggle_box" id="ground_truth_list">
-                                        <div class="field_wrapper">
-                                            {% for tset in tsets %}
-                                                <div class="ground_truth_item">
-                                                    {{tset.data.page}}
-                                                    <input type="checkbox" class="ground_truth_enabled"
-                                                        name="tset" value="{{tset.pk}}" />
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </fieldset>
-                            </div>
+                            {% include "training/includes/groundtruth_selector.html" %}
                             <div class="form_footer">
                                 <div class="form_submit_buttons">
                                     <input type="submit" value="Submit Model Comparison" 
@@ -73,6 +50,7 @@
                     </div>            
                 </form>            
             </div>
+        </div>
     </div>
 {% endblock %}
 
