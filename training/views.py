@@ -169,6 +169,7 @@ def score_models(request):
 
     try:
         tsets = ReferencePage.objects.filter(pk__in=request.POST.getlist("tset"))
+        assert(len(tsets), "no valid training sets given")
         assert(form.is_valid())
     except (ReferencePage.DoesNotExist, AssertionError):
         template = "training/compare.html"
@@ -194,7 +195,9 @@ def score_models(request):
     comparison.save()
 
     # get parameter sets
-    paramsets = _get_paramset_list(request)
+    psetnames = _get_paramset_names(request.POST)
+    paramsets = _get_paramset_list(request.POST)
+    assert(len(psetnames) == len(paramsets))
     
     for gtruth in tsets:
         path = gtruth.source_image_path
@@ -219,7 +222,7 @@ def score_models(request):
 
             # create a score record for this task
             score = ParameterScore(
-                name="Settings %d" % (i+1),                
+                name=psetnames[i],                
                 task=task,
                 comparison=comparison,
                 ground_truth=gtruth
@@ -271,7 +274,8 @@ def comparison(request, comparison_pk):
             counts[score.name] += 1
     
     for name, score in totals.iteritems():
-        totals[name] /= counts[name]
+        if counts[name] > 0:
+            totals[name] /= counts[name]
 
     template = "training/comparison.html" if not request.is_ajax() \
             else "training/includes/comparison_details.html"
@@ -425,7 +429,7 @@ def delete(request, page_pk):
     return HttpResponseRedirect("/training/list")
 
 
-def _get_paramset_list(request):
+def _get_paramset_list(postdict):
     """
     Parse sets of distinct params from the POST data.
     They all have a prefix p0_ .. pN_
@@ -433,12 +437,28 @@ def _get_paramset_list(request):
     paramsets = []
     pinit = 0
     while True:
-        params = _get_best_params(request.POST, with_prefix="p%d_" % pinit)
+        params = _get_best_params(postdict, with_prefix="p%d_" % pinit)
         if len(params) == 0:
             break
         paramsets.append(params)
         pinit += 1
     return paramsets
+
+
+def _get_paramset_names(postdict):
+    """
+    Extract names for each of the paramsets from the POST data.
+    Again, they have the prefix p0_ .. pN_
+    """
+    paramnames = []
+    pinit = 0
+    while True:
+        name = postdict.get("p%d_paramset_name" % pinit)
+        if not name:
+            break
+        paramnames.append(name)
+        pinit += 1
+    return paramnames
 
 
 def _get_comparison_context(request):
