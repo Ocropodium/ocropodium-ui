@@ -21,9 +21,9 @@
                 </tr>
                 {% for score in scores %}
                     <tr class="{% cycle 'odd' 'even' %}">
-                        <td>{% if forloop.first %}{{score.ground_truth.page_name}}{% endif %}</td>
-                        <td>{{score.name}}</td>
-                        <td>{{score.score|default_if_none:"-"}}</td>
+                        <td class="training_page_name">{{score.ground_truth.page_name}}</td>
+                        <td class="training_score_name">{{score.name}}</td>
+                        <td class="training_score">{{score.score|default_if_none:"-"}}</td>
                         <td><a class="score_details" href="/training/show_paramscore/{{score.pk}}/">Details</a></td>
                     </tr>        
                {% endfor %}

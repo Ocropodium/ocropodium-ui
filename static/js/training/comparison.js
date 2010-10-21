@@ -33,5 +33,21 @@ $(function() {
         event.preventDefault();
     });
 
+    // remove some superfluous data in the lists to make the table
+    // easier to read, i.e. only show the first page for the given
+    // set of scores.
+    var lastpagename;
+    $(".training_page_name").each(function(i, elem) {
+        if (!lastpagename) {
+            lastpagename = $(elem).text();
+        } else {
+            if (lastpagename == $(elem).text()) {
+                $(elem).text("");
+            } else {
+                lastpagename = $(elem).text();
+            }
+        }
+    });
+
     refreshData();    
 });
