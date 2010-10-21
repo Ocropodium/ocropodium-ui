@@ -169,7 +169,7 @@ def score_models(request):
 
     try:
         tsets = ReferencePage.objects.filter(pk__in=request.POST.getlist("tset"))
-        assert(len(tsets), "no valid training sets given")
+        assert(tsets)
         assert(form.is_valid())
     except (ReferencePage.DoesNotExist, AssertionError):
         template = "training/compare.html"
