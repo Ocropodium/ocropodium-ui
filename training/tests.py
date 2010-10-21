@@ -63,5 +63,22 @@ class TrainingTest(TestCase):
         r = self.client.get("/training/comparisons/")
         self.assertEqual(r.status_code, 200)
 
+    def test_score_models(self):
+        """
+        Test launching a test between two sets
+        of settings.  FIXME: Fragile hard-coded
+        references to batch & ref set pks.
+        """
+        r = self.client.post("/training/score_models", {
+            "name": "Test comparison",
+            "p0_paramset_name": "Test Ocropus",
+            "p1_paramset_name": "Test Tesseract",
+            "p0_engine": "ocropus",
+            "p1_engine": "tesseract",
+            "tset": 1,
+        }, follow=True)
+        # check we were redirected to the batch page
+        self.assertRedirects(r, "/batch/show/1/")
+
 
 
