@@ -344,11 +344,11 @@ def media_path_to_url(path):
         return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
 
 
-def output_to_plain_text(jsondata):
+def output_to_plain_text(jsondata, linesep="\n"):
     """
     Convert page json to plain text.
     """
-    return " ".join([line["text"] for line in jsondata["lines"]])
+    return linesep.join([line["text"] for line in jsondata["lines"]])
 
 
 def output_to_hocr(jsondata):
