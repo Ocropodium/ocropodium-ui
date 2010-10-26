@@ -1,5 +1,9 @@
 import os
 from types import MethodType
+import tempfile
+import gzip
+import tarfile
+import StringIO
 
 from celery import result as celeryresult
 from celery.contrib.abortable import AbortableAsyncResult
@@ -9,6 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.servers.basehttp import FileWrapper
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Count
@@ -16,6 +21,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerEr
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
+from django.utils.encoding import smart_str, smart_unicode
 from ocradmin.batch import utils as batchutils
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
@@ -349,7 +355,7 @@ def upload_files(request):
     """
     mimetype = "application/json" if not request.POST.get("_iframe") \
             else "text/html"
-    assert(request.session["project"].slug)
+    relpath = request.session["project"].slug
     try:
         paths = _handle_request(request, request.output_path)[0]
     except AppException, err:
@@ -360,7 +366,7 @@ def upload_files(request):
                 simplejson.dumps({"error": "no valid images found"}),
                 mimetype="application/json")     
 
-    pathlist = [os.path.basename(p) for p in paths]
+    pathlist = [os.path.join(relpath, os.path.basename(p)) for p in paths]
     return HttpResponse(simplejson.dumps(pathlist), mimetype=mimetype)
 
 
@@ -464,7 +470,35 @@ def test(request):
     return render_to_response("batch/test.html", 
             {}, context_instance=RequestContext(request))
 
+
+@login_required
+def export_hocr(request, batch_pk):
+    """
+    Export a batch as HOCR.
+    """
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    #temp = tempfile.TemporaryFile()
+    response = HttpResponse(content_type="application/x-gzip")
+    tar = tarfile.open(fileobj=response, mode='w|gz')
+    for task in batch.tasks.all():
+        json = task.latest_transcript()
+        hocr = ocrutils.output_to_hocr(json)
+        text = ocrutils.output_to_plain_text(json)
+        hinfo = tarfile.TarInfo("%s.html" % os.path.splitext(task.page_name)[0])
+        hinfo.size = len(hocr)
+        buf = StringIO.StringIO(smart_str(hocr))
+        tar.addfile(hinfo, buf)
+        tinfo = tarfile.TarInfo("%s.txt" % os.path.splitext(task.page_name)[0])
+        tinfo.size = len(text)
+        buf = StringIO.StringIO(smart_str(text))
+        tar.addfile(tinfo, buf)
+    tar.close()
+    response["Content-Disposition"] = "attachment: filename=%s.tar.gz" % batch.name
+    #response["Content-Length"] = temp.tell()
+    #temp.seek(0)
+    return response
     
+
     
 @login_required
 def spellcheck(request):
