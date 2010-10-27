@@ -143,7 +143,7 @@ class OcrBatchTest(TestCase):
         r = self.client.post("/batch/upload_files/", params, **headers)
         fh.close()
         content = simplejson.loads(r.content)
-        self.assertEqual(content, [TESTFILE])
+        self.assertEqual(content, [os.path.join("test-project-2", TESTFILE)])
       
 
     def _get_batch_response(self, params={}, headers={}):
