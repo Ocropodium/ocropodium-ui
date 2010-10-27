@@ -100,9 +100,17 @@
     clear: left;
 }
 
-.transcript_link:hover {
+.transcript_link:hover, .export_link:hover {
     color: #660;
     background-color: #FFFFDD;
+}
+
+.export_link, .export_link:visited {
+    text-decoration: none;
+    font-size: 0.9em;
+    color: #666;
+    float: left;
+    margin-left: 10px;
 }
 
 .page_name {

@@ -122,6 +122,29 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             }
         });
 
+        $(".export_link").click(function(event) {
+            var dialog = $("<div></div>")
+                .attr("id", "export_dialog")
+                .load($(this).attr("href"), function(data) {
+                    $("#tabs").tabs();
+                    $("#submit_export_form").click(function(e) {
+                        $("#export_dialog").dialog("close");
+                    });
+                })
+                .dialog({
+                    modal: true,
+                    width: 600,
+                    height: 600,
+                    title: "Export Batch",
+                    close: function(e, ui) {
+                        $("#export_dialog").remove();
+                    },
+                });
+
+
+            event.preventDefault();                
+        });
+
         $(".batch_task").bind("click", function(event) {
             return false;
         });
@@ -347,16 +370,22 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             .text(batchdata.fields.name)
         var link = batch
             .find(".transcript_link");
+        var export = batch
+            .find(".export_link");
         if (batchclass == "compare") {
             link
                 .attr("href", "/training/comparison?batch=" + batchdata.pk)
                 .text("Comparison Results");
+            export.hide();
         } else if (batchclass == "fedora") {
 
         } else {
             link
                 .attr("href", "/batch/transcript/" + batchdata.pk + "/")
-                .text("View Transcripts")
+                .text("View Transcripts")                
+            export
+                .attr("href", "/batch/export_options/" + batchdata.pk + "/")
+                .text("Export").show();                
         }
 
         // update links with the batch id
@@ -606,6 +635,12 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                     .text("View Transcripts")
                     .addClass("transcript_link")
                     .attr("title", "View Transcript")
+                )
+                .append($("<a></a>")
+                    .attr("href", "#")
+                    .text("Export")
+                    .addClass("export_link")
+                    .attr("title", "Export Batch Transcripts")
                 )
         );
         this._addProgressBar(controls);
