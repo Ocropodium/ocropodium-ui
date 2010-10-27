@@ -33,8 +33,7 @@ function rebuildModelLists(appname) {
 
 
 function saveState() {
-    $.cookie("engine", $("input[name=engine]:checked").attr("value"));
-    $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
+    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         $.cookie(item, $("select[name=" + item + "]").attr("value"));     
     });
 
@@ -47,11 +46,7 @@ function saveState() {
 
 
 function loadState() {
-    var engine = $.cookie("engine");
-    if (engine) {
-        $("input[value='" + engine + "']").attr("checked", true);
-    }
-    $.each(["clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
+    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         var val = $.cookie(item);
         if (val) {
             $("select[name=" + item + "]").val(val);
@@ -202,7 +197,6 @@ $(function() {
     uploader.onXHRLoad = onXHRLoad;
     uploader.onUploadsStarted = function(e) {
         $("#dropzone").text("Please wait...").addClass("waiting");
-        uploader.registerTextParameter("input[name=engine]:checked"); 
         $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
             uploader.registerTextParameter(elem);
         });
