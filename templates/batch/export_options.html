@@ -24,9 +24,7 @@
             {% endfor %}
             </ul>
         {% endif %}
-        <form id="export_batch_form" method="GET" action="/batch/export/{{batch.pk}}/">
-            {% include "batch/includes/export_form.html" %}
-        </form>    
+        {% include "batch/includes/export_form.html" %}
     </div> 
 </div>
 

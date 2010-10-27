@@ -1,28 +1,30 @@
 
 
 {% include "includes/form_errors.html" %}
-<div id="tabs">
-    <ul>
-        <li><a id="tabs_1_link" href="#tabs_1">Export</a></li>
-    </ul>
-    <div id="tabs_1">
-        <div class="form_body">
-            <fieldset>
-                <legend>Transcript Formats</legend>
-                {% for format, name in formats.items %}
-                    <div class="field_wrapper">                    
-                        <label for="id_format_{{format}}">{{name}}</label>
-                        <input id="id_format_{{format}}" class="export_format" type="checkbox" 
-                                name="format" value={{format}} />
-                    </div>
-                {% endfor %}
-            </fieldset>
-        </div>
-        <div class="form_footer">
-            <div class="form_submit_buttons">
-                <input type="submit" value="Export Batch" id="submit_export_form" />
+<form id="export_batch_form" method="GET" action="/batch/export/{{batch.pk}}/">
+    <div id="tabs">
+        <ul>
+            <li><a id="tabs_1_link" href="#tabs_1">Export</a></li>
+        </ul>
+        <div id="tabs_1">
+            <div class="form_body">
+                <fieldset>
+                    <legend>Transcript Formats</legend>
+                    {% for format, name in formats.items %}
+                        <div class="field_wrapper">                    
+                            <label for="id_format_{{format}}">{{name}}</label>
+                            <input id="id_format_{{format}}" class="export_format" type="checkbox" 
+                                    name="format" value={{format}} />
+                        </div>
+                    {% endfor %}
+                </fieldset>
+            </div>
+            <div class="form_footer">
+                <div class="form_submit_buttons">
+                    <input type="submit" value="Export Batch" id="submit_export_form" />
+                </div>
             </div>
         </div>
     </div>
-</div>
+</form>    
 
