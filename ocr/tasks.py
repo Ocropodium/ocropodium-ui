@@ -128,6 +128,56 @@ class ConvertPageTask(AbortableTask):
         return out
 
 
+class ConvertLineTask(AbortableTask):
+    """
+    Convert a single line (from the given coords).  This is done using
+    the OcropusWrapper (and it's proxy, TessWrapper) in util.py.
+    """
+    name = "convert.line"
+    max_retries = None
+
+    def run(self, filepath, outdir, paramdict, **kwargs):
+        """
+        Runs the convert action.
+        """
+        # function for the converted to call periodically to check whether 
+        # to end execution early
+        logger = self.get_logger(**kwargs)
+        logger.info(paramdict)
+
+        # if we need to write intermediate files, determine the binpath
+        # and the segpath needed
+        outdir = paramdict.get("intermediate_outdir")
+        if outdir is not None:
+            logger.info("WORKING OUT BIN & SEG paths")
+            stdpath = os.path.join(outdir, os.path.basename(filepath))
+            if not os.path.exists(outdir):
+                try:
+                    os.makedirs(outdir, 0777)
+                except OSError, (errno, strerr):
+                    # counter weird error when other tasks can make
+                    # the directory after the test but before the
+                    # operation.  Errno 17 is the already exists
+                    # error.
+                    if errno == 17:
+                        pass
+                    else:
+                        raise OSError(errno, strerr)
+                try:
+                    os.chmod(outdir, 0777)
+                except Exception:
+                    logger.error("CHMOD FAILED: %s" % outdir)
+            paramdict["binout"] = utils.get_media_output_path(stdpath, "bin", ".png")
+            paramdict["segout"] = utils.get_media_output_path(stdpath, "seg", ".png")
+
+        converter = utils.get_converter(paramdict.get("engine", "tesseract"), 
+                logger=logger, abort_func=None, params=paramdict)
+        paramdict["prebinarized"] = True
+        out = converter.convert_lines(paramdict.get("binout").encode(), paramdict.get("coords"))
+        logger.info("LINE OUTPUT: %s" % out)
+        return out
+
+
 class BinarizePageTask(AbortableTask):
     """
     Binarize an image of text into a temporary file.  Return some

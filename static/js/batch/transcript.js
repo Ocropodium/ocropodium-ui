@@ -41,6 +41,38 @@ function pollForResults(data, polltime) {
     }
 }
 
+function reconvertLines() {
+    var lines = $(".ocr_line.reconvert");
+    var linedata = [];
+    lines.each(function(i, elem) {
+        linedata.push( {
+            line: $(elem).data("num"),
+            box: $(elem).data("bbox"),
+        });
+    });
+
+    $.ajax({
+        url: "/batch/reconvert_lines/" + transcript.pageData().pk + "/",
+        data: { 
+            coords: JSON.stringify(linedata),
+            engine: "cuneiform",
+        },
+        type: "POST",
+        complete: function(data) {
+            $(".ocr_line").unbind("click.reconvert");
+            transcript.enable();
+        },
+        success: function(data) {
+            $.each(data.results, function(i, line) {
+                $("#line_" + line.line)
+                    .text(line.text)
+                    .removeClass("reconvert");
+            });
+        },
+    });
+}
+
+
 
 $(function() {
     // setup toolbar
@@ -82,6 +114,11 @@ $(function() {
         disabled: true,
         text: true,
     });
+    $("#reconvert").button({
+        text: true,
+    });        
+
+
     $("#vlink").buttonset();
 
     $("#format_block").click(function(event) {
@@ -122,6 +159,14 @@ $(function() {
         $("#heading").attr("checked", type == "h1")
             .button("refresh");
     }
+
+    $("#reconvert").click(function(event) {
+        transcript.disable();
+        $(".ocr_line").bind("click.reconvert", function(e) {
+            $(this).toggleClass("reconvert");
+        });
+    });
+
 
     $("#heading").change(function() {
         transcript.setCurrentLineType($(this).attr("checked") ? "h1" : "span");        

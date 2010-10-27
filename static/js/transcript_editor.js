@@ -71,11 +71,11 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             }
         });
 
-        $(".ocr_line").live("click", function(event) {
+        $(".ocr_line").live("click.selectline", function(event) {
             self.setCurrentLine($(this));
         });
 
-        $(".ocr_line").live("mouseover", function(event) {
+        $(".ocr_line").live("mouseover.selectline", function(event) {
             self.onHoverPosition($(this).data("bbox"));
         });
     },
@@ -128,12 +128,28 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
     },                 
 
+    teardownMouseEvents: function() {
+        $(".ocr_line")
+            .die("dblclick.editline")
+            .die("click.selectline")
+            .die("mouseover.selectline");
+    },
+
     teardownKeyEvents: function() {
         $(window)
             .unbind("keyup.lineedit")
             .unbind("keydown.tabshift");
     },                 
 
+    disable: function() {
+        this.teardownMouseEvents();
+        this.teardownKeyEvents();
+    },
+
+    enable: function() {
+        this.setupMouseEvents();
+        this.setupKeyEvents();
+    },             
 
     setupCallbacks: function() {
         var self = this;
@@ -333,6 +349,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             var type = line.type ? line.type : "span";
             lspan = $("<" + type + "></" + type + ">")
                 .text(line.text)
+                .attr("id", "line_" + line.line)
                 .addClass("ocr_line")
                 .data("bbox", line.box)
                 .data("num", line.line);

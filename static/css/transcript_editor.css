@@ -62,3 +62,6 @@ h1.ocr_line {
     background-color: #FFFF66;
 }
 
+.ocr_line.reconvert {
+    background-color: #01DF74;
+}

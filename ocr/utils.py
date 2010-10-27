@@ -721,6 +721,30 @@ class OcropusWrapper(object):
         return pagedata
 
 
+    def convert_lines(self, filepath, linedata):
+        """
+        Convert a single line given a prebinarized file and 
+        x, y, w, h coords.
+        """
+        from copy import deepcopy
+
+        page_bin = iulib.bytearray()
+        iulib.read_image_binary(page_bin, filepath)
+        pagewidth = page_bin.dim(0)
+        pageheight = page_bin.dim(1)
+        out = deepcopy(linedata)
+        for i in range(len(linedata)):
+            ld = linedata[i]
+            coords = ld["box"]
+            iulibcoords = (
+                coords[0], pageheight - coords[1], coords[0] + coords[2], 
+                pageheight - (coords[1] - coords[3]))
+            lineimage = iulib.bytearray()
+            iulib.extract_subimage(lineimage, page_bin, *iulibcoords)
+            out[i]["text"] = self.get_transcript(lineimage)
+        return out            
+
+
     def get_default_logger(self):
         """
         Initialize a default logger to stderr.

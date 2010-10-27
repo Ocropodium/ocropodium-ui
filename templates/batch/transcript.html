@@ -55,6 +55,7 @@
             <span>&nbsp;&nbsp;&nbsp;</span>
             <input type="checkbox" id="heading" />
             <label for="heading">H</label>
+
             <span>&nbsp;&nbsp;&nbsp;</span>
             <div id="page_slider"></div>
             <button id="prev_page">Previous</button>
@@ -63,6 +64,8 @@
             <button id="save_data">Save Text</button>
             <button id="save_training_data">Save Training Page</button>
             <span>&nbsp;&nbsp;&nbsp;</span>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <button id="reconvert">Redo</button>
             
             <input type="hidden" name="batch_id" value="{{batch.pk}}" id="batch_id" />
             <input type="hidden" name="initial" value="{{initial|default_if_none:0}}" id="initial" />

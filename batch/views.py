@@ -283,11 +283,11 @@ def save_page_data(request, batch_pk, page_index):
 
 
 @login_required
-def submit_viewer_binarization(request, batch_pk):
+def submit_viewer_binarization(request, task_pk):
     """
     Trigger a re-binarization of the image for viewing purposes.
     """
-    task = get_object_or_404(OcrTask, pk=batch_pk)
+    task = get_object_or_404(OcrTask, pk=task_pk)
     # hack!  add an allowcache to the params dict to indicate
     # that we don't want to remake an existing binary
     args = task.args
@@ -314,6 +314,34 @@ def viewer_binarization_results(request, task_id):
         results=async.result
     )
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
+
+
+@login_required
+def reconvert_lines(request, task_pk):
+    """
+    Quick hack method for testing Tesseract line results.
+    """
+    jsonstr =  request.POST.get("coords")
+    linedata = simplejson.loads(jsonstr)
+
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    # hack!  add an allowcache to the params dict to indicate
+    # that we don't want to remake an existing binary
+    args = task.args
+    args[2]["allowcache"] = True
+    args[2]["prebinarized"] = True
+    args[2].update(_get_best_params(
+        _cleanup_params(request.POST.copy(), "coords")))
+    args[2]["coords"] = linedata
+    async = tasks.ConvertLineTask.apply(args=args,
+            queue="interactive")
+    out = dict(
+        job_name=async.task_id,
+        status=async.status,
+        results=async.result
+    )
+    return HttpResponse(simplejson.dumps(out), mimetype="application/json")
+
 
 
 @login_required
