@@ -472,30 +472,49 @@ def test(request):
 
 
 @login_required
-def export_hocr(request, batch_pk):
+def export_options(request, batch_pk):
+    """
+    Setup export.
+    """
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    formats = {"text": "Plain Text", "json": "JSON", "hocr": "HOCR HTML"}
+    template = "batch/export_options.html" if not request.is_ajax() \
+            else "batch/includes/export_form.html"
+    context = dict(
+        batch=batch,
+        formats=formats
+    )
+    return render_to_response(template, context, 
+            context_instance=RequestContext(request))            
+
+
+@login_required
+def export(request, batch_pk):
     """
     Export a batch as HOCR.
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    formats = {"text": "txt", "json": "json", "hocr": "html"}
+    reqformats = request.GET.getlist("format")
+    if not reqformats:
+        reqformats = ["hocr"]
+
     #temp = tempfile.TemporaryFile()
     response = HttpResponse(content_type="application/x-gzip")
     tar = tarfile.open(fileobj=response, mode='w|gz')
     for task in batch.tasks.all():
         json = task.latest_transcript()
-        hocr = ocrutils.output_to_hocr(json)
-        text = ocrutils.output_to_plain_text(json)
-        hinfo = tarfile.TarInfo("%s.html" % os.path.splitext(task.page_name)[0])
-        hinfo.size = len(hocr)
-        buf = StringIO.StringIO(smart_str(hocr))
-        tar.addfile(hinfo, buf)
-        tinfo = tarfile.TarInfo("%s.txt" % os.path.splitext(task.page_name)[0])
-        tinfo.size = len(text)
-        buf = StringIO.StringIO(smart_str(text))
-        tar.addfile(tinfo, buf)
+        for format, ext in formats.iteritems():
+            if not format in reqformats:
+                continue
+            output = getattr(ocrutils, "output_to_%s" % format)(json)
+            info = tarfile.TarInfo(
+                    "%s.%s" % (os.path.splitext(task.page_name)[0], ext))
+            info.size = len(output)
+            buf = StringIO.StringIO(smart_str(output))
+            tar.addfile(info, buf)
     tar.close()
     response["Content-Disposition"] = "attachment: filename=%s.tar.gz" % batch.name
-    #response["Content-Length"] = temp.tell()
-    #temp.seek(0)
     return response
     
 
