@@ -135,8 +135,8 @@ class ComparisonTask(AbortableTask):
 
         accuracy, details = utils.isri_accuracy(
                 logger, 
-                ocrutils.output_to_plain_text(groundtruth.data),
-                ocrutils.output_to_plain_text(outdata))
+                ocrutils.output_to_text(groundtruth.data),
+                ocrutils.output_to_text(outdata))
         # there's be no details if something went wrong
         assert(details)
         task.parameter_score.score = accuracy

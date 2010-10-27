@@ -18,6 +18,7 @@ import iulib
 
 from PIL import Image
 
+from django.utils import simplejson
 from django.conf import settings
 
 
@@ -37,17 +38,17 @@ HEADER_TEMPLATE = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-<title>OCR Results</title>
-<meta name="Description" content="OCRopus Output" />
-<meta name="ocr-system" content="ocropus-0.4" />
-<meta name="ocr-capabilities" content="ocr_line ocr_page" />
-</head>
-<body>
+    <head>
+        <title>OCR Results</title>
+        <meta name="Description" content="OCRopus Output" />
+        <meta name="ocr-system" content="ocropus-0.4" />
+        <meta name="ocr-capabilities" content="ocr_line ocr_page" />
+    </head>
+    <body>
 """
 
 FOOTER_TEMPLATE = """
-</body>
+    </body>
 </html>
 """
 
@@ -344,11 +345,18 @@ def media_path_to_url(path):
         return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
 
 
-def output_to_plain_text(jsondata, linesep="\n"):
+def output_to_text(jsondata, linesep="\n"):
     """
     Convert page json to plain text.
     """
     return linesep.join([line["text"] for line in jsondata["lines"]])
+
+
+def output_to_json(jsondata, indent=None):
+    """
+    Process raw json data to user output, with an indent.
+    """
+    return simplejson.dumps(jsondata, indent=indent)
 
 
 def output_to_hocr(jsondata):
@@ -357,7 +365,7 @@ def output_to_hocr(jsondata):
     """
 
     hocr = HEADER_TEMPLATE
-    hocr += "<div class='ocr_page' title=\"bbox %d %d %d %d\" image='%s'>\n" % (
+    hocr += "\t<div class='ocr_page' title=\"bbox %d %d %d %d\" image='%s'>\n" % (
         jsondata["box"][0],
         jsondata["box"][1],
         jsondata["box"][2],
@@ -366,7 +374,7 @@ def output_to_hocr(jsondata):
     )
     
     def hocr_line(line):
-        return "<%s title=\"bbox %d %d %d %d\">%s</%s>\n" % (
+        return "\t\t<%s title=\"bbox %d %d %d %d\">%s</%s>\n" % (
             line.get("type", "span"),
             line["box"][0],
             line["box"][1],
@@ -378,7 +386,7 @@ def output_to_hocr(jsondata):
 
     for line in jsondata["lines"]:
         hocr += hocr_line(line)
-    hocr += "</div>"
+    hocr += "\t</div>"
     hocr += FOOTER_TEMPLATE
 
     return hocr

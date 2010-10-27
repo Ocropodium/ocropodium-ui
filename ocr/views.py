@@ -315,7 +315,7 @@ def _json_or_text_data(request, json):
         result = ""
         for page in json:
             if page.get("results"):
-                result += ocrutils.output_to_plain_text(page.get("results"))
+                result += ocrutils.output_to_text(page.get("results"))
                 result += "\n"
     else:
         result = simplejson.dumps(json)

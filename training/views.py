@@ -301,7 +301,7 @@ def show_paramscore(request, paramscore_pk):
     context = dict(
         modelscore=score,
         task=score.task,
-        text=ocrutils.output_to_plain_text(result),
+        text=ocrutils.output_to_text(result),
         json=result
     )
     template = "training/show_modelscore.html" if not request.is_ajax() \
