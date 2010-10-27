@@ -41,8 +41,7 @@ function pollForResults(data, polltime) {
     }
 }
 
-function reconvertLines() {
-    var lines = $(".ocr_line.reconvert");
+function reconvertLines(lines) {
     var linedata = [];
     lines.each(function(i, elem) {
         linedata.push( {
@@ -55,18 +54,21 @@ function reconvertLines() {
         url: "/batch/reconvert_lines/" + transcript.pageData().pk + "/",
         data: { 
             coords: JSON.stringify(linedata),
-            engine: "cuneiform",
+            engine: $("#reconvert_engine").val(),
         },
         type: "POST",
+        beforeSend: function(event) {
+            lines.addClass("reconverting");
+        },
         complete: function(data) {
-            $(".ocr_line").unbind("click.reconvert");
-            transcript.enable();
         },
         success: function(data) {
             $.each(data.results, function(i, line) {
                 $("#line_" + line.line)
                     .text(line.text)
-                    .removeClass("reconvert");
+                    .removeClass("reconverting")
+                    .addClass("reconverted");
+                $("#save_data").button({disabled: false});                    
             });
         },
     });
@@ -160,12 +162,36 @@ $(function() {
             .button("refresh");
     }
 
-    $("#reconvert").click(function(event) {
-        transcript.disable();
-        $(".ocr_line").bind("click.reconvert", function(e) {
-            $(this).toggleClass("reconvert");
-        });
+    $("#reconvert").change(function(event) {
+        $("#reconvert_engine").attr("disabled", !$("#reconvert").attr("checked"));
+        $("#transcript_toolbar")
+            .find("#spellcheck")
+            .button({
+                disabled: $(this).attr("checked"),
+            });
+        if (!$(this).attr("checked")) {
+            //transcript.enable();
+            $(".reconverted")
+                .removeClass("reconverted");
+            $(".ocr_line")
+                .die("click.reconvert")
+                .die("mouseover.reconvert")
+                .die("mouseout.reconvert");
+        } else {
+            //transcript.disable();
+            $(".ocr_line.hover").removeClass("hover");
+            $(".ocr_line").live("click.reconvert", function(e) {
+                positionViewer($(this).data("bbox"));
+                reconvertLines($(this));
+            }).live("mouseover.reconvert", function(e) {
+                $(this).addClass("reconvert");    
+            }).live("mouseout.reconvert", function(e) {
+                $(this).removeClass("reconvert");    
+            });
+        }
     });
+
+    $("#reconvert_engine").attr("disabled", !$("#reconvert").attr("checked"));
 
 
     $("#heading").change(function() {

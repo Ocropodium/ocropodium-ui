@@ -63,5 +63,15 @@ h1.ocr_line {
 }
 
 .ocr_line.reconvert {
-    background-color: #01DF74;
+    background-color: #F8E0E0;
 }
+
+.ocr_line.reconverted {
+    background-color: #CEF6CE;
+}
+
+.ocr_line.reconverting {
+    background-color: #F7BE81;
+}
+
+
