@@ -160,13 +160,8 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         }
 
         this._editor.onEditingFinished = function(element, origtext, newtext) {
-            self._logger("Push stack: " + self._undostack.index);
             self.setupKeyEvents();
-            if (origtext != newtext) {
-                self._undostack.push(
-                        new OCRJS.EditCommand(self, element, origtext, newtext));
-                self.onTextChanged(); 
-            }           
+            self.replaceLineText(element, origtext, newtext);
             if (self._spellchecking) {
                 self._speller.spellcheck($(element));
                 self._speller.takeFocus();
@@ -234,6 +229,14 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
         this._spellchecking = false;
     },
+
+    replaceLineText: function(element, origtext, newtext) {
+        if (origtext != newtext) {
+            this._undostack.push(
+                    new OCRJS.EditCommand(this, element, origtext, newtext));
+            this.onTextChanged(); 
+        }           
+    },                   
 
     setBatchId: function(batch_id) {
         this._batch_id = batch_id;

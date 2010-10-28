@@ -64,8 +64,9 @@ function reconvertLines(lines) {
         },
         success: function(data) {
             $.each(data.results, function(i, line) {
-                $("#line_" + line.line)
-                    .text(line.text)
+                var lineelem = document.getElementById("line_" + line.line);
+                transcript.replaceLineText(lineelem, $(lineelem).text(), line.text);
+                $(lineelem)
                     .removeClass("reconverting")
                     .addClass("reconverted");
                 $("#save_data").button({disabled: false});                    
