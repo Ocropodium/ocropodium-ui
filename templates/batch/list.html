@@ -52,17 +52,10 @@
     </div>
 </div>
 
-{% if messages %}
-<ul class="messages">
-{% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-{% endfor %}
-</ul>
-{% endif %}
-
 <div class="widget" id="batch_list_widget">
     <div class="widget_header">Project Batches:</div>
     <div class="widget_content">
+        {% include "includes/messages.html" %}
         <div class="list_controls">
             <div class="list_controls_right">            
                 <form name="controls" class="list_controls_form" action="/batch/list/" method="GET">

@@ -50,17 +50,10 @@
     </div>
 </div>
 
-{% if messages %}
-<ul class="messages">
-{% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-{% endfor %}
-</ul>
-{% endif %}
-
 <div class="widget" id="task_list_widget">
     <div class="widget_header">OCR Tasks</div>
     <div class="widget_content">
+        {% include "includes/messages.html" %}
         <div class="list_controls">
             <div class="list_controls_right">
                 <div id="status_filter" class="filter_container">
