@@ -344,6 +344,13 @@ def reconvert_lines(request, task_pk):
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
+@login_required
+def reconvert_results(request):
+    """
+    Get results of a batch of reconvert tasks.
+    """
+    pass
+
 
 @login_required
 @project_required
