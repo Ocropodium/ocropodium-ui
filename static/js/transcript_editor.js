@@ -35,6 +35,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._textbuffer = null;        // initial state of the text buffer
         this._pagedata = null;          // page data cache
         this._currentline = null;       // store the current line
+        this._haschanges = false;       // unsaved pending changes
 
         this.init();
         this.setupMouseEvents();
@@ -186,7 +187,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
 
         this._speller.onWordCorrection = function() {
             if (self._pagediv.text() != self._textbuffer) {
-                self.onTextChanged();
+                self._textChanged();
             }
         }
 
@@ -194,7 +195,6 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             self.setCurrentLine($(element).parent());
         }        
     },                 
-
 
     container: function() {
         return this.containerWidget();
@@ -230,11 +230,15 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._spellchecking = false;
     },
 
+    hasUnsavedChanges: function() {
+        return this._haschanges;
+    },        
+
     replaceLineText: function(element, origtext, newtext) {
         if (origtext != newtext) {
             this._undostack.push(
                     new OCRJS.EditCommand(this, element, origtext, newtext));
-            this.onTextChanged(); 
+            this._textChanged(); 
         }           
     },                   
 
@@ -262,7 +266,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             .html(this._currentline.html());
         this._currentline.replaceWith(newline);
         this._currentline = newline;
-        this.onTextChanged();        
+        this._textChanged();        
     },
 
     // set a waiting spinner when doing something
@@ -390,6 +394,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             success: function(data) {
                 if (data && data.ok) {
                     self._textbuffer = self._pagediv.text();
+                    self._haschanges = false;
                     self.onSave();
                 }
             },
@@ -426,6 +431,12 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             return -1;
         return 0;
     },
+
+
+    _textChanged: function() {
+        this._haschanges = true;
+        this.onTextChanged();
+    },                      
 
     /*
      * Overridable events

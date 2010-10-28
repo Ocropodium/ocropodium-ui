@@ -76,6 +76,10 @@ function reconvertLines(lines) {
 }
 
 
+function unsavedPrompt() {
+    return confirm("Save changes to transcript?");
+}
+
 
 $(function() {
     // setup toolbar
@@ -310,8 +314,16 @@ $(function() {
 
     $("#page_slider").slider({
         stop: function(e, ui) {
-            var val = $("#page_slider").slider("option", "value") - 1;
+            var val = $("#page_slider").slider("value") - 1;
             if (val != transcript.page()) {
+                if (transcript.hasUnsavedChanges()) {
+                    if (!unsavedPrompt()) {
+                        $("#page_slider").slider({value: transcript.page() + 1});
+                        return;
+                    } else {
+                        transcript.save();
+                    }
+                } 
                 transcript.setPage(val);
             }
         },
@@ -319,6 +331,11 @@ $(function() {
     });
 
     $("#prev_page").click(function(event) {
+        if (transcript.hasUnsavedChanges() && !unsavedPrompt()) {
+            return;
+        } else {
+            transcript.save();
+        }
         var curr = $("#page_slider").slider("option", "value");
         $("#page_slider").slider("option", "value", curr - 1);
         transcript.setPage(transcript.page() -1);
@@ -326,6 +343,11 @@ $(function() {
         
 
     $("#next_page").click(function(event) {
+        if (transcript.hasUnsavedChanges() && !unsavedPrompt()) {
+            return;
+        } else {
+            transcript.save();
+        } 
         var curr = $("#page_slider").slider("option", "value");
         $("#page_slider").slider("option", "value", curr + 1);
         transcript.setPage(transcript.page() + 1);
