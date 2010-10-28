@@ -10,6 +10,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from datetime import datetime
 from django import forms
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
@@ -578,6 +579,18 @@ def spellcheck(request):
     simplejson.dump(spelldata, response, ensure_ascii=False)
     return response
 
+
+@login_required
+def delete(request, batch_pk):
+    """
+    Delete a batch and all tasks belonging to it.
+    """
+    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    if request.user != batch.user:
+        messages.warning(request, "Unable to delete batch '%s': Permission denied" % batch.name)
+        return HttpResponseRedirect
+    batch.delete()
+    return HttpResponseRedirect("/batch/list/")
 
 
 def _abort_celery_task(task):

@@ -13,10 +13,13 @@ from django.utils import simplejson
 
 TESTFILE = "simple.png"
 
+from ocradmin.batch.models import OcrBatch
+
 
 class OcrBatchTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json",
-            "projects/fixtures/test_fixtures.json"]
+            "projects/fixtures/test_fixtures.json",
+            "batch/fixtures/test_batch.json"]
 
     def setUp(self):
         """
@@ -114,6 +117,17 @@ class OcrBatchTest(TestCase):
         pk = self._test_batch_action()        
         r = self.client.get("/batch/show/%s/" % pk)
         self.assertEqual(r.status_code, 200)
+
+
+    def test_delete_action(self):
+        """
+        Test viewing batch details.
+        """
+        before = OcrBatch.objects.count()
+        r = self.client.get("/batch/delete/1/")
+        self.assertRedirects(r, "/batch/list/")
+        self.assertEqual(before, OcrBatch.objects.count() + 1)
+
 
 
     def _test_batch_action(self, params=None, headers={}):
