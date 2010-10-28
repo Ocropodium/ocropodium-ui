@@ -352,7 +352,7 @@ def output_to_text(jsondata, linesep="\n"):
     return linesep.join([line["text"] for line in jsondata["lines"]])
 
 
-def output_to_json(jsondata, indent=None):
+def output_to_json(jsondata, indent=4):
     """
     Process raw json data to user output, with an indent.
     """
