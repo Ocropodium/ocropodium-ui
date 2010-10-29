@@ -3,7 +3,7 @@
         "pk": 1, 
         "model": "ocrmodels.ocrmodel", 
         "fields": {
-            "file": "test/default.model", 
+            "file": "test/ocropus_default_char.model", 
             "name": "Default Character Model", 
             "tags": "default cmodel", 
             "app": "ocropus", 
@@ -21,7 +21,7 @@
         "pk": 2, 
         "model": "ocrmodels.ocrmodel", 
         "fields": {
-            "file": "test/engtessdata.tgz", 
+            "file": "test/tesseract_default_lang.tgz", 
             "name": "Default Tesseract English", 
             "tags": "default tesseract english", 
             "app": "tesseract", 
@@ -39,7 +39,7 @@
         "pk": 3, 
         "model": "ocrmodels.ocrmodel", 
         "fields": {
-            "file": "test/default.fst", 
+            "file": "test/ocropus_default_lang.fst", 
             "name": "Default Language Model", 
             "tags": "default ocropus english", 
             "app": "ocropus", 
