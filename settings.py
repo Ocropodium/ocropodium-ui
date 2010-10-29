@@ -38,17 +38,9 @@ ARCH = sp.Popen(
 ).communicate()[0].strip()
 
 ADMINS = (
-    ('Michael Bryant', 'mikesname@gmail.com'),
 )
 
 MANAGERS = ADMINS
-
-#DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#DATABASE_NAME = "%s/admindb" % SITE_ROOT    # Or path to database file if using sqlite3.
-#DATABASE_USER = ''                          # Not used with sqlite3.
-#DATABASE_PASSWORD = ''         # Not used with sqlite3.
-#DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
-#DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
 DATABASE_HOST = "localhost" if not SERVER else MASTERNAME
 DATABASE_NAME = "ocr_testing" if DEBUG else "ocr_production"
@@ -63,8 +55,7 @@ DATABASES = {
     },
 }
 
-# celery settings - not sure this'll work...
-# mysql
+# celery settings 
 CELERY_RESULT_BACKEND = "database"
 CELERY_RESULT_DBURI = "mysql://celery:celery@localhost/celeryresults"
 BROKER_HOST = "localhost" if not SERVER else MASTERNAME
