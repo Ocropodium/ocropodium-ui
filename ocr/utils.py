@@ -127,21 +127,21 @@ class FileWrangler(object):
         return os.path.abspath(base)
 
 
-def get_tesseract():
+def get_binary(binname):
     """
     Try and find where Tesseract is installed.
     """
-    tess = sp.Popen(["which", "tesseract"], 
+    bin = sp.Popen(["which", binname], 
             stdout=sp.PIPE).communicate()[0].strip()
-    if tess and os.path.exists(tess):
-        return tess
+    if bin and os.path.exists(bin):
+        return bin
 
     for path in ["/usr/local/bin", "/usr/bin"]:
-        tesspath = os.path.join(path, "tesseract") 
-        if os.path.exists(tesspath):
-            return tesspath
-    # fallback, you never know...;
-    return "tesseract"
+        binpath = os.path.join(path, binname) 
+        if os.path.exists(binpath):
+            return binpath
+    # fallback...
+    return binname
 
 
 def get_ocr_path(user=None, temp=True, subdir="test", unique=False, timestamp=True):
@@ -996,7 +996,7 @@ class TessWrapper(OcropusWrapper):
         """
         if self.params.lmodel and self._tessdata is None:
             self.unpack_tessdata(self.params.lmodel)
-        self._tesseract = get_tesseract()
+        self._tesseract = get_binary("tesseract")
         self.logger.info("Using Tesseract: %s" % self._tesseract)
 
     @check_aborted
@@ -1152,7 +1152,7 @@ class CuneiformWrapper(GenericLineWrapper):
     use Cuneiform for recognition of individual lines.
     """
 
-    binary = "/usr/local/bin/cuneiform"
+    binary = get_binary("cuneiform")
 
     def get_command(self, outfile, image):
         """
@@ -1167,7 +1167,7 @@ class GocrWrapper(GenericLineWrapper):
     use Gocr for recognition of individual lines.
     """
 
-    binary = "/usr/bin/gocr"
+    binary = get_binary("gocr")
 
     def get_command(self, outfile, image):
         """
