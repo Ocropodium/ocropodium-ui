@@ -229,21 +229,15 @@ class BinarizePageTask(AbortableTask):
             pageheight = page_bin.dim(1)
             converter.write_binary(binpath, page_bin)
         
-        pagedata = { 
-            "page" : os.path.basename(filepath) ,
-            "src" : None,
-            "dst" : None,
-            "box": [0, 0, pagewidth, pageheight]
-        }
-        
         src, dst = make_deepzoom_proxies(logger, filepath, binpath, "bin", paramdict)
-        pagedata["png"] = utils.media_path_to_url(filepath)
-        pagedata["out"] = utils.media_path_to_url(binpath)
-        pagedata["src"] = utils.media_path_to_url(src)
-        pagedata["dst"] = utils.media_path_to_url(dst)
-    
-        return pagedata
-
+        return dict( 
+            page=os.path.basename(filepath),
+            box=[0, 0, pagewidth, pageheight],
+            png=utils.media_path_to_url(filepath),
+            out=utils.media_path_to_url(binpath),
+            src=utils.media_path_to_url(src),
+            dst=utils.media_path_to_url(dst)
+        )
 
 
 class SegmentPageTask(AbortableTask):
@@ -291,23 +285,17 @@ class SegmentPageTask(AbortableTask):
         boxes = converter.extract_boxes(page_seg)
         converter.write_packed(segpath, page_seg)
 
-        pagedata = dict( 
+        src, dst = make_deepzoom_proxies(logger, filepath, segpath, "seg", paramdict)
+        print "SRC: %s" % src
+        return dict( 
             page=os.path.basename(filepath),
-            png=None,
-            src=None,
-            dst=None,
             box=[0, 0, pagewidth, pageheight],
+            png=utils.media_path_to_url(filepath),
+            out=utils.media_path_to_url(segpath),
+            src=utils.media_path_to_url(src),
+            dst=utils.media_path_to_url(dst),
             **boxes
         )
-
-        src, dst = make_deepzoom_proxies(logger, filepath, segpath, "seg", paramdict)
-        pagedata.update({
-            "png": utils.media_path_to_url(filepath),
-            "src": utils.media_path_to_url(src),
-            "dst": utils.media_path_to_url(dst),
-        })
-    
-        return pagedata
 
 
 class CleanupTempTask(PeriodicTask):
