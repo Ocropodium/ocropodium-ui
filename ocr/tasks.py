@@ -286,7 +286,6 @@ class SegmentPageTask(AbortableTask):
         converter.write_packed(segpath, page_seg)
 
         src, dst = make_deepzoom_proxies(logger, filepath, segpath, "seg", paramdict)
-        print "SRC: %s" % src
         return dict( 
             page=os.path.basename(filepath),
             box=[0, 0, pagewidth, pageheight],
