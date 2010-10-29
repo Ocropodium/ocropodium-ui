@@ -15,6 +15,12 @@ def symlink_model_fixtures():
     """
     for fname in os.listdir(MODELDIR):
         try:
+            os.makedirs("media/test")
+        except OSError, (errno, strerr):
+            if errno == 17: # already exists
+                pass
+
+        try:
             os.symlink(os.path.abspath("%s/%s" % (MODELDIR, fname)),  
                 "media/test/%s" % fname)
         except OSError, (errno, strerr):
@@ -22,4 +28,3 @@ def symlink_model_fixtures():
                 pass
 
 
-    

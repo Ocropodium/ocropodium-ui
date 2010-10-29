@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils import simplejson
 
+from ocradmin.ocr.tests import testutils
 from ocradmin.ocrmodels.models import OcrModel
 
 
@@ -20,8 +21,7 @@ class OcrModelTest(TestCase):
         """
             Setup OCR tests.  Creates a test user.
         """
-        shutil.copy2("media/models/mytessdata.tgz", "media/test/engtessdata.tgz")
-        shutil.copy2("media/models/default.model", "media/test/default.model")
+        testutils.symlink_model_fixtures()
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
@@ -107,21 +107,22 @@ class OcrModelTest(TestCase):
         """
         Insert a post test model view post
         """
-        tf = open(os.path.join(settings.MEDIA_ROOT, "test", "default.model"))        
-        r = self.client.post(
-            "/ocrmodels/create",
-            dict(
-                user=self.testuser.pk,
-                tags="test model",
-                name="Test Model",
-                description="Testing model creation",
-                public=True,
-                app="ocropus",
-                type="char",
-                file=tf,
-            ),
-        )
-        tf.close()
+
+        modelpath = OcrModel.objects.all()[0].file.path
+        with open(modelpath) as tf:
+            r = self.client.post(
+                "/ocrmodels/create",
+                dict(
+                    user=self.testuser.pk,
+                    tags="test model",
+                    name="Test Model",
+                    description="Testing model creation",
+                    public=True,
+                    app="ocropus",
+                    type="char",
+                    file=tf,
+                ),
+            )
         return r
 
 

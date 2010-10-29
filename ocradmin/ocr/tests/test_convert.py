@@ -11,6 +11,7 @@ from django.utils import simplejson
 
 from ocradmin.ocr.tests import testutils 
 
+TESTFILE = "etc/simple.png"
 
 class OcrConvertTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json"]
@@ -124,7 +125,7 @@ class OcrConvertTest(TestCase):
         """
         Post an image for conversion with the given params, headers.
         """
-        tf = open(os.path.join(settings.MEDIA_ROOT, "test", "simple.png"))
+        tf = open(TESTFILE)
         params["image1"] = tf
         r = self.client.post("/ocr/convert", params, **headers)
         tf.close()

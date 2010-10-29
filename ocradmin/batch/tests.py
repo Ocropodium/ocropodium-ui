@@ -13,7 +13,7 @@ from django.utils import simplejson
 from ocradmin.batch.models import OcrBatch
 from ocradmin.ocr.tests import testutils 
 
-TESTFILE = "simple.png"
+TESTFILE = "etc/simple.png"
 
 
 
@@ -27,9 +27,12 @@ class OcrBatchTest(TestCase):
             Setup OCR tests.  Creates a test user.
         """
         testutils.symlink_model_fixtures()
-        os.makedirs("media/files/test_user/test")
-        os.symlink(os.path.abspath("media/test/%s" % TESTFILE), 
-                "media/files/test_user/test/%s" % TESTFILE)
+        try: 
+            os.makedirs("media/files/test_user/test")
+        except OSError, (errno, strerr):
+            if errno == 17: pass
+        os.symlink(os.path.abspath(TESTFILE), 
+                "media/files/test_user/test/%s" % os.path.basename(TESTFILE))
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
@@ -136,7 +139,7 @@ class OcrBatchTest(TestCase):
         """
         if params is None:
             params = dict(name="Test Batch", 
-                    files=os.path.join("test/%s" % TESTFILE))
+                    files=os.path.join("test/%s" % os.path.basename(TESTFILE)))
         r = self._get_batch_response(params, headers)
         # check the POST redirected as it should
         self.assertEqual(r.redirect_chain[0][1], 302)
@@ -149,15 +152,15 @@ class OcrBatchTest(TestCase):
         """
         Test uploading files to the server.
         """
-        upload = os.path.join(settings.MEDIA_ROOT, "test", TESTFILE)
-        fh = file(upload, "rb")
+        fh = file(TESTFILE, "rb")
         params = {}
         params["file1"] = fh
         headers = {}
         r = self.client.post("/batch/upload_files/", params, **headers)
         fh.close()
         content = simplejson.loads(r.content)
-        self.assertEqual(content, [os.path.join("test-project-2", TESTFILE)])
+        self.assertEqual(content, [os.path.join("test-project-2", 
+            os.path.basename(TESTFILE))])
       
 
     def _get_batch_response(self, params={}, headers={}):

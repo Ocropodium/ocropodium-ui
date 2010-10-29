@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
+TESTFILE = "etc/simple.png" 
 
 class OcrSegmentTest(TestCase):
     def setUp(self):
@@ -80,7 +81,7 @@ class OcrSegmentTest(TestCase):
         """
         Post an image for conversion with the given params, headers.
         """
-        tf = open(os.path.join(settings.MEDIA_ROOT, "test", "simple.png"))
+        tf = open(TESTFILE)
         params["image1"] = tf
         r = self.client.post("/ocr/segment", params, **headers)
         tf.close()
