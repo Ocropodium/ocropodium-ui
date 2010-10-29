@@ -9,6 +9,8 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
+from ocradmin.ocr.tests import testutils 
+
 
 class OcrConvertTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json"]
@@ -16,9 +18,7 @@ class OcrConvertTest(TestCase):
         """
             Setup OCR tests.  Creates a test user.
         """
-        shutil.copy2("media/models/mytessdata.tgz", "media/test/engtessdata.tgz")
-        shutil.copy2("media/models/default.model", "media/test/default.model")
-        shutil.copy2("media/models/default.fst", "media/test/default.fst")
+        testutils.symlink_model_fixtures()
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")

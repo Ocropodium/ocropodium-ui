@@ -10,10 +10,11 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
+from ocradmin.batch.models import OcrBatch
+from ocradmin.ocr.tests import testutils 
 
 TESTFILE = "simple.png"
 
-from ocradmin.batch.models import OcrBatch
 
 
 class OcrBatchTest(TestCase):
@@ -25,11 +26,10 @@ class OcrBatchTest(TestCase):
         """
             Setup OCR tests.  Creates a test user.
         """
-        shutil.copy2("media/models/mytessdata.tgz", "media/test/engtessdata.tgz")
-        shutil.copy2("media/models/default.model", "media/test/default.model")
-        shutil.copy2("media/models/default.fst", "media/test/default.fst")
+        testutils.symlink_model_fixtures()
         os.makedirs("media/files/test_user/test")
-        shutil.copy2("media/test/%s" % TESTFILE, "media/files/test_user/test/%s" % TESTFILE)
+        os.symlink(os.path.abspath("media/test/%s" % TESTFILE), 
+                "media/files/test_user/test/%s" % TESTFILE)
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
