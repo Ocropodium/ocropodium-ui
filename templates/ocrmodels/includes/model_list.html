@@ -30,10 +30,16 @@
             <td>{{cm.app}}</td>        
             <td>{{cm.type|upper}}</td>        
             <td><a title="Model Details"  class="show_model_link" href="/ocrmodels/show/{{cm.pk}}/">Show</a></td>
-            {% if cm.user == user %}
-                <td><a title="Edit Model" class="edit_model_link" href="/ocrmodels/edit/{{cm.pk}}/">Edit</a></td>
-                <td><a title="Delete Model"  class="delete_model_link" href="/ocrmodels/delete/{{cm.pk}}/">Delete</a></td>
-            {% endif %} 
+            <td>
+                {% if cm.user == user %}
+                    <a title="Edit Model" class="edit_model_link" href="/ocrmodels/edit/{{cm.pk}}/">Edit</a>
+                {% endif %} 
+            </td>
+            <td>
+                {% if cm.user == user %}
+                    <a title="Delete Model"  class="delete_model_link" href="/ocrmodels/delete/{{cm.pk}}/">Delete</a>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </table>
