@@ -22,11 +22,6 @@ class TrainingTest(TestCase):
         """
             Setup OCR tests.  Creates a test user.
         """
-        #shutil.copy2("media/models/mytessdata.tgz", "media/test/engtessdata.tgz")
-        #shutil.copy2("media/models/default.model", "media/test/default.model")
-        #shutil.copy2("media/models/default.fst", "media/test/default.fst")
-        #os.makedirs("media/files/test_user/test")
-        #shutil.copy2("media/test/%s" % TESTFILE, "media/files/test_user/test/%s" % TESTFILE)
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
