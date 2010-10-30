@@ -91,13 +91,14 @@ function OcrPage(insertinto_id, page_id, pagename, jobname) {
 
     // handle the results of each poll
     var processData = function(data) {
-        if (data.error) {
+        if (data.error || data.trace) {
             setError(data.error, data.trace);
         } else if (data.status == "SUCCESS") {
             setResults(data.results);
         } else if (data.status == "PENDING") {
             return false;
         } else {
+            me.setWaiting(false);
             pdiv.html("<p>Oops, task finished with status: " + data.status + "</p>");
         }
         return true;
