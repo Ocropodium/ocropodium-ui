@@ -1127,6 +1127,8 @@ class GenericLineWrapper(OcropusWrapper):
         with tempfile.NamedTemporaryFile() as tmp:
             tmp.close()
             args = self.get_command(outfile=tmp.name, image=imagepath)
+            if not os.path.exists(args[0]):
+                raise ExternalToolError("Unable to find binary: '%s'" % args[0])
             self.logger.info(args)
             proc = sp.Popen(args, stderr=sp.PIPE)
             err = proc.stderr.read()
