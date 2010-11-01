@@ -131,9 +131,7 @@ function ParameterBuilder(container_id, ctypes) {
             complete: function() {
                 me.setWaiting(false);
             },
-            error: function(xhr, error) {
-                alert("Unable to fetch parameter info: " + error);
-            },
+            error: OCRJS.ajaxErrorHandler,
             success: function(data) {
                 componentdata = data;
                 buildParameters();

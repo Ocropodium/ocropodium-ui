@@ -285,3 +285,8 @@ a.button:hover {
     color: #FFF;
 }
 
+.debugwindow {
+    border: none;
+    width: 100%;
+    height: 100%;
+}

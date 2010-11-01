@@ -326,9 +326,7 @@ function Spellchecker(parent, selector) {
             type: "POST",
             data: {data: json},
             dataType: "json",
-            error: function(xhr, err) {
-                alert("Spellcheck failed.  Unable to reach server: " + err);
-            },
+            error: OCRJS.ajaxErrorHandler,
             success: function(data) {
                 if (data == null)
                     return;

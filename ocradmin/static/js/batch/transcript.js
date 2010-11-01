@@ -21,6 +21,9 @@ function pollForResults(data, polltime) {
             beforeSend: function(e) {
                 sdviewer.setWaiting(true);
             },
+            complete: function(e) {
+                sdviewer.setWaiting(false);  
+            },
             success: function(data) {
                 if (polltimeout != -1) {
                     clearTimeout(polltimeout);
@@ -30,9 +33,7 @@ function pollForResults(data, polltime) {
                     pollForResults(data, polltime);
                 }, polltime);        
             },
-            error: function(e) {
-                alert(e);
-            },
+            error: OCRJS.ajaxErrorHandler,
         });
     } else if (data.status == "SUCCESS") {
         $(sdviewer).data("binpath", data.results.out);
@@ -72,6 +73,7 @@ function reconvertLines(lines) {
                 $("#save_data").button({disabled: false});                    
             });
         },
+        error: OCRJS.ajaxErrorHandler,
     });
 }
 
@@ -227,9 +229,7 @@ $(function() {
                 }
                 pollForResults(data, 300);
             },
-            error: function(e) {
-                alert(e);
-            },
+            error: OCRJS.ajaxErrorHandler,
         });
     }
 
@@ -298,17 +298,14 @@ $(function() {
             data: {binary_image: binurl},
             dataType: "json",
             type: "POST",
-            error: function(xhr, err, str) {
-                alert(err + "  " + str);
-            },
             success: function(data) {
                 if (data.error)
                     return alert("Error: " + data.error);
                 alert("Saved!");
             },
             complete: function() {
-
             },
+            error: OCRJS.ajaxErrorHandler,
         });
     });
 

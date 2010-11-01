@@ -58,6 +58,7 @@ $(function() {
             url: "/batch/list?order_by=-created_on",
             data: {},
             dataType: "json",
+            error: OCRJS.ajaxErrorHandler,
             success: populateBatchList,
         });
     }

@@ -167,9 +167,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 beforeSend: function(e) { 
                     self.setTaskWaiting($("#task" + pk), true);
                 },
-                error: function(e, msg) {
-                    alert(msg);
-                },
+                error: OCRJS.ajaxErrorHandler,
                 complete: function(e) {
                     self.setTaskWaiting($("#task" + pk), false);
                 },
@@ -198,9 +196,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 url: "/ocrtasks/show/" + pk + "/",
                 type: "GET",
                 dataType: "html",
-                error: function(e, msg) {
-                    alert(msg);
-                },
+                error: OCRJS.ajaxErrorHandler,
                 success: function(data) {
                     $("#dialog_box").html(data)                    
                         .find("#tabs")
@@ -220,9 +216,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 beforeSend: function(e) {                
                     self.setTaskWaiting($("#task" + pk), true);
                 },
-                error: function(e, msg) {
-                    alert(msg);
-                },
+                error: OCRJS.ajaxErrorHandler,
                 complete: function(e) {
                     self.setTaskWaiting($("#task" + pk), false);
                 },
@@ -256,9 +250,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 url: $(this).attr("href"),
                 type: "POST",
                 dataType: "json",
-                error: function(e, msg) {
-                    alert(msg);
-                },
+                error: OCRJS.ajaxErrorHandler,
                 beforeSend: function(e) {
                     if (!confirm("Really " + action + "?"))
                         return false;
@@ -339,9 +331,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                     self._polltimeout = -1;
                 }                
             },
-            error: function(xhr, statusText, errorThrown) {
-                alert("Http Error " + statusText + "\n\n" + errorThrown);
-            },
+            error: OCRJS.ajaxErrorHandler,
             complete: function() {
                 self.setWaiting(false);
             },

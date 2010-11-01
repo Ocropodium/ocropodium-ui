@@ -122,9 +122,7 @@ var FileDataSource = AbstractDataSource.extend({
                 self.__data = data;
                 self.sort();
             },
-            error: function(xhr, error) {
-                alert(error);
-            },
+            error: OCRJS.ajaxErrorHandler,
         });
     },
 });

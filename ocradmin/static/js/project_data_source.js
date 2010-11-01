@@ -73,9 +73,7 @@ var ProjectDataSource = AbstractDataSource.extend({
             url: "/projects/open",
             data: self.params(),
             dataType: "json",
-            error: function(xhr, msg) { 
-                alert("Error loading projects: " + msg);
-            },
+            error: OCRJS.ajaxErrorHandler,
             beforeSend: function(e) {
                 self.callListeners("startRefresh");
             },

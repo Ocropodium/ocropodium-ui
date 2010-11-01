@@ -116,6 +116,7 @@ function PresetManager(container_id, type) {
             url: "/ocrpresets/list",
             dataType: "json",
             data: {type: type},
+            error: OCRJS.ajaxErrorHandler,
             success: function(data) {
                 loadeddata = data;
                 reloadData();
@@ -141,6 +142,7 @@ function PresetManager(container_id, type) {
             },
             beforeSend: beforeSend,
             complete: onComplete,
+            error: OCRJS.ajaxErrorHandler,
         });
     }
 
@@ -160,6 +162,7 @@ function PresetManager(container_id, type) {
             },
             beforeSend: beforeSend,
             complete: onComplete,
+            error: OCRJS.ajaxErrorHandler,
         });        
     }
 
@@ -217,9 +220,7 @@ function PresetManager(container_id, type) {
                 $("#preset_id").append(poption).val(data[0].pk);
                 me.hide();
             },
-            error: function(xhr, errtype, exception) {
-                alert("Error saving preset: " + errtype);
-            },
+            error: OCRJS.ajaxErrorHandler,
             beforeSend: beforeSend,
             complete: onComplete,
         });            
@@ -316,6 +317,7 @@ function PresetManager(container_id, type) {
             url: "/ocrpresets/list/",
             dataType: "json",
             data: { type: type },
+            error: OCRJS.ajaxErrorHandler,
             success: function(data) {
                 rebuildPresetList(data);
             },

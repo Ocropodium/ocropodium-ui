@@ -77,9 +77,7 @@ function refreshImage() {
             $(sdviewer).data("jobname", data[0].job_name);
             pollForResults($(sdviewer));
         },
-        error: function(xhr, errorResponse, errorThrown) {
-            alert("XHR failed: " + errorResponse);
-        },
+        error: OCRJS.ajaxErrorHandler,
         complete: function(e) {
         }
     });
@@ -157,13 +155,7 @@ function pollForResults(element) {
         success: function(data) {
             processData(element, data);    
         },
-        error: function(xhr, statusText, errorThrown) {
-            var msg = "Http Error: " + statusText;
-            if (errorThrown) {
-                msg += "\n\n" + errorThrown;
-            }
-            alert(msg);
-        }
+        error: OCRJS.ajaxErrorHandler,
     }); 
 }
 

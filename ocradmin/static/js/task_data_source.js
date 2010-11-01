@@ -152,9 +152,7 @@ var TaskDataSource = AbstractDataSource.extend({
                 self.__data = data;
                 self.callListeners("dataChanged");
             },
-            error: function(xhr, error) {
-                alert(error);
-            },
+            error: OCRJS.ajaxErrorHandler,
         });
     },
 });

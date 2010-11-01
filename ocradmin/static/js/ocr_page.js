@@ -126,9 +126,7 @@ function OcrPage(insertinto_id, page_id, pagename, jobname) {
                     }, polltime);
                 }                
             },
-            error: function(xhr, statusText, errorThrown) {
-                setError("Http Error " + statusText, errorThrown);
-            }
+            error: OCRJS.ajaxErrorHandler,
         }); 
     }
 

@@ -142,6 +142,7 @@ var BatchDataSource = AbstractDataSource.extend({
                 page: self.__page,
                 order_by: self.__desc ? "-" + self.__sortby : self.__sortby,
             },
+            error: OCRJS.ajaxErrorHandler,
             beforeSend: function(e) {
                 self.callListeners("startRefresh");
             },
@@ -155,9 +156,6 @@ var BatchDataSource = AbstractDataSource.extend({
                 }
                 self.__data = data;
                 self.callListeners("dataChanged");
-            },
-            error: function(xhr, error) {
-                alert(error);
             },
         });
     },

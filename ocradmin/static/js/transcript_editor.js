@@ -308,6 +308,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                 self.onBatchLoad();              
                 self.refreshPageData();
             },
+            error: OCRJS.ajaxErrorHandler,
         });
     },
 
@@ -341,6 +342,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                         //self._speller.spellCheck($(".ocr_line"));
                 }               
             },
+            error: OCRJS.ajaxErrorHandler,
         });    
         self.onPageChange();
     },
@@ -388,9 +390,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             data: {data: JSON.stringify(results)},
             dataType: "json",
             type: "POST",
-            error: function(e) {
-                alert("Error saving data: " + e);
-            },
+            error: OCRJS.ajaxErrorHandler,
             success: function(data) {
                 if (data && data.ok) {
                     self._textbuffer = self._pagediv.text();

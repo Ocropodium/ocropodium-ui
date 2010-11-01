@@ -30,6 +30,7 @@ var TaskListWidget = AbstractListWidget.extend({
         $.ajax({
             url: "/ocrtasks/show/" + pk + "/",
             dataType: "html",
+            error: OCRJS.ajaxErrorHandler,
             success: function(data) {
                 dialog
                     .html(data).tabs();

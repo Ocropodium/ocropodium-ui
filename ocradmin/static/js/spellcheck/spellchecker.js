@@ -177,9 +177,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
             type: "POST",
             data: { data: JSON.stringify(text) },
             dataType: "json",
-            error: function(xhr, err) {
-                alert("Spellcheck failed.  Unable to reach server: " + err);
-            },
+            error: OCRJS.ajaxErrorHandler,
             success: function(data) {
                 if (data == null)
                     return;
