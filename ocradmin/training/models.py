@@ -6,7 +6,7 @@ import os
 
 from django.db import models
 from picklefield import fields
-from ocradmin.projects.models import ReferencePage
+from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.batch.models import OcrBatch
 from ocradmin.ocrmodels.models import OcrModel

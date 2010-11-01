@@ -16,7 +16,8 @@ TESTFILE = "simple.png"
 
 class TrainingTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json",
-            "projects/fixtures/test_fixtures.json"]
+            "projects/fixtures/test_fixtures.json",
+            "reference_pages/fixtures/test_fixtures.json"]
 
     def setUp(self):
         """
@@ -40,14 +41,6 @@ class TrainingTest(TestCase):
         Test viewing the training submission form.
         """
         r = self.client.get("/training/new/")
-        self.assertEqual(r.status_code, 200)
-
-
-    def test_list_view(self):
-        """
-        Test viewing the training set list.
-        """
-        r = self.client.get("/training/list/")
         self.assertEqual(r.status_code, 200)
 
 

@@ -11,7 +11,7 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.training import utils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.projects.models import ReferencePage
+from ocradmin.reference_pages.models import ReferencePage
 
 
 
@@ -145,25 +145,4 @@ class ComparisonTask(AbortableTask):
         return outdata
 
         
-
-class MakeThumbnailTask(AbortableTask):
-    """
-    Create a thumbnail of a given image.
-    """
-    name = "image.thumbnail"
-    max_retries = None
-    ignore_result = True
-
-    def run(self, path, size, **kwargs):
-        """
-        Runs the model comparison action.
-        """
-        logger = self.get_logger(**kwargs)
-        from PIL import Image
-        base = os.path.splitext(path)[0]
-        img = Image.open(path)
-        img.thumbnail(size, Image.ANTIALIAS)
-        thumbpath = "%s.thumb.jpg" % base
-        img.save(thumbpath, "JPEG")
-        logger.info("Generated thumb: %s" % thumbpath)
 

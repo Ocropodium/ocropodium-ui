@@ -1,5 +1,4 @@
 import os
-from picklefield import fields
 from django.db import models
 from django.contrib.auth.models import User
 from tagging.fields import TagField
@@ -7,6 +6,7 @@ from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 
 from ocradmin.ocr import utils as ocrutils
+
 
 class OcrProject(models.Model):
     """
@@ -26,7 +26,6 @@ class OcrProject(models.Model):
         """
         return self.name
 
-
 class OcrProjectDefaults(models.Model):
     """
     OCR Project Defaults.  This is something of a 
@@ -43,37 +42,6 @@ class OcrProjectDefaults(models.Model):
     recognizer = models.ForeignKey(OcrPreset, blank=True, null=True,
             related_name="recognizer", limit_choices_to={"type": "recognize"})
 
-
-
-class ReferencePage(models.Model):
-    """
-    Single page of reference data, i.e: text lines
-    with geometry and a corresponding binary
-    image.
-    """
-    page_name = models.CharField(max_length=255)
-    user = models.ForeignKey(User)
-    project = models.ForeignKey(OcrProject, related_name="reference_sets")
-    data = fields.PickledObjectField()
-    source_image = models.FileField(upload_to=ocrutils.get_refpage_path, max_length=255)
-    binary_image = models.FileField(upload_to=ocrutils.get_refpage_path, max_length=255)
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
-    updated_on = models.DateTimeField(auto_now=True, editable=False)
-
-    class Meta:
-        unique_together = ("project", "source_image", "binary_image")
-
-    def thumbnail_path(self):
-        """
-        Path to where the thumbnail should be.
-        """
-        return "%s.thumb.jpg" % os.path.splitext(self.source_image.path)[0] 
-
-    def thumbnail_url(self):
-        """
-        Url to thumbnail resource.
-        """
-        return ocrutils.media_path_to_url(self.thumbnail_path())
 
 
     

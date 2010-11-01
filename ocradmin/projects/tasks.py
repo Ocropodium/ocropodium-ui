@@ -11,7 +11,8 @@ from celery.contrib.abortable import AbortableAsyncResult
 from datetime import datetime, timedelta
 from django.conf import settings
 
-from ocradmin.projects.models import OcrProject, ReferencePage
+from ocradmin.projects.models import OcrProject
+from ocradmin.reference_pages.models import ReferencePage
 from ocrtasks.models import OcrTask
 
 from ocradmin.ocr import utils as ocrutils

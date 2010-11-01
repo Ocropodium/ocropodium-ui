@@ -21,6 +21,7 @@ urlpatterns = patterns('',
     (r'^ocrmodels/?', include('ocradmin.ocrmodels.urls')),
     (r'^ocrpresets/?', include('ocradmin.ocrpresets.urls')),
     (r'^projects/?', include('ocradmin.projects.urls')),
+    (r'^reference_pages/?', include('ocradmin.reference_pages.urls')),
     (r'^training/?', include('ocradmin.training.urls')),
     (r'^imageops/?', include('ocradmin.imageops.urls')),
 

@@ -1,6 +1,6 @@
 <div class="reference_page" id="pageinfo_{{refpage.pk}}">
     <h4>{{refpage.page_name}}</h4>
-    <table class="training_page_info">
+    <table class="reference_page_info">
         <tr>
             <td class="key">First Saved:</td><td>{{refpage.created_on}}</td>
         </tr>
@@ -8,14 +8,14 @@
             <td class="key">Last Update:</td><td>{{refpage.updated_on|default_if_none:"-"}}</td>
         </tr>
     </table>
-    <div class="training_page_center">
-        <div class="training_page_image">
+    <div class="reference_page_center">
+        <div class="reference_page_image">
             <a title="Binary Image" href="{{refpage.binary_image.url}}" target="_blank" >
                 <img  src="{{refpage.thumbnail_url}}" />
             </a>
         </div>
         <p>
-            <a class="delete_ref_page ui-icon ui-icon-trash" href="/training/delete/{{refpage.pk}}/" Title="Delete Reference Page">Delete</a>
+            <a class="delete_ref_page ui-icon ui-icon-trash" href="/reference_pages/delete/{{refpage.pk}}/" Title="Delete Reference Page">Delete</a>
         </p>
     </div>
 </div>

@@ -294,7 +294,7 @@ $(function() {
         var pk = transcript.pageData().pk;
         var binurl = $(sdviewer).data("binpath");
         $.ajax({
-            url: "/training/save_task/" + pk + "/",
+            url: "/reference_pages/create_from_task/" + pk + "/",
             data: {binary_image: binurl},
             dataType: "json",
             type: "POST",
