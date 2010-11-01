@@ -55,7 +55,7 @@ class LineTrainTask(AbortableTask):
                 params=paramdict)
         for pagedata in datasets:
             #pagedata = ReferencePage.objects.get(pk=pk)
-            trainer.load_training_binary(pagedata.binary_image_path.encode())
+            trainer.load_training_binary(pagedata.binary_image.path.encode())
             # we've got a Training page.  Go through it, and 
             # train on each line
             for line in pagedata.data["lines"]:
@@ -130,7 +130,7 @@ class ComparisonTask(AbortableTask):
         # init progress to zero (for when retrying tasks)
         progress_func(0)
 
-        outdata = converter.convert(groundtruth.source_image_path.encode(),
+        outdata = converter.convert(groundtruth.source_image.path.encode(),
                 progress_func=progress_func)        
 
         accuracy, details = utils.isri_accuracy(

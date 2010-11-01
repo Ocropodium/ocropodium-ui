@@ -44,6 +44,7 @@ class OcrProjectDefaults(models.Model):
             related_name="recognizer", limit_choices_to={"type": "recognize"})
 
 
+
 class ReferencePage(models.Model):
     """
     Single page of reference data, i.e: text lines
@@ -54,31 +55,19 @@ class ReferencePage(models.Model):
     user = models.ForeignKey(User)
     project = models.ForeignKey(OcrProject, related_name="reference_sets")
     data = fields.PickledObjectField()
-    source_image_path = models.CharField(max_length=255)
-    binary_image_path = models.CharField(max_length=255)
+    source_image = models.FileField(upload_to=ocrutils.get_refpage_path, max_length=255)
+    binary_image = models.FileField(upload_to=ocrutils.get_refpage_path, max_length=255)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     updated_on = models.DateTimeField(auto_now=True, editable=False)
 
     class Meta:
-        unique_together = ("project", "binary_image_path")
-
-    def binary_image_url(self):
-        """
-        Url to image resource.
-        """
-        return ocrutils.media_path_to_url(self.binary_image_path)
-
-    def source_image_url(self):
-        """
-        Url to image resource.
-        """
-        return ocrutils.media_path_to_url(self.source_image_path)
+        unique_together = ("project", "source_image", "binary_image")
 
     def thumbnail_path(self):
         """
         Path to where the thumbnail should be.
         """
-        return "%s.thumb.jpg" % os.path.splitext(self.source_image_path)[0] 
+        return "%s.thumb.jpg" % os.path.splitext(self.source_image.path)[0] 
 
     def thumbnail_url(self):
         """

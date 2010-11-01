@@ -66,13 +66,15 @@ def saves_files(func):
             temp = True
         if temp:
             output_path = os.path.join(
-                settings.TEMP_ROOT,
+                settings.MEDIA_ROOT,
+                settings.TEMP_PATH,
                 request.user.username,
                 datetime.now().strftime("%Y%m%d%H%M%S")
             )
-        else:
+        else:            
             output_path = os.path.join(
-                settings.USER_FILES_ROOT, 
+                settings.MEDIA_ROOT,
+                settings.USER_FILES_PATH, 
                 project.slug
             )
         if request.path.startswith("/training/save_task"):
@@ -80,6 +82,19 @@ def saves_files(func):
         request.__class__.output_path = output_path
         return func(request, *args, **kwargs)
     return wrapper
+
+
+def get_refpage_path(refpage, filename):
+    """
+    Get the path for a reference page file.  Called from the
+    model FileField's upload_to param.
+    """
+    return os.path.join(
+            "reference",
+            refpage.project.slug,
+            os.path.splitext(refpage.page_name)[0],
+            filename
+    )
 
 
 

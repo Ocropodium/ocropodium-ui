@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from ordereddict import OrderedDict
 
+from django.core.files.base import ContentFile
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
@@ -200,7 +201,7 @@ def score_models(request):
     assert(len(psetnames) == len(paramsets))
     
     for gtruth in tsets:
-        path = gtruth.source_image_path
+        path = gtruth.source_image.path
         for i in range(len(paramsets)):
             params = paramsets[i]
             tid = ocrutils.get_new_task_id(path)
@@ -328,40 +329,30 @@ def save_task(request, task_pk):
     if not os.path.exists(binpath):
         raise HttpResponseServerError("Binary image does not exist")
 
-    if not os.path.exists(request.output_path):
-        os.makedirs(request.output_path)
-        os.chmod(request.output_path, 0777)
-    srcoutpath = os.path.join(request.output_path, os.path.basename(srcpath))    
-    binoutpath = os.path.join(request.output_path, os.path.basename(binpath))
-    import shutil
-    shutil.copy2(srcpath, srcoutpath)
-    shutil.copy2(binpath, binoutpath)
-
-    # try and create a thumbnail of the file
-    MakeThumbnailTask.apply_async((srcoutpath, settings.THUMBNAIL_SIZE), 
-            queue="interactive", retries=2)
-    
     # create or update the model
     try:
         tpage = ReferencePage.objects.get(
-            project=request.session["project"], 
-            user=request.user,
-            binary_image_path=binoutpath
+            project=request.session["project"],
+            page_name=task.page_name
         )
     except ReferencePage.DoesNotExist:
-        tpage = ReferencePage()
+        # create a new one
+        tpage = ReferencePage(
+            page_name=task.page_name,
+            project=request.session["project"],
+            user=request.user
+        )
+        tpage.source_image.save(os.path.basename(srcpath),
+                ContentFile(open(srcpath, "rb").read()))
+        tpage.binary_image.save(os.path.basename(binpath),
+                ContentFile(open(binpath, "rb").read()))
 
-    try:
-        tpage.page_name = task.page_name
-        tpage.user = request.user
-        tpage.project = request.session["project"]
-        tpage.data = task.latest_transcript()
-        tpage.source_image_path = srcoutpath
-        tpage.binary_image_path = binoutpath
-        tpage.save()
-    except IntegrityError, err:
-        return HttpResponse(simplejson.dumps({"error": str(err)}),
-                mimetype="application/json")
+    tpage.data = task.latest_transcript()
+    tpage.save()
+    
+    # try and create a thumbnail of the file
+    MakeThumbnailTask.apply_async((tpage.source_image.path, 
+            settings.THUMBNAIL_SIZE), queue="interactive", retries=2)
     
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")

@@ -112,10 +112,10 @@ ADMIN_MEDIA_ROOT = "%s/media" % SITE_ROOT if not SERVER else "/media/share"
 MEDIA_URL = '/media/'
 
 # Base path for transitory files
-TEMP_ROOT = "%s/temp" % MEDIA_ROOT
+TEMP_PATH = "temp"
 
 # Base path for user project files.
-USER_FILES_ROOT = "%s/files" % MEDIA_ROOT
+USER_FILES_PATH = "files"
 
 # Size for thumbnails
 THUMBNAIL_SIZE = (256, 256)

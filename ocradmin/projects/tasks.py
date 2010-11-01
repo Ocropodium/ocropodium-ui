@@ -42,7 +42,7 @@ class IngestTask(AbortableTask):
         trainingpage = ReferencePage.objects.get(pk=trainingpage_id)
         dublincore["title"] = trainingpage.page_name
 
-        imagedata = open(trainingpage.binary_image_path, "rb")
+        imagedata = trainingpage.binary_image.open(mode="rb")
         # TODO: Fix the Fedora library so you can actually specify
         # the pid in the constructor without it thinking you're
         # updating an existing object!

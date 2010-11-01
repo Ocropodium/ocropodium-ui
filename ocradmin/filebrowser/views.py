@@ -68,7 +68,7 @@ def ls(request):
     """
 
     dir = request.GET.get("dir", "")
-    root = os.path.join(settings.USER_FILES_ROOT)
+    root = os.path.join(settings.USER_FILES_PATH)
     fulldir = os.path.join(root, dir)
     response = HttpResponse(mimetype="application/json")
     simplejson.dump(entry_info(fulldir), response) #cls=ExtJsonEncoder)
