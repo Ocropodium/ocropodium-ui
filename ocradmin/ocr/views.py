@@ -112,11 +112,7 @@ def multiple_results(request):
         async = celeryresult.AsyncResult(job_name)
         if async is None:
             raise Http404
-        out.append({
-            "job_name": async.task_id,
-            "status": async.status,
-            "results": async.result
-        })         
+        out.append(_async_data(async))         
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
@@ -249,6 +245,25 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         ) 
 
 
+def _async_data(async):        
+    """
+    Convert an async object into suitable JSON.
+    """
+    if async.status == "FAILURE":
+        err = async.result
+        taskmeta = OcrTask.objects.get(task_id=async.task_id)
+        return dict(
+            job_name=async.task_id,
+            status=async.status,
+            results=None,
+            error=err.message, 
+            trace=taskmeta.traceback
+        )
+    return dict(
+        job_name=async.task_id,
+        status=async.status,
+        results=async.result
+    )         
 
 
 def _format_task_results(request, async):
@@ -256,23 +271,7 @@ def _format_task_results(request, async):
     Wrap the results in JSON metadata.  Treat
     exceptions as a special case.
     """
-    if async.status == "FAILURE":
-        err = async.result
-        taskmeta = OcrTask.objects.get(task_id=async.task_id)
-        return HttpResponse(
-            simplejson.dumps({
-                "error": err.message, 
-                "trace": taskmeta.traceback
-            }),
-            mimetype="application/json"
-        )
-    return _format_response(
-        request, {
-            "job_name": async.task_id,
-            "status": async.status,
-            "results": async.result
-        }
-    )
+    return _format_response(request, _async_data(async))
 
 
 
@@ -316,14 +315,6 @@ def _format_data(request, json):
     """
     Format the output string accordingly.
     """
-    mimetype = "application/json"
-
-    # bad code alert!  if uploaded via the dodgy
-    # Ajax iframe method, force a text response
-    # otherwise firefox eats the results for us...
-    if request.POST.get("_iframe"):
-        mimetype = "text/html"
-
     if _wants_png_format(request):
         if isinstance(json, dict):
             json = [json]
@@ -354,6 +345,7 @@ def _format_data(request, json):
                 result += ocrutils.output_to_text(page.get("results"))
                 result += "\n"
     else:
+        mimetype = "application/json"
         result = simplejson.dumps(json)
     return result, mimetype
 
