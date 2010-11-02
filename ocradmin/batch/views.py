@@ -695,7 +695,10 @@ def _get_batch_file_paths(request):
     """
     Extract the full file paths from the POST data.
     """
-    dirpath = settings.USER_FILES_PATH
+    dirpath = os.path.relpath(os.path.join(
+        settings.MEDIA_ROOT,
+        settings.USER_FILES_PATH
+    ))
     filenames = request.POST.get("files", "").split(",")
     return [os.path.join(dirpath, f) for f in sorted(filenames)]
 
