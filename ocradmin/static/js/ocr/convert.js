@@ -1,3 +1,20 @@
+//
+// Handle drag and drop page conversions
+//
+
+
+var PAGES = [];
+var POLLTIMER = -1;
+var PENDING = {};
+
+const MINFONTSIZE = 6;
+const MAXFONTSIZE = 40;
+
+var uploader = null;
+//var pbuilder = null;
+var formatter = null;
+
+
 
 // Function to build the lang & char models selects when
 // the engine type is changed.
@@ -38,9 +55,9 @@ function saveState() {
     });
 
     // save the job names of the current pages...
-    var jobnames = $(".ocr_page").map(function(i, d) {
-        return $(d).data("pagename") + ":" + $(d).data("jobname");
-    }).get().join(",");
+    var jobnames = $.map(PAGES, function(page, i) {
+        return page.pageName() + ":" + page.id();
+    }).join(",");
     $.cookie("jobnames", jobnames, {expires: 7});
 }
 
@@ -56,18 +73,83 @@ function loadState() {
     var jobnames = $.cookie("jobnames");
     if (jobnames) {
         $.each(jobnames.split(","), function(index, pagejob) {
-            var page = pagejob.split(":")[0], job = pagejob.split(":")[1];
-            pageobjects[index] = new OcrPage("workspace", index, page, job);
-            pageobjects[index].onLinesReady = function() {
-                // trigger a reformat
-                $("input[name=format]:checked").click();
-            }
-            pageobjects[index].pollForResults();            
+            var pagename = pagejob.split(":")[0], jobname = pagejob.split(":")[1];
+            addPageToWorkspace(pagename, jobname);
         });
+        pollForResults();
         layoutWidgets();
         updateUiState();
     }
 }
+
+
+function addPageToWorkspace(pagename, jobname) {
+    var workspace = document.getElementById("workspace");
+    var page = new OCRJS.PageWidget(workspace, pagename, jobname);
+    PAGES.push(page);
+    PENDING[jobname] = page;
+    $(workspace).append(page.init());
+    page.onLinesReady = function() {
+        // trigger a reformat
+        $("input[name=format]:checked").click();
+    }
+    page.onClose = function() {
+        delete PENDING[page.id()];
+        var temp = [];
+        for (var i in PAGES) {
+            if (page != PAGES[i])
+                temp.push(PAGES[i])
+        }
+        PAGES = temp;
+        updateUiState();
+    }
+}
+
+
+function setResults(data) {
+    for (var i in data) {
+        var job = data[i];
+        if (job.status == "PENDING")
+            continue;
+        var page = PENDING[job.job_name];
+        if (!page) 
+            continue;
+
+        if (job.error || job.trace || job.status == "FAILURE") {
+            page.setError(job.error, job.trace);
+        } else if (job.status == "SUCCESS") {
+            page.setResults(job.results);    
+        }    
+        delete PENDING[job.job_name];        
+    };
+
+    var count = 0;
+    for (k in PENDING) if (PENDING.hasOwnProperty(k)) count++;
+    if (count) {
+        POLLTIMER = setTimeout(function() {
+            pollForResults();
+        }, 100);
+    } else {
+        POLLTIMER = -1;
+    }
+}
+
+function pollForResults() {
+    var tidstr = [];
+    $.each(PENDING, function(tid, obj) {
+        tidstr.push("job=" + tid);
+    });
+    if (!tidstr.length)
+        return;
+    $.ajax({
+        url: "/ocr/results/",
+        data: tidstr.join("&"),
+        type: "GET",
+        error: OCRJS.ajaxErrorHandler,
+        success: setResults,
+    });
+}
+
 
 
 function onXHRLoad(event) {
@@ -84,18 +166,13 @@ function onXHRLoad(event) {
         $("#dropzone").text("Drop images here...").removeClass("waiting");
         return;
     }
-    $.each(data, function(pagenum, pageresults) {
-        pageobjects[pagenum] = new OcrPage("workspace", pagenum, pageresults.page_name, pageresults.job_name);
-        var timeout = (300 * Math.max(1, uploader.size())) + (pagenum * 250);
-        pageobjects[pagenum].onLinesReady = function() {
-            // trigger a reformat
-            $("input[name=format]:checked").click();
-        }
-
-        pageobjects[pagenum].pollForResults(timeout);
-        layoutWidgets();
-        updateUiState();
+    $.each(data, function(pagenum, results) {
+        addPageToWorkspace(results.page_name, results.job_name);
     }); 
+    if (POLLTIMER == -1)
+        pollForResults();
+    layoutWidgets();
+    updateUiState();
 };
 
 
@@ -109,20 +186,12 @@ function relayoutPages(maxheight) {
 }
 
 function updateUiState() {
-    var pcount = $(".ocr_page_container").length;
+    var pcount = PAGES.length;
     $(".tbbutton").button({disabled: pcount < 1});
     $(".ocr_page").css("font-size", $("#font_size").val() + "px");
 }
 
 
-
-var pageobjects = [];
-var uploader = null;
-//var pbuilder = null;
-var formatter = null;
-
-const MINFONTSIZE = 6;
-const MAXFONTSIZE = 40;
 
 $(function() {
 
@@ -137,15 +206,15 @@ $(function() {
     });
     $("#format").buttonset();
     $("#clear").click(function(event) {
-        pageobjects = [];
+        PAGES = [];
         $(".ocr_page_container").remove();
         $.cookie("jobnames", null);
         updateUiState();
     });
     $("#download").click(function(event) {
         var jobnames = [];
-        $(".ocr_page").each(function(i, elem) {
-            jobnames.push("task=" + $(elem).data("jobname"));
+        $.each(PAGES, function(i, page) {
+            jobnames.push("task=" + page.id());
         });
         $("#download").attr("href", "/ocr/zipped_results/?" + jobnames.join("&"));
     });
@@ -210,7 +279,11 @@ $(function() {
     
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
-        saveState();
+        try {
+            saveState();
+        } catch (msg) {
+            alert(msg);
+        }
     }
 
 
@@ -218,7 +291,7 @@ $(function() {
     formatter = new OCRJS.LineFormatter();
 
     // fetch the appropriate models...
-    rebuildModelLists($("input[name=engine]:checked").val());    
+    rebuildModelLists($("select[name=engine]").val());    
 
     // initialise the controls
     //pbuilder = new ParameterBuilder("options", ["ISegmentLine", "IGrouper"]);

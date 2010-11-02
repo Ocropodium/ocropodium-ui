@@ -1,21 +1,29 @@
 .ocr_page_container {
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+    border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    overflow: auto;    
+    background-color: #FDFDFD;
 }
-
-/*.ocr_page_head {
-    border-radius: 4px;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    padding: 10px;
-    background-color: #FBFBFB;    
-    border-bottom: 1px solid #DDD;
-    font-size: 1.2em;    
-} */
 
 .ocr_page {
     font-size: 1.1em;
-    background-color: #FDFDFD;
     padding: 10px;
     overflow: auto;
+    min-height: 50px;
+}
+
+.ocr_page_header {
+    padding: 5px;
+    font-size: 1.1em;
+    font-weight: bold;
+    background-color: #DBDBFB;
 }
 
 .literal {
@@ -25,7 +33,6 @@
     background-image: url(/static/ajax-loader-large.gif);
     background-position: center;
     background-repeat: no-repeat;
-    min-height: 50px;
 }
 
 .view_link {
@@ -40,12 +47,19 @@
     background-color: #FFDDDD;
 }
 
+.close_link {
+    float: right;
+    display: none;
+    margin: left; 10px;
+}
+
 .result_link {
     float: right;
     text-decoration: none;
     color: #999999;
     font-size: 0.9em;
     margin-left: 10px;
+    display: none;
 }
 
 .result_link:hover {
