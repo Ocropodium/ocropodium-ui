@@ -103,6 +103,24 @@ def segment(request):
 
 
 @login_required
+def multiple_results(request):
+    """
+    Retrieve the results using the previously provided task name.
+    """
+    out = []
+    for job_name in request.GET.getlist("job"):
+        async = celeryresult.AsyncResult(job_name)
+        if async is None:
+            raise Http404
+        out.append({
+            "job_name": async.task_id,
+            "status": async.status,
+            "results": async.result
+        })         
+    return HttpResponse(simplejson.dumps(out), mimetype="application/json")
+
+
+@login_required
 def results(request, job_name):
     """
     Retrieve the results using the previously provided task name.
@@ -126,7 +144,7 @@ def zipped_results(request):
     zfile = gzip.GzipFile(mode='wb', compresslevel=6, fileobj=zbuf)
     for task in ctasks:
         async = celeryresult.AsyncResult(task)
-        data = _json_or_text_data(
+        data = _format_data(
             request, {
                 "job_name": async.task_id,
                 "status": async.status,
@@ -162,6 +180,7 @@ def test(request, ids):
     """
 
     print "ARGS: %s" % ids
+    
     return render_to_response("ocr/test.html", {})
 
 
@@ -215,7 +234,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             })
         # should be past the danger zone now...
         transaction.commit()
-        return _json_or_text_response(request, out)
+        return _format_response(request, out)
     except Exception, err:
         print err
         transaction.rollback()
@@ -247,7 +266,7 @@ def _format_task_results(request, async):
             }),
             mimetype="application/json"
         )
-    return _json_or_text_response(
+    return _format_response(
         request, {
             "job_name": async.task_id,
             "status": async.status,
@@ -264,6 +283,14 @@ def _wants_text_format(request):
     return request.META.get("HTTP_ACCEPT", "") == "text/plain" \
         or request.GET.get("format", "") == "text" \
         or request.POST.get("format", "") == "text"
+
+
+def _wants_hocr_format(request):
+    """
+    Determine whether we should send back HOCR.
+    """    
+    return request.GET.get("format", "") == "hocr" \
+        or request.POST.get("format", "") == "hocr"
 
 
 def _wants_png_format(request):
@@ -285,7 +312,7 @@ def _should_wait(request):
     return request.GET.get("wait", False)
 
 
-def _json_or_text_data(request, json):
+def _format_data(request, json):
     """
     Format the output string accordingly.
     """
@@ -317,16 +344,25 @@ def _json_or_text_data(request, json):
             if page.get("results"):
                 result += ocrutils.output_to_text(page.get("results"))
                 result += "\n"
+    elif _wants_hocr_format(request):
+        if isinstance(json, dict):
+            json = [json]
+        mimetype = "text/html"
+        result = ""
+        for page in json:
+            if page.get("results"):
+                result += ocrutils.output_to_text(page.get("results"))
+                result += "\n"
     else:
         result = simplejson.dumps(json)
     return result, mimetype
 
 
-def _json_or_text_response(request, json):
+def _format_response(request, json):
     """
     Return the appropriate mimetype
     """
-    result, mimetype = _json_or_text_data(request, json)
+    result, mimetype = _format_data(request, json)
     return HttpResponse(result, mimetype=mimetype)
 
 
