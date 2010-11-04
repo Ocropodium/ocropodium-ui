@@ -5,9 +5,9 @@
     box-shadow: 2px 3px 3px #919598;
     -webkit-box-shadow: 2px 3px 3px #919598;
     -moz-box-shadow: 2px 3px 3px #919598;
-    border-radius: 2px;
-    -webkit-border-radius: 2px;
-    -moz-border-radius: 2px;
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
     overflow: auto;    
     background-color: #FDFDFD;
 }
@@ -24,6 +24,18 @@
     font-size: 1.1em;
     font-weight: bold;
     background-color: #DBDBFB;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(240,240,240))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(240,240,240) 35%,
+        rgb(245,245,245) 50%
+    );
 }
 
 .literal {
