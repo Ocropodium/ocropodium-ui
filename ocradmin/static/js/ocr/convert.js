@@ -2,16 +2,16 @@
 // Handle drag and drop page conversions
 //
 
+var PAGES = [];     // list of current pages in view
+var PENDING = {};   // hash of jobnames -> pending pages
+var POLLTIMER = -1; // id of current results-polling timer
 
-var PAGES = [];
-var POLLTIMER = -1;
-var PENDING = {};
-
+// should probably be moved to app-global scope
 const MINFONTSIZE = 6;
 const MAXFONTSIZE = 40;
 
+// only in global scope for dubugging purposes
 var uploader = null;
-//var pbuilder = null;
 var formatter = null;
 
 
@@ -292,11 +292,5 @@ $(function() {
 
     // fetch the appropriate models...
     rebuildModelLists($("select[name=engine]").val());    
-
-    // initialise the controls
-    //pbuilder = new ParameterBuilder("options", ["ISegmentLine", "IGrouper"]);
-    //pbuilder.registerComponent("grouper", "Grouper", "StandardGrouper");
-    //pbuilder.registerComponent("segmenter", "Line Segmenter", "DpSegmenter");
-    //pbuilder.init();
 });
 
