@@ -233,8 +233,8 @@ $(function() {
         }
     });
 
-    // refrwesh on compparm enter
-    $(".compparam > input").live("keydown", function(event) {
+    // refresh on compparm enter    
+    $(".compparam > input").live("keydown", function(event) {         
         if (event.keyCode == KC_RETURN) {
            refreshImage();            
            return false;
