@@ -3,106 +3,113 @@
 // type, i.e. the binclean[0-10] params used by the pre-processing stage.
 
 
-function ParameterBuilder(container_id, ctypes) {
-    var url = "/ocr/components?" + $.map(ctypes, function(c, i) {
-            return "type=" + c;
-    }).join("&"),
-    container = $("#" + container_id),
-
-    // cache of parameter data, fetched from the server
-    componentdata = null,
-
-    // the list of components to build initially, set via
-    // registerComponent
-    components = [],
-
-    // meta-component - component containing other components
-    metacomponent = null,
-
-    // track the number of multiple params of each type
-    multiples = {},
-
-    // regrettable need to map component names against
-    // their respective component types.  TODO: Make this
-    // go away
-    namemap = {
-        binclean:   "ICleanupBinary",
-        grayclean:  "ICleanupGray",
-        binarizer:  "IBinarize",
-        bindeskew:  "ICleanupBinary",        
-        graydeskew: "ICleanupBinary",   // don't ask, it's just like this...
-        psegmenter: "ISegmentPage",
-        segmenter:  "ISegmentLine",
-        grouper:    "IGrouper",
-    };
-
-    /*
-     *  Event stuff ===========================================================
-     */
-
-    // rebuild the params when components change
-    $(".ocroption").live("change", function(e) {
-        setComponentParams($(this).val(), $(this).parent("div").nextAll("div.compparam"));
-    });
-
-    $(".compsel").live('mouseenter mouseleave', function(event) {
-        if (event.type == 'mouseover') {
-            $(this).children("input[type='button']").css("opacity", 1);
-        } else {
-            $(this).children("input[type='button']").css("opacity", 0);
-        }
-    });
-
-    $(".addmulti").live("click", function(e) {
-        var compname = $(this).prev("select").attr("name");
-        var thisdiv = $(this).parent("div").parent("div");
-        var newdiv = thisdiv.clone();
-        newdiv.children("select").val("-");
-        newdiv.children("div.compparam").html("");
-        thisdiv.after(newdiv);
-        renumberMultiComponents(compname);
-    });
-
-    $(".remmulti").live("click", function(e) {
-        var compname = $(this).prevAll("select").attr("name");
-        $(this).parent("div").parent("div").remove();
-        renumberMultiComponents(compname);
-    });
+var OCRJS = OCRJS || {};
 
 
-    /*
-     *  Functions =============================================================
-     */
-    var me = this;
+var ParameterBuilder = OCRJS.OcrBase.extend({
+    constructor: function(parent, ctypes, options) {
+        this.base(parent, options);
+        this._url = "/ocr/components?" + $.map(ctypes, function(c, i) {
+                return "type=" + c;
+        }).join("&"),
+
+        this._container = $(parent);
+
+        // cache of parameter data, fetched from the server
+        this._componentdata = null,
+
+        // the list of components to build initially, set via
+        // registerComponent
+        this._components = [],
+
+        // meta-component - component containing other components
+        this._metacomponent = null,
+
+        // track the number of multiple params of each type
+        this._multiples = {},
+
+        // regrettable need to map component names against
+        // their respective component types.  TODO: Make this
+        // go away
+        this._namemap = {
+            binclean:   "ICleanupBinary",
+            grayclean:  "ICleanupGray",
+            binarizer:  "IBinarize",
+            bindeskew:  "ICleanupBinary",        
+            graydeskew: "ICleanupBinary",   // don't ask, it's just like this...
+            psegmenter: "ISegmentPage",
+            segmenter:  "ISegmentLine",
+            grouper:    "IGrouper",
+        };
+        
+        this.setupEvents();
+    },
+
+
+
+    setupEvents: function() {
+        var self = this;
+
+        // rebuild the params when components change
+        $(".ocroption").live("change", function(e) {
+            self.setComponentParams($(this).val(), $(this).parent("div").nextAll("div.compparam"));
+        });
+
+        $(".compsel").live('mouseenter mouseleave', function(event) {
+            if (event.type == 'mouseover') {
+                $(this).children("input[type='button']").css("opacity", 1);
+            } else {
+                $(this).children("input[type='button']").css("opacity", 0);
+            }
+        });
+
+        $(".addmulti").live("click", function(e) {
+            var compname = $(this).prev("select").attr("name");
+            var thisdiv = $(this).parent("div").parent("div");
+            var newdiv = thisdiv.clone();
+            newdiv.children("select").val("-");
+            newdiv.children("div.compparam").html("");
+            thisdiv.after(newdiv);
+            self.renumberMultiComponents(compname);
+        });
+
+        $(".remmulti").live("click", function(e) {
+            var compname = $(this).prevAll("select").attr("name");
+            $(this).parent("div").parent("div").remove();
+            self.renumberMultiComponents(compname);
+        });
+    },
+
+
 
     // indicate we're doing something
-    this.setWaiting = function(wait) {
+    setWaiting: function(wait) {
         wait = wait || false;
         $(".ocroption, .compparam > input").attr("disabled", wait);
         //container.toggleClass("waiting", wait);
-    }
+    },
 
     // return a hash of param data
-    this.data = function() {
+    data: function() {
         var params = {};
         $(".ocroption, .compparam > input").each(function(i, p) {
             params[$(p).attr("name")] = $(p).val();
         });
         return params;    
-    }
+    },
 
-    this.serializedData = function() {
+    serializedData: function() {
         var params = [];
-        var data = me.data();
+        var data = this.data();
         for (var i in data) {
             params.push(i + "=" + data[i]);
         }
         return params.join("&");
-    }
+    },
 
     // add a component to the list of initially-built ones
-    this.registerComponent = function(cname, label, def, multiple, add_blank) {
-        components.push({
+    registerComponent: function(cname, label, def, multiple, add_blank) {
+        this._components.push({
             name: cname,
             label: label,
             defvalue: def,
@@ -110,40 +117,41 @@ function ParameterBuilder(container_id, ctypes) {
             multiple: multiple || false,
         });
         if (multiple) {
-            ++multiples[cname] || (multiples[cname] = 0);
+            ++this.multiples[cname] || (this.multiples[cname] = 0);
         }
-    }
+    },
 
     // allow registering a 'meta-parameter', aka StandardPreprocessing
     // that simply lists a collection of other params...
-    this.registerDefaultMetaComponent = function(cname) {
-        metacomponent = cname;        
-    }
+    registerDefaultMetaComponent: function(cname) {
+        this._metacomponent = cname;        
+    },
 
     // trigger the ajax call to fetch parameter info...
-    this.init = function() {
+    init: function() {
+        var self = this;              
         $.ajax({
-            url: url,
+            url: self._url,
             dataType: "json",
             beforeSend: function() {
-                me.setWaiting(true);
+                self.setWaiting(true);
             },
             complete: function() {
-                me.setWaiting(false);
+                self.setWaiting(false);
             },
             error: OCRJS.ajaxErrorHandler,
             success: function(data) {
-                componentdata = data;
-                buildParameters();
+                self._componentdata = data;
+                self.buildParameters();
             },
         });
-    }
+    },
 
     // clear everything and start over...
-    this.reinit = function() {
-        container.html("");
-        me.init();
-    }
+    reinit: function() {
+        this._container.html("");
+        this.init();
+    },
 
     // load an object containing param data...
     // data looks like:
@@ -151,7 +159,8 @@ function ParameterBuilder(container_id, ctypes) {
     //      binarizer: "BinarizeByHT",
     //      BinarizeByHT__k1:  0.1,
     // }
-    this.loadData = function(data) {
+    loadData: function(data) {
+        var self = this;                  
         $.each(data, function(key, value) {
             if (!key.match(/__/)) {
                 var sel = $("#" + key);
@@ -160,8 +169,8 @@ function ParameterBuilder(container_id, ctypes) {
                 } else {
                     // add a multi component select with a blank
                     // option
-                    addComponentSelect(key, key, value, true);
-                    renumberMultiComponents(key);
+                    self.addComponentSelect(key, key, value, true);
+                    self.renumberMultiComponents(key);
                     sel = $("#" + key);
                 }
                 sel.trigger("change");
@@ -182,21 +191,21 @@ function ParameterBuilder(container_id, ctypes) {
                 $(comp).parent("div").parent("div").remove();
             }
         });
-    }
+    },
 
     /*
      *  Private stuff =========================================================
      */
 
-    var sortByName = function(a, b) {
+    _sortByName: function(a, b) {
         var x = a.name;
         var y = b.name;
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-    }
+    },
 
     // when the user adds another multi-component (binclean1-10),
     // renumber them accordingly
-    var renumberMultiComponents = function(compname) {
+    renumberMultiComponents: function(compname) {
         var basename = compname.match(/(\w+?)(\d+)$/)[1];
         var count = 0;
         $("select[name^='" + basename + "']").each(function(i, sel) {
@@ -214,26 +223,26 @@ function ParameterBuilder(container_id, ctypes) {
         $("select[name^='" + basename + "']").nextAll("input.remmulti")
             .attr("disabled", count == 1);
 
-    }
+    },
 
     // construct a UI containing the registered components, with
     // the fetched default parameter info...
-    var buildParameters = function() {
-        if (metacomponent) {
-            buildMetaComponentSet();
+    buildParameters: function() {
+        if (this._metacomponent) {
+            this.buildMetaComponentSet();
         } else {
-            buildRegisteredComponentSet();
+            this.buildRegisteredComponentSet();
         }
-    }
+    },
 
     // use a particular component to provide a template
     // for the full component set
-    var buildMetaComponentSet = function() {
-        var metacomp = componentdata[metacomponent];
+    buildMetaComponentSet: function() {
+        var metacomp = this._componentdata[this._metacomponent];
 
         // sort the list alphabetically - affects the
         // original data but we don't care
-        metacomp.params.sort(sortByName);
+        metacomp.params.sort(this._sortByName);
 
         // sort the list so multiple c-params go at the end...
         var splist = [];
@@ -246,43 +255,45 @@ function ParameterBuilder(container_id, ctypes) {
             }
         });
         // add both lists of params to the page
+        var self = this;                               
         $.each([splist, mplist], function(i, list) {
             $.each(list, function(i, param) {
                 if (param.value) {
-                    addComponentSelect(param.name, param.name, param.value, true);
+                    self.addComponentSelect(param.name, param.name, param.value, true);
                 }
             });
         });
-    }
+    },
 
-    var buildRegisteredComponentSet = function() {
-        $.each(components, function(i, comp) {
-            addComponentSelect(comp.name, comp.label, comp.defvalue, comp.blank);
-        });
-    }
+    buildRegisteredComponentSet: function() {
+        for (var i in this._components) {
+            var comp = this._components[i];
+            this.addComponentSelect(comp.name, comp.label, comp.defvalue, comp.blank);
+        }
+    },
 
     // get the component type for a string name like
     // binclean0 -> ICleanupBinary.  This is listed
     // in the namemap but we also need to strip of
     // any numeric suffix
-    var getComponentType = function(compname) {
-        var ctype = namemap[compname.match(/(\w+?)(\d*)$/)[1]];
+    getComponentType: function(compname) {
+        var ctype = this._namemap[compname.match(/(\w+?)(\d*)$/)[1]];
         if (!ctype) {
             throw "Bad component type string: '" + compname + 
                 "'.  Expecting something like 'binclean0', 'binarizer'";
         }
         return ctype; 
-    }
+    },
 
-    var setComponentParams = function(compname, pdiv) {
+    setComponentParams: function(compname, pdiv) {
         pdiv.html("");
         if (!compname || compname == "-") {
             return;
         }
         var plabel = $("<label></label>");
         var pinput = $("<input type='text'></input>");
-        for (var i in componentdata[compname].params) {
-            var param = componentdata[compname].params[i];
+        for (var i in this._componentdata[compname].params) {
+            var param = this._componentdata[compname].params[i];
             var pname = compname + "__" + param.name;
             pdiv.append(plabel.clone().text(param.name).attr("for", pname));    
             pdiv.append(
@@ -291,27 +302,27 @@ function ParameterBuilder(container_id, ctypes) {
                     .val(param.value));
         }
 
-    }
+    },
 
     // get a list of components for a param name like 'binarize'
-    var getComponentOptions = function(name) {
-        var comptype = getComponentType(name);
+    getComponentOptions: function(name) {
+        var comptype = this.getComponentType(name);
         var complist = [];
-        for (var cname in componentdata) {
-            var comp = componentdata[cname];
+        for (var cname in this._componentdata) {
+            var comp = this._componentdata[cname];
             // skip metacomponent or those of different types
             if (comp.type != comptype || 
-                    (metacomponent && metacomponent == comp.name)) {
+                    (this._metacomponent && this._metacomponent == comp.name)) {
                 continue;
             }
             complist.push(comp);
         }
-        complist.sort(sortByName);
+        complist.sort(this._sortByName);
         return complist;
-    }
+    },
 
     // add a select with component selection options
-    var addComponentSelect = function(name, label, def, blank) {
+    addComponentSelect: function(name, label, def, blank) {
         var lab = $("<label></label>")
             .attr("for", name)
             .text(label);
@@ -332,20 +343,22 @@ function ParameterBuilder(container_id, ctypes) {
         if (blank) {
             sel.append($("<option></option>").attr("value", "-"));
         }
-        $.each(getComponentOptions(name), function(i, comp) {
+        $.each(this.getComponentOptions(name), function(i, comp) {
             sel.append($("<option></option>")
                     .attr("value", comp.name)
                     .text(comp.name)); 
         });
         if (def) {
             sel.attr("value", def);
-            setComponentParams(def, pdiv);
+            this.setComponentParams(def, pdiv);
         }
         var div1 = $("<div></div>").append(lab);
         var div2 = $("<div></div>").addClass("compsel").append(sel);
         if (name.match(/\d+$/)) {
             div2.append(add).append(rem);
         }
-        container.append(div1.append(div2).append(pdiv));
-    }
-}
+        this._container.append(div1.append(div2).append(pdiv));
+    },
+
+});
+
