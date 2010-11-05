@@ -326,9 +326,14 @@ $(function() {
     // initialize the preset manager
     // this first bit's a hack
     var presettype = window.location.pathname.replace(/\/ocr\//g, "").replace(/\//g, "");
-    presetmanager = new PresetManager("preset_container", presettype);
-    presetmanager.onPresetLoadData = pbuilder.loadData;
-    presetmanager.onPresetClear = pbuilder.reinit;
+
+    presetmanager = new PresetManager(document.getElementById("preset_container"), presettype);
+    presetmanager.onPresetLoadData = function(data) {
+        pbuilder.loadData(data);
+    };
+    presetmanager.onPresetClear = function() {
+        pbuilder.reinit();
+    };
 
     // initialise the uploader...
     var uploader  = new OCRJS.AjaxUploader(
