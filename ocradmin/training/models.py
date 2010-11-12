@@ -14,25 +14,6 @@ from ocradmin.ocr import utils as ocrutils
 
 
 
-def reference_page_location(instance, filename):
-    """
-    Get the path for a given reference page.
-    """
-    username = instance.user.username
-    project_id = instance.project.pk
-    outpath = ocrutils.FileWrangler(
-        username=username,
-        project_id=project_id,
-        reference=True,
-        temp=False,
-    )()
-    if not os.path.exists(outpath):
-        os.makedirs(outpath)
-        os.chmod(outpath, 0777)
-    return os.path.join(outpath, filename)
-
-
-
 class ParameterScore(models.Model):
     """
     A record of a job scoring a model on a given
