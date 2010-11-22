@@ -441,7 +441,6 @@ def _get_best_params(postdict, with_prefix=None):
     POST.  This is contingent on data in the models table.
     TODO: Make this less horrible
     """
-    print "Fetching params: %s" % postdict
     userparams = {}
     cleanedparams = {}
     if with_prefix is not None:
