@@ -135,6 +135,8 @@ class OcrModelTest(TestCase):
             dict(
                 name="Test Update Model",
                 tags="test model update",
+                app="ocropus",
+                type="char",
                 description="",
                 public=False,
             ),
