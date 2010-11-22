@@ -55,8 +55,8 @@ class OcrModelEditForm(OcrModelForm):
 
     class Meta:
         model = OcrModel
-        fields = ["name", "description", "public", "tags",]
-        exclude = ["user", "updated_on", "derived_from", "user", "app", "type"]
+        fields = ["name", "description", "public", "tags", "app", "type",]
+        exclude = ["user", "updated_on", "derived_from",]
 
 
 
