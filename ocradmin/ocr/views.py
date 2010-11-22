@@ -441,7 +441,7 @@ def _get_best_params(postdict, with_prefix=None):
     POST.  This is contingent on data in the models table.
     TODO: Make this less horrible
     """
-
+    print "Fetching params: %s" % postdict
     userparams = {}
     cleanedparams = {}
     if with_prefix is not None:
@@ -474,7 +474,7 @@ def _get_best_params(postdict, with_prefix=None):
     # get the lmodel/cmodel, either model object paths or defaults
     for modparam in ("cmodel", "lmodel"):
         try:
-            model = OcrModel.objects.get(name=userparams.get(modparam, "???"))
+            model = OcrModel.objects.get(name=cleanedparams.get(modparam, "???"))
             userparams[modparam] = model.file.path            
         except OcrModel.DoesNotExist:
             # try and choose the best model accordingly - this is a model
