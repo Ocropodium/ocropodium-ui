@@ -22,6 +22,7 @@ from ocradmin.training.models import OcrComparison, ParameterScore
 from ocradmin.reference_pages.models import ReferencePage        
 from ocradmin.projects.utils import project_required
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
+from ocradmin.ocr.tools.manager import PluginManager
 
 
 class ReferenceSetForm(forms.Form):
@@ -374,6 +375,7 @@ def _get_comparison_context(request):
         project=request.session["project"],
         binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
         segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
+        engines=PluginManager.get_provider("line"),
         tsets=request.session["project"].reference_sets.all(),
     )
     

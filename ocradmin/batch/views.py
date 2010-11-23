@@ -35,6 +35,7 @@ from ocradmin.training.tasks import ComparisonTask
 from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params, _cleanup_params, \
         _handle_request, AppException
+from ocradmin.ocr.tools.manager import PluginManager
     
 
 
@@ -686,6 +687,7 @@ def _new_batch_context(request):
     return dict(
         prefix="",
         form=form,
+        engines=PluginManager.get_provider("line"),
         binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
         segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
     )

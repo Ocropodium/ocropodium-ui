@@ -18,7 +18,9 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.ocr.utils import saves_files
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
-from ocradmin.ocrtasks.models import OcrTask 
+from ocradmin.ocrtasks.models import OcrTask
+
+from ocradmin.ocr.tools.manager import PluginManager
 
 
 class AppException(StandardError):
@@ -69,6 +71,7 @@ def convert(request):
             type="binarize").order_by("name"),
         "segpresets": OcrPreset.objects.filter(
             type="segment").order_by("name"),
+        "engines": PluginManager.get_provider("line")
     }
 
     return _ocr_task(

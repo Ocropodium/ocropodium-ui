@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from ocradmin.ocr import utils
 from ocradmin.vendor import deepzoom
+from ocradmin.ocr.tools.manager import PluginManager
+
 
 
 def make_deepzoom_proxies(logger, inpath, outpath, type, params):
@@ -104,7 +106,7 @@ class ConvertPageTask(AbortableTask):
             asyncres = AbortableAsyncResult(kwargs["task_id"])            
             return asyncres.backend.get_status(kwargs["task_id"]) == "ABORTED" 
 
-        converter = utils.get_converter(paramdict.get("engine", "tesseract"), 
+        converter = PluginManager.get_converter(paramdict.get("engine", "tesseract"), 
                 logger=logger, abort_func=abort_func, params=paramdict)
         
         # function for the converter to update progress
@@ -170,7 +172,7 @@ class ConvertLineTask(AbortableTask):
             paramdict["binout"] = utils.get_media_output_path(stdpath, "bin", ".png")
             paramdict["segout"] = utils.get_media_output_path(stdpath, "seg", ".png")
 
-        converter = utils.get_converter(paramdict.get("engine", "tesseract"), 
+        converter = PluginManager.get_converter(paramdict.get("engine", "tesseract"), 
                 logger=logger, abort_func=None, params=paramdict)
         paramdict["prebinarized"] = True
         out = converter.convert_lines(paramdict.get("binout").encode(), paramdict.get("coords"))
@@ -222,7 +224,7 @@ class BinarizePageTask(AbortableTask):
             logger.info("Rebinarising - file exists: %s, cache: %s" % (
                 os.path.exists(binpath), 
                 paramdict.get("allowcache")))
-            converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
+            converter = PluginManager.get_converter(paramdict.get("engine", "ocropus"),                 
                     logger=logger, abort_func=abort_func, params=paramdict)
             grey, page_bin = converter.standard_preprocess(filepath)
             pagewidth = page_bin.dim(0)
@@ -275,7 +277,7 @@ class SegmentPageTask(AbortableTask):
                 logger.error("CHMOD FAILED: %s" % outdir)
         segpath = os.path.join(outdir, segname)        
 
-        converter = utils.get_converter(paramdict.get("engine", "ocropus"),                 
+        converter = PluginManager.get_converter(paramdict.get("engine", "ocropus"),                 
                 logger=logger, abort_func=abort_func, params=paramdict)
         grey, page_bin = converter.standard_preprocess(filepath)
         page_seg = converter.get_page_seg(page_bin)
