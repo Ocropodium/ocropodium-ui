@@ -58,12 +58,10 @@ OCRJS.PageWidget = OCRJS.OcrBaseWidget.extend({
         this._closelink.click(function(event) {
             self.close();    
         });                
-        this._container.bind("mouseenter mouseleave", function(event) {
-            if (event.type == "mouseenter") {
-                $(this).find(".result_link, .close_link").show(200);
-            } else {
-                $(this).find(".result_link, .close_link").hide(200);
-            }
+        this._container.hoverIntent(function(event) {
+            $(this).find(".result_link, .close_link").show(200);
+        }, function(event) {
+            $(this).find(".result_link, .close_link").hide(200);
         });
     },
 
