@@ -14,6 +14,64 @@ from PIL import Image
 from django.utils import simplejson
 from django.conf import settings
 
+from HTMLParser import HTMLParser
+
+
+class HocrParser(HTMLParser):    
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.data = {}
+        self.linecnt = 0
+        self.currline = None
+        self.boxre = re.compile(".*?bbox (\d+) (\d+) (\d+) (\d+)")
+        self.gotpage = False
+
+    def parsefile(self, filename):
+        with open(filename, "r") as f:
+            for line in f.readlines():
+                self.feed(line)
+        return self.data                
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "div" and not self.gotpage:
+            for attr in attrs:
+                if attr[0] == "class" and attr[1] == "ocr_page":
+                    self.gotpage = True
+                    self.data["lines"] = []
+                    break
+            if self.gotpage:
+                for attr in attrs:
+                    if attr[0] == "title":
+                        boxmatch = self.boxre.match(attr[1])
+                        if boxmatch:
+                            dims = [int(i) for i in boxmatch.groups()]
+                            self.data["box"] = [
+                                dims[0], dims[3],
+                                dims[2] - dims[0], dims[3] - dims[1]]
+                        namematch = re.match("image \"([^\"]+)", attr[1])
+                        if namematch:
+                            self.data["page"] = namematch.groups()[0]
+        elif tag == "span":
+            for attr in attrs:
+                boxmatch = self.boxre.match(attr[1])
+                if boxmatch:
+                    dims = [int(i) for i in boxmatch.groups()]
+                    box = [
+                        dims[0], dims[3], dims[2] - dims[0], dims[3] - dims[1]]
+                    self.currline = dict(line=self.linecnt, box=box)
+    def handle_data(self, data):
+        if self.currline is not None:
+            self.currline["text"] = data
+
+    def handle_endtag(self, tag):
+        if tag == "span" and self.currline is not None \
+                and self.currline.get("text"):
+            self.linecnt += 1
+            self.data["lines"].append(self.currline.copy())
+            self.currline = None
+
+
+
 
 class AppException(StandardError):
     """
@@ -265,7 +323,7 @@ def media_path_to_url(path):
     """
     if path:
         path = os.path.abspath(path)
-        return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
+        return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)    
 
 
 def output_to_text(jsondata, linesep="\n"):
