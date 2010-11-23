@@ -19,7 +19,6 @@ from ocradmin.ocr.utils import saves_files
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask
-
 from ocradmin.ocr.tools.manager import PluginManager
 
 
