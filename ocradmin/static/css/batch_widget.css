@@ -227,7 +227,9 @@
 
 .recent_batch {
     padding: 5px 10px;
-    overflow: hidden; 
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; 
 }
 
 .recent_batch .recent_batch_link {
