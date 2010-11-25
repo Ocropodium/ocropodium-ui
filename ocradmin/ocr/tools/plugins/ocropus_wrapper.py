@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import logging
+import traceback
 import UserDict
 from ocradmin.ocr.tools import base, check_aborted, set_progress
 import iulib
