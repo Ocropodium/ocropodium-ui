@@ -102,7 +102,7 @@ def create(request):
     Create a new training task.
     """
     project = request.session["project"]
-    form = TrainingSetForm(request.POST)
+    form = ReferenceSetForm(request.POST)
     formok = form.is_valid()
     try: 
         tsets = ReferencePage.objects.filter(pk__in=request.POST.getlist("tset"))
@@ -132,7 +132,7 @@ def create(request):
         user = request.user,
         project = project,
         page_name=name,
-        task_type="train",
+        task_name="train",
         status="INIT",
         args=args,
         kwargs=kwargs,        
