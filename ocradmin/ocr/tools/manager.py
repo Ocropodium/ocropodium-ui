@@ -39,8 +39,13 @@ class PluginManager(object):
                             break
         return engines                    
 
-
-
+    @classmethod
+    def get_trainer(cls, name, *args, **kwargs):
+        """
+        Fetch a given trainer class.  Currently this is the
+        same as the converter.
+        """
+        return cls.get_converter(name, *args, **kwargs)
 
     @classmethod
     def get_converter(cls, name, *args, **kwargs):
