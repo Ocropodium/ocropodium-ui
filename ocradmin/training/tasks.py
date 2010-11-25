@@ -12,6 +12,7 @@ from ocradmin.training import utils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage
+from ocradmin.ocr.tools.manager import PluginManager
 
 
 
@@ -30,7 +31,6 @@ class LineTrainTask(AbortableTask):
         """
         datasets = ReferencePage.objects.filter(pk__in=dataset_ids)
         cmodel = OcrModel.objects.get(pk=cmodel_id)
-        #cmodel = OcrModel.objects.get(pk=cmodel_id)
         paramdict = dict(
             cmodel=cmodel.file.path.encode(),
             outmodel=os.path.join(outdir, 
@@ -51,10 +51,9 @@ class LineTrainTask(AbortableTask):
             asyncres = AbortableAsyncResult(kwargs["task_id"])            
             return asyncres.is_aborted()
 
-        trainer = ocrutils.get_trainer(logger=logger, abort_func=abort_func,
+        trainer = PluginManager.get_trainer("ocropus", logger=logger, abort_func=abort_func,
                 params=paramdict)
         for pagedata in datasets:
-            #pagedata = ReferencePage.objects.get(pk=pk)
             trainer.load_training_binary(pagedata.binary_image.path.encode())
             # we've got a Training page.  Go through it, and 
             # train on each line
@@ -115,7 +114,7 @@ class ComparisonTask(AbortableTask):
         # ground truth is already a binary, so tell the converter not
         # to redo it...
         #paramdict["prebinarized"] = True
-        converter = ocrutils.get_converter(
+        converter = PluginManager.get_converter(
                 paramdict.get("engine", "tesseract"), 
                 logger=logger, abort_func=abort_func, params=paramdict)
         
