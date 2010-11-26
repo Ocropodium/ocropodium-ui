@@ -37,7 +37,6 @@ def index(request):
     return HttpResponseRedirect("/ocr/convert/")
 
 
-
 @login_required
 @saves_files
 @transaction.commit_manually
@@ -53,7 +52,6 @@ def binarize(request):
         "Binarize",
         tasks.BinarizePageTask,
     )
-
 
 
 @login_required
@@ -114,7 +112,7 @@ def multiple_results(request):
         async = celeryresult.AsyncResult(job_name)
         if async is None:
             raise Http404
-        out.append(_async_data(async))         
+        out.append(_async_data(async))
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
@@ -128,36 +126,6 @@ def results(request, job_name):
         raise Http404
 
     return _format_task_results(request, async)
-
-
-@login_required
-def zipped_results(request):
-    """
-    Send back quicky results for several
-    pages in a zip.
-    """
-    ctasks = request.GET.getlist("task")
-    import cStringIO, gzip
-    zbuf = cStringIO.StringIO()
-    zfile = gzip.GzipFile(mode='wb', compresslevel=6, fileobj=zbuf)
-    for task in ctasks:
-        async = celeryresult.AsyncResult(task)
-        data = _format_data(
-            request, {
-                "job_name": async.task_id,
-                "status": async.status,
-                "results": async.result
-            }
-        )[0]        
-        zfile.write(data)
-    zfile.close()
-
-    compressed_content = zbuf.getvalue()
-    response = HttpResponse(compressed_content)
-    response['Content-Encoding'] = 'application/octet-stream'
-    response['Content-Length'] = str(len(compressed_content))
-    response['Content-Disposition'] = "attachment; filename=results.tar.gz;"
-    return response
 
 
 @login_required
@@ -178,7 +146,6 @@ def test(request, ids):
     """
 
     print "ARGS: %s" % ids
-    
     return render_to_response("ocr/test.html", {})
 
 
@@ -187,7 +154,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     Generic handler for OCR tasks which run a celery job.
     """
     if not request.method == "POST":
-        return render_to_response(template, context, 
+        return render_to_response(template, context,
                         context_instance=RequestContext(request))
 
     try:
@@ -198,7 +165,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     if not paths:
         return HttpResponse(
                 simplejson.dumps({"error": "no valid images found"}),
-                mimetype="application/json")     
+                mimetype="application/json")
 
     # init the job from our params
     asynctasks = []
@@ -217,8 +184,8 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         )
         ocrtask.save()
         asynctasks.append(
-            (os.path.basename(path), celerytask.apply_async(args=args, **kwargs))
-        )
+            (os.path.basename(path),
+                celerytask.apply_async(args=args, **kwargs)))
     try:
         # aggregate the results.  If necessary wait for tasks.
         out = []
@@ -238,16 +205,16 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         transaction.rollback()
         return HttpResponse(
             simplejson.dumps({
-                "error": err.message, 
+                "error": err.message,
                 "trace": "\n".join(
-                    [ "\t".join(str(t)) for t in traceback.extract_stack()]
+                    ["\t".join(str(t)) for t in traceback.extract_stack()]
                 )
             }),
             mimetype="application/json"
-        ) 
+        )
 
 
-def _async_data(async):        
+def _async_data(async):
     """
     Convert an async object into suitable JSON.
     """
@@ -258,14 +225,14 @@ def _async_data(async):
             job_name=async.task_id,
             status=async.status,
             results=None,
-            error=err.message, 
+            error=err.message,
             trace=taskmeta.traceback
         )
     return dict(
         job_name=async.task_id,
         status=async.status,
         results=async.result
-    )         
+    )
 
 
 def _format_task_results(request, async):
@@ -276,11 +243,10 @@ def _format_task_results(request, async):
     return _format_response(request, _async_data(async))
 
 
-
 def _wants_text_format(request):
     """
     Determine whether we should send back plain text instead of JSON.
-    """    
+    """
     return request.META.get("HTTP_ACCEPT", "") == "text/plain" \
         or request.GET.get("format", "") == "text" \
         or request.POST.get("format", "") == "text"
@@ -289,7 +255,7 @@ def _wants_text_format(request):
 def _wants_hocr_format(request):
     """
     Determine whether we should send back HOCR.
-    """    
+    """
     return request.GET.get("format", "") == "hocr" \
         or request.POST.get("format", "") == "hocr"
 
@@ -302,7 +268,6 @@ def _wants_png_format(request):
     return (request.META.get("HTTP_ACCEPT", "") == "image/png" \
         or request.GET.get("format", "") == "png" \
         or request.POST.get("format", "") == "png")
-
 
 
 def _should_wait(request):
@@ -399,12 +364,11 @@ def _handle_multipart_upload(request, outdir):
     return paths, _get_best_params(request.POST.copy())
 
 
-
 def _get_preset_data(param):
     """
     Fetch a preset by primary key and return its data
     dict for merging into OCR params.  Try to get the
-    preset via primary key (as used via the web UI) 
+    preset via primary key (as used via the web UI)
     or name (as used via Curl).
     """
     pmatch = re.match("preset_(\d+)", param)
@@ -451,8 +415,8 @@ def _get_best_params(postdict, with_prefix=None):
                 cleanedparams[key.replace(with_prefix, "", 1)] = value
         if len(cleanedparams) == 0:
             return {}
-    else:                
-        cleanedparams = userparams = postdict.copy()    
+    else:
+        cleanedparams = userparams = postdict.copy()
 
     # default to tesseract if no 'engine' parameter...
     userparams["engine"] = cleanedparams.get("engine", "tesseract")
@@ -475,8 +439,8 @@ def _get_best_params(postdict, with_prefix=None):
     # get the lmodel/cmodel, either model object paths or defaults
     for modparam in ("cmodel", "lmodel"):
         try:
-            model = OcrModel.objects.get(name=cleanedparams.get(modparam, "???"))
-            userparams[modparam] = model.file.path            
+            model = OcrModel.objects.get(name=cleanedparams.get(modparam, "?"))
+            userparams[modparam] = model.file.path
         except OcrModel.DoesNotExist:
             # try and choose the best model accordingly - this is a model
             # named "Default Something"
@@ -487,8 +451,8 @@ def _get_best_params(postdict, with_prefix=None):
                     app__iexact=userparams["engine"],
                     type__iexact=modtype,
                 )[0]
-                userparams[modparam] = model.file.path            
+                userparams[modparam] = model.file.path
             except IndexError:
-                userparams[modparam] = "???" 
+                userparams[modparam] = "???"
 
-    return userparams    
+    return userparams

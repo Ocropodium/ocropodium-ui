@@ -20,7 +20,11 @@ class OcrModelForm(forms.ModelForm):
     """
         Base model form
     """
-    ALLOWED_FILE_TYPES = ("application/octet-stream", "application/x-gzip", "application/x-compressed-tar") 
+    ALLOWED_FILE_TYPES = (
+            "application/octet-stream",
+            "application/x-gzip",
+            "application/x-compressed-tar")
+
     def __init__(self, *args, **kwargs):
         super(OcrModelForm, self).__init__(*args, **kwargs)
 
@@ -35,12 +39,15 @@ class OcrModelForm(forms.ModelForm):
         data = self.cleaned_data["file"]
         if not data.content_type in self.ALLOWED_FILE_TYPES:
             raise forms.ValidationError(
-                    "Bad file type: %s.  Must be one of: %s" % (data.content_type, ", ".join(self.ALLOWED_FILE_TYPES)))
+                    "Bad file type: %s.  Must be one of: %s" % (
+                        data.content_type,
+                        ", ".join(self.ALLOWED_FILE_TYPES)))
         return data
 
     class Meta:
         model = OcrModel
-        fields = ["name", "file", "description", "public", "app", "type", "tags",]
+        fields = ["name", "file", "description",
+                "public", "app", "type", "tags"]
         exclude = ["user", "updated_on", "derived_from"]
 
 
@@ -55,9 +62,8 @@ class OcrModelEditForm(OcrModelForm):
 
     class Meta:
         model = OcrModel
-        fields = ["name", "description", "public", "tags", "app", "type",]
-        exclude = ["user", "updated_on", "derived_from",]
-
+        fields = ["name", "description", "public", "tags", "app", "type"]
+        exclude = ["user", "updated_on", "derived_from"]
 
 
 def index(request):
@@ -77,7 +83,7 @@ def model_query(user, order, **params):
 
     query = Q(public=True) | (Q(public=False) & Q(user=user))
     for key, val in params.items():
-        ld = {key:val}
+        ld = {key: val}
         query = query & Q(**ld)
 
     # if there's a tag present search by tagged item
@@ -89,9 +95,6 @@ def model_query(user, order, **params):
         return OcrModel.objects.filter(query).order_by(*order)
 
 
-
-
-
 @login_required
 def list(request):
     """
@@ -100,7 +103,7 @@ def list(request):
 
     tag = request.GET.get("tag")
     order = request.GET.get("order", "name")
-    fields = [ "name", "app", "type", ]
+    fields = ["name", "app", "type"]
     # add a 'invert token' if we're ordering by the
     # same field again
     fields = map(lambda x: "-%s" % x if x == order else x, fields)
@@ -113,7 +116,8 @@ def list(request):
     template = "ocrmodels/list.html" if not request.is_ajax() \
             else "ocrmodels/includes/model_list.html"
 
-    return render_to_response(template, context, context_instance=RequestContext(request))
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
 
 
 @login_required
@@ -125,9 +129,10 @@ def search(request):
     for key, val in request.GET.items():
         if key in ("app", "type"):
             qd[str(key)] = str(val)
-    mods = model_query(request.user, ["name", "created_on"], tag=request.GET.get("tag"), **qd)
-    return HttpResponse(serializers.serialize("json", mods), mimetype="application/json")
-
+    mods = model_query(request.user, ["name", "created_on"],
+            tag=request.GET.get("tag"), **qd)
+    return HttpResponse(serializers.serialize("json", mods),
+            mimetype="application/json")
 
 
 @login_required
@@ -135,15 +140,15 @@ def new(request):
     """
         Show the new model form.
     """
-
-    form = OcrModelForm(initial={"user" : request.user.pk})
+    form = OcrModelForm(initial={"user": request.user.pk})
     context = {"form": form}
     template = "ocrmodels/new.html" if not request.is_ajax() \
             else "ocrmodels/includes/new_model_form.html"
 
-    return render_to_response(template, context, context_instance=RequestContext(request))
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
 
-    
+
 @login_required
 def create(request):
     """
@@ -151,12 +156,13 @@ def create(request):
     """
     form = OcrModelForm(request.POST, request.FILES)
     if not form.is_valid():
-        context = {"form": form}        
+        context = {"form": form}
         template = "ocrmodels/new.html" if not request.is_ajax() \
                 else "ocrmodels/includes/new_model_form.html"
-        return render_to_response(template, context, context_instance=RequestContext(request))
+        return render_to_response(template, context,
+                context_instance=RequestContext(request))
 
-    model = form.instance #OcrCharModel(**form.cleaned_data)
+    model = form.instance
     model.user = request.user
     model.full_clean()
     model.save()
@@ -169,14 +175,14 @@ def delete(request, pk):
     """
         Delete a model.
     """
-    
+
     model = get_object_or_404(OcrModel, pk=pk)
     if request.user.is_staff or model.user == request.user:
         model.delete()
         messages.success(request, "Model deleted OK.")
     else:
         messages.error(request, "Attempt to delete non-owned model!")
-        
+
     template = "ocrmodels/list.html" if not request.is_ajax() \
             else "ocrmodels/includes/model_list.html"
 
@@ -200,8 +206,8 @@ def show(request, pk):
     context = {"model": model, "info": modelinfo}
     template = "ocrmodels/show.html" if not request.is_ajax() \
             else "ocrmodels/includes/show_model.html"
-    return render_to_response(template, context, context_instance=RequestContext(request))
-
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
 
 
 def edit(request, pk):
@@ -211,11 +217,12 @@ def edit(request, pk):
 
     model = get_object_or_404(OcrModel, pk=pk)
     form = OcrModelEditForm(instance=model)
-    context = {"form" : form, "model": model}
+    context = {"form": form, "model": model}
     template = "ocrmodels/includes/edit_model_form.html" if request.is_ajax() \
             else "ocrmodels/edit.html"
 
-    return render_to_response(template, context, context_instance=RequestContext(request))
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
 
 
 def update(request, pk):
@@ -231,12 +238,13 @@ def update(request, pk):
         context = {"form": form}
         template = "ocrmodels/edit.html" if not request.is_ajax() \
                 else "ocrmodels/includes/edit_model_form.html"
-        return render_to_response(template, context, context_instance=RequestContext(request))
+        return render_to_response(template, context,
+                context_instance=RequestContext(request))
 
     if form.has_changed():
-        model = form.instance 
+        model = form.instance
         model.full_clean()
         model.save()
         messages.success(request, "Model was updated OK.")
 
-    return HttpResponseRedirect("/ocrmodels/list") 
+    return HttpResponseRedirect("/ocrmodels/list")

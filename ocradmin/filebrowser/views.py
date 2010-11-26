@@ -50,7 +50,7 @@ def entry_info(path):
             type = "link"
         elif S_ISREG(mode):
             type = "file"
-        stats.append( (
+        stats.append((
             entry,
             type,
             st.st_size,
@@ -59,7 +59,7 @@ def entry_info(path):
             st.st_ctime
         ))
     return stats
-            
+
 
 @login_required
 def ls(request):
@@ -74,9 +74,8 @@ def ls(request):
     ))
     fulldir = os.path.join(root, dir)
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(entry_info(fulldir), response) #cls=ExtJsonEncoder)
+    simplejson.dump(entry_info(fulldir), response)
     return response
-
 
 
 @login_required

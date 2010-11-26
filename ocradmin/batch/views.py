@@ -18,7 +18,8 @@ from django.core.servers.basehttp import FileWrapper
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Count
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError 
+from django.http import HttpResponse, HttpResponseRedirect, \
+        HttpResponseServerError
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
@@ -36,7 +37,6 @@ from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _get_best_params, _cleanup_params, \
         _handle_request, AppException
 from ocradmin.ocr.tools.manager import PluginManager
-    
 
 
 PER_PAGE = 25
@@ -46,9 +46,10 @@ def batch_query(params):
     """
     Query the batch db.
     """
-    order = [x for x in params.getlist("order_by") if x != ""] or ["created_on"]
+    order = [x for x in params.getlist("order_by") if x != ""] \
+            or ["created_on"]
 
-    query =  Q()
+    query = Q()
     for key, val in params.items():
         if key.find("__") == -1 and \
                 not key in OcrBatch._meta.get_all_field_names():
@@ -86,8 +87,8 @@ def new(request):
     """
     template = "batch/new.html" if not request.is_ajax() \
         else "batch/includes/new_form.html"
-    return render_to_response(template, _new_batch_context(request), 
-            context_instance=RequestContext(request))    
+    return render_to_response(template, _new_batch_context(request),
+            context_instance=RequestContext(request))
 
 
 @login_required
@@ -103,42 +104,43 @@ def list(request):
         return render_to_response("batch/list.html", context,
                 context_instance=RequestContext(request))
 
-    paginator = Paginator(batch_query(params), PER_PAGE) 
+    paginator = Paginator(batch_query(params), PER_PAGE)
     try:
         page = int(request.GET.get('page', '1'))
     except ValueError:
         page = 1
-    
+
     try:
         batches = paginator.page(page)
     except (EmptyPage, InvalidPage):
         batches = paginator.page(paginator.num_pages)
-    
-    pythonserializer = serializers.get_serializer("python")()    
+
+    pythonserializer = serializers.get_serializer("python")()
     serializedpage = {}
     serializedpage["num_pages"] = paginator.num_pages
     wanted = ("end_index", "has_next", "has_other_pages", "has_previous",
-            "next_page_number", "number", "start_index", "previous_page_number")
+            "next_page_number", "number",
+            "start_index", "previous_page_number")
     for attr in wanted:
         want = getattr(batches, attr)
         if isinstance(want, MethodType):
             serializedpage[attr] = want()
         elif isinstance(want, (str, int)):
             serializedpage[attr] = want
-    # This gets rather gnarly, see: 
+    # This gets rather gnarly, see:
     # http://code.google.com/p/wadofstuff/wiki/DjangoFullSerializers
     serializedpage["params"] = params
     serializedpage["object_list"] = pythonserializer.serialize(
-        batches.object_list, 
-        extras=( "username", "is_complete", "task_count",),
-    ) 
+        batches.object_list,
+        extras=("username", "is_complete", "task_count",),
+    )
 
     response = HttpResponse(mimetype="application/json")
     simplejson.dump(serializedpage, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
-    
+
 @login_required
 @project_required
 @saves_files
@@ -155,7 +157,7 @@ def create(request):
     form = OcrBatchForm(request.POST)
     if not request.method == "POST" or not form.is_valid() or not paths:
         return render_to_response("batch/new.html",
-            _new_batch_context(request), 
+            _new_batch_context(request),
             context_instance=RequestContext(request))
 
     # create a batch db job
@@ -168,7 +170,7 @@ def create(request):
         tags=form.cleaned_data["tags"],
         task_type=celerytask.name,
         project=request.session["project"]
-    )    
+    )
     batch.save()
 
     # wrangle the params - this needs improving
@@ -200,7 +202,8 @@ def create(request):
         publisher = celerytask.get_publisher(connect_timeout=5)
         try:
             for args, kwargs in asyncparams:
-                celerytask.apply_async(args=args, publisher=publisher, **kwargs)
+                celerytask.apply_async(args=args,
+                        publisher=publisher, **kwargs)
         finally:
             publisher.close()
             publisher.connection.close()
@@ -213,7 +216,6 @@ def create(request):
     # return a serialized result
     transaction.commit()
     return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
-
 
 
 @login_required
@@ -234,7 +236,7 @@ def results(request, batch_pk):
     if "ALL" in statuses:
         statuses = None
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch, start, limit, statuses), 
+    simplejson.dump(_serialize_batch(batch, start, limit, statuses),
             response, cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
@@ -254,10 +256,10 @@ def page_results(request, batch_pk, page_index):
     response = HttpResponse(mimetype="application/json")
     taskssl = pyserializer.serialize(
         [page],
-        excludes=("transcripts", "args", "kwargs",), 
+        excludes=("transcripts", "args", "kwargs",),
     )
     taskssl[0]["fields"]["results"] = page.latest_transcript()
-    simplejson.dump(taskssl, response, 
+    simplejson.dump(taskssl, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
@@ -280,7 +282,7 @@ def save_page_data(request, batch_pk, page_index):
     result = Transcript(data=data, task=page)
     result.save()
 
-    return HttpResponse(simplejson.dumps({"ok": True}), 
+    return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
 
 
@@ -309,7 +311,7 @@ def viewer_binarization_results(request, task_id):
     """
     Trigger a re-binarization of the image for viewing purposes.
     """
-    async = celeryresult.AsyncResult(task_id)    
+    async = celeryresult.AsyncResult(task_id)
     out = dict(
         job_name=async.task_id,
         status=async.status,
@@ -323,7 +325,7 @@ def reconvert_lines(request, task_pk):
     """
     Quick hack method for testing Tesseract line results.
     """
-    jsonstr =  request.POST.get("coords")
+    jsonstr = request.POST.get("coords")
     linedata = simplejson.loads(jsonstr)
 
     task = get_object_or_404(OcrTask, pk=task_pk)
@@ -361,7 +363,7 @@ def latest(request):
     """
     try:
         batch = OcrBatch.objects.filter(
-            user=request.user, 
+            user=request.user,
             project=request.session["project"]
         ).order_by("-created_on")[0]
     except (OcrBatch.DoesNotExist, IndexError):
@@ -401,7 +403,7 @@ def upload_files(request):
     if not paths:
         return HttpResponse(
                 simplejson.dumps({"error": "no valid images found"}),
-                mimetype="application/json")     
+                mimetype="application/json")
 
     pathlist = [os.path.join(relpath, os.path.basename(p)) for p in paths]
     return HttpResponse(simplejson.dumps(pathlist), mimetype=mimetype)
@@ -417,7 +419,7 @@ def transcript(request, batch_pk):
     template = "batch/transcript.html"
     context = dict(batch=batch, initial=request.GET.get("page"))
 
-    return render_to_response(template, context, 
+    return render_to_response(template, context,
             context_instance=RequestContext(request))
 
 
@@ -428,7 +430,7 @@ def _show_batch(request, batch):
     template = "batch/show.html"
     context = {"batch": batch}
 
-    return render_to_response(template, context, 
+    return render_to_response(template, context,
             context_instance=RequestContext(request))
 
 
@@ -444,7 +446,7 @@ def retry_task(request, task_pk):
     except Exception, err:
         out = {"error": err.message}
 
-    return HttpResponse(simplejson.dumps(out), 
+    return HttpResponse(simplejson.dumps(out),
             mimetype="application/json")
 
 
@@ -454,10 +456,10 @@ def abort_task(request, task_pk):
     Abort a batch task.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
-    return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}), 
+    return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}),
             mimetype="application/json")
 
-    
+
 @transaction.commit_manually
 @login_required
 def abort_batch(request, batch_pk):
@@ -468,7 +470,7 @@ def abort_batch(request, batch_pk):
     for task in batch.tasks.all():
         _abort_celery_task(task)
     transaction.commit()
-    return HttpResponse(simplejson.dumps({"ok": True}), 
+    return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
 
 
@@ -480,9 +482,9 @@ def retry(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.tasks.all():
-        _retry_celery_task(task)        
+        _retry_celery_task(task)
     transaction.commit()
-    return HttpResponse(simplejson.dumps({"ok": True}), 
+    return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
 
 
@@ -494,9 +496,9 @@ def retry_errored(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.errored_tasks():
-        _retry_celery_task(task)        
+        _retry_celery_task(task)
     transaction.commit()
-    return HttpResponse(simplejson.dumps({"ok": True}), 
+    return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
 
 
@@ -504,7 +506,7 @@ def test(request):
     """
     Test action
     """
-    return render_to_response("batch/test.html", 
+    return render_to_response("batch/test.html",
             {}, context_instance=RequestContext(request))
 
 
@@ -521,8 +523,8 @@ def export_options(request, batch_pk):
         batch=batch,
         formats=formats
     )
-    return render_to_response(template, context, 
-            context_instance=RequestContext(request))            
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
 
 
 @login_required
@@ -551,11 +553,11 @@ def export(request, batch_pk):
             buf = StringIO.StringIO(smart_str(output))
             tar.addfile(info, buf)
     tar.close()
-    response["Content-Disposition"] = "attachment: filename=%s.tar.gz" % batch.name
+    response["Content-Disposition"] = \
+            "attachment: filename=%s.tar.gz" % batch.name
     return response
-    
 
-    
+
 @login_required
 def spellcheck(request):
     """
@@ -563,28 +565,12 @@ def spellcheck(request):
     """
     json = request.POST.get("data")
     if not json:
-        return HttpResponseServerError("No data passed to 'spellcheck' function.")
+        return HttpResponseServerError(
+                "No data passed to 'spellcheck' function.")
     data = simplejson.loads(json)
-#    replacepunc = {}
-#    for line in data.split("\n"):
-#        for word in line.split(" "):
-#            pmatch = re.match("([a-zA-Z])[\[\]\|\.,\"'!;]([a-zA-Z])", word)
-#            if pmatch:
-#                repl = "%sZZZ%s" % pmatch.groups() 
-#                print "Got spell match: %s -> %s" % (word, repl)
-#                replacepunc[word] = repl
-#                data = data.replace(word, repl, 1)
-
     aspell = batchutils.Aspell()
-    spelldata = aspell.spellcheck(data)
-#    for word in spelldata.keys():
-#        if replacepunc.get(word):
-#            print "Replacing %s -> %s" % (replacepunc[word], word)
-#            spelldata[replacepunc[word]] = spelldata[word]
-#            del spelldata[word]
-
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(spelldata, response, ensure_ascii=False)
+    simplejson.dump(aspell.spellcheck(data), response, ensure_ascii=False)
     return response
 
 
@@ -595,7 +581,8 @@ def delete(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     if request.user != batch.user:
-        messages.warning(request, "Unable to delete batch '%s': Permission denied" % batch.name)
+        messages.warning(request,
+                "Unable to delete batch '%s': Permission denied" % batch.name)
         return HttpResponseRedirect
     batch.delete()
     return HttpResponseRedirect("/batch/list/")
@@ -607,7 +594,7 @@ def _abort_celery_task(task):
     """
     if not task.is_active():
         return False
-    
+
     asyncres = AbortableAsyncResult(task.task_id)
     asyncres.revoke()
     asyncres.abort()
@@ -620,10 +607,10 @@ def _abort_celery_task(task):
 def _retry_celery_task(task):
     """
     Set a task re-running.
-    """                                             
+    """
     #celerytask = tasks.ConvertPageTask
     #celerytask.retry(args=task.args, kwargs=task.kwargs,
-    #            options=dict(task_id=task.task_id, loglevel=60, retries=2), 
+    #            options=dict(task_id=task.task_id, loglevel=60, retries=2),
     #            countdown=0, throw=False)
     if task.is_abortable():
         _abort_celery_task(task)
@@ -655,13 +642,13 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None):
     else:
         taskqset = batch.tasks.all()
     task_count = taskqset.count()
-    pyserializer = serializers.get_serializer("python")()     
+    pyserializer = serializers.get_serializer("python")()
     batchsl = pyserializer.serialize(
         [batch],
         extras=("estimate_progress", "is_complete",),
         relations={
-            "user":  { "fields": ("username") },
-            "ocrcomparison": {"fields": () },
+            "user": {"fields": ("username")},
+            "ocrcomparison": {"fields": ()},
         },
     )
     taskssl = pyserializer.serialize(
@@ -671,7 +658,7 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None):
     batchsl[0]["fields"]["tasks"] = taskssl
     batchsl[0]["extras"]["task_count"] = task_count
     return batchsl
-   
+
 
 def _new_batch_context(request):
     """
@@ -681,7 +668,7 @@ def _new_batch_context(request):
     # work out the name of the batch - start with how
     # many other batches there are in the projects
     project = request.session["project"]
-    batchname = "%s - Batch %d" % (project.name, 
+    batchname = "%s - Batch %d" % (project.name,
             project.ocrbatch_set.count() + 1)
     form = OcrBatchForm(initial={"name": batchname})
     return dict(
@@ -703,5 +690,3 @@ def _get_batch_file_paths(request):
     ))
     filenames = request.POST.get("files", "").split(",")
     return [os.path.join(dirpath, f) for f in sorted(filenames)]
-
-

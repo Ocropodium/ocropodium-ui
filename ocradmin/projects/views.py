@@ -21,7 +21,7 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject, OcrProjectDefaults
-from fedora.adaptor import fcobject, fcdatastream 
+from fedora.adaptor import fcobject, fcdatastream
 from ordereddict import OrderedDict
 from ocradmin.projects.tasks import IngestTask
 PER_PAGE = 10
@@ -75,7 +75,7 @@ def project_query(user, order, **params):
         if key.find("__") == -1 and \
                 not key in OcrProject._meta.get_all_field_names():
             continue
-        ld = {key:val}
+        ld = {key: val}
         query = query & Q(**ld)
 
     # if there's a tag present search by tagged item
@@ -85,8 +85,6 @@ def project_query(user, order, **params):
             tag).order_by(*order)
     else:
         return OcrProject.objects.filter(query).order_by(*order)
-
-
 
 
 @login_required
@@ -104,7 +102,7 @@ def list(request):
     """
     tag = request.GET.get("tag")
     order = request.GET.get("order", "name")
-    fields = [ "name", "created_on", "user__pk", ]
+    fields = ["name", "created_on", "user__pk"]
     # add a 'invert token' if we're ordering by the
     # same field again
     fields = map(lambda x: "-%s" % x if x == order else x, fields)
@@ -134,7 +132,7 @@ def new(request):
             context_instance=RequestContext(request))
 
 
-@transaction.autocommit    
+@transaction.autocommit
 @login_required
 def create(request):
     """
@@ -160,7 +158,6 @@ def create(request):
     return HttpResponseRedirect("/projects/load/%s/" % project.pk)
 
 
-
 @login_required
 def edit(request, pk):
     """
@@ -168,7 +165,7 @@ def edit(request, pk):
     """
     project = get_object_or_404(OcrProject, pk=pk)
     form = OcrProjectForm(instance=project)
-    defform = OcrProjectDefaultsForm(instance=project.defaults)    
+    defform = OcrProjectDefaultsForm(instance=project.defaults)
     context = {"project": project, "form": form, "defform": defform}
     template = "projects/edit.html"
     return render_to_response(template, context,
@@ -183,9 +180,9 @@ def update(request, pk):
     """
     project = get_object_or_404(OcrProject, pk=pk)
     form = OcrProjectForm(request.POST, instance=project)
-    defform = OcrProjectDefaultsForm(request.POST, instance=project.defaults)    
+    defform = OcrProjectDefaultsForm(request.POST, instance=project.defaults)
 
-    if request.method == "POST":        
+    if request.method == "POST":
         if not defform.is_valid() or not form.is_valid():
             # if we get here there's an error
             context = {"project": project, "form": form, "defform": defform}
@@ -220,21 +217,15 @@ def open(request):
     """
     List available projects.
     """
-    
-    # this is not complete yet
-    #if not request.is_ajax():
-    #    return list(request)
-
-    order = request.GET.getlist("order_by");
+    order = request.GET.getlist("order_by")
     params = request.GET.copy()
     projects = project_query(request.user, order, **params)
-    
+
     serializer = serializers.get_serializer("json")()
     json = serializer.serialize(
         projects,
     )
     return HttpResponse(json, mimetype="application/json")
-
 
 
 @login_required
@@ -266,7 +257,8 @@ def export(request, pk):
     project = get_object_or_404(OcrProject, pk=pk)
     template = "projects/export.html" if not request.is_ajax() \
             else "projects/includes/export_form.html"
-    dublincore = OrderedDict([(v, "") for v in fcobject.FedoraObject.DUBLINCORE])
+    dublincore = OrderedDict([(v, "") for v in \
+            fcobject.FedoraObject.DUBLINCORE])
     dublincore["title"] = "<page_name>"
     dublincore["creator"] = request.user.get_full_name()
     dublincore["description"] = project.description
@@ -306,9 +298,8 @@ def ingest(request, pk):
         description="",
         task_type=IngestTask.name,
         project=project
-    )    
+    )
     batch.save()
-
 
     for ts in project.reference_sets.all():
         tid = ocrutils.get_new_task_id()
@@ -326,10 +317,10 @@ def ingest(request, pk):
             kwargs=kwargs,
         )
         task.save()
-        asyncparams.append((args, kwargs))            
+        asyncparams.append((args, kwargs))
 
     # launch all the tasks
-    publisher = IngestTask.get_publisher(connect_timeout=5)    
+    publisher = IngestTask.get_publisher(connect_timeout=5)
     try:
         for args, kwargs in asyncparams:
             IngestTask.apply_async(args=args, publisher=publisher, **kwargs)
@@ -368,16 +359,4 @@ def delete_project(request, project_pk):
     else:
         project.delete()
         messages.success(request, "Project '%s' deleted." % project.name)
-    return HttpResponseRedirect("/projects/list")                
-
-
-#@login_required
-#def delete(request, pk):
-#    """
-#    Show a form for editing the project.
-#    """
-#    project = get_object_or_404(OcrProject, pk=pk)
-#    project.delete()
-#    return HttpResponseRedirect("/projects/list/")
-
-
+    return HttpResponseRedirect("/projects/list")

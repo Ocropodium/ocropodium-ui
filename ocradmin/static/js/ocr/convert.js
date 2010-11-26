@@ -211,13 +211,6 @@ $(function() {
         $.cookie("jobnames", null);
         updateUiState();
     });
-    $("#download").click(function(event) {
-        var jobnames = [];
-        $.each(PAGES, function(i, page) {
-            jobnames.push("task=" + page.id());
-        });
-        $("#download").attr("href", "/ocr/zipped_results/?" + jobnames.join("&"));
-    });
     $("#zoomin").click(function(event) {
         $("#font_size").val(parseInt($("#font_size").val()) + 2);
         $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});

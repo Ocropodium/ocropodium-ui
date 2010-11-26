@@ -7,7 +7,8 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
 from django.db.models import Q, Count
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError 
+from django.http import HttpResponse, HttpResponseRedirect, \
+        HttpResponseServerError
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
@@ -19,7 +20,7 @@ from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.training.models import OcrComparison, ParameterScore
-from ocradmin.reference_pages.models import ReferencePage        
+from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.projects.utils import project_required
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 from ocradmin.ocr.tools.manager import PluginManager
@@ -62,7 +63,7 @@ def comparison_query(order, **params):
 
     query = Q()
     for key, val in params.items():
-        ld = {key:val}
+        ld = {key: val}
         query = query & Q(**ld)
 
     # if there's a tag present search by tagged item
@@ -70,7 +71,6 @@ def comparison_query(order, **params):
             .filter(query)\
             .order_by(*order)\
             .annotate(groundtruths=Count("parameter_scores__ground_truth"))
-
 
 
 @project_required
@@ -90,7 +90,7 @@ def new(request):
         project=request.session["project"],
         tsets=request.session["project"].reference_sets.all(),
     )
-    return render_to_response(template, context, 
+    return render_to_response(template, context,
             context_instance=RequestContext(request))
 
 
@@ -104,38 +104,39 @@ def create(request):
     project = request.session["project"]
     form = ReferenceSetForm(request.POST)
     formok = form.is_valid()
-    try: 
-        tsets = ReferencePage.objects.filter(pk__in=request.POST.getlist("tset"))
+    try:
+        tsets = ReferencePage.objects.filter(
+                pk__in=request.POST.getlist("tset"))
     except ReferencePage.DoesNotExist:
         formok = False
 
     if not formok:
-        template = "training/new.html"          
+        template = "training/new.html"
         context = dict(
             form=form,
             tsets=project.reference_sets.all(),
             project=project,
         )
-        return render_to_response(template, context, 
+        return render_to_response(template, context,
                 context_instance=RequestContext(request))
-    
+
     name = form.cleaned_data["name"]
     cmodel = form.cleaned_data["cmodel"]
-    
+
     # make us a new task entry
-    tid = ocrutils.get_new_task_id()    
+    tid = ocrutils.get_new_task_id()
     args = ([t.pk for t in tsets], cmodel.pk, request.output_path)
     # Note: could add a 'queue' param here
-    kwargs = dict(task_id=tid, loglevel=60, retries=2,) 
+    kwargs = dict(task_id=tid, loglevel=60, retries=2,)
     task = OcrTask(
         task_id=tid,
-        user = request.user,
-        project = project,
+        user=request.user,
+        project=project,
         page_name=name,
         task_name="train",
         status="INIT",
         args=args,
-        kwargs=kwargs,        
+        kwargs=kwargs,
     )
     task.save()
     LineTrainTask.apply_async(args=args, **kwargs)
@@ -169,7 +170,8 @@ def score_models(request):
     project = request.session["project"]
 
     try:
-        tsets = ReferencePage.objects.filter(pk__in=request.POST.getlist("tset"))
+        tsets = ReferencePage.objects.filter(
+                pk__in=request.POST.getlist("tset"))
         assert(tsets)
         assert(form.is_valid())
     except (ReferencePage.DoesNotExist, AssertionError):
@@ -199,7 +201,7 @@ def score_models(request):
     psetnames = _get_paramset_names(request.POST)
     paramsets = _get_paramset_list(request.POST)
     assert(len(psetnames) == len(paramsets))
-    
+
     for gtruth in tsets:
         path = gtruth.source_image.path
         for i in range(len(paramsets)):
@@ -219,26 +221,27 @@ def score_models(request):
                 kwargs=kwargs,
             )
             task.save()
-            asyncparams.append((args, kwargs))            
+            asyncparams.append((args, kwargs))
 
             # create a score record for this task
             score = ParameterScore(
-                name=psetnames[i],                
+                name=psetnames[i],
                 task=task,
                 comparison=comparison,
                 ground_truth=gtruth
             )
             score.save()
     # launch all the tasks (as comparisons, not converts)
-    publisher = ComparisonTask.get_publisher(connect_timeout=5)    
+    publisher = ComparisonTask.get_publisher(connect_timeout=5)
     try:
         for args, kwargs in asyncparams:
-            ComparisonTask.apply_async(args=args, publisher=publisher, **kwargs)
+            ComparisonTask.apply_async(
+                    args=args, publisher=publisher, **kwargs)
     finally:
         publisher.close()
         publisher.connection.close()
-    return HttpResponseRedirect("/batch/show/%s/" % batch.pk) 
-    
+    return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
+
 
 @project_required
 @login_required
@@ -273,14 +276,14 @@ def comparison(request, comparison_pk):
         if not score.score is None:
             totals[score.name] += score.score
             counts[score.name] += 1
-    
+
     for name, score in totals.iteritems():
         if counts[name] > 0:
             totals[name] /= counts[name]
 
     template = "training/comparison.html" if not request.is_ajax() \
             else "training/includes/comparison_details.html"
-        
+
     context = dict(
         comparison=comparison,
         scores=scores,
@@ -288,7 +291,6 @@ def comparison(request, comparison_pk):
     )
     return render_to_response(template, context,
             context_instance=RequestContext(request))
-
 
 
 @project_required
@@ -309,8 +311,8 @@ def show_paramscore(request, paramscore_pk):
             else "training/includes/modelscore.html"
     return render_to_response(template, context,
             context_instance=RequestContext(request))
-            
-    
+
+
 @project_required
 @login_required
 def comparisons(request):
@@ -318,7 +320,7 @@ def comparisons(request):
     List the Model comparisons.
     """
     order = request.GET.get("order", "created_on")
-    fields = [ "name", "created_on", "groundtruths",]
+    fields = ["name", "created_on", "groundtruths"]
     # add a 'invert token' if we're ordering by the
     # same field again
     fields = map(lambda x: "-%s" % x if x == order else x, fields)
@@ -371,11 +373,10 @@ def _get_comparison_context(request):
     """
     return dict(
         form=ComparisonForm(initial={"name": "Parameter Comparison"}),
-        prefixes=["p0_", "p1_",],
+        prefixes=["p0_", "p1_"],
         project=request.session["project"],
         binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
         segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
         engines=PluginManager.get_provider("line"),
         tsets=request.session["project"].reference_sets.all(),
     )
-    
