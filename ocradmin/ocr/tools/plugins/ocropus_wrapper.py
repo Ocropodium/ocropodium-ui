@@ -69,40 +69,6 @@ class OcropusParams(UserDict.DictMixin):
 
 
 
-def get_ocropus_components(oftypes=None, withnames=None):
-    """
-    Get a datastructure contraining all Ocropus components
-    (possibly of a given type) and their default parameters.
-    """
-    out = {}
-    clist = ocropus.ComponentList()
-    for i in range(0, clist.length()):
-        ckind = clist.kind(i)
-        if oftypes and not \
-                ckind.lower() in [c.lower() for c in oftypes]:
-            continue
-        cname = clist.name(i)
-        if withnames and not \
-                cname.lower() in [n.lower() for n in withnames]:
-            continue            
-        compdict = {"name": cname, "type": ckind, "params": []}
-        # this is WELL dodgy
-        try:
-            comp = eval("ocropus.make_%s(\"%s\")" % (ckind, cname))
-        except StandardError, err:
-            continue
-        compdict["description"] = comp.description()
-        compdict["shortname"] = comp.name()
-        for paramnum in range(0, comp.plength()):
-            pname = comp.pname(paramnum) 
-            compdict["params"].append({
-                "name": pname,
-                "value": comp.pget(pname),
-            })
-        out[cname] = compdict
-    return out
-
-
 class OcropusError(StandardError):
     """
     Ocropus-related exceptions.
@@ -376,7 +342,7 @@ class OcropusWrapper(base.OcrBase):
         Mimic OCRopus's StandardPreprocessing component but
         allow more flexible param setting.  Somehow.
         """
-        complookup = get_ocropus_components(
+        complookup = self.get_components(
                 oftypes=["IBinarize", "ICleanupGray", "ICleanupBinary"])
         pagegray = iulib.bytearray()
         pageout = iulib.bytearray()
@@ -540,6 +506,41 @@ class OcropusWrapper(base.OcrBase):
                     self.logger.info("Setting: %s.%s -> %s" % (compname, param, val))
                     component.pset(param, val)
         
+
+    @classmethod
+    def get_components(cls, oftypes=None, withnames=None):
+        """
+        Get a datastructure contraining all Ocropus components
+        (possibly of a given type) and their default parameters.
+        """
+        out = {}
+        clist = ocropus.ComponentList()
+        for i in range(0, clist.length()):
+            ckind = clist.kind(i)
+            if oftypes and not \
+                    ckind.lower() in [c.lower() for c in oftypes]:
+                continue
+            cname = clist.name(i)
+            if withnames and not \
+                    cname.lower() in [n.lower() for n in withnames]:
+                continue            
+            compdict = {"name": cname, "type": ckind, "params": []}
+            # this is WELL dodgy
+            try:
+                comp = eval("ocropus.make_%s(\"%s\")" % (ckind, cname))
+            except StandardError, err:
+                continue
+            compdict["description"] = comp.description()
+            compdict["shortname"] = comp.name()
+            for paramnum in range(0, comp.plength()):
+                pname = comp.pname(paramnum) 
+                compdict["params"].append({
+                    "name": pname,
+                    "value": comp.pget(pname),
+                })
+            out[cname] = compdict
+        return out
+
 
 
 

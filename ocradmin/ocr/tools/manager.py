@@ -52,6 +52,26 @@ class PluginManager(object):
         """
         Get a converter with a given name.
         """
+        mc = cls._main_class(name)
+        if mc is not None:
+            return mc(*args, **kwargs)
+
+
+    @classmethod
+    def get_components(cls, name, *args, **kwargs):
+        """
+        Get available components of the given type for given plugin.
+        """
+        mc = cls._main_class(name)
+        if mc is not None:
+            return mc.get_components(*args, **kwargs)
+
+
+    @classmethod
+    def _main_class(cls, name):
+        """
+        Get the plugin class with a given name.
+        """
         plugdir = os.path.join(os.path.dirname(__file__), "plugins")
         for fname in os.listdir(plugdir):
             modname = "%s_wrapper.py" % name
@@ -59,8 +79,5 @@ class PluginManager(object):
                 # FIXME: Hard-coded module import path needs to change
                 # TODO: Generally find a better way of doing this...
                 pm = __import__("ocradmin.ocr.tools.plugins.%s_wrapper" % name, fromlist=["main_class"])
-                return pm.main_class()(*args, **kwargs)
-
-
-
+                return pm.main_class()
 

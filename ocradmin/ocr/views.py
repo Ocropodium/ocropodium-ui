@@ -134,7 +134,7 @@ def components(request):
     List OCRopus components - either all or those
     of an optional type.
     """
-    comps = ocrutils.get_ocropus_components(
+    comps = PluginManager.get_components("ocropus",
             request.GET.getlist("type"), request.GET.getlist("name"))
     return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
 
