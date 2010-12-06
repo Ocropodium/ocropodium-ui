@@ -1,0 +1,1 @@
+/home/michaelb/dev/ocr-grid/trunk/rect.py
