@@ -1,0 +1,84 @@
+
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - Files {% endblock %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
+	<script type='application/javascript' src='/static/js/stats.js'></script>
+	<script type='application/javascript' src='/static/js/abstract_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/file_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/abstract_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/file_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/ajax-dragdrop-upload.js'></script>
+    <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/filebrowser.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <script type="application/javascript">
+
+
+var fbrowser = null;
+
+$(function() {        
+        fbrowser = new FileListWidget(
+            $("#file_browser").get(0), 
+            new FileDataSource(),
+            {multiselect: true}
+        );
+        fbrowser.open = function() {
+            alert(fbrowser.files());
+            fbrowser.close();
+        }
+        fbrowser.close = function() {
+            $("#file_browser").dialog("close");
+        }
+        $("#file_browser").dialog({
+            width: 700,
+            minHeight: 300,
+            resize: function(e, ui) {
+                fbrowser.resized(e);
+                fbrowser.setHeight($(this).height());   
+            },
+            close: function(e) {
+            
+            },            
+            modal: true,
+        });
+        // HACK!  Can't work how to achieve these styling
+        // bits without munging the dialog content css 
+        // directly.  Obviously this is fragile
+        $(".ui-dialog-content")
+            .css("padding", "5px 2px 10px 2px")
+            .css("margin-top", "0px")
+            .css("overflow", "hidden");
+
+});
+
+
+    </script>
+
+    <style type="text/css">
+        #files {
+            float: left;
+            width: 400px;
+            height: 200px;
+            background-color: #FFFFDD;
+            border: 1px solid #F0F0F0;            
+        }
+
+        #browse {
+            float: left;
+            font-size: 1.1em;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="innercontent">
+    <div class="filewindow" id="file_browser"> </div>
+</div>
+
+
+{% endblock %}

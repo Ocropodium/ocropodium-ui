@@ -1,0 +1,20 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+    <script type='application/javascript' src='/static/js/training/new.js'></script>
+    <link rel="stylesheet" href="/static/css/training.css" type="text/css" media="screen" />
+
+{% endblock %}
+
+{% block content %}
+
+    <div id="document_window">
+        <div class="widget">
+            <div class="widget_header">New Training Job</div>
+            <div class="widget_content">
+                <form action="/training/create" method="POST">
+                    {% include "training/includes/training_form.html" %}
+                </form>
+            </div>
+    </div>
+{% endblock %}

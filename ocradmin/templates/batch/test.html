@@ -1,0 +1,97 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/undo/command.js'></script>
+	<script type='application/javascript' src='/static/js/undo/stack.js'></script>
+    <script type="text/javascript" src="/static/js/line_editor.js"></script>
+   
+    <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
+	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
+    
+    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
+
+    <style type="text/css">
+        #dialog_box {
+            display: none;
+        }
+    </style>
+
+    <script type="text/javascript">
+        // test code
+        //var editor = null;
+        var viewer = null;
+        $(function() {
+
+           // editor = new OCRJS.LineEditor({log: true});        
+
+           // $(window).bind("keyup.lineedit", function(event) {
+           //     var line = $(".ocr_line").first().get(0);
+           //     if (event.keyCode == 113) {
+           //         editor.edit(line, event);
+           //     }
+           // });
+           // $(".ocr_line").bind("dblclick.lineedit", function(event) {
+           //     editor.edit(this, event);
+           // });
+
+            $(window).bind("keypress", function(event) {
+                if (event.which == 32) {
+                    viewer.nextBuffer();    
+                }
+            });
+
+            viewer = new OCRJS.ImageViewer($("#myviewer").get(0), {numBuffers: 3});
+            var vpad = $("#viewercontainer").height() - $("#myviewer").height();
+            $("#viewercontainer").resizable({
+                handles: 'se, sw, w, e, n, s',
+                resize: function(e, ui) {                    
+                    viewer.updateSize($(this).width(), $(this).height() - vpad);
+                },
+                stop: function(e, ui) {
+                viewer.updateSize($(this).width(), $(this).height() - 20);
+                },        
+            });
+        });
+
+
+    </script>
+{% endblock %}
+
+{% block content %}
+
+
+<div id="sidebar" class="widget">
+    <div class="widget_header" id="filter_head">Filter Batches:</div>
+    <div class="widget_content">
+    </div>
+</div>
+
+{% if messages %}
+<ul class="messages">
+{% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<div class="widget" id="viewercontainer">
+    <div class="widget_header">Project Batches:</div>
+    <div class="widget_content">
+        <div id="myviewer"></div>
+       <!-- <div style="background-color: #FFFFFF; padding: 20px; font-size: 3em">
+            <span class="ocr_line">This is a line of editable text</span>
+            <span class="ocr_line">This is another line of editable text</span>
+            <span class="ocr_line">Blah blah blah blah</span>
+            <span class="ocr_line">Bibbly bibbly bibbly boo...</span>
+        </div> -->
+
+
+    </div> 
+</div>
+
+
+{% endblock %}
+
+
+

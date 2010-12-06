@@ -1,0 +1,20 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/projects/delete.js'></script>
+
+
+{% endblock %}
+
+{% block content %}
+    {% include "projects/includes/sidebar.html" %}
+
+    <div id="document_window">
+        <div class="widget">
+            <div class="widget_header">Delete Project '{{project.name}}'</div>
+            <div class="widget_content">
+                {% include "projects/includes/delete_form.html" %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

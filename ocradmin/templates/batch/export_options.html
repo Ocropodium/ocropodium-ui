@@ -1,0 +1,33 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/batch/export.js'></script>
+{% endblock %}
+
+{% block content %}
+
+
+<div id="sidebar" class="widget">
+    <div class="widget_header" id="filter_head"></div>
+    <div class="widget_content">
+    </div>
+</div>
+
+<div class="widget" id="batch_export_widget">
+    <div class="widget_header">Export Batch: {{batch.name}}</div>
+    <div class="widget_content">
+        {% if messages %}
+            <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        {% include "batch/includes/export_form.html" %}
+    </div> 
+</div>
+
+
+{% endblock %}
+

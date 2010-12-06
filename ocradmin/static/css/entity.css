@@ -1,0 +1,47 @@
+#details_table {
+	text-align:left;
+}
+
+#show_content {
+	text-align:left;
+	font-size: 1.1em;
+	list-style-type: none;
+}
+
+/*
+	Image preview stuff
+*/
+div#loader {
+  border: 1px solid #ccc;
+  width: 500px;
+  height: 300px;
+  overflow: auto;
+}
+
+/**
+ * While we're having the loading class set.
+ * Removig it, will remove the loading message
+ */
+div#loader.loading {
+  background: url(../ajax-loader.gif) no-repeat center center;
+}
+
+.new_link_container {
+    float: right;
+    text-decoration: none;
+}
+
+.new_link {
+    text-decoration: none;
+}
+
+.new_link:hover {    
+    background-color: #FFFFDD;
+}
+
+.disabled_link {
+    color: #D2D2D2;
+
+
+}
+
