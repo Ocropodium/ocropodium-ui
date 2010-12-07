@@ -293,6 +293,16 @@ $(function() {
         sdviewer.setFullPage(true);
     });
 
+    // make the viewer resizable
+    $("#viewercontainer").resizable({
+        resize: function(event, ui) {
+            sdviewer.updateSize(
+                $(this).width(),
+                $(this).height() - $(".widget_header").outerHeight(true)
+            );
+        },
+    });
+
     // bind 1-2-3 and a-b-s to viewer outputs
     $("#viewer").bind("mouseenter mouseleave", function(mouseevent) {
         if (mouseevent.type == "mouseenter") {
