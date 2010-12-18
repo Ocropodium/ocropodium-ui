@@ -13,6 +13,7 @@ import UserDict
 from ocradmin.ocr.tools import base, check_aborted, set_progress
 import iulib
 import ocropus
+from ocropy import components
 
 
 
@@ -307,7 +308,8 @@ class OcropusWrapper(base.OcrBase):
         Segment the binary page into a colour-coded segmented images.
         """
         self.logger.info("Segmenting page with %s" % self.params.psegmenter)
-        segmenter = ocropus.make_ISegmentPage(self.params.psegmenter)
+        #segmenter = ocropus.make_ISegmentPage(self.params.psegmenter)
+        segmenter = components.make_component(self.params.psegmenter, "ISegmentPage")
         for name, val in self.params.iteritems():
             # find the 'long' name for the component with the given short
             # name, i.e: binsauvola -> BinarizeBySauvola
@@ -514,6 +516,20 @@ class OcropusWrapper(base.OcrBase):
         (possibly of a given type) and their default parameters.
         """
         out = {}
+        out.update(cls._get_native_components(oftypes, withnames))
+        out.update(cls._get_python_components(oftypes, withnames))
+
+        return out
+
+
+
+    @classmethod
+    def _get_native_components(cls, oftypes=None, withnames=None):
+        """
+        Get a datastructure contraining all Ocropus native components
+        (possibly of a given type) and their default parameters.
+        """
+        out = {}
         clist = ocropus.ComponentList()
         for i in range(0, clist.length()):
             ckind = clist.kind(i)
@@ -539,8 +555,53 @@ class OcropusWrapper(base.OcrBase):
                     "value": comp.pget(pname),
                 })
             out[cname] = compdict
-        return out
+        return out            
 
 
+    @classmethod
+    def _get_python_components(cls, oftypes=None, withnames=None):
+        """
+        Get native python components.
+        """
+        out = {}
+        dir = os.path.join(os.path.dirname(__file__), "components")
+        for fname in os.listdir(dir):
+            if not fname.endswith(".py"):
+                continue
+            modname = fname.replace(".py", "", 1)
+            pm = __import__("%s" % modname, fromlist=["main_class"])
+            if not hasattr(pm, "main_class"):
+                continue
+            ctype = pm.main_class()
+            ckind = ctype.__base__.__name__
 
+            # note: the loading function in ocropy/components.py expects
+            # python components to have a module-qualified name, i.e:
+            # mymodule.MyComponent.
+            cname = "%s.%s" % (modname, ctype.__name__)
+            if oftypes and not \
+                    ckind.lower() in [c.lower() for c in oftypes]:
+                continue
+            if withnames and not \
+                    cname.lower() in [n.lower() for n in withnames]:
+                continue            
+            
+            comp = ctype()
+            # FIXME: Extreme dodginess getting the interface type,
+            # very fragile
+            compdict = dict(
+                name=cname,
+                type=ckind,
+                params=[],
+                shortname=comp.name(),
+                description=comp.description()
+            )
+            for paramnum in range(0, comp.plength()):
+                pname = comp.pname(paramnum) 
+                compdict["params"].append({
+                    "name": pname,
+                    "value": comp.pget(pname),
+                })
+            out[cname] = compdict
+        return out            
 

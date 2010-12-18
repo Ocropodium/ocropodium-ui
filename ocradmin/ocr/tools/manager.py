@@ -25,7 +25,7 @@ class PluginManager(object):
             if fname.endswith("wrapper.py"):
                 modname = os.path.splitext(os.path.basename(fname))[0]
                 pm = __import__(
-                        "ocradmin.ocr.tools.plugins.%s" % modname,
+                        modname,
                         fromlist=["main_class"])
                 if not hasattr(pm, "main_class"):
                     continue
@@ -78,6 +78,6 @@ class PluginManager(object):
             if fname == modname:
                 # FIXME: Hard-coded module import path needs to change
                 # TODO: Generally find a better way of doing this...
-                pm = __import__("ocradmin.ocr.tools.plugins.%s_wrapper" % name, fromlist=["main_class"])
+                pm = __import__("%s_wrapper" % name, fromlist=["main_class"])
                 return pm.main_class()
 
