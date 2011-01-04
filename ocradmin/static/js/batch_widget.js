@@ -41,6 +41,22 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             ["INIT", "PENDING", "RETRY", "STARTED", "SUCCESS", "ERROR", "ABORTED"],
             true
         );
+
+        // class of this batch.  Subclasses should override
+        // this to change, e.g the icon appearance
+        this._batchclass = "convert";
+
+        // url at which to view batch results.  Again, subclasses
+        // can override this
+        this._viewurl = "/batch/transcript/" + this._batch_id;
+
+        // text for the view link
+        this._viewtext = "View Transcripts";
+
+        // url for exporting batch results... might not be relevant
+        // subclasses should set to null
+        this._exporturl = "/batch/export_options/" + this._batch_id;
+
     },
 
     init: function() {
@@ -111,15 +127,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         $(".batch_task").bind("dblclick", function(event) {
             var index = $(this).data("index");
             var batchclass = self.getBatchClass(self._batchdata.fields.task_type);
-            if (batchclass == "compare") {
-                document.location.href = "/training/comparison?batch=" + 
-                    self._batchdata.pk;
-            } else if (batchclass == "fedora") {
-
-            } else {
-                document.location.href = "/batch/transcript/" + self._batchdata.pk
-                + "/?page=" + (index + self._itemoffset);
-            }
+            document.location.href = self._viewurl + "/?page=" + (index + self._itemoffset);
         });
 
         $(".export_link").click(function(event) {
@@ -349,10 +357,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
 
     setBatchResults: function(batchdata) {
-        var batchclass = this.getBatchClass(this._batchdata.fields.task_type);
+        this.setBatchType(batchdata);                                 
         var batch = this._batchdiv.find(".batch");
         batch.attr("id", "batch" + batchdata.pk)
-        batch.find(".batch_header").attr("class", "batch_header " + batchclass);
+        batch.find(".batch_header").attr("class", "batch_header " + this._batchclass);
 
         // set titles
         batch
@@ -362,20 +370,15 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             .find(".transcript_link");
         var export = batch
             .find(".export_link");
-        if (batchclass == "compare") {
-            link
-                .attr("href", "/training/comparison?batch=" + batchdata.pk)
-                .text("Comparison Results");
-            export.hide();
-        } else if (batchclass == "fedora") {
-
-        } else {
-            link
-                .attr("href", "/batch/transcript/" + batchdata.pk + "/")
-                .text("View Transcripts")                
+        link
+            .attr("href", this._viewurl)
+            .text(this._viewtext);
+        if (this._exporturl) {
             export
-                .attr("href", "/batch/export_options/" + batchdata.pk + "/")
-                .text("Export").show();                
+                .attr("href", this._exporturl + batchdata.pk + "/")
+                .text("Export").show();
+        } else {
+            export.hide();
         }
 
         // update links with the batch id
@@ -605,7 +608,28 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 task_type.search(/\./));
     },
                
-
+    setBatchType: function(batchdata) {                      
+        this._batchclass = this.getBatchClass(batchdata.fields.task_type);
+        switch (this._batchclass) {
+            case "convert":
+                this._viewurl = "/batch/transcript/" + this._batch_id;
+                this._viewtext = "View Transcripts";
+                this._exporturl = "/batch/export_options/" + this._batch_id;
+                break;
+            case "fedora":
+                this._viewurl = "/batch/transcript/" + this._batch_id;
+                this._viewtext = "View Transcripts";
+                this._exporturl = null;
+                break;
+            case "compare":
+                this._viewurl = "/training/comparison/?batch=" + this._batch_id;
+                this._viewtext = "View Comparison";
+                this._exporturl = null;
+                break;
+            default:
+                break;
+        }
+    },
 
     _createBatchHeaderUi: function() {
         var self = this;
