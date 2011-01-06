@@ -108,24 +108,24 @@ def multiple_results(request):
     Retrieve the results using the previously provided task name.
     """
     out = []
-    for job_name in request.GET.getlist("job"):
-        async = celeryresult.AsyncResult(job_name)
+    for task_id in request.GET.getlist("job"):
+        async = celeryresult.AsyncResult(task_id)
         if async is None:
             raise Http404
-        out.append(_async_data(async))
+        out.append(_wrap_async_result(async))
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
 @login_required
-def results(request, job_name):
+def results(request, task_id):
     """
     Retrieve the results using the previously provided task name.
     """
-    async = celeryresult.AsyncResult(job_name)
+    async = celeryresult.AsyncResult(task_id)
     if async is None:
         raise Http404
 
-    return _format_task_results(request, async)
+    return _format_response(request, _wrap_async_result(async))
 
 
 @login_required
@@ -193,7 +193,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             result = async.wait() if _should_wait(request) else async.result
             out.append({
                 "page_name": pagename,
-                "job_name": async.task_id,
+                "task_id": async.task_id,
                 "status": async.status,
                 "results": result,
             })
@@ -214,7 +214,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         )
 
 
-def _async_data(async):
+def _wrap_async_result(async):
     """
     Convert an async object into suitable JSON.
     """
@@ -222,25 +222,17 @@ def _async_data(async):
         err = async.result
         taskmeta = OcrTask.objects.get(task_id=async.task_id)
         return dict(
-            job_name=async.task_id,
+            task_id=async.task_id,
             status=async.status,
             results=None,
             error=err.message,
             trace=taskmeta.traceback
         )
     return dict(
-        job_name=async.task_id,
+        task_id=async.task_id,
         status=async.status,
         results=async.result
     )
-
-
-def _format_task_results(request, async):
-    """
-    Wrap the results in JSON metadata.  Treat
-    exceptions as a special case.
-    """
-    return _format_response(request, _async_data(async))
 
 
 def _wants_text_format(request):

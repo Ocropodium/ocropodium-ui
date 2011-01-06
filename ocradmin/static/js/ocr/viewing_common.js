@@ -74,7 +74,7 @@ function refreshImage() {
         beforeSend: function(data) {
         },
         success: function(data) {
-            $(sdviewer).data("jobname", data[0].job_name);
+            $(sdviewer).data("jobname", data[0].task_id);
             pollForResults($(sdviewer));
         },
         error: OCRJS.ajaxErrorHandler,
@@ -177,11 +177,11 @@ function onXHRLoad(event) {
     }
 
     $.each(data, function(page, pageresults) {
-        var pagename = pageresults.job_name.split("::")[0].replace(/\.[^\.]+$/, "");
+        var pagename = pageresults.task_id.split("::")[0].replace(/\.[^\.]+$/, "");
         //sdviewer.setTitle(pagename);
         sdviewer.setWaiting(true);
         $("#viewer")
-            .data("jobname", pageresults.job_name);
+            .data("jobname", pageresults.task_id);
         pollForResults($("#viewer"));
     }); 
 };

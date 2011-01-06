@@ -83,7 +83,7 @@ class OcrConvertTest(TestCase):
         self.assertEqual(r.status_code, 200)
         # check the response IS JSON at this stage
         content = simplejson.loads(r.content)
-        r2 = self.client.get("/ocr/results/%s" % content[0]["job_name"], {"format": "text"})
+        r2 = self.client.get("/ocr/results/%s" % content[0]["task_id"], {"format": "text"})
         self.assertEqual(r2.status_code, 200)        
         self.assertRaises(ValueError, simplejson.loads, r2.content)
         self.assertEqual(r2["Content-Type"], "text/plain")

@@ -299,7 +299,7 @@ def submit_viewer_binarization(request, task_pk):
     async = tasks.BinarizePageTask.apply_async(args=args,
             queue="interactive")
     out = dict(
-        job_name=async.task_id,
+        task_id=async.task_id,
         status=async.status,
         results=async.result
     )
@@ -313,7 +313,7 @@ def viewer_binarization_results(request, task_id):
     """
     async = celeryresult.AsyncResult(task_id)
     out = dict(
-        job_name=async.task_id,
+        task_id=async.task_id,
         status=async.status,
         results=async.result
     )
@@ -340,7 +340,7 @@ def reconvert_lines(request, task_pk):
     async = tasks.ConvertLineTask.apply(args=args,
             queue="interactive")
     out = dict(
-        job_name=async.task_id,
+        task_id=async.task_id,
         status=async.status,
         results=async.result
     )
