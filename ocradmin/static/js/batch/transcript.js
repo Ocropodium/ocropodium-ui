@@ -16,7 +16,7 @@ function pollForResults(data, polltime) {
         alert(data.error);
     } else if (data.status == "PENDING") {
         $.ajax({
-            url: "/batch/viewer_binarization_results/" + data.job_name + "/",
+            url: "/batch/viewer_binarization_results/" + data.task_id + "/",
             dataType: "json",
             beforeSend: function(e) {
                 sdviewer.setWaiting(true);

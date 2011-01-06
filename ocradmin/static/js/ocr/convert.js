@@ -111,7 +111,7 @@ function setResults(data) {
         var job = data[i];
         if (job.status == "PENDING")
             continue;
-        var page = PENDING[job.job_name];
+        var page = PENDING[job.task_id];
         if (!page) 
             continue;
 
@@ -120,7 +120,7 @@ function setResults(data) {
         } else if (job.status == "SUCCESS") {
             page.setResults(job.results);    
         }    
-        delete PENDING[job.job_name];        
+        delete PENDING[job.task_id];        
     };
 
     var count = 0;
@@ -167,7 +167,7 @@ function onXHRLoad(event) {
         return;
     }
     $.each(data, function(pagenum, results) {
-        addPageToWorkspace(results.page_name, results.job_name);
+        addPageToWorkspace(results.page_name, results.task_id);
     }); 
     if (POLLTIMER == -1)
         pollForResults();
