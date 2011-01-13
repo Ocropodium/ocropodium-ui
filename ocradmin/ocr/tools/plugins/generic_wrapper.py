@@ -8,7 +8,7 @@ import os
 import tempfile
 import iulib
 import subprocess as sp
-from ocradmin.ocr.tools import check_aborted, get_binary
+from ocradmin.ocr.tools import check_aborted, get_binary, ExternalToolError
 from ocropus_wrapper import OcropusWrapper
 
 
