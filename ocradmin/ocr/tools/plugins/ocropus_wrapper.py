@@ -13,7 +13,7 @@ import UserDict
 from ocradmin.ocr.tools import base, check_aborted, set_progress, ExternalToolError
 import iulib
 import ocropus
-from ocropy import components
+from ocrolib import components
 
 
 
