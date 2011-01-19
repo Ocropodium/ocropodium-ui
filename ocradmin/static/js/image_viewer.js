@@ -192,6 +192,10 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
     activeBufferOverlays: function(bufnum) {
         return this._rects[this._cbuf];
+    },
+
+    activeViewer: function() {
+        return this._buffers[this._cbuf];
     },                    
     
     // set overlay elements for a given buffer, or if
@@ -211,26 +215,29 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
         // FIXME: hack around the viewport not
         // being built the first time we try to
-        // draw overlays - assume it'll be ready
-        // in half a second
+        // draw overlays
         var self = this;
         if (this.isReady()) {
             self.drawBufferOverlays(); 
         } else {
             setTimeout(function() {
                 self.drawBufferOverlays();
-            }, 500);        
+            }, 200);        
         }
     },                           
 
 
     drawBufferOverlays: function() {
         for (var i in this._buffers) {
+            var portal = this._portals[i];
             var viewer = this._buffers[i];
             var overlays = this._rects[i];            
             if (!viewer || !viewer.drawer || !overlays)
                 continue;
-            viewer.drawer.clearOverlays();
+            //viewer.drawer.clearOverlays();
+            $(".viewer_highlight", portal).each(function(i, elem) {
+                viewer.drawer.removeOverlay(elem);
+            });
             var overlaydiv;
             $.each(overlays, function(class, rects) {
                 for (var r in rects) {
@@ -262,7 +269,7 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
                     
     // Sync background buffers to the foreground one
     syncToActiveBuffer: function() {
-        this._logger("Syncing others to: " + this._cbuf);                            
+        //this._logger("Syncing others to: " + this._cbuf);                            
         var active = this._buffers[this._cbuf];
         for (i in this._buffers) {
             if (i != this._cbuf) {

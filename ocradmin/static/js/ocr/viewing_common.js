@@ -30,9 +30,9 @@ function loadState() {
         var outa = $.cookie(winprefix + "_outadzi");
         var outb = $.cookie(winprefix + "_outbdzi");
 
-       /* if (png && outa) {
-            sdviewer.setSource(src);
-            sdviewer.setOutputA(outa);
+        if (0 && png && outa) {
+            sdviewer.setBufferPath(0, src);
+            sdviewer.setBufferPath(1, outa);
             $("#viewerwindow").data("png", png);
             $("#viewerwindow").data("src", src);
             $("#viewerwindow").data("outa", outa);        
@@ -44,7 +44,7 @@ function loadState() {
             } else {
                 $("#toggleab").attr("disabled", true);
             }
-        }*/
+        }
     }
 }
 
@@ -74,8 +74,7 @@ function refreshImage() {
         beforeSend: function(data) {
         },
         success: function(data) {
-            $(sdviewer).data("jobname", data[0].task_id);
-            pollForResults($(sdviewer));
+            pollForResults(data[0].task_id);
         },
         error: OCRJS.ajaxErrorHandler,
         complete: function(e) {
@@ -101,21 +100,8 @@ function getViewerCoordinateRects(bounds, pagerects) {
 
 // Process the data completed results data... in this case
 // set the viewer source and output paths
-function processData(element, data) {
-    if (!data || !data.status || data.status == "PENDING") {
-        setTimeout(function() {
-            pollForResults(element);
-        }, 500);
-    } else if (data.error) {
-        sdviewer.setWaiting(true);
-        element
-            .addClass("error")
-            .html("<h4>Error: " + data.error + "</h4>")
-            .append(
-                $("<div></div>").addClass("traceback")
-                    .append("<pre>" + data.trace + "</pre>")                                
-            );                            
-    } else if (data.status == "SUCCESS") {
+function processData(data) {
+    if (data.status == "SUCCESS") {
         $(sdviewer).data("png", data.results.png);
         $(sdviewer).data("src", data.results.src);
         if (data.results.dst.search("_b.dzi") != -1) {
@@ -126,34 +112,45 @@ function processData(element, data) {
         sdviewer.setBufferPath(2, sdviewer.bufferPath(1));
         sdviewer.setBufferPath(1, data.results.dst);
         sdviewer.setBufferPath(0, data.results.src);
-        sdviewer.setWaiting(false);
-        pbuilder.setWaiting(false);
         
         var overlays = {};
         $.each(["lines", "paragraphs", "columns"], function(i, class) {
             if (data.results[class]) {
                 overlays[class] = getViewerCoordinateRects(
                     data.results.box, data.results[class]);
+                console.log("Adding overlay: " + class);
             }
         });
         sdviewer.setBufferOverlays(sdviewer.bufferOverlays(1), 2);
         sdviewer.setBufferOverlays(overlays, 1);
+        console.log(overlays);
 
         $(".tbbutton").button({disabled: false});
     } else {
-        alert("Oops.  Task finished with bad status: " + data.status);
+        if (data.error)
+            alert(data.error);
+        else
+            alert("Oops.  Task finished with bad status: " + data.status);
     }
+
+    sdviewer.setWaiting(false);
+    pbuilder.setWaiting(false);
 } 
             
 // keep checking the server for the results of the jobname
 // associated with the particular element
-function pollForResults(element) {
-    var jobname = element.data("jobname");
+function pollForResults(tid) {
     $.ajax({
-        url: "/ocr/results/" + jobname,
+        url: "/ocr/results/" + tid,
         dataType: "json",
         success: function(data) {
-            processData(element, data);    
+            if (!data || !data.status || data.status == "PENDING") {
+                setTimeout(function() {
+                    pollForResults(tid);
+                }, 500);
+            } else {            
+                processData(data);
+            }
         },
         error: OCRJS.ajaxErrorHandler,
     }); 
@@ -176,13 +173,9 @@ function onXHRLoad(event) {
         return;
     }
 
+    sdviewer.setWaiting(true);
     $.each(data, function(page, pageresults) {
-        var pagename = pageresults.task_id.split("::")[0].replace(/\.[^\.]+$/, "");
-        //sdviewer.setTitle(pagename);
-        sdviewer.setWaiting(true);
-        $("#viewer")
-            .data("jobname", pageresults.task_id);
-        pollForResults($("#viewer"));
+        pollForResults(pageresults.task_id);
     }); 
 };
 
