@@ -120,8 +120,6 @@ def remove_border(narray, average_char_height):
 
     vidx = vhp.nonzero()[0]
     hidx = hhp.nonzero()[0]
-    print vidx[0], vidx[-1]
-    print hidx[0], hidx[-1]
 
     b = iulib.bytearray()
     iulib.extract_subimage(b, narray, int(vidx[0]), int(hidx[0]),

@@ -13,7 +13,6 @@ import UserDict
 from ocradmin.ocr.tools import base, check_aborted, set_progress, ExternalToolError
 import iulib
 import ocropus
-from ocrolib import components
 
 
 
@@ -289,6 +288,7 @@ class OcropusWrapper(base.OcrBase):
         logging.basicConfig(level=logging.DEBUG)
         return logging.getLogger(self.__class__.__name__)
 
+
     @check_aborted
     def get_page_binary(self, filepath):
         """
@@ -302,14 +302,19 @@ class OcropusWrapper(base.OcrBase):
         preproc.binarize(page_bin, page_gray)
         return page_bin
 
+
     @check_aborted
     def get_page_seg(self, page_bin):
         """
         Segment the binary page into a colour-coded segmented images.
         """
         self.logger.info("Segmenting page with %s" % self.params.psegmenter)
-        #segmenter = ocropus.make_ISegmentPage(self.params.psegmenter)
-        segmenter = components.make_component(self.params.psegmenter, "ISegmentPage")
+        try:
+            segmenter = ocropus.make_ISegmentPage(self.params.psegmenter)
+            self.logger.info("Loaded (%s): %s" % (self.params.psegmenter, segmenter))
+        except IndexError, err:
+            # no native component found - try loading a python one
+            segmenter = self._load_python_component(self.params.psegmenter)
         for name, val in self.params.iteritems():
             # find the 'long' name for the component with the given short
             # name, i.e: binsauvola -> BinarizeBySauvola
@@ -322,6 +327,7 @@ class OcropusWrapper(base.OcrBase):
         page_seg = iulib.intarray()
         segmenter.segment(page_seg, page_bin)
         return page_seg
+
 
     @check_aborted
     def get_transcript(self, line):
@@ -337,6 +343,7 @@ class OcropusWrapper(base.OcrBase):
         # NOTE: This returns the cost - not currently used
         ocropus.beam_search(result, fst, self._lmodel, 1000)
         return result.as_string()
+
 
     @check_aborted
     def standard_preprocess(self, filepath):
@@ -469,6 +476,7 @@ class OcropusWrapper(base.OcrBase):
             traceback.print_exc()
             self.logger.error("Skipping training line: %s: %s" % (text, e.message))
 
+
     def save_new_model(self):
         """
         Finalise training and save model.
@@ -521,6 +529,31 @@ class OcropusWrapper(base.OcrBase):
 
         return out
 
+
+    def _load_python_component(self, name):
+        """
+        Return the main class for a Python component.
+        """
+        # FIXME: This triggers an import of everything in components,
+        # which is undesirable to say the least
+        dir = os.path.join(os.path.dirname(__file__), "components")
+        comp = None
+        for fname in os.listdir(dir):
+            if not fname.endswith(".py"):
+                continue
+            modname = fname.replace(".py", "", 1)
+            try:
+                pm = __import__("%s" % modname, fromlist=[name])
+                reload(pm)
+                self.logger.info("Importing: %s" % modname)
+                if hasattr(pm, name):
+                    comp = getattr(pm, name)
+                    break
+            except ImportError, err:
+                self.logger.info("Unable to import module: %s" % err)
+        if comp is None:
+            raise IndexError("no such component: %s" % name)
+        return comp()
 
 
     @classmethod
@@ -578,7 +611,7 @@ class OcropusWrapper(base.OcrBase):
             # note: the loading function in ocropy/components.py expects
             # python components to have a module-qualified name, i.e:
             # mymodule.MyComponent.
-            cname = "%s.%s" % (modname, ctype.__name__)
+            cname = ctype.__name__
             if oftypes and not \
                     ckind.lower() in [c.lower() for c in oftypes]:
                 continue
@@ -603,5 +636,8 @@ class OcropusWrapper(base.OcrBase):
                     "value": comp.pget(pname),
                 })
             out[cname] = compdict
-        return out            
+        return out
+
+
+
 
