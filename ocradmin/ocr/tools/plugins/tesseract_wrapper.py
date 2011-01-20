@@ -2,7 +2,6 @@
 
 import os
 import tempfile
-import iulib
 import shutil
 import subprocess as sp
 from ocradmin.ocr.tools import check_aborted, set_progress, convert_to_temp_image, get_binary
@@ -51,7 +50,7 @@ class TesseractWrapper(OcropusWrapper):
         """
         with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
             tmp.close()
-            iulib.write_image_binary(tmp.name, line)
+            self.write_binary(tmp.name, line)
             tiff = convert_to_temp_image(tmp.name, "tif")
             text = self.process_line(tiff)
             os.unlink(tmp.name)
@@ -98,11 +97,11 @@ class TesseractWrapper(OcropusWrapper):
             tmp.close()
             tessargs = [self._tesseract, imagepath, tmp.name]
             if self._lang is not None:
-                tessargs.extend(["-l", self._lang])               
+                tessargs.extend(["-l", self._lang]) 
             proc = sp.Popen(tessargs, stderr=sp.PIPE)
             err = proc.stderr.read()
             if proc.wait() != 0:
-                return "!!! TESSERACT CONVERSION ERROR %d !!!" % proc.returncode
+                return "!!! TESSERACT CONVERSION ERROR %d: %s !!!" % (proc.returncode, err)
                 #raise RuntimeError(
                 #    "tesseract failed with errno %d: %s" % (
                 #        proc.returncode, err))

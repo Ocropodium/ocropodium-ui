@@ -6,7 +6,6 @@ return a single line of text.
 
 import os
 import tempfile
-import iulib
 import subprocess as sp
 from ocradmin.ocr.tools import check_aborted, get_binary, ExternalToolError
 from ocropus_wrapper import OcropusWrapper
@@ -35,7 +34,7 @@ class GenericWrapper(OcropusWrapper):
         """
         with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
             tmp.close()
-            iulib.write_image_binary(tmp.name, line)
+            self.write_binary(tmp.name, line)
             text = self.process_line(tmp.name)
             os.unlink(tmp.name)
             return text            
