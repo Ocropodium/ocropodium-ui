@@ -1,0 +1,160 @@
+/* Borrowed from 
+ * http://www.seoconsultants.com/css/menus/horizontal/css/menuh.css
+ */
+
+#menu {
+    /* top margin is to prevent glitchy hovers to the child
+     * elements when the browser is temporarily unaware of 
+     * the position of the mouse (i.e. when closing select
+     * menus. */
+    color: #060606;
+    margin: 1px 0px 0px 0px;
+    width: 100%;
+    float: left;
+    vertical-align: middle;
+    background-color: #F0F0F0;
+    text-align: left;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.75, rgb(250,250,250)),
+        color-stop(0.25, rgb(240,240,240))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(240,240,240) 25%,
+        rgb(250,250,250) 75%
+    );
+}
+
+#menu ul {
+    cursor: pointer;
+}
+
+#menu a {
+    display: block;
+    white-space: nowrap;
+    margin: 0;
+}
+
+#menu h3 {
+    display: block;
+    white-space: nowrap;
+    margin: 0;
+    padding: 5px 20px 5px 5px;
+    font-weight: normal;
+}
+
+#menu ul ul a, .disabled_option {
+    padding: 5px 40px 5px 5px;
+    font-size: 1.1em;
+}
+
+#menu h3.top {
+    background-image: url("/static/hz_scroll_down.gif");
+    background-repeat: no-repeat;
+    background-position: center right;
+}
+
+#menu ul li {
+    border-top: 1px solid transparent;
+    border-right: 1px solid transparent;
+    border-left: 1px solid transparent;
+}
+
+#menu ul {
+    border: 1px solid transparent;
+}
+
+#menu ul.selected {
+    color: #FFF;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    -moz-border-radius-topleft: 3px;
+    -moz-border-radius-topright: 3px;
+    border-top: 1px solid #4B6E99;
+    border-right: 1px solid #4B6E99;
+    border-left: 1px solid #4B6E99;
+}
+
+#menu.selected * {
+    color: #FFF;
+}
+
+#menu h3.right {
+    background-image: url("/static/vt_scroll_right.gif");
+    background-repeat: no-repeat;
+    background-position: center right;
+}
+
+#menu a {
+    text-decoration: none;
+}
+
+#menu ul a, #menu a:visited {
+    color: #060606;
+}
+
+#menu ul a:hover {
+    color: #FFF;
+}
+
+#menu a:active {
+}
+
+#menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    float: left;
+}
+
+#menu li {
+    position: relative;
+}
+
+#menu ul ul {
+    position: absolute;
+    z-index: 500;
+    top: auto;
+    display: none;
+    background-color: #FEFEFE;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+}
+
+#menu ul ul ul {
+    top: 0;
+    left: 100%;
+}
+
+#menu ul ul li {
+    border: 1px solid transparent;
+}
+
+#menu ul ul li:hover {
+    color: #FFF;
+    background-color: #F8F8F8;
+    border: 1px solid #4B6E99;
+    background: -webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        color-stop(0.95, rgb(132,170,216)),
+        color-stop(0.25, rgb(161,192,231))
+    );
+    background: -moz-linear-gradient(
+        left bottom,
+        rgb(132,170,216) 25%,
+        rgb(161,192,231) 95%
+    );
+}
+
+.disabled_option {
+    color: #BBB;
+    background: inherit;
+    cursor: auto;
+}
+

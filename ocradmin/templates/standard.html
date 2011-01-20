@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>
+        {% if request.session.project %}
+            {{ request.session.project }} -
+        {% endif %}
+        {% block title %} OCRopodium - Test Server {% endblock %}
+    </title>
+    <link rel="stylesheet" href="/static/css/custom-theme/jquery-ui-1.8.4.custom.css" />
+    <link rel="stylesheet" href="/static/css/mainmenu.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/forms.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/messages.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/projectbrowser.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
+
+
+	<script type='application/javascript' src='/static/js/jquery-1.4.2.js'></script>
+    <script type='application/javascript' src='/static/js/jquery-ui-1.8.4.custom.min.js'></script>
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/jquery.globalstylesheet.js'></script>
+	<script type='application/javascript' src='/static/js/base.js'></script>
+	<script type='application/javascript' src='/static/js/ocrbase.js'></script>
+	<script type='application/javascript' src='/static/js/helpers.js'></script>
+	<script type='application/javascript' src='/static/js/constants.js'></script>
+    <script type='application/javascript' src='/static/js/widget_layout.js'></script>
+
+    <script type='application/javascript' src='/static/js/abstract_data_source.js'></script>    
+	<script type='application/javascript' src='/static/js/project_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/abstract_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/project_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/projectbrowser.js'></script>
+
+	{% block headerscript %}{% endblock %}
+	
+    <link rel="stylesheet" href="/static/css/standard.css" type="text/css" media="screen" />
+	<script type='application/javascript' src='/static/js/loadall.js'></script>
+</head>
+<body>
+    <div id="app_container">
+        <div id="workspace">
+            <div id="menu">
+                {% if request.user.username %}
+                    <span id="login_info">
+                        Logged in as {{request.user.username}}. <a href="/accounts/logout" alt="Logout">Logout</a>
+                        <a alt="Account Admin" href="/admin/">Admin</a>
+                    </span>
+
+                {% endif %}
+                <ul class="top">
+                    <li>
+                    <h3>Project</h3>                
+                    <ul>
+                        <li>
+                            <a id="new_project" href="/projects/new/">New Project</a>
+                        </li>
+                        <li>
+                            <a id="open_project" href="/projects/open/">Open Project</a>
+                        </li>
+                        {% if request.session.project %}
+                            <li><a href="/projects/show/{{request.session.project.pk}}/">Information</a></li>
+                            <li><a href="/projects/export/{{request.session.project.pk}}/">Export</a></li>
+                            <li><a href="/projects/close/">Close</a></li>
+                        {% else %}
+                            <li class="disabled_option">Close</li>
+                        {% endif %}
+                    </ul>
+                    </li>
+                </ul>
+                {% if request.session.project %}
+                <ul class="top">
+                    <li> 
+                        <h3>Batch</h3>
+                        <ul>
+                            <li>
+                                <a id="new_batch" href="/batch/new/">New Batch</a>
+                            </li>
+                            <li>
+                                <a id="latest_batch" href="/batch/latest/">Latest Batch</a>
+                            </li>
+                            <li>
+                                <a id="list_batch" href="/batch/list/">Show Batches</a>
+                            </li>
+                            <li>
+                                <a href="/ocrtasks/">Show Tasks</a>
+                            </li>
+                        </ul>
+                    </li> 
+                </ul>
+                <ul class="top">
+                    <li> 
+                        <h3>Training</h3>
+                        <ul>
+                            <li>
+                                <a id="new_training" href="/training/new/">Submit Training Job</a>
+                            </li>
+                            <li>
+                                <a id="new_comparison" href="/training/compare/">Run Comparison</a>
+                            </li>
+                            <li>
+                                <a id="comparison_list" href="/training/comparisons/">Previous Comparisons</a>
+                            </li>
+                        </ul>
+                    </li> 
+                </ul>
+                {% endif %}
+                <ul class="top">
+                    <li>
+                        <h3>Models</h3>
+                        <ul>
+                            <li>
+                                <a id="new_batch" href="/ocrmodels/new/">New Model</a>
+                            </li>
+                            <li>
+                                <a id="list_batch" href="/ocrmodels/list/">Show Models</a>
+                            </li>
+                        </ul>
+                    </li> 
+                </ul>
+                <ul class="top">
+                    <li>
+                    <h3>Tools</h3>
+                        <ul>
+                            <li>
+                                <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}
+                                    href="/ocr/convert/">Convert</a>
+                            </li> 
+                            <li>
+                            <a {% ifequal request.path "/ocr/binarize/" %}class="current"{% endifequal %}
+                                href="/ocr/binarize/">Binarize</a>
+                            </li> 
+                            <li>
+                            <a {% ifequal request.path "/ocr/segment/" %}class="current"{% endifequal %}
+                                href="/ocr/segment/">Segment</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div style="clear:both"></div>
+            {% block subtoolbar %}{% endblock %}
+                    {% block content %}{% endblock %}
+            
+        </div>
+        <div id="dialog_box"></div>
+    </div>
+</body>
+</html>

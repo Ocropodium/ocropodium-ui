@@ -1,0 +1,12 @@
+<fieldset class="ocr_parameter_set">
+    <legend>Settings {{prefix|cut:"_"|capfirst}}</legend>
+    <div class="field_wrapper">
+        <label for="id_{{prefix}}paramset_name">Name</label>
+        <input type="text" id="id_{{prefix}}paramset_name"
+        name="{{prefix}}paramset_name" value="Settings {{prefix|cut:"_"|capfirst}}" />
+    </div>
+    {% include "includes/ocr_settings.html" %}                
+    <span class="del_paramset">Remove Parameter Set</span>
+    <span class="add_paramset">Copy Parameter Set</span>
+</fieldset>
+

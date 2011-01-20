@@ -1,0 +1,113 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/task_list.css" type="text/css" media="screen" />
+	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/task_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/task_list_widget.js'></script>
+    <script type="text/javascript" src="/static/js/ocrtasks/list.js"></script>
+    <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
+
+    <style type="text/css">
+        #dialog_box {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+
+<div id="sidebar" class="widget">
+    <div class="widget_header" id="filter_head">Filter Tasks:</div>
+    <div class="widget_content">
+        <form name="filter" id="task_filter_form" method="GET" action="/ocrtasks/list">
+            <input type="hidden" class="filter_item" name="page" value="{{params.page}}" />
+            <input type="hidden" class="filter_item" name="order_by" value="{{params.order_by}}" />
+
+            <div class="field_wrapper">
+                <label for="view_status_all">All:</label>            
+                <input type="checkbox" name="status" class="filter_item" id="view_status_all" value="ALL"
+                    checked="checked" />
+                <br />
+                {% for status, name in statuses %}
+                    <label for="view_status_{{status}}">{{name}}:</label>
+                    <input type="checkbox" name="status" class="filter_item" id="view_status_{{status}}" 
+                    {% if status in selected %} checked="Checked" {% endif %} value="{{status}}" />
+                    <br />
+                {% endfor %}
+            </div>
+            <div class="field_wrapper">
+                <label for="filter_user">User:</label>
+                <select class="filter_item" id="filter_user" name="user__pk">
+                    <option value="" {% ifequal params.user_id "" %}selected="selected"{% endifequal %}>All</option>
+                    <option value="{{request.user.pk}}" {% ifequal params.user_id request.user.pk %}selected="selected"
+                    {% endifequal %}>{{user.username}}</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="widget" id="task_list_widget">
+    <div class="widget_header">OCR Tasks</div>
+    <div class="widget_content">
+        {% include "includes/messages.html" %}
+        <div class="list_controls">
+            <div class="list_controls_right">
+                <div id="status_filter" class="filter_container">
+                    <div class="toggle_button ui-state-default ui-corner-all">
+                        Filter Tasks
+                    </div>
+                    <div class="list_popup" style="display: none; ">
+                        <div class="status_filter" checked="true">
+                            <label class="status_label" for="ALL">ALL</label>
+                            <input type="checkbox" name="ALL" id="filter_none">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="INIT">INIT</label>
+                            <input type="checkbox" name="INIT" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="PENDING">PENDING</label>
+                            <input type="checkbox" name="PENDING" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="RETRY">RETRY</label>
+                            <input type="checkbox" name="RETRY" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="STARTED">STARTED</label>
+                            <input type="checkbox" name="STARTED" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="SUCCESS">SUCCESS</label>
+                            <input type="checkbox" name="SUCCESS" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="ERROR">ERROR</label>
+                            <input type="checkbox" name="ERROR" class="filter_type">
+                        </div>
+                        <div class="status_filter">
+                            <label class="status_label" for="ABORTED">ABORTED</label>
+                            <input type="checkbox" name="ABORTED" class="filter_type">
+                        </div>
+                    </div>
+                </div>
+
+                <form name="controls" class="list_controls_form" action="/ocrtasks/list/" method="GET">
+                    Auto-Refresh:
+                    <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
+                    <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
+                </form>
+            </div>
+        </div>
+        <div id="task_list">
+        </div>
+    </div> 
+</div>
+
+
+{% endblock %}
+

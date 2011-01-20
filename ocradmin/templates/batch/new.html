@@ -1,0 +1,45 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - New Batch {% endblock %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
+	<script type='application/javascript' src='/static/js/stats.js'></script>
+	<script type='application/javascript' src='/static/js/file_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/file_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/batch/new.js'></script>
+	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+    <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/file_list_widget.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/batch_widget.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block content %}
+
+<div id="sidebar" class="widget">
+    <div class="widget_header">Options</div>
+    <div class="widget_content">
+        <h3>Upload New Files</h3>
+        <form id="uploadform" name="uploadoptions" action="/batch/upload_files/" method="POST" enctype="multipart/form-data">
+            <div id="dragdrop">
+                <div id="dropzone">
+                    Drop images here...
+                </div>
+            </div>
+        </form>            
+    </div>
+</div>
+
+<div id="document_window">
+    <div class="widget" id="new_batch">
+        <div class="widget_header">New Batch</div>
+        <div class="widget_content">
+            {% include "batch/includes/new_form.html" %}
+        </div>
+    </div>
+</div>
+<div id="file_browser"></div>
+ 
+{% endblock %}
+
