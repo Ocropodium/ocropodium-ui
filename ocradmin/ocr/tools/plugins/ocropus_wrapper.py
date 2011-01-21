@@ -19,7 +19,7 @@ class OcropusParams(UserDict.DictMixin):
     """
     Convert a dictionary into an object with certain
     default attribites.  It also uses encode() to convert
-    Django unicode strings to standard strings with the 
+    Django unicode strings to standard strings with the
     Ocropus python bindings can handle.
     """
     def __init__(self, dct):
@@ -161,7 +161,7 @@ class OcropusWrapper(base.OcrBase):
             self._linerec.load_native(self.params.cmodel)
         except (StandardError, RuntimeError), err:
             raise err
-        self._linerec.startTraining()        
+        self._linerec.startTraining()
         self.training = True
 
 
@@ -189,16 +189,16 @@ class OcropusWrapper(base.OcrBase):
             for i in range(1, regions.length()):
                 out[box].append([regions.x0(i),
                     regions.y0(i) + (regions.y1(i) - regions.y0(i)),
-                    regions.x1(i) - regions.x0(i), 
+                    regions.x1(i) - regions.x0(i),
                     regions.y1(i) - regions.y0(i)])
-        return out            
+        return out
 
 
     def convert(self, filepath, progress_func=None, callback=None, **cbkwargs):
         """
         Convert an image file into text.  A callback can be supplied that
         is evaluated before every individual page line is run.  If it does
-        not evaluate to True the function returns early with the page 
+        not evaluate to True the function returns early with the page
         results gathered up to that point.  Keyword arguments can also be
         passed to the callback.
         """
@@ -214,13 +214,13 @@ class OcropusWrapper(base.OcrBase):
             self.logger.info("Writing segmentation: %s" % self.params.segout)
             self.write_packed(self.params.segout, page_seg)
         pageheight, pagewidth = page_bin.shape
-        
+
         self.logger.info("Extracting regions...")
         regions = ocrolib.RegionExtractor()
         regions.setPageLines(page_seg)
         numlines = regions.length()
         self.logger.info("Recognising lines...")
-        pagedata = dict( 
+        pagedata = dict(
             page=os.path.basename(filepath),
             lines=[],
             box=[0, 0, pagewidth, pageheight]
@@ -231,7 +231,7 @@ class OcropusWrapper(base.OcrBase):
                 if not callback(**cbkwargs):
                     return pagedata
             set_progress(self.logger, progress_func, i, numlines)
-            line = regions.extract(page_bin, i, 1)        
+            line = regions.extract(page_bin, i, 1)
             bbox = [regions.x0(i), pageheight - regions.y0(i),
                 regions.x1(i) - regions.x0(i), regions.y1(i) - regions.y0(i)]
             text = self.get_transcript(line)
@@ -244,7 +244,7 @@ class OcropusWrapper(base.OcrBase):
 
     def convert_lines(self, filepath, linedata):
         """
-        Convert a single line given a prebinarized file and 
+        Convert a single line given a prebinarized file and
         x, y, w, h coords.
         """
         from copy import deepcopy
@@ -255,12 +255,12 @@ class OcropusWrapper(base.OcrBase):
         for i in range(len(linedata)):
             coords = linedata[i]["box"]
             iulibcoords = (
-                coords[0], pageheight - coords[1], coords[0] + coords[2], 
+                coords[0], pageheight - coords[1], coords[0] + coords[2],
                 pageheight - (coords[1] - coords[3]))
             lineimage = ocrolib.iulib.bytearray()
             ocrolib.iulib.extract_subimage(lineimage, page_bin, *iulibcoords)
             out[i]["text"] = self.get_transcript(ocrolib.narray2numpy(lineimage))
-        return out            
+        return out
 
 
     def get_default_logger(self):
@@ -309,7 +309,7 @@ class OcropusWrapper(base.OcrBase):
     @check_aborted
     def get_transcript(self, line):
         """
-        Run line-recognition on an ocrolib.iulib.bytearray images of a 
+        Run line-recognition on an ocrolib.iulib.bytearray images of a
         single line.
         """
         if self._lmodel is None:
@@ -340,7 +340,7 @@ class OcropusWrapper(base.OcrBase):
             bindeskew = getattr(ocrolib, self.params.bindeskew)()
         cleanups = { "grayclean": [], "binclean": [] }
         for cleantype, cleanlist in cleanups.iteritems():
-            for i in range(0, 10): 
+            for i in range(0, 10):
                 paramval = self.params.get("%s%s" % (cleantype, i))
                 if paramval and paramval != "-":
                     try:
@@ -348,14 +348,14 @@ class OcropusWrapper(base.OcrBase):
                     except IndexError, err:
                         self.logger.error(err.message)
 
-        self._set_component_parameters(complookup, [binarizer, 
-                bindeskew, graydeskew] 
+        self._set_component_parameters(complookup, [binarizer,
+                bindeskew, graydeskew]
                 + cleanups["grayclean"] + cleanups["binclean"])
         self.logger.debug("pagegray: type: %s" % type(pagegray))
         # onwards with cleanup
         pageout = pagegray
         deskewed = False
-        
+
         if 0: #ocrolib.iulib.contains_only(pageout, 0, 255):
             self.logger.debug("Running BINARY batch clean.")
             pageout = self.batch_clean(cleanups["binclean"], pagegray)
@@ -418,14 +418,14 @@ class OcropusWrapper(base.OcrBase):
         if not self.training:
             self.init_trainer()
         # need to invert the bbox for the time being
-        # we should really store it the right way 
+        # we should really store it the right way
         # round in the first place
         height = self._trainbin.shape[0]
         ibox = (bbox[0], height - bbox[1],
                 bbox[0] + bbox[2] + 1,
                 (height - bbox[1]) + bbox[3] + 1)
         sub = ocrolib.iulib.bytearray()
-        ocrolib.iulib.extract_subimage(sub, 
+        ocrolib.iulib.extract_subimage(sub,
                 ocrolib.numpy2narray(self._trainbin), *ibox)
 
         try:
@@ -477,7 +477,7 @@ class OcropusWrapper(base.OcrBase):
                 self.logger.info(
                         "Setting: %s.%s -> %s" % (compname, param, val))
                 component.pset(param, val)
-        
+
 
     @classmethod
     def get_components(cls, oftypes=None, withnames=None):
@@ -534,9 +534,9 @@ class OcropusWrapper(base.OcrBase):
             cname = clist.name(i)
             if withnames and not \
                     cname.lower() in [n.lower() for n in withnames]:
-                continue            
+                continue
             compdict = {"name": cname, "type": ckind, "params": []}
-            # TODO: Fix this heavy-handed exception handling which is 
+            # TODO: Fix this heavy-handed exception handling which is
             # liable to mask genuine errors - it's needed because of
             # various inconsistencies in the Python/native component
             # wrappers.
@@ -548,13 +548,13 @@ class OcropusWrapper(base.OcrBase):
                 continue
 
             for paramnum in range(0, comp.plength()):
-                pname = comp.pname(paramnum) 
+                pname = comp.pname(paramnum)
                 compdict["params"].append({
                     "name": pname,
                     "value": comp.pget(pname),
                 })
             out[cname] = compdict
-        return out            
+        return out
 
 
     @classmethod
@@ -583,8 +583,8 @@ class OcropusWrapper(base.OcrBase):
                 continue
             if withnames and not \
                     cname.lower() in [n.lower() for n in withnames]:
-                continue            
-            
+                continue
+
             comp = ctype()
             # FIXME: Extreme dodginess getting the interface type,
             # very fragile
@@ -596,7 +596,7 @@ class OcropusWrapper(base.OcrBase):
                 description=comp.description()
             )
             for paramnum in range(0, comp.plength()):
-                pname = comp.pname(paramnum) 
+                pname = comp.pname(paramnum)
                 compdict["params"].append({
                     "name": pname,
                     "value": comp.pget(pname),
