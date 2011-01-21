@@ -36,7 +36,7 @@ var ParameterBuilder = OCRJS.OcrBase.extend({
             grayclean:  "ICleanupGray",
             binarizer:  "IBinarize",
             bindeskew:  "ICleanupBinary",        
-            graydeskew: "ICleanupBinary",   // don't ask, it's just like this...
+            graydeskew: "ICleanupGray",  
             psegmenter: "ISegmentPage",
             segmenter:  "ISegmentLine",
             grouper:    "IGrouper",

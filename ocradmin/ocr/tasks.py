@@ -234,9 +234,8 @@ class BinarizePageTask(AbortableTask):
             converter = PluginManager.get_converter(
                     paramdict.get("engine", "ocropus"),
                     logger=logger, abort_func=abort_func, params=paramdict)
-            grey, page_bin = converter.standard_preprocess(filepath)
-            pagewidth = page_bin.dim(0)
-            pageheight = page_bin.dim(1)
+            page_bin = converter.standard_preprocess(filepath)
+            pageheight, pagewidth = page_bin.shape
             converter.write_binary(binpath, page_bin)
 
         src, dst = make_deepzoom_proxies(logger,
@@ -289,11 +288,10 @@ class SegmentPageTask(AbortableTask):
         converter = PluginManager.get_converter(
                 paramdict.get("engine", "ocropus"),
                 logger=logger, abort_func=abort_func, params=paramdict)
-        grey, page_bin = converter.standard_preprocess(filepath)
+        page_bin = converter.standard_preprocess(filepath)
         page_seg = converter.get_page_seg(page_bin)
 
-        pagewidth = page_seg.dim(0)
-        pageheight = page_seg.dim(1)
+        pageheight, pagewidth = page_bin.shape
         boxes = converter.extract_boxes(page_seg)
         converter.write_packed(segpath, page_seg)
 
