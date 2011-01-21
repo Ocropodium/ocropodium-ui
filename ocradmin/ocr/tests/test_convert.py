@@ -47,7 +47,10 @@ class OcrConvertTest(TestCase):
         """
         Test OCRing with Tesseract as the engine.
         """
-        self._test_convert_action({"engine": "tesseract", "lmodel": "Default Tesseract English"})        
+        self._test_convert_action({
+            "engine": "tesseract",
+            "lmodel": "Default Tesseract English"
+        })        
 
     def test_convert_action_ocropus(self):
         """
@@ -88,7 +91,6 @@ class OcrConvertTest(TestCase):
         self.assertRaises(ValueError, simplejson.loads, r2.content)
         self.assertEqual(r2["Content-Type"], "text/plain")
 
-
     def test_results_action(self):
         """
         Test fetching task results.  We can't meaningfully do this
@@ -120,7 +122,6 @@ class OcrConvertTest(TestCase):
         # locally we will
         self.assertTrue(content[0]["results"] is not None, "Unable to get results")
       
-
     def _get_convert_response(self, params={}, headers={}):
         """
         Post an image for conversion with the given params, headers.
