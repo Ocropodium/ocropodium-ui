@@ -258,7 +258,8 @@ class OcropusWrapper(base.OcrBase):
                 coords[0], pageheight - coords[1], coords[0] + coords[2],
                 pageheight - (coords[1] - coords[3]))
             lineimage = ocrolib.iulib.bytearray()
-            ocrolib.iulib.extract_subimage(lineimage, page_bin, *iulibcoords)
+            ocrolib.iulib.extract_subimage(lineimage, 
+                    ocrolib.numpy2narray(page_bin), *iulibcoords)
             out[i]["text"] = self.get_transcript(ocrolib.narray2numpy(lineimage))
         return out
 
