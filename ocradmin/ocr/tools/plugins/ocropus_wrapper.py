@@ -53,7 +53,7 @@ class OcropusParams(UserDict.DictMixin):
 
     @classmethod
     def _safe(cls, param):
-        """Convert unicode strings to safe values."""
+        """Convert unicode strings to ocropus-safe values."""
         if isinstance(param, unicode):
             return param.encode()
         else:
@@ -202,13 +202,7 @@ class OcropusWrapper(base.OcrBase):
         results gathered up to that point.  Keyword arguments can also be
         passed to the callback.
         """
-        if not self.params.prebinarized:
-            page_bin = self.standard_preprocess(filepath)
-            if self.params.binout:
-                self.logger.info("Writing binary: %s" % self.params.binout)
-                self.write_binary(self.params.binout, page_bin)
-        else:
-            page_bin = ocrolib.read_image_gray(filepath)
+        page_bin = self.conditional_preprocess(filepath)
         page_seg = self.get_page_seg(page_bin)
         if self.params.segout:
             self.logger.info("Writing segmentation: %s" % self.params.segout)
@@ -319,6 +313,21 @@ class OcropusWrapper(base.OcrBase):
         # NOTE: This returns the cost - not currently used
         out, _ = ocrolib.beam_search_simple(fst, self._lmodel, 1000)
         return out
+
+
+    def conditional_preprocess(self, filepath):
+        """
+        Run preprocessing unless we're told to 
+        use a passed-in prebinarized file.
+        """
+        if self.params.prebinarized:
+            page_bin = ocrolib.read_image_gray(filepath)
+        else:
+            page_bin = self.standard_preprocess(filepath)
+            if self.params.binout:
+                self.logger.info("Writing binary: %s" % self.params.binout)
+                self.write_binary(self.params.binout, page_bin)
+        return page_bin
 
 
     @check_aborted
