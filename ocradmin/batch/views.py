@@ -177,8 +177,8 @@ def create(request):
     userparams = _get_best_params(
             _cleanup_params(request.POST.copy(),
                 ("files", "name", "description", "tags")))
-    userparams["intermediate_outdir"] = request.output_path.encode()
-
+    # preserve intermediate binary & segmentation results            
+    userparams["write_intermediate_results"] = True
     asyncparams = []
     try:
         for path in paths:
