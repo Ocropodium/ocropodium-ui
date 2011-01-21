@@ -6,13 +6,12 @@ line wrapper.
 
 import os
 import re
-import sys
 import logging
 import traceback
 import UserDict
-from ocradmin.ocr.tools import base, check_aborted, set_progress, ExternalToolError
-import iulib
-import ocropus
+from ocradmin.ocr.tools import base, check_aborted, \
+        set_progress, ExternalToolError
+import ocrolib
 
 
 
@@ -31,7 +30,7 @@ class OcropusParams(UserDict.DictMixin):
         self.psegmenter = "SegmentPageByRAST"
         self.clean = "StandardPreprocessing"
         self.binarizer = "BinarizeBySauvola"
-        self.graydeskew = "DeskewPageByRAST"
+        self.graydeskew = "DeskewGrayPageByRAST"
         self.bindeskew = "DeskewPageByRAST"
         self.binclean0 = "AutoInvert"
         self.binclean1 = "RmHalftone"
@@ -52,7 +51,8 @@ class OcropusParams(UserDict.DictMixin):
         """Dictionary keys."""
         return self.__dict__.keys()
 
-    def _safe(self, param):
+    @classmethod
+    def _safe(cls, param):
         """Convert unicode strings to safe values."""
         if isinstance(param, unicode):
             return param.encode()
@@ -78,6 +78,9 @@ class OcropusError(StandardError):
 
 
 def main_class():
+    """
+    Exported wrapper.
+    """
     return OcropusWrapper
 
 
@@ -96,6 +99,7 @@ class OcropusWrapper(base.OcrBase):
         self.abort_func = abort_func
         self._linerec = None
         self._lmodel = None
+        self._trainbin = None
         self.training = False
         self.logger = logger if logger else self.get_default_logger()
         self.params = OcropusParams(params) if params \
@@ -107,7 +111,7 @@ class OcropusWrapper(base.OcrBase):
         """
         Write a binary image.
         """
-        iulib.write_image_binary(path, data)
+        ocrolib.iulib.write_image_binary(path, ocrolib.numpy2narray(data))
 
 
     @classmethod
@@ -115,7 +119,7 @@ class OcropusWrapper(base.OcrBase):
         """
         Write a packed image.
         """
-        iulib.write_image_packed(path, data)
+        ocrolib.iulib.write_image_packed(path, ocrolib.pseg2narray(data))
 
 
     def init_converter(self):
@@ -123,8 +127,9 @@ class OcropusWrapper(base.OcrBase):
         Load the line-recogniser and the lmodel FST objects.
         """
         try:
-            self._linerec = ocropus.load_linerec(self.params.cmodel)
-            self._lmodel = ocropus.make_OcroFST()
+            self._linerec = ocrolib.RecognizeLine()
+            self._linerec.load_native(self.params.cmodel)
+            self._lmodel = ocrolib.OcroFST()
             self._lmodel.load(self.params.lmodel)
         except (StandardError, RuntimeError), err:
             raise err
@@ -143,7 +148,6 @@ class OcropusWrapper(base.OcrBase):
         #    cmatch = re.match("%s__(.+)" % self.params.segmenter, name, re.I)
         #    if cmatch:
         #        param = cmatch.groups()[0]
-        #        self.logger.info("Setting: %s.%s -> %s" % (self.params.psegmenter, param, val))
         #        self._linerec.pset(param, val)
 
 
@@ -151,11 +155,10 @@ class OcropusWrapper(base.OcrBase):
         """
         Load the cmodel for training.
         """
-        from ocropy import linerec
         try:
-            #self._linerec = ocropus.load_linerec(self.params.cmodel)
-            self._linerec = linerec.LineRecognizer()
-            self._linerec.load(self.params.cmodel)
+            #self._linerec = ocrolib.ocropus.load_linerec(self.params.cmodel)
+            self._linerec = ocrolib.RecognizeLine()
+            self._linerec.load_native(self.params.cmodel)
         except (StandardError, RuntimeError), err:
             raise err
         self._linerec.startTraining()        
@@ -169,32 +172,25 @@ class OcropusWrapper(base.OcrBase):
         self._linerec.finishTraining()
 
 
-    def save_trained_model(self):
-        """
-        Save the results of training.
-        """
-        #self._linerec.save(self.params.outmodel)
-        ocropus.save_component(self.params.outmodel, self._linerec.cmodel)
-        
-
-    def extract_boxes(self, page_seg):
+    @classmethod
+    def extract_boxes(cls, page_seg):
         """
         Extract line/paragraph geometry info.
         """
-        regions = ocropus.RegionExtractor()
+        regions = ocrolib.RegionExtractor()
         out = dict(columns=[], lines=[], paragraphs=[])
         exfuncs = dict(
             columns=regions.setPageColumns,
             lines=regions.setPageLines,
             paragraphs=regions.setPageParagraphs,
         )
-        pageheight = page_seg.dim(1)
-
         for box, func in exfuncs.iteritems():
             func(page_seg)
             for i in range(1, regions.length()):
-                out[box].append([regions.x0(i), pageheight - regions.y0(i),
-                    regions.x1(i) - regions.x0(i), regions.y1(i) - regions.y0(i)])
+                out[box].append([regions.x0(i),
+                    regions.y0(i) + (regions.y1(i) - regions.y0(i)),
+                    regions.x1(i) - regions.x0(i), 
+                    regions.y1(i) - regions.y0(i)])
         return out            
 
 
@@ -207,53 +203,42 @@ class OcropusWrapper(base.OcrBase):
         passed to the callback.
         """
         if not self.params.prebinarized:
-            _, page_bin = self.standard_preprocess(filepath)
+            page_bin = self.standard_preprocess(filepath)
             if self.params.binout:
                 self.logger.info("Writing binary: %s" % self.params.binout)
                 self.write_binary(self.params.binout, page_bin)
         else:
-            page_bin = iulib.bytearray()
-            iulib.read_image_binary(page_bin, filepath)
+            page_bin = ocrolib.read_image_gray(filepath)
         page_seg = self.get_page_seg(page_bin)
         if self.params.segout:
             self.logger.info("Writing segmentation: %s" % self.params.segout)
             self.write_packed(self.params.segout, page_seg)
-        pagewidth = page_seg.dim(0)
-        pageheight = page_seg.dim(1)
+        pageheight, pagewidth = page_bin.shape
         
         self.logger.info("Extracting regions...")
-        regions = ocropus.RegionExtractor()
+        regions = ocrolib.RegionExtractor()
         regions.setPageLines(page_seg)
         numlines = regions.length()
         self.logger.info("Recognising lines...")
-        pagedata = { 
-            "page" : os.path.basename(filepath) ,
-            "lines": [],
-            "box": [0, 0, pagewidth, pageheight]
-        }
+        pagedata = dict( 
+            page=os.path.basename(filepath),
+            lines=[],
+            box=[0, 0, pagewidth, pageheight]
+        )
         for i in range(1, numlines):
             # test for continuation
             if callback is not None:
                 if not callback(**cbkwargs):
                     return pagedata
             set_progress(self.logger, progress_func, i, numlines)
-            line = iulib.bytearray()
-            regions.extract(line, page_bin, i, 1)        
+            line = regions.extract(page_bin, i, 1)        
             bbox = [regions.x0(i), pageheight - regions.y0(i),
                 regions.x1(i) - regions.x0(i), regions.y1(i) - regions.y0(i)]
-            try:
-                text = self.get_transcript(line)
-            except ExternalToolError, err:
-                raise err
-            #except StandardError, err:
-            #    raise err
-            #    self.logger.error("Caught conversion error: %s" % err.message)
-            #    text = ""
+            text = self.get_transcript(line)
             pagedata["lines"].append({"line": i, "box": bbox, "text" : text })
 
         # set progress complete
         set_progress(self.logger, progress_func, numlines, numlines)
-
         return pagedata
 
 
@@ -264,20 +249,17 @@ class OcropusWrapper(base.OcrBase):
         """
         from copy import deepcopy
 
-        page_bin = iulib.bytearray()
-        iulib.read_image_binary(page_bin, filepath)
-        pagewidth = page_bin.dim(0)
-        pageheight = page_bin.dim(1)
+        page_bin = ocrolib.read_image_gray(filepath)
+        pageheight = page_bin.shape[0]
         out = deepcopy(linedata)
         for i in range(len(linedata)):
-            ld = linedata[i]
-            coords = ld["box"]
+            coords = linedata[i]["box"]
             iulibcoords = (
                 coords[0], pageheight - coords[1], coords[0] + coords[2], 
                 pageheight - (coords[1] - coords[3]))
-            lineimage = iulib.bytearray()
-            iulib.extract_subimage(lineimage, page_bin, *iulibcoords)
-            out[i]["text"] = self.get_transcript(lineimage)
+            lineimage = ocrolib.iulib.bytearray()
+            ocrolib.iulib.extract_subimage(lineimage, page_bin, *iulibcoords)
+            out[i]["text"] = self.get_transcript(ocrolib.narray2numpy(lineimage))
         return out            
 
 
@@ -292,15 +274,12 @@ class OcropusWrapper(base.OcrBase):
     @check_aborted
     def get_page_binary(self, filepath):
         """
-        Convert an on-disk file into an in-memory iulib.bytearray.
+        Convert an on-disk file into an in-memory ocrolib.iulib.bytearray.
         """
-        page_gray = iulib.bytearray()
-        iulib.read_image_gray(page_gray, filepath)        
+        page_gray = ocrolib.read_image_gray(filepath)
         self.logger.info("Binarising image with %s" % self.params.clean)
-        preproc = ocropus.make_IBinarize(self.params.clean)
-        page_bin = iulib.bytearray()
-        preproc.binarize(page_bin, page_gray)
-        return page_bin
+        preproc = getattr(ocrolib, self.params.clean)()
+        return preproc.binarize(page_gray)
 
 
     @check_aborted
@@ -310,10 +289,10 @@ class OcropusWrapper(base.OcrBase):
         """
         self.logger.info("Segmenting page with %s" % self.params.psegmenter)
         try:
-            segmenter = ocropus.make_ISegmentPage(self.params.psegmenter)
-            self.logger.info("Loaded (%s): %s" % (self.params.psegmenter, segmenter))
-        except IndexError, err:
-            # no native component found - try loading a python one
+            segmenter = getattr(ocrolib, self.params.psegmenter)()
+            self.logger.info("Loaded %s" % self.params.psegmenter)
+        except AttributeError:
+            # no native-wrapped component found - try loading a python one
             segmenter = self._load_python_component(self.params.psegmenter)
         for name, val in self.params.iteritems():
             # find the 'long' name for the component with the given short
@@ -321,28 +300,24 @@ class OcropusWrapper(base.OcrBase):
             cmatch = re.match("%s__(.+)" % self.params.psegmenter, name, re.I)
             if cmatch:
                 param = cmatch.groups()[0]
-                self.logger.info("Setting: %s.%s -> %s" % (self.params.psegmenter, param, val))
+                self.logger.info("Setting: %s.%s -> %s" % (
+                    self.params.psegmenter, param, val))
                 segmenter.pset(param, val)
-
-        page_seg = iulib.intarray()
-        segmenter.segment(page_seg, page_bin)
-        return page_seg
+        return segmenter.segment(page_bin)
 
 
     @check_aborted
     def get_transcript(self, line):
         """
-        Run line-recognition on an iulib.bytearray images of a 
+        Run line-recognition on an ocrolib.iulib.bytearray images of a 
         single line.
         """
         if self._lmodel is None:
             self.init_converter()
-        fst = ocropus.make_OcroFST()
-        self._linerec.recognizeLine(fst, line)
-        result = iulib.ustrg()
+        fst = self._linerec.recognizeLine(line)
         # NOTE: This returns the cost - not currently used
-        ocropus.beam_search(result, fst, self._lmodel, 1000)
-        return result.as_string()
+        out, _ = ocrolib.beam_search_simple(fst, self._lmodel, 1000)
+        return out
 
 
     @check_aborted
@@ -353,93 +328,78 @@ class OcropusWrapper(base.OcrBase):
         """
         complookup = self.get_components(
                 oftypes=["IBinarize", "ICleanupGray", "ICleanupBinary"])
-        pagegray = iulib.bytearray()
-        pageout = iulib.bytearray()
-        iulib.read_image_gray(pagegray, filepath)
-        self.logger.debug("Page gray initial size: %s" % pagegray.length())
+        pagegray = ocrolib.read_image_gray(filepath)
         self.logger.info("Binarizing with params: %s" % self.params)
         # init components
-        binarizer = ocropus.make_IBinarize(self.params.binarizer)
+        binarizer = getattr(ocrolib, self.params.binarizer)()
         graydeskew = None
         if self.params.graydeskew and self.params.graydeskew != "-":
-            graydeskew = ocropus.make_ICleanupGray(self.params.graydeskew)
+            graydeskew = getattr(ocrolib, self.params.graydeskew)()
         bindeskew = None
         if self.params.bindeskew and self.params.bindeskew != "-":
-            bindeskew = ocropus.make_ICleanupBinary(self.params.bindeskew)
+            bindeskew = getattr(ocrolib, self.params.bindeskew)()
         cleanups = { "grayclean": [], "binclean": [] }
         for cleantype, cleanlist in cleanups.iteritems():
             for i in range(0, 10): 
                 paramval = self.params.get("%s%s" % (cleantype, i))
                 if paramval and paramval != "-":
                     try:
-                        cleanlist.append(ocropus.make_ICleanupBinary(paramval))
+                        cleanlist.append(getattr(ocrolib, paramval)())
                     except IndexError, err:
                         self.logger.error(err.message)
 
-        self._set_component_parameters(complookup, [binarizer, bindeskew, graydeskew] 
+        self._set_component_parameters(complookup, [binarizer, 
+                bindeskew, graydeskew] 
                 + cleanups["grayclean"] + cleanups["binclean"])
-
+        self.logger.debug("pagegray: type: %s" % type(pagegray))
         # onwards with cleanup
         pageout = pagegray
         deskewed = False
         
-        gray = iulib.bytearray()
-        tmp = iulib.bytearray()        
-        if iulib.contains_only(pageout, 0, 255):
+        if 0: #ocrolib.iulib.contains_only(pageout, 0, 255):
             self.logger.debug("Running BINARY batch clean.")
-            pageout = self.batch_clean(cleanups["binclean"], pagegray)            
+            pageout = self.batch_clean(cleanups["binclean"], pagegray)
             if bindeskew:
                 self.logger.debug("Deskewing with: %s" % self.params.bindeskew)
-                bindeskew.cleanup(tmp, pageout)
+                pageout = bindeskew.cleanup(pageout)
                 deskewed = True
-                pageout.move(tmp)
         else:
             self.logger.debug("Running GRAYSCALE batch clean.")
             pageout = self.batch_clean(cleanups["grayclean"], pagegray)
             if graydeskew:
                 self.logger.debug("Deskewing with: %s" % self.params.graydeskew)
-                graydeskew.cleanup_gray(tmp, pageout)
+                pageout = graydeskew.cleanup_gray(pageout)
                 deskewed = True
-                pageout.move(tmp)
 
-        self.logger.debug("Page out length: %s" % pageout.length())
-        # TODO: Ensure this copy isn't costly...
-        gray.copy(pageout)
-        tmp.move(pageout)
+        self.logger.debug("Page out length: %s" % len(pageout))
         try:
-            binarizer.binarize(pageout, tmp)
+            pageout, pagegray = binarizer.binarize(pageout)
         except StandardError, err:
             self.logger.error("Binarizer failed: %s" % err)
-            pageout.move(tmp)
-        tmp.move(pageout)
-        pageout = self.batch_clean(cleanups["binclean"], tmp)
-        self.logger.debug("Page out length: %s" % pageout.length())
+        pageout = self.batch_clean(cleanups["binclean"], pageout)
+        self.logger.debug("Page out length: %s" % len(pageout))
         if bindeskew and not deskewed:
-            tmp.move(pageout)
             try:
-                bindeskew.cleanup(pageout, tmp)
+                pageout = bindeskew.cleanup(pageout)
             except StandardError, err:
                 self.logger.error("Binary deskew failed: %s" % err)
-                pageout.move(tmp)
-        return gray, pageout
+        return pageout
 
 
     @check_aborted
     def batch_clean(self, components, pagedata):
-        tmp = iulib.bytearray()
-        # TODO: Ditto, benchmark this copy
-        pageout = iulib.bytearray()
-        pageout.copy(pagedata)
+        """
+        Run a set of cleanup components on the given page data.
+        """
+        pageout = pagedata
         count = 0
         for component in components:
-            self.logger.debug("Running cleanup: %s.  Image size: %s" % (component.name(), pageout.length()))
             try:
-                component.cleanup(tmp, pageout)
-                pageout.move(tmp)
-            except Exception, err:
-                self.logger.error("clean%s: %s failed:" % (count, component.name()))
+                pageout = component.cleanup(pageout)
+            except StandardError:
+                self.logger.error("clean%s: %s failed:" % (
+                    count, component.name()))
             count += 1
-
         return pageout
 
 
@@ -447,8 +407,7 @@ class OcropusWrapper(base.OcrBase):
         """
         Load an image to use for training.
         """
-        self.trainbin = iulib.bytearray()
-        iulib.read_image_gray(self.trainbin, imagepath)                
+        self._trainbin = ocrolib.read_image_gray(imagepath)
 
 
     def train_line(self, bbox, text):
@@ -461,20 +420,21 @@ class OcropusWrapper(base.OcrBase):
         # need to invert the bbox for the time being
         # we should really store it the right way 
         # round in the first place
-        w = self.trainbin.dim(0)
-        h = self.trainbin.dim(1)
-
-        ibox = (bbox[0], h - bbox[1],
+        height = self._trainbin.shape[0]
+        ibox = (bbox[0], height - bbox[1],
                 bbox[0] + bbox[2] + 1,
-                (h - bbox[1]) + bbox[3] + 1)
-        sub = iulib.bytearray()
-        iulib.extract_subimage(sub, self.trainbin, *ibox)
+                (height - bbox[1]) + bbox[3] + 1)
+        sub = ocrolib.iulib.bytearray()
+        ocrolib.iulib.extract_subimage(sub, 
+                ocrolib.numpy2narray(self._trainbin), *ibox)
 
         try:
-            self._linerec.addTrainingLine1(sub, text.encode())
-        except Exception, e:
+            self._linerec.addTrainingLine(ocrolib.narray2numpy(sub),
+                    unicode(text))
+        except StandardError, err:
             traceback.print_exc()
-            self.logger.error("Skipping training line: %s: %s" % (text, e.message))
+            self.logger.error(
+                    "Skipping training line: %s: %s" % (text, err.message))
 
 
     def save_new_model(self):
@@ -487,13 +447,13 @@ class OcropusWrapper(base.OcrBase):
             try:
                 self.finalize_trainer()
                 break
-            except Exception, e:
-                self.logger.error("Encounter runtime error: %s" % e.message)
+            except StandardError, err:
+                self.logger.error("Encounter runtime error: %s" % err.message)
                 self.logger.info("Tries left: %d" % tries)
             tries -= 1
 
         self.logger.info("Saving trained model")
-        self.save_trained_model()
+        self._linerec.save_native(self.params.outmodel)
 
 
     def _set_component_parameters(self, complookup, components):
@@ -511,10 +471,12 @@ class OcropusWrapper(base.OcrBase):
                 compname = [comp["name"] for comp in complookup.itervalues() \
                         if comp["shortname"] == component.name()][0]
                 cmatch = re.match("%s__(.+)" % compname, name, re.I)
-                if cmatch:
-                    param = cmatch.groups()[0]
-                    self.logger.info("Setting: %s.%s -> %s" % (compname, param, val))
-                    component.pset(param, val)
+                if cmatch is None:
+                    continue
+                param = cmatch.groups()[0]
+                self.logger.info(
+                        "Setting: %s.%s -> %s" % (compname, param, val))
+                component.pset(param, val)
         
 
     @classmethod
@@ -536,18 +498,18 @@ class OcropusWrapper(base.OcrBase):
         """
         # FIXME: This triggers an import of everything in components,
         # which is undesirable to say the least
-        dir = os.path.join(os.path.dirname(__file__), "components")
+        directory = os.path.join(os.path.dirname(__file__), "components")
         comp = None
-        for fname in os.listdir(dir):
+        for fname in os.listdir(directory):
             if not fname.endswith(".py"):
                 continue
             modname = fname.replace(".py", "", 1)
             try:
-                pm = __import__("%s" % modname, fromlist=[name])
-                reload(pm)
+                pmod = __import__("%s" % modname, fromlist=[name])
+                reload(pmod)
                 self.logger.info("Importing: %s" % modname)
-                if hasattr(pm, name):
-                    comp = getattr(pm, name)
+                if hasattr(pmod, name):
+                    comp = getattr(pmod, name)
                     break
             except ImportError, err:
                 self.logger.info("Unable to import module: %s" % err)
@@ -563,8 +525,8 @@ class OcropusWrapper(base.OcrBase):
         (possibly of a given type) and their default parameters.
         """
         out = {}
-        clist = ocropus.ComponentList()
-        for i in range(0, clist.length()):
+        clist = ocrolib.ComponentList()
+        for i in range(clist.length()):
             ckind = clist.kind(i)
             if oftypes and not \
                     ckind.lower() in [c.lower() for c in oftypes]:
@@ -574,13 +536,17 @@ class OcropusWrapper(base.OcrBase):
                     cname.lower() in [n.lower() for n in withnames]:
                 continue            
             compdict = {"name": cname, "type": ckind, "params": []}
-            # this is WELL dodgy
+            # TODO: Fix this heavy-handed exception handling which is 
+            # liable to mask genuine errors - it's needed because of
+            # various inconsistencies in the Python/native component
+            # wrappers.
             try:
-                comp = eval("ocropus.make_%s(\"%s\")" % (ckind, cname))
-            except StandardError, err:
+                comp = getattr(ocrolib, cname)()
+                compdict["description"] = comp.description()
+                compdict["shortname"] = comp.name()
+            except (AttributeError, AssertionError, IndexError):
                 continue
-            compdict["description"] = comp.description()
-            compdict["shortname"] = comp.name()
+
             for paramnum in range(0, comp.plength()):
                 pname = comp.pname(paramnum) 
                 compdict["params"].append({
@@ -597,15 +563,15 @@ class OcropusWrapper(base.OcrBase):
         Get native python components.
         """
         out = {}
-        dir = os.path.join(os.path.dirname(__file__), "components")
-        for fname in os.listdir(dir):
+        directory = os.path.join(os.path.dirname(__file__), "components")
+        for fname in os.listdir(directory):
             if not fname.endswith(".py"):
                 continue
             modname = fname.replace(".py", "", 1)
-            pm = __import__("%s" % modname, fromlist=["main_class"])
-            if not hasattr(pm, "main_class"):
+            pmod = __import__("%s" % modname, fromlist=["main_class"])
+            if not hasattr(pmod, "main_class"):
                 continue
-            ctype = pm.main_class()
+            ctype = pmod.main_class()
             ckind = ctype.__base__.__name__
 
             # note: the loading function in ocropy/components.py expects
