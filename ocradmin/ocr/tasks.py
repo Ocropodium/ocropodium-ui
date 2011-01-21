@@ -17,7 +17,86 @@ from ocradmin.ocr.tools.manager import PluginManager
 from ocradmin.ocrtasks.models import OcrTask
 
 
-def make_deepzoom_proxies(logger, inpath, outpath, type, params):
+def get_progress_function(task_id):
+    """
+    Closure for generating a function that refers to
+    a task id in outer scope.
+    """
+    def progress_func(progress, lines=None):
+        """
+        Set progress for the given task.
+        """
+        task = OcrTask.objects.get(task_id=task_id)
+        task.progress = progress
+        if lines is not None:
+            task.lines = lines
+        task.save()
+    return progress_func
+
+
+def get_abort_function(task_id):
+    """
+    Closure for generating a function that takes
+    no params but uses a task_id in outer scope.
+    """
+    def abort_func():
+        """
+        Check whether the task in question has been aborted.
+        """
+        # TODO: this should be possible via a simple 'self.is_aborted()'
+        # Find out why it isn't.
+        asyncres = AbortableAsyncResult(task_id)
+        return asyncres.backend.get_status(task_id) == "ABORTED"
+    return abort_func
+
+
+def create_intermediate_paths(filepath, directory, params, logger):
+    """
+    Modify paramdict in place so if it's been told to write
+    intermediate results we set the appropriate binary and
+    segmentation paths.
+    """
+    # if we need to write intermediate files, determine the binpath
+    # and the segpath needed
+    if params.get("write_intermediate_results"):
+        ensure_writable(directory, logger)
+        basepath = os.path.join(directory, os.path.basename(filepath))
+        params["binout"] = utils.get_media_output_path(basepath, "bin", ".png")
+        params["segout"] = utils.get_media_output_path(basepath, "seg", ".png")
+
+
+def ensure_writable(directory, logger):
+    """
+    Make sure we can write to the given directory,
+    with appropriate permissions.
+    """
+    try:
+        os.makedirs(directory, 0777)
+    except OSError, (errno, _):
+        if errno != 17:  # already exists, that's ok
+            raise
+    try:
+        os.chmod(directory, 0777)
+    except StandardError:
+        logger.error("CHMOD FAILED: %s" % directory)
+    return True
+
+
+def create_binary_deepzoom(params, logger):
+    """
+    Create a DZI for binary files.
+    """
+    binpath = params.get("binout")
+    if binpath and os.path.exists(binpath):
+        dzipath = re.sub("\.png$", "_a.dzi", binpath)
+        logger.info("Making binary DZI: %s" % dzipath)
+        creator = deepzoom.ImageCreator(tile_size=512,
+                tile_overlap=2, tile_format="png",
+                image_quality=1, resize_filter="nearest")
+        creator.create(binpath, dzipath)
+
+
+def make_deepzoom_proxies(logger, inpath, outpath, params):
     """
     Make deepzoom versions of a source and output.
     """
@@ -52,9 +131,8 @@ def make_deepzoom_proxies(logger, inpath, outpath, type, params):
         os.chmod(outpath, 0777)
         os.chmod(dstdzipath, 0777)
         os.chmod(srcdzipath, 0777)
-    except Exception:
+    except StandardError:
         logger.error("CHMOD FAILED: %s" % outpath)
-
     return srcdzipath, dstdzipath
 
 
@@ -74,62 +152,16 @@ class ConvertPageTask(AbortableTask):
         # to end execution early
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
-
-        # if we need to write intermediate files, determine the binpath
-        # and the segpath needed
-        outdir = paramdict.get("intermediate_outdir")
-        if outdir is not None:
-            logger.info("WORKING OUT BIN & SEG paths")
-            stdpath = os.path.join(outdir, os.path.basename(filepath))
-            if not os.path.exists(outdir):
-                try:
-                    os.makedirs(outdir, 0777)
-                except OSError, (errno, strerr):
-                    # counter weird error when other tasks can make
-                    # the directory after the test but before the
-                    # operation.  Errno 17 is the already exists
-                    # error.
-                    if errno == 17:
-                        pass
-                    else:
-                        raise OSError(errno, strerr)
-                try:
-                    os.chmod(outdir, 0777)
-                except Exception:
-                    logger.error("CHMOD FAILED: %s" % outdir)
-            paramdict["binout"] = utils.get_media_output_path(
-                    stdpath, "bin", ".png")
-            paramdict["segout"] = utils.get_media_output_path(
-                    stdpath, "seg", ".png")
-
-        def abort_func():
-            # TODO: this should be possible via a simple 'self.is_aborted()'
-            # Find out why it isn't.
-            asyncres = AbortableAsyncResult(kwargs["task_id"])
-            return asyncres.backend.get_status(kwargs["task_id"]) == "ABORTED"
-
+        create_intermediate_paths(filepath, outdir, paramdict, logger)
         converter = PluginManager.get_converter(
-                paramdict.get("engine", "tesseract"),
-                logger=logger, abort_func=abort_func, params=paramdict)
-
-        # function for the converter to update progress
-        def progress_func(progress, lines=None):
-            task = OcrTask.objects.get(task_id=kwargs["task_id"])
-            task.progress = progress
-            if lines is not None:
-                task.lines = lines
-            task.save()
+                paramdict.get("engine", "tesseract"), logger=logger,
+                abort_func=get_abort_function(kwargs["task_id"]),
+                params=paramdict)
         # init progress to zero (for when retrying tasks)
+        progress_func = get_progress_function(kwargs["task_id"])
         progress_func(0)
-
         out = converter.convert(filepath, progress_func=progress_func)
-        if paramdict.get("binout") and os.path.exists(paramdict["binout"]):
-            dzipath = re.sub("\.png$", "_a.dzi", paramdict["binout"])
-            logger.info("Making binary DZI: %s" % dzipath)
-            creator = deepzoom.ImageCreator(tile_size=512,
-                    tile_overlap=2, tile_format="png",
-                    image_quality=1, resize_filter="nearest")
-            creator.create(paramdict["binout"], dzipath)
+        create_binary_deepzoom(paramdict, logger)
         return out
 
 
@@ -149,42 +181,13 @@ class ConvertLineTask(AbortableTask):
         # to end execution early
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
-
-        # if we need to write intermediate files, determine the binpath
-        # and the segpath needed
-        outdir = paramdict.get("intermediate_outdir")
-        if outdir is not None:
-            logger.info("WORKING OUT BIN & SEG paths")
-            stdpath = os.path.join(outdir, os.path.basename(filepath))
-            if not os.path.exists(outdir):
-                try:
-                    os.makedirs(outdir, 0777)
-                except OSError, (errno, strerr):
-                    # counter weird error when other tasks can make
-                    # the directory after the test but before the
-                    # operation.  Errno 17 is the already exists
-                    # error.
-                    if errno == 17:
-                        pass
-                    else:
-                        raise OSError(errno, strerr)
-                try:
-                    os.chmod(outdir, 0777)
-                except Exception:
-                    logger.error("CHMOD FAILED: %s" % outdir)
-            paramdict["binout"] = utils.get_media_output_path(
-                    stdpath, "bin", ".png")
-            paramdict["segout"] = utils.get_media_output_path(
-                    stdpath, "seg", ".png")
-
+        create_intermediate_paths(filepath, outdir, paramdict, logger)
         converter = PluginManager.get_converter(
                 paramdict.get("engine", "tesseract"),
                 logger=logger, abort_func=None, params=paramdict)
         paramdict["prebinarized"] = True
-        out = converter.convert_lines(
+        return converter.convert_lines(
                 paramdict.get("binout").encode(), paramdict.get("coords"))
-        logger.info("LINE OUTPUT: %s" % out)
-        return out
 
 
 class BinarizePageTask(AbortableTask):
@@ -200,27 +203,12 @@ class BinarizePageTask(AbortableTask):
         """
         Runs the binarize action.
         """
-        # function for the converted to call periodically to check whether
-        # to end execution early
-        def abort_func():
-            # TODO: this should be possible via a simple 'self.is_aborted()'
-            # Find out why it isn't.
-            asyncres = AbortableAsyncResult(kwargs["task_id"])
-            return asyncres.is_aborted()
-
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
-
         filepath = utils.make_png(filepath, outdir)
         binname = os.path.basename(
                 utils.get_media_output_path(filepath, "bin", ".png"))
-        if not os.path.exists(outdir):
-            try:
-                os.makedirs(outdir, 0777)
-                os.chmod(outdir, 0777)
-            except Exception:
-                logger.error("CHMOD FAILED: %s" % outdir)
-
+        ensure_writable(outdir, logger)
         binpath = os.path.join(outdir, binname)
         # hack - this is to save time when doing the transcript editor
         # work - don't rebinarize of there's an existing file
@@ -232,14 +220,13 @@ class BinarizePageTask(AbortableTask):
                 os.path.exists(binpath),
                 paramdict.get("allowcache")))
             converter = PluginManager.get_converter(
-                    paramdict.get("engine", "ocropus"),
-                    logger=logger, abort_func=abort_func, params=paramdict)
+                    paramdict.get("engine", "ocropus"), logger=logger,
+                    abort_func=get_abort_function(kwargs["task_id"]),
+                    params=paramdict)
             page_bin = converter.standard_preprocess(filepath)
             pageheight, pagewidth = page_bin.shape
             converter.write_binary(binpath, page_bin)
-
-        src, dst = make_deepzoom_proxies(logger,
-                filepath, binpath, "bin", paramdict)
+        src, dst = make_deepzoom_proxies(logger, filepath, binpath, paramdict)
         return dict(
             page=os.path.basename(filepath),
             box=[0, 0, pagewidth, pageheight],
@@ -263,40 +250,23 @@ class SegmentPageTask(AbortableTask):
         """
         Runs the segment action.
         """
-        # function for the converted to call periodically to check whether
-        # to end execution early
-        def abort_func():
-            # TODO: this should be possible via a simple 'self.is_aborted()'
-            # Find out why it isn't.
-            asyncres = AbortableAsyncResult(kwargs["task_id"])
-            return asyncres.is_aborted()
-
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
-
         filepath = utils.make_png(filepath, outdir)
         segname = os.path.basename(
                 utils.get_media_output_path(filepath, "seg", ".png"))
-        if not os.path.exists(outdir):
-            try:
-                os.makedirs(outdir, 0777)
-                os.chmod(outdir, 0777)
-            except Exception:
-                logger.error("CHMOD FAILED: %s" % outdir)
+        ensure_writable(outdir, logger)
         segpath = os.path.join(outdir, segname)
-
         converter = PluginManager.get_converter(
-                paramdict.get("engine", "ocropus"),
-                logger=logger, abort_func=abort_func, params=paramdict)
+                paramdict.get("engine", "ocropus"), logger=logger,
+                abort_func=get_abort_function(kwargs["task_id"]),
+                params=paramdict)
         page_bin = converter.standard_preprocess(filepath)
         page_seg = converter.get_page_seg(page_bin)
-
         pageheight, pagewidth = page_bin.shape
         boxes = converter.extract_boxes(page_seg)
         converter.write_packed(segpath, page_seg)
-
-        src, dst = make_deepzoom_proxies(logger,
-                filepath, segpath, "seg", paramdict)
+        src, dst = make_deepzoom_proxies(logger, filepath, segpath, paramdict)
         return dict(
             page=os.path.basename(filepath),
             box=[0, 0, pagewidth, pageheight],
