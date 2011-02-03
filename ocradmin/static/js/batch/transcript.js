@@ -16,7 +16,7 @@ function pollForResults(data, polltime) {
         alert(data.error);
     } else if (data.status == "PENDING") {
         $.ajax({
-            url: "/batch/viewer_binarization_results/" + data.task_id + "/",
+            url: "/ocr/viewer_binarization_results/" + data.task_id + "/",
             dataType: "json",
             beforeSend: function(e) {
                 sdviewer.setWaiting(true);
@@ -52,7 +52,7 @@ function reconvertLines(lines) {
     });
 
     $.ajax({
-        url: "/batch/reconvert_lines/" + transcript.pageData().pk + "/",
+        url: "/ocr/reconvert_lines/" + transcript.pageData().pk + "/",
         data: { 
             coords: JSON.stringify(linedata),
             engine: $("#reconvert_engine").val(),
@@ -216,7 +216,7 @@ $(function() {
         // want to rebinarize with the same params
         var task_pk = transcript.pageData().pk;
         $.ajax({
-            url: "/batch/submit_viewer_binarization/" + task_pk + "/",
+            url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
             dataType: "json",
             beforeSend: function(e) {
                 sdviewer.close();
