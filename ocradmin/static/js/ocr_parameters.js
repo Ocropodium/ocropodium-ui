@@ -1,6 +1,7 @@
 // Try and coerce messy parameter-building logic into slightly less messy
 // object.  The challenge here is to support multiple params of the same
 // type, i.e. the binclean[0-10] params used by the pre-processing stage.
+// FIXME: This is basically write-only ATM.
 
 
 var OCRJS = OCRJS || {};
@@ -143,6 +144,8 @@ var ParameterBuilder = OCRJS.OcrBase.extend({
             success: function(data) {
                 self._componentdata = data;
                 self.buildParameters();
+                console.log("Done parameter init");
+                self.parametersInitialised();
             },
         });
     },
@@ -151,6 +154,10 @@ var ParameterBuilder = OCRJS.OcrBase.extend({
     reinit: function() {
         this._container.html("");
         this.init();
+    },
+
+    // callbacks
+    parametersInitialised: function() {
     },
 
     // load an object containing param data...
@@ -162,13 +169,16 @@ var ParameterBuilder = OCRJS.OcrBase.extend({
     loadData: function(data) {
         var self = this;                  
         $.each(data, function(key, value) {
-            if (!key.match(/__/)) {
+            var ctype = self._namemap[key.match(/(\w+?)(\d*)$/)[1]];
+            console.log("CType: " + ctype);
+            if (ctype && self._componentdata[value] && !key.match(/__/)) {
                 var sel = $("#" + key);
                 if (sel.length) {
                     sel.val(value);
                 } else {
                     // add a multi component select with a blank
                     // option
+                    console.log("Key: " + key + ", Value: " + value);
                     self.addComponentSelect(key, key, value, true);
                     self.renumberMultiComponents(key);
                     sel = $("#" + key);
