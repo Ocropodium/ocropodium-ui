@@ -17,15 +17,14 @@ OCRJS.EditCommand = OCRJS.UndoCommand.extend({
 
 
 OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
-    constructor: function(parent, batch_id, initial, options) {
+    constructor: function(parent, options) {
         this.base(parent, options);
         this.options = {
             log: false,
         },
         $.extend(this.options, options);
 
-        this._batch_id = batch_id;
-        this._page = initial || 0;
+        this._task_pk = null;
 
         this._editor = new OCRJS.LineEditor(); // line editor widget
         this._speller = new OCRJS.Spellchecker(".ocr_line", {log: true}); // spell check widget
@@ -41,7 +40,6 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this.setupMouseEvents();
         this.setupKeyEvents();
         this.setupCallbacks();        
-        this.refresh();
         this.refreshSize();
     },
 
@@ -240,16 +238,15 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                     new OCRJS.EditCommand(this, element, origtext, newtext));
             this._textChanged(); 
         }           
-    },                   
-
-    setBatchId: function(batch_id) {
-        this._batch_id = batch_id;
-        this.refresh();
     },
 
-    setPage: function(page_index) {
-        this._page = page_index || 0;
-        this.refreshPageData();
+    taskId: function() {
+        return this._task_pk;
+    },                
+
+    setTaskId: function(task_pk) {
+        this._task_pk = task_pk;
+        this.refresh();
     },
 
     setCurrentLineType: function(type) {
@@ -274,23 +271,14 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._pagediv.toggleClass("waiting", waiting);
     },
 
-
-    page: function() {
-        return this._page;
-    },
-
-    pageCount: function() {
-        return this._batchdata.extras.task_count;
-    },
-
-    pageData: function() {
-        return this._pagedata;
-    },
+    taskData: function() {
+        return this._taskdata;
+    },                  
 
     refresh: function() {
         var self = this;                 
         $.ajax({
-            url: "/batch/results/" + self._batch_id + "/?start=" + self._page + "&end=" + (self._page + 1),
+            url: "/ocr/task_transcript/" + self._task_pk + "/",
             dataType: "json",
             beforeSend: function(e) {
                self.setWaiting(true); 
@@ -304,54 +292,17 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                 } else if (data.error) {
                     alert(data.error);
                 }
-                self._batchdata = data[0];
-                self.onBatchLoad();              
-                self.refreshPageData();
+                self._taskdata = data[0];
+                self.setPageLines(data[0]);              
+                self.onTaskLoad();
             },
             error: OCRJS.ajaxErrorHandler,
         });
     },
 
 
-    refreshPageData: function() {
-        var self = this;                         
-        var url ="/batch/results/" + this._batch_id + "/" + this._page + "/"; 
-        $.ajax({
-            url: url,
-            data: {},
-            dataType: "json",
-            beforeSend: function(e) {
-               self.setWaiting(true); 
-            },
-            complete: function(e) {
-               self.setWaiting(false); 
-            },
-            success: function(data) {
-                if (data == null) {
-                    alert("Unable to retrieve page data.");
-                } else if (data.error) {
-                    alert(data.error);
-                } else if (data.length != 1) {
-                    alert("Data length error - should be 1 element long");
-                } else {
-                    self._pagedata = data[0];
-                    self.onPageLoad();
-                    self.setPageLines(data[0]);
-                    //if (self._spellchecking)
-                        //self.reset();
-                        //self._speller.spellCheck($(".ocr_line"));
-                }               
-            },
-            error: OCRJS.ajaxErrorHandler,
-        });    
-        self.onPageChange();
-    },
-
-
     setPageLines: function(data) {
         var self = this;
-        //this._pagecount.text("Page " + (this._page + 1) + " of " + this._batchdata.extras.task_count);
-        //this._pagename.text(data.fields.page_name);
         this._pagediv.children().remove();
         this._pagediv.data("bbox", data.fields.results.box);
         $.each(data.fields.results.lines, function(linenum, line) {
@@ -372,7 +323,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
 
     save: function() {
         var self = this;
-        var results = this._pagedata.fields.results;
+        var results = this._taskdata.fields.results;
         var lines = [];
         this._pagediv.find(".ocr_line").each(function(i, elem) {
             var line = {
@@ -386,7 +337,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
         results.lines = lines;
         $.ajax({
-            url: "/batch/save/" + this._batch_id + "/" + this._page + "/", 
+            url: "/ocr/save/" + this._task_pk + "/",
             data: {data: JSON.stringify(results)},
             dataType: "json",
             type: "POST",
@@ -449,13 +400,10 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
     onTextChanged: function() {
     },
 
-    onBatchLoad: function() {
+    onTaskLoad: function() {
     },
 
-    onPageLoad: function() {
-    },
-
-    onPageChange: function() {
+    onTaskChange: function() {
     },
 
     onClickPosition: function(position) {
