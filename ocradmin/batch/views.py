@@ -6,7 +6,6 @@ import tarfile
 import StringIO
 
 from celery import result as celeryresult
-from celery.contrib.abortable import AbortableAsyncResult
 from datetime import datetime
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -32,10 +31,10 @@ from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
-
 from ocradmin.projects.utils import project_required
-from ocradmin.ocr.views import _get_best_params, _cleanup_params, \
-        _handle_request, AppException
+from ocradmin.ocr.views import _get_best_params, _cleanup_params
+from ocradmin.ocr.views import _handle_request, AppException
+from ocradmin.ocr.views import  _retry_celery_task, _abort_celery_task 
 from ocradmin.ocr.tools.manager import PluginManager
 
 
@@ -287,67 +286,6 @@ def save_page_data(request, batch_pk, page_index):
 
 
 @login_required
-def submit_viewer_binarization(request, task_pk):
-    """
-    Trigger a re-binarization of the image for viewing purposes.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    # hack!  add an allowcache to the params dict to indicate
-    # that we don't want to remake an existing binary
-    args = task.args
-    args[2]["allowcache"] = True
-    async = tasks.BinarizePageTask.apply_async(args=args,
-            queue="interactive")
-    out = dict(
-        task_id=async.task_id,
-        status=async.status,
-        results=async.result
-    )
-    return HttpResponse(simplejson.dumps(out), mimetype="application/json")
-
-
-@login_required
-def viewer_binarization_results(request, task_id):
-    """
-    Trigger a re-binarization of the image for viewing purposes.
-    """
-    async = celeryresult.AsyncResult(task_id)
-    out = dict(
-        task_id=async.task_id,
-        status=async.status,
-        results=async.result
-    )
-    return HttpResponse(simplejson.dumps(out), mimetype="application/json")
-
-
-@login_required
-def reconvert_lines(request, task_pk):
-    """
-    Quick hack method for testing Tesseract line results.
-    """
-    jsonstr = request.POST.get("coords")
-    linedata = simplejson.loads(jsonstr)
-
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    # hack!  add an allowcache to the params dict to indicate
-    # that we don't want to remake an existing binary
-    args = task.args
-    args[2]["allowcache"] = True
-    args[2]["prebinarized"] = True
-    args[2].update(_get_best_params(
-        _cleanup_params(request.POST.copy(), "coords")))
-    args[2]["coords"] = linedata
-    async = tasks.ConvertLineTask.apply(args=args,
-            queue="interactive")
-    out = dict(
-        task_id=async.task_id,
-        status=async.status,
-        results=async.result
-    )
-    return HttpResponse(simplejson.dumps(out), mimetype="application/json")
-
-
-@login_required
 def reconvert_results(request):
     """
     Get results of a batch of reconvert tasks.
@@ -432,32 +370,6 @@ def _show_batch(request, batch):
 
     return render_to_response(template, context,
             context_instance=RequestContext(request))
-
-
-@login_required
-def retry_task(request, task_pk):
-    """
-    Retry a batch task.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    out = {"ok": True}
-    try:
-        _retry_celery_task(task)
-    except Exception, err:
-        out = {"error": err.message}
-
-    return HttpResponse(simplejson.dumps(out),
-            mimetype="application/json")
-
-
-@login_required
-def abort_task(request, task_pk):
-    """
-    Abort a batch task.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}),
-            mimetype="application/json")
 
 
 @transaction.commit_manually
@@ -586,50 +498,6 @@ def delete(request, batch_pk):
         return HttpResponseRedirect
     batch.delete()
     return HttpResponseRedirect("/batch/list/")
-
-
-def _abort_celery_task(task):
-    """
-    Abort a task.
-    """
-    if not task.is_active():
-        return False
-
-    asyncres = AbortableAsyncResult(task.task_id)
-    asyncres.revoke()
-    asyncres.abort()
-    if asyncres.is_aborted():
-        task.status = "ABORTED"
-        task.save()
-    return asyncres.is_aborted()
-
-
-def _retry_celery_task(task):
-    """
-    Set a task re-running.
-    """
-    #celerytask = tasks.ConvertPageTask
-    #celerytask.retry(args=task.args, kwargs=task.kwargs,
-    #            options=dict(task_id=task.task_id, loglevel=60, retries=2),
-    #            countdown=0, throw=False)
-    if task.is_abortable():
-        _abort_celery_task(task)
-    tid = ocrutils.get_new_task_id()
-
-    # FIXME: Figure the appropriate class out properly
-    # via Celery registry inspection
-    celerytask = tasks.ConvertPageTask
-    if task.task_name == "compare.groundtruth":
-        celerytask = ComparisonTask
-    elif task.task_name == "fedora.ingest":
-        celerytask = IngestTask
-
-    async = celerytask.apply_async(
-            args=task.args, task_id=tid, loglevel=60, retries=2)
-    task.task_id = async.task_id
-    task.status = "RETRY"
-    task.progress = 0
-    task.save()
 
 
 def _serialize_batch(batch, start=0, limit=25, statuses=None):
