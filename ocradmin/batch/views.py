@@ -28,7 +28,7 @@ from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
 from ocradmin.ocr.utils import saves_files
 from ocradmin.ocrpresets.models import OcrPreset
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch, Transcript
+from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
 from ocradmin.projects.utils import project_required
@@ -261,28 +261,6 @@ def page_results(request, batch_pk, page_index):
     simplejson.dump(taskssl, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
-
-
-@login_required
-def save_page_data(request, batch_pk, page_index):
-    """
-    Save data for a single page.
-    """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
-    try:
-        page = batch.tasks.all().order_by("page_name")[int(page_index)]
-    except OcrBatch.DoesNotExist, err:
-        raise err
-
-    json = request.POST.get("data")
-    if not json:
-        return HttpResponseServerError("No data passed to 'save' function.")
-    data = simplejson.loads(json)
-    result = Transcript(data=data, task=page)
-    result.save()
-
-    return HttpResponse(simplejson.dumps({"ok": True}),
-            mimetype="application/json")
 
 
 @login_required

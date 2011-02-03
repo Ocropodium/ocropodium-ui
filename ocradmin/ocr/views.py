@@ -8,9 +8,11 @@ import traceback
 from celery import result as celeryresult
 from celery.contrib.abortable import AbortableAsyncResult
 from django.contrib.auth.decorators import login_required
+from django.core import serializers
 from django.db import transaction
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
@@ -19,7 +21,7 @@ from ocradmin.ocr import utils as ocrutils
 from ocradmin.ocr.utils import saves_files
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrTask, Transcript
 from ocradmin.ocr.tools.manager import PluginManager
 
 
@@ -148,12 +150,45 @@ def retry_task(request, task_pk):
 
 
 @login_required
+def transcript(request, task_pk):
+    """
+    View the transcription of a task.
+    """
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    template = "ocr/transcript.html"
+    context = dict(task=task)
+    if task.batch:
+        context["batchoffset"] = task.pk - task.batch.tasks.all()[0].pk
+        context["batchsize"] = task.batch.tasks.count()
+
+    return render_to_response(template, context,
+            context_instance=RequestContext(request))
+
+
+@login_required
 def abort_task(request, task_pk):
     """
     Abort a batch task.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
     return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}),
+            mimetype="application/json")
+
+
+@login_required
+def save_transcript(request, task_pk):
+    """
+    Save data for a single page.
+    """
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    json = request.POST.get("data")
+    if not json:
+        return HttpResponseServerError("No data passed to 'save' function.")
+    data = simplejson.loads(json)
+    result = Transcript(data=data, task=task)
+    result.save()
+
+    return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
 
 
@@ -231,6 +266,24 @@ def results(request, task_id):
         raise Http404
 
     return _format_response(request, _wrap_async_result(async))
+
+
+@login_required
+def task_transcript(request, task_pk):
+    """
+    Retrieve the results using the previously provided task name.
+    """
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    pyserializer = serializers.get_serializer("python")()
+    response = HttpResponse(mimetype="application/json")
+    taskssl = pyserializer.serialize(
+        [task],
+        excludes=("transcripts", "args", "kwargs",),
+    )
+    taskssl[0]["fields"]["results"] = task.latest_transcript()
+    simplejson.dump(taskssl, response,
+            cls=DjangoJSONEncoder, ensure_ascii=False)
+    return response
 
 
 @login_required
