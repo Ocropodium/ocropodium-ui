@@ -169,7 +169,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         $(".retry_task").bind("click", function(event) {
             var pk = $(this).data("pk");
             $.ajax({
-                url: "/batch/retry_task/" + pk + "/",
+                url: "/ocr/retry_task/" + pk + "/",
                 type: "POST",
                 dataType: "json",
                 beforeSend: function(e) { 
@@ -432,10 +432,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 .find("a").data("pk", taskdata.pk)
                 .end()
                 .find(".retry_task")
-                .attr("href", "/batch/retry_task/" + taskdata.pk + "/")
+                .attr("href", "/ocr/retry_task/" + taskdata.pk + "/")
                 .end()
                 .find(".abort_task")
-                .attr("href", "/batch/abort_task/" + taskdata.pk + "/");
+                .attr("href", "/ocr/abort_task/" + taskdata.pk + "/");
             this.setProgressStatus(task, taskdata.fields.progress, taskdata.fields.status);
             if (taskdata.fields.lines) {
                 task.find(".page_info").text("Lines: " + taskdata.fields.lines);
