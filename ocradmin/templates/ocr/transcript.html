@@ -8,7 +8,7 @@
 	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
 	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
 	<script type='application/javascript' src='/static/js/stats.js'></script>
-	<script type='application/javascript' src='/static/js/batch/transcript.js'></script>
+	<script type='application/javascript' src='/static/js/ocr/transcript.js'></script>
 	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/undo/command.js'></script>
 	<script type='application/javascript' src='/static/js/undo/stack.js'></script>
@@ -76,8 +76,9 @@
             <button id="save_training_data">Save Training Page</button>
             <span>&nbsp;&nbsp;&nbsp;</span>
             
-            <input type="hidden" name="batch_id" value="{{batch.pk}}" id="batch_id" />
-            <input type="hidden" name="initial" value="{{initial|default_if_none:0}}" id="initial" />
+            <input type="hidden" name="batchoffset" value="{{batchoffset|default_if_none:0}}" id="batchoffset" />
+            <input type="hidden" name="batchsize" value="{{batchsize|default_if_none:0}}" id="batchsize" />
+            <input type="hidden" name="task_pk" value="{{task.pk|default_if_none:0}}" id="task_pk" />
 
         </div>        
     </div>

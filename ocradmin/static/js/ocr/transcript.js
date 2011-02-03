@@ -52,7 +52,7 @@ function reconvertLines(lines) {
     });
 
     $.ajax({
-        url: "/ocr/reconvert_lines/" + transcript.pageData().pk + "/",
+        url: "/ocr/reconvert_lines/" + transcript.taskData().pk + "/",
         data: { 
             coords: JSON.stringify(linedata),
             engine: $("#reconvert_engine").val(),
@@ -82,6 +82,28 @@ function unsavedPrompt() {
     return confirm("Save changes to transcript?");
 }
 
+
+function updateTask(event) {
+    var abstaskpk = parseInt($("#task_pk").val());
+    var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
+    var batchoffset = parseInt($("#batchoffset").val());
+    if (!isNaN(hashoffset)) {
+        abstaskpk += hashoffset;
+        batchoffset += hashoffset;
+    }
+    transcript.setTaskId(abstaskpk);
+    console.log("Setting page slider to: " + batchoffset);
+    $("#page_slider").slider({value: batchoffset});
+}
+
+function updateNavButtons() {
+    var ismax = $("#page_slider").slider("option", "value") 
+            == $("#page_slider").slider("option", "max");
+    var ismin = $("#page_slider").slider("option", "value") == 0; 
+    $("#next_page").button({disabled: ismax});         
+    $("#prev_page").button({disabled: ismin});
+    $("#heading").button({disabled: true});
+}
 
 $(function() {
     // setup toolbar
@@ -139,30 +161,23 @@ $(function() {
     $("#format_column").click(function(event) {
         formatter.columnLayout($(".transcript_lines"));
     });
-
-    $("#page_slider").slider({min: 1, value: 1});
-
-    transcript = new OCRJS.TranscriptEditor(
-        $("#transcript").get(0), 
-        parseInt($("#batch_id").val()),
-        parseInt($("#initial").val())
-    );   
-    transcript.onBatchLoad = function() {
-        $("#page_slider").slider({
-            max: transcript.pageCount(),
-            value: transcript.page() + 1,
-        });
-    }
-
-    transcript.onPageChange = function() {
+    $("#page_slider").slider({
+        min: 0,
+        max: $("#batchsize").val() - 1,
+        value: $("#batchoffset").val(),
+    });
+    
+            
+    // initialise the transcript editor
+    transcript = new OCRJS.TranscriptEditor(document.getElementById("transcript"));    
+    transcript.onTaskChange = function() {
         var ismax = $("#page_slider").slider("option", "value") 
-                == transcript.pageCount();
-        var ismin = $("#page_slider").slider("option", "value") == 1; 
+                == $("#batchsize").val() - 1;
+        var ismin = $("#page_slider").slider("option", "value") == 0; 
         $("#next_page").button({disabled: ismax});         
         $("#prev_page").button({disabled: ismin});
         $("#heading").button({disabled: true});
     }
-
     transcript.onLineSelected = function(type) {
         $("#heading").button({disabled: false});
         $("#heading").attr("checked", type == "h1")
@@ -209,12 +224,17 @@ $(function() {
     // image is rebinarized so we can view it in the viewer
     // This is likely to be horribly inefficient, at least
     // at first...
-    transcript.onPageLoad = function() {
-
+    transcript.onTaskLoad = function() {
+        //var ismax = $("#page_slider").slider("option", "value") 
+        //        == $("#batchsize").val() - 1;
+        //var ismin = $("#page_slider").slider("option", "value") == 0; 
+        //$("#next_page").button({disabled: ismax});         
+        //$("#prev_page").button({disabled: ismin});
+        //$("#heading").button({disabled: true});
         // get should-be-hidden implementation details
         // i.e. the task id that process the page.  We
         // want to rebinarize with the same params
-        var task_pk = transcript.pageData().pk;
+        var task_pk = transcript.taskData().pk;
         $.ajax({
             url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
             dataType: "json",
@@ -252,7 +272,7 @@ $(function() {
 
     var positionViewer = function(position) {
         // ensure the given line is centred in the viewport
-        var bounds = transcript.pageData().fields.results.box;
+        var bounds = transcript.taskData().fields.results.box;
         var fw = bounds[2], fh = bounds[3];
         var x = position[0], y = position[1], w = position[2], h = position[3];        
         var rect = new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw);
@@ -291,7 +311,7 @@ $(function() {
     });
 
     $("#save_training_data").click(function(event) {
-        var pk = transcript.pageData().pk;
+        var pk = transcript.taskData().pk;
         var binurl = $(sdviewer).data("binpath");
         $.ajax({
             url: "/reference_pages/create_from_task/" + pk + "/",
@@ -310,44 +330,46 @@ $(function() {
     });
 
     $("#page_slider").slider({
-        stop: function(e, ui) {
-            var val = $("#page_slider").slider("value") - 1;
-            if (val != transcript.page()) {
-                if (transcript.hasUnsavedChanges()) {
-                    if (!unsavedPrompt()) {
-                        $("#page_slider").slider({value: transcript.page() + 1});
-                        return;
-                    } else {
-                        transcript.save();
-                    }
-                } 
-                transcript.setPage(val);
-            }
+        change: function(e, ui) {            
+            var val = $("#page_slider").slider("value");
+            var diff = val - parseInt($("#batchoffset").val());
+            var batchoffset = parseInt($("#batchoffset").val());            
+            var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
+            if (isNaN(hashoffset))
+                hashoffset = 0;
+            var diff = val - batchoffset;
+            var orig = batchoffset + hashoffset;
+
+            // return if nothing's changed
+            if (hashoffset == diff)
+                return;
+
+            // check for unsaved changes
+            if (transcript.hasUnsavedChanges()) {
+                if (!unsavedPrompt()) {
+                    $("#page_slider").slider({value: orig});
+                    return;
+                } else {
+                    transcript.save();
+                }
+            } 
+            transcript.setTaskId(transcript.taskId() + diff);
+            window.location.hash = "#!/" + diff;
+            
+            // set the buttons accordingly
+            updateNavButtons();
         },
-        
     });
 
     $("#prev_page").click(function(event) {
-        if (transcript.hasUnsavedChanges() && !unsavedPrompt()) {
-            return;
-        } else {
-            transcript.save();
-        }
-        var curr = $("#page_slider").slider("option", "value");
-        $("#page_slider").slider("option", "value", curr - 1);
-        transcript.setPage(transcript.page() -1);
+        $("#page_slider").slider("option", "value", 
+            $("#page_slider").slider("option", "value") - 1);    
     });
         
 
     $("#next_page").click(function(event) {
-        if (transcript.hasUnsavedChanges() && !unsavedPrompt()) {
-            return;
-        } else {
-            transcript.save();
-        } 
-        var curr = $("#page_slider").slider("option", "value");
-        $("#page_slider").slider("option", "value", curr + 1);
-        transcript.setPage(transcript.page() + 1);
+        $("#page_slider").slider("option", "value", 
+            $("#page_slider").slider("option", "value") + 1);    
     });
     
     // line formatter object
@@ -358,6 +380,10 @@ $(function() {
         numBuffers: 1,
         height: 300,
     }); 
+    
+    updateTask();
+    updateNavButtons();
+    window.addEventListener("hashchange", updateTask);
 
 
     // maximise the height of the transcript page
