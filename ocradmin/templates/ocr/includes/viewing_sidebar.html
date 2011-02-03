@@ -9,6 +9,8 @@
             </div>
         </form>
         <form id="optionsform" name="options" action="{{request.path}}" method="POST">
+            <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
+            <input type="hidden" name="preload_params" value="{{preload_params}}" />
 
             {# Add a binarisation menu (for segmentation only) #}
             {% if binpresets %}

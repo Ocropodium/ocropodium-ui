@@ -24,7 +24,22 @@ function saveState() {
 
 function loadState() {
     if (sdviewer) {
-        var winprefix = window.location.pathname.replace(/\//g, "");
+
+        var tid = $("input[name='preload_task_id']").val();
+        if (tid)
+            pollForResults(tid);
+
+        // if there's stored parameter data, load it after the parameters
+        // have initially been set...
+        pbuilder.parametersInitialised = function() {
+            var pdata = $("input[name='preload_params']").val();
+            if (pdata) {
+                pbuilder.loadData($.parseJSON(pdata));
+            }
+       };
+                
+
+        /*var winprefix = window.location.pathname.replace(/\//g, "");
         var png = $.cookie(winprefix + "_srcpng");
         var src = $.cookie(winprefix + "_srcdzi");
         var outa = $.cookie(winprefix + "_outadzi");
@@ -44,7 +59,7 @@ function loadState() {
             } else {
                 $("#toggleab").attr("disabled", true);
             }
-        }
+        }*/
     }
 }
 
@@ -363,4 +378,5 @@ $(function() {
     };
 
     loadState();
+
 });
