@@ -115,6 +115,29 @@ class OcrConvertTest(TestCase):
         r = self.client.get("/ocr/transcript/%s/" % task.pk)
         self.assertEqual(r.status_code, 200)
 
+    def test_edit_convert_view(self):
+        """
+        Test viewing the edit task page.
+        """
+        r = self._get_convert_response()
+        self.assertEqual(r.status_code, 200)
+        task = OcrTask.objects.all().order_by("-created_on")[0]
+        r = self.client.get("/ocr/convert/%s/" % task.pk)
+        self.assertEqual(r.status_code, 200)
+
+    def test_edit_convert_action(self):
+        """
+        Test updating a tasks parameters.
+        """
+        r = self._get_convert_response()
+        self.assertEqual(r.status_code, 200)
+        task = OcrTask.objects.all().order_by("-created_on")[0]
+        r = self.client.post(
+            "/ocr/update_task/%s/" % task.pk,
+            {"$psegmenter": "SegmentPageBy1CP",},                
+        )
+        self.assertEqual(r.status_code, 302)
+
     def _test_convert_action(self, params=None, headers={}):
         """
         Testing actually OCRing a file.

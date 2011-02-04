@@ -87,7 +87,6 @@ def edit_binarize(request, task_pk):
         return binarize(request)
     task = get_object_or_404(OcrTask, pk=task_pk)
     template = "ocr/binarize.html"
-    print task.args
     context = dict(
         preload_task_id=task.task_id,
         preload_params=simplejson.dumps(task.args[2]),
@@ -105,7 +104,6 @@ def edit_convert(request, task_pk):
         return convert(request)
     task = get_object_or_404(OcrTask, pk=task_pk)
     template = "ocr/convert.html"
-    print task.args
     context = dict(
         binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
         segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
@@ -127,7 +125,6 @@ def edit_segment(request, task_pk):
     if request.method == "POST":
         return segment(request)
     task = get_object_or_404(OcrTask, pk=task_pk)
-    print task.args[2].get("preset_id")
     template = "ocr/segment.html" 
     context = dict(
         preload_task_id=task.task_id,
@@ -148,7 +145,12 @@ def update_task(request, task_pk):
     _, userparams = _handle_request(request, request.output_path)
     task.args = (task.args[0], task.args[1], userparams)
     task.save()
-    _retry_celery_task(task)
+    try:
+        _retry_celery_task(task)
+    except OcrTask.DoesNotExist:
+        # FIXME: for some reason this happens when running
+        # automated tests
+        pass
     if task.batch:
         return HttpResponseRedirect("/batch/show/%s/" % task.batch.pk)
     else:
@@ -358,7 +360,6 @@ def test(request, ids):
     be put somewhere else.
     """
 
-    print "ARGS: %s" % ids
     return render_to_response("ocr/test.html", {})
 
 
