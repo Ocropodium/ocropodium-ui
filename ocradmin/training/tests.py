@@ -61,8 +61,8 @@ class TrainingTest(TestCase):
             "name": "Test comparison",
             "p0_paramset_name": "Test Ocropus",
             "p1_paramset_name": "Test Tesseract",
-            "p0_engine": "ocropus",
-            "p1_engine": "tesseract",
+            "$p0_engine": "ocropus",
+            "$p1_engine": "tesseract",
             "tset": 1,
         }, follow=True)
         # check we were redirected to the batch page

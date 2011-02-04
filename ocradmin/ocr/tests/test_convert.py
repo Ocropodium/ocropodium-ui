@@ -67,7 +67,7 @@ class OcrConvertTest(TestCase):
         """
         Test OCRing with variable segmentation.
         """
-        self._test_convert_action({"psegmenter": "SegmentPageByXYCUTS"})        
+        self._test_convert_action({"$psegmenter": "SegmentPageByXYCUTS"})        
 
     def test_convert_plain_text(self):
         """

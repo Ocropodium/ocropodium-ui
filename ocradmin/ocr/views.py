@@ -64,16 +64,11 @@ def convert(request):
     """
     Save a posted image to the DFS and convert it with Celery.
     """
-
-    # add available seg and bin presets to the context
-    context = {
-        "binpresets": OcrPreset.objects.filter(
-            type="binarize").order_by("name"),
-        "segpresets": OcrPreset.objects.filter(
-            type="segment").order_by("name"),
-        "engines": PluginManager.get_provider("line")
-    }
-
+    context = dict(
+        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
+        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
+        engines=PluginManager.get_provider("line")
+    )
     return _ocr_task(
         request,
         "ocr/convert.html",
@@ -93,10 +88,33 @@ def edit_binarize(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     template = "ocr/binarize.html"
     print task.args
-    context = {
-        "preload_task_id": task.task_id,
-        "preload_params": simplejson.dumps(task.args[2]),
-    }
+    context = dict(
+        preload_task_id=task.task_id,
+        preload_params=simplejson.dumps(task.args[2]),
+    )
+    return render_to_response(template, context, 
+            context_instance=RequestContext(request))
+
+
+@login_required
+def edit_convert(request, task_pk):
+    """
+    Edit a task's convert params.
+    """
+    if request.method == "POST":
+        return convert(request)
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    template = "ocr/convert.html"
+    print task.args
+    context = dict(
+        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
+        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
+        engines=PluginManager.get_provider("line"),
+        preload_task_id=task.task_id,
+        preload_params=simplejson.dumps(task.args[2]),
+        task=task,
+        params=task.args[2],
+    )
     return render_to_response(template, context, 
             context_instance=RequestContext(request))
 
@@ -111,26 +129,30 @@ def edit_segment(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     print task.args[2].get("preset_id")
     template = "ocr/segment.html" 
-    context = {
-        "preload_task_id": task.task_id,
-        "preload_params": simplejson.dumps(task.args[2]),
-    }
+    context = dict(
+        preload_task_id=task.task_id,
+        preload_params=simplejson.dumps(task.args[2]),
+    )
     return render_to_response(template, context, 
             context_instance=RequestContext(request))
 
 
 @login_required
 @saves_files
-def edit_task(request, task_pk):
+def update_task(request, task_pk):
     """
     Re-save the params for a task and resubmit it,
     redirecting to the transcript page.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
     _, userparams = _handle_request(request, request.output_path)
-    task.args[2] = userparams
+    task.args = (task.args[0], task.args[1], userparams)
     task.save()
-    return retry_task(request, task_pk)
+    _retry_celery_task(task)
+    if task.batch:
+        return HttpResponseRedirect("/batch/show/%s/" % task.batch.pk)
+    else:
+        return HttpResponseRedirect("/ocrtasks/list/")
 
 
 @login_required
@@ -202,10 +224,9 @@ def segment(request):
     """
 
     # add available seg and bin presets to the context
-    context = {
-        "binpresets": OcrPreset.objects.filter(
-            type="binarize").order_by("name"),
-    }
+    context = dict(
+        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
+    )
     return _ocr_task(
         request,
         "ocr/segment.html",
@@ -555,7 +576,7 @@ def _get_preset_data(param):
     preset via primary key (as used via the web UI)
     or name (as used via Curl).
     """
-    pmatch = re.match("preset_(\d+)", param)
+    pmatch = re.match("(\d+)", param)
     data = None
     #keyval = {}
     if pmatch:
@@ -585,40 +606,53 @@ def _cleanup_params(postdict, unused):
     return postdict
 
 
+def _strip_non_params(postdict):
+    """
+    Remove the initial symbol denoting an OCR
+    parameter: '$'
+    """
+    cleaned = {}
+    for key, value in postdict.iteritems():
+        if key.startswith("$"):
+            cleaned[key[1:]] = value
+    return cleaned            
+
+
 def _get_best_params(postdict, with_prefix=None):
     """
     Attempt to determine the best params if not specified in
     POST.  This is contingent on data in the models table.
     TODO: Make this less horrible
     """
+    cleanpost = _strip_non_params(postdict)
     userparams = {}
     cleanedparams = {}
     if with_prefix is not None:
-        for key, value in postdict.iteritems():
+        for key, value in cleanpost.iteritems():
             if key.startswith(with_prefix):
                 cleanedparams[key.replace(with_prefix, "", 1)] = value
         if len(cleanedparams) == 0:
             return {}
     else:
-        cleanedparams = userparams = postdict.copy()
+        cleanedparams = userparams = cleanpost
 
     # default to tesseract if no 'engine' parameter...
     userparams["engine"] = cleanedparams.get("engine", "tesseract")
 
     # get the bin and seg params.  These are either dicts or default strings
-    segparam = cleanedparams.get("psegmenter", "SegmentPageByRAST")
+    segparam = cleanedparams.get("psegmenter", "0")
     segdata = _get_preset_data(segparam)
-    if segdata:
+    if segdata is not None:
         userparams.update(segdata)
     else:
-        userparams["psegmenter"] = segparam
+        userparams["psegmenter"] = "SegmentPageByRAST"
 
-    binparam = cleanedparams.get("clean", "StandardPreprocessing")
+    binparam = cleanedparams.get("clean", "0")
     bindata = _get_preset_data(binparam)
-    if bindata:
+    if bindata is not None:
         userparams.update(bindata)
     else:
-        userparams["clean"] = binparam
+        userparams["clean"] = "StandardPreprocessing"
 
     # get the lmodel/cmodel, either model object paths or defaults
     for modparam in ("cmodel", "lmodel"):

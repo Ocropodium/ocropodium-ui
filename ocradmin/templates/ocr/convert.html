@@ -43,6 +43,7 @@
 <div id="sidebar" class="widget">
     <div class="widget_header">Options</div>
     <div class="widget_content">
+        {% if not task %}
         <form id="uploadform" name="convertoptions" action="{{request.path}}" method="POST" enctype="multipart/form-data">
             <div id="dragdrop">
                 <div id="dropzone">
@@ -50,9 +51,16 @@
                 </div>
             </div>
         </form>
-        <form id="optionsform" name="options" action="{{request.path}}" method="POST">
+        {% endif %}
+        <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
             <h4>Options:</h4>
             {% include "includes/ocr_settings.html" %}
+            {% if task %}
+                <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
+                <input type="hidden" name="preload_params" value="{{preload_params}}" />
+                <input type="hidden" name="preload_page_name" value="{{task.page_name}}" />
+                <input type="submit" value="Update" id="submit_update_task" />
+            {% endif %}
         </form>
     </div>
 </div>
