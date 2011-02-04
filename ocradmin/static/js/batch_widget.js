@@ -98,6 +98,9 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         ];
 
         this._task_buttons = [ {
+                title: "Edit Task",
+                classes: "ui-icon-wrench edit_task",
+            }, {
                 title: "Retry Task",
                 classes: "ui-icon-refresh retry_task",
             }, {
@@ -153,9 +156,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             event.preventDefault();                
         });
 
-        $(".batch_task").bind("click", function(event) {
-            return false;
-        });
+        //$(".batch_task").bind("click", function(event) {
+        //    console.log("clicked");
+        //    return false;
+        //});
 
         $(".ui-icon", this._batchdiv).bind("mouseover mouseout", function(event) {
             if (event.type == "mouseover") {
@@ -430,6 +434,9 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 .text(taskdata.fields.page_name)
                 .end()
                 .find("a").data("pk", taskdata.pk)
+                .end()
+                .find(".edit_task")
+                .attr("href", "/ocr/convert/" + taskdata.pk + "/")
                 .end()
                 .find(".retry_task")
                 .attr("href", "/ocr/retry_task/" + taskdata.pk + "/")
