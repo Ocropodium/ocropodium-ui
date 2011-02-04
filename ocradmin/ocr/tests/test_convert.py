@@ -9,7 +9,8 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
-from ocradmin.ocr.tests import testutils 
+from ocradmin.ocr.tests import testutils
+from ocradmin.ocrtasks.models import OcrTask
 
 TESTFILE = "etc/simple.png"
 
@@ -103,6 +104,16 @@ class OcrConvertTest(TestCase):
         content = simplejson.loads(r.content)
         # unknown tasks should come back with status 'PENDING'
         self.assertEqual(content["status"], "PENDING")
+
+    def test_transcript_action(self):
+        """
+        Test viewing the transcript for a new batch.
+        """
+        r = self._get_convert_response()
+        self.assertEqual(r.status_code, 200)
+        task = OcrTask.objects.all().order_by("-created_on")[0]
+        r = self.client.get("/ocr/transcript/%s/" % task.pk)
+        self.assertEqual(r.status_code, 200)
 
     def _test_convert_action(self, params=None, headers={}):
         """

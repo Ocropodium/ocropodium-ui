@@ -22,6 +22,7 @@ class OcrBatchTest(TestCase):
             "projects/fixtures/test_fixtures.json",
             "batch/fixtures/test_batch.json"]
 
+
     def setUp(self):
         """
             Setup OCR tests.  Creates a test user.
@@ -104,15 +105,6 @@ class OcrBatchTest(TestCase):
                 os.path.basename(TESTFILE))
 
 
-    def test_transcript_action(self):
-        """
-        Test viewing the transcript for a new batch.
-        """
-        pk = self._test_batch_action()        
-        r = self.client.get("/batch/transcript/%s/" % pk)
-        self.assertEqual(r.status_code, 200)
-
-
     def test_show_action(self):
         """
         Test viewing batch details.
@@ -130,7 +122,6 @@ class OcrBatchTest(TestCase):
         r = self.client.get("/batch/delete/1/")
         self.assertRedirects(r, "/batch/list/")
         self.assertEqual(before, OcrBatch.objects.count() + 1)
-
 
 
     def _test_batch_action(self, params=None, headers={}):
