@@ -14,6 +14,10 @@
     cursor: pointer;
 }
 
+.batch_task:hover {
+    background-color: #EEE;
+}
+
 #overlay {
     background-color: #000;
     opacity: 0.3;
