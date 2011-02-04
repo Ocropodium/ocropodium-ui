@@ -308,7 +308,7 @@ var ParameterBuilder = OCRJS.OcrBase.extend({
             pdiv.append(plabel.clone().text(param.name).attr("for", pname));    
             pdiv.append(
                 pinput.clone()
-                    .attr("name", pname).attr("id", pname)
+                    .attr("name", "$" + pname).attr("id", pname)
                     .val(param.value));
         }
 
@@ -339,7 +339,7 @@ var ParameterBuilder = OCRJS.OcrBase.extend({
         var sel = $("<select></select>")
             .addClass("ocroption")
             .attr("id", name)
-            .attr("name", name);
+            .attr("name", "$" + name);
         var pdiv = $("<div></div>")
             .addClass("compparam")
             .attr("id", name + "_options");
