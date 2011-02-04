@@ -51,7 +51,7 @@ function rebuildModelLists(appname) {
 
 function saveState() {
     $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
-        $.cookie(item, $("select[name=" + item + "]").attr("value"));     
+        $.cookie(item, $("select[name=$" + item + "]").attr("value"));     
     });
 
     // save the job names of the current pages...
@@ -63,23 +63,35 @@ function saveState() {
 
 
 function loadState() {
+
+    var jobnames = $.cookie("jobnames");
+    var tid = $("input[name='preload_task_id']").val();
+    var pname = $("input[name='preload_page_name']").val();
+    var pagename, jobname;
+    if (tid) {
+        jobnames = tid
+    }
     $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
         var val = $.cookie(item);
         if (val) {
-            $("select[name=" + item + "]").val(val);
+            $("select[name=$" + item + "]").val(val);
         }
     });
 
-    var jobnames = $.cookie("jobnames");
     if (jobnames) {
         $.each(jobnames.split(","), function(index, pagejob) {
-            var pagename = pagejob.split(":")[0], jobname = pagejob.split(":")[1];
+            if (pagejob.search(":") != -1) {
+                pagename = pagejob.split(":")[0], jobname = pagejob.split(":")[1];
+            } else {
+                pagename = pname, jobname = pagejob;
+            }
             addPageToWorkspace(pagename, jobname);
         });
-        pollForResults();
-        layoutWidgets();
-        updateUiState();
     }
+
+    pollForResults();
+    layoutWidgets();
+    updateUiState();
 }
 
 
@@ -235,7 +247,7 @@ $(function() {
             primary: "ui-icon-zoomout",
         }
     });
-    $("select[name=engine]").change(function(e) {
+    $("select[name=$engine]").change(function(e) {
         rebuildModelLists($(this).val());
     });
     $("#format_block").click(function(event) {
@@ -255,17 +267,19 @@ $(function() {
 
 
     // initialise the uploader...
-    uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
-    uploader.onXHRLoad = onXHRLoad;
-    uploader.onUploadsStarted = function(e) {
-        $("#dropzone").text("Please wait...").addClass("waiting");
-        $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
-            uploader.registerTextParameter(elem);
-        });
-    };
-    uploader.onUploadsFinished = function(e) {
-        $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-    };
+    if ($("#uploadform").length) {
+        uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
+        uploader.onXHRLoad = onXHRLoad;
+        uploader.onUploadsStarted = function(e) {
+            $("#dropzone").text("Please wait...").addClass("waiting");
+            $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
+                uploader.registerTextParameter(elem);
+            });
+        };
+        uploader.onUploadsFinished = function(e) {
+            $("#dropzone").text("Drop images here...").removeClass("waiting"); 
+        };
+    }
 
     // load state stored from last time
     loadState();

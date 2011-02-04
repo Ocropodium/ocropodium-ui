@@ -43,7 +43,7 @@ class OcrSegmentTest(TestCase):
         """
         Test OCRing with variable segmentation.
         """
-        self._test_segment_action({"psegmenter": "SegmentPageByXYCUTS"})        
+        self._test_segment_action({"$psegmenter": "SegmentPageByXYCUTS"})        
 
     def test_results_action(self):
         """
