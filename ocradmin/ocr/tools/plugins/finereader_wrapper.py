@@ -20,7 +20,7 @@ class FinereaderWrapper(GenericWrapper):
     description = "Wrapper for Abbyy Finereader CLI 8.0"
     capabilities = ("page",)
     binary = get_binary("abbyyocr")
-    parameters = [
+    _parameters = [
         {
             "name": "page_segmentation",
             "description": "Page Segmentation Options",

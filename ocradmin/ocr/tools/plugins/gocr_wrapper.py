@@ -19,7 +19,7 @@ class GocrWrapper(GenericWrapper):
     name = "gocr"
     description = "Wrapper for GNU GOCR"
     binary = get_binary("gocr")
-    parameters = []
+    _parameters = []
 
     def get_command(self, outfile, image):
         """

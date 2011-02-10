@@ -15,6 +15,7 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
         self.queryOptions(null, []);
     },
 
+
     queryOptions: function(parent, urlparts, func) {
         var self = this;
         var parent = parent || self.parent;
@@ -47,7 +48,7 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
             if (data.choices.constructor != Array) {
                 console.log("Fetching uncached options: " + data.name);
                 var parts = ident.split(":").splice(2);
-                parts.push(data.name);
+                //parts.push(data.name);
                 self.queryOptions(container.get(0), parts); 
             } else {
                 self.buildOptionSection(container, ident, data);
