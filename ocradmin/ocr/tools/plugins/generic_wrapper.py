@@ -5,25 +5,432 @@ return a single line of text.
 
 
 import os
+import re
+import traceback
+import UserDict
 import tempfile
 import subprocess as sp
-from ocradmin.ocr.tools import check_aborted, get_binary, ExternalToolError
-from ocropus_wrapper import OcropusWrapper
+from ocradmin.ocr.tools import base, check_aborted, get_binary, ExternalToolError, set_progress
+import ocrolib
+
+LMODEL = "etc/defaultmodels/tesseract_default_lang.tgz" #"/home/michaelb/dev/ocropodium/install/ocropus/ocropus-0.0.0/share/ocropus/models/default.fst" 
+CMODEL = "/home/michaelb/dev/ocropodium/install/ocropus/ocropus-0.0.0/share/ocropus/models/default.model"
+
+class OcropusParams(UserDict.DictMixin):
+    """
+    Convert a dictionary into an object with certain
+    default attribites.  It also uses encode() to convert
+    Django unicode strings to standard strings with the
+    Ocropus python bindings can handle.
+    """
+    def __init__(self, dct):
+        self.lmodel = LMODEL
+        self.cmodel = CMODEL
+        self.segmenter = "DpSegmenter"
+        self.grouper = "StandardGrouper"
+        self.psegmenter = "SegmentPageByRAST"
+        self.clean = "StandardPreprocessing"
+        self.binarizer = "BinarizeBySauvola"
+        self.graydeskew = "DeskewGrayPageByRAST"
+        self.bindeskew = "DeskewPageByRAST"
+        self.binclean0 = "AutoInvert"
+        self.binclean1 = "RmHalftone"
+        self.binclean2 = "RmBig"
+        self.binout = None
+        self.segout = None
+        self.prebinarized = False
+
+        for key, val in dct.iteritems():
+            if isinstance(val, (list, tuple)):
+                setattr(self, str(key), [x if isinstance(x, dict) \
+                    else self._safe(x) for x in val])
+            else:
+                setattr(self, str(key), val if isinstance(val, dict) \
+                    else self._safe(val))
 
 
-class GenericWrapper(OcropusWrapper):
+    def keys(self):
+        """Dictionary keys."""
+        return self.__dict__.keys()
+
+    @classmethod
+    def _safe(cls, param):
+        """Convert unicode strings to ocropus-safe values."""
+        if isinstance(param, unicode):
+            return param.encode()
+        else:
+            return param
+
+    def __getitem__(self, item):
+        """Slice notation."""
+        return self.__dict__[item]
+
+    def __repr__(self):
+        """Generic representation."""
+        return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
+
+
+
+class GenericWrapper(base.OcrBase):
     """
     Override certain methods of the OcropusWrapper to
     use generic OCRs for recognition of individual lines.
     """
     name = "generic"
+    description = "Generic command-line OCR wrapper"
     binary = "unimplemented"
+
+    # top-level parameters
+    parameters = [
+        {
+            "name": "grayscale_preprocessing",
+            "description": "Greyscale Preprocessor",
+            "help": "Filters for preprocessing greyscale images",
+            "multiple": True,
+            "choices": True,
+        }, {
+            "name": "binarizer",
+            "description": "Binarizer",
+            "help": "Filter for binarizing greyscale images",
+            "multiple": False,
+            "choices": True,
+        }, {
+            "name": "binary_preprocessing",
+            "description": "Binary Preprocessor",
+            "help": "Filters for preprocessing binary images",
+            "multiple": True,
+            "choices": True,
+        }, {
+            "name": "page_segmenter",
+            "description": "Page Segmenter",
+            "help": "Algorithm for segmenting binary page images",
+            "multiple": False,
+            "choices": True,
+        }, {
+            "name": "character_model",
+            "description": "Character Model",
+            "help": "Model for character recognition",
+            "multiple": False,
+            "choices": True,
+        }, {
+            "name": "language_model",
+            "description": "Language Model",
+            "help": "Model for language processing",
+            "multiple": False,
+            "choices": True,
+        }, {
+            "name": "debug",
+            "description": "Dump debug info",
+            "multiple": False,
+            "choices": False,
+            "value": True,
+            "type": "bool",
+        },
+    ]
+
+    # map of friendly names to OCRopus component names    
+    _component_map = dict(
+        grayscale_preprocessing="ICleanupGray",
+        binary_preprocessing="ICleanupBinary",
+        binarizer="IBinarize",
+        page_segmenter="ISegmentPage",
+    )
+
+    _ignored_components = [
+        "StandardPreprocessing",
+    ]
+
+    def __init__(self, logger=None, abort_func=None, params=None):
+        """
+        Initialise an OcropusWrapper object.
+        """
+        self.abort_func = abort_func
+        self.logger = logger if logger else self.get_default_logger()
+        self.params = OcropusParams(params) if params \
+                else OcropusParams({})
+
+
+    @classmethod
+    def write_binary(cls, path, data):
+        """
+        Write a binary image.
+        """
+        ocrolib.iulib.write_image_binary(path, ocrolib.numpy2narray(data))
+
+
+    @classmethod
+    def write_packed(cls, path, data):
+        """
+        Write a packed image.
+        """
+        ocrolib.iulib.write_image_packed(path, ocrolib.pseg2narray(data))
+
+
+    @classmethod
+    def _get_toplevel_parameter_info(cls, name):
+        comp = cls._component_map[name]        
+        info = [i for i in cls.parameters if i["name"] == name][0]
+        info["choices"] = cls.get_components(oftypes=[comp], 
+                exclude=cls._ignored_components)
+        return info    
+
 
     def get_command(self, *args, **kwargs):
         """
         Get the command line for converting a given image.
         """
         raise NotImplementedError
+
+
+    @classmethod
+    def get_parameters(cls, *args):
+        """
+        Get general OCR parameters.  
+        """
+        # Note: we ignore all but the last args given here,
+        # because other plugins might implement nested options
+        # as a proper tree structure
+        if len(args) == 0:
+            return dict(
+                name="%s" % cls.name,
+                description="Available configuration for OCR settings",
+                parameters=cls.parameters,
+            )
+        elif hasattr(cls, "_get_%s_parameter_info" % args[-1]):
+            return getattr(cls, "_get_%s_parameter_info" % args[-1])()
+        elif cls._component_map.get(args[-1]):
+            return cls._get_toplevel_parameter_info(args[-1])
+        else:
+            return cls.get_component_parameters(args[-1])
+
+
+    @classmethod
+    def extract_boxes(cls, page_seg):
+        """
+        Extract line/paragraph geometry info.
+        """
+        regions = ocrolib.RegionExtractor()
+        out = dict(columns=[], lines=[], paragraphs=[])
+        exfuncs = dict(
+            columns=regions.setPageColumns,
+            lines=regions.setPageLines,
+            paragraphs=regions.setPageParagraphs,
+        )
+        for box, func in exfuncs.iteritems():
+            func(page_seg)
+            for i in range(1, regions.length()):
+                out[box].append([regions.x0(i),
+                    regions.y0(i) + (regions.y1(i) - regions.y0(i)),
+                    regions.x1(i) - regions.x0(i),
+                    regions.y1(i) - regions.y0(i)])
+        return out
+
+
+    def convert(self, filepath, progress_func=None, callback=None, **cbkwargs):
+        """
+        Convert an image file into text.  A callback can be supplied that
+        is evaluated before every individual page line is run.  If it does
+        not evaluate to True the function returns early with the page
+        results gathered up to that point.  Keyword arguments can also be
+        passed to the callback.
+        """
+        page_bin = self.conditional_preprocess(filepath)
+        page_seg = self.get_page_seg(page_bin)
+        if self.params.segout:
+            self.logger.info("Writing segmentation: %s" % self.params.segout)
+            self.write_packed(self.params.segout, page_seg)
+        pageheight, pagewidth = page_bin.shape
+
+        self.logger.info("Extracting regions...")
+        regions = ocrolib.RegionExtractor()
+        regions.setPageLines(page_seg)
+        numlines = regions.length()
+        self.logger.info("Recognising lines...")
+        pagedata = dict(
+            page=os.path.basename(filepath),
+            lines=[],
+            box=[0, 0, pagewidth, pageheight]
+        )
+        for i in range(1, numlines):
+            # test for continuation
+            if callback is not None:
+                if not callback(**cbkwargs):
+                    return pagedata
+            set_progress(self.logger, progress_func, i, numlines)
+            line = regions.extract(page_bin, i, 1)
+            bbox = [regions.x0(i), pageheight - regions.y0(i),
+                regions.x1(i) - regions.x0(i), regions.y1(i) - regions.y0(i)]
+            text = self.get_transcript(line)
+            pagedata["lines"].append({"line": i, "box": bbox, "text" : text })
+
+        # set progress complete
+        set_progress(self.logger, progress_func, numlines, numlines)
+        return pagedata
+
+
+    @check_aborted
+    def get_page_binary(self, filepath):
+        """
+        Convert an on-disk file into an in-memory ocrolib.iulib.bytearray.
+        """
+        page_gray = ocrolib.read_image_gray(filepath)
+        self.logger.info("Binarising image with %s" % self.params.clean)
+        preproc = getattr(ocrolib, self.params.clean)()
+        return preproc.binarize(page_gray)
+
+
+    @check_aborted
+    def get_page_seg(self, page_bin):
+        """
+        Segment the binary page into a colour-coded segmented images.
+        """
+        self.logger.info("Segmenting page with %s" % self.params.psegmenter)
+        try:
+            segmenter = getattr(ocrolib, self.params.psegmenter)()
+            self.logger.info("Loaded %s" % self.params.psegmenter)
+        except AttributeError:
+            # no native-wrapped component found - try loading a python one
+            segmenter = self._load_python_component(self.params.psegmenter)
+        for name, val in self.params.iteritems():
+            # find the 'long' name for the component with the given short
+            # name, i.e: binsauvola -> BinarizeBySauvola
+            cmatch = re.match("%s__(.+)" % self.params.psegmenter, name, re.I)
+            if cmatch:
+                param = cmatch.groups()[0]
+                self.logger.info("Setting: %s.%s -> %s" % (
+                    self.params.psegmenter, param, val))
+                segmenter.pset(param, val)
+        return segmenter.segment(page_bin)
+
+
+    def convert_lines(self, filepath, linedata):
+        """
+        Convert a single line given a prebinarized file and
+        x, y, w, h coords.
+        """
+        from copy import deepcopy
+
+        page_bin = ocrolib.read_image_gray(filepath)
+        pageheight = page_bin.shape[0]
+        out = deepcopy(linedata)
+        for i in range(len(linedata)):
+            coords = linedata[i]["box"]
+            iulibcoords = (
+                coords[0], pageheight - coords[1], coords[0] + coords[2],
+                pageheight - (coords[1] - coords[3]))
+            lineimage = ocrolib.iulib.bytearray()
+            ocrolib.iulib.extract_subimage(lineimage, 
+                    ocrolib.numpy2narray(page_bin), *iulibcoords)
+            out[i]["text"] = self.get_transcript(ocrolib.narray2numpy(lineimage))
+        return out
+
+
+    @classmethod
+    def get_component_parameters(cls, component, *args, **kwargs):
+        """
+        Get general component parameters.
+        """
+        comps = cls.get_components(withnames=[component], exclude=["StandardPreprocessing"])
+        if len(comps):
+            return comps[0]
+
+
+    def conditional_preprocess(self, filepath):
+        """
+        Run preprocessing unless we're told to 
+        use a passed-in prebinarized file.
+        """
+        if self.params.prebinarized:
+            page_bin = ocrolib.read_image_gray(filepath)
+        else:
+            page_bin = self.standard_preprocess(filepath)
+            if self.params.binout:
+                self.logger.info("Writing binary: %s" % self.params.binout)
+                self.write_binary(self.params.binout, page_bin)
+        return page_bin
+
+
+    @check_aborted
+    def standard_preprocess(self, filepath):
+        """
+        Mimic OCRopus's StandardPreprocessing component but
+        allow more flexible param setting.  Somehow.
+        """
+        complookup = self.get_components(
+                oftypes=["IBinarize", "ICleanupGray", "ICleanupBinary"])
+        pagegray = ocrolib.read_image_gray(filepath)
+        self.logger.info("Binarizing with params: %s" % self.params)
+        # init components
+        binarizer = getattr(ocrolib, self.params.binarizer)()
+        graydeskew = None
+        if self.params.graydeskew and self.params.graydeskew != "-":
+            graydeskew = getattr(ocrolib, self.params.graydeskew)()
+        bindeskew = None
+        if self.params.bindeskew and self.params.bindeskew != "-":
+            bindeskew = getattr(ocrolib, self.params.bindeskew)()
+        cleanups = { "grayclean": [], "binclean": [] }
+        for cleantype, cleanlist in cleanups.iteritems():
+            for i in range(0, 10):
+                paramval = self.params.get("%s%s" % (cleantype, i))
+                if paramval and paramval != "-":
+                    try:
+                        cleanlist.append(getattr(ocrolib, paramval)())
+                    except IndexError, err:
+                        self.logger.error(err.message)
+
+        self._set_component_parameters(complookup, [binarizer,
+                bindeskew, graydeskew]
+                + cleanups["grayclean"] + cleanups["binclean"])
+        self.logger.debug("pagegray: type: %s" % type(pagegray))
+        # onwards with cleanup
+        pageout = pagegray
+        deskewed = False
+
+        if 0 and ocrolib.iulib.contains_only(pageout, 0, 255):
+            self.logger.debug("Running BINARY batch clean.")
+            pageout = self.batch_clean(cleanups["binclean"], pagegray)
+            if bindeskew:
+                self.logger.debug("Deskewing with: %s" % self.params.bindeskew)
+                pageout = bindeskew.cleanup(pageout)
+                deskewed = True
+        else:
+            self.logger.debug("Running GRAYSCALE batch clean.")
+            pageout = self.batch_clean(cleanups["grayclean"], pagegray)
+            if graydeskew:
+                self.logger.debug("Deskewing with: %s" % self.params.graydeskew)
+                pageout = graydeskew.cleanup_gray(pageout)
+                deskewed = True
+
+        self.logger.debug("Page out length: %s" % len(pageout))
+        try:
+            pageout, pagegray = binarizer.binarize(pageout)
+        except StandardError, err:
+            self.logger.error("Binarizer failed: %s" % err)
+        pageout = self.batch_clean(cleanups["binclean"], pageout)
+        self.logger.debug("Page out length: %s" % len(pageout))
+        if bindeskew and not deskewed:
+            try:
+                pageout = bindeskew.cleanup(pageout)
+            except StandardError, err:
+                self.logger.error("Binary deskew failed: %s" % err)
+        return pageout
+
+
+    @check_aborted
+    def batch_clean(self, components, pagedata):
+        """
+        Run a set of cleanup components on the given page data.
+        """
+        pageout = pagedata
+        count = 0
+        for component in components:
+            try:
+                pageout = component.cleanup(pageout)
+            except StandardError:
+                self.logger.error("clean%s: %s failed:" % (
+                    count, component.name()))
+            count += 1
+        return pageout
 
 
     @check_aborted
@@ -69,6 +476,155 @@ class GenericWrapper(OcropusWrapper):
                 os.unlink(txt.name)        
         return " ".join(lines)
 
+
+    def _set_component_parameters(self, complookup, components):
+        """
+        Set parameters from the params object on the
+        components passed in *args.
+        """
+        # set all the parameters on our components
+        for component in components:
+            if component is None:
+                continue
+            for name, val in self.params.iteritems():
+                # find the 'long' name for the component with the given short
+                # name, i.e: binsauvola -> BinarizeBySauvola
+                compname = component.__class__.__name__
+                cmatch = re.match("%s__(.+)" % compname, name, re.I)
+                if cmatch is None:
+                    continue
+                param = cmatch.groups()[0]
+                self.logger.info(
+                        "Setting: %s.%s -> %s" % (compname, param, val))
+                component.pset(param, val)
+
+
+    @classmethod
+    def get_components(cls, oftypes=None, withnames=None, exclude=None):
+        """
+        Get a datastructure contraining all Ocropus components
+        (possibly of a given type) and their default parameters.
+        """
+        out = cls._get_native_components(oftypes, withnames, exclude=exclude)
+        out.extend(cls._get_python_components(oftypes, withnames, exclude=exclude))
+        return sorted(out, lambda x, y: cmp(x["name"], y["name"]))
+
+
+    @classmethod
+    def _load_python_component(cls, name):
+        """
+        Return the main class for a Python component.
+        """
+        # FIXME: This triggers an import of everything in components,
+        # which is undesirable to say the least
+        directory = os.path.join(os.path.dirname(__file__), "components")
+        comp = None
+        for fname in os.listdir(directory):
+            if not fname.endswith(".py"):
+                continue
+            modname = fname.replace(".py", "", 1)
+            try:
+                pmod = __import__("%s" % modname, fromlist=[name])
+                reload(pmod)
+                if hasattr(pmod, name):
+                    comp = getattr(pmod, name)
+                    break
+            except ImportError, err:
+                pass
+        if comp is None:
+            raise IndexError("no such component: %s" % name)
+        return comp()
+
+
+    @classmethod
+    def _get_native_components(cls, oftypes=None, withnames=None, exclude=None):
+        """
+        Get a datastructure contraining all Ocropus native components
+        (possibly of a given type) and their default parameters.
+        """
+        out = []
+        clist = ocrolib.ComponentList()
+        for i in range(clist.length()):
+            ckind = clist.kind(i)
+            if oftypes and not \
+                    ckind.lower() in [c.lower() for c in oftypes]:
+                continue
+            cname = clist.name(i)
+            if withnames and not \
+                    cname.lower() in [n.lower() for n in withnames]:
+                continue
+            if exclude and cname.lower() in [n.lower() for n in exclude]:
+                continue
+            compdict = dict(name=cname, type=ckind, parameters=[])
+            # TODO: Fix this heavy-handed exception handling which is
+            # liable to mask genuine errors - it's needed because of
+            # various inconsistencies in the Python/native component
+            # wrappers.
+            try:
+                comp = getattr(ocrolib, cname)()
+                compdict["name"] = cname
+                compdict["description"] = comp.description()
+            except (AttributeError, AssertionError, IndexError):
+                continue
+            for paramnum in range(0, comp.plength()):
+                pname = comp.pname(paramnum)
+                compdict["parameters"].append(dict(
+                    name=pname,
+                    value=comp.pget(pname),
+                    description="",
+                    choices=None,
+                ))
+            out.append(compdict)
+        return out
+
+
+    @classmethod
+    def _get_python_components(cls, oftypes=None, withnames=None, exclude=None):
+        """
+        Get native python components.
+        """
+        out = []
+        directory = os.path.join(os.path.dirname(__file__), "components")
+        for fname in os.listdir(directory):
+            if not fname.endswith(".py"):
+                continue
+            modname = fname.replace(".py", "", 1)
+            pmod = __import__("%s" % modname, fromlist=["main_class"])
+            if not hasattr(pmod, "main_class"):
+                continue
+            ctype = pmod.main_class()
+            ckind = ctype.__base__.__name__
+            # note: the loading function in ocropy/components.py expects
+            # python components to have a module-qualified name, i.e:
+            # mymodule.MyComponent.
+            cname = ctype.__name__
+            if oftypes and not \
+                    ckind.lower() in [c.lower() for c in oftypes]:
+                continue
+            if withnames and not \
+                    cname.lower() in [n.lower() for n in withnames]:
+                continue
+            if exclude and cname.lower() in [n.lower() for n in exclude]:
+                continue
+            comp = ctype()
+            # FIXME: Extreme dodginess getting the interface type,
+            # very fragile
+            compdict = dict(
+                name=cname,
+                type=ckind,
+                parameters=[],
+                description=comp.description()
+            )
+            for paramnum in range(0, comp.plength()):
+                pname = comp.pname(paramnum)
+                compdict["parameters"].append(dict(
+                    name=pname,
+                    description="",
+                    value=comp.pget(pname),
+                    choices=None,
+                ))
+            out.append(compdict)
+        return out
 
 
 

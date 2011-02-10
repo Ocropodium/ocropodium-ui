@@ -17,8 +17,26 @@ class FinereaderWrapper(GenericWrapper):
     use Abbyy FR for recognition of individual lines.
     """
     name = "finereader"
+    description = "Wrapper for Abbyy Finereader CLI 8.0"
     capabilities = ("page",)
     binary = get_binary("abbyyocr")
+    parameters = [
+        {
+            "name": "page_segmentation",
+            "description": "Page Segmentation Options",
+            "choices": [
+                {
+                    "name": "single",
+                    "description": "Single Column",
+                    "value": 0,
+                }, {
+                    "name": "default",
+                    "description": "Auto Detection",
+                    "value": 1,
+                },
+            ],
+        },
+    ]
 
     def get_command(self, outfile, image):
         """

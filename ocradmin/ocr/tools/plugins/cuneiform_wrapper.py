@@ -19,6 +19,7 @@ class CuneiformWrapper(GenericWrapper):
     use Cuneiform for recognition of individual lines.
     """
     name = "cuneiform"
+    description = "Wrapper for Cuneiform Linux"
     capabilities = ("line", "page")
     binary = get_binary("cuneiform")
 

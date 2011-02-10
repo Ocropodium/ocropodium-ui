@@ -229,6 +229,9 @@ def segment(request):
     context = dict(
         binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
     )
+    for k, v in request.META.iteritems():
+        print "%-20s : %s" % (k, v)
+    print request.path
     return _ocr_task(
         request,
         "ocr/segment.html",
@@ -354,13 +357,22 @@ def components(request):
     return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
 
 
-def test(request, ids):
+def test(request):
     """
     Dummy action for running JS unit tests.  Probably needs to
     be put somewhere else.
     """
 
     return render_to_response("ocr/test.html", {})
+
+
+def testparams(request):
+    """
+    Dummy action for running JS unit tests.  Probably needs to
+    be put somewhere else.
+    """
+
+    return render_to_response("ocr/testparams.html", {})
 
 
 def _ocr_task(request, template, context, tasktype, celerytask):
