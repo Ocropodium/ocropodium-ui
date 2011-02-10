@@ -27,7 +27,7 @@
 #options label {
     float: left;
     clear: left;
-    width: 7em;    
+    width: 10em;    
 }
 
 #options select {
@@ -83,3 +83,19 @@
     text-align: center;
     opacity: 0;
 }
+
+.param_section {
+    padding-left: 5px;
+}
+
+.param_section * {
+    margin-bottom: 2px;
+}
+
+.param_section input {
+    border: 1px solid #999999;
+    height: 1em;
+    background-color: #FFFFDD;
+}
+
+
