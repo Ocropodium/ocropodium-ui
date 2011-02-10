@@ -81,7 +81,7 @@ class GenericWrapper(base.OcrBase):
     binary = "unimplemented"
 
     # top-level parameters
-    parameters = [
+    _parameters = [
         {
             "name": "grayscale_preprocessing",
             "description": "Greyscale Preprocessor",
@@ -106,25 +106,6 @@ class GenericWrapper(base.OcrBase):
             "help": "Algorithm for segmenting binary page images",
             "multiple": False,
             "choices": True,
-        }, {
-            "name": "character_model",
-            "description": "Character Model",
-            "help": "Model for character recognition",
-            "multiple": False,
-            "choices": True,
-        }, {
-            "name": "language_model",
-            "description": "Language Model",
-            "help": "Model for language processing",
-            "multiple": False,
-            "choices": True,
-        }, {
-            "name": "debug",
-            "description": "Dump debug info",
-            "multiple": False,
-            "choices": False,
-            "value": True,
-            "type": "bool",
         },
     ]
 
@@ -149,6 +130,13 @@ class GenericWrapper(base.OcrBase):
         self.params = OcropusParams(params) if params \
                 else OcropusParams({})
 
+    @classmethod
+    def parameters(cls):
+        """
+        Get parameters for this plugin.
+        """
+        return cls._parameters
+
 
     @classmethod
     def write_binary(cls, path, data):
@@ -169,7 +157,7 @@ class GenericWrapper(base.OcrBase):
     @classmethod
     def _get_toplevel_parameter_info(cls, name):
         comp = cls._component_map[name]        
-        info = [i for i in cls.parameters if i["name"] == name][0]
+        info = [i for i in cls.parameters() if i["name"] == name][0]
         info["choices"] = cls.get_components(oftypes=[comp], 
                 exclude=cls._ignored_components)
         return info    
@@ -194,7 +182,7 @@ class GenericWrapper(base.OcrBase):
             return dict(
                 name="%s" % cls.name,
                 description="Available configuration for OCR settings",
-                parameters=cls.parameters,
+                parameters=cls.parameters(),
             )
         elif hasattr(cls, "_get_%s_parameter_info" % args[-1]):
             return getattr(cls, "_get_%s_parameter_info" % args[-1])()

@@ -4,6 +4,7 @@ this is also the base class of the Tesseract wrapper and the generic
 line wrapper.
 """
 
+import copy
 from ocradmin.ocr.tools import check_aborted, \
         ExternalToolError
 from ocradmin.ocr import tools        
@@ -48,10 +49,39 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         self._trainbin = None
         self.training = False
 
+    _parameters = [
+        {
+            "name": "character_model",
+            "description": "Character Model",
+            "help": "Model for character recognition",
+            "multiple": False,
+            "choices": True,
+        }, {
+            "name": "language_model",
+            "description": "Language Model",
+            "help": "Model for language processing",
+            "multiple": False,
+            "choices": True,
+        }, {
+            "name": "debug",
+            "description": "Dump debug info",
+            "multiple": False,
+            "choices": False,
+            "value": True,
+            "type": "bool",
+        },  
+    ]
+
+    @classmethod
+    def parameters(cls):
+        params = copy.deepcopy(generic_wrapper.GenericWrapper.parameters())
+        params.extend(cls._parameters)
+        return params
+
 
     @classmethod
     def _get_character_model_parameter_info(cls):
-        info = [i for i in cls.parameters if i["name"] == "character_model"][0]
+        info = [i for i in cls.parameters() if i["name"] == "character_model"][0]
         mods = OcrModel.objects.filter(app="ocropus", type="char")
         info["choices"] = [
                 dict(name=m.name, description=m.description) for m in mods]
@@ -60,7 +90,7 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
 
     @classmethod
     def _get_language_model_parameter_info(cls):
-        info = [i for i in cls.parameters if i["name"] == "language_model"][0]
+        info = [i for i in cls.parameters() if i["name"] == "language_model"][0]
         mods = OcrModel.objects.filter(app="ocropus", type="lang")
         info["choices"] = [
                 dict(name=m.name, description=m.description) for m in mods]
