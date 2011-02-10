@@ -18,16 +18,17 @@ class TesseractWrapper(OcropusWrapper):
     use Tesseract for recognition of individual lines.
     """
     name = "tesseract"
+    description = "Wrapper for Tesseract 3.0 OCR"
     capabilities = ["line"]
 
     def __init__(self, *args, **kwargs):
         """
         Initialise a TesseractWrapper object.
         """
+        super(TesseractWrapper, self).__init__(*args, **kwargs)
         self._tessdata = None
         self._lang = None
         self._tesseract = None
-        super(TesseractWrapper, self).__init__(*args, **kwargs)
 
 
     def init_converter(self):

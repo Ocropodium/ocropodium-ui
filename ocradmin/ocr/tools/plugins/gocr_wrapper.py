@@ -17,7 +17,9 @@ class GocrWrapper(GenericWrapper):
     use Gocr for recognition of individual lines.
     """
     name = "gocr"
+    description = "Wrapper for GNU GOCR"
     binary = get_binary("gocr")
+    parameters = []
 
     def get_command(self, outfile, image):
         """

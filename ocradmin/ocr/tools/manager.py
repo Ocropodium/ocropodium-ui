@@ -15,7 +15,32 @@ class PluginManager(object):
 
 
     @classmethod
-    def get_provider(cls, provides):
+    def get_plugins(cls):
+        """
+        List available OCR plugins.
+        """
+        engines = []
+        plugdir = os.path.join(os.path.dirname(__file__), "plugins")
+        for fname in os.listdir(plugdir):
+            if not fname.endswith("wrapper.py"):
+                continue
+            modname = os.path.splitext(os.path.basename(fname))[0]
+            pm = __import__(
+                    modname,
+                    fromlist=["main_class"])
+            if not hasattr(pm, "main_class"):
+                continue
+            mod = pm.main_class()
+            engines.append(dict(
+                name=mod.name,
+                description=mod.description,
+                parameters=True,
+            ))
+        return engines
+
+
+    @classmethod
+    def get_provider(cls, provides=None):
         """
         Get a list of available OCR engines.        
         """
@@ -30,14 +55,46 @@ class PluginManager(object):
                 if not hasattr(pm, "main_class"):
                     continue
                 mod = pm.main_class()
-                if isinstance(provides, str) and provides in mod.capabilities:
+                if provides is None:
+                    engines.append(mod.name)
+                elif isinstance(provides, str) and provides in mod.capabilities:
                     engines.append(mod.name)
                 elif isinstance(provides, tuple):
                     for cap in provides:
                         if cap in mod.capabilities:
                             engines.append(mod.name)
                             break
-        return engines                    
+        return engines
+
+
+    @classmethod
+    def get(cls, name, *args, **kwargs):
+        """
+        Get a plugin directly.
+        """
+        return cls._main_class(name)
+
+
+    @classmethod
+    def get_info(cls, name, *args, **kwargs):
+        """
+        Get info about a plugin.
+        """
+        mc = cls._main_class(name)
+        if mc is not None:
+            return mc.get_info(*args, **kwargs)
+
+
+    @classmethod
+    def get_parameters(cls, name, *args, **kwargs):
+        """
+        Get general options for an engine.
+        """
+        print "Getting options: " + name
+        mc = cls._main_class(name)
+        if mc is not None:
+            return mc.get_parameters(*args, **kwargs)
+
 
     @classmethod
     def get_trainer(cls, name, *args, **kwargs):
@@ -46,6 +103,7 @@ class PluginManager(object):
         same as the converter.
         """
         return cls.get_converter(name, *args, **kwargs)
+
 
     @classmethod
     def get_converter(cls, name, *args, **kwargs):
@@ -63,6 +121,7 @@ class PluginManager(object):
         Get available components of the given type for given plugin.
         """
         mc = cls._main_class(name)
+        print "KWARGS: %s" % kwargs
         if mc is not None:
             return mc.get_components(*args, **kwargs)
 
