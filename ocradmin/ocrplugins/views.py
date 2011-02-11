@@ -66,10 +66,9 @@ def parse(request):
     """
     Parse the options.
     """
-    pp = pprint.PrettyPrinter(indent=4)
+    pp = pprint.PrettyPrinter(indent=2)
     if request.method == "POST":
-        l, c = _parse_options(request.POST)
-        pp.pprint(l)
+        c = _parse_options(request.POST)
         pp.pprint(c)
     return HttpResponseRedirect("/ocr/testparams/")        
 
@@ -79,24 +78,98 @@ def _parse_options(postdict):
     """
     Parse options into a dictionary.
     """
-    cleaned = {}
-    levels = []
-    for name, value in postdict.iteritems():
-        if not name.startswith("$options:"):
+    # parse the postdict into a conventient, sorted
+    # array of tuples:
+    # [(name, value), (name, value)]
+    post = []
+    for k, v in postdict.iteritems():
+        if not k.startswith("$options"):
             continue
+        post.append((k, v))
+    post.sort()
+    paramstruct = _initialise_param_structure(post)
+    params = _populate_param_structure(
+            post, paramstruct)
+    return _cleanup_empty_param_lists(params)
+
+
+def _initialise_param_structure(post):
+    """
+    Build the initial parameter structure.
+    """
+    cleaned = dict(params=[])
+    for name, value in post:
         parts = name.split(":")
         parts.pop(0)
-
-        curr = cleaned
+        curr = cleaned["params"]
         for part in parts:
-            if not curr.get("name"):
-                curr["name"] = part
-                curr["params"] = [{}]
-            curr = curr["params"][0] 
+            index = None
+            imatch = re.search("(?P<base>.+)\[(?P<index>\d+)\]$", part)
+            if imatch:
+                part, index = imatch.groups()
+            found = False
+            for param in curr:
+                if param["name"] == part:
+                    found = True
+                    curr = param["params"]
+                    break
+            if found:
+                continue
+            params = []
+            d = dict(
+                name=part,
+                params=params,
+            )
+            if index is not None:
+                while len(curr) < int(index) + 1:
+                    curr.append(None)
+                print "Setting ele index: %s -> %s" % (d, index)
+                curr[int(index)] = d
+            else:
+                curr.append(d)                    
+            curr = params
+    print "STRUCTURE:"
+    pp = pprint.PrettyPrinter(indent=2)
+    pp.pprint(cleaned)
+    return cleaned
 
-        print name
 
+def _populate_param_structure(post, params):
+    """
+    Populate the parameter data structure
+    with values.
+    """
+    for name, value in post:
+        parts = name.split(":")
+        curr = params["params"]
+        key = parts.pop()
+        for part in parts:
+            index = None
+            imatch = re.search("(?P<base>.+)\[(?P<index>\d+)\]$", part)
+            if imatch:
+                part, index = imatch.groups()
+            for param in curr:
+                if param["name"] == part:
+                    curr = param["params"]
+                    break
+            for param in curr:
+                if param["name"] == key:
+                    param["value"] = value
+    return params
 
-    return levels, cleaned        
+def _cleanup_empty_param_lists(params):
+    """
+    Recursively clean out empty param slots.
+    """
+    def cleanup_param(param):
+        if len(param["params"]) == 0:
+            del param["params"]
+        else:
+            for p in param.get("params"):
+                cleanup_param(p)
+    for p in params["params"]:
+        cleanup_param(p)
+    return params["params"]        
+
 
 

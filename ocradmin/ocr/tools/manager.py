@@ -121,7 +121,6 @@ class PluginManager(object):
         Get available components of the given type for given plugin.
         """
         mc = cls._main_class(name)
-        print "KWARGS: %s" % kwargs
         if mc is not None:
             return mc.get_components(*args, **kwargs)
 
