@@ -99,14 +99,26 @@ def _initialise_param_structure(post):
     """
     cleaned = dict(params=[])
     for name, value in post:
+        last = None
+        lastindex = None
         parts = name.split(":")
         parts.pop(0)
         curr = cleaned["params"]
         for part in parts:
+            print "Part is: %s" % part
+            print "Last is: %s" % last
+            partcopy = part
             index = None
-            imatch = re.search("(?P<base>.+)\[(?P<index>\d+)\]$", part)
-            if imatch:
-                part, index = imatch.groups()
+            pmatch = re.search("(?P<base>.+)\[(?P<index>\d+)\]$", part)
+            if pmatch:
+                part, _ = pmatch.groups()            
+            if last is not None:
+                lmatch = re.search("(?P<base>.+)\[(?P<index>\d+)\]$", last)
+                if lmatch:
+                    print "Matched last: %s" % last
+                    last, lastindex = lmatch.groups()
+                else:
+                    lastindex = None
             found = False
             for param in curr:
                 if param["name"] == part:
@@ -114,20 +126,23 @@ def _initialise_param_structure(post):
                     curr = param["params"]
                     break
             if found:
+                last = partcopy
                 continue
+            print "Adding part: %s" % part
             params = []
             d = dict(
                 name=part,
                 params=params,
             )
-            if index is not None:
-                while len(curr) < int(index) + 1:
+            if lastindex is not None:
+                while len(curr) < int(lastindex) + 1:
                     curr.append(None)
-                print "Setting ele index: %s -> %s" % (d, index)
-                curr[int(index)] = d
+                print "Setting ele index: %s -> %s" % (d, lastindex)
+                curr[int(lastindex)] = d
             else:
                 curr.append(d)                    
             curr = params
+            last = partcopy
     print "STRUCTURE:"
     pp = pprint.PrettyPrinter(indent=2)
     pp.pprint(cleaned)
