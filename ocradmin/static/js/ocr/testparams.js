@@ -79,7 +79,7 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
             var newid = "[" + index + "]";                        
             $(elem).attr("id", $(elem).attr("id").replace(re, newid))
                 .find("*").each(function(i, e) {
-                $.each(this.attributes, function(j, attrib) {
+                $.each(e.attributes, function(j, attrib) {
                     if (attrib.value.match(re)) {
                         attrib.value = attrib.value.replace(re, newid);
                     }
