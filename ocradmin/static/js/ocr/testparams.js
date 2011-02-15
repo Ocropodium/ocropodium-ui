@@ -1,4 +1,16 @@
 
+RegExp.escape = function(text) {
+  if (!arguments.callee.sRE) {
+    var specials = [
+      '/', '.', '*', '+', '?', '|',
+      '(', ')', '[', ']', '{', '}', '\\'
+    ];
+    arguments.callee.sRE = new RegExp(
+      '(\\' + specials.join('|\\') + ')', 'g'
+    );
+  }
+  return text.replace(arguments.callee.sRE, '\\$1');
+}
 
 OCRJS = OCRJS || {};
 OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
@@ -62,21 +74,17 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
                 .find(".control_manip")      
                 .remove()
                 .end()
+                .insertAfter(elem)
                 .find("select")
-                .change()
-                .end()
-                .insertAfter(elem);
-            console.log("Duped " + elem.id);
-            self.renumberMultiples(elem.id);
-            //clone.find("select").change();
+                .change();
         });
     },
 
     renumberMultiples: function(baseid) {
-        var baseid = baseid.replace(/\[\d+\]$/, "");                           
-        var re = new RegExp(/\[\d+\]/);
-        $(".multiple[id^='" + baseid + "']").each(function(index, elem) {            
-            var newid = "[" + index + "]";                        
+        var base = baseid.replace(/\[\d+\]_ctrl$/, "");                           
+        var re = new RegExp(RegExp.escape(base) + "\\[\\d+\\]", "g");
+        $(".multiple[id^='" + base + "']").each(function(index, elem) {
+            var newid = base + "[" + index + "]";                        
             $(elem).attr("id", $(elem).attr("id").replace(re, newid))
                 .find("*").each(function(i, e) {
                 $.each(e.attributes, function(j, attrib) {
@@ -105,18 +113,22 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
         });
     },
 
-    getIdent: function(parent, data) {
-        return parent.id + ":" + data.name + (
-                data.multiple ? "[0]" : "");
+    getIdent: function(parent, data, index) {
+        var ident;
+        if (index != null)
+            ident = parent.id + "[" + index + "]" + "." + data.name;
+        else
+            ident = parent.id + "." + data.name;
+        return data.multiple ? (ident + "[0]") : ident;
     },                  
 
-    buildSection: function(parent, data) {
+    buildSection: function(parent, data, index) {
         // build a section for one parameter and its
         // children
         if (!data)
             return;
         var self = this;
-        var ident = self.getIdent(parent, data);
+        var ident = self.getIdent(parent, data, index);
         var container = $("<div></div>")
             .attr("id", ident)
             .addClass("param_section");
@@ -134,7 +146,7 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
         var self = this;                             
         // fetch more data if we need to...
         if (data.choices === true) {
-            var parts = ident.replace(/\[\d+\]/, "").split(":").splice(2);
+            var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
             //parts.push(data.name);
             $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
                 self.buildChoicesSection(container, ident, data);
@@ -163,12 +175,14 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
                 .appendTo(control);
         });
         control.change(function(event) {
+            console.log("Change event for: " + this.id);
             var newdata = $(this).data($(this).val());
             var section = self.buildSection(container.get(0), newdata); 
             if ($(this).next("div").length)
-                $(this).next("div").html(section);
+                $(this).next("div").replaceWith(section);
             else
                 container.append(section);                    
+            self.renumberMultiples(this.id);
         });
         if (data.choices.length) {
             self.loadOptionState(control, data.choices[0].name);
@@ -181,11 +195,11 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
 
         // fetch more data if we need to...
         if (data.parameters === true) {
-            var parts = ident.replace(/\[\d+\]/, "").split(":").splice(2);
+            var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
             $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
                 var section = self.buildSection(parent, data);
                 if ($(parent).children("div").length)
-                    $(parent).children("div").html(section);
+                    $(parent).children("div").replaceWith(section);
                 else
                     $(parent).append(section);                    
             });
@@ -193,13 +207,14 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
         }
 
         $.each(data.parameters, function(i, param) {
+            console.log("Building param for: " + i + " " + param.name + " ", param);
             container.append(
-                self.buildSection(container.get(0), param)
+                self.buildSection(container.get(0), param, i)
             );
         });        
     },
 
-    buildParameterSection: function(container, ident, data) {
+    buildParameterSection: function(container, ident, data) {                               
         if (!(data.value || data.parameters || data.choices))
             return;
         var label = $("<label></label>")
