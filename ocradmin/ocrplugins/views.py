@@ -2,6 +2,7 @@
 RESTful interface to interacting with OCR plugins.
 """
 import re
+import copy
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response
 from django.utils import simplejson
@@ -10,9 +11,10 @@ from django.core.urlresolvers import reverse
 import pprint
 
 from ocradmin.ocr.tools.manager import PluginManager 
+from ocradmin.ocrplugins import parameters
 
 
-def list(request):
+def index(request):
     """
     List available plugins.
     """
@@ -68,123 +70,9 @@ def parse(request):
     """
     pp = pprint.PrettyPrinter(indent=2)
     if request.method == "POST":
-        c = _parse_options(request.POST)
+        c = parameters.parse_post_data(request.POST)
         pp.pprint(c)
     return HttpResponseRedirect("/ocr/testparams/")        
-
-
-
-def _parse_options(postdict):
-    """
-    Parse options into a dictionary.
-    """
-    # parse the postdict into a conventient, sorted
-    # array of tuples:
-    # [(name, value), (name, value)]
-    post = []
-    for k, v in postdict.iteritems():
-        if not k.startswith("$options"):
-            continue
-        post.append((k, v))
-    post.sort()
-    paramstruct = _initialise_param_structure(post)
-    params = _populate_param_structure(
-            post, paramstruct)
-    return _cleanup_empty_param_lists(params)
-
-
-def _initialise_param_structure(post):
-    """
-    Build the initial parameter structure.
-    """
-    cleaned = dict(params=[])
-    for name, value in post:
-        last = None
-        lastindex = None
-        parts = name.split(":")
-        parts.pop(0)
-        curr = cleaned["params"]
-        for part in parts:
-            print "Part is: %s" % part
-            print "Last is: %s" % last
-            partcopy = part
-            index = None
-            pmatch = re.search("(?P<base>.+)\[(?P<index>\d+)\]$", part)
-            if pmatch:
-                part, _ = pmatch.groups()            
-            if last is not None:
-                lmatch = re.search("(?P<base>.+)\[(?P<index>\d+)\]$", last)
-                if lmatch:
-                    print "Matched last: %s" % last
-                    last, lastindex = lmatch.groups()
-                else:
-                    lastindex = None
-            found = False
-            for param in curr:
-                if param["name"] == part:
-                    found = True
-                    curr = param["params"]
-                    break
-            if found:
-                last = partcopy
-                continue
-            print "Adding part: %s" % part
-            params = []
-            d = dict(
-                name=part,
-                params=params,
-            )
-            if lastindex is not None:
-                while len(curr) < int(lastindex) + 1:
-                    curr.append(None)
-                print "Setting ele index: %s -> %s" % (d, lastindex)
-                curr[int(lastindex)] = d
-            else:
-                curr.append(d)                    
-            curr = params
-            last = partcopy
-    print "STRUCTURE:"
-    pp = pprint.PrettyPrinter(indent=2)
-    pp.pprint(cleaned)
-    return cleaned
-
-
-def _populate_param_structure(post, params):
-    """
-    Populate the parameter data structure
-    with values.
-    """
-    for name, value in post:
-        parts = name.split(":")
-        curr = params["params"]
-        key = parts.pop()
-        for part in parts:
-            index = None
-            imatch = re.search("(?P<base>.+)\[(?P<index>\d+)\]$", part)
-            if imatch:
-                part, index = imatch.groups()
-            for param in curr:
-                if param["name"] == part:
-                    curr = param["params"]
-                    break
-            for param in curr:
-                if param["name"] == key:
-                    param["value"] = value
-    return params
-
-def _cleanup_empty_param_lists(params):
-    """
-    Recursively clean out empty param slots.
-    """
-    def cleanup_param(param):
-        if len(param["params"]) == 0:
-            del param["params"]
-        else:
-            for p in param.get("params"):
-                cleanup_param(p)
-    for p in params["params"]:
-        cleanup_param(p)
-    return params["params"]        
 
 
 
