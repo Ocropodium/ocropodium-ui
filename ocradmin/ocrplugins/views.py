@@ -70,7 +70,7 @@ def parse(request):
     """
     pp = pprint.PrettyPrinter(indent=2)
     if request.method == "POST":
-        c = parameters.parse_post_data(request.POST)
+        c = parameters.OcrParameters.from_post_data(request.POST)
         pp.pprint(c)
     return HttpResponseRedirect("/ocr/testparams/")        
 

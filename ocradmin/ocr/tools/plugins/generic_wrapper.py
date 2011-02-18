@@ -13,6 +13,10 @@ import subprocess as sp
 from ocradmin.ocr.tools import base, check_aborted, get_binary, ExternalToolError, set_progress
 import ocrolib
 
+from ocradmin.ocrplugins import parameters
+
+
+
 LMODEL = "etc/defaultmodels/tesseract_default_lang.tgz" #"/home/michaelb/dev/ocropodium/install/ocropus/ocropus-0.0.0/share/ocropus/models/default.fst" 
 CMODEL = "/home/michaelb/dev/ocropodium/install/ocropus/ocropus-0.0.0/share/ocropus/models/default.model"
 
@@ -80,34 +84,6 @@ class GenericWrapper(base.OcrBase):
     description = "Generic command-line OCR wrapper"
     binary = "unimplemented"
 
-    # top-level parameters
-    _parameters = [
-        {
-            "name": "grayscale_preprocessing",
-            "description": "Greyscale Preprocessor",
-            "help": "Filters for preprocessing greyscale images",
-            "multiple": True,
-            "choices": True,
-        }, {
-            "name": "binarizer",
-            "description": "Binarizer",
-            "help": "Filter for binarizing greyscale images",
-            "multiple": False,
-            "choices": True,
-        }, {
-            "name": "binary_preprocessing",
-            "description": "Binary Preprocessor",
-            "help": "Filters for preprocessing binary images",
-            "multiple": True,
-            "choices": True,
-        }, {
-            "name": "page_segmenter",
-            "description": "Page Segmenter",
-            "help": "Algorithm for segmenting binary page images",
-            "multiple": False,
-            "choices": True,
-        },
-    ]
 
     # map of friendly names to OCRopus component names    
     _component_map = dict(
@@ -125,6 +101,8 @@ class GenericWrapper(base.OcrBase):
         """
         Initialise an OcropusWrapper object.
         """
+        self.config = parameters.OcrParameters.from_parameters(parameters.TESTPARAMS)
+
         self.abort_func = abort_func
         self.logger = logger if logger else self.get_default_logger()
         self.params = OcropusParams(params) if params \
@@ -135,7 +113,37 @@ class GenericWrapper(base.OcrBase):
         """
         Get parameters for this plugin.
         """
-        return cls._parameters
+        # top-level parameters
+        return [{
+                "name": "grayscale_preprocessing",
+                "description": "Greyscale Preprocessor",
+                "help": "Filters for preprocessing greyscale images",
+                "multiple": True,
+                "choices": cls.get_components(oftypes=["ICleanupGray"], 
+                    exclude=cls._ignored_components),
+            }, {
+                "name": "binarizer",
+                "description": "Binarizer",
+                "help": "Filter for binarizing greyscale images",
+                "multiple": False,
+                "choices": cls.get_components(oftypes=["IBinarize"], 
+                    exclude=cls._ignored_components),
+            }, {
+                "name": "binary_preprocessing",
+                "description": "Binary Preprocessor",
+                "help": "Filters for preprocessing binary images",
+                "multiple": True,
+                "choices": cls.get_components(oftypes=["ICleanupBinary"], 
+                    exclude=cls._ignored_components),
+            }, {
+                "name": "page_segmenter",
+                "description": "Page Segmenter",
+                "help": "Algorithm for segmenting binary page images",
+                "multiple": False,
+                "choices": cls.get_components(oftypes=["ISegmentPage"], 
+                    exclude=cls._ignored_components),
+            },
+        ]
 
 
     @classmethod
@@ -156,11 +164,12 @@ class GenericWrapper(base.OcrBase):
 
     @classmethod
     def _get_toplevel_parameter_info(cls, name):
-        comp = cls._component_map[name]        
-        info = [i for i in cls.parameters() if i["name"] == name][0]
-        info["choices"] = cls.get_components(oftypes=[comp], 
-                exclude=cls._ignored_components)
-        return info    
+        try:
+            out = [i for i in cls.parameters() if i["name"] == name][0]
+        except IndexError:
+            out = None
+        return out            
+
 
 
     def get_command(self, *args, **kwargs):
@@ -261,9 +270,9 @@ class GenericWrapper(base.OcrBase):
         """
         Convert an on-disk file into an in-memory ocrolib.iulib.bytearray.
         """
-        page_gray = ocrolib.read_image_gray(filepath)
-        self.logger.info("Binarising image with %s" % self.params.clean)
-        preproc = getattr(ocrolib, self.params.clean)()
+        page_gray = ocrolib.read_image_gray(filepath)        
+        self.logger.info("Binarising image with %s" % self.config.binarizer.name)
+        preproc = getattr(ocrolib, self.config.binarizer.name)()
         return preproc.binarize(page_gray)
 
 
@@ -272,22 +281,20 @@ class GenericWrapper(base.OcrBase):
         """
         Segment the binary page into a colour-coded segmented images.
         """
-        self.logger.info("Segmenting page with %s" % self.params.psegmenter)
+        self.logger.info("Segmenting page with %s" % self.config.page_segmenter.name)
         try:
-            segmenter = getattr(ocrolib, self.params.psegmenter)()
-            self.logger.info("Loaded %s" % self.params.psegmenter)
+            segmenter = getattr(ocrolib, self.config.page_segmenter.name)()
+            self.logger.info("Loaded %s" % self.config.page_segmenter.name)
         except AttributeError:
             # no native-wrapped component found - try loading a python one
-            segmenter = self._load_python_component(self.params.psegmenter)
-        for name, val in self.params.iteritems():
+            segmenter = self._load_python_component(self.config.page_segmenter.name)
+        for param in self.config.page_segmenter.value:
             # find the 'long' name for the component with the given short
             # name, i.e: binsauvola -> BinarizeBySauvola
-            cmatch = re.match("%s__(.+)" % self.params.psegmenter, name, re.I)
-            if cmatch:
-                param = cmatch.groups()[0]
-                self.logger.info("Setting: %s.%s -> %s" % (
-                    self.params.psegmenter, param, val))
-                segmenter.pset(param, val)
+            self.logger.info("Setting: %s.%s -> %s" % (
+                    self.config.page_segmenter.name, param["name"], param["value"]))
+            segmenter.pset(param["name"], param["value"])
+            self.logger.info("YES I'M WORKING")
         return segmenter.segment(page_bin)
 
 
