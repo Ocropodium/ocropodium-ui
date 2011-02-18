@@ -49,33 +49,38 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         self._trainbin = None
         self.training = False
 
-    _parameters = [
-        {
-            "name": "character_model",
-            "description": "Character Model",
-            "help": "Model for character recognition",
-            "multiple": False,
-            "choices": True,
-        }, {
-            "name": "language_model",
-            "description": "Language Model",
-            "help": "Model for language processing",
-            "multiple": False,
-            "choices": True,
-        }, {
-            "name": "debug",
-            "description": "Dump debug info",
-            "multiple": False,
-            "choices": False,
-            "value": True,
-            "type": "bool",
-        },  
-    ]
 
     @classmethod
     def parameters(cls):
         params = copy.deepcopy(generic_wrapper.GenericWrapper.parameters())
-        params.extend(cls._parameters)
+        mods = OcrModel.objects.filter(app="ocropus")
+        cmods = [dict(name=m.name, description=m.description) for m in
+                 mods if m.type == "char"]
+        lmods = [dict(name=m.name, description=m.description) for m in
+                 mods if m.type == "lang"]
+        _parameters = [
+            {
+                "name": "character_model",
+                "description": "Character Model",
+                "help": "Model for character recognition",
+                "multiple": False,
+                "choices": cmods,
+            }, {
+                "name": "language_model",
+                "description": "Language Model",
+                "help": "Model for language processing",
+                "multiple": False,
+                "choices": lmods,
+            }, {
+                "name": "debug",
+                "description": "Dump debug info",
+                "multiple": False,
+                "choices": False,
+                "value": True,
+                "type": "bool",
+            },  
+        ]
+        params.extend(_parameters)
         return params
 
 

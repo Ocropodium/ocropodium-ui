@@ -3,15 +3,15 @@ Wrapper for Abbyy Finereader 8.0 CLI.
 """
 
 
-
-from generic_wrapper import *
-
+from ocradmin.ocr.tools import base, check_aborted, get_binary, ExternalToolError, set_progress
+import generic_wrapper
+import copy
 
 def main_class():
     return FinereaderWrapper
 
 
-class FinereaderWrapper(GenericWrapper):
+class FinereaderWrapper(generic_wrapper.GenericWrapper):
     """
     Override certain methods of the OcropusWrapper to
     use Abbyy FR for recognition of individual lines.
@@ -37,6 +37,11 @@ class FinereaderWrapper(GenericWrapper):
             ],
         },
     ]
+
+    @classmethod
+    def parameters(cls):
+        return cls._parameters
+
 
     def get_command(self, outfile, image):
         """
