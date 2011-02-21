@@ -10,8 +10,11 @@ from ocradmin.ocr.tools import check_aborted, \
 from ocradmin.ocr import tools        
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocr.tools.plugins import generic_wrapper
+reload(generic_wrapper)
 import ocrolib
 
+from ocradmin.ocrplugins import parameters
+reload(parameters)
 
 
 class OcropusError(StandardError):
@@ -44,7 +47,9 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         Initialise an OcropusWrapper object.
         """
         super(OcropusWrapper, self).__init__(*args, **kwargs)
-        self._linerec = None
+        self.config = parameters.OcrParameters.from_parameters(
+                dict(name=self.name, parameters=self.parameters()))
+        self._cmodel = None
         self._lmodel = None
         self._trainbin = None
         self.training = False
@@ -63,11 +68,13 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
                 "name": "character_model",
                 "description": "Character Model",
                 "help": "Model for character recognition",
+                "value": cmods[0]["name"] if len(cmods) else None,
                 "multiple": False,
                 "choices": cmods,
             }, {
                 "name": "language_model",
                 "description": "Language Model",
+                "value": lmods[0]["name"] if len(lmods) else None,
                 "help": "Model for language processing",
                 "multiple": False,
                 "choices": lmods,
@@ -75,7 +82,6 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
                 "name": "debug",
                 "description": "Dump debug info",
                 "multiple": False,
-                "choices": False,
                 "value": True,
                 "type": "bool",
             },  
@@ -101,6 +107,15 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
                 dict(name=m.name, description=m.description) for m in mods]
         return info
 
+    @classmethod
+    def _lookup_model_file(cls, modelname):
+        """
+        Lookup the filename of a model from its
+        database name.
+        """
+        mod = OcrModel.objects.get(name=modelname)
+        return mod.file.path.encode()
+
 
     def init_converter(self):
         """
@@ -110,7 +125,8 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
             self._linerec = ocrolib.RecognizeLine()
             self._linerec.load_native(self.params.cmodel)
             self._lmodel = ocrolib.OcroFST()
-            self._lmodel.load(self.params.lmodel)
+            lmodpath = self._lookup_model_file(self.config.language_model.name)
+            self._lmodel.load(lmodpath)
         except (StandardError, RuntimeError), err:
             raise err
         if self.params.segmenter:
@@ -138,7 +154,8 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         try:
             #self._linerec = ocrolib.ocropus.load_linerec(self.params.cmodel)
             self._linerec = ocrolib.RecognizeLine()
-            self._linerec.load_native(self.params.cmodel)
+            cmodpath = self._load_model_path(self.config.character_model.name)
+            self._linerec.load_native(cmodpath)
         except (StandardError, RuntimeError), err:
             raise err
         self._linerec.startTraining()
