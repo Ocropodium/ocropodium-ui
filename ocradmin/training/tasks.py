@@ -31,10 +31,10 @@ class LineTrainTask(AbortableTask):
         """
         datasets = ReferencePage.objects.filter(pk__in=dataset_ids)
         cmodel = OcrModel.objects.get(pk=cmodel_id)
+        outmodel=os.path.join(outdir, 
+            os.path.basename(cmodel.file.path.encode())),
         paramdict = dict(
             cmodel=cmodel.file.path.encode(),
-            outmodel=os.path.join(outdir, 
-                os.path.basename(cmodel.file.path.encode())),
         )
         logger = self.get_logger(**kwargs)
         logger.info(paramdict)
@@ -60,10 +60,10 @@ class LineTrainTask(AbortableTask):
             for line in pagedata.data["lines"]:
                 trainer.train_line(line["box"], line["text"])
         
-        trainer.save_new_model()
-        logger.info("SAVING MODEL: test.cmodel")
+        trainer.save_new_model(outmodel)
+        logger.info("SAVING MODEL: %s" % outmodel)
 
-        fhdl = open(paramdict["outmodel"], "rb")
+        fhdl = open(outmodel, "rb")
         derivednum = cmodel.ocrmodel_set.count() + 1
         newmodel = OcrModel(
             user=cmodel.user,

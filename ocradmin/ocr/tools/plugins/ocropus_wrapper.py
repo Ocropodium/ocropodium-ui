@@ -131,12 +131,12 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
             self._lmodel.load(lmodpath)
         except (StandardError, RuntimeError):
             raise
-        if self.params.segmenter:
-            self.logger.info("Using line segmenter: %s" % self.params.segmenter)
-            self._linerec.pset("segmenter", self.params.segmenter)
-        if self.params.grouper:
-            self.logger.info("Using grouper: %s" % self.params.grouper)
-            self._linerec.pset("grouper", self.params.grouper)
+        #if self.params.segmenter:
+        #    self.logger.info("Using line segmenter: %s" % self.params.segmenter)
+        #    self._linerec.pset("segmenter", self.params.segmenter)
+        #if self.params.grouper:
+        #    self.logger.info("Using grouper: %s" % self.params.grouper)
+        #    self._linerec.pset("grouper", self.params.grouper)
         # TODO: Work out how to set parameters on the grouper and segmenter
         # Unsure about how (or if it's possible) to access the segmenter
         # via the LineRec
@@ -156,10 +156,10 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         try:
             #self._linerec = ocrolib.ocropus.load_linerec(self.params.cmodel)
             self._linerec = ocrolib.RecognizeLine()
-            cmodpath = self._load_model_path(self.config.character_model.name)
+            cmodpath = self._load_model_path(self.config.character_model)
             self._linerec.load_native(cmodpath)
-        except (StandardError, RuntimeError), err:
-            raise err
+        except (StandardError, RuntimeError):
+            raise
         self._linerec.startTraining()
         self.training = True
 
@@ -219,7 +219,7 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
                     "Skipping training line: %s: %s" % (text, err.message))
 
 
-    def save_new_model(self):
+    def save_new_model(self, outpath):
         """
         Finalise training and save model.
         """
@@ -235,6 +235,6 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
             tries -= 1
 
         self.logger.info("Saving trained model")
-        self._linerec.save_native(self.params.outmodel)
+        self._linerec.save_native(outpath)
 
 
