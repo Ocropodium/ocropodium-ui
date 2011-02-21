@@ -15,6 +15,7 @@ from ocradmin.ocr import utils
 from ocradmin.vendor import deepzoom
 from ocradmin.ocr.tools.manager import PluginManager
 from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrplugins import parameters
 
 
 def get_progress_function(task_id):
@@ -61,8 +62,8 @@ def create_intermediate_paths(filepath, directory, params, logger):
     if params.get("write_intermediate_results"):
         ensure_writable(directory, logger)
         basepath = os.path.join(directory, os.path.basename(filepath))
-        params["binout"] = utils.get_media_output_path(basepath, "bin", ".png")
-        params["segout"] = utils.get_media_output_path(basepath, "seg", ".png")
+        params["bin_out"] = utils.get_media_output_path(basepath, "bin", ".png")
+        params["seg_out"] = utils.get_media_output_path(basepath, "seg", ".png")
 
 
 def ensure_writable(directory, logger):
@@ -148,7 +149,6 @@ class ConvertPageTask(AbortableTask):
         """
         Runs the convert action.
         """
-        from ocradmin.ocrplugins import parameters
         logger = self.get_logger(**kwargs)
         config = parameters.OcrParameters(config)
         # function for the converted to call periodically to check whether
@@ -160,12 +160,11 @@ class ConvertPageTask(AbortableTask):
         converter = PluginManager.get_converter(
                 config.name, logger=logger,
                 abort_func=get_abort_function(kwargs["task_id"]),
-                params=params)
-        converter.config = config
+                config=config)
         # init progress to zero (for when retrying tasks)
         progress_func = get_progress_function(kwargs["task_id"])
         progress_func(0)
-        out = converter.convert(filepath, progress_func=progress_func)
+        out = converter.convert(filepath, progress_func=progress_func, **params)
         #create_binary_deepzoom(params, logger)
         return out
 
@@ -175,6 +174,7 @@ class ConvertLineTask(AbortableTask):
     Convert a single line (from the given coords).  This is done using
     the OcropusWrapper (and it's proxy, TessWrapper) in util.py.
     """
+    # FIXME FIXME FIXME
     name = "convert.line"
     max_retries = None
 
@@ -189,7 +189,7 @@ class ConvertLineTask(AbortableTask):
         create_intermediate_paths(filepath, outdir, paramdict, logger)
         converter = PluginManager.get_converter(
                 paramdict.get("engine", "tesseract"),
-                logger=logger, abort_func=None, params=paramdict)
+                logger=logger, abort_func=None)
         paramdict["prebinarized"] = True
         return converter.convert_lines(
                 paramdict.get("binout").encode(), paramdict.get("coords"))
@@ -204,34 +204,35 @@ class BinarizePageTask(AbortableTask):
     """
     name = "binarize.page"
 
-    def run(self, filepath, outdir, paramdict, **kwargs):
+    def run(self, filepath, outdir, params, config, **kwargs):
         """
         Runs the binarize action.
         """
         logger = self.get_logger(**kwargs)
-        logger.info(paramdict)
+        logger.info(params)
         filepath = utils.make_png(filepath, outdir)
+        config = parameters.OcrParameters(config)
         binname = os.path.basename(
                 utils.get_media_output_path(filepath, "bin", ".png"))
         ensure_writable(outdir, logger)
         binpath = os.path.join(outdir, binname)
         # hack - this is to save time when doing the transcript editor
         # work - don't rebinarize of there's an existing file
-        if os.path.exists(binpath) and paramdict.get("allowcache"):
+        if os.path.exists(binpath) and params.get("allowcache"):
             logger.info("Not rebinarizing - file exists and allowcache is ON")
             pagewidth, pageheight = utils.get_image_dims(binpath)
         else:
             logger.info("Rebinarising - file exists: %s, cache: %s" % (
                 os.path.exists(binpath),
-                paramdict.get("allowcache")))
+                params.get("allowcache")))
             converter = PluginManager.get_converter(
-                    paramdict.get("engine", "ocropus"), logger=logger,
+                    config.name, logger=logger,
                     abort_func=get_abort_function(kwargs["task_id"]),
-                    params=paramdict)
+                    config=config)
             page_bin = converter.standard_preprocess(filepath)
             pageheight, pagewidth = page_bin.shape
             converter.write_binary(binpath, page_bin)
-        src, dst = make_deepzoom_proxies(logger, filepath, binpath, paramdict)
+        src, dst = make_deepzoom_proxies(logger, filepath, binpath, params)
         return dict(
             page=os.path.basename(filepath),
             box=[0, 0, pagewidth, pageheight],
@@ -251,27 +252,28 @@ class SegmentPageTask(AbortableTask):
     """
     name = "segment.page"
 
-    def run(self, filepath, outdir, paramdict, **kwargs):
+    def run(self, filepath, outdir, params, config, **kwargs):
         """
         Runs the segment action.
         """
         logger = self.get_logger(**kwargs)
-        logger.info(paramdict)
+        logger.info(params)
+        config = parameters.OcrParameters(config)
         filepath = utils.make_png(filepath, outdir)
         segname = os.path.basename(
                 utils.get_media_output_path(filepath, "seg", ".png"))
         ensure_writable(outdir, logger)
         segpath = os.path.join(outdir, segname)
         converter = PluginManager.get_converter(
-                paramdict.get("engine", "ocropus"), logger=logger,
+                config.name, logger=logger,
                 abort_func=get_abort_function(kwargs["task_id"]),
-                params=paramdict)
+                config=config)
         page_bin = converter.standard_preprocess(filepath)
         page_seg = converter.get_page_seg(page_bin)
         pageheight, pagewidth = page_bin.shape
         boxes = converter.extract_boxes(page_seg)
         converter.write_packed(segpath, page_seg)
-        src, dst = make_deepzoom_proxies(logger, filepath, segpath, paramdict)
+        src, dst = make_deepzoom_proxies(logger, filepath, segpath, params)
         return dict(
             page=os.path.basename(filepath),
             box=[0, 0, pagewidth, pageheight],

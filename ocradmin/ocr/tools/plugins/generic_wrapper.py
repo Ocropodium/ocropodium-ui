@@ -17,64 +17,6 @@ from ocradmin.ocrplugins import parameters
 
 
 
-LMODEL = "etc/defaultmodels/tesseract_default_lang.tgz" #"/home/michaelb/dev/ocropodium/install/ocropus/ocropus-0.0.0/share/ocropus/models/default.fst" 
-CMODEL = "/home/michaelb/dev/ocropodium/install/ocropus/ocropus-0.0.0/share/ocropus/models/default.model"
-
-class OcropusParams(UserDict.DictMixin):
-    """
-    Convert a dictionary into an object with certain
-    default attribites.  It also uses encode() to convert
-    Django unicode strings to standard strings with the
-    Ocropus python bindings can handle.
-    """
-    def __init__(self, dct):
-        self.lmodel = LMODEL
-        self.cmodel = CMODEL
-        self.segmenter = "DpSegmenter"
-        self.grouper = "StandardGrouper"
-        self.psegmenter = "SegmentPageByRAST"
-        self.clean = "StandardPreprocessing"
-        self.binarizer = "BinarizeBySauvola"
-        self.graydeskew = "DeskewGrayPageByRAST"
-        self.bindeskew = "DeskewPageByRAST"
-        self.binclean0 = "AutoInvert"
-        self.binclean1 = "RmHalftone"
-        self.binclean2 = "RmBig"
-        self.binout = None
-        self.segout = None
-        self.prebinarized = False
-
-        for key, val in dct.iteritems():
-            if isinstance(val, (list, tuple)):
-                setattr(self, str(key), [x if isinstance(x, dict) \
-                    else self._safe(x) for x in val])
-            else:
-                setattr(self, str(key), val if isinstance(val, dict) \
-                    else self._safe(val))
-
-
-    def keys(self):
-        """Dictionary keys."""
-        return self.__dict__.keys()
-
-    @classmethod
-    def _safe(cls, param):
-        """Convert unicode strings to ocropus-safe values."""
-        if isinstance(param, unicode):
-            return param.encode()
-        else:
-            return param
-
-    def __getitem__(self, item):
-        """Slice notation."""
-        return self.__dict__[item]
-
-    def __repr__(self):
-        """Generic representation."""
-        return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
-
-
-
 class GenericWrapper(base.OcrBase):
     """
     Override certain methods of the OcropusWrapper to
@@ -97,16 +39,14 @@ class GenericWrapper(base.OcrBase):
         "StandardPreprocessing",
     ]
 
-    def __init__(self, logger=None, abort_func=None, params=None):
+    def __init__(self, logger=None, abort_func=None, config=None):
         """
         Initialise an OcropusWrapper object.
         """
-        self.config = parameters.OcrParameters.from_parameters(parameters.TESTPARAMS)
-
+        self.config = config if config is not None \
+                else parameters.OcrParameters.from_parameters(parameters.TESTPARAMS)
         self.abort_func = abort_func
         self.logger = logger if logger else self.get_default_logger()
-        self.params = OcropusParams(params) if params \
-                else OcropusParams({})
 
     @classmethod
     def parameters(cls):
@@ -213,7 +153,6 @@ class GenericWrapper(base.OcrBase):
         regions = ocrolib.RegionExtractor()
         out = dict(columns=[], lines=[], paragraphs=[])
         exfuncs = dict(
-            columns=regions.setPageColumns,
             lines=regions.setPageLines,
             paragraphs=regions.setPageParagraphs,
         )
@@ -236,11 +175,14 @@ class GenericWrapper(base.OcrBase):
         results gathered up to that point.  Keyword arguments can also be
         passed to the callback.
         """
-        page_bin = self.conditional_preprocess(filepath)
+        page_bin = self.conditional_preprocess(filepath, kwargs.get("prebinarized"))
         page_seg = self.get_page_seg(page_bin)
-        if self.params.segout:
-            self.logger.info("Writing segmentation: %s" % self.params.segout)
-            self.write_packed(self.params.segout, page_seg)
+        if kwargs.get("seg_out"):
+            self.logger.info("Writing segmentation: %s" % kwargs.get("seg_out"))
+            self.write_packed(kwargs.get("seg_out"), page_seg)
+        if kwargs.get("bin_out"):
+            self.logger.info("Writing binary: %s" % kwargs.get("bin_out"))
+            self.write_binary(kwargs.get("bin_out"), page_bin)
         pageheight, pagewidth = page_bin.shape
 
         self.logger.info("Extracting regions...")
@@ -314,6 +256,15 @@ class GenericWrapper(base.OcrBase):
 
 
     @check_aborted
+    def standard_preprocess(self, filepath):
+        """
+        One-stop function for preprocessing a file.
+        """
+        page_gray = ocrolib.read_image_gray(filepath)
+        return self.get_page_clean(page_gray)
+
+
+    @check_aborted
     def get_page_clean(self, page_data):
         """
         Binarise a page and apply grey and binary cleanup.
@@ -371,19 +322,16 @@ class GenericWrapper(base.OcrBase):
             return comps[0]
 
 
-    def conditional_preprocess(self, filepath):
+    def conditional_preprocess(self, filepath, prebinarized=False):
         """
         Run preprocessing unless we're told to 
         use a passed-in prebinarized file.
         """
-        if self.params.prebinarized:
+        if prebinarized:
             page_bin = ocrolib.read_image_gray(filepath)
         else:
             page_gray = ocrolib.read_image_gray(filepath)
             page_bin = self.get_page_clean(page_gray)
-            if self.params.binout:
-                self.logger.info("Writing binary: %s" % self.params.binout)
-                self.write_binary(self.params.binout, page_bin)
         return page_bin
 
 
@@ -429,28 +377,6 @@ class GenericWrapper(base.OcrBase):
                     lines = lines[:-1]
                 os.unlink(txt.name)        
         return " ".join(lines)
-
-
-    def _set_component_parameters(self, complookup, components):
-        """
-        Set parameters from the params object on the
-        components passed in *args.
-        """
-        # set all the parameters on our components
-        for component in components:
-            if component is None:
-                continue
-            for name, val in self.params.iteritems():
-                # find the 'long' name for the component with the given short
-                # name, i.e: binsauvola -> BinarizeBySauvola
-                compname = component.__class__.__name__
-                cmatch = re.match("%s__(.+)" % compname, name, re.I)
-                if cmatch is None:
-                    continue
-                param = cmatch.groups()[0]
-                self.logger.info(
-                        "Setting: %s.%s -> %s" % (compname, param, val))
-                component.pset(param, val)
 
 
     @classmethod

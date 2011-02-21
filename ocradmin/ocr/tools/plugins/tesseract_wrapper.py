@@ -10,6 +10,9 @@ from ocradmin.ocrmodels.models import OcrModel
 import generic_wrapper
 reload(generic_wrapper)
 
+from ocradmin.ocrplugins import parameters
+reload(parameters)
+
 
 def main_class():
     return TesseractWrapper
@@ -24,21 +27,14 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
     description = "Wrapper for Tesseract 3.0 OCR"
     capabilities = ["line"]
 
-    _parameters = [
-        {
-            "name": "language_model",
-            "description": "Language Model",
-            "help": "Model for language processing",
-            "multiple": False,
-            "choices": True,
-        },
-    ]
-
     def __init__(self, *args, **kwargs):
         """
         Initialise a TesseractWrapper object.
         """
         super(TesseractWrapper, self).__init__(*args, **kwargs)
+        self.config = kwargs.get("config") if kwargs.get("config") \
+                else parameters.OcrParameters.from_parameters(
+                    dict(name=self.name, parameters=self.parameters()))
         self._tessdata = None
         self._lang = None
         self._tesseract = None
@@ -49,8 +45,10 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
         Extract the lmodel to a temporary directory.  This is
         cleaned up in the destructor.
         """
-        if self.params.lmodel and self._tessdata is None:
-            self.unpack_tessdata(self.params.lmodel)
+        if self._tessdata is None:
+            modpath = OcrModel.objects.get(
+                    name=self.config.language_model).file.path.encode()
+            self.unpack_tessdata(modpath)
         self._tesseract = get_binary("tesseract")
         self.logger.info("Using Tesseract: %s" % self._tesseract)
 
@@ -58,7 +56,20 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
     @classmethod
     def parameters(cls):
         params = copy.deepcopy(generic_wrapper.GenericWrapper.parameters())
-        params.extend(cls._parameters)
+        mods = OcrModel.objects.filter(app="tesseract")
+        lmods = [dict(name=m.name, description=m.description) for m in
+                 mods if m.type == "lang"]
+        _parameters = [
+            {
+                "name": "language_model",
+                "description": "Language Model",
+                "value": "Tesseract Default Lang",
+                "help": "Model for language processing",
+                "multiple": False,
+                "choices": lmods,
+            },
+        ]
+        params.extend(_parameters)
         return params
 
 

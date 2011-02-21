@@ -31,12 +31,12 @@ function loadState() {
 
         // if there's stored parameter data, load it after the parameters
         // have initially been set...
-        pbuilder.parametersInitialised = function() {
-            var pdata = $("input[name='preload_params']").val();
-            if (pdata) {
-                pbuilder.loadData($.parseJSON(pdata));
-            }
-       };
+        //pbuilder.parametersInitialised = function() {
+        //    var pdata = $("input[name='preload_params']").val();
+        //    if (pdata) {
+        //        //pbuilder.loadData($.parseJSON(pdata));
+        //    }
+        //};
                 
 
         /*var winprefix = window.location.pathname.replace(/\//g, "");
@@ -79,7 +79,7 @@ function refreshImage() {
     // have to disable the params AFTER building the param
     // string!
     sdviewer.setWaiting(true);
-    pbuilder.setWaiting(true);
+    //pbuilder.setWaiting(true);
 
     $.ajax({
         url: window.location.pathname,
@@ -149,7 +149,7 @@ function processData(data) {
     }
 
     sdviewer.setWaiting(false);
-    pbuilder.setWaiting(false);
+    //pbuilder.setWaiting(false);
 } 
             
 // keep checking the server for the results of the jobname
@@ -347,10 +347,10 @@ $(function() {
 
     presetmanager = new PresetManager(document.getElementById("preset_container"), presettype);
     presetmanager.onPresetLoadData = function(data) {
-        pbuilder.loadData(data);
+        //pbuilder.loadData(data);
     };
     presetmanager.onPresetClear = function() {
-        pbuilder.reinit();
+        //pbuilder.reinit();
     };
 
     // initialise the uploader...
@@ -363,20 +363,21 @@ $(function() {
     uploader.onUploadsStarted = function(e) {
         // close anything that's already open in the viewer
         sdviewer.close();
-        pbuilder.setWaiting(true);
+        //pbuilder.setWaiting(true);
         $("#dropzone").text("Please wait...").addClass("waiting");
         // slurp up the parameters.  Since the params are build 
         // dynamically this has to be done immediately before the
         // upload commences, hence in the onUploadsStarted handler
-        $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
+        $("#optionsform input, #optionsform select").each(function(i, elem) {
             uploader.registerTextParameter(elem);
         });
     };
     uploader.onUploadsFinished = function(e) {
-        pbuilder.setWaiting(false);        
+        //pbuilder.setWaiting(false);        
         $("#dropzone").text("Drop images here...").removeClass("waiting"); 
     };
 
+    pbuilder = new OCRJS.TestParameterBuilder(document.getElementById("options"));
     loadState();
 
 });

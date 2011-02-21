@@ -12,26 +12,6 @@
             <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
             <input type="hidden" name="preload_params" value="{{preload_params}}" />
 
-            {# Add a binarisation menu (for segmentation only) #}
-            {% if binpresets %}
-            <h4>Preprocessing:</h4>
-            <p>
-                <select id="form_clean" name="clean">
-                    <option value="StandardPreprocessing" selected="selected">Standard</option>
-                    <optgroup label="Presets">
-                    {% for p in binpresets %}
-                        <option value="preset_{{p.pk}}">{{p.name}}</option>                        
-                    {% endfor %}            
-                    </optgroup>
-                </select>
-            </p>
-            {% endif %}
-
-            <h4>Option Presets:</h4>
-            <div id="preset_container">
-            </div>
-
-            <h4>Options:</h4>
             <div id="options">
             </div>
         </form>
