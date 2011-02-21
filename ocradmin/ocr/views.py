@@ -24,6 +24,7 @@ from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, Transcript
 from ocradmin.ocr.tools.manager import PluginManager
 
+from ocradmin.ocrplugins import parameters
 
 class AppException(StandardError):
     """
@@ -65,9 +66,6 @@ def convert(request):
     Save a posted image to the DFS and convert it with Celery.
     """
     context = dict(
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
-        engines=PluginManager.get_provider("line")
     )
     return _ocr_task(
         request,
@@ -383,8 +381,10 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         return render_to_response(template, context,
                         context_instance=RequestContext(request))
 
+    userparams = parameters.OcrParameters.from_post_data(request.GET)._params
+    print "USERPARAMS: ", userparams
     try:
-        paths, userparams = _handle_request(request, request.output_path)
+        paths, params = _handle_request(request, request.output_path)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -397,7 +397,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     asynctasks = []
     for path in paths:
         tid = ocrutils.get_new_task_id()
-        args = (path.encode(), request.output_path.encode(), userparams)
+        args = (path.encode(), request.output_path.encode(), params, userparams)
         kwargs = dict(task_id=tid, loglevel=60, retries=2, queue="interactive")
         ocrtask = OcrTask(
             task_id=tid,

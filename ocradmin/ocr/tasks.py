@@ -144,24 +144,29 @@ class ConvertPageTask(AbortableTask):
     name = "convert.page"
     max_retries = None
 
-    def run(self, filepath, outdir, paramdict, **kwargs):
+    def run(self, filepath, outdir, params, config, **kwargs):
         """
         Runs the convert action.
         """
+        from ocradmin.ocrplugins import parameters
+        logger = self.get_logger(**kwargs)
+        config = parameters.OcrParameters(config)
         # function for the converted to call periodically to check whether
         # to end execution early
-        logger = self.get_logger(**kwargs)
-        logger.info(paramdict)
-        create_intermediate_paths(filepath, outdir, paramdict, logger)
+        logger.info(params)
+        logger.info(config)
+        
+        create_intermediate_paths(filepath, outdir, params, logger)
         converter = PluginManager.get_converter(
-                paramdict.get("engine", "tesseract"), logger=logger,
+                config.name, logger=logger,
                 abort_func=get_abort_function(kwargs["task_id"]),
-                params=paramdict)
+                params=params)
+        converter.config = config
         # init progress to zero (for when retrying tasks)
         progress_func = get_progress_function(kwargs["task_id"])
         progress_func(0)
         out = converter.convert(filepath, progress_func=progress_func)
-        create_binary_deepzoom(paramdict, logger)
+        #create_binary_deepzoom(params, logger)
         return out
 
 

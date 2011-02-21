@@ -7,7 +7,7 @@
 	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
 	<script type='application/javascript' src='/static/js/jquery.hoverIntent.min.js'></script>
 	<script type='application/javascript' src='/static/js/stats.js'></script>
-	<script type='application/javascript' src='/static/js/ocr_parameters.js'></script>
+	<script type='application/javascript' src='/static/js/ocr/testparams.js'></script>
 	<script type='application/javascript' src='/static/js/page_widget.js'></script>
 	<script type='application/javascript' src='/static/js/ocr/convert.js'></script>
 	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
@@ -54,7 +54,11 @@
         {% endif %}
         <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
             <h4>Options:</h4>
-            {% include "includes/ocr_settings.html" %}
+            
+            <div id="options">
+            
+            </div>
+             
             {% if task %}
                 <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
                 <input type="hidden" name="preload_params" value="{{preload_params}}" />

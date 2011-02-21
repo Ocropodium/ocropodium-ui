@@ -329,12 +329,12 @@ class GenericWrapper(base.OcrBase):
         """
         Apply a single preprocessing step.
         """
-        self.logger.debug("Applying preprocessor: %s" % process.name)
+        self.logger.info("Applying preprocessor: %s" % process.name)
         comp = self.load_component(process.name)
         for p in process.value:
-            self.logger.debug("Setting param: %s.%s -> %s" % (process.name, 
-                p["name"], p["value"]))
-            comp.pset(p["name"], p["value"])
+            self.logger.info("Setting param: %s.%s -> %s" % (process.name, 
+                p["name"].encode(), p["value"].encode()))
+            comp.pset(p["name"].encode(), p["value"].encode())
         call = getattr(comp, func)
         return call(data)
 
