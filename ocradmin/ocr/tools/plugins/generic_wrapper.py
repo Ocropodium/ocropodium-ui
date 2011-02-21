@@ -118,6 +118,7 @@ class GenericWrapper(base.OcrBase):
                 "name": "grayscale_preprocessing",
                 "description": "Greyscale Preprocessor",
                 "help": "Filters for preprocessing greyscale images",
+                "value": [],
                 "multiple": True,
                 "choices": cls.get_components(oftypes=["ICleanupGray"], 
                     exclude=cls._ignored_components),
@@ -125,12 +126,14 @@ class GenericWrapper(base.OcrBase):
                 "name": "binarizer",
                 "description": "Binarizer",
                 "help": "Filter for binarizing greyscale images",
+                "value": "BinarizeBySauvola",
                 "multiple": False,
                 "choices": cls.get_components(oftypes=["IBinarize"], 
                     exclude=cls._ignored_components),
             }, {
                 "name": "binary_preprocessing",
                 "description": "Binary Preprocessor",
+                'value': ['DeskewPageByRAST', 'RmBig', 'RmHalftone'],
                 "help": "Filters for preprocessing binary images",
                 "multiple": True,
                 "choices": cls.get_components(oftypes=["ICleanupBinary"], 
@@ -138,6 +141,7 @@ class GenericWrapper(base.OcrBase):
             }, {
                 "name": "page_segmenter",
                 "description": "Page Segmenter",
+                "value": "SegmentPageByRAST",
                 "help": "Algorithm for segmenting binary page images",
                 "multiple": False,
                 "choices": cls.get_components(oftypes=["ISegmentPage"], 
@@ -223,7 +227,8 @@ class GenericWrapper(base.OcrBase):
         return out
 
 
-    def convert(self, filepath, progress_func=None, callback=None, **cbkwargs):
+    def convert(self, filepath, progress_func=None, 
+            callback=None, cbkwargs=None, **kwargs):
         """
         Convert an image file into text.  A callback can be supplied that
         is evaluated before every individual page line is run.  If it does
@@ -251,7 +256,8 @@ class GenericWrapper(base.OcrBase):
         for i in range(1, numlines):
             # test for continuation
             if callback is not None:
-                if not callback(**cbkwargs):
+                args = {} if cbkwargs is None else cbkwargs
+                if not callback(**args):
                     return pagedata
             set_progress(self.logger, progress_func, i, numlines)
             line = regions.extract(page_bin, i, 1)
@@ -281,21 +287,56 @@ class GenericWrapper(base.OcrBase):
         """
         Segment the binary page into a colour-coded segmented images.
         """
-        self.logger.info("Segmenting page with %s" % self.config.page_segmenter.name)
-        try:
-            segmenter = getattr(ocrolib, self.config.page_segmenter.name)()
-            self.logger.info("Loaded %s" % self.config.page_segmenter.name)
-        except AttributeError:
-            # no native-wrapped component found - try loading a python one
-            segmenter = self._load_python_component(self.config.page_segmenter.name)
-        for param in self.config.page_segmenter.value:
-            # find the 'long' name for the component with the given short
-            # name, i.e: binsauvola -> BinarizeBySauvola
-            self.logger.info("Setting: %s.%s -> %s" % (
-                    self.config.page_segmenter.name, param["name"], param["value"]))
-            segmenter.pset(param["name"], param["value"])
-            self.logger.info("YES I'M WORKING")
-        return segmenter.segment(page_bin)
+        return self.apply_processor(
+                self.config.page_segmenter, page_bin, func="segment")
+
+
+    @check_aborted
+    def get_cleaned_grayscale(self, page_data):
+        """
+        Apply grayscale preprocessing.
+        """
+        cleaned = page_data
+        for param in self.config.grayscale_preprocessing:
+            cleaned = self.apply_processor(param, cleaned)
+        return cleaned
+
+
+    @check_aborted
+    def get_cleaned_binary(self, page_data):
+        """
+        Apply grayscale preprocessing.
+        """
+        cleaned = page_data
+        for param in self.config.grayscale_preprocessing:
+            cleaned = self.apply_processor(param, cleaned)
+        return cleaned
+
+
+    @check_aborted
+    def get_page_clean(self, page_data):
+        """
+        Binarise a page and apply grey and binary cleanup.
+        """
+        cleaned = self.get_cleaned_grayscale(page_data)
+        binary, gray = self.apply_processor(
+                self.config.binarizer, cleaned, func="binarize")
+        return self.get_cleaned_binary(binary)
+
+    
+    @check_aborted
+    def apply_processor(self, process, data, func="cleanup"):
+        """
+        Apply a single preprocessing step.
+        """
+        self.logger.debug("Applying preprocessor: %s" % process.name)
+        comp = self.load_component(process.name)
+        for p in process.value:
+            self.logger.debug("Setting param: %s.%s -> %s" % (process.name, 
+                p["name"], p["value"]))
+            comp.pset(p["name"], p["value"])
+        call = getattr(comp, func)
+        return call(data)
 
 
     def convert_lines(self, filepath, linedata):
@@ -338,94 +379,12 @@ class GenericWrapper(base.OcrBase):
         if self.params.prebinarized:
             page_bin = ocrolib.read_image_gray(filepath)
         else:
-            page_bin = self.standard_preprocess(filepath)
+            page_gray = ocrolib.read_image_gray(filepath)
+            page_bin = self.get_page_clean(page_gray)
             if self.params.binout:
                 self.logger.info("Writing binary: %s" % self.params.binout)
                 self.write_binary(self.params.binout, page_bin)
         return page_bin
-
-
-    @check_aborted
-    def standard_preprocess(self, filepath):
-        """
-        Mimic OCRopus's StandardPreprocessing component but
-        allow more flexible param setting.  Somehow.
-        """
-        complookup = self.get_components(
-                oftypes=["IBinarize", "ICleanupGray", "ICleanupBinary"])
-        pagegray = ocrolib.read_image_gray(filepath)
-        self.logger.info("Binarizing with params: %s" % self.params)
-        # init components
-        binarizer = getattr(ocrolib, self.params.binarizer)()
-        graydeskew = None
-        if self.params.graydeskew and self.params.graydeskew != "-":
-            graydeskew = getattr(ocrolib, self.params.graydeskew)()
-        bindeskew = None
-        if self.params.bindeskew and self.params.bindeskew != "-":
-            bindeskew = getattr(ocrolib, self.params.bindeskew)()
-        cleanups = { "grayclean": [], "binclean": [] }
-        for cleantype, cleanlist in cleanups.iteritems():
-            for i in range(0, 10):
-                paramval = self.params.get("%s%s" % (cleantype, i))
-                if paramval and paramval != "-":
-                    try:
-                        cleanlist.append(getattr(ocrolib, paramval)())
-                    except IndexError, err:
-                        self.logger.error(err.message)
-
-        self._set_component_parameters(complookup, [binarizer,
-                bindeskew, graydeskew]
-                + cleanups["grayclean"] + cleanups["binclean"])
-        self.logger.debug("pagegray: type: %s" % type(pagegray))
-        # onwards with cleanup
-        pageout = pagegray
-        deskewed = False
-
-        if 0 and ocrolib.iulib.contains_only(pageout, 0, 255):
-            self.logger.debug("Running BINARY batch clean.")
-            pageout = self.batch_clean(cleanups["binclean"], pagegray)
-            if bindeskew:
-                self.logger.debug("Deskewing with: %s" % self.params.bindeskew)
-                pageout = bindeskew.cleanup(pageout)
-                deskewed = True
-        else:
-            self.logger.debug("Running GRAYSCALE batch clean.")
-            pageout = self.batch_clean(cleanups["grayclean"], pagegray)
-            if graydeskew:
-                self.logger.debug("Deskewing with: %s" % self.params.graydeskew)
-                pageout = graydeskew.cleanup_gray(pageout)
-                deskewed = True
-
-        self.logger.debug("Page out length: %s" % len(pageout))
-        try:
-            pageout, pagegray = binarizer.binarize(pageout)
-        except StandardError, err:
-            self.logger.error("Binarizer failed: %s" % err)
-        pageout = self.batch_clean(cleanups["binclean"], pageout)
-        self.logger.debug("Page out length: %s" % len(pageout))
-        if bindeskew and not deskewed:
-            try:
-                pageout = bindeskew.cleanup(pageout)
-            except StandardError, err:
-                self.logger.error("Binary deskew failed: %s" % err)
-        return pageout
-
-
-    @check_aborted
-    def batch_clean(self, components, pagedata):
-        """
-        Run a set of cleanup components on the given page data.
-        """
-        pageout = pagedata
-        count = 0
-        for component in components:
-            try:
-                pageout = component.cleanup(pageout)
-            except StandardError:
-                self.logger.error("clean%s: %s failed:" % (
-                    count, component.name()))
-            count += 1
-        return pageout
 
 
     @check_aborted
@@ -503,6 +462,14 @@ class GenericWrapper(base.OcrBase):
         out = cls._get_native_components(oftypes, withnames, exclude=exclude)
         out.extend(cls._get_python_components(oftypes, withnames, exclude=exclude))
         return sorted(out, lambda x, y: cmp(x["name"], y["name"]))
+
+    @classmethod
+    def load_component(cls, name):
+        try:
+            comp = getattr(ocrolib, name)()
+        except AttributeError:
+            comp = cls._load_python_component(name)
+        return comp
 
 
     @classmethod

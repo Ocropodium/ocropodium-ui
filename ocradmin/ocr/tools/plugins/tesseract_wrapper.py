@@ -8,6 +8,7 @@ import subprocess as sp
 from ocradmin.ocr.tools import check_aborted, set_progress, convert_to_temp_image, get_binary
 from ocradmin.ocrmodels.models import OcrModel
 import generic_wrapper
+reload(generic_wrapper)
 
 
 def main_class():

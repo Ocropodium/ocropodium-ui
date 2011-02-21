@@ -72,6 +72,8 @@ class OcrParameters(object):
             return [OcrParameters(p) for p in val]
         if isinstance(val, dict):
             return OcrParameters(val)
+        if isinstance(val, unicode):
+            return val.encode()
         else:
             return val
 
@@ -603,6 +605,19 @@ TESTPARAMS = {
             ],
         }, {
             'name': 'language_model',
+            'multiple': False,
+            'value': 'Default Tesseract English',
+            'choices': [
+                {
+                    'description': 'Tesseract Default 3.00 ',
+                    'name': 'Default Tesseract English',
+                    'value': '1',
+                }
+            ], 
+            'help': 'Model for language processing',
+            'description': 'Language Model'
+        }, {
+            'name': 'character_model',
             'multiple': False,
             'value': 'Default Tesseract English',
             'choices': [
