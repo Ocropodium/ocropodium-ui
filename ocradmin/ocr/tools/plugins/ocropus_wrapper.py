@@ -47,8 +47,9 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         Initialise an OcropusWrapper object.
         """
         super(OcropusWrapper, self).__init__(*args, **kwargs)
-        self.config = parameters.OcrParameters.from_parameters(
-                dict(name=self.name, parameters=self.parameters()))
+        self.config = kwargs.get("config") if kwargs.get("config") \
+                else parameters.OcrParameters.from_parameters(
+                    dict(name=self.name, parameters=self.parameters()))
         self._cmodel = None
         self._lmodel = None
         self._trainbin = None
