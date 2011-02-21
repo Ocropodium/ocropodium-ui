@@ -13,7 +13,7 @@ const MAXFONTSIZE = 40;
 // only in global scope for dubugging purposes
 var uploader = null;
 var formatter = null;
-
+var pbuilder = null;
 
 
 // Function to build the lang & char models selects when
@@ -272,7 +272,7 @@ $(function() {
         uploader.onXHRLoad = onXHRLoad;
         uploader.onUploadsStarted = function(e) {
             $("#dropzone").text("Please wait...").addClass("waiting");
-            $("#optionsform input[type='text'], #optionsform select").each(function(i, elem) {
+            $("#optionsform input, #optionsform select").each(function(i, elem) {
                 uploader.registerTextParameter(elem);
             });
         };
@@ -296,8 +296,6 @@ $(function() {
 
     // line formatter object
     formatter = new OCRJS.LineFormatter();
-
-    // fetch the appropriate models...
-    rebuildModelLists($("select[name=engine]").val());    
+    pbuilder = new OCRJS.TestParameterBuilder(document.getElementById("options"));
 });
 

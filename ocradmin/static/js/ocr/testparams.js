@@ -20,6 +20,7 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
         this.init();
 
         this._cache = null;
+        console.log("Called constructor");
     },
 
     init: function() {
@@ -31,7 +32,6 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
     setupEvents: function() {
         var self = this;
         $(".multiple").live("mouseenter", function(event) {
-            console.log("Mouseover : " + this.id);
             var select = $(this).children("select").first();
             var ctrl = $("<div></div>")
                 .addClass("control_manip");
@@ -55,7 +55,6 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
                 left: select.position().left + select.width(),
             }).appendTo(this);
         }).live("mouseleave", function(event) {
-            console.log("Mouseout");
             $(".control_manip", this).remove();
         });
 
@@ -175,7 +174,6 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
                 .appendTo(control);
         });
         control.change(function(event) {
-            console.log("Change event for: " + this.id);
             var newdata = $(this).data($(this).val());
             var section = self.buildSection(container.get(0), newdata); 
             if ($(this).next("div").length)
@@ -207,7 +205,7 @@ OCRJS.TestParameterBuilder = OCRJS.OcrBase.extend({
         }
 
         $.each(data.parameters, function(i, param) {
-            console.log("Building param for: " + i + " " + param.name + " ", param);
+            //console.log("Building param for: " + i + " " + param.name + " ", param);
             container.append(
                 self.buildSection(container.get(0), param, i)
             );
@@ -263,5 +261,5 @@ $(function() {
         pbuilder.saveState();
     }
 
-    pbuilder = new OCRJS.TestParameterBuilder(document.getElementById("options"));
+//    pbuilder = new OCRJS.TestParameterBuilder(document.getElementById("options"));
 });

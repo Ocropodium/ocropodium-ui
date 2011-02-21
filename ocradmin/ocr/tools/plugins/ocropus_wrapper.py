@@ -123,12 +123,14 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         """
         try:
             self._linerec = ocrolib.RecognizeLine()
-            self._linerec.load_native(self.params.cmodel)
+            cmodpath = self._lookup_model_file(self.config.character_model)
+            self._linerec.load_native(cmodpath)
             self._lmodel = ocrolib.OcroFST()
-            lmodpath = self._lookup_model_file(self.config.language_model.name)
+            lmodpath = self._lookup_model_file(self.config.language_model)
+            self.logger.info("Loading file: %s" % lmodpath)
             self._lmodel.load(lmodpath)
-        except (StandardError, RuntimeError), err:
-            raise err
+        except (StandardError, RuntimeError):
+            raise
         if self.params.segmenter:
             self.logger.info("Using line segmenter: %s" % self.params.segmenter)
             self._linerec.pset("segmenter", self.params.segmenter)
