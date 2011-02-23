@@ -101,6 +101,11 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         return params;    
     },
 
+    clearParameters: function() {
+        console.log("Clear parameters");                         
+        this._params = [];
+    },         
+
     uploadPost: function(files) {
         this.onUploadsStarted();
 

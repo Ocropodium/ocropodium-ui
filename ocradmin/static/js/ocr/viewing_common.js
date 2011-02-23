@@ -368,6 +368,7 @@ $(function() {
         // slurp up the parameters.  Since the params are build 
         // dynamically this has to be done immediately before the
         // upload commences, hence in the onUploadsStarted handler
+        uploader.clearParameters();
         $("#optionsform input, #optionsform select").each(function(i, elem) {
             uploader.registerTextParameter(elem);
         });
@@ -377,7 +378,6 @@ $(function() {
         $("#dropzone").text("Drop images here...").removeClass("waiting"); 
     };
 
-    pbuilder = new OCRJS.TestParameterBuilder(document.getElementById("options"));
     loadState();
 
 });

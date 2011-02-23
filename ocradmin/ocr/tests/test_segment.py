@@ -37,13 +37,21 @@ class OcrSegmentTest(TestCase):
         """
         Test OCRing with minimal parameters.
         """
-        self._test_segment_action()        
+        self._test_segment_action({
+            "%options.engine": "ocropus",
+            "%options.engine.ocropus[0].binarizer": 'BinarizeBySauvola',
+            "%options.engine.ocropus[1].page_segmenter": 'SegmentPageByRAST',
+        })        
 
     def test_convert_action_seg(self):
         """
         Test OCRing with variable segmentation.
         """
-        self._test_segment_action({"$psegmenter": "SegmentPageByXYCUTS"})        
+        self._test_segment_action({
+            "%options.engine": "ocropus",
+            "%options.engine.ocropus[0].binarizer": 'BinarizeBySauvola',
+            "%options.engine.ocropus[1].page_segmenter": 'SegmentPageBy1CP',
+        })        
 
     def test_results_action(self):
         """

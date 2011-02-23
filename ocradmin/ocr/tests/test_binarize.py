@@ -38,7 +38,10 @@ class OcrBinarizeTest(TestCase):
         """
         Test OCRing with minimal parameters.
         """
-        self._test_binarize_action()        
+        self._test_binarize_action({
+            "%options.engine": "ocropus",
+            "%options.engine.ocropus[0].binarizer": 'BinarizeBySauvola',
+        })        
 
     def test_results_action(self):
         """

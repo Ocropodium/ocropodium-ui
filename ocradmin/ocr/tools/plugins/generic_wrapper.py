@@ -44,7 +44,8 @@ class GenericWrapper(base.OcrBase):
         Initialise an OcropusWrapper object.
         """
         self.config = config if config is not None \
-                else parameters.OcrParameters.from_parameters(parameters.TESTPARAMS)
+                else parameters.OcrParameters.from_parameters(
+                        dict(name=self.name, value=self.parameters()))
         self.abort_func = abort_func
         self.logger = logger if logger else self.get_default_logger()
 
@@ -57,6 +58,7 @@ class GenericWrapper(base.OcrBase):
         return [{
                 "name": "grayscale_preprocessing",
                 "description": "Greyscale Preprocessor",
+                "type": "list",
                 "help": "Filters for preprocessing greyscale images",
                 "value": [],
                 "multiple": True,
@@ -65,6 +67,7 @@ class GenericWrapper(base.OcrBase):
             }, {
                 "name": "binarizer",
                 "description": "Binarizer",
+                "type": "list",
                 "help": "Filter for binarizing greyscale images",
                 "value": "BinarizeBySauvola",
                 "multiple": False,
@@ -73,6 +76,7 @@ class GenericWrapper(base.OcrBase):
             }, {
                 "name": "binary_preprocessing",
                 "description": "Binary Preprocessor",
+                "type": "object",
                 'value': ['DeskewPageByRAST', 'RmBig', 'RmHalftone'],
                 "help": "Filters for preprocessing binary images",
                 "multiple": True,
@@ -81,6 +85,7 @@ class GenericWrapper(base.OcrBase):
             }, {
                 "name": "page_segmenter",
                 "description": "Page Segmenter",
+                "type": "object",
                 "value": "SegmentPageByRAST",
                 "help": "Algorithm for segmenting binary page images",
                 "multiple": False,
@@ -238,6 +243,8 @@ class GenericWrapper(base.OcrBase):
         """
         Apply grayscale preprocessing.
         """
+        if not hasattr(self.config, "grayscale_preprocessing"):
+            return page_data
         cleaned = page_data
         for param in self.config.grayscale_preprocessing:
             cleaned = self.apply_processor(param, cleaned)
@@ -249,9 +256,12 @@ class GenericWrapper(base.OcrBase):
         """
         Apply grayscale preprocessing.
         """
+        if not hasattr(self.config, "binary_preprocessing"):
+            return page_data
         cleaned = page_data
-        for param in self.config.grayscale_preprocessing:
-            cleaned = self.apply_processor(param, cleaned)
+        for param in self.config.binary_preprocessing:
+            if param is not None:
+                cleaned = self.apply_processor(param, cleaned)
         return cleaned
 
 
@@ -280,9 +290,12 @@ class GenericWrapper(base.OcrBase):
         """
         Apply a single preprocessing step.
         """
-        self.logger.info("Applying preprocessor: %s" % process.name)
+        self.logger.info("Applying preprocessor: %s" % process)
+        self.logger.info("    Name: %s" % process.name)
         comp = self.load_component(process.name)
         for p in process.value:
+            if p is None:
+                continue
             self.logger.info("Setting param: %s.%s -> %s" % (process.name, 
                 p["name"].encode(), p["value"].encode()))
             comp.pset(p["name"].encode(), p["value"].encode())
@@ -450,14 +463,18 @@ class GenericWrapper(base.OcrBase):
             # wrappers.
             try:
                 comp = getattr(ocrolib, cname)()
-                compdict["name"] = cname
-                compdict["description"] = comp.description()
+                compdict = dict(
+                    name=cname,
+                    type="list",
+                    description=comp.description(),
+                    parameters=[])
             except (AttributeError, AssertionError, IndexError):
                 continue
             for paramnum in range(0, comp.plength()):
                 pname = comp.pname(paramnum)
                 compdict["parameters"].append(dict(
                     name=pname,
+                    type="scalar",
                     value=comp.pget(pname),
                     description="",
                     choices=None,
@@ -499,7 +516,7 @@ class GenericWrapper(base.OcrBase):
             # very fragile
             compdict = dict(
                 name=cname,
-                type=ckind,
+                type="list",
                 parameters=[],
                 description=comp.description()
             )
@@ -508,6 +525,7 @@ class GenericWrapper(base.OcrBase):
                 compdict["parameters"].append(dict(
                     name=pname,
                     description="",
+                    type="scalar",
                     value=comp.pget(pname),
                     choices=None,
                 ))

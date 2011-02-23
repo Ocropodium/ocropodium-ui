@@ -140,8 +140,8 @@ def update_task(request, task_pk):
     redirecting to the transcript page.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
-    _, userparams = _handle_request(request, request.output_path)
-    task.args = (task.args[0], task.args[1], userparams)
+    _, config, params = _handle_request(request, request.output_path)
+    task.args = (task.args[0], task.args[1], params, config)
     task.save()
     try:
         _retry_celery_task(task)
@@ -381,10 +381,8 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         return render_to_response(template, context,
                         context_instance=RequestContext(request))
 
-    userparams = parameters.OcrParameters.from_post_data(request.GET)._params
-    print "USERPARAMS: ", userparams
     try:
-        paths, params = _handle_request(request, request.output_path)
+        paths, config, params = _handle_request(request, request.output_path)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -397,7 +395,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     asynctasks = []
     for path in paths:
         tid = ocrutils.get_new_task_id()
-        args = (path.encode(), request.output_path.encode(), params, userparams)
+        args = (path.encode(), request.output_path.encode(), params, config)
         kwargs = dict(task_id=tid, loglevel=60, retries=2, queue="interactive")
         ocrtask = OcrTask(
             task_id=tid,
@@ -409,9 +407,17 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             kwargs=kwargs,
         )
         ocrtask.save()
-        asynctasks.append(
-            (os.path.basename(path),
-                celerytask.apply_async(args=args, **kwargs)))
+        try:
+            asynctasks.append(
+                (os.path.basename(path),
+                    celerytask.apply_async(args=args, **kwargs)))
+        except Exception, err:
+            print "PARAMS: %s" % params
+            print "CONFIG: %s" % config
+            print err
+            for t in traceback.extract_stack():
+                print t
+            raise
     try:
         # aggregate the results.  If necessary wait for tasks.
         out = []
@@ -427,7 +433,6 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         transaction.commit()
         return _format_response(request, out)
     except Exception, err:
-        print err
         transaction.rollback()
         return HttpResponse(
             simplejson.dumps({
@@ -567,7 +572,8 @@ def _handle_streaming_upload(request, outdir):
     tmpfile = file(fpath, "wb")
     tmpfile.write(request.raw_post_data)
     tmpfile.close()
-    return [fpath], _get_best_params(request.GET.copy())
+    config = parameters.parse_post_data(request.GET)
+    return [fpath], config, _cleanup_params(request.GET)
 
 
 def _handle_multipart_upload(request, outdir):
@@ -579,114 +585,18 @@ def _handle_multipart_upload(request, outdir):
         paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
     else:
         paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
-    return paths, _get_best_params(request.POST.copy())
+    config = parameters.parse_post_data(request.POST)
+    return paths, config, _cleanup_params(request.POST)
 
-
-def _get_preset_data(param):
+def _cleanup_params(data):
     """
-    Fetch a preset by primary key and return its data
-    dict for merging into OCR params.  Try to get the
-    preset via primary key (as used via the web UI)
-    or name (as used via Curl).
-    """
-    pmatch = re.match("(\d+)", param)
-    data = None
-    #keyval = {}
-    if pmatch:
-        keyval = dict(pk=pmatch.groups()[0])
-    else:
-        keyval = dict(name=param)
-
-    try:
-        preset = OcrPreset.objects.get(**keyval)
-        data = preset.data
-    except OcrPreset.DoesNotExist:
-        pass
-    return data
-
-
-def _cleanup_params(postdict, unused):
-    """
-    Remove anything in the params that we don't want
-    to store as part of the convert job.  Note: the
-    dict param IS mutable.
-    """
-    for param in unused:
-        try:
-            del postdict[param]
-        except KeyError:
-            pass
-    return postdict
-
-
-def _strip_non_params(postdict):
-    """
-    Remove the initial symbol denoting an OCR
-    parameter: '$'
+    Remove OCR-type params.
     """
     cleaned = {}
-    for key, value in postdict.iteritems():
-        if key.startswith("$"):
-            cleaned[key[1:]] = value
+    for k, v in data.iteritems():
+        if not k.startswith(("$","%","@")):
+            cleaned[k] = v
     return cleaned            
-
-
-def _get_best_params(postdict, with_prefix=None):
-    """
-    Attempt to determine the best params if not specified in
-    POST.  This is contingent on data in the models table.
-    TODO: Make this less horrible
-    """
-    cleanpost = _strip_non_params(postdict)
-    userparams = {}
-    cleanedparams = {}
-    if with_prefix is not None:
-        for key, value in cleanpost.iteritems():
-            if key.startswith(with_prefix):
-                cleanedparams[key.replace(with_prefix, "", 1)] = value
-        if len(cleanedparams) == 0:
-            return {}
-    else:
-        cleanedparams = userparams = cleanpost
-
-    # default to tesseract if no 'engine' parameter...
-    userparams["engine"] = cleanedparams.get("engine", "tesseract")
-
-    # get the bin and seg params.  These are either dicts or default strings
-    segparam = cleanedparams.get("psegmenter", "0")
-    segdata = _get_preset_data(segparam)
-    if segdata is not None:
-        userparams.update(segdata)
-    else:
-        userparams["psegmenter"] = "SegmentPageByRAST"
-
-    binparam = cleanedparams.get("clean", "0")
-    bindata = _get_preset_data(binparam)
-    if bindata is not None:
-        userparams.update(bindata)
-    else:
-        userparams["clean"] = "StandardPreprocessing"
-
-    # get the lmodel/cmodel, either model object paths or defaults
-    for modparam in ("cmodel", "lmodel"):
-        try:
-            model = OcrModel.objects.get(name=cleanedparams.get(modparam, "?"))
-            userparams[modparam] = model.file.path
-        except OcrModel.DoesNotExist:
-            # try and choose the best model accordingly - this is a model
-            # named "Default Something"
-            modtype = "char" if modparam == "cmodel" else "lang"
-            try:
-                model = OcrModel.objects.filter(
-                    name__icontains="default",
-                    app__iexact=userparams["engine"],
-                    type__iexact=modtype,
-                )[0]
-                userparams[modparam] = model.file.path
-            except IndexError:
-                userparams[modparam] = "???"
-
-    return userparams
 
 
 def _abort_celery_task(task):
