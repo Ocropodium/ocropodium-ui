@@ -178,21 +178,22 @@ class ConvertLineTask(AbortableTask):
     name = "convert.line"
     max_retries = None
 
-    def run(self, filepath, outdir, paramdict, **kwargs):
+    def run(self, filepath, outdir, params, config, **kwargs):
         """
         Runs the convert action.
         """
         # function for the converted to call periodically to check whether
         # to end execution early
         logger = self.get_logger(**kwargs)
-        logger.info(paramdict)
-        create_intermediate_paths(filepath, outdir, paramdict, logger)
+        logger.info(params)
+        create_intermediate_paths(filepath, outdir, params, logger)
         converter = PluginManager.get_converter(
-                paramdict.get("engine", "tesseract"),
-                logger=logger, abort_func=None)
-        paramdict["prebinarized"] = True
+                config.name,
+                logger=logger, abort_func=None, config=config)
+        params["prebinarized"] = True
         return converter.convert_lines(
-                paramdict.get("binout").encode(), paramdict.get("coords"))
+                paramdict.get("binout").encode(),
+                paramdict.get("coords"), **params)
 
 
 class BinarizePageTask(AbortableTask):

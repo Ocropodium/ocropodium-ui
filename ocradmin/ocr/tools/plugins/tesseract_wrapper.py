@@ -63,6 +63,7 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
             {
                 "name": "language_model",
                 "description": "Language Model",
+                "type": "scalar",
                 "value": "Tesseract Default Lang",
                 "help": "Model for language processing",
                 "multiple": False,

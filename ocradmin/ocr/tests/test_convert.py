@@ -12,6 +12,9 @@ from django.utils import simplejson
 from ocradmin.ocr.tests import testutils
 from ocradmin.ocrtasks.models import OcrTask
 
+from ocradmin.ocrplugins import parameters
+
+
 TESTFILE = "etc/simple.png"
 
 class OcrConvertTest(TestCase):
@@ -42,38 +45,33 @@ class OcrConvertTest(TestCase):
         """
         Test OCRing with minimal parameters.
         """
-        self._test_convert_action()        
+        self._test_convert_action(parameters.TESTPOST_OCROPUS)        
 
     def test_convert_action_tess(self):
         """
         Test OCRing with Tesseract as the engine.
         """
-        self._test_convert_action({
-            "engine": "tesseract",
-            "lmodel": "Default Tesseract English"
-        })        
+        self._test_convert_action(parameters.TESTPOST)        
 
     def test_convert_action_ocropus(self):
         """
         Test OCRing with OCRopus as the engine.
         """
-        self._test_convert_action({
-            "engine": "ocropus", 
-            "cmodel": "Default Character Model",
-            "lmodel": "Default Language Model"
-        })        
+        self._test_convert_action(parameters.TESTPOST_OCROPUS)        
 
     def test_convert_action_seg(self):
         """
         Test OCRing with variable segmentation.
         """
-        self._test_convert_action({"$psegmenter": "SegmentPageByXYCUTS"})        
+        self._test_convert_action(parameters.TESTPOST_OCROPUS_SEG)        
 
     def test_convert_plain_text(self):
         """
         Fetch results and request plain text back.
         """
-        r = self._get_convert_response(params={"format":"text"}, headers={"ACCEPT":"text/plain"})
+        params = {"format": "text"}
+        params.update(parameters.TESTPOST)
+        r = self._get_convert_response(params=params, headers={"accept":"text/plain"})
         self.assertEqual(r.status_code, 200)
         # check the response is not JSON
         self.assertRaises(ValueError, simplejson.loads, r.content)
@@ -83,7 +81,9 @@ class OcrConvertTest(TestCase):
         """
         Fetch results and request plain text back.
         """
-        r = self._get_convert_response(params={"format":"json"})
+        params = {"format": "json"}
+        params.update(parameters.TESTPOST)
+        r = self._get_convert_response(params=params)
         self.assertEqual(r.status_code, 200)
         # check the response IS JSON at this stage
         content = simplejson.loads(r.content)
@@ -109,7 +109,7 @@ class OcrConvertTest(TestCase):
         """
         Test viewing the transcript for a new batch.
         """
-        r = self._get_convert_response()
+        r = self._get_convert_response(parameters.TESTPOST)
         self.assertEqual(r.status_code, 200)
         task = OcrTask.objects.all().order_by("-created_on")[0]
         r = self.client.get("/ocr/transcript/%s/" % task.pk)
@@ -119,7 +119,7 @@ class OcrConvertTest(TestCase):
         """
         Test viewing the edit task page.
         """
-        r = self._get_convert_response()
+        r = self._get_convert_response(parameters.TESTPOST)
         self.assertEqual(r.status_code, 200)
         task = OcrTask.objects.all().order_by("-created_on")[0]
         r = self.client.get("/ocr/convert/%s/" % task.pk)
@@ -129,12 +129,12 @@ class OcrConvertTest(TestCase):
         """
         Test updating a tasks parameters.
         """
-        r = self._get_convert_response()
+        r = self._get_convert_response(parameters.TESTPOST)
         self.assertEqual(r.status_code, 200)
         task = OcrTask.objects.all().order_by("-created_on")[0]
         r = self.client.post(
             "/ocr/update_task/%s/" % task.pk,
-            {"$psegmenter": "SegmentPageBy1CP",},                
+            {"%options.tesseract[1].psegmenter": "SegmentPageBy1CP",},                
         )
         self.assertEqual(r.status_code, 302)
 
@@ -150,6 +150,7 @@ class OcrConvertTest(TestCase):
         # check we recieve JSON back
         self.assert_(r.content, "No content returned")
         content = simplejson.loads(r.content)
+        #print content
         self.assertEqual(len(content), 1)
         # Note: we'd not normally expect any results here because we're
         # not using the "nohang" parameter, but since tests are executed 

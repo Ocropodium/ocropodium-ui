@@ -1,6 +1,130 @@
 import re
 
 
+INDEX_REGEXP = re.compile("(?P<base>.+)\[(?P<index>\d+)\]$")
+
+def parse_post_data(postdict):
+    """
+    Parse POST data into a params structure.
+    """
+    # parse the postdict into a conventient, sorted
+    # array of tuples:
+    # [(name, value), (name, value)]
+    post = []
+    for k, v in postdict.iteritems():
+        if not k.startswith(("$", "@", "%")):
+            continue
+        post.append((k, v))
+    post.sort()
+    paramstruct = _initialise_param_structure(post)
+    params = _populate_param_structure(
+            post, paramstruct)
+    return params
+
+
+def _initialise_param_structure(post):
+    """
+    Build the initial parameter structure.  TODO: Make this
+    less hideous.
+    """
+    cleaned = dict()
+    for name, value in post:
+        last = None
+        index = None
+        lastindex = None
+        parts = name.split(".")
+        parts.pop(0)
+        parts.pop(0)
+        curr = cleaned
+        for part in parts:
+            partcopy = part
+            indexmatch = INDEX_REGEXP.search(part)
+            if indexmatch:
+                part, _index = indexmatch.groups()
+                index = int(_index)
+            else:
+                index = None
+            found = False
+            if isinstance(curr, list):
+                for item in curr:
+                    if item is not None and item["name"] == part:
+                        curr = item["value"]
+                        found = True
+                        break
+            else:
+                if curr.get("name") == part:
+                    curr = curr.get("value")
+                    found = True
+            if found is False:
+                next = [] if index is not None else {}
+                if not isinstance(curr, list):
+                    curr["name"] = part
+                    curr["value"] = next
+                    curr = curr["value"]
+                else:
+                    while len(curr) < lastindex + 1:
+                        curr.append(None)
+                    curr[lastindex] = dict(name=part, value=next)
+                    curr = curr[lastindex]["value"]
+            last = partcopy
+            lastindex = index
+    return cleaned
+
+
+def _populate_param_structure(post, params):
+    """
+    Populate the parameter data structure
+    with values.
+    """
+    for name, value in post:
+        last = None
+        index = None
+        lastindex = None
+        parts = name.split(".")
+        if len(parts) < 3:
+            continue
+        parts.pop(0)
+        parts.pop(0)
+        dest = parts.pop()
+        curr = params
+        for part in parts:
+            partcopy = part
+            indexmatch = INDEX_REGEXP.search(part)
+            if indexmatch:
+                part, _index = indexmatch.groups()
+                index = int(_index)
+            else:
+                index = None
+            if isinstance(curr, list):
+                for item in curr:
+                    if item is not None and item["name"] == part:
+                        curr = item["value"]
+                        break
+            else:
+                if curr.get("name") == part:
+                    curr = curr.get("value")
+        if not isinstance(curr, list): 
+            continue
+        for param in curr:
+            if param is None or param["name"] != dest:
+                continue
+            if not isinstance(param["value"], dict):
+                continue
+            if len(param["value"]) == 0:
+                if name.startswith("$"):
+                    param["value"] = value
+                else:
+                    param["value"] = dict(
+                            name=value, value=[])
+            break
+    return params
+
+
+
+
+
+
+
 class OcrParameters(object):
     """
     Class to access more elegantly access an OCR
@@ -94,6 +218,14 @@ class OcrParameters(object):
 
 
     @classmethod
+    def from_post_data(cls, post):
+        """
+        Parse an object from post data.
+        """
+        return OcrParameters(parse_post_data(post))
+
+
+    @classmethod
     def _parameter_from_option(cls, option):
         param = {}
         param["name"] = option.get("name")
@@ -128,125 +260,6 @@ class OcrParameters(object):
         return param                        
 
         
-    @classmethod
-    def from_post_data(cls, postdict):
-        """
-        Parse POST data into an OcrParameters object.
-        """
-        # parse the postdict into a conventient, sorted
-        # array of tuples:
-        # [(name, value), (name, value)]
-        post = []
-        for k, v in postdict.iteritems():
-            if not k.startswith("$options"):
-                continue
-            post.append((k, v))
-        post.sort()
-        paramstruct = cls._initialise_param_structure(post)
-        params = cls._populate_param_structure(
-                post, paramstruct)
-        return OcrParameters(params)
-
-
-    @classmethod
-    def _initialise_param_structure(cls, post):
-        """
-        Build the initial parameter structure.  TODO: Make this
-        less hideous.
-        """
-        cleaned = dict()
-        idxre = re.compile("(?P<base>.+)\[(?P<index>\d+)\]$")
-        for name, value in post:
-            last = None
-            index = None
-            lastindex = None
-            parts = name.split(".")
-            parts.pop(0)
-            parts.pop(0)
-            curr = cleaned
-            for part in parts:
-                partcopy = part
-                indexmatch = idxre.search(part)
-                if indexmatch:
-                    part, _index = indexmatch.groups()
-                    index = int(_index)
-                else:
-                    index = None
-                found = False
-                if isinstance(curr, list):
-                    for item in curr:
-                        if item is not None and item["name"] == part:
-                            curr = item["value"]
-                            found = True
-                            break
-                else:
-                    if curr.get("name") == part:
-                        curr = curr.get("value")
-                        found = True
-                if found is False:
-                    next = [] if index is not None else {}
-                    if not isinstance(curr, list):
-                        curr["name"] = part
-                        curr["value"] = next
-                        curr = curr["value"]
-                    else:
-                        while len(curr) < lastindex + 1:
-                            curr.append(None)
-                        curr[lastindex] = dict(name=part, value=next)
-                        curr = curr[lastindex]["value"]
-                last = partcopy
-                lastindex = index
-        return cleaned
-
-
-    @classmethod
-    def _populate_param_structure(cls, post, params):
-        """
-        Populate the parameter data structure
-        with values.
-        """
-        idxre = re.compile("(?P<base>.+)\[(?P<index>\d+)\]$")
-        for name, value in post:
-            last = None
-            index = None
-            lastindex = None
-            parts = name.split(".")
-            if len(parts) < 3:
-                continue
-            parts.pop(0)
-            parts.pop(0)
-            dest = parts.pop()
-            curr = params
-            for part in parts:
-                partcopy = part
-                indexmatch = idxre.search(part)
-                if indexmatch:
-                    part, _index = indexmatch.groups()
-                    index = int(_index)
-                else:
-                    index = None
-                if isinstance(curr, list):
-                    for item in curr:
-                        if item is not None and item["name"] == part:
-                            curr = item["value"]
-                            break
-                else:
-                    if curr.get("name") == part:
-                        curr = curr.get("value")
-            if isinstance(curr, list): 
-                for param in curr:
-                    if param is None or param["name"] != dest:
-                        continue
-                    if not isinstance(param["value"], dict):
-                        continue
-                    if len(param["value"]) == 0:
-                        param["value"] = value
-                    break
-        return params
-
-
-
-
 
 
 TESTDATA = {'name': u'tesseract',
@@ -644,23 +657,72 @@ PAGESEG = {
 
 
 TESTPOST = {
+    u'@options.engine.tesseract[0].grayscale_preprocessing[0]': None,
     u'$options.engine.tesseract[2].binary_preprocessing[1].RmBig[2].minaspect': u'0.03',
     u'$options.engine.tesseract[2].binary_preprocessing[1].RmBig[0].mh': u'100',
     u'$options.engine.tesseract[2].binary_preprocessing[2].RmHalftone[1].threshold': u'4',
     u'$options.engine.tesseract[2].binary_preprocessing[2].RmHalftone[0].factor': u'3',
     u'$options.engine.tesseract[1].binarizer.BinarizeBySauvola[0].k': u'0.3',
-    u'$options.engine.tesseract[3].page_segmenter': u'SegmentPageByXYCUTS',
-    u'$options.engine.tesseract[2].binary_preprocessing[2]': u'RmHalftone',
+    u'@options.engine.tesseract[3].page_segmenter': u'SegmentPageByXYCUTS',
+    u'@options.engine.tesseract[2].binary_preprocessing[2]': u'RmHalftone',
     u'$options.engine.tesseract[2].binary_preprocessing[1].RmBig[4].max_n': u'50000',
     u'$options.engine.tesseract[2].binary_preprocessing[1].RmBig[1].mw': u'300',
     u'$options.engine.tesseract[2].binary_preprocessing[1].RmBig[3].maxaspect': u'30',
-    u'$options.engine': [u'tesseract'], u'$options.engine.tesseract[2].binary_preprocessing[0]': u'AutoInvert',
+    u'$options.engine': u'tesseract',
+    u'@options.engine.tesseract[2].binary_preprocessing[0]': u'AutoInvert',
     u'$options.engine.tesseract[2].binary_preprocessing[0].AutoInvert[1].minheight': u'100',
     u'$options.engine.tesseract[2].binary_preprocessing[0].AutoInvert[0].fraction': u'0.7',
     u'$options.engine.tesseract[2].binary_preprocessing[2].RmHalftone[2].max_n': u'20000',
     u'$options.engine.tesseract[1].binarizer.BinarizeBySauvola[1].w': u'40',
     u'$options.engine.tesseract[4].language_model': u'Default Tesseract English',
-    u'$options.engine.tesseract[1].binarizer': u'BinarizeBySauvola',
-    u'$options.engine.tesseract[2].binary_preprocessing[1]': u'RmBig'
+    u'@options.engine.tesseract[1].binarizer': u'BinarizeBySauvola',
+    u'@options.engine.tesseract[2].binary_preprocessing[1]': u'RmBig'
+}
+
+
+TESTPOST_OCROPUS = {
+    '%options.engine': 'ocropus',
+#    '@options.engine.ocropus[0].grayscale_preprocessing[0]': None,
+    '%options.engine.ocropus[1].binarizer': 'BinarizeBySauvola',
+    '$options.engine.ocropus[1].binarizer.BinarizeBySauvola[0].k': 0.3,
+    '$options.engine.ocropus[1].binarizer.BinarizeBySauvola[1].w': 40,
+    '%options.engine.ocropus[2].binary_preprocessing[0]': 'AutoInvert',
+    '$options.engine.ocropus[2].binary_preprocessing[0].AutoInvert[0].fraction': 0.7,
+    '$options.engine.ocropus[2].binary_preprocessing[0].AutoInvert[1].minheight': 100,
+    '%options.engine.ocropus[2].binary_preprocessing[1]': 'RmBig',
+    '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[0].mh': 100,
+    '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[1].mw': 300,
+    '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[2].minaspect': 0.03,
+    '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[3].maxaspect': 30,
+    '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[4].max_n': 50000,
+    '%options.engine.ocropus[2].binary_preprocessing[2]': 'RmHalftone',
+    '$options.engine.ocropus[2].binary_preprocessing[2].RmHalftone[0].factor': 3,
+    '$options.engine.ocropus[2].binary_preprocessing[2].RmHalftone[1].threshold': 4,
+    '$options.engine.ocropus[2].binary_preprocessing[2].RmHalftone[2].max_n': 20000,
+    '%options.engine.ocropus[3].page_segmenter': 'SegmentPageByRAST',
+    '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST[0].all_pixels': 0,
+    '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST[1].gap_factor': 10,
+    '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST[2].max_results': 1000,
+    '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST[3].use_four_line_model': 0,
+    '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST[4].max_descender': 20,
+    '$options.engine.ocropus[4].character_model': 'Ocropus Default Char',
+    '$options.engine.ocropus[5].language_model': 'Ocropus Default Lang',
+}
+
+TESTPOST_OCROPUS_SEG = {
+    '%options.engine': 'ocropus',
+    '%options.engine.ocropus[1].binarizer': 'BinarizeBySauvola',
+    '%options.engine.ocropus[3].page_segmenter': 'SegmentPageBy1CP',
+    '$options.engine.ocropus[4].character_model': 'Ocropus Default Char',
+    '$options.engine.ocropus[5].language_model': 'Ocropus Default Lang',
+}
+
+
+TESTPOST_OCROPUS_BIN = {
+    '%options.engine': 'ocropus',
+    '%options.engine.ocropus[1].binarizer': 'BinarizeByOTSU',
+    '%options.engine.ocropus[3].page_segmenter': 'SegmentPageByRAST1',
+    '$options.engine.ocropus[4].character_model': 'Ocropus Default Char',
+    '$options.engine.ocropus[5].language_model': 'Ocropus Default Lang',
 }
 

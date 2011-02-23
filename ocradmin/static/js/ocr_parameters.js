@@ -1,374 +1,265 @@
-// Try and coerce messy parameter-building logic into slightly less messy
-// object.  The challenge here is to support multiple params of the same
-// type, i.e. the binclean[0-10] params used by the pre-processing stage.
-// FIXME: This is basically write-only ATM.
 
+RegExp.escape = function(text) {
+  if (!arguments.callee.sRE) {
+    var specials = [
+      '/', '.', '*', '+', '?', '|',
+      '(', ')', '[', ']', '{', '}', '\\'
+    ];
+    arguments.callee.sRE = new RegExp(
+      '(\\' + specials.join('|\\') + ')', 'g'
+    );
+  }
+  return text.replace(arguments.callee.sRE, '\\$1');
+}
 
-var OCRJS = OCRJS || {};
+OCRJS = OCRJS || {};
+OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
+    constructor: function(parent) {
+        this.base(parent);
+        this.parent = parent;
+        this.init();
 
-
-var ParameterBuilder = OCRJS.OcrBase.extend({
-    constructor: function(parent, ctypes, options) {
-        this.base(parent, options);
-        this._url = "/ocr/components?" + $.map(ctypes, function(c, i) {
-                return "type=" + c;
-        }).join("&"),
-
-        this._container = $(parent);
-
-        // cache of parameter data, fetched from the server
-        this._componentdata = null,
-
-        // the list of components to build initially, set via
-        // registerComponent
-        this._components = [],
-
-        // meta-component - component containing other components
-        this._metacomponent = null,
-
-        // track the number of multiple params of each type
-        this._multiples = {},
-
-        // regrettable need to map component names against
-        // their respective component types.  TODO: Make this
-        // go away
-        this._namemap = {
-            binclean:   "ICleanupBinary",
-            grayclean:  "ICleanupGray",
-            binarizer:  "IBinarize",
-            bindeskew:  "ICleanupBinary",        
-            graydeskew: "ICleanupGray",  
-            psegmenter: "ISegmentPage",
-            segmenter:  "ISegmentLine",
-            grouper:    "IGrouper",
-        };
-        
-        this.setupEvents();
+        this._cache = null;
+        console.log("Called constructor");
     },
 
-
+    init: function() {
+        var self = this;
+        self.setupEvents();
+        self.queryOptions(null, null);
+    },
 
     setupEvents: function() {
         var self = this;
-
-        // rebuild the params when components change
-        $(".ocroption").live("change", function(e) {
-            self.setComponentParams($(this).val(), $(this).parent("div").nextAll("div.compparam"));
+        $(".multiple").live("mouseenter", function(event) {
+            var select = $(this).children("select").first();
+            var ctrl = $("<div></div>")
+                .addClass("control_manip");
+            var plus = $("<div></div>")
+                .addClass("ui-icon ui-icon-plus")
+                .addClass("control_manip_add")
+                .data("ctrl", this)
+                .appendTo(ctrl)
+                .css("float", "left");
+            var minus = $("<div></div>")
+                .addClass("ui-icon ui-icon-minus")
+                .addClass("control_manip_remove")
+                .appendTo(ctrl)
+                .data("ctrl", this)
+                .css("float", "left");
+            ctrl.css({
+                position: "absolute",
+                float: "left",
+                width: "40px",
+                top: select.position().top,
+                left: select.position().left + select.width(),
+            }).appendTo(this);
+        }).live("mouseleave", function(event) {
+            $(".control_manip", this).remove();
         });
 
-        $(".compsel").live('mouseenter mouseleave', function(event) {
-            if (event.type == 'mouseover') {
-                $(this).children("input[type='button']").css("opacity", 1);
-            } else {
-                $(this).children("input[type='button']").css("opacity", 0);
-            }
+        $(".control_manip_remove").live("click", function(event) {
+            var elem = $(this).data("ctrl");
+            $(elem).detach();
+            self.renumberMultiples();
         });
 
-        $(".addmulti").live("click", function(e) {
-            var compname = $(this).prev("select").attr("name");
-            var thisdiv = $(this).parent("div").parent("div");
-            var newdiv = thisdiv.clone();
-            newdiv.children("select").val("-");
-            newdiv.children("div.compparam").html("");
-            thisdiv.after(newdiv);
-            self.renumberMultiComponents(compname);
-        });
-
-        $(".remmulti").live("click", function(e) {
-            var compname = $(this).prevAll("select").attr("name");
-            $(this).parent("div").parent("div").remove();
-            self.renumberMultiComponents(compname);
+        $(".control_manip_add").live("click", function(event) {            
+            var elem = $(this).data("ctrl");
+            // clone the element with both data and events,
+            // then remove any existing hover controls and
+            // trigger a rebuild of the section
+            var clone = $(elem).clone(true)  
+                .find(".control_manip")      
+                .remove()
+                .end()
+                .insertAfter(elem)
+                .find("select")
+                .change();
         });
     },
 
+    renumberMultiples: function(baseid) {
+        var base = baseid.replace(/\[\d+\]_ctrl$/, "");                           
+        var re = new RegExp(RegExp.escape(base) + "\\[\\d+\\]", "g");
+        $(".multiple[id^='" + base + "']").each(function(index, elem) {
+            var newid = base + "[" + index + "]";                        
+            $(elem).attr("id", $(elem).attr("id").replace(re, newid))
+                .find("*").each(function(i, e) {
+                $.each(e.attributes, function(j, attrib) {
+                    if (attrib.value.match(re)) {
+                        attrib.value = attrib.value.replace(re, newid);
+                    }
+                });
+            });
+        });
+    },                 
 
-
-    // indicate we're doing something
-    setWaiting: function(wait) {
-        wait = wait || false;
-        $(".ocroption, .compparam > input").attr("disabled", wait);
-        //container.toggleClass("waiting", wait);
+    queryOptions: function(parent) {
+        var self = this;
+        var parent = parent || self.parent;
+        var url = "/ocrplugins/query/";
+        $.ajax({
+            url: url,
+            type: "GET",
+            error: OCRJS.ajaxErrorHandler,
+            success: function(data) {
+                self._cache = data;
+                $(parent).append(
+                    self.buildSection(parent, data)
+                );
+            },
+        });
     },
 
-    // return a hash of param data
-    data: function() {
-        var params = {};
-        $(".ocroption, .compparam > input").each(function(i, p) {
-            params[$(p).attr("name")] = $(p).val();
+    getIdent: function(parent, data, index) {
+        var ident;
+        if (index != null)
+            ident = parent.id + "[" + index + "]" + "." + data.name;
+        else
+            ident = parent.id + "." + data.name;
+        return data.multiple ? (ident + "[0]") : ident;
+    },
+
+    getKeyName: function(ident, data) {
+        return (data.type == "list"
+                ? "@"
+                : (data.type == "object" ? "%" : "$")) + ident;
+    },              
+
+    buildSection: function(parent, data, index) {
+        // build a section for one parameter and its
+        // children
+        if (!data)
+            return;
+        var self = this;
+        var ident = self.getIdent(parent, data, index);
+        var container = $("<div></div>")
+            .attr("id", ident)
+            .addClass("param_section");
+        if (data.choices) {
+            self.buildChoicesSection(container, ident, data);
+        } else if (data.parameters) {
+            self.buildParameterList(parent, container, ident, data);
+        } else {
+            self.buildParameterSection(container, ident, data);
+        } 
+        return container;
+    },
+
+    buildChoicesSection: function(container, ident, data) {
+        var self = this;                             
+        // fetch more data if we need to...
+        if (data.choices === true) {
+            var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
+            //parts.push(data.name);
+            $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
+                self.buildChoicesSection(container, ident, data);
+            });
+            return;
+        }
+
+        var label = $("<label></label>")
+            .attr("for", ident + "_ctrl")
+            .attr("title", data.description)
+            .text(data.name)
+            .appendTo(container);
+        var control = $("<select></select>")
+            .attr("id", ident + "_ctrl")
+            .addClass("option_select")
+            .attr("name", self.getKeyName(ident, data))
+            .appendTo(container);
+        if (data.multiple)
+            container.addClass("multiple");
+        var option = $("<option></option>");
+        $.each(data.choices, function(i, choice) {
+            control.data(choice.name, choice);
+            option.clone()
+                .attr("value", choice.value == null ? choice.name : choice.value)
+                .text(choice.name)
+                .appendTo(control);
         });
-        return params;    
+        control.change(function(event) {
+            var newdata = $(this).data($(this).val());
+            var section = self.buildSection(container.get(0), newdata); 
+            if ($(this).next("div").length)
+                $(this).next("div").replaceWith(section);
+            else
+                container.append(section);                    
+            self.renumberMultiples(this.id);
+        });
+        if (data.choices.length) {
+            self.loadOptionState(control, data.choices[0].name);
+            control.change();
+        }
+    },                  
+
+    buildParameterList: function(parent, container, ident, data) {
+        var self = this;
+
+        // fetch more data if we need to...
+        if (data.parameters === true) {
+            var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
+            $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
+                var section = self.buildSection(parent, data);
+                if ($(parent).children("div").length)
+                    $(parent).children("div").replaceWith(section);
+                else
+                    $(parent).append(section);                    
+            });
+            return;
+        }
+
+        $.each(data.parameters, function(i, param) {
+            //console.log("Building param for: " + i + " " + param.name + " ", param);
+            container.append(
+                self.buildSection(container.get(0), param, i)
+            );
+        });        
+    },
+
+    buildParameterSection: function(container, ident, data) {
+        var self = this;
+        if (!(data.value || data.parameters || data.choices))
+            return;
+        var label = $("<label></label>")
+            .attr("for", ident + "_ctrl")
+            .text(data.name).attr("title", data.description);
+        var control = $("<input></input>")
+            .attr("id", ident + "_ctrl")
+            .attr("name", self.getKeyName(ident, data));
+        if (data.type == "bool")
+            control.attr("type", "checkbox");
+        this.loadOptionState(control, data.value);
+        container.append(label).append(control);
+    },
+                           
+    saveState: function() {
+        $("select, input", $("#options")).each(function(index, item) {
+            if ($(item).attr("type") == "checkbox")
+                $.cookie($(item).attr("name"), $(item).attr("checked"));
+            else
+                $.cookie($(item).attr("name"), $(item).val());
+        });
+    },
+
+    loadOptionState: function(item, defaultoption) {
+        // check for a cookie with the given 'name'
+        // otherwise, select the first available option
+        var val = $.cookie(item.attr("name"));
+        if (!val)
+            val = defaultoption;
+
+        item.val(val);
+        if (item.attr("type") == "checkbox") {
+            item.attr("checked", !(parseInt(val) == 0 || val == "false"
+                        || val == "off"));
+        }
     },
 
     serializedData: function() {
-        var params = [];
-        var data = this.data();
-        for (var i in data) {
-            params.push(i + "=" + data[i]);
-        }
-        return params.join("&");
-    },
-
-    // add a component to the list of initially-built ones
-    registerComponent: function(cname, label, def, multiple, add_blank) {
-        this._components.push({
-            name: cname,
-            label: label,
-            defvalue: def,
-            blank: add_blank || false,
-            multiple: multiple || false,
-        });
-        if (multiple) {
-            ++this.multiples[cname] || (this.multiples[cname] = 0);
-        }
-    },
-
-    // allow registering a 'meta-parameter', aka StandardPreprocessing
-    // that simply lists a collection of other params...
-    registerDefaultMetaComponent: function(cname) {
-        this._metacomponent = cname;        
-    },
-
-    // trigger the ajax call to fetch parameter info...
-    init: function() {
-        var self = this;              
-        $.ajax({
-            url: self._url,
-            dataType: "json",
-            beforeSend: function() {
-                self.setWaiting(true);
-            },
-            complete: function() {
-                self.setWaiting(false);
-            },
-            error: OCRJS.ajaxErrorHandler,
-            success: function(data) {
-                self._componentdata = data;
-                self.buildParameters();
-                console.log("Done parameter init");
-                self.parametersInitialised();
-            },
-        });
-    },
-
-    // clear everything and start over...
-    reinit: function() {
-        this._container.html("");
-        this.init();
-    },
-
-    // callbacks
-    parametersInitialised: function() {
-    },
-
-    // load an object containing param data...
-    // data looks like:
-    // {
-    //      binarizer: "BinarizeByHT",
-    //      BinarizeByHT__k1:  0.1,
-    // }
-    loadData: function(data) {
-        var self = this;                  
-        $.each(data, function(key, value) {
-            var ctype = self._namemap[key.match(/(\w+?)(\d*)$/)[1]];
-            console.log("CType: " + ctype);
-            if (ctype && self._componentdata[value] && !key.match(/__/)) {
-                var sel = $("#" + key);
-                if (sel.length) {
-                    sel.val(value);
-                } else {
-                    // add a multi component select with a blank
-                    // option
-                    console.log("Key: " + key + ", Value: " + value);
-                    self.addComponentSelect(key, key, value, true);
-                    self.renumberMultiComponents(key);
-                    sel = $("#" + key);
-                }
-                sel.trigger("change");
-            }
-        });
-
-        // set the component parameter values
-        $.each(data, function(key, value) {
-            if (key.match(/__/)) {
-                $("#" + key).val(value);
-            }
-        });
-
-        // strip any components not in the preset
-        $(".ocroption").each(function(i, comp) {
-            var id = $(comp).attr("name");
-            if (!data[id]) {
-                $(comp).parent("div").parent("div").remove();
-            }
-        });
-    },
-
-    /*
-     *  Private stuff =========================================================
-     */
-
-    _sortByName: function(a, b) {
-        var x = a.name;
-        var y = b.name;
-        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-    },
-
-    // when the user adds another multi-component (binclean1-10),
-    // renumber them accordingly
-    renumberMultiComponents: function(compname) {
-        var basename = compname.match(/(\w+?)(\d+)$/)[1];
-        var count = 0;
-        $("select[name^='" + basename + "']").each(function(i, sel) {
-            var newname = basename + count;
-            $(sel).attr("name", newname).attr("id", newname);
-            $(sel).parent().prev("label")
-                .text(newname)
-                .attr("for", newname);
-            $(sel).parent().nextAll("div").attr("id", newname + "_options");
-            count++;
-        });
-
-        // if there's only one of a given component, disable the
-        // delete button...
-        $("select[name^='" + basename + "']").nextAll("input.remmulti")
-            .attr("disabled", count == 1);
-
-    },
-
-    // construct a UI containing the registered components, with
-    // the fetched default parameter info...
-    buildParameters: function() {
-        if (this._metacomponent) {
-            this.buildMetaComponentSet();
-        } else {
-            this.buildRegisteredComponentSet();
-        }
-    },
-
-    // use a particular component to provide a template
-    // for the full component set
-    buildMetaComponentSet: function() {
-        var metacomp = this._componentdata[this._metacomponent];
-
-        // sort the list alphabetically - affects the
-        // original data but we don't care
-        metacomp.params.sort(this._sortByName);
-
-        // sort the list so multiple c-params go at the end...
-        var splist = [];
-        var mplist = [];
-        $.each(metacomp.params, function(i, param) {
-            if (param.name.match(/(\d+)$/)) {
-                mplist.push(param);
-            } else {
-                splist.push(param);
-            }
-        });
-        // add both lists of params to the page
-        var self = this;                               
-        $.each([splist, mplist], function(i, list) {
-            $.each(list, function(i, param) {
-                if (param.value) {
-                    self.addComponentSelect(param.name, param.name, param.value, true);
-                }
-            });
-        });
-    },
-
-    buildRegisteredComponentSet: function() {
-        for (var i in this._components) {
-            var comp = this._components[i];
-            this.addComponentSelect(comp.name, comp.label, comp.defvalue, comp.blank);
-        }
-    },
-
-    // get the component type for a string name like
-    // binclean0 -> ICleanupBinary.  This is listed
-    // in the namemap but we also need to strip of
-    // any numeric suffix
-    getComponentType: function(compname) {
-        var ctype = this._namemap[compname.match(/(\w+?)(\d*)$/)[1]];
-        if (!ctype) {
-            throw "Bad component type string: '" + compname + 
-                "'.  Expecting something like 'binclean0', 'binarizer'";
-        }
-        return ctype; 
-    },
-
-    setComponentParams: function(compname, pdiv) {
-        pdiv.html("");
-        if (!compname || compname == "-") {
-            return;
-        }
-        var plabel = $("<label></label>");
-        var pinput = $("<input type='text'></input>");
-        for (var i in this._componentdata[compname].params) {
-            var param = this._componentdata[compname].params[i];
-            var pname = compname + "__" + param.name;
-            pdiv.append(plabel.clone().text(param.name).attr("for", pname));    
-            pdiv.append(
-                pinput.clone()
-                    .attr("name", "$" + pname).attr("id", pname)
-                    .val(param.value));
-        }
-
-    },
-
-    // get a list of components for a param name like 'binarize'
-    getComponentOptions: function(name) {
-        var comptype = this.getComponentType(name);
-        var complist = [];
-        for (var cname in this._componentdata) {
-            var comp = this._componentdata[cname];
-            // skip metacomponent or those of different types
-            if (comp.type != comptype || 
-                    (this._metacomponent && this._metacomponent == comp.name)) {
-                continue;
-            }
-            complist.push(comp);
-        }
-        complist.sort(this._sortByName);
-        return complist;
-    },
-
-    // add a select with component selection options
-    addComponentSelect: function(name, label, def, blank) {
-        var lab = $("<label></label>")
-            .attr("for", name)
-            .text(label);
-        var sel = $("<select></select>")
-            .addClass("ocroption")
-            .attr("id", name)
-            .attr("name", "$" + name);
-        var pdiv = $("<div></div>")
-            .addClass("compparam")
-            .attr("id", name + "_options");
-        var add = $("<input type='button' />")
-            .addClass("addmulti")
-            .attr("value", "+");
-        var rem = $("<input type='button' />")
-            .addClass("remmulti")
-            .attr("value", "-");
-
-        if (blank) {
-            sel.append($("<option></option>").attr("value", "-"));
-        }
-        $.each(this.getComponentOptions(name), function(i, comp) {
-            sel.append($("<option></option>")
-                    .attr("value", comp.name)
-                    .text(comp.name)); 
-        });
-        if (def) {
-            sel.attr("value", def);
-            this.setComponentParams(def, pdiv);
-        }
-        var div1 = $("<div></div>").append(lab);
-        var div2 = $("<div></div>").addClass("compsel").append(sel);
-        if (name.match(/\d+$/)) {
-            div2.append(add).append(rem);
-        }
-        this._container.append(div1.append(div2).append(pdiv));
-    },
-
+        return $("input, select", this.parent).serialize();
+    },                   
 });
+
 

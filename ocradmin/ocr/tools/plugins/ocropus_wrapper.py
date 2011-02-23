@@ -60,14 +60,15 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
     def parameters(cls):
         params = copy.deepcopy(generic_wrapper.GenericWrapper.parameters())
         mods = OcrModel.objects.filter(app="ocropus")
-        cmods = [dict(name=m.name, description=m.description) for m in
+        cmods = [dict(name=m.name, type="scalar", description=m.description) for m in
                  mods if m.type == "char"]
-        lmods = [dict(name=m.name, description=m.description) for m in
+        lmods = [dict(name=m.name, type="scalar", description=m.description) for m in
                  mods if m.type == "lang"]
         _parameters = [
             {
                 "name": "character_model",
                 "description": "Character Model",
+                "type": "scalar",
                 "help": "Model for character recognition",
                 "value": cmods[0]["name"] if len(cmods) else None,
                 "multiple": False,
@@ -75,6 +76,7 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
             }, {
                 "name": "language_model",
                 "description": "Language Model",
+                "type": "scalar",
                 "value": lmods[0]["name"] if len(lmods) else None,
                 "help": "Model for language processing",
                 "multiple": False,

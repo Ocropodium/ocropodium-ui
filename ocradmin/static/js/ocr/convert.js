@@ -50,9 +50,7 @@ function rebuildModelLists(appname) {
 
 
 function saveState() {
-    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
-        $.cookie(item, $("select[name=$" + item + "]").attr("value"));     
-    });
+    pbuilder.saveState();
 
     // save the job names of the current pages...
     var jobnames = $.map(PAGES, function(page, i) {
@@ -71,13 +69,6 @@ function loadState() {
     if (tid) {
         jobnames = tid
     }
-    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
-        var val = $.cookie(item);
-        if (val) {
-            $("select[name=$" + item + "]").val(val);
-        }
-    });
-
     if (jobnames) {
         $.each(jobnames.split(","), function(index, pagejob) {
             if (pagejob.search(":") != -1) {
@@ -271,6 +262,7 @@ $(function() {
         uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
         uploader.onXHRLoad = onXHRLoad;
         uploader.onUploadsStarted = function(e) {
+            uploader.clearParameters();
             $("#dropzone").text("Please wait...").addClass("waiting");
             $("#optionsform input, #optionsform select").each(function(i, elem) {
                 uploader.registerTextParameter(elem);
@@ -282,7 +274,7 @@ $(function() {
     }
 
     // load state stored from last time
-    loadState();
+ //loadState();
     
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
@@ -296,6 +288,6 @@ $(function() {
 
     // line formatter object
     formatter = new OCRJS.LineFormatter();
-    pbuilder = new OCRJS.TestParameterBuilder(document.getElementById("options"));
+    pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
 });
 
