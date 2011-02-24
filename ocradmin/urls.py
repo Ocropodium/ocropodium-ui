@@ -3,6 +3,7 @@ from django.conf import settings
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+from django.contrib.auth.views import login, logout
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -12,9 +13,11 @@ urlpatterns = patterns('',
     (r'^media/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': settings.MEDIA_ROOT}),
     
+    (r'^accounts/login', login),
+    (r'^accounts/logout', logout, {"next_page": "/ocr/"}),
+	(r'^accounts/unauthorised', 'ocradmin.accounts.views.unauthorised'),
     (r'^/?$', include('ocradmin.ocr.urls')),
     (r'^ocr/?', include('ocradmin.ocr.urls')),
-    (r'^accounts/?', include('ocradmin.accounts.urls')),
     (r'^filebrowser/?', include('ocradmin.filebrowser.urls')),
     (r'^batch/?', include('ocradmin.batch.urls')),
     (r'^ocrtasks/?', include('ocradmin.ocrtasks.urls')),

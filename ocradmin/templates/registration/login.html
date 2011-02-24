@@ -13,18 +13,20 @@
 </script>
  
 <div id="login_dialog">
-    {% if error %}
-    <div class="error">{{error}}</div>
+    {% if form.errors %}
+        <div class="error">Your username and password didn't match. Please try again.</div>
     {% endif %}
 
-    <div class="spil_form">
-        <form id="login_form" method="POST" action="/accounts/login/">
-            <label for="username">User name:</label><br />
-            <input type="text" id="username" name="username" /><br /> 
-            <label for="password">Password:</label><br /> 
-            <input type="password" id="password" name="password" /><br />  
+    <div class="form">
+        <form method="post" action="{% url django.contrib.auth.views.login %}">
+            {% csrf_token %}
+            {{ form.username.label_tag }}<br />
+            {{ form.username }}<br /> 
+            {{ form.password.label_tag }}<br /> 
+            {{ form.password }}<br />  
             <br />
             <input type="submit" id="submit_login" value="Submit" /><br /> 
+            <input type="hidden" name="next" value="{{ next }}" />
         </form>
     </div>
 </div>
