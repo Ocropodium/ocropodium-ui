@@ -11,7 +11,9 @@ from django.conf import settings
 from django.utils import simplejson
 
 from ocradmin.batch.models import OcrBatch
-from ocradmin.ocr.tests import testutils 
+from ocradmin.ocr.tests import testutils
+
+from ocradmin.ocrplugins import parameters
 
 TESTFILE = "etc/simple.png"
 
@@ -131,6 +133,7 @@ class OcrBatchTest(TestCase):
         if params is None:
             params = dict(name="Test Batch", 
                     files=os.path.join("test/%s" % os.path.basename(TESTFILE)))
+            params.update(parameters.TESTPOST)
         r = self._get_batch_response(params, headers)
         # check the POST redirected as it should
         self.assertEqual(r.redirect_chain[0][1], 302)

@@ -1,67 +1,9 @@
-// Function to build the lang & char models selects when
-// the engine type is changed.
-function rebuildModelLists(appname) {
-    var opt = $("<option />");
-    var copt = $("#form_cmodel").val();
-    var lopt = $("#form_lmodel").val();
-
-    $("#uploadform").attr("disabled", "disabled");
-    $.get(
-        "/ocrmodels/search",
-        { app: appname },
-        function(response) {
-            $("#form_cmodel").html("");
-            $("#form_lmodel").html("");
-            $.each(response, function(index, item) {
-                var select = item.fields.type == "char"
-                    ? $("#form_cmodel")
-                    : $("#form_lmodel");
-
-                var newopt = opt.clone()
-                        .text(item.fields.name)
-                        .attr("value", item.fields.name);
-                if (item.fields.name == copt) {
-                    newopt.attr("selected", "selected");
-                }
-                select.append(newopt);
-            });
-            $("#uploadform").removeAttr("disabled");
-        }
-    );
-}
-
 
 function saveState() {
-    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
-        $.cookie(item, $("select[name=" + item + "]").val());     
-    });
-
-    // save the job names of the current pages...
-    var jobnames = $(".ocr_page").map(function(i, d) {
-        return $(d).data("jobname");
-    }).get().join(",");
-    if (jobnames) {
-        $.cookie("jobnames", jobnames);
-    }
 }
 
 
 function loadState() {
-    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
-        var val = $.cookie(item);
-        if (val) {
-            $("select[name=" + item + "]").val(val);
-        }
-    });
-
-    /*var jobnames = $.cookie("jobnames");
-    if (jobnames) {
-        var joblist = jobnames.split(",");
-        $.each(joblist, function(index, jobname) {
-            pageobjects[index] = new OcrPage("pageout", index, jobname);
-            pageobjects[index].pollForResults();            
-        });
-    }*/
 }
 
 // save state on leaving the page... at least try to...
@@ -75,6 +17,7 @@ window.onbeforeunload = function(event) {
 $(function() {
     var uploader = null;
     var filebrowser = null;
+    var pbuilder = null;
 
     // set up filebrowser
     $("#browse").click(function(event) {
@@ -116,10 +59,6 @@ $(function() {
         .css("padding", "5px 2px 10px 2px")
         .css("margin-top", "0px")
         .css("overflow", "hidden");
-
-    $("select[name=engine]").change(function(e) {
-        rebuildModelLists($(this).val());
-    });
 
     // toggle selection of files
     $(".file_item").live("click", function(event) {
@@ -223,7 +162,7 @@ $(function() {
     // load state stored from last time
     loadState();
 
-    // fetch the appropriate models...
-    rebuildModelLists($("select[name='engine']").val());    
+    pbuilder = new OCRJS.ParameterBuilder(
+            document.getElementById("options"));
 });
 
