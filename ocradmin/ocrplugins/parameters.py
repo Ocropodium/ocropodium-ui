@@ -33,6 +33,8 @@ def _initialise_param_structure(post):
         index = None
         lastindex = None
         parts = name.split(".")
+        if len(parts) < 3:
+            continue
         parts.pop(0)
         parts.pop(0)
         curr = cleaned
