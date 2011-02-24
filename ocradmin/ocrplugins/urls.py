@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
-    (r'^/?$', 'ocradmin.ocrplugins.views.list'),
+    (r'^/?$', 'ocradmin.ocrplugins.views.index'),
     (r'^query/?$', 'ocradmin.ocrplugins.views.query'),
     (r'^query/(?P<args>.+)/?$', 'ocradmin.ocrplugins.views.query'),
     (r'^parse/?$', 'ocradmin.ocrplugins.views.parse'),
