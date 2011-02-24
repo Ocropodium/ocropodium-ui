@@ -1,5 +1,5 @@
 
-#options {
+.option_box {
     min-height: 50px;
 }
 
@@ -20,17 +20,17 @@
     margin-bottom: 5px;
 }
 
-#options * {
+.option_box * {
     font-size: 0.95em;
 }
 
-#options label {
+.option_box label {
     float: left;
     clear: left;
     width: 10em;    
 }
 
-#options select {
+.option_box select {
     width: 13em;
 }
 
