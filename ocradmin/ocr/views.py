@@ -227,9 +227,6 @@ def segment(request):
     context = dict(
         binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
     )
-    for k, v in request.META.iteritems():
-        print "%-20s : %s" % (k, v)
-    print request.path
     return _ocr_task(
         request,
         "ocr/segment.html",
@@ -412,8 +409,6 @@ def _ocr_task(request, template, context, tasktype, celerytask):
                 (os.path.basename(path),
                     celerytask.apply_async(args=args, **kwargs)))
         except Exception, err:
-            print "PARAMS: %s" % params
-            print "CONFIG: %s" % config
             print err
             for t in traceback.extract_stack():
                 print t
