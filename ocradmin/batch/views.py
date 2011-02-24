@@ -331,11 +331,8 @@ def transcript(request, batch_pk):
     View the transcription of a batch.
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
-    template = "batch/transcript.html"
-    context = dict(batch=batch, initial=request.GET.get("page"))
-
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
+    tid = batch.tasks.all()[0]
+    return HttpResponseRedirect("/ocr/transcript/%d/" % tid.pk)
 
 
 def _show_batch(request, batch):
