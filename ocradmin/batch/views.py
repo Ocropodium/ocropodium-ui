@@ -1,4 +1,5 @@
 import os
+import traceback
 from types import MethodType
 import tempfile
 import gzip
@@ -32,7 +33,6 @@ from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
 from ocradmin.projects.utils import project_required
-from ocradmin.ocr.views import _get_best_params, _cleanup_params
 from ocradmin.ocr.views import _handle_request, AppException
 from ocradmin.ocr.views import  _retry_celery_task, _abort_celery_task 
 from ocradmin.ocr.tools.manager import PluginManager
@@ -173,16 +173,15 @@ def create(request):
     batch.save()
 
     # wrangle the params - this needs improving
-    userparams = _get_best_params(
-            _cleanup_params(request.POST.copy(),
-                ("files", "name", "description", "tags")))
+    _, config, params = _handle_request(request, request.output_path)
+
     # preserve intermediate binary & segmentation results            
-    userparams["write_intermediate_results"] = True
+    params["write_intermediate_results"] = True
     asyncparams = []
     try:
         for path in paths:
             tid = ocrutils.get_new_task_id()
-            args = (path.encode(), request.output_path.encode(), userparams)
+            args = (path.encode(), request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             ocrtask = OcrTask(
                 task_id=tid,
