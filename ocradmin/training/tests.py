@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
+from ocradmin.ocrplugins import parameters
 
 TESTFILE = "simple.png"
 
@@ -57,14 +58,20 @@ class TrainingTest(TestCase):
         of settings.  FIXME: Fragile hard-coded
         references to batch & ref set pks.
         """
-        r = self.client.post("/training/score_models", {
+        params = {
             "name": "Test comparison",
             "p0_paramset_name": "Test Ocropus",
             "p1_paramset_name": "Test Tesseract",
-            "$p0_engine": "ocropus",
-            "$p1_engine": "tesseract",
             "tset": 1,
-        }, follow=True)
+        }
+        for key, value in parameters.TESTPOST.iteritems():
+            pkey = re.sub("^(?P<prefix>.)options", "\g<prefix>p0_options", key)
+            params[pkey] = value
+        for key, value in parameters.TESTPOST_OCROPUS.iteritems():
+            pkey = re.sub("^(?P<prefix>.)options", "\g<prefix>p1_options", key)
+            params[pkey] = value
+
+        r = self.client.post("/training/score_models", params, follow=True)
         # check we were redirected to the batch page
         self.assertRedirects(r, "/batch/show/1/")
 
