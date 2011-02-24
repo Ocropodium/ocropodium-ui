@@ -15,7 +15,6 @@ from django.utils import simplejson
 from django import forms
 from ocradmin.ocr import utils as ocrutils
 from ocradmin.ocr.utils import saves_files
-from ocradmin.ocr.views import _get_best_params
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
@@ -24,6 +23,8 @@ from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.projects.utils import project_required
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 from ocradmin.ocr.tools.manager import PluginManager
+
+from ocradmin.ocrplugins import parameters
 
 
 class ReferenceSetForm(forms.Form):
@@ -199,15 +200,16 @@ def score_models(request):
 
     # get parameter sets
     psetnames = _get_paramset_names(request.POST)
-    paramsets = _get_paramset_list(request.POST)
-    assert(len(psetnames) == len(paramsets))
+    configsets = _get_config_list(request.POST)
+    assert(len(psetnames) == len(configsets))
 
     for gtruth in tsets:
         path = gtruth.source_image.path
-        for i in range(len(paramsets)):
-            params = paramsets[i]
+        for i in range(len(configsets)):
+            config = configsets[i]
+            params = {}
             tid = ocrutils.get_new_task_id(path)
-            args = (gtruth.pk, request.output_path.encode(), params)
+            args = (gtruth.pk, request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             task = OcrTask(
                 task_id=tid,
@@ -335,20 +337,21 @@ def comparisons(request):
             context_instance=RequestContext(request))
 
 
-def _get_paramset_list(postdict):
+def _get_config_list(postdict):
     """
     Parse sets of distinct params from the POST data.
     They all have a prefix p0_ .. pN_
     """
-    paramsets = []
+    configsets = []
     pinit = 0
     while True:
-        params = _get_best_params(postdict, with_prefix="p%d_" % pinit)
-        if len(params) == 0:
+        config = parameters.parse_post_data(
+                postdict, prefix="p%d_options" % pinit)
+        if len(config) == 0:
             break
-        paramsets.append(params)
+        configsets.append(config)
         pinit += 1
-    return paramsets
+    return configsets
 
 
 def _get_paramset_names(postdict):

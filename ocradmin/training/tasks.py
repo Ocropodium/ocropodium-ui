@@ -14,7 +14,7 @@ from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.ocr.tools.manager import PluginManager
 
-
+from ocradmin.ocrplugins import parameters
 
 class LineTrainTask(AbortableTask):
     """
@@ -92,16 +92,16 @@ class ComparisonTask(AbortableTask):
     name = "compare.groundtruth"
     max_retries = None
 
-    def run(self, gt_id, outdir, paramdict, **kwargs):
+    def run(self, gt_id, outdir, params, config, **kwargs):
         """
         Runs the model comparison action.
         """
         groundtruth = ReferencePage.objects.get(pk=gt_id)
+        config = parameters.OcrParameters(config)
 
         # function for the converted to call periodically to check whether 
         # to end execution early
         logger = self.get_logger(**kwargs)
-        logger.info(paramdict)
         task = OcrTask.objects.get(task_id=kwargs["task_id"])
 
         def abort_func():
@@ -113,10 +113,9 @@ class ComparisonTask(AbortableTask):
 
         # ground truth is already a binary, so tell the converter not
         # to redo it...
-        #paramdict["prebinarized"] = True
         converter = PluginManager.get_converter(
-                paramdict.get("engine", "tesseract"), 
-                logger=logger, abort_func=abort_func, params=paramdict)
+                config.name, 
+                logger=logger, abort_func=abort_func, config=config)
         
         # function for the converter to update progress
         def progress_func(progress, lines=None):
@@ -130,7 +129,7 @@ class ComparisonTask(AbortableTask):
         progress_func(0)
 
         outdata = converter.convert(groundtruth.source_image.path.encode(),
-                progress_func=progress_func)        
+                progress_func=progress_func, **params)        
 
         accuracy, details = utils.isri_accuracy(
                 logger, 
