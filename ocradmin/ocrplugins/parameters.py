@@ -3,7 +3,7 @@ import re
 
 INDEX_REGEXP = re.compile("(?P<base>.+)\[(?P<index>\d+)\]$")
 
-def parse_post_data(postdict):
+def parse_post_data(postdict, prefix="options"):
     """
     Parse POST data into a params structure.
     """
@@ -12,7 +12,7 @@ def parse_post_data(postdict):
     # [(name, value), (name, value)]
     post = []
     for k, v in postdict.iteritems():
-        if not k.startswith(("$", "@", "%")):
+        if not k.startswith(("$" + prefix, "@" + prefix, "%" + prefix)):
             continue
         post.append((k, v))
     post.sort()
