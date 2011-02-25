@@ -164,6 +164,6 @@ class OcrConvertTest(TestCase):
         tf = open(TESTFILE)
         params["image1"] = tf
         r = self.client.post("/ocr/convert", params, **headers)
-        tf.close()
+        #tf.close()
         return r
         
