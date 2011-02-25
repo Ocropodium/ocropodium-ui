@@ -208,8 +208,9 @@ class GenericWrapper(base.OcrBase):
                     return pagedata
             set_progress(self.logger, progress_func, i, numlines)
             line = regions.extract(page_bin, i, 1)
-            bbox = [regions.x0(i), pageheight - regions.y0(i),
+            bbox = [regions.x0(i), regions.y0(i) + (regions.y1(i) - regions.y0(i)),
                 regions.x1(i) - regions.x0(i), regions.y1(i) - regions.y0(i)]
+
             text = self.get_transcript(line)
             pagedata["lines"].append({"line": i, "box": bbox, "text" : text })
 
