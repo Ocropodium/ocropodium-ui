@@ -149,7 +149,7 @@ class ConvertPageTask(AbortableTask):
         """
         Runs the convert action.
         """
-        logger = self.get_logger(**kwargs)
+        logger = self.get_logger()
         config = parameters.OcrParameters(config)
         # function for the converted to call periodically to check whether
         # to end execution early
@@ -184,7 +184,7 @@ class ConvertLineTask(AbortableTask):
         """
         # function for the converted to call periodically to check whether
         # to end execution early
-        logger = self.get_logger(**kwargs)
+        logger = self.get_logger()
         logger.info(params)
         create_intermediate_paths(filepath, outdir, params, logger)
         converter = PluginManager.get_converter(
@@ -209,7 +209,7 @@ class BinarizePageTask(AbortableTask):
         """
         Runs the binarize action.
         """
-        logger = self.get_logger(**kwargs)
+        logger = self.get_logger()
         logger.info(params)
         filepath = utils.make_png(filepath, outdir)
         config = parameters.OcrParameters(config)
@@ -257,7 +257,7 @@ class SegmentPageTask(AbortableTask):
         """
         Runs the segment action.
         """
-        logger = self.get_logger(**kwargs)
+        logger = self.get_logger()
         logger.info(params)
         config = parameters.OcrParameters(config)
         filepath = utils.make_png(filepath, outdir)
@@ -303,7 +303,7 @@ class CleanupTempTask(PeriodicTask):
         been accessed for X minutes.
         """
         import glob
-        logger = self.get_logger(**kwargs)
+        logger = self.get_logger()
         tempdir = os.path.join(settings.MEDIA_ROOT, "temp")
         if not os.path.exists(tempdir):
             return

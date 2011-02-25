@@ -34,7 +34,7 @@ class IngestTask(AbortableTask):
         """
         Ingest an image into fedora.
         """
-        logger = self.get_logger(**kwargs)
+        logger = self.get_logger()
         logger.info((trainingpage_id, namespace, kwargs))
         task = OcrTask.objects.get(task_id=self.request.id)
         task.progess = 0
