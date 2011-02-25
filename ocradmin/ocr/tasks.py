@@ -159,10 +159,10 @@ class ConvertPageTask(AbortableTask):
         create_intermediate_paths(filepath, outdir, params, logger)
         converter = PluginManager.get_converter(
                 config.name, logger=logger,
-                abort_func=get_abort_function(kwargs["task_id"]),
+                abort_func=get_abort_function(self.request.id),
                 config=config)
         # init progress to zero (for when retrying tasks)
-        progress_func = get_progress_function(kwargs["task_id"])
+        progress_func = get_progress_function(self.request.id)
         progress_func(0)
         out = converter.convert(filepath, progress_func=progress_func, **params)
         #create_binary_deepzoom(params, logger)
@@ -228,7 +228,7 @@ class BinarizePageTask(AbortableTask):
                 params.get("allowcache")))
             converter = PluginManager.get_converter(
                     config.name, logger=logger,
-                    abort_func=get_abort_function(kwargs["task_id"]),
+                    abort_func=get_abort_function(self.request.id),
                     config=config)
             page_bin = converter.standard_preprocess(filepath)
             pageheight, pagewidth = page_bin.shape
@@ -267,7 +267,7 @@ class SegmentPageTask(AbortableTask):
         segpath = os.path.join(outdir, segname)
         converter = PluginManager.get_converter(
                 config.name, logger=logger,
-                abort_func=get_abort_function(kwargs["task_id"]),
+                abort_func=get_abort_function(self.request.id),
                 config=config)
         page_bin = converter.standard_preprocess(filepath)
         page_seg = converter.get_page_seg(page_bin)
