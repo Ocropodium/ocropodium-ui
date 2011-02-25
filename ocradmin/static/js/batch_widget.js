@@ -222,7 +222,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         $(".abort_task").bind("click", function(event) {
             var pk = $(this).data("pk");
             $.ajax({
-                url: "/batch/abort_task/" + pk + "/",
+                url: "/ocr/abort_task/" + pk + "/",
                 type: "POST",
                 dataType: "json",
                 beforeSend: function(e) {                
