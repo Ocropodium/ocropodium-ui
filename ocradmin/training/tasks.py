@@ -48,7 +48,7 @@ class LineTrainTask(AbortableTask):
             """Abort task if condition met."""
             # TODO: this should be possible via a simple 'self.is_aborted()'
             # Find out why it isn't.
-            asyncres = AbortableAsyncResult(kwargs["task_id"])            
+            asyncres = AbortableAsyncResult(self.request.id)            
             return asyncres.is_aborted()
 
         trainer = PluginManager.get_trainer("ocropus", logger=logger, abort_func=abort_func,
@@ -102,14 +102,14 @@ class ComparisonTask(AbortableTask):
         # function for the converted to call periodically to check whether 
         # to end execution early
         logger = self.get_logger(**kwargs)
-        task = OcrTask.objects.get(task_id=kwargs["task_id"])
+        task = OcrTask.objects.get(task_id=self.request.id)
 
         def abort_func():
             """Quit function if a condition met"""
             # TODO: this should be possible via a simple 'self.is_aborted()'
             # Find out why it isn't.
-            asyncres = AbortableAsyncResult(kwargs["task_id"])            
-            return asyncres.backend.get_status(kwargs["task_id"]) == "ABORTED" 
+            asyncres = AbortableAsyncResult(self.request.id)            
+            return asyncres.backend.get_status(self.request.id) == "ABORTED" 
 
         # ground truth is already a binary, so tell the converter not
         # to redo it...
@@ -120,7 +120,7 @@ class ComparisonTask(AbortableTask):
         # function for the converter to update progress
         def progress_func(progress, lines=None):
             """Report project of running tasks"""
-            task = OcrTask.objects.get(task_id=kwargs["task_id"])
+            task = OcrTask.objects.get(task_id=self.request.id)
             task.progress = progress
             if lines is not None:
                 task.lines = lines
