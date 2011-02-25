@@ -36,7 +36,6 @@ def _initialise_param_structure(post):
         if len(parts) < 3:
             continue
         parts.pop(0)
-        parts.pop(0)
         curr = cleaned
         for part in parts:
             partcopy = part
@@ -225,6 +224,38 @@ class OcrParameters(object):
         Parse an object from post data.
         """
         return OcrParameters(parse_post_data(post))
+
+
+    def to_post_data(self, prefix="options"):
+        """
+        Encode an object into a set of key,value
+        strings.
+        """
+        def get_prefix(item):
+            if isinstance(item, list):
+                return "@"
+            elif isinstance(item, dict):
+                return "%"
+            else:
+                return "$"
+
+        def stringify(pfx, strings, item, path):
+            if isinstance(item["value"], list):
+                strings[path] = item["name"]
+                for i in range(len(item["value"])):
+                    p = "%s%s.%s[%d]" % (pfx, path[1:], item["name"], i)
+                    stringify(get_prefix(item["value"]), strings, item["value"][i], p)
+            elif isinstance(item["value"], dict):
+                p = "%s%s.%s" % (pfx, path[1:], item["name"])
+                strings[path] = item["name"]
+                stringify("%", strings, item["value"], p)
+            else:
+                strings["$%s.%s" % (path[1:], item["name"])] = item["value"]
+            return strings
+        return stringify("%", {}, self._params, "%%%s" % prefix)
+
+
+
 
 
     @classmethod
@@ -727,4 +758,27 @@ TESTPOST_OCROPUS_BIN = {
     '$options.engine.ocropus[4].character_model': 'Ocropus Default Char',
     '$options.engine.ocropus[5].language_model': 'Ocropus Default Lang',
 }
+
+
+
+"""
+Unit tests.
+"""
+if __name__ == "__main__":
+    import unittest
+
+    class OcrParameterTest(unittest.TestCase):
+        def setUp(self):
+            pass
+
+        def test_encode_decode_post(self):
+            op = OcrParameters.from_post_data(TESTPOST)
+            enc = op.to_post_data()
+            for name, val in TESTPOST.iteritems():
+                print "%s -> %s" % (name, val)
+                self.assertTrue(name in enc)
+                self.assertTrue(enc.get(name) == val)
+
+    unittest.main()
+
 
