@@ -164,5 +164,6 @@ $(function() {
 
     pbuilder = new OCRJS.ParameterBuilder(
             document.getElementById("options"));
+    pbuilder.init();
 });
 
