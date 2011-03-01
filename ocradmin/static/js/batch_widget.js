@@ -213,6 +213,13 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                     $("#dialog_box").html(data)                    
                         .find("#tabs")
                         .tabs();
+                    var params = null;
+                    $.getJSON("/ocr/task_config/" + pk + "/", function(data) {
+                        console.log("Set task data...");
+                        params = new OCRJS.ParameterBuilder(
+                                $("#dialog_box").find("#options").get(0), data);
+                        params.init();
+                    });
                 },
             });
             event.preventDefault();    

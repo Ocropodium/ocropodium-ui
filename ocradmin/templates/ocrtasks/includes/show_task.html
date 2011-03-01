@@ -4,8 +4,9 @@
         <li><a href="#tab_1">Basic Info</a></li>
         <li><a href="#tab_2">Parameters</a></li>
         <li><a href="#tab_3">Results</a></li>
+        <li><a href="#tab_4">Edit</a></li>
         {% if task.error %}
-            <li><a href="#tab_4" class="ui-state-error-text">Errors</a></li>
+            <li><a href="#tab_5" class="ui-state-error-text">Errors</a></li>
         {% endif %}
     </ul>
     <div id="tab_1">
@@ -64,8 +65,19 @@
             <li><a target="_blank" href="/ocr/results/{{task.task_id}}/?format=text" title="Text Format">Plain Text</a></li>
         </ul>
     </div>
+    <div id="tab_4">
+        <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
+            <h4>Options:</h4>
+            
+            <div id="options" class="option_box">
+
+            </div>
+            <input type="submit" value="Update" id="submit_update_task" />
+        </form>
+
+    </div>
     {% if task.error %}
-        <div id="tab_4">
+        <div id="tab_5">
             <pre>
 {{task.error}}
 
