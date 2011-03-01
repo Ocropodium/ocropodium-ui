@@ -139,6 +139,7 @@ class GenericWrapper(base.OcrBase):
         if len(args) == 0:
             return dict(
                 name="%s" % cls.name,
+                type="list",
                 description="Available configuration for OCR settings",
                 parameters=cls.parameters(),
             )
