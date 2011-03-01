@@ -308,6 +308,18 @@ def task_transcript(request, task_pk):
 
 
 @login_required
+def task_config(request, task_pk):
+    """
+    Get a task config as a set of key/value strings.
+    """
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    configdict = task.args[3]
+    return HttpResponse(simplejson.dumps(
+            parameters.OcrParameters(configdict).to_post_data()),
+            mimetype="application/json")            
+   
+
+@login_required
 def submit_viewer_binarization(request, task_pk):
     """
     Trigger a re-binarization of the image for viewing purposes.
