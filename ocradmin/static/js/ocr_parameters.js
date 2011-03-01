@@ -12,14 +12,33 @@ RegExp.escape = function(text) {
   return text.replace(arguments.callee.sRE, '\\$1');
 }
 
+
+function isUndefined(x) {
+    return x == null && x !== null;
+}
+
+
 OCRJS = OCRJS || {};
+OCRJS.countProperties = function(obj) {
+    var count = 0;
+    for (var k in obj) {
+        if (obj.hasOwnProperty(k)) {
+            ++count;
+        }
+    }
+    return count;
+};
+
+
 OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
-    constructor: function(parent) {
+    constructor: function(parent, valuedata) {
         this.base(parent);
         this.parent = parent;
-        this.init();
+
+        this._valuedata = valuedata || null;
 
         this._cache = null;
+        this._waiting = {};
         console.log("Called constructor");
     },
 
@@ -27,6 +46,10 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var self = this;
         self.setupEvents();
         self.queryOptions(null, null);
+    },
+
+    isReady: function() {
+        return OCRJS.countProperties(this._waiting) > 0 ? false : true;
     },
 
     setupEvents: function() {
@@ -39,18 +62,13 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 .addClass("ui-icon ui-icon-plus")
                 .addClass("control_manip_add")
                 .data("ctrl", this)
-                .appendTo(ctrl)
-                .css("float", "left");
+                .appendTo(ctrl);
             var minus = $("<div></div>")
                 .addClass("ui-icon ui-icon-minus")
                 .addClass("control_manip_remove")
                 .appendTo(ctrl)
-                .data("ctrl", this)
-                .css("float", "left");
+                .data("ctrl", this);
             ctrl.css({
-                position: "absolute",
-                float: "left",
-                width: "40px",
                 top: select.position().top,
                 left: select.position().left + select.width(),
             }).appendTo(this);
@@ -60,8 +78,9 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
 
         $(".control_manip_remove").live("click", function(event) {
             var elem = $(this).data("ctrl");
-            $(elem).detach();
-            self.renumberMultiples();
+            var id = $(elem).find("select").first().attr("id");
+            $(elem).remove();
+            self.renumberMultiples(id);
         });
 
         $(".control_manip_add").live("click", function(event) {            
@@ -99,6 +118,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var self = this;
         var parent = parent || self.parent;
         var url = "/ocrplugins/query/";
+        self._waiting[parent.id] = true;
         $.ajax({
             url: url,
             type: "GET",
@@ -108,37 +128,56 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 $(parent).append(
                     self.buildSection(parent, data)
                 );
+                self._queryDone(parent.id);
             },
         });
     },
 
-    getIdent: function(parent, data, index) {
+    getIdent: function(parent, data, index, multiindex) {
         var ident;
-        if (index != null)
+        if (index !== undefined)
             ident = parent.id + "[" + index + "]" + "." + data.name;
         else
             ident = parent.id + "." + data.name;
-        return data.multiple ? (ident + "[0]") : ident;
+        if (multiindex !== undefined)
+            ident = ident + "[" + multiindex + "]";
+        return ident;
     },
 
-    getKeyName: function(ident, data) {
+    getKeyName: function(ident, data, index) {
+        var iname = ident.replace(/\[(\d+)\]$/, "[" + index + "]", ident);
         return (data.type == "list"
                 ? "@"
-                : (data.type == "object" ? "%" : "$")) + ident;
+                : (data.type == "object" ? "%" : "$")) + iname;
     },              
 
     buildSection: function(parent, data, index) {
         // build a section for one parameter and its
         // children
         if (!data)
-            return;
+            return;        
         var self = this;
         var ident = self.getIdent(parent, data, index);
         var container = $("<div></div>")
             .attr("id", ident)
             .addClass("param_section");
         if (data.choices) {
-            self.buildChoicesSection(container, ident, data);
+            if (data.multiple) {
+                var mtemp = container.clone();
+                mcount = 0;
+                while (true) {
+                    var mident = self.getIdent(parent, data, index, mcount);
+                    var stored = self._storedValue(mident);
+                    if ((stored === null || stored === undefined) && mcount > 0)
+                        break;
+                    var mcontainer = mtemp.clone()
+                        .attr("id", mident);
+                    container.append(mcontainer);
+                    self.buildChoicesSection(mcontainer, mident, data, mcount);
+                    mcount++;
+                }
+            } else
+                self.buildChoicesSection(container, ident, data);
         } else if (data.parameters) {
             self.buildParameterList(parent, container, ident, data);
         } else {
@@ -147,18 +186,21 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         return container;
     },
 
-    buildChoicesSection: function(container, ident, data) {
+    buildChoicesSection: function(container, ident, data, multiindex) {
         var self = this;                             
         // fetch more data if we need to...
         if (data.choices === true) {
             var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
             //parts.push(data.name);
+            self._waiting[ident] = true;
             $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
                 self.buildChoicesSection(container, ident, data);
+                self._queryDone(ident);
             });
             return;
         }
 
+        var ctrlname = self.getKeyName(ident, data, multiindex);
         var label = $("<label></label>")
             .attr("for", ident + "_ctrl")
             .attr("title", data.description)
@@ -167,10 +209,12 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var control = $("<select></select>")
             .attr("id", ident + "_ctrl")
             .addClass("option_select")
-            .attr("name", self.getKeyName(ident, data))
+            .attr("name", ctrlname)
             .appendTo(container);
-        if (data.multiple)
+
+        if (data.multiple) {
             container.addClass("multiple");
+        }
         var option = $("<option></option>");
         $.each(data.choices, function(i, choice) {
             control.data(choice.name, choice);
@@ -200,12 +244,14 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         // fetch more data if we need to...
         if (data.parameters === true) {
             var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
+            self._waiting[ident] = true;
             $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
                 var section = self.buildSection(parent, data);
                 if ($(parent).children("div").length)
                     $(parent).children("div").replaceWith(section);
                 else
                     $(parent).append(section);                    
+                self._queryDone(ident);
             });
             return;
         }
@@ -230,36 +276,72 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             .attr("name", self.getKeyName(ident, data));
         if (data.type == "bool")
             control.attr("type", "checkbox");
-        this.loadOptionState(control, data.value);
+        self.loadOptionState(control, data.value);
         container.append(label).append(control);
     },
                            
     saveState: function() {
-        $("select, input", $("#options")).each(function(index, item) {
+        if (this._valuedata !== null)
+            return;
+
+        $("select, input", this.parent).each(function(index, item) {
+            var key = $(item).attr("name").substr(1);
             if ($(item).attr("type") == "checkbox")
-                $.cookie($(item).attr("name"), $(item).attr("checked"));
+                $.cookie(key, $(item).attr("checked"));
             else
-                $.cookie($(item).attr("name"), $(item).val());
+                $.cookie(key, $(item).val());
         });
     },
 
     loadOptionState: function(item, defaultoption) {
         // check for a cookie with the given 'name'
         // otherwise, select the first available option
-        var val = $.cookie(item.attr("name"));
-        if (!val)
-            val = defaultoption;
-
-        item.val(val);
+        var key = item.attr("name").substr(1);
+        var val = this._storedValue(key);
+        var setval = val ? val : defaultoption;
+        item.val(setval);
         if (item.attr("type") == "checkbox") {
-            item.attr("checked", !(parseInt(val) == 0 || val == "false"
-                        || val == "off"));
+            item.attr("checked", !(parseInt(setval) == 0 || setval == "false"
+                        || setval == "off"));
         }
+        return val !== null ? true : false;
     },
 
     serializedData: function() {
         return $("input, select", this.parent).serialize();
-    },                   
+    },
+
+    setFromData: function(data) {
+        $("input, select", this.parent).each(function(index, elem) {
+            // get the element name and cut off the object type
+            // prefix                    
+            var key = $(elem).attr("name").substr(1);
+            if (data[key]) {
+                console.log("Restoring parameter: ", key);
+                $(elem).val(data[key]);
+            }
+        });
+    },
+
+    _queryDone: function(key) {
+        delete this._waiting[key];                    
+        if (this.isReady()) {
+            this.onReadyState();      
+        }
+    },
+
+    _storedValue: function(key) {
+        if (this._valuedata !== null) {
+            return this._valuedata[key];
+        } else {
+            return $.cookie(key);            
+        }
+    },                
+
+    // overrideable functions
+    onReadyState: function() {
+        console.log("READY");
+    },
 });
 
 
