@@ -97,15 +97,15 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             },
         ];
 
-        this._task_buttons = [ {
-                title: "Edit Task",
-                classes: "ui-icon-wrench edit_task",
-            }, {
+        this._task_buttons = [{
                 title: "Retry Task",
                 classes: "ui-icon-refresh retry_task",
             }, {
                 title: "Abort Task",
                 classes: "ui-icon-circle-close abort_task",
+            }, {
+                title: "Edit Task",
+                classes: "ui-icon-wrench edit_task",
             }, {
                 title: "Show Task Info",
                 classes: "ui-icon-info task_info",
@@ -193,11 +193,12 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         });
 
 
-        $(".task_info").bind("click", function(event) {
+        $(".task_info, .edit_task").bind("click", function(event) {
             var pk = $(this).data("pk");
+            var elem = this;
             $("#dialog_box").dialog({
                     modal: true,
-                    title: "Task Details",
+                    title: "Task #" + pk + " Details",
                     width: 700,
                     height: 500,
                     close: function(e, ui) {
@@ -210,7 +211,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 dataType: "html",
                 error: OCRJS.ajaxErrorHandler,
                 success: function(data) {
-                    $("#dialog_box").html(data)                    
+                    var tabs = $("#dialog_box").html(data)                    
                         .find("#tabs")
                         .tabs();
                     var params = null;
@@ -219,6 +220,8 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                         params = new OCRJS.ParameterBuilder(
                                 $("#dialog_box").find("#options").get(0), data);
                         params.init();
+                        if ($(elem).hasClass("edit_task"))
+                            tabs.tabs("select", 3);
                     });
                 },
             });
