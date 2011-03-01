@@ -36,6 +36,7 @@ def _initialise_param_structure(post):
         if len(parts) < 3:
             continue
         parts.pop(0)
+        parts.pop(0)
         curr = cleaned
         for part in parts:
             partcopy = part
@@ -215,7 +216,8 @@ class OcrParameters(object):
         Parse an options structure into an OcrParameters
         object
         """
-        return OcrParameters(cls._parameter_from_option(options))
+        return OcrParameters(dict(
+            name="engine", value=cls._parameter_from_option(options)))
 
 
     @classmethod
@@ -226,33 +228,38 @@ class OcrParameters(object):
         return OcrParameters(parse_post_data(post))
 
 
+    @classmethod
+    def from_parameters_and_post(cls, options, post):
+        """
+        Build an object from options AND post data.
+        """
+        pass
+
+
+
     def to_post_data(self, prefix="options"):
         """
         Encode an object into a set of key,value
         strings.
         """
-        def get_prefix(item):
-            if isinstance(item, list):
-                return "@"
-            elif isinstance(item, dict):
-                return "%"
-            else:
-                return "$"
-
-        def stringify(pfx, strings, item, path):
-            if isinstance(item["value"], list):
+        def stringify(strings, item, path):
+            if item is None:
+                strings[path] = None
+            elif item.get("value") is None:
+                strings["%s.%s" % (path, item["name"])] = None
+            elif isinstance(item["value"], list):
                 strings[path] = item["name"]
                 for i in range(len(item["value"])):
-                    p = "%s%s.%s[%d]" % (pfx, path[1:], item["name"], i)
-                    stringify(get_prefix(item["value"]), strings, item["value"][i], p)
+                    p = "%s.%s[%d]" % (path, item["name"], i)
+                    stringify(strings, item["value"][i], p)
             elif isinstance(item["value"], dict):
-                p = "%s%s.%s" % (pfx, path[1:], item["name"])
+                p = "%s.%s" % (path, item["name"])
                 strings[path] = item["name"]
-                stringify("%", strings, item["value"], p)
+                stringify(strings, item["value"], p)
             else:
-                strings["$%s.%s" % (path[1:], item["name"])] = item["value"]
+                strings["%s.%s" % (path, item["name"])] = item["value"]
             return strings
-        return stringify("%", {}, self._params, "%%%s" % prefix)
+        return stringify({}, self._params, "%s.engine" % prefix)
 
 
 
@@ -260,6 +267,10 @@ class OcrParameters(object):
 
     @classmethod
     def _parameter_from_option(cls, option):
+        """
+        Recursively build a parameter structure from an option
+        and its children.
+        """
         param = {}
         param["name"] = option.get("name")
         param["value"] = None
@@ -270,22 +281,31 @@ class OcrParameters(object):
         else:
             choices = option.get("choices")
             default = option.get("value")
+            ptype = option.get("type")
             if option.get("multiple") and choices is not None:
                 param["value"] = []
                 if default is not None:
                     for value in default:
                         for choice in choices:
                             if choice.get("name") == value:
-                                param["value"].append(
+                                if ptype == "scalar":
+                                    param["value"] = choice.get("type")
+                                else:
+                                    param["value"].append(
                                         cls._parameter_from_option(choice))
                 elif len(choices):
-                    param["value"].append(cls._parameter_from_option(choices[0]))
+                    if ptype == "scalar":
+                        param["value"] = choices[0].get("value") 
+                    else:
+                        param["value"].append(cls._parameter_from_option(choices[0]))
             elif choices is not None:
                 if default is not None:
                     for choice in choices:
                         if choice.get("name") == default:
-                            param["value"] = cls._parameter_from_option(choice)
-                            break
+                            if ptype and ptype == "scalar":
+                                param["value"] = choice.get("value")
+                            else:
+                                param["value"] = cls._parameter_from_option(choice)
                 elif len(choices):
                     param["value"] = cls._parameter_from_option(choices[0])
             elif default is not None:
@@ -380,6 +400,7 @@ TESTPARAMS = {
         {
             'name': 'grayscale_preprocessing',
             'description': 'Greyscale Preprocessor',
+            'type': 'list',
             'multiple': True,
             'help': 'Filters for preprocessing greyscale images',
             'choices': [],
@@ -387,6 +408,7 @@ TESTPARAMS = {
             'name': 'binarizer',
             'description': 'Binarizer',
             'multiple': False,
+            'type': 'object',
             'value': 'BinarizeBySauvola',
             'help': 'Filter for binarizing greyscale images',
             'choices': [
@@ -449,6 +471,7 @@ TESTPARAMS = {
         }, {
             'name': 'binary_preprocessing',
             'description': 'Binary Preprocessor',
+            'type': 'list',
             'value': ['DeskewPageByRAST', 'RmBig', 'RmHalftone'],
             'multiple': True,
             'help': 'Filters for preprocessing binary images',
@@ -558,6 +581,7 @@ TESTPARAMS = {
         }, {
             'name': 'page_segmenter',
             'description': 'Page Segmenter',
+            'type': 'object',
             'multiple': False,
             'value': 'SegmentPageByRAST',
             'help': 'Algorithm for segmenting binary page images',
@@ -652,25 +676,27 @@ TESTPARAMS = {
         }, {
             'name': 'language_model',
             'multiple': False,
+            'type': 'scalar',
             'value': 'Default Tesseract English',
             'choices': [
                 {
                     'description': 'Tesseract Default 3.00 ',
                     'name': 'Default Tesseract English',
-                    'value': '1',
+                    'value': 'Default Tesseract English',
                 }
             ], 
             'help': 'Model for language processing',
             'description': 'Language Model'
         }, {
             'name': 'character_model',
+            'type': 'scalar',
             'multiple': False,
             'value': 'Default Tesseract English',
             'choices': [
                 {
                     'description': 'Tesseract Default 3.00 ',
                     'name': 'Default Tesseract English',
-                    'value': '1',
+                    'value': 'Default Tesseract English',
                 }
             ], 
             'help': 'Model for language processing',
@@ -775,9 +801,10 @@ if __name__ == "__main__":
             op = OcrParameters.from_post_data(TESTPOST)
             enc = op.to_post_data()
             for name, val in TESTPOST.iteritems():
-                print "%s -> %s" % (name, val)
-                self.assertTrue(name in enc)
-                self.assertTrue(enc.get(name) == val)
+                if val is None:
+                    continue
+                self.assertTrue(name[1:] in enc)
+                self.assertTrue(enc.get(name[1:]) == val)
 
     unittest.main()
 
