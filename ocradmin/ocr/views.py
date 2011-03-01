@@ -6,6 +6,7 @@ import re
 import os
 import traceback
 from celery import result as celeryresult
+from celery import registry as celeryregistry
 from celery.contrib.abortable import AbortableAsyncResult
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
@@ -148,7 +149,6 @@ def update_task(request, task_pk):
     except OcrTask.DoesNotExist:
         # FIXME: for some reason this happens when running
         # automated tests
-        print "ARRRGH - DID NOT GET TASK"
         pass
     if task.batch:
         return HttpResponseRedirect("/batch/show/%s/" % task.batch.pk)
@@ -627,22 +627,10 @@ def _retry_celery_task(task):
     """
     Set a task re-running.
     """
-    #celerytask = tasks.ConvertPageTask
-    #celerytask.retry(args=task.args, kwargs=task.kwargs,
-    #            options=dict(task_id=task.task_id, loglevel=60, retries=2),
-    #            countdown=0, throw=False)
     if task.is_abortable():
         _abort_celery_task(task)
     tid = ocrutils.get_new_task_id()
-
-    # FIXME: Figure the appropriate class out properly
-    # via Celery registry inspection
-    celerytask = tasks.ConvertPageTask
-    if task.task_name == "compare.groundtruth":
-        celerytask = ComparisonTask
-    elif task.task_name == "fedora.ingest":
-        celerytask = IngestTask
-
+    celerytask = celeryregistry.tasks[task.task_name]
     async = celerytask.apply_async(
             args=task.args, task_id=tid, loglevel=60, retries=2)
     task.task_id = async.task_id
