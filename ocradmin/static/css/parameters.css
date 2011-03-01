@@ -98,4 +98,13 @@
     background-color: #FFFFDD;
 }
 
+.control_manip {
+    position: absolute;
+    float: left;
+    width: 40px;
+}
+
+.control_manip_add, .control_manip_remove {
+    float: left;
+}
 
