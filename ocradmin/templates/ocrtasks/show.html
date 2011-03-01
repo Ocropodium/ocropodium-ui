@@ -1,6 +1,10 @@
 {% extends "ocrtasks/standard.html" %}
 
 {% block headerscript %}
+	<script type='application/javascript' src='/static/js/ocr_parameters.js'></script>
+	<script type='application/javascript' src='/static/js/ocrtasks/show.js'></script>
+    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
 
 
 {% endblock %}
@@ -10,7 +14,8 @@
 
 <div class="widget">
     <div class="widget_header">Task Details</div>
-    <div class="widget_content">        
+    <div class="widget_content">
+        <input type="hidden" id="task_pk_cache" name="task_pk" value="{{task.pk}}" />
         {% include "ocrtasks/includes/show_task.html" %}
     </div>
 </div>

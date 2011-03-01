@@ -148,6 +148,7 @@ def update_task(request, task_pk):
     except OcrTask.DoesNotExist:
         # FIXME: for some reason this happens when running
         # automated tests
+        print "ARRRGH - DID NOT GET TASK"
         pass
     if task.batch:
         return HttpResponseRedirect("/batch/show/%s/" % task.batch.pk)
