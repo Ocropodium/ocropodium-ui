@@ -289,5 +289,6 @@ $(function() {
     // line formatter object
     formatter = new OCRJS.LineFormatter();
     pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
+    pbuilder.init();
 });
 
