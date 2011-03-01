@@ -67,7 +67,8 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 .addClass("ui-icon ui-icon-minus")
                 .addClass("control_manip_remove")
                 .appendTo(ctrl)
-                .data("ctrl", this);
+                .data("ctrl", this)
+                .toggle($(this).siblings().length > 0);
             ctrl.css({
                 top: select.position().top,
                 left: select.position().left + select.width(),
@@ -76,11 +77,13 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             $(".control_manip", this).remove();
         });
 
-        $(".control_manip_remove").live("click", function(event) {
+        $(".control_manip_remove").live("click", function(event) {                
             var elem = $(this).data("ctrl");
-            var id = $(elem).find("select").first().attr("id");
-            $(elem).remove();
-            self.renumberMultiples(id);
+            if ($(elem).siblings().length > 0) {
+                var id = $(elem).find("select").first().attr("id");
+                $(elem).remove();
+                self.renumberMultiples(id);
+            }
         });
 
         $(".control_manip_add").live("click", function(event) {            
@@ -283,7 +286,15 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     saveState: function() {
         if (this._valuedata !== null)
             return;
-
+        // Delete all existing state cookies
+        var val;
+        var cookies = document.cookie.split(";");
+        for (var i in cookies) {
+            val = cookies[i].split("=")[0];
+            if ($.trim(val).match("^" + this.parent.id)) {
+                $.cookie(val, null);
+            }
+        }
         $("select, input", this.parent).each(function(index, item) {
             var key = $(item).attr("name").substr(1);
             if ($(item).attr("type") == "checkbox")
@@ -337,6 +348,14 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             return $.cookie(key);            
         }
     },                
+
+    _deleteStoredValue: function(key) {
+        if (this._valuedata !== null) {
+            delete this._valuedata[key];
+        } else {
+            $.cookie(key, null);
+        }
+    },                  
 
     // overrideable functions
     onReadyState: function() {
