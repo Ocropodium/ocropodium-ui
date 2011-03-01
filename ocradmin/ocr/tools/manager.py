@@ -33,7 +33,7 @@ class PluginManager(object):
             mod = pm.main_class()
             engines.append(dict(
                 name=mod.name,
-                type="object",
+                type="list",
                 description=mod.description,
                 parameters=True,
             ))
