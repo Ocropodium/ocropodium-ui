@@ -55,7 +55,7 @@ def query(request, args=None):
     if not parts:        
         data = dict(
             choices=PluginManager.get_plugins(),
-            type="object",
+            type="list",
             name="engine",
             description="Available OCR plugins",
         )
