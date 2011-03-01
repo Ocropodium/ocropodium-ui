@@ -92,7 +92,7 @@ function updateTask(event) {
         batchoffset += hashoffset;
     }
     transcript.setTaskId(abstaskpk);
-    console.log("Setting page slider to: " + batchoffset);
+    console.log("Setting page slider to: " + batchoffset + " for task: " + abstaskpk);
     $("#page_slider").slider({value: batchoffset});
 }
 
@@ -353,7 +353,6 @@ $(function() {
                     transcript.save();
                 }
             } 
-            transcript.setTaskId(transcript.taskId() + diff);
             window.location.hash = "#!/" + diff;
             
             // set the buttons accordingly
