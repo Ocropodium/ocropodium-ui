@@ -100,15 +100,19 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         this._task_buttons = [{
                 title: "Retry Task",
                 classes: "ui-icon-refresh retry_task",
+                baseurl: "/ocr/retry_task/",
             }, {
                 title: "Abort Task",
                 classes: "ui-icon-circle-close abort_task",
+                baseurl: "/ocr/abort_task/",
             }, {
                 title: "Edit Task",
                 classes: "ui-icon-wrench edit_task",
+                baseurl: "/ocrtasks/show/",
             }, {
                 title: "Show Task Info",
                 classes: "ui-icon-info task_info",
+                baseurl: "/ocrtasks/show/",
             },
         ];
 
@@ -445,6 +449,9 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 .end()
                 .find("a").data("pk", taskdata.pk)
                 .end()
+                .find(".task_info")
+                .attr("href", "/ocrtasks/show/" + taskdata.pk + "/")
+                .end()
                 .find(".edit_task")
                 .attr("href", "/ocr/convert/" + taskdata.pk + "/")
                 .end()
@@ -734,7 +741,8 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             self._button_template.clone()
                 .attr("title", button.title)
                 .addClass(button.classes)
-                .appendTo(task);
+                .appendTo(task)
+                .data("baseurl", button.baseurl);
         });
 
         task.append(
