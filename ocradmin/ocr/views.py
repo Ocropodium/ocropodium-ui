@@ -265,15 +265,15 @@ def reconvert_lines(request, task_pk):
     args = task.args
     args[2]["allowcache"] = True
     args[2]["prebinarized"] = True
-    args[2].update(_get_best_params(
-        _cleanup_params(request.POST.copy(), "coords")))
+    args[2]["write_intermediate_results"] = True
+    args[2].update(_cleanup_params(request.POST.copy()))
     args[2]["coords"] = linedata
-    async = tasks.ConvertLineTask.apply(args=args,
+    sync = tasks.ConvertLineTask.apply(throw=True, args=args,
             queue="interactive")
     out = dict(
-        task_id=async.task_id,
-        status=async.status,
-        results=async.result
+        task_id=sync.task_id,
+        status=sync.status,
+        results=sync.result
     )
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 

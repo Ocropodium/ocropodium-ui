@@ -185,6 +185,7 @@ class ConvertLineTask(AbortableTask):
         # function for the converted to call periodically to check whether
         # to end execution early
         logger = self.get_logger()
+        config = parameters.OcrParameters(config)
         logger.info(params)
         create_intermediate_paths(filepath, outdir, params, logger)
         converter = PluginManager.get_converter(
@@ -192,8 +193,8 @@ class ConvertLineTask(AbortableTask):
                 logger=logger, abort_func=None, config=config)
         params["prebinarized"] = True
         return converter.convert_lines(
-                paramdict.get("binout").encode(),
-                paramdict.get("coords"), **params)
+                params.get("bin_out").encode(),
+                params.get("coords"), **params)
 
 
 class BinarizePageTask(AbortableTask):
