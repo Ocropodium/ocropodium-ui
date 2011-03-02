@@ -305,7 +305,7 @@ class GenericWrapper(base.OcrBase):
         return call(data)
 
 
-    def convert_lines(self, filepath, linedata):
+    def convert_lines(self, filepath, linedata, **kwargs):
         """
         Convert a single line given a prebinarized file and
         x, y, w, h coords.
