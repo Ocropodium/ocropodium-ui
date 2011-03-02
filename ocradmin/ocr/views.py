@@ -260,15 +260,18 @@ def reconvert_lines(request, task_pk):
     linedata = simplejson.loads(jsonstr)
 
     task = get_object_or_404(OcrTask, pk=task_pk)
+    config = parameters.parse_post_data(request.POST)
+    params = _cleanup_params(request.POST)
     # hack!  add an allowcache to the params dict to indicate
     # that we don't want to remake an existing binary
-    args = task.args
-    args[2]["allowcache"] = True
-    args[2]["prebinarized"] = True
-    args[2]["write_intermediate_results"] = True
-    args[2].update(_cleanup_params(request.POST.copy()))
-    args[2]["coords"] = linedata
-    sync = tasks.ConvertLineTask.apply(throw=True, args=args,
+    task.args[2].update(dict(
+            allowcache=True,
+            prebinarized=True,
+            write_intermediate_results=True,
+            **params))
+    task.args[2]["coords"] = linedata
+    task.args[3] = config
+    sync = tasks.ConvertLineTask.apply(throw=True, args=task.args,
             queue="interactive")
     out = dict(
         task_id=sync.task_id,
@@ -595,6 +598,7 @@ def _handle_multipart_upload(request, outdir):
         paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
     config = parameters.parse_post_data(request.POST)
     return paths, config, _cleanup_params(request.POST)
+
 
 def _cleanup_params(data):
     """
