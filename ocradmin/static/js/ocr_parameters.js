@@ -36,10 +36,8 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         this.parent = parent;
 
         this._valuedata = valuedata || null;
-
-        this._cache = null;
+        this._temp = null;
         this._waiting = {};
-        console.log("Called constructor");
     },
 
     init: function() {
@@ -127,10 +125,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             type: "GET",
             error: OCRJS.ajaxErrorHandler,
             success: function(data) {
-                self._cache = data;
-                $(parent).append(
-                    self.buildSection(parent, data)
-                );
+                self._temp = self.buildSection(parent, data)
                 self._queryDone(parent.id);
             },
         });
@@ -189,16 +184,22 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         return container;
     },
 
+    fetchData: function(ident, callback) {
+        var self = this;
+        var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
+        self._waiting[ident] = true;
+        $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
+            callback.call(self, data);
+            self._queryDone(ident);
+        });
+    },                  
+
     buildChoicesSection: function(container, ident, data, multiindex) {
         var self = this;                             
         // fetch more data if we need to...
         if (data.choices === true) {
-            var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
-            //parts.push(data.name);
-            self._waiting[ident] = true;
-            $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
-                self.buildChoicesSection(container, ident, data);
-                self._queryDone(ident);
+            self.fetchData(ident, function(data) {
+                self.buildChoicesSection(container, ident, data, multiindex);
             });
             return;
         }
@@ -215,9 +216,9 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             .attr("name", ctrlname)
             .appendTo(container);
 
-        if (data.multiple) {
+        if (data.multiple)
             container.addClass("multiple");
-        }
+        
         var option = $("<option></option>");
         $.each(data.choices, function(i, choice) {
             control.data(choice.name, choice);
@@ -235,6 +236,9 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 container.append(section);                    
             self.renumberMultiples(this.id);
         });
+
+        // if we have some choices, select the last cached
+        // and then trigger a change event to build any children
         if (data.choices.length) {
             self.loadOptionState(control, data.choices[0].name);
             control.change();
@@ -246,21 +250,17 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
 
         // fetch more data if we need to...
         if (data.parameters === true) {
-            var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
-            self._waiting[ident] = true;
-            $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
+            self.fetchData(ident, function(data) {
                 var section = self.buildSection(parent, data);
                 if ($(parent).children("div").length)
                     $(parent).children("div").replaceWith(section);
                 else
                     $(parent).append(section);                    
-                self._queryDone(ident);
             });
             return;
         }
 
         $.each(data.parameters, function(i, param) {
-            //console.log("Building param for: " + i + " " + param.name + " ", param);
             container.append(
                 self.buildSection(container.get(0), param, i)
             );
@@ -337,6 +337,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     _queryDone: function(key) {
         delete this._waiting[key];                    
         if (this.isReady()) {
+            $(this.parent).append(this._temp);
             this.onReadyState();      
         }
     },
