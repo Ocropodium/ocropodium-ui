@@ -36,6 +36,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         this.parent = parent;
 
         this._valuedata = valuedata || null;
+        this._cache = null;
         this._temp = null;
         this._waiting = {};
     },
@@ -287,21 +288,16 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         if (this._valuedata !== null)
             return;
         // Delete all existing state cookies
-        var val;
-        var cookies = document.cookie.split(";");
-        for (var i in cookies) {
-            val = cookies[i].split("=")[0];
-            if ($.trim(val).match("^" + this.parent.id)) {
-                $.cookie(val, null);
-            }
-        }
+        var val = {};
         $("select, input", this.parent).each(function(index, item) {
             var key = $(item).attr("name").substr(1);
+
             if ($(item).attr("type") == "checkbox")
-                $.cookie(key, $(item).attr("checked"));
+                val[key] = $(item).attr("checked");
             else
-                $.cookie(key, $(item).val());
+                val[key] = $(item).val();
         });
+        $.cookie("ocr-parameters", JSON.stringify(val));
     },
 
     loadOptionState: function(item, defaultoption) {
@@ -346,17 +342,13 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         if (this._valuedata !== null) {
             return this._valuedata[key];
         } else {
-            return $.cookie(key);            
+            if (this._cache === null) {
+                var val = $.cookie("ocr-parameters");
+                this._cache = val ? JSON.parse(val) : {};
+            }
+            return this._cache[key];
         }
     },                
-
-    _deleteStoredValue: function(key) {
-        if (this._valuedata !== null) {
-            delete this._valuedata[key];
-        } else {
-            $.cookie(key, null);
-        }
-    },                  
 
     // overrideable functions
     onReadyState: function() {
