@@ -33,7 +33,31 @@ function populateBatchList(data) {
 
 $(function() {
     if ($("#batch_id").length) {
-        batch = new OCRJS.BatchWidget($("#workspace").get(0), $("#batch_id").val());    
+        var selectedtab = 0;
+        batch = new OCRJS.BatchWidget($("#workspace").get(0), $("#batch_id").val());
+        batch.onTaskSelected = function(index, pk) {
+            $("#recent_batches").load("/ocrtasks/show/" + pk + "/", function() {
+                var elem = this;
+                console.log("selecting: ", selectedtab);
+                var tabs = $(elem)                    
+                        .find("#tabs")
+                        .accordion({
+                            collapsible: true,
+                            autoHeight: false,
+                            active: selectedtab,
+                            change: function(event, ui) {
+                                selectedtab = ui.options.active; 
+                            },
+                        });
+                var params = null;
+                $.getJSON("/ocr/task_config/" + pk + "/", function(data) {
+                    console.log("Set task data...");
+                    params = new OCRJS.ParameterBuilder(
+                            $(elem).find("#options").get(0), data);
+                    params.init();
+                });
+            });
+        };
         batch.init();
     
         $.ajax({

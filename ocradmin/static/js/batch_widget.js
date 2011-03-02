@@ -131,10 +131,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
     setupMouseEvents: function() {
         var self = this;
 
-        $(".batch_task").bind("dblclick", function(event) {
+        $(".batch_task").bind("click", function(event) {
             var index = $(this).data("index");
-            var batchclass = self.getBatchClass(self._batchdata.fields.task_type);
-            document.location.href = self._viewurl + "/?page=" + (index + self._itemoffset);
+            var pk = $(this).data("pk");
+            self.onTaskSelected(index, pk);
         });
 
         $(".export_link").click(function(event) {
@@ -776,7 +776,12 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         task.append(holder.append(progressbar.append(progress)));
     },
 
-
+    /*
+     * Overrideable events
+     *
+     */
+    onTaskSelected: function(index, pk) {
+    },                     
 });
 
 
