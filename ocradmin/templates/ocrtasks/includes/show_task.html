@@ -1,5 +1,6 @@
 
 <div class="task_info_container" id="tabs">
+    <!--
     <ul>
         <li><a href="#tab_1">Basic Info</a></li>
         <li><a href="#tab_2">Parameters</a></li>
@@ -8,7 +9,9 @@
         {% if task.error %}
             <li><a href="#tab_5" class="ui-state-error-text">Errors</a></li>
         {% endif %}
-    </ul>
+    </ul> -->
+
+    <h3><a href="#">Basic Info</a></h3>
     <div id="tab_1">
         <table class="properties_table" border="0px">
             <tr class="odd">
@@ -49,6 +52,7 @@
             </tr>
         </table>
     </div>
+    <h3><a href="#">Parameters</a></h3>
     <div id="tab_2">
         <table class="properties_table">
             {% for k, v in params %}
@@ -58,6 +62,7 @@
             {% endfor %}
         </table> 
     </div>
+    <h3><a href="#">Results</a></h3>
     <div id="tab_3">
         <h3>Results:</h3>
         <ul class="results_list">
@@ -65,6 +70,7 @@
             <li><a target="_blank" href="/ocr/results/{{task.task_id}}/?format=text" title="Text Format">Plain Text</a></li>
         </ul>
     </div>
+    <h3><a href="#">Options</a></h3>
     <div id="tab_4">
         <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
             <h4>Options:</h4>
