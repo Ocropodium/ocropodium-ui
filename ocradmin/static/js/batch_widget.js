@@ -44,6 +44,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
         this._listeners = {
             onTaskSelected: [],
+            onTaskDeselected: [],
             onUpdate: [],
         };
 
@@ -139,7 +140,14 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         $(".batch_task").bind("click", function(event) {
             var index = $(this).data("index");
             var pk = $(this).data("pk");
-            self.callListeners("onTaskSelected", index, pk);
+            if (!$(this).hasClass("current")) {
+                $(".batch_task").removeClass("current");
+                $(this).addClass("current");
+                self.callListeners("onTaskSelected", index, pk);
+            } else {
+                $(this).removeClass("current");
+                self.callListeners("onTaskDeselected", index, pk);
+            }
         });
 
         $(".export_link").click(function(event) {
