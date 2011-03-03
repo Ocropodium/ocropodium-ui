@@ -144,13 +144,13 @@ $(function() {
 
     // initialise the uploader...
     uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/batch/upload_files/");
-    uploader.onXHRLoad = onXHRLoad;
-    uploader.onUploadsStarted = function(e) {
+    uploader.addListener("onXHRLoad", onXHRLoad);
+    uploader.addListener("onUploadsStarted", function(e) {
         $("#dropzone").text("Please wait...").addClass("waiting");
-    };
-    uploader.onUploadsFinished = function(e) {
+    });
+    uploader.addListener("onUploadsFinished", function(e) {
         $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-    };
+    });
 
     // make steps into tabs
     $(".next_tab").click(function(event) {

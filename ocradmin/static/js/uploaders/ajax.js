@@ -13,6 +13,14 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         };
         $.extend(this.options, options);
 
+        this._listeners = {            
+            onXHRLoad: [],
+            onUploadStart: [],
+            onUploadEnd: [],
+            onUploadsStarted: [],
+            onUploadsFinished: [],
+        };
+
         this._maxsize = 0;
         this._queue = [];
         this._params = [];
@@ -102,12 +110,11 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
     },
 
     clearParameters: function() {
-        console.log("Clear parameters");                         
         this._params = [];
     },         
 
     uploadPost: function(files) {
-        this.onUploadsStarted();
+        this.callListeners("onUploadsStarted");
 
         // chuck away all but the first file if not
         // in multi mode
@@ -129,7 +136,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
                 
     postNextItem: function() {
         if (!this._queue.length) {
-            this.onUploadsFinished();
+            this.callListeners("onUploadsFinished");
             return false;
         }
 
@@ -138,13 +145,13 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         var xhr = new XMLHttpRequest();
         xhr.onload = function(event) {
             self.postNextItem();
-            self.onXHRLoad(event);        
+            self.callListeners("onXHRLoad", event);        
         };
 
         var params = this.parameters();
         params["inlinefile"] = file.fileName;
         var urlstring = this.getQueryString(params);
-        this.onUploadStart()
+        this.callListeners("onUploadStart");
         xhr.open("POST", urlstring, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.setRequestHeader('content-type', file.type); 
@@ -163,26 +170,6 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         return this._maxsize;
     },
 
-    // callbacks:
-    onXHRLoad: function(event) {
-
-    },
-
-    onUploadStart: function(event) {
-
-    },
-
-    onUploadEnd: function(event) {
-
-    },
-
-    onUploadsStarted: function(event) {
-
-    },
-
-    onUploadsFinished: function(event) {
-
-    },
 });
 
 
