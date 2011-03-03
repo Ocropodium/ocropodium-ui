@@ -21,6 +21,12 @@ OCRJS.OcrBase = Base.extend({
         console.log(arguments);
     },
 
+    registerListener: function(key) {
+        if (this._listeners[key] != undefined)
+            throw "Listener already registered: '" + key + "'";
+        this._listeners[key] = [];            
+    },
+
     addListener: function(key, func) {
         if (this._listeners[key] == undefined)
             throw "Unknown callback: '" + key + "'";
