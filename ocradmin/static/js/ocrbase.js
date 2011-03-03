@@ -12,26 +12,32 @@ OCRJS.OcrBase = Base.extend({
             log: false,
         }
         $.extend(this.options, options);        
+        this._listeners = [];
     },
 
-    _logger: function(text) {
+    _logger: function(arguments) {
         if (!this.options.log)
             return;
-        this._log.push((new Date()).getTime() + ":  " + text);
-        if (this._log.length > 5)
-            this._log.shift();        
-        var log = $("#logwin");
-        if (!log.length) {
-            log = $("<div></div>")
-                .attr("id", "logwin");
-                
-            $("body").append(log);
-        }
-        log.html("");
-        $.each(this._log, function(i, t) {
-            log.append($("<div>" + t + "</div>"));
+        console.log(arguments);
+    },
+
+    addListener: function(key, func) {
+        if (this._listeners[key] == undefined)
+            throw "Unknown callback: '" + key + "'";
+        this._listeners[key].push(func);
+    },
+
+    callListeners: function() {
+        var args = Array.prototype.slice.call(arguments);
+        var key = args.shift();
+        if (this._listeners[key] == undefined)
+            throw "Unknown callback: '" + key + "'";
+        $.each(this._listeners[key], function(i, func) {
+            func.apply(
+                func.callee, args.concat(Array.prototype.slice.call(arguments)));
         });
-    },             
+    },
+                   
 });
 
 
