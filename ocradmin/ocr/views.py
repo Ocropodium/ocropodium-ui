@@ -150,10 +150,14 @@ def update_task(request, task_pk):
         # FIXME: for some reason this happens when running
         # automated tests
         pass
-    if task.batch:
-        return HttpResponseRedirect("/batch/show/%s/" % task.batch.pk)
+    if request.is_ajax():
+        return HttpResponse(simplejson.dumps({"ok": True}), 
+                mimetype="application/json")
     else:
-        return HttpResponseRedirect("/ocrtasks/list/")
+        if task.batch:
+            return HttpResponseRedirect("/batch/show/%s/" % task.batch.pk)
+        else:
+            return HttpResponseRedirect("/ocrtasks/list/")
 
 
 @login_required
