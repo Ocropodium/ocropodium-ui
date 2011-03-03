@@ -94,6 +94,13 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         this.options = {log: false};
         $.extend(this.options, options);
 
+        this._listeners = {
+            onEditNextElement: [],
+            onEditPrevElement: [],
+            onEditingStarted: [],
+            onEditingFinished: [],
+        };
+
         this._e = null;          // the element we're operating on 
         this._c = null;          // the current character in front of the cursor
         this._top = null;         // reference to initial top of elem
@@ -149,7 +156,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         this._initialiseCursor();
         if (event && event.type.match(/click/))
             this._selectCharUnderPoint(event);
-        this.onEditingStarted(elem);
+        this.callListeners("onEditingStarted", elem);
     },
 
 
@@ -169,7 +176,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         }
         this.teardownEvents();
         this._editing = false;
-        this.onEditingFinished(
+        this.callListeners("onEditingFinished", 
             this._e,
             this._inittext,
             withtext ? withtext : endtext
@@ -485,30 +492,6 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         this._undostack.push(new InsertCommand(this, char, curr));
     },
 
-
-    /*
-     * Overridable events
-     *
-     */
-
-    onEditNextElement: function(event) {
-
-    },
-
-    onEditPrevElement: function(event) {
-
-    },
-
-    onEditingStarted: function(event) {
-
-    },
-
-    onEditingFinished: function(element, origtext, newtext) {
-
-    },
-
-
-
     /*
      * Private Functions
      */
@@ -577,8 +560,8 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
             case KC_TAB: // finish and go to next
                 this.finishEditing();
                 event.shiftKey 
-                    ? this.onEditPrevElement()
-                    : this.onEditNextElement();
+                    ? this.callListeners("onEditPrevElement")
+                    : this.callListeners("onEditNextElement");
                 break;
             default:
                 // char handlers - only use keypress for this                

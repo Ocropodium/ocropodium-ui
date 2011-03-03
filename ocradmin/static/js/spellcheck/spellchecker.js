@@ -23,7 +23,11 @@ var ReplaceCommand = OCRJS.UndoCommand.extend({
 OCRJS.Spellchecker = OCRJS.OcrBase.extend({
 
     constructor: function(parent, options) {
-        this.base(options);        
+        this.base(options);
+        this._listeners = {
+            onWordCorrection: [],
+            onWordHighlight: [],
+        };        
         this.parent = parent;
         this._wordindex = 0;
         this._data = {};    // spellcheck data
@@ -270,7 +274,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
         this._lineedit.val($(element).text());
         this._lineedit.focus();
         this.updateSuggestions();
-        this.onWordHighlight(element);
+        this.callListeners("onWordHighlight", element);
     },
 
 
@@ -302,7 +306,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
                 )
             );
             //correctelem.replaceWith(replacenode);
-            this.onWordCorrection();
+            this.callListeners("onWordCorrection");
         } else {
             this.setNextSpellcheckWord(shiftback);
         }
@@ -321,12 +325,4 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
         this._lineedit.blur();        
         this._container.find("*").attr("disabled", true);
     },               
-
-    onWordCorrection: function(word) {
-
-    },
-
-    onWordHighlight: function(element) {
-
-    },                      
 });
