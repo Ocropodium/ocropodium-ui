@@ -288,6 +288,7 @@ def latest(request):
 
 
 @login_required
+@project_required
 def show(request, batch_pk):
     """
     View a batch.
