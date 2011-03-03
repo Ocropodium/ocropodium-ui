@@ -24,6 +24,18 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         },
         $.extend(this.options, options);
 
+        this._listeners = {
+            onLinesReady: [],
+            onTextChanged: [],
+            onTaskLoad: [],
+            onTaskChange: [],
+            onClickPosition: [],
+            onHoverPosition: [],
+            onSave: [],
+            onLineSelected: [],
+            onLineDeselected: [],
+        };
+
         this._task_pk = null;
 
         this._editor = new OCRJS.LineEditor(); // line editor widget
@@ -75,7 +87,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
 
         $(".ocr_line").live("mouseover.selectline", function(event) {
-            self.onHoverPosition($(this).data("bbox"));
+            self.callListeners("onHoverPosition", $(this).data("bbox"));
         });
     },
 
@@ -152,46 +164,42 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
 
     setupCallbacks: function() {
         var self = this;
-        this._editor.onEditingStarted = function(element) {
+        this._editor.addListener("onEditingStarted", function(element) {
             self.teardownKeyEvents();
             if (self._spellchecking)
                 self._speller.looseFocus();
-        }
-
-        this._editor.onEditingFinished = function(element, origtext, newtext) {
+        });
+        this._editor.addListener("onEditingFinished", function(element, origtext, newtext) {
             self.setupKeyEvents();
             self.replaceLineText(element, origtext, newtext);
             if (self._spellchecking) {
                 self._speller.spellcheck($(element));
                 self._speller.takeFocus();
             }
-        }
-
-        this._editor.onEditNextElement = function() {
+        });
+        this._editor.addListener("onEditNextElement", function() {
             var next = $(self._editor.element()).nextAll(".ocr_line").first();
             if (!next.length)
                 next = $(".ocr_line").first();
             self._editor.edit(next.get(0));
             next.trigger("click");
-        }
-
-        this._editor.onEditPrevElement = function() {
+        });
+        this._editor.addListener("onEditPrevElement", function() {
             var prev = $(self._editor.element()).prevAll(".ocr_line").first();
             if (!prev.length)
                 prev = $(".ocr_line").last();
             self._editor.edit(prev.get(0));
             prev.trigger("click");
-        }
+        });
 
-        this._speller.onWordCorrection = function() {
+        this._speller.addListener("onWordCorrection", function() {
             if (self._pagediv.text() != self._textbuffer) {
                 self._textChanged();
             }
-        }
-
-        this._speller.onWordHighlight = function(element) {
+        });
+        this._speller.addListener("onWordHighlight", function(element) {
             self.setCurrentLine($(element).parent());
-        }        
+        });        
     },                 
 
     container: function() {
@@ -294,7 +302,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                 }
                 self._taskdata = data[0];
                 self.setPageLines(data[0]);              
-                self.onTaskLoad();
+                self.callListeners("onTaskLoad");
             },
             error: OCRJS.ajaxErrorHandler,
         });
@@ -317,7 +325,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
         //self.insertBreaks();
         this._textbuffer = this._pagediv.text();
-        this.onLinesReady();
+        this.callListeners("onLinesReady");
     },
 
 
@@ -346,7 +354,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                 if (data && data.ok) {
                     self._textbuffer = self._pagediv.text();
                     self._haschanges = false;
-                    self.onSave();
+                    self.callListeners("onSave");
                 }
             },
         });
@@ -362,8 +370,8 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         if (pos != 0) {
             line.get(0).scrollIntoView(pos == -1);
         }        
-        this.onClickPosition(line.data("bbox"));
-        this.onLineSelected(line.get(0).tagName.toLowerCase());
+        this.callListeners("onClickPosition", line.data("bbox"));
+        this.callListeners("onLineSelected", line.get(0).tagName.toLowerCase());
     },
                  
 
@@ -386,7 +394,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
 
     _textChanged: function() {
         this._haschanges = true;
-        this.onTextChanged();
+        this.callListeners("onTextChanged");
     },                      
 
     /*
