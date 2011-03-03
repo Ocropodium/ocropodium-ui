@@ -4,10 +4,10 @@
 var BatchDataSource = AbstractDataSource.extend({
     constructor: function() {
         this.base();    
-        this.__data = [];
-        this.__url = "/batch/list";
-        this.__dir = "";
-        this.__headers = [{
+        this._data = [];
+        this._url = "/batch/list";
+        this._dir = "";
+        this._headers = [{
                 name: "#",
                 sortAs: "num",
             }, {
@@ -28,11 +28,11 @@ var BatchDataSource = AbstractDataSource.extend({
             }, 
         ];
 
-        this.__page = 1;
-        this.__sortby = "created_on";
-        this.__desc = true;
-        this.__sortcol = 2;
-        this.__col2sort = {
+        this._page = 1;
+        this._sortby = "created_on";
+        this._desc = true;
+        this._sortcol = 2;
+        this._col2sort = {
             0: "pk",
             1: "name",
             2: "user__username",
@@ -43,54 +43,54 @@ var BatchDataSource = AbstractDataSource.extend({
     },
 
     isPaginated: function() {
-        return this.__data.has_other_pages;
+        return this._data.has_other_pages;
     },
 
     page: function() {
-        return this.__page;
+        return this._page;
     },
 
     setPage : function(page) {
-        this.__page = page;
+        this._page = page;
         this.refreshData();
     },
 
     nextPage: function() {
-        return this.__data.next_page_number;
+        return this._data.next_page_number;
     },
 
     prevPage: function() {
-        return this.__data.previous_page_number;
+        return this._data.previous_page_number;
     },
 
     hasPrev: function() {
-        return this.__data.has_previous;
+        return this._data.has_previous;
     },
 
     hasNext: function() {
-        return this.__data.has_next;
+        return this._data.has_next;
     },
 
     numPages: function() {
-        return this.__data.num_pages;
+        return this._data.num_pages;
     },
 
     url: function() {
-        return this.__url;
+        return this._url;
     },
 
     dataLength: function() {
-        return this.__data.object_list.length;
+        return this._data.object_list.length;
     },
 
     rowMetadata: function(row) {
         return {
-            pk: this.__data.object_list[row].pk,
+            pk: this._data.object_list[row].pk,
         };
     },
 
     rowClassNames: function(row) {
-        if (this.__data.object_list[row].fields.is_complete) 
+        if (this._data.object_list[row].fields.is_complete) 
             return [ "complete" ];
         return [];
     },
@@ -101,27 +101,27 @@ var BatchDataSource = AbstractDataSource.extend({
 
     cellLabel: function(row, col) {
         if (col == 0)
-            return this.__data.object_list[row].pk;
+            return this._data.object_list[row].pk;
         if (col == 1)
-            return this.__data.object_list[row].fields.name;
+            return this._data.object_list[row].fields.name;
         if (col == 2)
-            return this.__data.object_list[row].extras.username;
+            return this._data.object_list[row].extras.username;
         if (col == 3)
-            return this.__data.object_list[row].fields.task_type
-                .substr(0, this.__data.object_list[row].fields.task_type.indexOf("."));
+            return this._data.object_list[row].fields.task_type
+                .substr(0, this._data.object_list[row].fields.task_type.indexOf("."));
         if (col == 4)
-            return this.__data.object_list[row].fields.created_on;
+            return this._data.object_list[row].fields.created_on;
         if (col == 5)
-            return this.__data.object_list[row].extras.task_count;
+            return this._data.object_list[row].extras.task_count;
     },
 
 
     sortByColumn: function(col) {
-        var s = this.__col2sort[col];
-        if (this.__sortby == s)
-            this.__desc = !this.__desc;
+        var s = this._col2sort[col];
+        if (this._sortby == s)
+            this._desc = !this._desc;
         else
-            this.__sortby = s;
+            this._sortby = s;
         this.refreshData();
     },
 
@@ -136,11 +136,11 @@ var BatchDataSource = AbstractDataSource.extend({
     refreshData: function(params) {
         var self = this;
         $.ajax({
-            url: self.__url,
+            url: self._url,
             dataType: "json",
             data: {
-                page: self.__page,
-                order_by: self.__desc ? "-" + self.__sortby : self.__sortby,
+                page: self._page,
+                order_by: self._desc ? "-" + self._sortby : self._sortby,
             },
             error: OCRJS.ajaxErrorHandler,
             beforeSend: function(e) {
@@ -154,7 +154,7 @@ var BatchDataSource = AbstractDataSource.extend({
                     alert("Error: " + data.error);
                     return;
                 }
-                self.__data = data;
+                self._data = data;
                 self.callListeners("dataChanged");
             },
         });

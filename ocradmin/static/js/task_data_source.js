@@ -5,10 +5,10 @@
 var TaskDataSource = AbstractDataSource.extend({
     constructor: function() {
         this.base();
-        this.__data = [];
-        this.__url = "/ocrtasks/list";
-        this.__dir = "";
-        this.__headers = [{
+        this._data = [];
+        this._url = "/ocrtasks/list";
+        this._dir = "";
+        this._headers = [{
                 name: "#",
                 sortAs: "num",
             }, {
@@ -26,11 +26,11 @@ var TaskDataSource = AbstractDataSource.extend({
             }, 
         ];
 
-        this.__page = 1;
-        this.__sortby = "updated_on";
-        this.__desc = true;
-        this.__sortcol = 2;
-        this.__col2sort = {
+        this._page = 1;
+        this._sortby = "updated_on";
+        this._desc = true;
+        this._sortcol = 2;
+        this._col2sort = {
             0: "pk",
             1: "page_name",
             2: "user__username",
@@ -42,55 +42,55 @@ var TaskDataSource = AbstractDataSource.extend({
 
 
     isPaginated: function() {
-        return this.__data.has_other_pages;
+        return this._data.has_other_pages;
     },
 
     page: function() {
-        return this.__page;
+        return this._page;
     },
 
     setPage : function(page) {
-        this.__page = page;
+        this._page = page;
         this.refreshData();
     },
 
     nextPage: function() {
-        return this.__data.next_page_number;
+        return this._data.next_page_number;
     },
 
     prevPage: function() {
-        return this.__data.previous_page_number;
+        return this._data.previous_page_number;
     },
 
     hasPrev: function() {
-        return this.__data.has_previous;
+        return this._data.has_previous;
     },
 
     hasNext: function() {
-        return this.__data.has_next;
+        return this._data.has_next;
     },
 
     numPages: function() {
-        return this.__data.num_pages;
+        return this._data.num_pages;
     },
 
     url: function() {
-        return this.__url;
+        return this._url;
     },
 
     dataLength: function() {
-        return this.__data.object_list.length;
+        return this._data.object_list.length;
     },
 
     rowMetadata: function(row) {
         return {
-            pk: this.__data.object_list[row].pk,
+            pk: this._data.object_list[row].pk,
         };
     },
 
     rowClassNames: function(row) {
         return [
-            this.__data.object_list[row].fields.status.toLowerCase(),
+            this._data.object_list[row].fields.status.toLowerCase(),
         ];
     },
 
@@ -100,24 +100,24 @@ var TaskDataSource = AbstractDataSource.extend({
 
     cellLabel: function(row, col) {
         if (col == 0)
-            return this.__data.object_list[row].pk;
+            return this._data.object_list[row].pk;
         if (col == 1)
-            return this.__data.object_list[row].fields.page_name;
+            return this._data.object_list[row].fields.page_name;
         if (col == 2)
-            return this.__data.object_list[row].fields.user.fields.username;
+            return this._data.object_list[row].fields.user.fields.username;
         if (col == 3)
-            return this.__data.object_list[row].fields.updated_on;
+            return this._data.object_list[row].fields.updated_on;
         if (col == 4)
-            return this.__data.object_list[row].fields.status;
+            return this._data.object_list[row].fields.status;
     },
 
 
     sortByColumn: function(col) {
-        var s = this.__col2sort[col];
-        if (this.__sortby == s)
-            this.__desc = !this.__desc;
+        var s = this._col2sort[col];
+        if (this._sortby == s)
+            this._desc = !this._desc;
         else
-            this.__sortby = s;
+            this._sortby = s;
         this.refreshData();
     },
 
@@ -132,11 +132,11 @@ var TaskDataSource = AbstractDataSource.extend({
     refreshData: function(params) {
         var self = this;
         $.ajax({
-            url: self.__url,
+            url: self._url,
             dataType: "json",
             data: {
-                page: self.__page,
-                order_by: self.__desc ? "-" + self.__sortby : self.__sortby,
+                page: self._page,
+                order_by: self._desc ? "-" + self._sortby : self._sortby,
             },
             beforeSend: function(e) {
                 self.callListeners("startRefresh");
@@ -149,7 +149,7 @@ var TaskDataSource = AbstractDataSource.extend({
                     alert("Error: " + data.error);
                     return;
                 }
-                self.__data = data;
+                self._data = data;
                 self.callListeners("dataChanged");
             },
             error: OCRJS.ajaxErrorHandler,

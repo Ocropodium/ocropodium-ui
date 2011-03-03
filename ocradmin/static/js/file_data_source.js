@@ -4,10 +4,10 @@
 var FileDataSource = AbstractDataSource.extend({
     constructor: function() {
         this.base();
-        this.__data = [];
-        this.__lsurl = "/filebrowser/ls";
-        this.__dir = "";
-        this.__headers = [{
+        this._data = [];
+        this._lsurl = "/filebrowser/ls";
+        this._dir = "";
+        this._headers = [{
                 name: "Name",
                 sortAs: "str",
             }, {
@@ -22,7 +22,7 @@ var FileDataSource = AbstractDataSource.extend({
 
 
     renderCellAt1: function(row) {
-        var size = this.__data[row][this.c2d(1)];
+        var size = this._data[row][this.c2d(1)];
         if (size < 1024) {
             return size + " bytes";
         } else if (size < 1024 * 1024) {
@@ -34,28 +34,28 @@ var FileDataSource = AbstractDataSource.extend({
 
     renderCellAt2: function(row) {
         var date = new Date();
-        date.setTime(parseFloat(this.__data[row][this.c2d(2)]) * 1000);
+        date.setTime(parseFloat(this._data[row][this.c2d(2)]) * 1000);
         return date.toString();
     },
 
     rowKey: function(row) {
-        return this.__data[row][0];
+        return this._data[row][0];
     },
 
     rowMetadata: function(row) {
-        var value = this.__dir == ""
-            ? this.__data[row][0]
-            : this.__dir + "/" + this.__data[row][0];
+        var value = this._dir == ""
+            ? this._data[row][0]
+            : this._dir + "/" + this._data[row][0];
         return {
-            name: this.__data[row][0],
-            type: this.__data[row][1],
+            name: this._data[row][0],
+            type: this._data[row][1],
             value: value,
         };
     },
 
     rowClassNames: function(row) {
         return [
-            this.__data[row][1],
+            this._data[row][1],
         ];
     },
 
@@ -74,18 +74,18 @@ var FileDataSource = AbstractDataSource.extend({
     },
 
     setCwd: function(dir) {
-        if (this.__dir != "")
-           this.__dir = this.__dir + "/" + dir;
+        if (this._dir != "")
+           this._dir = this._dir + "/" + dir;
         else
-           this.__dir = dir;
+           this._dir = dir;
         this.refreshData();
     },
 
     backDir: function() {
-        if (this.__dir.match(/(.*)\/[^\/]+$/)) 
-            this.__dir = RegExp.$1;
+        if (this._dir.match(/(.*)\/[^\/]+$/)) 
+            this._dir = RegExp.$1;
         else 
-            this.__dir = "";
+            this._dir = "";
         this.refreshData();
     },
 
@@ -101,9 +101,9 @@ var FileDataSource = AbstractDataSource.extend({
     refreshData: function(params) {
         var self = this;
         $.ajax({
-            url: self.__lsurl,
+            url: self._lsurl,
             dataType: "json",
-            data: "dir=" + self.__dir,
+            data: "dir=" + self._dir,
             beforeSend: function(e) {
                 self.callListeners("startRefresh");
             },
@@ -119,7 +119,7 @@ var FileDataSource = AbstractDataSource.extend({
                     alert("Error: " + data[0].error);
                     return;
                 }
-                self.__data = data;
+                self._data = data;
                 self.sort();
             },
             error: OCRJS.ajaxErrorHandler,
