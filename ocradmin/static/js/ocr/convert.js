@@ -260,17 +260,17 @@ $(function() {
     // initialise the uploader...
     if ($("#uploadform").length) {
         uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
-        uploader.onXHRLoad = onXHRLoad;
-        uploader.onUploadsStarted = function(e) {
+        uploader.addListener("onXHRLoad", onXHRLoad);
+        uploader.addListener("onUploadsStarted", function(e) {
             uploader.clearParameters();
             $("#dropzone").text("Please wait...").addClass("waiting");
             $("#optionsform input, #optionsform select").each(function(i, elem) {
                 uploader.registerTextParameter(elem);
             });
-        };
-        uploader.onUploadsFinished = function(e) {
+        });
+        uploader.addListener("onUploadsFinished", function(e) {
             $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-        };
+        });
     }
 
     // load state stored from last time

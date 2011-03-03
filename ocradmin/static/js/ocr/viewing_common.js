@@ -359,8 +359,8 @@ $(function() {
         window.location.pathname, 
         { multi: false }
     );
-    uploader.onXHRLoad = onXHRLoad;
-    uploader.onUploadsStarted = function(e) {
+    uploader.addListener("onXHRLoad", onXHRLoad);
+    uploader.addListener("onUploadsStarted", function(e) {
         // close anything that's already open in the viewer
         sdviewer.close();
         //pbuilder.setWaiting(true);
@@ -372,11 +372,11 @@ $(function() {
         $("#optionsform input, #optionsform select").each(function(i, elem) {
             uploader.registerTextParameter(elem);
         });
-    };
-    uploader.onUploadsFinished = function(e) {
+    });
+    uploader.addListener("onUploadsFinished", function(e) {
         //pbuilder.setWaiting(false);        
         $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-    };
+    });
 
     loadState();
 
