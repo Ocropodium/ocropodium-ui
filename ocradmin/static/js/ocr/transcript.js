@@ -224,7 +224,7 @@ $(function() {
     // image is rebinarized so we can view it in the viewer
     // This is likely to be horribly inefficient, at least
     // at first...
-    transcript.onTaskLoad = function() {
+    transcript.addListener("onTaskLoad", function() {
         //var ismax = $("#page_slider").slider("option", "value") 
         //        == $("#batchsize").val() - 1;
         //var ismin = $("#page_slider").slider("option", "value") == 0; 
@@ -251,24 +251,21 @@ $(function() {
             },
             error: OCRJS.ajaxErrorHandler,
         });
-    }
-
-    transcript.onTextChanged = function() {
+    });
+    transcript.addListener("onTextChanged", function() {
         $("#save_data").button({
             disabled: false,
         });
-    }
-
-    transcript.onSave = function() {
+    });
+    transcript.addListener("onSave", function() {
         $("#save_data").button({
             disabled: true,
         });
-    }
-
-    transcript.onLinesReady = function() {
+    });
+    transcript.addListener("onLinesReady", function() {
         // trigger a reformat
         $("input[name=format]:checked").click();
-    }
+    });
 
     var positionViewer = function(position) {
         // ensure the given line is centred in the viewport
@@ -284,19 +281,19 @@ $(function() {
         }
     }
 
-    transcript.onHoverPosition = function(position) {
+    transcript.addListener("onHoverPosition", function(position) {
         if (!($("input[name=vlink]:checked").val() == "hover" 
                     && sdviewer.isReady()))
             return;
         positionViewer(position);
-    }
+    });
 
-    transcript.onClickPosition = function(position) {
+    transcript.addListener("onClickPosition", function(position) {
         if (!($("input[name=vlink]:checked").val() == "click" 
                     && sdviewer.isReady()))
             return;
         positionViewer(position);
-    }
+    });
 
     $("#spellcheck").change(function(event) {
         if ($(this).attr("checked")) {
