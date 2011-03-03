@@ -24,14 +24,25 @@ OCRJS.OcrBase = Base.extend({
     registerListener: function(key) {
         if (this._listeners[key] != undefined)
             throw "Listener already registered: '" + key + "'";
-        this._listeners[key] = [];            
+        this._listeners[key] = [];
+        return this;        
     },
 
     addListener: function(key, func) {
         if (this._listeners[key] == undefined)
             throw "Unknown callback: '" + key + "'";
         this._listeners[key].push(func);
+        return this;
     },
+
+    addListeners: function(obj) {
+        if (typeof obj != "object")
+            throw "addListeners except an object parameter, got " + (typeof obj)
+                + " instead";
+        var self = this;
+        $.each(obj, function(k, v) { self.addListener(k, v) });
+        return this;
+    },                 
 
     callListeners: function() {
         var args = Array.prototype.slice.call(arguments);
