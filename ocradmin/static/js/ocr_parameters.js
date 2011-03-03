@@ -35,6 +35,10 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         this.base(parent);
         this.parent = parent;
 
+        this._listeners = {
+            onReadyState: [],
+            onUpdateStarted: [],
+        };
         this._valuedata = valuedata || null;
         this._cache = null;
         this._temp = null;
@@ -47,6 +51,23 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         self.queryOptions(null, null);
     },
 
+    addListener: function(key, func) {
+        if (this._listeners[key] == undefined)
+            throw "Unknown callback: '" + key + "'";
+        this._listeners[key].push(func);
+    },
+
+    callListeners: function() {
+        var args = Array.prototype.slice.call(arguments);
+        var key = args.shift();
+        if (this._listeners[key] == undefined)
+            throw "Unknown callback: '" + key + "'";
+        $.each(this._listeners[key], function(i, func) {
+            func.apply(
+                func.callee, args.concat(Array.prototype.slice.call(arguments)));
+        });
+    },
+                   
     isReady: function() {
         return OCRJS.countProperties(this._waiting) > 0 ? false : true;
     },
@@ -121,6 +142,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var parent = parent || self.parent;
         var url = "/ocrplugins/query/";
         self._waiting[parent.id] = true;
+        self.callListeners("onUpdateStarted"); 
         $.ajax({
             url: url,
             type: "GET",
@@ -189,6 +211,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var self = this;
         var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
         self._waiting[ident] = true;
+        self.callListeners("onUpdateStarted"); 
         $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
             callback.call(self, data);
             self._queryDone(ident);
@@ -334,7 +357,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         delete this._waiting[key];                    
         if (this.isReady()) {
             $(this.parent).append(this._temp);
-            this.onReadyState();      
+            this.callListeners("onReadyState"); 
         }
     },
 
