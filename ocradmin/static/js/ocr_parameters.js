@@ -51,23 +51,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         self.queryOptions(null, null);
     },
 
-    addListener: function(key, func) {
-        if (this._listeners[key] == undefined)
-            throw "Unknown callback: '" + key + "'";
-        this._listeners[key].push(func);
-    },
-
-    callListeners: function() {
-        var args = Array.prototype.slice.call(arguments);
-        var key = args.shift();
-        if (this._listeners[key] == undefined)
-            throw "Unknown callback: '" + key + "'";
-        $.each(this._listeners[key], function(i, func) {
-            func.apply(
-                func.callee, args.concat(Array.prototype.slice.call(arguments)));
-        });
-    },
-                   
     isReady: function() {
         return OCRJS.countProperties(this._waiting) > 0 ? false : true;
     },
