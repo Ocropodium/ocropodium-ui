@@ -1,4 +1,8 @@
 
+#options {
+    min-height: 500px;
+}
+
 .option_box {
     min-height: 50px;
 }
