@@ -409,7 +409,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         batch.find(".abort_batch")
             .attr("href", "/batch/abort_batch/" + batchdata.pk + "/") 
             .data("pk", batchdata.pk);
-        this.setProgressStatus(batch, batchdata.extras.estimate_progress);
+        this.setProgressStatus(batch, batchdata.extras.estimate_progress);        
     },
 
 
@@ -441,7 +441,9 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 continue;                
             }
 
-            task.attr("id", "task" + taskdata.pk)
+            task
+                .attr("id", "task" + taskdata.pk)
+                .attr("href", "#task" + taskdata.pk)
                 .data("pk", taskdata.pk)
                 .data("index", i)
                 .find(".page_name")
@@ -469,6 +471,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         }
 
         this.setScrollHandleHeight();
+        this.onUpdate();
     },
 
 
@@ -729,7 +732,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
         tlcontainer.append(this._tasklist);
 
-        var task = $("<div></div>")
+        var task = $("<a></a>")
             .addClass("batch_task")
             .hide();
         task.append(
@@ -781,7 +784,11 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
      *
      */
     onTaskSelected: function(index, pk) {
-    },                     
+    },               
+
+    onUpdate: function() {
+
+    },                  
 });
 
 

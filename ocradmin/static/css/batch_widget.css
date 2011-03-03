@@ -11,7 +11,9 @@
     height: 15px;
     vertical-align: middle;
     min-width: 540px;
-    cursor: pointer;
+    display: block;
+    text-decoration: none;
+    color: #333;
 }
 
 .batch_task:hover {
