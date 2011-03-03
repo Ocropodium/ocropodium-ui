@@ -42,6 +42,11 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             true
         );
 
+        this._listeners = {
+            onTaskSelected: [],
+            onUpdate: [],
+        };
+
         // class of this batch.  Subclasses should override
         // this to change, e.g the icon appearance
         this._batchclass = "convert";
@@ -134,7 +139,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         $(".batch_task").bind("click", function(event) {
             var index = $(this).data("index");
             var pk = $(this).data("pk");
-            self.onTaskSelected(index, pk);
+            self.callListeners("onTaskSelected", index, pk);
         });
 
         $(".export_link").click(function(event) {
@@ -471,7 +476,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         }
 
         this.setScrollHandleHeight();
-        this.onUpdate();
+        this.callListeners("onUpdate");
     },
 
 
@@ -778,17 +783,6 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             .addClass("progress");
         task.append(holder.append(progressbar.append(progress)));
     },
-
-    /*
-     * Overrideable events
-     *
-     */
-    onTaskSelected: function(index, pk) {
-    },               
-
-    onUpdate: function() {
-
-    },                  
 });
 
 
