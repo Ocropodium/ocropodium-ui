@@ -260,21 +260,23 @@ $(function() {
     // initialise the uploader...
     if ($("#uploadform").length) {
         uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
-        uploader.addListener("onXHRLoad", onXHRLoad);
-        uploader.addListener("onUploadsStarted", function(e) {
-            uploader.clearParameters();
-            $("#dropzone").text("Please wait...").addClass("waiting");
-            $("#optionsform input, #optionsform select").each(function(i, elem) {
-                uploader.registerTextParameter(elem);
-            });
-        });
-        uploader.addListener("onUploadsFinished", function(e) {
-            $("#dropzone").text("Drop images here...").removeClass("waiting"); 
+        uploader.addListeners({
+            onXHRLoad: onXHRLoad,
+            onUploadsStarted: function(event) {
+                uploader.clearParameters();
+                $("#dropzone").text("Please wait...").addClass("waiting");
+                $("#optionsform input, #optionsform select").each(function(i, elem) {
+                    uploader.registerTextParameter(elem);
+                });
+            },
+            onUploadsFinished: function(e) {
+                $("#dropzone").text("Drop images here...").removeClass("waiting"); 
+            },
         });
     }
 
     // load state stored from last time
- //loadState();
+    loadState();
     
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
@@ -284,7 +286,6 @@ $(function() {
             alert(msg);
         }
     }
-
 
     // line formatter object
     formatter = new OCRJS.LineFormatter();
