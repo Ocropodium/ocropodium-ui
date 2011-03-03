@@ -9,8 +9,22 @@ $(".recent_batch_link").live("click", function(event) {
 });
 
 
+function loadBatchList() {
+    $.ajax({
+        url: "/batch/list?order_by=-created_on",
+        data: {},
+        dataType: "json",
+        error: OCRJS.ajaxErrorHandler,
+        success: function(data) {
+            populateBatchList(data);
+            $(".widget_header", $("#sidebar")).text("Recent Batches");
+        },
+    });
+}
+
+
 function populateBatchList(data) {
-    var list = $("#recent_batches");
+    var list = $("<div></div>"); //$("#recent_batches");
     var tbatch = $("<div></div>").addClass("recent_batch");
     var titem = $("<span></span>"); 
     var tlink = $("<a></a>").addClass("recent_batch_link");
@@ -30,6 +44,7 @@ function populateBatchList(data) {
             .append(tbatch.clone().append(span.append(trans).append(link)))
             .textOverflow("...");        
     });
+    $("#recent_batches").html(list.html());
 }
 
 
@@ -61,18 +76,18 @@ function loadTaskDetails(index, pk) {
                     onReadyState: function() {
                         if (!loaded) {
                             elem.html(html);
-                            var tabs = elem                    
-                                    .find("#tabs")
-                                    .accordion({
-                                        collapsible: true,
-                                        autoHeight: false,
-                                        active: selectedtab,
-                                        change: function(event, ui) {
-                                            selectedtab = ui.options.active; 
-                                        },
-                                    });
+                            elem.find("#tabs")
+                                .accordion({
+                                    collapsible: true,
+                                    autoHeight: false,
+                                    active: selectedtab,
+                                    change: function(event, ui) {
+                                        selectedtab = ui.options.active; 
+                                    },
+                                });
                             elem.find("#submit_update_task").attr("disabled", false);
                             loaded = true;
+                            $(".widget_header", $("#sidebar")).text("Task #" + pk);
                         }
                     },
                     onUpdateStarted: function() {
@@ -91,6 +106,7 @@ $(function() {
         batch = new OCRJS.BatchWidget($("#workspace").get(0), $("#batch_id").val());
         batch.addListeners({
             onTaskSelected: loadTaskDetails,
+            onTaskDeselected: loadBatchList,
             onUpdate: hashNavigate,                                
         }).init();
 
@@ -121,13 +137,7 @@ $(function() {
             console.log("Selecting")
             $(selector).click();                        
         } else {
-            $.ajax({
-                url: "/batch/list?order_by=-created_on",
-                data: {},
-                dataType: "json",
-                error: OCRJS.ajaxErrorHandler,
-                success: populateBatchList,
-            });
+            loadBatchList();
         }
     }
 

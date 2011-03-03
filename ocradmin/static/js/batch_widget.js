@@ -111,14 +111,6 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 title: "Abort Task",
                 classes: "ui-icon-circle-close abort_task",
                 baseurl: "/ocr/abort_task/",
-            }, {
-                title: "Edit Task",
-                classes: "ui-icon-wrench edit_task",
-                baseurl: "/ocrtasks/show/",
-            }, {
-                title: "Show Task Info",
-                classes: "ui-icon-info task_info",
-                baseurl: "/ocrtasks/show/",
             },
         ];
 
@@ -206,43 +198,8 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                     }
                 },
             });
-            event.preventDefault();    
-        });
-
-
-        $(".task_info, .edit_task").bind("click", function(event) {
-            var pk = $(this).data("pk");
-            var elem = this;
-            $("#dialog_box").dialog({
-                    modal: true,
-                    title: "Task #" + pk + " Details",
-                    width: 700,
-                    height: 500,
-                    close: function(e, ui) {
-                        $(this).html();
-                    },
-                });
-            $.ajax({
-                url: "/ocrtasks/show/" + pk + "/",
-                type: "GET",
-                dataType: "html",
-                error: OCRJS.ajaxErrorHandler,
-                success: function(data) {
-                    var tabs = $("#dialog_box").html(data)                    
-                        .find("#tabs")
-                        .tabs();
-                    var params = null;
-                    $.getJSON("/ocr/task_config/" + pk + "/", function(data) {
-                        console.log("Set task data...");
-                        params = new OCRJS.ParameterBuilder(
-                                $("#dialog_box").find("#options").get(0), data);
-                        params.init();
-                        if ($(elem).hasClass("edit_task"))
-                            tabs.tabs("select", 3);
-                    });
-                },
-            });
-            event.preventDefault();    
+            event.preventDefault();
+            event.stopPropagation();    
         });
 
 
@@ -266,6 +223,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 },
             });
             event.preventDefault();    
+            event.stopPropagation();    
         });
 
 
@@ -463,12 +421,6 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 .text(taskdata.fields.page_name)
                 .end()
                 .find("a").data("pk", taskdata.pk)
-                .end()
-                .find(".task_info")
-                .attr("href", "/ocrtasks/show/" + taskdata.pk + "/")
-                .end()
-                .find(".edit_task")
-                .attr("href", "/ocr/convert/" + taskdata.pk + "/")
                 .end()
                 .find(".retry_task")
                 .attr("href", "/ocr/retry_task/" + taskdata.pk + "/")

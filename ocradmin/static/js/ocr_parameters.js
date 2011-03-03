@@ -30,6 +30,9 @@ OCRJS.countProperties = function(obj) {
 };
 
 
+OCRJS._ajaxCache = {};
+
+
 OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     constructor: function(parent, valuedata) {
         this.base(parent);
@@ -195,15 +198,18 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var parts = ident.replace(/\[\d+\]/g, "").split(".").splice(2);
         self._waiting[ident] = true;
         self.callListeners("onUpdateStarted"); 
-        $.getJSON("/ocrplugins/query/" + parts.join("/") + "/", function(data) {
-            callback.call(self, data);
-            self._queryDone(ident);
+        $.ajax({
+            url: "/ocrplugins/query/" + parts.join("/") + "/",
+            success: function(data) {
+                callback.call(self, data);
+                self._queryDone(ident);
+            },
         });
     },                  
 
     buildChoicesSection: function(container, ident, data, multiindex) {
         var self = this;                             
-        // fetch more data if we need to...
+        // fetch more data if we need to...                      
         if (data.choices === true) {
             self.fetchData(ident, function(data) {
                 self.buildChoicesSection(container, ident, data, multiindex);
@@ -356,9 +362,28 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         }
     },                
 
-    // overrideable functions
-    onReadyState: function() {
-        console.log("READY");
+
+    /*
+     * Not currently working attempt to get the browser
+     * to cache the results of plugin REST caches, where
+     * nothing much really changes
+     *
+     */
+    _cachedAjax: function(options) {
+        var self = this;
+        if (typeof OCRJS._ajaxCache[options.url] != "undefined") {
+            var data = OCRJS._ajaxCache[options.url];
+            options.success.call(this, data);
+        } else {
+            var orig = options.success;
+            var newfunc = function(data) {
+                console.log("Caching url: ", options.url);
+                OCRJS._ajaxCache[options.url] = data;
+                orig.call(this, data);    
+            };
+            options.success = newfunc;
+            $.ajax.call(this, options);
+        }        
     },
 });
 
