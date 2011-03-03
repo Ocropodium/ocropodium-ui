@@ -41,15 +41,13 @@
             </tr>
         </table>
     </div>
-    <h3><a href="#">Parameters</a></h3>
+    <h3><a href="#">Options</a></h3>
     <div id="tab_2">
-        <table class="properties_table">
-            {% for k, v in params %}
-            <tr class="{% cycle 'odd' 'even' %}">
-                <td class="attr">{{k}}:</td>
-                <td>{{v}}</td>
-            {% endfor %}
-        </table> 
+        <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
+            <div id="options" class="option_box">
+            </div>
+            <input type="submit" value="Rerun Task" id="submit_update_task" disabled="disabled" />
+        </form>
     </div>
     <h3><a href="#">Results</a></h3>
     <div id="tab_3">
@@ -58,18 +56,9 @@
             <li><a target="_blank" href="/ocr/results/{{task.task_id}}/?format=text" title="Text Format">Plain Text</a></li>
         </ul>
     </div>
-    <h3><a href="#">Options</a></h3>
-    <div id="tab_4">
-        <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
-            <div id="options" class="option_box">
-            </div>
-            <input type="submit" value="Update" id="submit_update_task" disabled="disabled" />
-        </form>
-
-    </div>
     {% if task.error %}
         <h3><a href="#">Errors</a></h3>
-        <div id="tab_5">
+        <div id="tab_4">
             <pre>
 {{task.error}}
 
