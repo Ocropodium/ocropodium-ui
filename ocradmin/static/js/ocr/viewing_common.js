@@ -6,6 +6,7 @@ var presetmanager = null;
 var pbuilder = null;
 
 function saveState() {
+    pbuilder.saveState();
     if (sdviewer) {
         var png = $(sdviewer).data("png");
         var src = $(sdviewer).data("src");
@@ -58,8 +59,7 @@ function loadState() {
                 $("#viewerwindow").data("outb", outb);        
             } else {
                 $("#toggleab").attr("disabled", true);
-            }
-        }*/
+        */
     }
 }
 
