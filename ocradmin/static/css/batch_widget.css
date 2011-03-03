@@ -20,6 +20,10 @@
     background-color: #EEE;
 }
 
+.batch_task.current {
+    background-color: #E0E8EF;
+}
+
 #overlay {
     background-color: #000;
     opacity: 0.3;
