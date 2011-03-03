@@ -12,7 +12,7 @@ OCRJS.OcrBase = Base.extend({
             log: false,
         }
         $.extend(this.options, options);        
-        this._listeners = [];
+        this._listeners = {};
     },
 
     _logger: function(arguments) {
