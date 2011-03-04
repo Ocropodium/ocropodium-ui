@@ -138,28 +138,7 @@ def get_refpage_path(refpage, filename):
             "reference",
             refpage.project.slug,
             os.path.splitext(refpage.page_name)[0],
-            filename
-    )
-
-
-def get_ocr_path(user=None, temp=True, subdir="test", unique=False, timestamp=True):
-    """
-    Get a path for saving temp images.
-    """
-    basepath = settings.MEDIA_ROOT
-    if temp:
-        basepath = os.path.join(basepath, "temp")
-    else:
-        basepath = os.path.join(basepath, "files")
-    if user:
-        basepath = os.path.join(basepath, user)
-    if subdir:
-        basepath = os.path.join(basepath, subdir)
-    if timestamp:
-        basepath = os.path.join(basepath, 
-                datetime.now().strftime("%Y%m%d%H%M%S"))
-    return basepath
-
+            filename)
 
 
 def save_ocr_images(images, path):
@@ -185,8 +164,6 @@ def save_ocr_images(images, path):
             except Exception:
                 print "CHMOD FAILED: %s" % filepath
     return paths
-
-
 
 
 def get_media_output_path(inpath, type, ext=".png"):
@@ -278,6 +255,7 @@ def scale_image(inpath, outpath, newsize, filter=Image.ANTIALIAS):
         # fall back on GraphicsMagick if opening fails
         sp.call(["convert", inpath, "-resize", "%sx%s" % newsize, outpath])
 
+
 def get_image_dims(inpath):
     """
     Get dimensions WxH of an image file.
@@ -344,7 +322,6 @@ def output_to_hocr(jsondata):
     """
     Convert page hocr.
     """
-
     hocr = HEADER_TEMPLATE
     hocr += "\t<div class='ocr_page' title=\"bbox %d %d %d %d\" image='%s'>\n" % (
         jsondata["box"][0],
