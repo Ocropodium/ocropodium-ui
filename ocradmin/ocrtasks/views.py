@@ -6,6 +6,8 @@ and updated by it's subsequent signals.
 from types import ClassType, MethodType
 
 from celery.task.control import revoke
+from celery import registry as celeryregistry
+from celery.contrib.abortable import AbortableAsyncResult
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
@@ -45,11 +47,11 @@ def index(request):
     """
     Default view.
     """
-    return list(request)
+    return list_tasks(request)
 
 
 @login_required
-def list(request):
+def list_tasks(request):
     """
     Return a list of currently running tasks according to
     GET filter settings.
@@ -169,15 +171,15 @@ def list2(request):
 
 
 @login_required
-def delete(request, pk=None):
+def delete(request, task_pk=None):
     """
     Delete a task or tasks.
     """
     response = HttpResponse()
     if not pk is None:
-        pks = [pk]
+        pks = [task_pk]
     else:
-        pks = request.POST.getlist("pk")
+        pks = request.POST.getlist("task_pk")
 
     taskquery = OcrTask.objects.filter(pk__in=pks)
     if not request.user.is_staff:
@@ -213,12 +215,12 @@ def update(request):
 
 
 @login_required
-def show(request, pk):
+def show(request, task_pk):
     """
     Show task details.
     """
 
-    task = get_object_or_404(OcrTask, pk=pk)
+    task = get_object_or_404(OcrTask, pk=task_pk)
     try:
         params = [(k, task.args[-1][k]) for k in \
                 sorted(task.args[-1].keys())] if task.args \
@@ -235,3 +237,67 @@ def show(request, pk):
             else "ocrtasks/includes/show_task.html"
     return render_to_response(template, context,
             context_instance=RequestContext(request))
+
+
+@login_required
+def retry(request, task_pk):
+    """
+    Retry a batch task.
+    """
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    out = {"ok": True}
+    try:
+        _retry_celery_task(task)
+    except Exception, err:
+        out = {"error": err.message}
+
+    return HttpResponse(simplejson.dumps(out),
+            mimetype="application/json")
+
+
+@login_required
+def abort(request, task_pk):
+    """
+    Abort a batch task.
+    """
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}),
+            mimetype="application/json")
+
+
+
+
+def _abort_celery_task(task):
+    """
+    Abort a task.
+    """
+    if not task.is_active():
+        return False
+
+    asyncres = AbortableAsyncResult(task.task_id)
+    asyncres.revoke()
+    asyncres.abort()
+    if asyncres.is_aborted():
+        task.status = "ABORTED"
+        task.save()
+    return asyncres.is_aborted()
+
+
+def _retry_celery_task(task):
+    """
+    Set a task re-running.
+    """
+    if task.is_abortable():
+        _abort_celery_task(task)
+    tid = ocrutils.get_new_task_id()
+    celerytask = celeryregistry.tasks[task.task_name]
+    async = celerytask.apply_async(
+            args=task.args, task_id=tid, loglevel=60, retries=2)
+    task.task_id = async.task_id
+    task.status = "RETRY"
+    task.progress = 0
+    task.save()
+
+
+
+    
