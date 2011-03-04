@@ -309,10 +309,8 @@ $(function() {
 
     $("#save_training_data").click(function(event) {
         var pk = transcript.taskData().pk;
-        var binurl = $(sdviewer).data("binpath");
         $.ajax({
             url: "/reference_pages/create_from_task/" + pk + "/",
-            data: {binary_image: binurl},
             dataType: "json",
             type: "POST",
             success: function(data) {

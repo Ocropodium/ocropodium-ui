@@ -4,11 +4,11 @@
         "pk": 1, 
         "model": "reference_pages.referencepage", 
         "fields": {
-            "binary_image": "media/test/simple_bin.png", 
-            "source_image": "media/test/simple.png", 
+            "binary_image": "media/test/test_bin.png", 
+            "source_image": "media/test/test.png", 
             "project": 1, 
             "created_on": "2010-10-21 10:47:14", 
-            "page_name": "simple.png", 
+            "page_name": "test.png", 
             "user": 1, 
             "updated_on": "2010-10-21 10:47:14", 
             "data": "{'box': [0, 0, 640, 480], 'lines': [{'box': [36, 122, 544, 30], 'text': 'This is a lot of 12 point text to test the', 'line': 1}, {'box': [36, 158, 582, 32], 'text': 'ocr code and see if it works on all types', 'line': 2}, {'box': [36, 184, 187, 24], 'text': 'of file format.', 'line': 3}, {'box': [36, 226, 549, 32], 'text': 'The quick brown dog jumped over the', 'line': 4}, {'box': [36, 260, 549, 32], 'text': 'lazy fox. The quick brown dog jumped', 'line': 5}, {'box': [35, 294, 561, 32], 'text': 'over the lazy fox. The quick brown dog', 'line': 6}, {'box': [42, 328, 518, 32], 'text': 'jumped over the lazy fox. The quick', 'line': 7}, {'box': [36, 362, 524, 32], 'text': 'brown dog jumped over the lazy fox.', 'line': 8}], 'page': 'simple.png'}"

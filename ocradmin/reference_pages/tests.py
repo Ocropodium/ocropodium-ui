@@ -7,11 +7,14 @@ from django.test.client import Client
 from django.utils import simplejson
 
 from ocradmin.reference_pages.models import ReferencePage
+from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrplugins import parameters
 
 
 AJAX_HEADERS = {
     "HTTP_X_REQUESTED_WITH": "XMLHttpRequest"
 }
+TESTFILE = "etc/simple.png"
 
 class ReferencePageTest(TestCase):
     fixtures = ["test_fixtures.json"]
@@ -25,11 +28,13 @@ class ReferencePageTest(TestCase):
         self.client.login(username="test_user", password="testpass")
         self.client.get("/projects/load/1/")
 
+
     def tearDown(self):
         """
             Cleanup a test.
         """
         self.testuser.delete()
+
 
     def test_list(self):
         """
@@ -57,3 +62,36 @@ class ReferencePageTest(TestCase):
         """
         r = self.client.post("/reference_pages/delete/1/")
         self.assertRedirects(r, "/reference_pages/list")
+
+
+    def test_create_from_task(self):
+        """
+        Test creating a ref page from a task object.
+        Note:  There's one fixture test ref page already 
+        (called test.png).  If we try to create one with the
+        same name as an existing page it will simply update 
+        the page data (transcript.)  So asserting that there'll
+        be one more ref page in the DB after the operation
+        is a fragile assumption - it depends on the new page
+        NOT having the same name as the current fixture.                           
+        """
+        tasksbefore = OcrTask.objects.count()
+        tf = open(TESTFILE)
+        headers = {}
+        params = parameters.TESTPOST
+        params["image1"] = tf
+        r = self.client.post("/ocr/convert", params, **headers)
+        #tf.close()        
+        self.assertEqual(r.status_code, 200)
+        tasksafter = OcrTask.objects.count()        
+        self.assertEqual(tasksbefore, tasksafter - 1)
+        newtask = OcrTask.objects.all().order_by("-created_on")[0]
+        refbefore = ReferencePage.objects.count()
+        r = self.client.post(
+                "/reference_pages/create_from_task/%s/" % newtask.pk)
+        self.assertEqual(r.status_code, 200)
+        refafter = ReferencePage.objects.count()
+        self.assertEqual(refbefore, refafter - 1)
+
+        
+
