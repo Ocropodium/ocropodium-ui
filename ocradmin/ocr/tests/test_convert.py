@@ -34,7 +34,6 @@ class OcrConvertTest(TestCase):
         """
         self.testuser.delete()
 
-
     def test_convert_view(self):
         """
         Test the convert view as a standard GET (no processing.)
@@ -115,17 +114,7 @@ class OcrConvertTest(TestCase):
         r = self.client.get("/ocr/transcript/%s/" % task.pk)
         self.assertEqual(r.status_code, 200)
 
-    def test_edit_convert_view(self):
-        """
-        Test viewing the edit task page.
-        """
-        r = self._get_convert_response(parameters.TESTPOST)
-        self.assertEqual(r.status_code, 200)
-        task = OcrTask.objects.all().order_by("-created_on")[0]
-        r = self.client.get("/ocr/convert/%s/" % task.pk)
-        self.assertEqual(r.status_code, 200)
-
-    def test_edit_convert_action(self):
+    def test_update_task_action(self):
         """
         Test updating a tasks parameters.
         """

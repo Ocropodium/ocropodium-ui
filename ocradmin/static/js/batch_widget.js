@@ -106,11 +106,11 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         this._task_buttons = [{
                 title: "Retry Task",
                 classes: "ui-icon-refresh retry_task",
-                baseurl: "/ocr/retry_task/",
+                baseurl: "/ocrtasks/retry/",
             }, {
                 title: "Abort Task",
                 classes: "ui-icon-circle-close abort_task",
-                baseurl: "/ocr/abort_task/",
+                baseurl: "/ocrtasks/abort/",
             },
         ];
 
@@ -182,7 +182,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         $(".retry_task").bind("click", function(event) {
             var pk = $(this).data("pk");
             $.ajax({
-                url: "/ocr/retry_task/" + pk + "/",
+                url: "/ocrtasks/retry/" + pk + "/",
                 type: "POST",
                 dataType: "json",
                 beforeSend: function(e) { 
@@ -206,7 +206,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         $(".abort_task").bind("click", function(event) {
             var pk = $(this).data("pk");
             $.ajax({
-                url: "/ocr/abort_task/" + pk + "/",
+                url: "/ocrtasks/abort/" + pk + "/",
                 type: "POST",
                 dataType: "json",
                 beforeSend: function(e) {                
@@ -423,10 +423,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 .find("a").data("pk", taskdata.pk)
                 .end()
                 .find(".retry_task")
-                .attr("href", "/ocr/retry_task/" + taskdata.pk + "/")
+                .attr("href", "/ocrtasks/retry/" + taskdata.pk + "/")
                 .end()
                 .find(".abort_task")
-                .attr("href", "/ocr/abort_task/" + taskdata.pk + "/");
+                .attr("href", "/ocrtasks/abort/" + taskdata.pk + "/");
             this.setProgressStatus(task, taskdata.fields.progress, taskdata.fields.status);
             if (taskdata.fields.lines) {
                 task.find(".page_info").text("Lines: " + taskdata.fields.lines);

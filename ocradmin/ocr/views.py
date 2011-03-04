@@ -6,8 +6,6 @@ import re
 import os
 import traceback
 from celery import result as celeryresult
-from celery import registry as celeryregistry
-from celery.contrib.abortable import AbortableAsyncResult
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.db import transaction
@@ -23,6 +21,7 @@ from ocradmin.ocr.utils import saves_files
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, Transcript
+from ocradmin.ocrtasks.views import _retry_celery_task
 from ocradmin.ocr.tools.manager import PluginManager
 
 from ocradmin.ocrplugins import parameters
@@ -78,62 +77,6 @@ def convert(request):
 
 
 @login_required
-def edit_binarize(request, task_pk):
-    """
-    Edit a task's binarization params.
-    """
-    if request.method == "POST":
-        return binarize(request)
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    template = "ocr/binarize.html"
-    context = dict(
-        preload_task_id=task.task_id,
-        preload_params=simplejson.dumps(task.args[2]),
-    )
-    return render_to_response(template, context, 
-            context_instance=RequestContext(request))
-
-
-@login_required
-def edit_convert(request, task_pk):
-    """
-    Edit a task's convert params.
-    """
-    if request.method == "POST":
-        return convert(request)
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    template = "ocr/convert.html"
-    context = dict(
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
-        engines=PluginManager.get_provider("line"),
-        preload_task_id=task.task_id,
-        preload_params=simplejson.dumps(task.args[2]),
-        task=task,
-        params=task.args[2],
-    )
-    return render_to_response(template, context, 
-            context_instance=RequestContext(request))
-
-
-@login_required
-def edit_segment(request, task_pk):
-    """
-    Edit a task's binarization params.
-    """
-    if request.method == "POST":
-        return segment(request)
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    template = "ocr/segment.html" 
-    context = dict(
-        preload_task_id=task.task_id,
-        preload_params=simplejson.dumps(task.args[2]),
-    )
-    return render_to_response(template, context, 
-            context_instance=RequestContext(request))
-
-
-@login_required
 @saves_files
 def update_task(request, task_pk):
     """
@@ -161,22 +104,6 @@ def update_task(request, task_pk):
 
 
 @login_required
-def retry_task(request, task_pk):
-    """
-    Retry a batch task.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    out = {"ok": True}
-    try:
-        _retry_celery_task(task)
-    except Exception, err:
-        out = {"error": err.message}
-
-    return HttpResponse(simplejson.dumps(out),
-            mimetype="application/json")
-
-
-@login_required
 def transcript(request, task_pk):
     """
     View the transcription of a task.
@@ -190,16 +117,6 @@ def transcript(request, task_pk):
 
     return render_to_response(template, context,
             context_instance=RequestContext(request))
-
-
-@login_required
-def abort_task(request, task_pk):
-    """
-    Abort a batch task.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}),
-            mimetype="application/json")
 
 
 @login_required
@@ -613,38 +530,5 @@ def _cleanup_params(data):
         if not k.startswith(("$","%","@")):
             cleaned[k] = v
     return cleaned            
-
-
-def _abort_celery_task(task):
-    """
-    Abort a task.
-    """
-    if not task.is_active():
-        return False
-
-    asyncres = AbortableAsyncResult(task.task_id)
-    asyncres.revoke()
-    asyncres.abort()
-    if asyncres.is_aborted():
-        task.status = "ABORTED"
-        task.save()
-    return asyncres.is_aborted()
-
-
-def _retry_celery_task(task):
-    """
-    Set a task re-running.
-    """
-    if task.is_abortable():
-        _abort_celery_task(task)
-    tid = ocrutils.get_new_task_id()
-    celerytask = celeryregistry.tasks[task.task_name]
-    async = celerytask.apply_async(
-            args=task.args, task_id=tid, loglevel=60, retries=2)
-    task.task_id = async.task_id
-    task.status = "RETRY"
-    task.progress = 0
-    task.save()
-
 
 

@@ -34,7 +34,7 @@ from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
 from ocradmin.projects.utils import project_required
 from ocradmin.ocr.views import _handle_request, AppException
-from ocradmin.ocr.views import  _retry_celery_task, _abort_celery_task 
+from ocradmin.ocrtasks.views import  _retry_celery_task, _abort_celery_task 
 from ocradmin.ocr.tools.manager import PluginManager
 
 
