@@ -15,19 +15,28 @@ from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage        
 from ocradmin.reference_pages.tasks import MakeThumbnailTask
 from ocradmin.projects.utils import project_required
+from ocradmin.ocr.utils import saves_files
 
 
 @project_required
 @login_required
-def list(request):
+def index(request):
+    """
+    App index, redirect to list.
+    """
+    return list_reference_pages(request)
+
+
+@project_required
+@login_required
+def list_reference_pages(request):
     """
     List the ref sets for the given project.
     """
     project = request.session["project"]
     context = dict(
         project=project,
-        reference_sets=project.reference_sets.all(),
-    )
+        reference_sets=project.reference_sets.all(),)
     template = "reference_pages/list.html" if not request.is_ajax() \
             else "reference_pages/includes/reference_page_list.html"
     return render_to_response(template, context,
@@ -60,48 +69,47 @@ def delete(request, page_pk):
     return HttpResponseRedirect("/reference_pages/list")
 
 
+@saves_files
 @project_required
 @login_required
 def create_from_task(request, task_pk):
     """
     Save a page and it's binary image as 
-    reference data.
+    reference data.  FIXME: This assumes that
+    the binary path for a given file is where
+    we expect it based on the user/project.  
+    This assumption is rather fragile.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
 
     srcpath = task.args[0]
-    binurl = request.POST.get("binary_image")
-    if not binurl:
-        raise HttpResponseServerError("No binary image url given.")
-    binpath = ocrutils.media_url_to_path(binurl)
+    binpath = os.path.join(request.output_path, 
+            "%s_bin%s" % os.path.splitext(os.path.basename(srcpath)))
     if not os.path.exists(binpath):
-        raise HttpResponseServerError("Binary image does not exist")
+        return HttpResponseServerError(
+                "Unable to find binary path for file: %s (%s)" % (
+                    srcpath, binpath))
 
     # create or update the model
     try:
         tpage = ReferencePage.objects.get(
             project=request.session["project"],
-            page_name=task.page_name
-        )
+            page_name=task.page_name)
     except ReferencePage.DoesNotExist:
         # create a new one
         tpage = ReferencePage(
             page_name=task.page_name,
             project=request.session["project"],
-            user=request.user
-        )
+            user=request.user)
         tpage.source_image.save(os.path.basename(srcpath),
                 ContentFile(open(srcpath, "rb").read()))
         tpage.binary_image.save(os.path.basename(binpath),
                 ContentFile(open(binpath, "rb").read()))
-
     tpage.data = task.latest_transcript()
-    tpage.save()
-    
+    tpage.save()    
     # try and create a thumbnail of the file
     MakeThumbnailTask.apply_async((tpage.source_image.path, 
-            settings.THUMBNAIL_SIZE), queue="interactive", retries=2)
-    
+            settings.THUMBNAIL_SIZE), queue="interactive", retries=2)    
     return HttpResponse(simplejson.dumps({"ok": True, "pk": tpage.pk}),
             mimetype="application/json")
 
