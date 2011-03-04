@@ -305,31 +305,30 @@ class CleanupTempTask(PeriodicTask):
         """
         import glob
         logger = self.get_logger()
-        tempdir = os.path.join(settings.MEDIA_ROOT, "temp")
+        tempdir = os.path.join(settings.MEDIA_ROOT,
+                settings.TEMP_PATH)
         if not os.path.exists(tempdir):
             return
-
-        for userdir in glob.glob("%s/*/*" % tempdir):
+        for userdir in glob.glob("%s/*" % tempdir):
             if not os.path.isdir(userdir):
                 continue
             logger.debug("Checking dir: %s" % userdir)
             fdirs = [d for d in sorted(os.listdir(userdir)) \
                     if re.match("\d{14}", d)]
-
             if not fdirs:
                 continue
-
             # keep the latest, then delete everything
             # else not accessed in the last 10 mins
-            logger.info("Retaining: %s" % fdirs.pop())
+            logger.info("Retaining: %s" % os.path.join(userdir, fdirs.pop()))
             for fdir in fdirs:
                 # convert the dir last accessed time to a datetime
                 dtm = datetime(*time.localtime(
                         os.path.getmtime(os.path.join(userdir, fdir)))[0:6])
                 delta = datetime.now() - dtm
-                if (delta.seconds / 60) <= 10:
+                if delta.days < 1 and (delta.seconds / 60) <= 10:
+                    logger.info("Retaining: %s" % os.path.join(userdir, fdir))
                     continue
-                logger.info("Cleanup directory: %s" % fdir)
+                logger.info("Cleanup directory: %s" % os.path.join(userdir, fdir))
                 try:
                     shutil.rmtree(os.path.join(userdir, fdir))
                 except StandardError, err:
