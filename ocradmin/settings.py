@@ -59,6 +59,12 @@ DATABASES = {
     },
 }
 
+if 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'ocr_testing'
+    }
+
 # celery settings 
 CELERY_RESULT_BACKEND = "database"
 CELERY_RESULT_DBURI = "mysql://celery:celery@localhost/celeryresults"
