@@ -27,15 +27,15 @@ from django.utils.encoding import smart_str, smart_unicode
 from ocradmin.batch import utils as batchutils
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
-from ocradmin.ocr.utils import saves_files
+from ocradmin.core.utils import saves_files
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
 from ocradmin.projects.utils import project_required
-from ocradmin.ocr.views import _handle_request, AppException
+from ocradmin.core.views import _handle_request, AppException
 from ocradmin.ocrtasks.views import  _retry_celery_task, _abort_celery_task 
-from ocradmin.ocr.tools.manager import PluginManager
+from ocradmin.core.tools.manager import PluginManager
 
 
 PER_PAGE = 25

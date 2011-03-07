@@ -14,7 +14,7 @@ from django.template import RequestContext
 from django.utils import simplejson
 from django import forms
 from ocradmin.ocr import utils as ocrutils
-from ocradmin.ocr.utils import saves_files
+from ocradmin.core.utils import saves_files
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
@@ -22,7 +22,7 @@ from ocradmin.training.models import OcrComparison, ParameterScore
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.projects.utils import project_required
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
-from ocradmin.ocr.tools.manager import PluginManager
+from ocradmin.core.tools.manager import PluginManager
 
 from ocradmin.ocrplugins import parameters
 

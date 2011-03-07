@@ -12,7 +12,7 @@ from ocradmin.training import utils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage
-from ocradmin.ocr.tools.manager import PluginManager
+from ocradmin.core.tools.manager import PluginManager
 
 from ocradmin.ocrplugins import parameters
 

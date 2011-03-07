@@ -17,12 +17,12 @@ from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.ocr import tasks
 from ocradmin.ocr import utils as ocrutils
-from ocradmin.ocr.utils import saves_files
+from ocradmin.core.utils import saves_files
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, Transcript
 from ocradmin.ocrtasks.views import _retry_celery_task
-from ocradmin.ocr.tools.manager import PluginManager
+from ocradmin.core.tools.manager import PluginManager
 
 from ocradmin.ocrplugins import parameters
 

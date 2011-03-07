@@ -10,7 +10,7 @@ import traceback
 import UserDict
 import tempfile
 import subprocess as sp
-from ocradmin.ocr.tools import base, check_aborted, get_binary, ExternalToolError, set_progress
+from ocradmin.core.tools import base, check_aborted, get_binary, ExternalToolError, set_progress
 import ocrolib
 
 from ocradmin.ocrplugins import parameters

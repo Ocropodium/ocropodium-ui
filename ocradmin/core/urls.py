@@ -1,0 +1,23 @@
+from django.conf.urls.defaults import *
+
+urlpatterns = patterns('',
+   (r'^/?$', 'ocradmin.core.views.index'),
+	(r'^binarize/?$', 'ocradmin.core.views.binarize'),
+	(r'^components/?$', 'ocradmin.core.views.components'),
+	(r'^convert/?$', 'ocradmin.core.views.convert'),
+	(r'^segment/?$', 'ocradmin.core.views.segment'),
+    (r'^reconvert_lines/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.reconvert_lines'),
+    (r'^task_config/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.task_config'),
+    (r'^task_transcript/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.task_transcript'),
+    (r'^results/(?P<task_id>[^\/]+)/?$', 'ocradmin.core.views.results'),
+    (r'^results/?$', 'ocradmin.core.views.multiple_results'),
+    (r'^save/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.save_transcript'),
+    (r'^submit_viewer_binarization/(?P<task_pk>\d+)/?$',
+        'ocradmin.core.views.submit_viewer_binarization'),
+    (r'^transcript/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.transcript'),
+    (r'^viewer_binarization_results/(?P<task_id>[^\/]+)/?$',
+        'ocradmin.core.views.viewer_binarization_results'),
+    (r'^update_task/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.update_task'),
+	(r'^test/?$', 'ocradmin.core.views.test'),
+	(r'^testparams/?$', 'ocradmin.core.views.testparams'),
+)
