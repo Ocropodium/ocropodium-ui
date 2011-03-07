@@ -17,7 +17,7 @@ from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
-from ocradmin.core.utils import saves_files
+from ocradmin.core.decorators import saves_files
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, Transcript

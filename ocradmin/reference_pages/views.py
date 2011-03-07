@@ -14,8 +14,7 @@ from ocradmin.core import utils as ocrutils
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage        
 from ocradmin.reference_pages.tasks import MakeThumbnailTask
-from ocradmin.projects.utils import project_required
-from ocradmin.core.utils import saves_files
+from ocradmin.core.decorators import project_required, saves_files
 
 
 @project_required
