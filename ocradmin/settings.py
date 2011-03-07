@@ -16,8 +16,8 @@ SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(SITE_ROOT, "lib"))
 
 # add plugin path to pythonpath
-sys.path.insert(0, os.path.join(SITE_ROOT, "ocr/tools/plugins"))
-sys.path.insert(0, os.path.join(SITE_ROOT, "ocr/tools/plugins/components"))
+sys.path.insert(0, os.path.join(SITE_ROOT, "core/tools/plugins"))
+sys.path.insert(0, os.path.join(SITE_ROOT, "core/tools/plugins/components"))
 
 # flag whether we're on a server.  Really need a better way of doing this.
 # ocr1 is the db master
@@ -186,7 +186,7 @@ INSTALLED_APPS = (
     'djcelery',
     'filebrowser',
     'batch',
-    'ocr',
+    'core',
     'ocrmodels',
     'ocrpresets',
     'ocrplugins',

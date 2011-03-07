@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils import simplejson
 
-from ocradmin.ocr.tests import testutils
+from ocradmin.core.tests import testutils
 from ocradmin.ocrmodels.models import OcrModel
 
 

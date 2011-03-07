@@ -7,7 +7,7 @@ from celery.registry import tasks
 from celery.signals import task_sent, task_prerun, task_postrun
 from celery.datastructures import ExceptionInfo
 
-from ocradmin.ocr.tasks import ConvertPageTask, BinarizePageTask 
+from ocradmin.core.tasks import ConvertPageTask, BinarizePageTask 
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.ocrtasks.models import OcrTask, Transcript

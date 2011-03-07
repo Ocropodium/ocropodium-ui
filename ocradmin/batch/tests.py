@@ -11,7 +11,7 @@ from django.conf import settings
 from django.utils import simplejson
 
 from ocradmin.batch.models import OcrBatch
-from ocradmin.ocr.tests import testutils
+from ocradmin.core.tests import testutils
 
 from ocradmin.ocrplugins import parameters
 

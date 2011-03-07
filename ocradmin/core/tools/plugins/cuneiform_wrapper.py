@@ -5,8 +5,8 @@ Wrapper for Cuneiform.
 
 import tempfile
 import subprocess as sp
-from ocradmin.ocr.tools import check_aborted, set_progress
-from ocradmin.ocr.utils import HocrParser
+from ocradmin.core.tools import check_aborted, set_progress
+from ocradmin.core.utils import HocrParser
 from generic_wrapper import *
 
 
