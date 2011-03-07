@@ -184,7 +184,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'djcelery',
-    'accounts',
     'filebrowser',
     'batch',
     'ocr',
