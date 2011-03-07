@@ -13,8 +13,12 @@ RegExp.escape = function(text) {
 }
 
 
-function isUndefined(x) {
-    return x == null && x !== null;
+function defined(x) {
+    return typeof(x) !== "undefined";
+}
+
+function isnull(x) {
+    return x === null;
 }
 
 
@@ -175,8 +179,13 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 while (true) {
                     var mident = self.getIdent(parent, data, index, mcount);
                     var stored = self._storedValue(mident);
-                    if ((stored === null || stored === undefined) && mcount > 0)
-                        break;
+                    if (stored === null || !defined(stored)) {
+                        if (typeof data.value == "object" && data.value.length > 0) {
+                            stored = data.value[mcount];
+                        }
+                    }
+                    if ((isnull(stored) || !defined(stored)) && mcount > 0)
+                       break; 
                     var mcontainer = mtemp.clone()
                         .attr("id", mident);
                     container.append(mcontainer);
@@ -253,7 +262,12 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         // if we have some choices, select the last cached
         // and then trigger a change event to build any children
         if (data.choices.length) {
-            self.loadOptionState(control, data.choices[0].name);
+            var value = data.choices[0].name;
+            if (!defined(multiindex) && defined(data.value))
+                value = data.value;
+            else if (defined(multiindex) && !defined(data.value))
+                value = data.value[multiindex];
+            self.loadOptionState(control, value);
             control.change();
         }
     },                  
