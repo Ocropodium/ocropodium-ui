@@ -9,7 +9,7 @@ from picklefield import fields
 from django.db import models
 from django.contrib.auth.models import User
 from ocradmin.projects.models import OcrProject
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 
 
 

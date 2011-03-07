@@ -17,7 +17,7 @@ from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
 from tagging.models import TaggedItem
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject, OcrProjectDefaults

@@ -10,7 +10,7 @@ from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.batch.models import OcrBatch
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 
 
 

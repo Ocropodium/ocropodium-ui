@@ -25,8 +25,8 @@ from django.template import RequestContext
 from django.utils import simplejson
 from django.utils.encoding import smart_str, smart_unicode
 from ocradmin.batch import utils as batchutils
-from ocradmin.ocr import tasks
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import tasks
+from ocradmin.core import utils as ocrutils
 from ocradmin.core.utils import saves_files
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
