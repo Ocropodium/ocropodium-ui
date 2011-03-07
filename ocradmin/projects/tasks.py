@@ -15,7 +15,7 @@ from ocradmin.projects.models import OcrProject
 from ocradmin.reference_pages.models import ReferencePage
 from ocrtasks.models import OcrTask
 
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 
 from fedora.adaptor import fcobject, fcdatastream
 from fedora.adaptor.utils import FedoraException

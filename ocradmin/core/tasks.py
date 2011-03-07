@@ -11,7 +11,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from celery.task import PeriodicTask
 from datetime import datetime, timedelta
 from django.conf import settings
-from ocradmin.ocr import utils
+from ocradmin.core import utils
 from ocradmin.vendor import deepzoom
 from ocradmin.core.tools.manager import PluginManager
 from ocradmin.ocrtasks.models import OcrTask

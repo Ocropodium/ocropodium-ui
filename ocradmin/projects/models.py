@@ -5,7 +5,7 @@ from tagging.fields import TagField
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrpresets.models import OcrPreset
 
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 
 
 class OcrProject(models.Model):

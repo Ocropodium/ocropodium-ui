@@ -7,7 +7,7 @@ from celery.contrib.abortable import AbortableTask
 from celery.contrib.abortable import AbortableAsyncResult
 from django.core.files.base import File
 
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 from ocradmin.training import utils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask

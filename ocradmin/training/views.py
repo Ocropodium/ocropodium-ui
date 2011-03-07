@@ -13,7 +13,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
 from django import forms
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 from ocradmin.core.utils import saves_files
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrmodels.models import OcrModel

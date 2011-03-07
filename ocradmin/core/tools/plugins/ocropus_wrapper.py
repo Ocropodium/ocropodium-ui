@@ -7,7 +7,7 @@ line wrapper.
 import copy
 from ocradmin.core.tools import check_aborted, \
         ExternalToolError
-from ocradmin.ocr import tools        
+from ocradmin.core import tools        
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.core.tools.plugins import generic_wrapper
 reload(generic_wrapper)
