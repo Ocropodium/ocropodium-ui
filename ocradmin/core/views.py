@@ -19,7 +19,6 @@ from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask, Transcript
-from ocradmin.ocrtasks.views import _retry_celery_task
 from ocradmin.core.tools.manager import PluginManager
 
 from ocradmin.plugins import parameters
@@ -76,7 +75,7 @@ def convert(request):
 
 @login_required
 @saves_files
-def update_task(request, task_pk):
+def update_ocr_task(request, task_pk):
     """
     Re-save the params for a task and resubmit it,
     redirecting to the transcript page.
@@ -85,12 +84,6 @@ def update_task(request, task_pk):
     _, config, params = _handle_request(request, request.output_path)
     task.args = (task.args[0], task.args[1], params, config)
     task.save()
-    try:
-        _retry_celery_task(task)
-    except OcrTask.DoesNotExist:
-        # FIXME: for some reason this happens when running
-        # automated tests
-        pass
     if request.is_ajax():
         return HttpResponse(simplejson.dumps({"ok": True}), 
                 mimetype="application/json")
