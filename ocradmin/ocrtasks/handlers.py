@@ -3,15 +3,8 @@ Callbacks to run when certain celery signals are recieved in response
 to the ConvertPageTask.
 """
 
-from celery.registry import tasks
-from celery.signals import task_sent, task_prerun, task_postrun, task_failure
+from models import OcrTask, Transcript
 from celery.datastructures import ExceptionInfo
-
-from ocradmin.core.tasks import ConvertPageTask, BinarizePageTask 
-from ocradmin.training.tasks import LineTrainTask, ComparisonTask
-from ocradmin.projects.tasks import IngestTask
-from ocradmin.ocrtasks.models import OcrTask, Transcript
-
 
 def on_task_sent(**kwargs):
     """
@@ -59,15 +52,5 @@ def on_task_failure(**kwargs):
     task.traceback = kwargs.get("traceback")
     task.status = "FAILURE"
     task.save()
-
-
-# Connect up signals to the *PageTask
-for taskname in [ConvertPageTask.name, LineTrainTask.name, 
-        ComparisonTask.name, IngestTask.name]:
-    task_sent.connect(on_task_sent, tasks[taskname])
-    task_prerun.connect(on_task_prerun, tasks[taskname])
-    task_postrun.connect(on_task_postrun, tasks[taskname])
-    task_failure.connect(on_task_failure, tasks[taskname])
-
 
 

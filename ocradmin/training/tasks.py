@@ -11,11 +11,15 @@ from ocradmin.core import utils as ocrutils
 from ocradmin.training import utils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.decorators import register_handlers
+from ocradmin.ocrtasks.utils import get_progress_callback, get_abort_callback
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.tools.manager import PluginManager
 
 from ocradmin.plugins import parameters
 
+
+@register_handlers
 class LineTrainTask(AbortableTask):
     """
     Given a collection of training pages (result objects)
@@ -44,14 +48,8 @@ class LineTrainTask(AbortableTask):
             os.makedirs(outdir)
             os.chmod(outdir, 0777)
 
-        def abort_func():
-            """Abort task if condition met."""
-            # TODO: this should be possible via a simple 'self.is_aborted()'
-            # Find out why it isn't.
-            asyncres = AbortableAsyncResult(self.request.id)            
-            return asyncres.is_aborted()
-
-        trainer = PluginManager.get_trainer("ocropus", logger=logger, abort_func=abort_func,
+        trainer = PluginManager.get_trainer("ocropus", logger=logger, 
+                abort_func=get_abort_callback(self.request.id),
                 params=paramdict)
         for pagedata in datasets:
             trainer.load_training_binary(pagedata.binary_image.path.encode())
@@ -81,8 +79,7 @@ class LineTrainTask(AbortableTask):
         return { "new_model_pk": newmodel.pk }
 
 
-
-
+@register_handlers
 class ComparisonTask(AbortableTask):
     """
     Run a comparison of a given model on a 
@@ -104,33 +101,18 @@ class ComparisonTask(AbortableTask):
         logger = self.get_logger(**kwargs)
         task = OcrTask.objects.get(task_id=self.request.id)
 
-        def abort_func():
-            """Quit function if a condition met"""
-            # TODO: this should be possible via a simple 'self.is_aborted()'
-            # Find out why it isn't.
-            asyncres = AbortableAsyncResult(self.request.id)            
-            return asyncres.backend.get_status(self.request.id) == "ABORTED" 
-
         # ground truth is already a binary, so tell the converter not
         # to redo it...
         converter = PluginManager.get_converter(
                 config.name, 
-                logger=logger, abort_func=abort_func, config=config)
-        
-        # function for the converter to update progress
-        def progress_func(progress, lines=None):
-            """Report project of running tasks"""
-            task = OcrTask.objects.get(task_id=self.request.id)
-            task.progress = progress
-            if lines is not None:
-                task.lines = lines
-            task.save()
+                logger=logger, abort_func=get_abort_callback(self.request.id),
+                config=config)
         # init progress to zero (for when retrying tasks)
+        progress_func = get_progress_callback(self.request.id)
         progress_func(0)
 
         outdata = converter.convert(groundtruth.source_image.path.encode(),
                 progress_func=progress_func, **params)        
-
         accuracy, details = utils.isri_accuracy(
                 logger, 
                 ocrutils.output_to_text(groundtruth.data),

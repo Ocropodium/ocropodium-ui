@@ -34,8 +34,11 @@ class OcrBatchTest(TestCase):
             os.makedirs("media/files/test_user/test")
         except OSError, (errno, strerr):
             if errno == 17: pass
-        os.symlink(os.path.abspath(TESTFILE), 
-                "media/files/test_user/test/%s" % os.path.basename(TESTFILE))
+        try: 
+            os.symlink(os.path.abspath(TESTFILE), 
+                    "media/files/test_user/test/%s" % os.path.basename(TESTFILE))
+        except OSError, (errno, strerr):
+            if errno == 17: pass
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
