@@ -14,17 +14,16 @@ from django.template import RequestContext
 from django.utils import simplejson
 from django import forms
 from ocradmin.core import utils as ocrutils
-from ocradmin.core.decorators import saves_files
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.training.models import OcrComparison, ParameterScore
 from ocradmin.reference_pages.models import ReferencePage
-from ocradmin.core.decorators import project_required
+from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 from ocradmin.core.tools.manager import PluginManager
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 
 class ReferenceSetForm(forms.Form):

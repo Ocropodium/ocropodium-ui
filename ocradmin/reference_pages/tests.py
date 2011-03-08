@@ -8,7 +8,7 @@ from django.utils import simplejson
 
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 
 AJAX_HEADERS = {

@@ -13,7 +13,7 @@ from ocradmin.core.tools.plugins import generic_wrapper
 reload(generic_wrapper)
 import ocrolib
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 reload(parameters)
 
 

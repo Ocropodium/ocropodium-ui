@@ -24,7 +24,7 @@ from ocradmin.ocrtasks.models import OcrTask, Transcript
 from ocradmin.ocrtasks.views import _retry_celery_task
 from ocradmin.core.tools.manager import PluginManager
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 class AppException(StandardError):
     """

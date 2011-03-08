@@ -189,7 +189,7 @@ INSTALLED_APPS = (
     'core',
     'ocrmodels',
     'ocrpresets',
-    'ocrplugins',
+    'plugins',
     'ocrtasks',
     'reference_pages',
     'training',
