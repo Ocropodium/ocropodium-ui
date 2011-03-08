@@ -28,7 +28,6 @@ from ocradmin.batch import utils as batchutils
 from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
-from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
@@ -517,8 +516,6 @@ def _new_batch_context(request):
         prefix="",
         form=form,
         engines=PluginManager.get_provider("line"),
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
     )
 
 
