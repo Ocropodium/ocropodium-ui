@@ -28,3 +28,23 @@ def symlink_model_fixtures():
                 pass
 
 
+def symlink_reference_pages():
+    """
+    Create a symlink for the reference page images.
+    """
+    try:
+        os.makedirs("media/test")
+    except OSError, (errno, strerr):
+        if errno == 17: # already exists
+            pass
+
+        try:
+            os.symlink(os.path.abspath("etc/simple.png"),  
+                "media/test/test.png")
+            os.symlink(os.path.abspath("etc/simple.png"),  
+                "media/test/test_bin.png")
+        except OSError, (errno, strerr):
+            if errno == 17: # already exists
+                pass
+
+
