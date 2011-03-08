@@ -3,7 +3,6 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('',
    (r'^/?$', 'ocradmin.core.views.index'),
 	(r'^binarize/?$', 'ocradmin.core.views.binarize'),
-	(r'^components/?$', 'ocradmin.core.views.components'),
 	(r'^convert/?$', 'ocradmin.core.views.convert'),
 	(r'^segment/?$', 'ocradmin.core.views.segment'),
     (r'^reconvert_lines/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.reconvert_lines'),

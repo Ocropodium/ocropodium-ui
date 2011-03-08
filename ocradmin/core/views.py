@@ -275,17 +275,6 @@ def viewer_binarization_results(request, task_id):
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
-@login_required
-def components(request):
-    """
-    List OCRopus components - either all or those
-    of an optional type.
-    """
-    comps = PluginManager.get_components("ocropus",
-            request.GET.getlist("type"), request.GET.getlist("name"))
-    return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
-
-
 def test(request):
     """
     Dummy action for running JS unit tests.  Probably needs to
