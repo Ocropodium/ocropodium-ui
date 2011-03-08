@@ -13,7 +13,7 @@ from django.utils import simplejson
 from ocradmin.batch.models import OcrBatch
 from ocradmin.core.tests import testutils
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 TESTFILE = "etc/simple.png"
 

@@ -15,7 +15,7 @@ from ocradmin.core import utils
 from ocradmin.vendor import deepzoom
 from ocradmin.core.tools.manager import PluginManager
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 
 def get_progress_function(task_id):

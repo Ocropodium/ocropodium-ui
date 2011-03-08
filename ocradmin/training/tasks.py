@@ -14,7 +14,7 @@ from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.tools.manager import PluginManager
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 class LineTrainTask(AbortableTask):
     """

@@ -130,7 +130,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     queryOptions: function(parent) {
         var self = this;
         var parent = parent || self.parent;
-        var url = "/ocrplugins/query/";
+        var url = "/plugins/query/";
         self._waiting[parent.id] = true;
         self.callListeners("onUpdateStarted"); 
         $.ajax({
@@ -208,7 +208,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         self._waiting[ident] = true;
         self.callListeners("onUpdateStarted"); 
         $.ajax({
-            url: "/ocrplugins/query/" + parts.join("/") + "/",
+            url: "/plugins/query/" + parts.join("/") + "/",
             success: function(data) {
                 callback.call(self, data);
                 self._queryDone(ident);

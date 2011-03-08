@@ -10,7 +10,7 @@ from ocradmin.ocrmodels.models import OcrModel
 import generic_wrapper
 reload(generic_wrapper)
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 reload(parameters)
 
 
