@@ -19,7 +19,6 @@ from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrtasks.models import OcrTask, Transcript
 from ocradmin.ocrtasks.views import _retry_celery_task
 from ocradmin.core.tools.manager import PluginManager
@@ -146,9 +145,7 @@ def segment(request):
     """
 
     # add available seg and bin presets to the context
-    context = dict(
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-    )
+    context = dict()
     return _ocr_task(
         request,
         "ocr/segment.html",

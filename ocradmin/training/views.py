@@ -14,7 +14,6 @@ from django.template import RequestContext
 from django.utils import simplejson
 from django import forms
 from ocradmin.core import utils as ocrutils
-from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.training.models import OcrComparison, ParameterScore
@@ -377,8 +376,6 @@ def _get_comparison_context(request):
         form=ComparisonForm(initial={"name": "Parameter Comparison"}),
         prefixes=["p0_", "p1_"],
         project=request.session["project"],
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
         engines=PluginManager.get_provider("line"),
         tsets=request.session["project"].reference_sets.all(),
     )
