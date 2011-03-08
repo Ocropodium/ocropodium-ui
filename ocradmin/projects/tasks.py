@@ -14,6 +14,7 @@ from django.conf import settings
 from ocradmin.projects.models import OcrProject
 from ocradmin.reference_pages.models import ReferencePage
 from ocrtasks.models import OcrTask
+from ocrtasks.decorators import register_handlers
 
 from ocradmin.core import utils as ocrutils
 
@@ -21,7 +22,7 @@ from fedora.adaptor import fcobject, fcdatastream
 from fedora.adaptor.utils import FedoraException
 
 
-
+@register_handlers
 class IngestTask(AbortableTask):
     """
     Ingest an image into a Fedora repository.
