@@ -11,7 +11,6 @@ from django.utils import simplejson
 
 from ocradmin.core.tests import testutils
 from ocradmin.ocrtasks.models import OcrTask
-
 from ocradmin.plugins import parameters
 
 
