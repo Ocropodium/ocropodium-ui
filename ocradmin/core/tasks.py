@@ -44,10 +44,8 @@ def get_abort_function(task_id):
         """
         Check whether the task in question has been aborted.
         """
-        # TODO: this should be possible via a simple 'self.is_aborted()'
-        # Find out why it isn't.
         asyncres = AbortableAsyncResult(task_id)
-        return asyncres.backend.get_status(task_id) == "ABORTED"
+        return asyncres.is_aborted()
     return abort_func
 
 

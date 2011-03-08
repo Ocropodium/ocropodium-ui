@@ -17,7 +17,7 @@ class OcrTask(models.Model):
         ("STARTED", "Started"),
         ("RETRY", "Retry"),
         ("SUCCESS", "Success"),
-        ("ERROR", "Error"),
+        ("FAILURE", "Failure"),
     )
 
     user = models.ForeignKey(User)

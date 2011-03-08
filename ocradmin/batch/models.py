@@ -32,7 +32,7 @@ class OcrBatch(models.Model):
         Check whether all tasks are done.
         """        
         numrunning = self.tasks.exclude(
-                status__in=("SUCCESS", "ERROR", "ABORTED")).count()
+                status__in=("SUCCESS", "FAILURE", "ABORTED")).count()
         return numrunning == 0
 
 
@@ -62,7 +62,7 @@ class OcrBatch(models.Model):
         for t in tasks:
             lines = t.lines or 50
             weight = float(lines) / float(totallines)
-            if t.status in ("ERROR", "ABORTED", "SUCCESS"):
+            if t.status in ("FAILURE", "ABORTED", "SUCCESS"):
                 percentdone += (weight * 100)            
             else:
                 runningtasks += 1
@@ -79,7 +79,7 @@ class OcrBatch(models.Model):
         """
         Get all errored tasks.
         """
-        return self.tasks.filter(status="ERROR")
+        return self.tasks.filter(status="FAILURE")
 
 
     class Meta:
