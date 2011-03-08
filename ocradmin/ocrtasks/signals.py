@@ -4,7 +4,7 @@ to the ConvertPageTask.
 """
 
 from celery.registry import tasks
-from celery.signals import task_sent, task_prerun, task_postrun
+from celery.signals import task_sent, task_prerun, task_postrun, task_failure
 from celery.datastructures import ExceptionInfo
 
 from ocradmin.core.tasks import ConvertPageTask, BinarizePageTask 
@@ -42,14 +42,22 @@ def on_task_postrun(**kwargs):
     # don't know what we need to do here yet
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
     retval = kwargs.get("retval", "")
-    if isinstance(retval, ExceptionInfo):
-        task.error = retval.exception
-        task.traceback = retval.traceback
-        task.status = "ERROR"
-    else:
+    if not isinstance(retval, ExceptionInfo):
         result = Transcript(task=task, data=retval)
         result.save()
         task.status = "SUCCESS"
+    task.save()
+
+
+def on_task_failure(**kwargs):
+    """
+    Store the exception and traceback when a task
+    fails.
+    """
+    task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
+    task.error = kwargs.get("exception")
+    task.traceback = kwargs.get("traceback")
+    task.status = "FAILURE"
     task.save()
 
 
@@ -59,6 +67,7 @@ for taskname in [ConvertPageTask.name, LineTrainTask.name,
     task_sent.connect(on_task_sent, tasks[taskname])
     task_prerun.connect(on_task_prerun, tasks[taskname])
     task_postrun.connect(on_task_postrun, tasks[taskname])
+    task_failure.connect(on_task_failure, tasks[taskname])
 
 
 
