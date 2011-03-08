@@ -38,7 +38,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         // status filter widget
         this._statusfilter = new MultiFilterList(
             "status",
-            ["INIT", "PENDING", "RETRY", "STARTED", "SUCCESS", "ERROR", "ABORTED"],
+            ["INIT", "PENDING", "RETRY", "STARTED", "SUCCESS", "FAILURE", "ABORTED"],
             true
         );
 
