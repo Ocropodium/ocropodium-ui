@@ -86,13 +86,13 @@ $(function() {
                                             $.cookie("selectedtab", selectedtab); 
                                         },
                                     });
-                                sidebar.find("#submit_update_task").attr("disabled", false);
                                 loaded = true;
                                 header.text("Task #" + pk);
                             }
+                            $(".submit_update", sidebar).attr("disabled", false);
                         },
                         onUpdateStarted: function() {
-                            sidebar.find("#submit_update_task").attr("disabled", true);
+                            $(".submit_update", sidebar).attr("disabled", true);
                         }
                     });
                     sideparams.init();
@@ -107,7 +107,6 @@ $(function() {
         batch.addListeners({
             onTaskSelected: loadTaskDetails,
             onTaskDeselected: function() {
-                window.location.hash = "fifofo";
                 loadBatchList();
             },
             onUpdate: hashNavigate,                                
@@ -117,9 +116,9 @@ $(function() {
             //hashNavigate();
         });
 
-        $("#submit_update_task").live("click", function(event) {
-            var button = this;
-            $(button).attr("disabled", true);
+        $(".submit_update").live("click", function(event) {
+            var button = $(this);
+            button.attr("disabled", true);
             var pk = sidebar.data("task_pk");
             if (!pk)
                 return;
@@ -129,7 +128,10 @@ $(function() {
                 data: sideparams.serializedData(),
                 success: function(resp) {
                     $(button).attr("disabled", false);
-                    batch.pollForResults();
+                    if (button.attr("id").search("rerun") != -1) {
+                        $.post("/ocrtasks/retry/" + pk + "/");
+                        batch.pollForResults();
+                    }
                 },                                
             });
             return false;
