@@ -427,7 +427,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 .end()
                 .find(".abort_task")
                 .attr("href", "/ocrtasks/abort/" + taskdata.pk + "/");
-            this.setProgressStatus(task, taskdata.fields.progress, taskdata.fields.status);
+            this.setProgressStatus(task, taskdata.extras.progress, taskdata.fields.status);
             if (taskdata.fields.lines) {
                 task.find(".page_info").text("Lines: " + taskdata.fields.lines);
             }

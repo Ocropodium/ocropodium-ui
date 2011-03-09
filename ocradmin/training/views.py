@@ -15,7 +15,7 @@ from django.utils import simplejson
 from django import forms
 from ocradmin.core import utils as ocrutils
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch
+from ocradmin.ocrtasks.models import OcrPageTask, OcrBatch
 from ocradmin.training.models import OcrComparison, ParameterScore
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.decorators import project_required, saves_files
@@ -123,11 +123,11 @@ def create(request):
     cmodel = form.cleaned_data["cmodel"]
 
     # make us a new task entry
-    tid = OcrTask.get_new_task_id()
+    tid = OcrPageTask.get_new_task_id()
     args = ([t.pk for t in tsets], cmodel.pk, request.output_path)
     # Note: could add a 'queue' param here
     kwargs = dict(task_id=tid, loglevel=60, retries=2,)
-    task = OcrTask(
+    task = OcrPageTask(
         task_id=tid,
         user=request.user,
         project=project,
@@ -206,10 +206,10 @@ def score_models(request):
         for i in range(len(configsets)):
             config = configsets[i]
             params = {}
-            tid = OcrTask.get_new_task_id()
+            tid = OcrPageTask.get_new_task_id()
             args = (gtruth.pk, request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
-            task = OcrTask(
+            task = OcrPageTask(
                 task_id=tid,
                 user=request.user,
                 batch=batch,

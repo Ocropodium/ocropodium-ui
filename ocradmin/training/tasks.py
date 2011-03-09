@@ -10,7 +10,7 @@ from django.core.files.base import File
 from ocradmin.core import utils as ocrutils
 from ocradmin.training import utils
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrPageTask
 from ocradmin.ocrtasks.decorators import register_handlers
 from ocradmin.ocrtasks.utils import get_progress_callback, get_abort_callback
 from ocradmin.reference_pages.models import ReferencePage
@@ -99,7 +99,7 @@ class ComparisonTask(AbortableTask):
         # function for the converted to call periodically to check whether 
         # to end execution early
         logger = self.get_logger(**kwargs)
-        task = OcrTask.objects.get(task_id=self.request.id)
+        task = OcrPageTask.objects.get(task_id=self.request.id)
 
         # ground truth is already a binary, so tell the converter not
         # to redo it...
