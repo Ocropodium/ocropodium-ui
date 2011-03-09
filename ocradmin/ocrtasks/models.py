@@ -3,7 +3,6 @@ Class for Asyncronous OCR jobs.  Wraps tasks that run on the Celery
 queue with more metadata and persistance.
 """
 
-import os
 import uuid
 from django.db import models
 from picklefield import fields
@@ -87,15 +86,12 @@ class OcrTask(models.Model):
 
 
     @classmethod
-    def get_new_task_id(cls, filepath=None):
+    def get_new_task_id(cls):
         """
         Get a unique id for a new page task, given it's
         file path.
         """
-        if filepath:
-            return "%s::%s" % (os.path.basename(filepath), uuid.uuid1()) 
-        else:
-            return str(uuid.uuid1())
+        return str(uuid.uuid1())
 
 
 
