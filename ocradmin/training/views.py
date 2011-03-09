@@ -123,7 +123,7 @@ def create(request):
     cmodel = form.cleaned_data["cmodel"]
 
     # make us a new task entry
-    tid = ocrutils.get_new_task_id()
+    tid = OcrTask.get_new_task_id()
     args = ([t.pk for t in tsets], cmodel.pk, request.output_path)
     # Note: could add a 'queue' param here
     kwargs = dict(task_id=tid, loglevel=60, retries=2,)
@@ -206,7 +206,7 @@ def score_models(request):
         for i in range(len(configsets)):
             config = configsets[i]
             params = {}
-            tid = ocrutils.get_new_task_id(path)
+            tid = OcrTask.get_new_task_id(path)
             args = (gtruth.pk, request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             task = OcrTask(

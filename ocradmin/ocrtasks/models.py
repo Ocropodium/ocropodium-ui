@@ -1,3 +1,10 @@
+"""
+Class for Asyncronous OCR jobs.  Wraps tasks that run on the Celery
+queue with more metadata and persistance.
+"""
+
+import os
+import uuid
 from django.db import models
 from picklefield import fields
 
@@ -36,6 +43,12 @@ class OcrTask(models.Model):
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     updated_on = models.DateTimeField(auto_now_add=True, auto_now=True, editable=False)
 
+    def retry(self):
+        """
+        Retry the Celery job.
+        """
+        pass
+
 
     def latest_transcript(self):
         """
@@ -71,6 +84,19 @@ class OcrTask(models.Model):
         The task is running or awaiting running.
         """
         return self.status in ("INIT", "PENDING", "RETRY", "STARTED")
+
+
+    @classmethod
+    def get_new_task_id(cls, filepath=None):
+        """
+        Get a unique id for a new page task, given it's
+        file path.
+        """
+        if filepath:
+            return "%s::%s" % (os.path.basename(filepath), uuid.uuid1()) 
+        else:
+            return str(uuid.uuid1())
+
 
 
 class Transcript(models.Model):

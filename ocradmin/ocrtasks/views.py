@@ -290,7 +290,7 @@ def _retry_celery_task(task):
     """
     if task.is_abortable():
         _abort_celery_task(task)
-    tid = ocrutils.get_new_task_id()
+    tid = OcrTask.get_new_task_id()
     task.task_id = tid
     task.status = "RETRY"
     task.progress = 0

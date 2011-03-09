@@ -178,7 +178,7 @@ def create(request):
     asyncparams = []
     try:
         for path in paths:
-            tid = ocrutils.get_new_task_id()
+            tid = OcrTask.get_new_task_id()
             args = (path.encode(), request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             ocrtask = OcrTask(
