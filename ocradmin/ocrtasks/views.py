@@ -295,9 +295,10 @@ def _retry_celery_task(task):
     task.status = "RETRY"
     task.progress = 0
     task.save()
+    kwargs = task.kwargs
+    kwargs["task_id"] = tid
     celerytask = celeryregistry.tasks[task.task_name]
-    async = celerytask.apply_async(
-            args=task.args, task_id=tid, loglevel=60, retries=2)
+    async = celerytask.apply_async(args=task.args, **kwargs)
 
 
 
