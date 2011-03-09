@@ -1,0 +1,22 @@
+<div id="sidebar" class="widget">
+    <div class="widget_header">Options</div>
+    <div class="widget_content">
+        <form id="uploadform" name="convertoptions" action="{{request.path}}" method="POST" enctype="multipart/form-data">
+            <div id="dragdrop">
+                <div id="dropzone">
+                    Drop images here...
+                </div>
+            </div>
+        </form>
+        <form id="optionsform" name="options" action="{{request.path}}" method="POST">
+            <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
+            <input type="hidden" name="preload_params" value="{{preload_params}}" />
+
+            <h4>Options:</h4>
+            <div id="options" class="option_box">
+            </div>
+        </form>
+    </div>    
+</div>
+
+

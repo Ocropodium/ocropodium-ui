@@ -1,0 +1,29 @@
+{% extends "standard.html" %}
+{% load tagging_tags %}
+{% tags_for_model ocrmodels.OcrModel as modeltags %}
+
+{% block title %} OCRopodium - Models {% endblock %}
+
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/entity.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+    <script type="application/javascript" src="/static/js/ocrmodels/list.js"></script>
+{% endblock %}
+
+{% block content %}
+    {% include "ocrmodels/includes/sidebar.html" %}
+
+
+<div class="widget">
+    <div class="widget_header">OCR Models</div>
+    <div class="widget_content">
+        {% include "includes/messages.html" %}
+        <div id="modellist">
+            {% include "ocrmodels/includes/model_list.html" %}
+        </div>
+    </div>
+</div>
+
+<div id="dialog_box"></div>
+
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - Comparisons {% endblock %}
+
+{% block headerscript %}
+    <script type="text/javascript" src="/static/js/training/comparisons.js"></script>
+    <link rel="stylesheet" href="/static/css/entity.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+
+<style type="text/css">
+    #formholder {
+        display: none;
+    }
+
+    #dialog_box {
+        display: none;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="widget">
+    <div class="widget_header">
+        Model Comparisons
+    </div>
+    <div class="widget_content" id="comparisonlist">
+        {% include "includes/messages.html" %}
+        {% include "training/includes/comparison_list.html" %}
+    </div>
+</div>
+
+<div id="dialog_box"></div>
+
+{% endblock %}

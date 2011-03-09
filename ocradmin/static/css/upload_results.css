@@ -1,0 +1,65 @@
+#singleupload {
+    width: 300px;
+}
+
+#dropzone {
+    padding: 5px;
+    border: 1px dotted #999;        
+
+    vertical-align: center;
+    text-align: center;
+    color: #000;
+    margin-top: auto;
+    margin-bottom: auto;
+    font-size: 1.4em;
+    background-color: #FFF;
+    color: #F0F0F0;
+}
+
+#dropzone.hover {
+    background-color: #FFC;
+    cursor: pointer;
+}
+
+#dropprompt {
+}
+
+#dropzone.waiting {
+    background-image: url('/static/ajax-loader-small2.gif');
+    background-repeat: no-repeat;
+    background-position: center;
+    min-height: inherit;
+}
+
+.error {
+    background-color: #fcc;
+}
+
+.traceback {
+    overflow: auto;
+}
+
+#convertwith {
+    font-size: 1.1em;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.upload-spinner {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
+.pageheader {
+    background-color: #ffc;
+    font-weight: bold;        
+}    
+.pageresults {
+    text-align: left;
+    margin: 5px;
+}
+.resulttext {
+    padding: 5px;
+    margin-bottom: 10px;
+}
+

@@ -1,0 +1,313 @@
+.ocr_batch {
+}
+
+.batch_task {
+    margin: 5px 5px 5px 5px;
+    border: 1px solid #999;
+    border-radius: 2px;
+    -moz-border-radius: 2px;
+    padding: 5px;
+    background-color: #FCFCFC;
+    height: 15px;
+    vertical-align: middle;
+    min-width: 540px;
+    display: block;
+    text-decoration: none;
+    color: #333;
+}
+
+.batch_task:hover {
+    background-color: #EEE;
+}
+
+.batch_task.current {
+    background-color: #E0E8EF;
+}
+
+#overlay {
+    background-color: #000;
+    opacity: 0.3;
+    position: absolute;
+    display: none;
+}
+
+.progressbar_container {
+    float: right;
+    padding-left: 20px;
+}
+
+.progressbar_container.waiting {
+    background-image: url("/static/ajax-loader-small2.gif");
+    background-position: left center;
+    background-repeat: no-repeat;
+}
+
+.progressbar {
+    float: right;
+    width: 200px;
+    border: 1px solid #999;
+    height: 10px;
+    border-radius: 2px;
+    -moz-border-radius: 2px;
+}
+
+.progressbar.started {
+    background-image: url("/static/progbar.gif");
+    background-position: center left;
+    background-repeat: no-repeat;
+}
+
+.progressbar span {
+    float: left;
+    width: 0%;
+    height: 10px;
+    /*border-radius: 2px;
+    -moz-border-radius: 2px;*/
+    background-color: #088A08;
+    opacity: 0.5;
+}
+
+.progressbar.pending, .progressbar.retry {
+    background-color: #FFFFFF;
+}
+
+.progressbar.success span {
+    background-color: #045FB4;
+}
+
+.progressbar.error span {
+    background-color: #FA5858;
+}
+
+.batch_header {
+    padding-left: 36px;
+    height: 32px;
+    background-image: url(/static/icons/transcript.png);
+    background-position: center left;
+    background-repeat: no-repeat;
+    float: left;
+}
+
+.batch_header.fedora {
+    background-image: url(/static/icons/fedora.png);
+}
+
+.batch_header.compare {
+    background-image: url(/static/icons/compare.png);
+}
+
+.batch_name {
+    font-weight: bold;
+    font-size: 1.3em;
+    #color: 333;
+}
+
+.transcript_link, .transcript_link:visited {
+    text-decoration: none;
+    font-size: 0.9em;
+    color: #666;
+    float: left;
+    clear: left;
+}
+
+.transcript_link:hover, .export_link:hover {
+    color: #660;
+    background-color: #FFFFDD;
+}
+
+.export_link, .export_link:visited {
+    text-decoration: none;
+    font-size: 0.9em;
+    color: #666;
+    float: left;
+    margin-left: 10px;
+}
+
+.page_name {
+    font-size: 0.9em;
+}
+
+.page_info {
+    color: #B9B9B9;
+    float: right;
+    width: 100px;
+}
+
+.button_link {
+    text-decoration: none;
+    color: #999;
+    float: right;
+    margin: 0px 5px;
+    opacity: 0.5;
+}
+
+.retry_errored {
+    background-color: #FFDDDD;
+}
+
+.tl_container {
+    overflow: auto;
+    border: 1px solid #999;
+    height: 490px;
+    margin: 10px;
+    background-color: #FFF;
+}
+
+.tl_scrollcontainer {
+    float: right;
+}
+
+.tl_scrollup, .tl_scrolldown {
+    width: 14px;
+    height: 14px;    
+    background-color: #FDFDFD;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-left: 1px solid #999;
+}
+
+.tl_scrollup {
+    background-image: url("/static/hz_scroll_up.gif");
+}
+
+.tl_scrolldown {
+    background-image: url("/static/hz_scroll_down.gif");
+}
+
+.tl_scrollbar {
+    width: 14px;
+    height: 460px;    
+    border-left: 1px solid #999;
+    border-bottom: 1px solid #999;
+    border-top: 1px solid #999;
+
+}
+
+.tl_scrollhandle {
+    width: 100%;
+    height: 80px;
+    float: right;
+    background-color: #999; 
+    background-position: center;
+    background-repeat: no-repeat;
+    background: -webkit-gradient(
+        linear,
+        left top,
+        right top,
+        color-stop(0.35, rgb(135,180,255)),
+        color-stop(0.48, rgb(143,184,255))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(135,180,255) 35%,
+        rgb(143,184,255) 48%
+    );
+    /*background-image: url("/static/hz_scroll_handle.gif");*/
+}
+
+.task_list {
+    margin-right: 15px;
+}
+
+.batch_controls {
+    overflow: auto;
+    padding: 10px 10px 0px 10px;
+}
+
+
+#scroll_viewer {
+    color: #FFF;
+    position: absolute;
+    -moz-border-radius: 20px;
+    border-radius: 20px;
+    background-color: #000;
+    opacity: 0.5;
+    font-size: 3em;
+    display: none;
+    vertical-align: middle;
+    text-align: center;
+    padding: 10px;
+}
+
+.recent_batches {
+    border: 1px solid #D0D0D0;
+    background-color: #FFF;
+    padding-bottom: 10px;
+}
+
+.recent_batch {
+    padding: 5px 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; 
+}
+
+.recent_batch .recent_batch_link {
+    text-decoration: none;
+    font-size: 0.8em;
+    color: #045FB4;
+}
+
+
+.list_popup {
+    float: right;
+    position: absolute;
+    background-color: #FFF;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+    padding: 3px;
+}
+
+.list_popup div.status_filter * {    
+    float: left;
+}
+
+.list_popup label {
+    width: 5em;
+    text-align: right;
+}
+
+.toggle_button {
+    padding: 2px 5px;
+    margin: 0px 5px;
+    cursor: pointer;
+}
+
+.filter_container {
+    float: right;
+   font-size: 0.8em;
+}
+
+#filter_list {
+    z-index: 1000;
+    background-color: #FFF;
+}
+
+
+/* New batch form -> /batch/new */
+#batch_file_list {
+    max-height: 400px;
+    min-height: 200px;
+    overflow: auto;
+    background: #FFF;
+    border: 1px solid #666;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    width: 400px;
+}
+
+
+#batchform .file_item {
+    padding: 3px;
+    color: #333;
+    cursor: pointer;    
+}
+
+#batch_file_list .odd {
+    background-color: #F2F2F2;
+}
+
+
+
+
