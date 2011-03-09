@@ -206,7 +206,7 @@ def score_models(request):
         for i in range(len(configsets)):
             config = configsets[i]
             params = {}
-            tid = OcrTask.get_new_task_id(path)
+            tid = OcrTask.get_new_task_id()
             args = (gtruth.pk, request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             task = OcrTask(
