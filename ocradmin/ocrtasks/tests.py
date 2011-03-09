@@ -10,12 +10,12 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 from ocradmin.core import utils as ocrutils
-from models import OcrTask
+from models import OcrPageTask
 from testutils import TestTask
 
 
-class OcrTaskTest(TestCase):
-    fixtures = ["test_batch.json", "test_task.json"]
+class OcrPageTaskTest(TestCase):
+    fixtures = ["test_batch.json", "test_task.json", "test_page_task.json"]
 
     def setUp(self):
         """
@@ -60,7 +60,7 @@ class OcrTaskTest(TestCase):
         task, async = self._start_test_task(args)
         t1 = task.task_id
         r = self.client.post("/ocrtasks/retry/%d/" % task.id)
-        task = OcrTask.objects.get(pk=task.pk)
+        task = OcrPageTask.objects.get(pk=task.pk)
         t2 = task.task_id
         self.assertEqual(r.status_code, 200)
         self.assertNotEqual(t1, t2)
@@ -70,9 +70,9 @@ class OcrTaskTest(TestCase):
         Create a test task and return both the wrapper
         object and the async object.
         """
-        tid = OcrTask.get_new_task_id()
+        tid = OcrPageTask.get_new_task_id()
         kwargs = dict(task_id=tid, loglevel=60,)
-        task = OcrTask(
+        task = OcrPageTask(
             task_id=tid,
             user=self.testuser,
             page_name="test",
@@ -83,6 +83,6 @@ class OcrTaskTest(TestCase):
         )
         task.save()
         async = TestTask.apply_async(args, **kwargs)
-        task = OcrTask.objects.get(task_id=tid)
+        task = OcrPageTask.objects.get(task_id=tid)
         return task, async
         

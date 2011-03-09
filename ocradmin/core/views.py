@@ -18,7 +18,7 @@ from django.utils import simplejson
 from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import saves_files
-from ocradmin.ocrtasks.models import OcrTask, Transcript
+from ocradmin.ocrtasks.models import OcrPageTask, Transcript
 from ocradmin.core.tools.manager import PluginManager
 
 from ocradmin.plugins import parameters
@@ -80,7 +80,7 @@ def update_ocr_task(request, task_pk):
     Re-save the params for a task and resubmit it,
     redirecting to the transcript page.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     _, config, params = _handle_request(request, request.output_path)
     task.args = (task.args[0], task.args[1], params, config)
     task.save()
@@ -99,7 +99,7 @@ def transcript(request, task_pk):
     """
     View the transcription of a task.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     template = "ocr/transcript.html"
     context = dict(task=task)
     if task.batch:
@@ -115,7 +115,7 @@ def save_transcript(request, task_pk):
     """
     Save data for a single page.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     json = request.POST.get("data")
     if not json:
         return HttpResponseServerError("No data passed to 'save' function.")
@@ -169,7 +169,7 @@ def reconvert_lines(request, task_pk):
     jsonstr = request.POST.get("coords")
     linedata = simplejson.loads(jsonstr)
 
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     config = parameters.parse_post_data(request.POST)
     params = _cleanup_params(request.POST)
     # hack!  add an allowcache to the params dict to indicate
@@ -208,7 +208,7 @@ def task_transcript(request, task_pk):
     """
     Retrieve the results using the previously provided task name.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     pyserializer = serializers.get_serializer("python")()
     response = HttpResponse(mimetype="application/json")
     taskssl = pyserializer.serialize(
@@ -226,7 +226,7 @@ def task_config(request, task_pk):
     """
     Get a task config as a set of key/value strings.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     configdict = task.args[3]
     return HttpResponse(simplejson.dumps(
             parameters.OcrParameters(configdict).to_post_data()),
@@ -238,13 +238,12 @@ def submit_viewer_binarization(request, task_pk):
     """
     Trigger a re-binarization of the image for viewing purposes.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     # hack!  add an allowcache to the params dict to indicate
     # that we don't want to remake an existing binary
     args = task.args
     args[2]["allowcache"] = True
-    async = tasks.BinarizePageTask.apply_async(args=args,
-            queue="interactive")
+    async = tasks.BinarizePageTask.apply_async(args=args, queue="interactive")
     out = dict(
         task_id=async.task_id,
         status=async.status,
@@ -306,10 +305,10 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     # init the job from our params
     asynctasks = []
     for path in paths:
-        tid = OcrTask.get_new_task_id()
+        tid = OcrPageTask.get_new_task_id()
         args = (path.encode(), request.output_path.encode(), params, config)
         kwargs = dict(task_id=tid, loglevel=60, retries=2, queue="interactive")
-        ocrtask = OcrTask(
+        ocrtask = OcrPageTask(
             task_id=tid,
             user=request.user,
             page_name=os.path.basename(path),
@@ -323,10 +322,10 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             asynctasks.append(
                 (os.path.basename(path),
                     celerytask.apply_async(args=args, **kwargs)))
-        except Exception, err:
-            print err
-            for t in traceback.extract_stack():
-                print t
+        except StandardError, err:
+            #print err
+            #for t in traceback.extract_stack():
+            #    print t
             raise
     try:
         # aggregate the results.  If necessary wait for tasks.
@@ -342,7 +341,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
         # should be past the danger zone now...
         transaction.commit()
         return _format_response(request, out)
-    except Exception, err:
+    except StandardError, err:
         transaction.rollback()
         return HttpResponse(
             simplejson.dumps({
@@ -361,7 +360,7 @@ def _wrap_async_result(async):
     """
     if async.status == "FAILURE":
         err = async.result
-        taskmeta = OcrTask.objects.get(task_id=async.task_id)
+        taskmeta = OcrPageTask.objects.get(task_id=async.task_id)
         return dict(
             task_id=async.task_id,
             status=async.status,

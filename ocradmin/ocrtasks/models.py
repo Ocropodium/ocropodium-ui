@@ -28,13 +28,9 @@ class OcrTask(models.Model):
     )
 
     user = models.ForeignKey(User)
-    batch = models.ForeignKey(OcrBatch, related_name="tasks", blank=True, null=True)
-    project = models.ForeignKey(OcrProject, related_name="tasks", blank=True, null=True)
     task_id = models.CharField(max_length=100)
     task_name = models.CharField(max_length=100)
-    page_name = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    lines = models.IntegerField(blank=True, null=True)
     progress = models.FloatField(default=0.0, blank=True, null=True)
     args = fields.PickledObjectField(blank=True, null=True)
     kwargs = fields.PickledObjectField(blank=True, null=True)
@@ -74,22 +70,6 @@ class OcrTask(models.Model):
         celerytask.apply_async(args=self.args, **self.kwargs)        
  
 
-    def latest_transcript(self):
-        """
-        Return the latest transcript.
-        """
-        try:
-            result = self.transcripts.order_by("-version")[0].data
-        except IndexError:
-            result = None
-        return result
-
-    def is_batch_task(self):
-        """
-        Whether task is part of a batch.
-        """
-        return self.batch is None
-
     def is_revokable(self):
         """
         Whether or not a given status allows
@@ -119,18 +99,43 @@ class OcrTask(models.Model):
         return str(uuid.uuid1())
 
 
+class OcrPageTask(OcrTask):
+    """
+    Extend the generic task with info relevant for
+    a page of text.
+    """
+    batch = models.ForeignKey(OcrBatch, related_name="tasks", blank=True, null=True)
+    project = models.ForeignKey(OcrProject, related_name="tasks", blank=True, null=True)
+    page_name = models.CharField(max_length=255)
+    lines = models.IntegerField(blank=True, null=True)
+
+    def latest_transcript(self):
+        """
+        Return the latest transcript.
+        """
+        try:
+            result = self.transcripts.order_by("-version")[0].data
+        except IndexError:
+            result = None
+        return result
+
+    def is_batch_task(self):
+        """
+        Whether task is part of a batch.
+        """
+        return self.batch is None
+
 
 class Transcript(models.Model):
     """
     Results set for a task.
     """
-    task = models.ForeignKey(OcrTask, related_name="transcripts")
+    task = models.ForeignKey(OcrPageTask, related_name="transcripts")
     version = models.IntegerField(default=0, editable=False)
     data = fields.PickledObjectField()
     is_retry = models.BooleanField(default=False, editable=False)
     is_final = models.BooleanField(default=False)
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
-
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)    
 
     def save(self, force_insert=False, force_update=False):
         """
@@ -151,4 +156,7 @@ class Transcript(models.Model):
                             version=self.version).update(is_final=False)    
         # Call the "real" save() method
         super(Transcript, self).save(force_insert, force_update)
+
+
+
 

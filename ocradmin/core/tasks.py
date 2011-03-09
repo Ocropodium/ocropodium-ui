@@ -13,7 +13,7 @@ from django.conf import settings
 from ocradmin.core import utils
 from ocradmin.vendor import deepzoom
 from ocradmin.core.tools.manager import PluginManager
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrPageTask
 from ocradmin.ocrtasks.utils import get_progress_callback, get_abort_callback
 from ocradmin.ocrtasks.decorators import register_handlers
 from ocradmin.plugins import parameters
@@ -167,7 +167,6 @@ class ConvertLineTask(AbortableTask):
                 params.get("coords"), **params)
 
 
-@register_handlers
 class BinarizePageTask(AbortableTask):
     """
     Binarize an image of text into a temporary file.  Return some
@@ -216,7 +215,6 @@ class BinarizePageTask(AbortableTask):
         )
 
 
-@register_handlers
 class SegmentPageTask(AbortableTask):
     """
     Segment an image of text into a temporary file.  Return some

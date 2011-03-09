@@ -11,7 +11,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.core import utils as ocrutils
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrPageTask
 from ocradmin.reference_pages.models import ReferencePage        
 from ocradmin.reference_pages.tasks import MakeThumbnailTask
 from ocradmin.core.decorators import project_required, saves_files
@@ -79,7 +79,7 @@ def create_from_task(request, task_pk):
     we expect it based on the user/project.  
     This assumption is rather fragile.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
 
     srcpath = task.args[0]
     binpath = os.path.join(request.output_path, 

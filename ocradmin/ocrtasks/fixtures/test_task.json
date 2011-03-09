@@ -4,14 +4,12 @@
         "model": "ocrtasks.ocrtask", 
         "fields": {
             "status": "SUCCESS", 
-            "task_id": "simple.png::37c2ea6a-7de8-11df-9023-002564d1c84c", 
+            "task_id": "37c2ea6a-7de8-11df-9023-002564d1c84c", 
             "args": null, 
             "user": 1,
-            "batch": 1, 
             "created_on": "2010-06-22 11:23:36", 
             "kwargs": null, 
-            "updated_on": "2010-06-22 11:23:37", 
-            "page_name": "simple.png"
+            "updated_on": "2010-06-22 11:23:37" 
         }
     }
 ]

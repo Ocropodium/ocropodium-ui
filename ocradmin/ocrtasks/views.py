@@ -17,7 +17,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrPageTask
 from ocradmin.core import utils as ocrutils
 
 PER_PAGE = 20
@@ -35,12 +35,12 @@ def task_query(params):
         query = Q(status__in=status)
     for key, val in params.items():
         if key.find("__") == -1 and \
-                not key in OcrTask._meta.get_all_field_names():
+                not key in OcrPageTask._meta.get_all_field_names():
             continue
         if key == "status" or not val:
             continue
         query = query & Q(**{str(key): str(val)})
-    return OcrTask.objects.select_related().filter(query).order_by(*order)
+    return OcrPageTask.objects.select_related().filter(query).order_by(*order)
 
 
 @login_required
@@ -60,7 +60,7 @@ def list_tasks(request):
     excludes = ["args", "kwargs", "traceback", "results"]
     params = request.GET.copy()
     context = {
-        "statuses": OcrTask.STATUS_CHOICES,
+        "statuses": OcrPageTask.STATUS_CHOICES,
         "params": params,
     }
     if not request.is_ajax():
@@ -97,6 +97,7 @@ def list_tasks(request):
     serializedpage["object_list"] = pythonserializer.serialize(
         tasks.object_list,
         excludes=excludes,
+        extras=("updated_on","status","user",),
         relations={
             "user": {
                 "fields": ("username"),
@@ -153,7 +154,7 @@ def list2(request):
     context = {
             "tasks": tasks,
             "fields": fields,
-            "statuses": OcrTask.STATUS_CHOICES,
+            "statuses": OcrPageTask.STATUS_CHOICES,
             "revokable": revokable,
             "selected": selected,
             "allstatus": allstatus,
@@ -182,7 +183,7 @@ def delete(request, task_pk=None):
     else:
         pks = request.POST.getlist("task_pk")
 
-    taskquery = OcrTask.objects.filter(pk__in=pks)
+    taskquery = OcrPageTask.objects.filter(pk__in=pks)
     if not request.user.is_staff:
         taskquery = taskquery.filter(user=request.user)
         if not len(taskquery) == len(pks):
@@ -221,7 +222,7 @@ def show(request, task_pk):
     Show task details.
     """
 
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     try:
         params = [(k, task.args[-1][k]) for k in \
                 sorted(task.args[-1].keys())] if task.args \
@@ -245,7 +246,7 @@ def retry(request, task_pk):
     """
     Retry a batch task.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     out = {"ok": True}
     try:
         task.retry()
@@ -260,7 +261,7 @@ def abort(request, task_pk):
     """
     Abort a batch task.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    task = get_object_or_404(OcrPageTask, pk=task_pk)
     out = {"ok": True}
     try:
         task.abort()

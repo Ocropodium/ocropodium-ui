@@ -10,7 +10,7 @@ from django.conf import settings
 from django.utils import simplejson
 
 from ocradmin.core.tests import testutils
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrPageTask
 from ocradmin.plugins import parameters
 
 
@@ -109,7 +109,7 @@ class OcrConvertTest(TestCase):
         """
         r = self._get_convert_response(parameters.TESTPOST)
         self.assertEqual(r.status_code, 200)
-        task = OcrTask.objects.all().order_by("-created_on")[0]
+        task = OcrPageTask.objects.all().order_by("-created_on")[0]
         r = self.client.get("/ocr/transcript/%s/" % task.pk)
         self.assertEqual(r.status_code, 200)
 
@@ -119,7 +119,7 @@ class OcrConvertTest(TestCase):
         """
         r = self._get_convert_response(parameters.TESTPOST)
         self.assertEqual(r.status_code, 200)
-        task = OcrTask.objects.all().order_by("-created_on")[0]
+        task = OcrPageTask.objects.all().order_by("-created_on")[0]
         r = self.client.post(
             "/ocr/update_task/%s/" % task.pk,
             {"%options.tesseract[1].psegmenter": "SegmentPageBy1CP",},                

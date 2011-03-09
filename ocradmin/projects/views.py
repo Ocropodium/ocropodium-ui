@@ -18,7 +18,7 @@ from django.template.defaultfilters import slugify
 
 from tagging.models import TaggedItem
 from ocradmin.core import utils as ocrutils
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrPageTask
 from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject
 from fedora.adaptor import fcobject
@@ -283,10 +283,10 @@ def ingest(request, project_pk):
     batch.save()
 
     for rset in project.reference_sets.all():
-        tid = OcrTask.get_new_task_id()
+        tid = OcrPageTask.get_new_task_id()
         args = (rset.pk, namespace, dublincore)
         kwargs = dict(task_id=tid, queue="interactive")
-        task = OcrTask(
+        task = OcrPageTask(
             task_id=tid,
             user=request.user,
             batch=batch,

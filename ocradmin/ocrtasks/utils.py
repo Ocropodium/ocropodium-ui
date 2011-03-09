@@ -1,9 +1,9 @@
 """
-Utilities for managing OcrTasks.
+Utilities for managing OcrPageTasks.
 """
 
 from celery.contrib.abortable import AbortableAsyncResult
-from models import OcrTask
+from models import OcrPageTask
 
 
 
@@ -16,7 +16,7 @@ def get_progress_callback(task_id):
         """
         Set progress for the given task.
         """
-        task = OcrTask.objects.get(task_id=task_id)
+        task = OcrPageTask.objects.get(task_id=task_id)
         task.progress = progress
         if lines is not None:
             task.lines = lines

@@ -7,7 +7,7 @@ from django.test.client import Client
 from django.utils import simplejson
 
 from ocradmin.reference_pages.models import ReferencePage
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrPageTask
 from ocradmin.plugins import parameters
 
 
@@ -75,7 +75,7 @@ class ReferencePageTest(TestCase):
         is a fragile assumption - it depends on the new page
         NOT having the same name as the current fixture.                           
         """
-        tasksbefore = OcrTask.objects.count()
+        tasksbefore = OcrPageTask.objects.count()
         tf = open(TESTFILE)
         headers = {}
         params = parameters.TESTPOST
@@ -83,9 +83,9 @@ class ReferencePageTest(TestCase):
         r = self.client.post("/ocr/convert", params, **headers)
         #tf.close()        
         self.assertEqual(r.status_code, 200)
-        tasksafter = OcrTask.objects.count()        
+        tasksafter = OcrPageTask.objects.count()        
         self.assertEqual(tasksbefore, tasksafter - 1)
-        newtask = OcrTask.objects.all().order_by("-created_on")[0]
+        newtask = OcrPageTask.objects.all().order_by("-created_on")[0]
         refbefore = ReferencePage.objects.count()
         r = self.client.post(
                 "/reference_pages/create_from_task/%s/" % newtask.pk)

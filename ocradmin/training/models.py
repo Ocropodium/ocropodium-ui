@@ -7,7 +7,7 @@ import os
 from django.db import models
 from picklefield import fields
 from ocradmin.reference_pages.models import ReferencePage
-from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.ocrtasks.models import OcrPageTask
 from ocradmin.batch.models import OcrBatch
 from ocradmin.core import utils as ocrutils
 
@@ -21,7 +21,7 @@ class ParameterScore(models.Model):
     comparison = models.ForeignKey("OcrComparison", 
             related_name="parameter_scores")
     name = models.CharField(max_length=255)
-    task  = models.OneToOneField(OcrTask, related_name="parameter_score") 
+    task  = models.OneToOneField(OcrPageTask, related_name="parameter_score") 
     ground_truth = models.ForeignKey(ReferencePage)
     score = models.FloatField(null=True, blank=True)
     score_internals = models.TextField(null=True, blank=True)

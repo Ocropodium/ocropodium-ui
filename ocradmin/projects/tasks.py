@@ -13,7 +13,7 @@ from django.conf import settings
 
 from ocradmin.projects.models import OcrProject
 from ocradmin.reference_pages.models import ReferencePage
-from ocrtasks.models import OcrTask
+from ocrtasks.models import OcrPageTask
 from ocrtasks.decorators import register_handlers
 
 from ocradmin.core import utils as ocrutils
@@ -37,7 +37,7 @@ class IngestTask(AbortableTask):
         """
         logger = self.get_logger()
         logger.info((trainingpage_id, namespace, kwargs))
-        task = OcrTask.objects.get(task_id=self.request.id)
+        task = OcrPageTask.objects.get(task_id=self.request.id)
         task.progess = 0
         task.save()
 

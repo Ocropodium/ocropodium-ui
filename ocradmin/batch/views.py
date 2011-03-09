@@ -28,7 +28,7 @@ from ocradmin.batch import utils as batchutils
 from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch
+from ocradmin.ocrtasks.models import OcrPageTask, OcrBatch
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
 from ocradmin.core.views import _handle_request, AppException
@@ -177,10 +177,10 @@ def create(request):
     asyncparams = []
     try:
         for path in paths:
-            tid = OcrTask.get_new_task_id()
+            tid = OcrPageTask.get_new_task_id()
             args = (path.encode(), request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
-            ocrtask = OcrTask(
+            ocrtask = OcrPageTask(
                 task_id=tid,
                 user=request.user,
                 batch=batch,
@@ -203,9 +203,10 @@ def create(request):
             publisher.close()
             publisher.connection.close()
 
-    except Exception, err:
+    except StandardError, err:
         transaction.rollback()
         print err.message
+        raise
         return HttpResponse(err.message, mimetype="application/json")
 
     # return a serialized result
@@ -494,6 +495,7 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None):
     taskssl = pyserializer.serialize(
         taskqset.order_by("page_name")[start:start + limit],
         excludes=("args", "kwargs", "traceback",),
+        extras=("progress",),
     )
     batchsl[0]["fields"]["tasks"] = taskssl
     batchsl[0]["extras"]["task_count"] = task_count

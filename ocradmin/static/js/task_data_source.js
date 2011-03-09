@@ -33,7 +33,7 @@ var TaskDataSource = AbstractDataSource.extend({
         this._col2sort = {
             0: "pk",
             1: "page_name",
-            2: "user__username",
+            2: "user",
             3: "updated_on",
             4: "status",
         }
@@ -90,7 +90,7 @@ var TaskDataSource = AbstractDataSource.extend({
 
     rowClassNames: function(row) {
         return [
-            this._data.object_list[row].fields.status.toLowerCase(),
+            this._data.object_list[row].extras.status.toLowerCase(),
         ];
     },
 
@@ -104,11 +104,11 @@ var TaskDataSource = AbstractDataSource.extend({
         if (col == 1)
             return this._data.object_list[row].fields.page_name;
         if (col == 2)
-            return this._data.object_list[row].fields.user.fields.username;
+            return this._data.object_list[row].extras.user;
         if (col == 3)
-            return this._data.object_list[row].fields.updated_on;
+            return this._data.object_list[row].extras.updated_on;
         if (col == 4)
-            return this._data.object_list[row].fields.status;
+            return this._data.object_list[row].extras.status;
     },
 
 
