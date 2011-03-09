@@ -167,7 +167,6 @@ class ConvertLineTask(AbortableTask):
                 params.get("coords"), **params)
 
 
-@register_handlers
 class BinarizePageTask(AbortableTask):
     """
     Binarize an image of text into a temporary file.  Return some
@@ -216,7 +215,6 @@ class BinarizePageTask(AbortableTask):
         )
 
 
-@register_handlers
 class SegmentPageTask(AbortableTask):
     """
     Segment an image of text into a temporary file.  Return some
