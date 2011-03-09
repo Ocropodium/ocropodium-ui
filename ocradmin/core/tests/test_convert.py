@@ -126,6 +126,20 @@ class OcrConvertTest(TestCase):
         )
         self.assertEqual(r.status_code, 302)
 
+    def test_submit_viewer_binarization(self):
+        """
+        Test requesting the binary DZI for a task.
+        """
+        r = self._get_convert_response(parameters.TESTPOST)
+        r = self._get_convert_response(parameters.TESTPOST)
+        self.assertEqual(r.status_code, 200)
+        task = OcrTask.objects.all().order_by("-created_on")[0]
+        r = self.client.post(
+                "/ocr/submit_viewer_binarization/%s/" % task.pk)
+        content = simplejson.loads(r.content)
+        self.assertTrue(content.get("status") is not None)
+        self.assertTrue(content.get("results").get("out").endswith("png"))
+
     def _test_convert_action(self, params=None, headers={}):
         """
         Testing actually OCRing a file.
