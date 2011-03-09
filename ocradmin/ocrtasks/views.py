@@ -18,7 +18,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 
 PER_PAGE = 20
 
@@ -248,10 +248,9 @@ def retry(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     out = {"ok": True}
     try:
-        _retry_celery_task(task)
-    except Exception, err:
+        task.retry()
+    except StandardError, err:
         out = {"error": err.message}
-
     return HttpResponse(simplejson.dumps(out),
             mimetype="application/json")
 
@@ -262,42 +261,14 @@ def abort(request, task_pk):
     Abort a batch task.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
-    return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}),
+    out = {"ok": True}
+    try:
+        task.abort()
+    except StandardError, err:
+        out = {"error": err.message}
+    return HttpResponse(simplejson.dumps(out),
             mimetype="application/json")
 
-
-
-
-def _abort_celery_task(task):
-    """
-    Abort a task.
-    """
-    if not task.is_active():
-        return False
-
-    asyncres = AbortableAsyncResult(task.task_id)
-    asyncres.revoke()
-    asyncres.abort()
-    if asyncres.is_aborted():
-        task.status = "ABORTED"
-        task.save()
-    return asyncres.is_aborted()
-
-
-def _retry_celery_task(task):
-    """
-    Set a task re-running.
-    """
-    if task.is_abortable():
-        _abort_celery_task(task)
-    tid = ocrutils.get_new_task_id()
-    celerytask = celeryregistry.tasks[task.task_name]
-    async = celerytask.apply_async(
-            args=task.args, task_id=tid, loglevel=60, retries=2)
-    task.task_id = async.task_id
-    task.status = "RETRY"
-    task.progress = 0
-    task.save()
 
 
 

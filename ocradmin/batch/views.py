@@ -25,17 +25,14 @@ from django.template import RequestContext
 from django.utils import simplejson
 from django.utils.encoding import smart_str, smart_unicode
 from ocradmin.batch import utils as batchutils
-from ocradmin.ocr import tasks
-from ocradmin.ocr import utils as ocrutils
-from ocradmin.ocr.utils import saves_files
-from ocradmin.ocrpresets.models import OcrPreset
+from ocradmin.core import tasks
+from ocradmin.core import utils as ocrutils
+from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
-from ocradmin.projects.utils import project_required
-from ocradmin.ocr.views import _handle_request, AppException
-from ocradmin.ocrtasks.views import  _retry_celery_task, _abort_celery_task 
-from ocradmin.ocr.tools.manager import PluginManager
+from ocradmin.core.views import _handle_request, AppException
+from ocradmin.core.tools.manager import PluginManager
 
 
 PER_PAGE = 25
@@ -180,7 +177,7 @@ def create(request):
     asyncparams = []
     try:
         for path in paths:
-            tid = ocrutils.get_new_task_id()
+            tid = OcrTask.get_new_task_id()
             args = (path.encode(), request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             ocrtask = OcrTask(
@@ -355,7 +352,7 @@ def abort_batch(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.tasks.all():
-        _abort_celery_task(task)
+        task.abort()
     transaction.commit()
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
@@ -369,7 +366,7 @@ def retry(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.tasks.all():
-        _retry_celery_task(task)
+        task.retry()
     transaction.commit()
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
@@ -383,7 +380,7 @@ def retry_errored(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.errored_tasks():
-        _retry_celery_task(task)
+        task.retry()
     transaction.commit()
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
@@ -518,8 +515,6 @@ def _new_batch_context(request):
         prefix="",
         form=form,
         engines=PluginManager.get_provider("line"),
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
     )
 
 

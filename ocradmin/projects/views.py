@@ -17,10 +17,10 @@ from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
 from tagging.models import TaggedItem
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.batch.models import OcrBatch
-from ocradmin.projects.models import OcrProject, OcrProjectDefaults
+from ocradmin.projects.models import OcrProject
 from fedora.adaptor import fcobject
 from ordereddict import OrderedDict
 from ocradmin.projects.tasks import IngestTask
@@ -49,14 +49,6 @@ class OcrProjectForm(forms.ModelForm):
     class Meta:
         model = OcrProject
         exclude = ["user", "slug", "created_on"]
-
-
-class OcrProjectDefaultsForm(forms.ModelForm):
-    """
-    New project defaults form.
-    """
-    class Meta:
-        model = OcrProjectDefaults
 
 
 def project_query(user, order, **params):
@@ -124,8 +116,7 @@ def new(request):
     Show a form for a new project.
     """
     form = OcrProjectForm()
-    defform = OcrProjectDefaultsForm()
-    context = {"form": form, "defform": defform}
+    context = {"form": form}
     template = "projects/new.html" if not request.is_ajax() \
             else "projects/includes/project_form.html"
     return render_to_response(template, context,
@@ -139,18 +130,14 @@ def create(request):
     Create a new project.
     """
     form = OcrProjectForm(request.POST)
-    defform = OcrProjectDefaultsForm(request.POST)
-    if not request.method == "POST" \
-            or not defform.is_valid() or not form.is_valid():
+    if not request.method == "POST" or not form.is_valid():
         # if we get here there's an error
-        context = {"form": form, "defform": defform}
+        context = {"form": form}
         template = "projects/new.html"
         return render_to_response(template, context,
                 context_instance=RequestContext(request))
 
-    defaults = defform.save()
     project = form.instance
-    project.defaults = defaults
     project.slug = slugify(project.name)
     project.user = request.user
     project.full_clean()
@@ -165,8 +152,7 @@ def edit(request, project_pk):
     """
     project = get_object_or_404(OcrProject, pk=project_pk)
     form = OcrProjectForm(instance=project)
-    defform = OcrProjectDefaultsForm(instance=project.defaults)
-    context = {"project": project, "form": form, "defform": defform}
+    context = {"project": project, "form": form,}
     template = "projects/edit.html"
     return render_to_response(template, context,
             context_instance=RequestContext(request))
@@ -180,18 +166,15 @@ def update(request, project_pk):
     """
     project = get_object_or_404(OcrProject, pk=project_pk)
     form = OcrProjectForm(request.POST, instance=project)
-    defform = OcrProjectDefaultsForm(request.POST, instance=project.defaults)
 
     if request.method == "POST":
-        if not defform.is_valid() or not form.is_valid():
+        if not form.is_valid():
             # if we get here there's an error
-            context = {"project": project, "form": form, "defform": defform}
+            context = {"project": project, "form": form,}
             template = "projects/edit.html"
             return render_to_response(template, context,
                     context_instance=RequestContext(request))
-        defaults = defform.save()
         project = form.instance
-        project.defaults = defaults
         project.slug = slugify(project.name)
         project.full_clean()
         project.save()
@@ -205,8 +188,7 @@ def show(request, project_pk):
     """
     project = get_object_or_404(OcrProject, pk=project_pk)
     form = OcrProjectForm(instance=project)
-    defform = OcrProjectDefaultsForm(instance=project)
-    context = {"project": project, "form": form, "defform": defform}
+    context = {"project": project, "form": form,}
     template = "projects/show.html"
     return render_to_response(template, context,
             context_instance=RequestContext(request))
@@ -220,7 +202,6 @@ def open(request):
     order = request.GET.getlist("order_by")
     params = request.GET.copy()
     projects = project_query(request.user, order, **params)
-
     serializer = serializers.get_serializer("json")()
     json = serializer.serialize(
         projects,
@@ -302,7 +283,7 @@ def ingest(request, project_pk):
     batch.save()
 
     for rset in project.reference_sets.all():
-        tid = ocrutils.get_new_task_id()
+        tid = OcrTask.get_new_task_id()
         args = (rset.pk, namespace, dublincore)
         kwargs = dict(task_id=tid, queue="interactive")
         task = OcrTask(

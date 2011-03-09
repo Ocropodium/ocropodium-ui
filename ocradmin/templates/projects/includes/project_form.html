@@ -18,15 +18,6 @@
                 {{ form.description }}
             </div>
         </fieldset>
-        <fieldset>
-            <legend>Project Default Settings</legend>
-            {% for field in defform %}
-                <div class="field_wrapper">
-                    {{ field.label_tag}}
-                    {{ field }}
-                </div>
-            {% endfor %}
-        </fieldset>
     </div>
     <div class="form_footer">
         <div class="form_submit_buttons">

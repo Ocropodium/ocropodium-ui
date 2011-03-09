@@ -10,12 +10,11 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerEr
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage        
 from ocradmin.reference_pages.tasks import MakeThumbnailTask
-from ocradmin.projects.utils import project_required
-from ocradmin.ocr.utils import saves_files
+from ocradmin.core.decorators import project_required, saves_files
 
 
 @project_required

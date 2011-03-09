@@ -9,10 +9,9 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
-from ocradmin.ocr.tests import testutils
+from ocradmin.core.tests import testutils
 from ocradmin.ocrtasks.models import OcrTask
-
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 
 TESTFILE = "etc/simple.png"

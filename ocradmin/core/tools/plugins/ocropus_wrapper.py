@@ -5,15 +5,15 @@ line wrapper.
 """
 
 import copy
-from ocradmin.ocr.tools import check_aborted, \
+from ocradmin.core.tools import check_aborted, \
         ExternalToolError
-from ocradmin.ocr import tools        
+from ocradmin.core import tools        
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocr.tools.plugins import generic_wrapper
+from ocradmin.core.tools.plugins import generic_wrapper
 reload(generic_wrapper)
 import ocrolib
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 reload(parameters)
 
 

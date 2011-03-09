@@ -7,48 +7,16 @@ import re
 import shutil
 import time
 from celery.contrib.abortable import AbortableTask
-from celery.contrib.abortable import AbortableAsyncResult
 from celery.task import PeriodicTask
 from datetime import datetime, timedelta
 from django.conf import settings
-from ocradmin.ocr import utils
+from ocradmin.core import utils
 from ocradmin.vendor import deepzoom
-from ocradmin.ocr.tools.manager import PluginManager
+from ocradmin.core.tools.manager import PluginManager
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.ocrplugins import parameters
-
-
-def get_progress_function(task_id):
-    """
-    Closure for generating a function that refers to
-    a task id in outer scope.
-    """
-    def progress_func(progress, lines=None):
-        """
-        Set progress for the given task.
-        """
-        task = OcrTask.objects.get(task_id=task_id)
-        task.progress = progress
-        if lines is not None:
-            task.lines = lines
-        task.save()
-    return progress_func
-
-
-def get_abort_function(task_id):
-    """
-    Closure for generating a function that takes
-    no params but uses a task_id in outer scope.
-    """
-    def abort_func():
-        """
-        Check whether the task in question has been aborted.
-        """
-        # TODO: this should be possible via a simple 'self.is_aborted()'
-        # Find out why it isn't.
-        asyncres = AbortableAsyncResult(task_id)
-        return asyncres.backend.get_status(task_id) == "ABORTED"
-    return abort_func
+from ocradmin.ocrtasks.utils import get_progress_callback, get_abort_callback
+from ocradmin.ocrtasks.decorators import register_handlers
+from ocradmin.plugins import parameters
 
 
 def create_intermediate_paths(filepath, directory, params, logger):
@@ -137,6 +105,7 @@ def make_deepzoom_proxies(logger, inpath, outpath, params):
     return srcdzipath, dstdzipath
 
 
+@register_handlers
 class ConvertPageTask(AbortableTask):
     """
     Convert an image of text into some JSON.  This is done using
@@ -159,16 +128,17 @@ class ConvertPageTask(AbortableTask):
         create_intermediate_paths(filepath, outdir, params, logger)
         converter = PluginManager.get_converter(
                 config.name, logger=logger,
-                abort_func=get_abort_function(self.request.id),
+                abort_func=get_abort_callback(self.request.id),
                 config=config)
         # init progress to zero (for when retrying tasks)
-        progress_func = get_progress_function(self.request.id)
+        progress_func = get_progress_callback(self.request.id)
         progress_func(0)
         out = converter.convert(filepath, progress_func=progress_func, **params)
         #create_binary_deepzoom(params, logger)
         return out
 
 
+@register_handlers
 class ConvertLineTask(AbortableTask):
     """
     Convert a single line (from the given coords).  This is done using
@@ -197,6 +167,7 @@ class ConvertLineTask(AbortableTask):
                 params.get("coords"), **params)
 
 
+@register_handlers
 class BinarizePageTask(AbortableTask):
     """
     Binarize an image of text into a temporary file.  Return some
@@ -229,7 +200,7 @@ class BinarizePageTask(AbortableTask):
                 params.get("allowcache")))
             converter = PluginManager.get_converter(
                     config.name, logger=logger,
-                    abort_func=get_abort_function(self.request.id),
+                    abort_func=get_abort_callback(self.request.id),
                     config=config)
             page_bin = converter.standard_preprocess(filepath)
             pageheight, pagewidth = page_bin.shape
@@ -245,6 +216,7 @@ class BinarizePageTask(AbortableTask):
         )
 
 
+@register_handlers
 class SegmentPageTask(AbortableTask):
     """
     Segment an image of text into a temporary file.  Return some
@@ -268,7 +240,7 @@ class SegmentPageTask(AbortableTask):
         segpath = os.path.join(outdir, segname)
         converter = PluginManager.get_converter(
                 config.name, logger=logger,
-                abort_func=get_abort_function(self.request.id),
+                abort_func=get_abort_callback(self.request.id),
                 config=config)
         page_bin = converter.standard_preprocess(filepath)
         page_seg = converter.get_page_seg(page_bin)

@@ -10,7 +10,8 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.core.tests import testutils
+from ocradmin.plugins import parameters
 
 TESTFILE = "simple.png"
 
@@ -28,6 +29,8 @@ class TrainingTest(TestCase):
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
         self.client.get("/projects/load/1/")
+        testutils.symlink_reference_pages()
+
 
 
     def tearDown(self):

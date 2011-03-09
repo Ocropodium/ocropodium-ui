@@ -1,3 +1,9 @@
+"""
+Class for Asyncronous OCR jobs.  Wraps tasks that run on the Celery
+queue with more metadata and persistance.
+"""
+
+import uuid
 from django.db import models
 from picklefield import fields
 
@@ -5,6 +11,7 @@ from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject
 
 from django.contrib.auth.models import User
+from celery import registry as celeryregistry
 
 
 class OcrTask(models.Model):
@@ -17,7 +24,7 @@ class OcrTask(models.Model):
         ("STARTED", "Started"),
         ("RETRY", "Retry"),
         ("SUCCESS", "Success"),
-        ("ERROR", "Error"),
+        ("FAILURE", "Failure"),
     )
 
     user = models.ForeignKey(User)
@@ -36,6 +43,36 @@ class OcrTask(models.Model):
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     updated_on = models.DateTimeField(auto_now_add=True, auto_now=True, editable=False)
 
+
+    def abort(self):
+        """
+        Abort a task.
+        """
+        if not self.is_active():
+            return
+        asyncres = AbortableAsyncResult(self.task_id)
+        asyncres.revoke()
+        if asyncres.is_abortable():
+            asyncres.abort()
+            if asyncres.is_aborted():
+                self.status = "ABORTED"
+                self.save()
+
+
+    def retry(self):
+        """
+        Retry the Celery job.
+        """
+        if self.is_abortable():
+            self.abort()
+        self.task_id = self.get_new_task_id()
+        self.status = "RETRY"
+        self.progress = 0
+        self.save()
+        self.kwargs["task_id"] = self.task_id
+        celerytask = celeryregistry.tasks[self.task_name]
+        celerytask.apply_async(args=self.args, **self.kwargs)        
+ 
 
     def latest_transcript(self):
         """
@@ -71,6 +108,16 @@ class OcrTask(models.Model):
         The task is running or awaiting running.
         """
         return self.status in ("INIT", "PENDING", "RETRY", "STARTED")
+
+
+    @classmethod
+    def get_new_task_id(cls):
+        """
+        Get a unique id for a new page task, given it's
+        file path.
+        """
+        return str(uuid.uuid1())
+
 
 
 class Transcript(models.Model):

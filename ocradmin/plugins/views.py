@@ -10,8 +10,8 @@ from django.core.urlresolvers import reverse
 
 import pprint
 
-from ocradmin.ocr.tools.manager import PluginManager 
-from ocradmin.ocrplugins import parameters
+from ocradmin.core.tools.manager import PluginManager 
+from ocradmin.plugins import parameters
 
 
 def index(request):

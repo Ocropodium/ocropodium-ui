@@ -13,18 +13,16 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
 from django import forms
-from ocradmin.ocr import utils as ocrutils
-from ocradmin.ocr.utils import saves_files
-from ocradmin.ocrpresets.models import OcrPreset
+from ocradmin.core import utils as ocrutils
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.training.models import OcrComparison, ParameterScore
 from ocradmin.reference_pages.models import ReferencePage
-from ocradmin.projects.utils import project_required
+from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
-from ocradmin.ocr.tools.manager import PluginManager
+from ocradmin.core.tools.manager import PluginManager
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 
 class ReferenceSetForm(forms.Form):
@@ -125,7 +123,7 @@ def create(request):
     cmodel = form.cleaned_data["cmodel"]
 
     # make us a new task entry
-    tid = ocrutils.get_new_task_id()
+    tid = OcrTask.get_new_task_id()
     args = ([t.pk for t in tsets], cmodel.pk, request.output_path)
     # Note: could add a 'queue' param here
     kwargs = dict(task_id=tid, loglevel=60, retries=2,)
@@ -208,7 +206,7 @@ def score_models(request):
         for i in range(len(configsets)):
             config = configsets[i]
             params = {}
-            tid = ocrutils.get_new_task_id(path)
+            tid = OcrTask.get_new_task_id()
             args = (gtruth.pk, request.output_path.encode(), params, config)
             kwargs = dict(task_id=tid, loglevel=60, retries=2)
             task = OcrTask(
@@ -378,8 +376,6 @@ def _get_comparison_context(request):
         form=ComparisonForm(initial={"name": "Parameter Comparison"}),
         prefixes=["p0_", "p1_"],
         project=request.session["project"],
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-        segpresets=OcrPreset.objects.filter(type="segment").order_by("name"),
         engines=PluginManager.get_provider("line"),
         tsets=request.session["project"].reference_sets.all(),
     )

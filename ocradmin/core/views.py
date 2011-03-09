@@ -15,16 +15,13 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
-from ocradmin.ocr import tasks
-from ocradmin.ocr import utils as ocrutils
-from ocradmin.ocr.utils import saves_files
-from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocrpresets.models import OcrPreset
+from ocradmin.core import tasks
+from ocradmin.core import utils as ocrutils
+from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask, Transcript
-from ocradmin.ocrtasks.views import _retry_celery_task
-from ocradmin.ocr.tools.manager import PluginManager
+from ocradmin.core.tools.manager import PluginManager
 
-from ocradmin.ocrplugins import parameters
+from ocradmin.plugins import parameters
 
 class AppException(StandardError):
     """
@@ -78,7 +75,7 @@ def convert(request):
 
 @login_required
 @saves_files
-def update_task(request, task_pk):
+def update_ocr_task(request, task_pk):
     """
     Re-save the params for a task and resubmit it,
     redirecting to the transcript page.
@@ -87,12 +84,6 @@ def update_task(request, task_pk):
     _, config, params = _handle_request(request, request.output_path)
     task.args = (task.args[0], task.args[1], params, config)
     task.save()
-    try:
-        _retry_celery_task(task)
-    except OcrTask.DoesNotExist:
-        # FIXME: for some reason this happens when running
-        # automated tests
-        pass
     if request.is_ajax():
         return HttpResponse(simplejson.dumps({"ok": True}), 
                 mimetype="application/json")
@@ -146,9 +137,7 @@ def segment(request):
     """
 
     # add available seg and bin presets to the context
-    context = dict(
-        binpresets=OcrPreset.objects.filter(type="binarize").order_by("name"),
-    )
+    context = dict()
     return _ocr_task(
         request,
         "ocr/segment.html",
@@ -278,17 +267,6 @@ def viewer_binarization_results(request, task_id):
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
-@login_required
-def components(request):
-    """
-    List OCRopus components - either all or those
-    of an optional type.
-    """
-    comps = PluginManager.get_components("ocropus",
-            request.GET.getlist("type"), request.GET.getlist("name"))
-    return HttpResponse(simplejson.dumps(comps), mimetype="application/json")
-
-
 def test(request):
     """
     Dummy action for running JS unit tests.  Probably needs to
@@ -328,7 +306,7 @@ def _ocr_task(request, template, context, tasktype, celerytask):
     # init the job from our params
     asynctasks = []
     for path in paths:
-        tid = ocrutils.get_new_task_id()
+        tid = OcrTask.get_new_task_id()
         args = (path.encode(), request.output_path.encode(), params, config)
         kwargs = dict(task_id=tid, loglevel=60, retries=2, queue="interactive")
         ocrtask = OcrTask(
