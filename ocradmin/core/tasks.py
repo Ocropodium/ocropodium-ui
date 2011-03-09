@@ -167,14 +167,14 @@ class ConvertLineTask(AbortableTask):
                 params.get("coords"), **params)
 
 
-class BinarizePageTask(AbortableTask):
+class UnhandledBinarizePageTask(AbortableTask):
     """
     Binarize an image of text into a temporary file.  Return some
     JSON containing the server-side path to that file.  The client
     then submits a request to have that binary full-size PNG converted
     into a scaled image for web viewing.
     """
-    name = "binarize.page"
+    name = "_binarize.page"
 
     def run(self, filepath, outdir, params, config, **kwargs):
         """
@@ -215,14 +215,22 @@ class BinarizePageTask(AbortableTask):
         )
 
 
-class SegmentPageTask(AbortableTask):
+@register_handlers
+class BinarizePageTask(UnhandledBinarizePageTask):
+    """
+    Simply a version of above which calls the DB handlers.
+    """
+    name = "binarize.page"
+
+
+class UnhandledSegmentPageTask(AbortableTask):
     """
     Segment an image of text into a temporary file.  Return some
     JSON containing the server-side path to that file.  The client
     then submits a request to have that binary full-size PNG converted
     into a scaled image for web viewing.
     """
-    name = "segment.page"
+    name = "_segment.page"
 
     def run(self, filepath, outdir, params, config, **kwargs):
         """
@@ -255,6 +263,14 @@ class SegmentPageTask(AbortableTask):
             dst=utils.media_path_to_url(dst),
             **boxes
         )
+
+        
+@register_handlers
+class SegmentPageTask(UnhandledSegmentPageTask):
+    """
+    Simply a version of above which calls the DB handlers.
+    """
+    name = "segment.page"
 
 
 class CleanupTempTask(PeriodicTask):
