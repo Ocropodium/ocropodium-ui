@@ -32,7 +32,6 @@ def on_task_postrun(**kwargs):
     Update the database when a task is finished.  Create a new 
     transcript entry with the retval of the task.
     """
-    # don't know what we need to do here yet
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
     retval = kwargs.get("retval", "")
     if not isinstance(retval, ExceptionInfo):
