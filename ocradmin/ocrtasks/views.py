@@ -249,7 +249,7 @@ def retry(request, task_pk):
     out = {"ok": True}
     try:
         _retry_celery_task(task)
-    except Exception, err:
+    except StandardError, err:
         out = {"error": err.message}
 
     return HttpResponse(simplejson.dumps(out),
@@ -291,13 +291,13 @@ def _retry_celery_task(task):
     if task.is_abortable():
         _abort_celery_task(task)
     tid = ocrutils.get_new_task_id()
-    celerytask = celeryregistry.tasks[task.task_name]
-    async = celerytask.apply_async(
-            args=task.args, task_id=tid, loglevel=60, retries=2)
-    task.task_id = async.task_id
+    task.task_id = tid
     task.status = "RETRY"
     task.progress = 0
     task.save()
+    celerytask = celeryregistry.tasks[task.task_name]
+    async = celerytask.apply_async(
+            args=task.args, task_id=tid, loglevel=60, retries=2)
 
 
 
