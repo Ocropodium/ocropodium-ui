@@ -248,10 +248,9 @@ def retry(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     out = {"ok": True}
     try:
-        _retry_celery_task(task)
+        task.retry()
     except StandardError, err:
         out = {"error": err.message}
-
     return HttpResponse(simplejson.dumps(out),
             mimetype="application/json")
 
@@ -262,43 +261,14 @@ def abort(request, task_pk):
     Abort a batch task.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
-    return HttpResponse(simplejson.dumps({"ok": _abort_celery_task(task)}),
+    out = {"ok": True}
+    try:
+        task.abort()
+    except StandardError, err:
+        out = {"error": err.message}
+    return HttpResponse(simplejson.dumps(out),
             mimetype="application/json")
 
-
-
-
-def _abort_celery_task(task):
-    """
-    Abort a task.
-    """
-    if not task.is_active():
-        return False
-
-    asyncres = AbortableAsyncResult(task.task_id)
-    asyncres.revoke()
-    asyncres.abort()
-    if asyncres.is_aborted():
-        task.status = "ABORTED"
-        task.save()
-    return asyncres.is_aborted()
-
-
-def _retry_celery_task(task):
-    """
-    Set a task re-running.
-    """
-    if task.is_abortable():
-        _abort_celery_task(task)
-    tid = OcrTask.get_new_task_id()
-    task.task_id = tid
-    task.status = "RETRY"
-    task.progress = 0
-    task.save()
-    kwargs = task.kwargs
-    kwargs["task_id"] = tid
-    celerytask = celeryregistry.tasks[task.task_name]
-    async = celerytask.apply_async(args=task.args, **kwargs)
 
 
 

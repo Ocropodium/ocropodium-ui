@@ -32,7 +32,6 @@ from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.projects.tasks import IngestTask
 from ocradmin.training.tasks import ComparisonTask
 from ocradmin.core.views import _handle_request, AppException
-from ocradmin.ocrtasks.views import  _retry_celery_task, _abort_celery_task 
 from ocradmin.core.tools.manager import PluginManager
 
 
@@ -353,7 +352,7 @@ def abort_batch(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.tasks.all():
-        _abort_celery_task(task)
+        task.abort()
     transaction.commit()
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
@@ -367,7 +366,7 @@ def retry(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.tasks.all():
-        _retry_celery_task(task)
+        task.retry()
     transaction.commit()
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
@@ -381,7 +380,7 @@ def retry_errored(request, batch_pk):
     """
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     for task in batch.errored_tasks():
-        _retry_celery_task(task)
+        task.retry()
     transaction.commit()
     return HttpResponse(simplejson.dumps({"ok": True}),
             mimetype="application/json")
