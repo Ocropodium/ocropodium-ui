@@ -283,7 +283,7 @@ def ingest(request, project_pk):
     batch.save()
 
     for rset in project.reference_sets.all():
-        tid = ocrutils.get_new_task_id()
+        tid = OcrTask.get_new_task_id()
         args = (rset.pk, namespace, dublincore)
         kwargs = dict(task_id=tid, queue="interactive")
         task = OcrTask(

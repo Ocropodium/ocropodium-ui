@@ -6,6 +6,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from models import OcrTask
 
 
+
 def get_progress_callback(task_id):
     """
     Closure for generating a function that refers to
