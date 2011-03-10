@@ -10,7 +10,7 @@ from django.conf import settings
 from django.utils import simplejson
 
 
-TESTFILE = "etc/simple.png" 
+TESTFILE = "etc/simple.png"
 
 class OcrBinarizeTest(TestCase):
     def setUp(self):
@@ -27,7 +27,6 @@ class OcrBinarizeTest(TestCase):
         """
         self.testuser.delete()
 
-
     def test_binarize_view(self):
         """
         Test the binarize view as a standard GET (no processing.)
@@ -41,7 +40,7 @@ class OcrBinarizeTest(TestCase):
         self._test_binarize_action({
             "%options.engine": "ocropus",
             "%options.engine.ocropus[0].binarizer": 'BinarizeBySauvola',
-        })        
+        })
 
     def test_results_action(self):
         """
@@ -62,7 +61,7 @@ class OcrBinarizeTest(TestCase):
         """
         if params is None:
             params = {}
-        r = self._get_binarize_response(params, headers) 
+        r = self._get_binarize_response(params, headers)
         self.assertEqual(r.status_code, 200)
 
         # check we recieve JSON back
@@ -70,10 +69,9 @@ class OcrBinarizeTest(TestCase):
         content = simplejson.loads(r.content)
         self.assertEqual(len(content), 1)
         # Note: we'd not normally expect any results here because we're
-        # not using the "nohang" parameter, but since tests are executed 
+        # not using the "nohang" parameter, but since tests are executed
         # locally we will
         self.assertTrue(content[0]["results"] is not None, "Unable to get results")
-      
 
     def _get_binarize_response(self, params={}, headers={}):
         """
@@ -84,5 +82,5 @@ class OcrBinarizeTest(TestCase):
         r = self.client.post("/ocr/binarize", params, **headers)
         tf.close()
         return r
-        
+
 

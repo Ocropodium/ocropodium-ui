@@ -31,8 +31,6 @@ class TrainingTest(TestCase):
         self.client.get("/projects/load/1/")
         testutils.symlink_reference_pages()
 
-
-
     def tearDown(self):
         """
             Cleanup a test.
@@ -46,7 +44,6 @@ class TrainingTest(TestCase):
         """
         r = self.client.get("/training/new/")
         self.assertEqual(r.status_code, 200)
-
 
     def test_comparisons_view(self):
         """

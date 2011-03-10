@@ -4,7 +4,7 @@ Functions for performing test setup/teardown etc.
 
 import os
 
-MODELDIR = "etc/defaultmodels" 
+MODELDIR = "etc/defaultmodels"
 
 
 def symlink_model_fixtures():
@@ -21,7 +21,7 @@ def symlink_model_fixtures():
                 pass
 
         try:
-            os.symlink(os.path.abspath("%s/%s" % (MODELDIR, fname)),  
+            os.symlink(os.path.abspath("%s/%s" % (MODELDIR, fname)),
                 "media/test/%s" % fname)
         except OSError, (errno, strerr):
             if errno == 17: # already exists
@@ -39,9 +39,9 @@ def symlink_reference_pages():
             pass
 
         try:
-            os.symlink(os.path.abspath("etc/simple.png"),  
+            os.symlink(os.path.abspath("etc/simple.png"),
                 "media/test/test.png")
-            os.symlink(os.path.abspath("etc/simple.png"),  
+            os.symlink(os.path.abspath("etc/simple.png"),
                 "media/test/test_bin.png")
         except OSError, (errno, strerr):
             if errno == 17: # already exists

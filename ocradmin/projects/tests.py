@@ -30,7 +30,6 @@ class OcrProjectsTest(TestCase):
         """
         self.testuser.delete()
 
-
     def test_projects_view(self):
         """
         Test basic list view
@@ -43,7 +42,6 @@ class OcrProjectsTest(TestCase):
         """
         r = self.client.get("/projects/list", {"tag": "test"})
         self.assertEqual(r.status_code, 200)
-
 
     def test_new_ajax_form(self):
         """
@@ -58,7 +56,7 @@ class OcrProjectsTest(TestCase):
         """
         Test creating a new project from an uploaded file.
         """
-        # we shouldn't have any projects in the DB yet.  If 
+        # we shouldn't have any projects in the DB yet.  If
         # successful it'll redirect back to the list.
         before = OcrProject.objects.count()
         r = self._create_test_project()
@@ -96,7 +94,7 @@ class OcrProjectsTest(TestCase):
         project = OcrProject.objects.get(pk=1)
         r = self.client.get("/projects/confirm_delete_project/1/")
         self.assertEqual(r.status_code, 200)
-        
+
     def test_delete_project(self):
         """
         Test actually deleting a project.
@@ -119,7 +117,6 @@ class OcrProjectsTest(TestCase):
         after = OcrProject.objects.count()
         self.assertEqual(before, after)
 
-
     def _create_test_project(self):
         """
         Insert a post test project view post
@@ -132,7 +129,6 @@ class OcrProjectsTest(TestCase):
                 description="Testing project creation",
             ),
         )
-
 
     def _update_test_project(self):
         """

@@ -28,33 +28,29 @@ class ReferencePageTest(TestCase):
         self.client.login(username="test_user", password="testpass")
         self.client.get("/projects/load/1/")
 
-
     def tearDown(self):
         """
             Cleanup a test.
         """
         self.testuser.delete()
 
-
     def test_list(self):
         """
         Test listing ref pages.
         """
-        # we shouldn't have any projects in the DB yet.  If 
+        # we shouldn't have any projects in the DB yet.  If
         # successful it'll redirect back to the list.
         r = self.client.get("/reference_pages/list/")
         self.assertEqual(r.status_code, 200)
-
 
     def test_show(self):
         """
         Test viewing a ref page.
         """
-        # we shouldn't have any projects in the DB yet.  If 
+        # we shouldn't have any projects in the DB yet.  If
         # successful it'll redirect back to the list.
         r = self.client.get("/reference_pages/show/1/")
         self.assertEqual(r.status_code, 200)
-
 
     def test_delete(self):
         """
@@ -63,17 +59,16 @@ class ReferencePageTest(TestCase):
         r = self.client.post("/reference_pages/delete/1/")
         self.assertRedirects(r, "/reference_pages/list")
 
-
     def test_create_from_task(self):
         """
         Test creating a ref page from a task object.
-        Note:  There's one fixture test ref page already 
+        Note:  There's one fixture test ref page already
         (called test.png).  If we try to create one with the
-        same name as an existing page it will simply update 
+        same name as an existing page it will simply update
         the page data (transcript.)  So asserting that there'll
         be one more ref page in the DB after the operation
         is a fragile assumption - it depends on the new page
-        NOT having the same name as the current fixture.                           
+        NOT having the same name as the current fixture.
         """
         tasksbefore = OcrTask.objects.count()
         tf = open(TESTFILE)
@@ -81,9 +76,9 @@ class ReferencePageTest(TestCase):
         params = parameters.TESTPOST
         params["image1"] = tf
         r = self.client.post("/ocr/convert", params, **headers)
-        #tf.close()        
+        #tf.close()
         self.assertEqual(r.status_code, 200)
-        tasksafter = OcrTask.objects.count()        
+        tasksafter = OcrTask.objects.count()
         self.assertEqual(tasksbefore, tasksafter - 1)
         newtask = OcrTask.objects.all().order_by("-created_on")[0]
         refbefore = ReferencePage.objects.count()
@@ -93,5 +88,4 @@ class ReferencePageTest(TestCase):
         refafter = ReferencePage.objects.count()
         self.assertEqual(refbefore, refafter - 1)
 
-        
 

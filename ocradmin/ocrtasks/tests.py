@@ -85,4 +85,4 @@ class OcrTaskTest(TestCase):
         async = TestTask.apply_async(args, **kwargs)
         task = OcrTask.objects.get(task_id=tid)
         return task, async
-        
+

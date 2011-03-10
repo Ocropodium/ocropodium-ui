@@ -43,25 +43,25 @@ class OcrConvertTest(TestCase):
         """
         Test OCRing with minimal parameters.
         """
-        self._test_convert_action(parameters.TESTPOST_OCROPUS)        
+        self._test_convert_action(parameters.TESTPOST_OCROPUS)
 
     def test_convert_action_tess(self):
         """
         Test OCRing with Tesseract as the engine.
         """
-        self._test_convert_action(parameters.TESTPOST)        
+        self._test_convert_action(parameters.TESTPOST)
 
     def test_convert_action_ocropus(self):
         """
         Test OCRing with OCRopus as the engine.
         """
-        self._test_convert_action(parameters.TESTPOST_OCROPUS)        
+        self._test_convert_action(parameters.TESTPOST_OCROPUS)
 
     def test_convert_action_seg(self):
         """
         Test OCRing with variable segmentation.
         """
-        self._test_convert_action(parameters.TESTPOST_OCROPUS_SEG)        
+        self._test_convert_action(parameters.TESTPOST_OCROPUS_SEG)
 
     def test_convert_plain_text(self):
         """
@@ -86,7 +86,7 @@ class OcrConvertTest(TestCase):
         # check the response IS JSON at this stage
         content = simplejson.loads(r.content)
         r2 = self.client.get("/ocr/results/%s" % content[0]["task_id"], {"format": "text"})
-        self.assertEqual(r2.status_code, 200)        
+        self.assertEqual(r2.status_code, 200)
         self.assertRaises(ValueError, simplejson.loads, r2.content)
         self.assertEqual(r2["Content-Type"], "text/plain")
 
@@ -122,7 +122,7 @@ class OcrConvertTest(TestCase):
         task = OcrTask.objects.all().order_by("-created_on")[0]
         r = self.client.post(
             "/ocr/update_task/%s/" % task.pk,
-            {"%options.tesseract[1].psegmenter": "SegmentPageBy1CP",},                
+            {"%options.tesseract[1].psegmenter": "SegmentPageBy1CP",},
         )
         self.assertEqual(r.status_code, 302)
 
@@ -146,7 +146,7 @@ class OcrConvertTest(TestCase):
         """
         if params is None:
             params = {}
-        r = self._get_convert_response(params, headers) 
+        r = self._get_convert_response(params, headers)
         self.assertEqual(r.status_code, 200)
 
         # check we recieve JSON back
@@ -155,10 +155,10 @@ class OcrConvertTest(TestCase):
         #print content
         self.assertEqual(len(content), 1)
         # Note: we'd not normally expect any results here because we're
-        # not using the "nohang" parameter, but since tests are executed 
+        # not using the "nohang" parameter, but since tests are executed
         # locally we will
         self.assertTrue(content[0]["results"] is not None, "Unable to get results")
-      
+
     def _get_convert_response(self, params={}, headers={}):
         """
         Post an image for conversion with the given params, headers.
@@ -168,4 +168,4 @@ class OcrConvertTest(TestCase):
         r = self.client.post("/ocr/convert", params, **headers)
         #tf.close()
         return r
-        
+
