@@ -127,6 +127,9 @@ class OcrTask(models.Model):
 
     @classmethod
     def run_celery_task(cls, *args, **kwargs):
+        """
+        Run an arbitary Celery task.
+        """
         tname = kwargs.get("task_name")
         if kwargs.get("untracked", False):
             tname = "_%s" % tname
