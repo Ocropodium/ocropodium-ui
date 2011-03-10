@@ -11,7 +11,7 @@ from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject
 
 from django.contrib.auth.models import User
-from celery import registry as celeryregistry
+import celery
 
 
 class OcrTask(models.Model):
@@ -28,8 +28,10 @@ class OcrTask(models.Model):
     )
 
     user = models.ForeignKey(User)
-    batch = models.ForeignKey(OcrBatch, related_name="tasks", blank=True, null=True)
-    project = models.ForeignKey(OcrProject, related_name="tasks", blank=True, null=True)
+    batch = models.ForeignKey(OcrBatch,
+            related_name="tasks", blank=True, null=True)
+    project = models.ForeignKey(OcrProject,
+            related_name="tasks", blank=True, null=True)
     task_id = models.CharField(max_length=100)
     task_name = models.CharField(max_length=100)
     page_name = models.CharField(max_length=255)
@@ -41,7 +43,8 @@ class OcrTask(models.Model):
     error = fields.PickledObjectField(blank=True, null=True)
     traceback = models.TextField(blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
-    updated_on = models.DateTimeField(auto_now_add=True, auto_now=True, editable=False)
+    updated_on = models.DateTimeField(
+            auto_now_add=True, auto_now=True, editable=False)
 
 
     def abort(self):
@@ -58,6 +61,20 @@ class OcrTask(models.Model):
                 self.status = "ABORTED"
                 self.save()
 
+    def run(self, dbhandle=None):
+        """
+        Run the task in a blocking manner and return 
+        the sync object.
+        """
+        task = celery.registry.tasks[self.task_name]
+        return task.apply(args=self.args, **self.kwargs)
+
+    def run_async(self, dbhandle=None):
+        """
+        Run the task in an asyncronous manner.
+        """
+        task = celery.registry.tasks[self.task_name]
+        return task.apply_async(args=self.args, **self.kwargs)
 
     def retry(self):
         """
@@ -70,9 +87,8 @@ class OcrTask(models.Model):
         self.progress = 0
         self.save()
         self.kwargs["task_id"] = self.task_id
-        celerytask = celeryregistry.tasks[self.task_name]
-        celerytask.apply_async(args=self.args, **self.kwargs)        
- 
+        celerytask = celery.registry.tasks[self.task_name]
+        celerytask.apply_async(args=self.args, **self.kwargs)
 
     def latest_transcript(self):
         """
@@ -148,7 +164,7 @@ class Transcript(models.Model):
         if self.is_final:
             others = Transcript.objects.filter(
                     task__exact=self.task).exclude(
-                            version=self.version).update(is_final=False)    
+                            version=self.version).update(is_final=False)
         # Call the "real" save() method
         super(Transcript, self).save(force_insert, force_update)
 
