@@ -21,4 +21,4 @@ class OcrPreset(models.Model):
         """
         String representation.
         """
-        return "<%s: %s>" % (self.__class__.__name__, self.name)
+        return self.name

@@ -44,5 +44,9 @@ class ReferencePage(models.Model):
         """
         return ocrutils.media_path_to_url(self.thumbnail_path())
 
-
+    def __unicode__(self):
+        """
+        Unicode representation.
+        """
+        return self.page_name
 
