@@ -23,11 +23,10 @@ class OcrModel(models.Model):
     app = models.CharField(max_length=20,
             choices=[("ocropus", "Ocropus"), ("tesseract", "Tesseract")])
 
-
     def __unicode__(self):
         """
         String representation.
         """
-        return self.name
+        return "<%s: %s>" % (self.__class__.__name__, self.name)
 
-    
+
