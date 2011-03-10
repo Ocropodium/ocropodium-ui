@@ -38,9 +38,16 @@ class Command(BaseCommand):
             if not nameparts[-1] in ("char", "lang"):
                 continue
 
+            name = " ".join([p.title() for p in nameparts])
+            try:
+                exists = OcrModel.objects.get(name=name)
+                exists.delete()
+            except OcrModel.DoesNotExist:
+                pass
+
             with open(os.path.join(MODELDIR, fname), "rb") as fh:
                 model = OcrModel(
-                    name=" ".join([p.title() for p in nameparts]),
+                    name=name,
                     app=nameparts[0],
                     type=nameparts[-1],
                     public=True,

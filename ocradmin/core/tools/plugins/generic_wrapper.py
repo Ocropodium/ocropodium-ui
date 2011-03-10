@@ -26,8 +26,7 @@ class GenericWrapper(base.OcrBase):
     description = "Generic command-line OCR wrapper"
     binary = "unimplemented"
 
-
-    # map of friendly names to OCRopus component names    
+    # map of friendly names to OCRopus component names
     _component_map = dict(
         grayscale_preprocessing="ICleanupGray",
         binary_preprocessing="ICleanupBinary",
@@ -62,7 +61,7 @@ class GenericWrapper(base.OcrBase):
                 "help": "Filters for preprocessing greyscale images",
                 "value": [],
                 "multiple": True,
-                "choices": cls.get_components(oftypes=["ICleanupGray"], 
+                "choices": cls.get_components(oftypes=["ICleanupGray"],
                     exclude=cls._ignored_components),
             }, {
                 "name": "binarizer",
@@ -71,7 +70,7 @@ class GenericWrapper(base.OcrBase):
                 "help": "Filter for binarizing greyscale images",
                 "value": "BinarizeBySauvola",
                 "multiple": False,
-                "choices": cls.get_components(oftypes=["IBinarize"], 
+                "choices": cls.get_components(oftypes=["IBinarize"],
                     exclude=cls._ignored_components),
             }, {
                 "name": "binary_preprocessing",
@@ -80,7 +79,7 @@ class GenericWrapper(base.OcrBase):
                 'value': ['DeskewPageByRAST', 'RmBig', 'RmHalftone'],
                 "help": "Filters for preprocessing binary images",
                 "multiple": True,
-                "choices": cls.get_components(oftypes=["ICleanupBinary"], 
+                "choices": cls.get_components(oftypes=["ICleanupBinary"],
                     exclude=cls._ignored_components),
             }, {
                 "name": "page_segmenter",
@@ -89,11 +88,10 @@ class GenericWrapper(base.OcrBase):
                 "value": "SegmentPageByRAST",
                 "help": "Algorithm for segmenting binary page images",
                 "multiple": False,
-                "choices": cls.get_components(oftypes=["ISegmentPage"], 
+                "choices": cls.get_components(oftypes=["ISegmentPage"],
                     exclude=cls._ignored_components),
             },
         ]
-
 
     @classmethod
     def write_binary(cls, path, data):
@@ -102,7 +100,6 @@ class GenericWrapper(base.OcrBase):
         """
         ocrolib.iulib.write_image_binary(path, ocrolib.numpy2narray(data))
 
-
     @classmethod
     def write_packed(cls, path, data):
         """
@@ -110,28 +107,18 @@ class GenericWrapper(base.OcrBase):
         """
         ocrolib.iulib.write_image_packed(path, ocrolib.pseg2narray(data))
 
-
     @classmethod
     def _get_toplevel_parameter_info(cls, name):
         try:
             out = [i for i in cls.parameters() if i["name"] == name][0]
         except IndexError:
             out = None
-        return out            
-
-
-
-    def get_command(self, *args, **kwargs):
-        """
-        Get the command line for converting a given image.
-        """
-        raise NotImplementedError
-
+        return out
 
     @classmethod
     def get_parameters(cls, *args):
         """
-        Get general OCR parameters.  
+        Get general OCR parameters.
         """
         # Note: we ignore all but the last args given here,
         # because other plugins might implement nested options
@@ -150,7 +137,6 @@ class GenericWrapper(base.OcrBase):
         else:
             return cls.get_component_parameters(args[-1])
 
-
     @classmethod
     def extract_boxes(cls, page_seg):
         """
@@ -158,10 +144,8 @@ class GenericWrapper(base.OcrBase):
         """
         regions = ocrolib.RegionExtractor()
         out = dict(columns=[], lines=[], paragraphs=[])
-        exfuncs = dict(
-            lines=regions.setPageLines,
-            paragraphs=regions.setPageParagraphs,
-        )
+        exfuncs = dict(lines=regions.setPageLines,
+                paragraphs=regions.setPageParagraphs)
         for box, func in exfuncs.iteritems():
             func(page_seg)
             for i in range(1, regions.length()):
@@ -172,7 +156,13 @@ class GenericWrapper(base.OcrBase):
         return out
 
 
-    def convert(self, filepath, progress_func=None, 
+    def get_command(self, *args, **kwargs):
+        """
+        Get the command line for converting a given image.
+        """
+        raise NotImplementedError
+
+    def convert(self, filepath, progress_func=None,
             callback=None, cbkwargs=None, **kwargs):
         """
         Convert an image file into text.  A callback can be supplied that
@@ -219,17 +209,15 @@ class GenericWrapper(base.OcrBase):
         set_progress(self.logger, progress_func, numlines, numlines)
         return pagedata
 
-
     @check_aborted
     def get_page_binary(self, filepath):
         """
         Convert an on-disk file into an in-memory ocrolib.iulib.bytearray.
         """
-        page_gray = ocrolib.read_image_gray(filepath)        
+        page_gray = ocrolib.read_image_gray(filepath)
         self.logger.info("Binarising image with %s" % self.config.binarizer.name)
         preproc = getattr(ocrolib, self.config.binarizer.name)()
         return preproc.binarize(page_gray)
-
 
     @check_aborted
     def get_page_seg(self, page_bin):
@@ -238,7 +226,6 @@ class GenericWrapper(base.OcrBase):
         """
         return self.apply_processor(
                 self.config.page_segmenter, page_bin, func="segment")
-
 
     @check_aborted
     def get_cleaned_grayscale(self, page_data):
@@ -251,7 +238,6 @@ class GenericWrapper(base.OcrBase):
         for param in self.config.grayscale_preprocessing:
             cleaned = self.apply_processor(param, cleaned)
         return cleaned
-
 
     @check_aborted
     def get_cleaned_binary(self, page_data):
@@ -266,7 +252,6 @@ class GenericWrapper(base.OcrBase):
                 cleaned = self.apply_processor(param, cleaned)
         return cleaned
 
-
     @check_aborted
     def standard_preprocess(self, filepath):
         """
@@ -274,7 +259,6 @@ class GenericWrapper(base.OcrBase):
         """
         page_gray = ocrolib.read_image_gray(filepath)
         return self.get_page_clean(page_gray)
-
 
     @check_aborted
     def get_page_clean(self, page_data):
@@ -286,7 +270,6 @@ class GenericWrapper(base.OcrBase):
                 self.config.binarizer, cleaned, func="binarize")
         return self.get_cleaned_binary(binary)
 
-    
     @check_aborted
     def apply_processor(self, process, data, func="cleanup"):
         """
@@ -298,12 +281,11 @@ class GenericWrapper(base.OcrBase):
         for p in process.value:
             if p is None:
                 continue
-            self.logger.info("Setting param: %s.%s -> %s" % (process.name, 
+            self.logger.info("Setting param: %s.%s -> %s" % (process.name,
                 p["name"].encode(), p["value"].encode()))
             comp.pset(p["name"].encode(), p["value"].encode())
         call = getattr(comp, func)
         return call(data)
-
 
     def convert_lines(self, filepath, linedata, **kwargs):
         """
@@ -321,11 +303,10 @@ class GenericWrapper(base.OcrBase):
                 coords[0], pageheight - coords[1], coords[0] + coords[2],
                 pageheight - (coords[1] - coords[3]))
             lineimage = ocrolib.iulib.bytearray()
-            ocrolib.iulib.extract_subimage(lineimage, 
+            ocrolib.iulib.extract_subimage(lineimage,
                     ocrolib.numpy2narray(page_bin), *iulibcoords)
             out[i]["text"] = self.get_transcript(ocrolib.narray2numpy(lineimage))
         return out
-
 
     @classmethod
     def get_component_parameters(cls, component, *args, **kwargs):
@@ -336,10 +317,9 @@ class GenericWrapper(base.OcrBase):
         if len(comps):
             return comps[0]
 
-
     def conditional_preprocess(self, filepath, prebinarized=False):
         """
-        Run preprocessing unless we're told to 
+        Run preprocessing unless we're told to
         use a passed-in prebinarized file.
         """
         if prebinarized:
@@ -349,26 +329,24 @@ class GenericWrapper(base.OcrBase):
             page_bin = self.get_page_clean(page_gray)
         return page_bin
 
-
     @check_aborted
     def get_transcript(self, line):
         """
         Recognise each individual line by writing it as a temporary
-        PNG and calling self.binary on the image.  
+        PNG and calling self.binary on the image.
         """
         with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
             tmp.close()
             self.write_binary(tmp.name, line)
             text = self.process_line(tmp.name)
             os.unlink(tmp.name)
-            return text            
-
+            return text
 
     @check_aborted
     def process_line(self, imagepath):
         """
         Run OCR on image, using YET ANOTHER temporary
-        file to gather the output, which is then read back in. 
+        file to gather the output, which is then read back in.
         """
         lines = []
         with tempfile.NamedTemporaryFile() as tmp:
@@ -383,16 +361,15 @@ class GenericWrapper(base.OcrBase):
                 return "!!! %s CONVERSION ERROR %d: %s !!!" % (
                         os.path.basename(self.binary).upper(),
                         proc.returncode, err)
-            
+
             # read and delete the temp text file
             # whilst writing to our file
             with open(tmp.name, "r") as txt:
                 lines = [line.rstrip() for line in txt.readlines()]
                 if lines and lines[-1] == "":
                     lines = lines[:-1]
-                os.unlink(txt.name)        
+                os.unlink(txt.name)
         return " ".join(lines)
-
 
     @classmethod
     def get_components(cls, oftypes=None, withnames=None, exclude=None):
@@ -411,7 +388,6 @@ class GenericWrapper(base.OcrBase):
         except AttributeError:
             comp = cls._load_python_component(name)
         return comp
-
 
     @classmethod
     def _load_python_component(cls, name):
@@ -437,7 +413,6 @@ class GenericWrapper(base.OcrBase):
         if comp is None:
             raise IndexError("no such component: %s" % name)
         return comp()
-
 
     @classmethod
     def _get_native_components(cls, oftypes=None, withnames=None, exclude=None):
@@ -483,7 +458,6 @@ class GenericWrapper(base.OcrBase):
                 ))
             out.append(compdict)
         return out
-
 
     @classmethod
     def _get_python_components(cls, oftypes=None, withnames=None, exclude=None):
@@ -533,6 +507,5 @@ class GenericWrapper(base.OcrBase):
                 ))
             out.append(compdict)
         return out
-
 
 

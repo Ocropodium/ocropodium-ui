@@ -39,7 +39,6 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
         self._lang = None
         self._tesseract = None
 
-
     def init_converter(self):
         """
         Extract the lmodel to a temporary directory.  This is
@@ -51,7 +50,6 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
             self.unpack_tessdata(modpath)
         self._tesseract = get_binary("tesseract")
         self.logger.info("Using Tesseract: %s" % self._tesseract)
-
 
     @classmethod
     def parameters(cls):
@@ -73,7 +71,6 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
         params.extend(_parameters)
         return params
 
-
     @classmethod
     def _get_language_model_parameter_info(cls):
         info = [i for i in cls.parameters() if i["name"] == "language_model"][0]
@@ -82,13 +79,12 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
                 dict(name=m.name, description=m.description) for m in mods]
         return info
 
-
     @check_aborted
     def get_transcript(self, line):
         """
         Recognise each individual line by writing it as a temporary
         PNG, converting it to Tiff, and calling Tesseract on the
-        image.  Unfortunately I can't get the current stable 
+        image.  Unfortunately I can't get the current stable
         Tesseract 2.04 to support anything except TIFFs.
         """
         with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
@@ -98,8 +94,7 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
             text = self.process_line(tiff)
             os.unlink(tmp.name)
             os.unlink(tiff)
-            return text            
-
+            return text
 
     def unpack_tessdata(self, lmodelpath):
         """
@@ -140,7 +135,7 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
             tmp.close()
             tessargs = [self._tesseract, imagepath, tmp.name]
             if self._lang is not None:
-                tessargs.extend(["-l", self._lang]) 
+                tessargs.extend(["-l", self._lang])
             proc = sp.Popen(tessargs, stderr=sp.PIPE)
             err = proc.stderr.read()
             if proc.wait() != 0:
@@ -148,16 +143,15 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
                 #raise RuntimeError(
                 #    "tesseract failed with errno %d: %s" % (
                 #        proc.returncode, err))
-            
+
             # read and delete Tesseract's temp text file
             # whilst writing to our file
             with open(tmp.name + ".txt", "r") as txt:
                 lines = [line.rstrip() for line in txt.readlines()]
                 if lines and lines[-1] == "":
                     lines = lines[:-1]
-                os.unlink(txt.name)        
+                os.unlink(txt.name)
         return " ".join(lines)
-
 
     def __del__(self):
         """
@@ -171,5 +165,4 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
             except OSError, (errno, strerr):
                 self.logger.error(
                     "RmTree raised error: %s, %s" % (errno, strerr))
-
 
