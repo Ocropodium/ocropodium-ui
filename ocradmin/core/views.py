@@ -5,7 +5,6 @@ Basic OCR functions.  Submit OCR tasks and retrieve the result.
 import re
 import os
 import traceback
-from celery import result as celeryresult
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.db import transaction
@@ -129,7 +128,7 @@ def multiple_results(request):
     """
     out = []
     for task_id in request.GET.getlist("job"):
-        async = celeryresult.AsyncResult(task_id)
+        async = OcrTask.get_celery_result(task_id)
         if async is None:
             raise Http404
         out.append(_wrap_async_result(async))
@@ -171,10 +170,9 @@ def results(request, task_id):
     """
     Retrieve the results using the previously provided task name.
     """
-    async = celeryresult.AsyncResult(task_id)
+    async = OcrTask.get_celery_result(task_id)
     if async is None:
         raise Http404
-
     return _format_response(request, _wrap_async_result(async))
 
 
@@ -230,7 +228,7 @@ def viewer_binarization_results(request, task_id):
     """
     Trigger a re-binarization of the image for viewing purposes.
     """
-    async = celeryresult.AsyncResult(task_id)
+    async = OcrTask.get_celery_result(task_id)
     out = dict(
         task_id=async.task_id,
         status=async.status,
