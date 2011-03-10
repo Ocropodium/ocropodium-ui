@@ -81,7 +81,7 @@ class OcrBatch(models.Model):
         """
         Unicode representation.
         """
-        return "<%s: %s>" % (self.__class__.__name__, self.name)
+        return self.name
 
 
     class Meta:
