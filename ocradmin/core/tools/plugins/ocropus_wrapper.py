@@ -7,7 +7,7 @@ line wrapper.
 import copy
 from ocradmin.core.tools import check_aborted, \
         ExternalToolError
-from ocradmin.core import tools        
+from ocradmin.core import tools
 from ocradmin.ocrmodels.models import OcrModel
 from ocradmin.core.tools.plugins import generic_wrapper
 reload(generic_wrapper)
@@ -55,7 +55,6 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         self._trainbin = None
         self.training = False
 
-
     @classmethod
     def parameters(cls):
         params = copy.deepcopy(generic_wrapper.GenericWrapper.parameters())
@@ -87,11 +86,10 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
                 "multiple": False,
                 "value": True,
                 "type": "bool",
-            },  
+            },
         ]
         params.extend(_parameters)
         return params
-
 
     @classmethod
     def _get_character_model_parameter_info(cls):
@@ -100,7 +98,6 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         info["choices"] = [
                 dict(name=m.name, description=m.description) for m in mods]
         return info
-
 
     @classmethod
     def _get_language_model_parameter_info(cls):
@@ -134,23 +131,6 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
             self._lmodel.load(lmodpath)
         except (StandardError, RuntimeError):
             raise
-        #if self.params.segmenter:
-        #    self.logger.info("Using line segmenter: %s" % self.params.segmenter)
-        #    self._linerec.pset("segmenter", self.params.segmenter)
-        #if self.params.grouper:
-        #    self.logger.info("Using grouper: %s" % self.params.grouper)
-        #    self._linerec.pset("grouper", self.params.grouper)
-        # TODO: Work out how to set parameters on the grouper and segmenter
-        # Unsure about how (or if it's possible) to access the segmenter
-        # via the LineRec
-        #for name, val in self.params.iteritems():
-        #    # find the 'long' name for the component with the given short
-        #    # name, i.e: binsauvola -> BinarizeBySauvola
-        #    cmatch = re.match("%s__(.+)" % self.params.segmenter, name, re.I)
-        #    if cmatch:
-        #        param = cmatch.groups()[0]
-        #        self._linerec.pset(param, val)
-
 
     def init_trainer(self):
         """
@@ -166,13 +146,11 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         self._linerec.startTraining()
         self.training = True
 
-
     def finalize_trainer(self):
         """
         Stop training.
         """
         self._linerec.finishTraining()
-
 
     @check_aborted
     def get_transcript(self, line):
@@ -187,13 +165,11 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         out, _ = ocrolib.beam_search_simple(fst, self._lmodel, 1000)
         return out
 
-
     def load_training_binary(self, imagepath):
         """
         Load an image to use for training.
         """
         self._trainbin = ocrolib.read_image_gray(imagepath)
-
 
     def train_line(self, bbox, text):
         """
@@ -212,7 +188,6 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         sub = ocrolib.iulib.bytearray()
         ocrolib.iulib.extract_subimage(sub,
                 ocrolib.numpy2narray(self._trainbin), *ibox)
-
         try:
             self._linerec.addTrainingLine(ocrolib.narray2numpy(sub),
                     unicode(text))
@@ -220,7 +195,6 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
             traceback.print_exc()
             self.logger.error(
                     "Skipping training line: %s: %s" % (text, err.message))
-
 
     def save_new_model(self, outpath):
         """
@@ -239,5 +213,4 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
 
         self.logger.info("Saving trained model")
         self._linerec.save_native(outpath)
-
 
