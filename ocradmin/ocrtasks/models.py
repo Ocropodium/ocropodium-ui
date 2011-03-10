@@ -139,6 +139,13 @@ class OcrTask(models.Model):
         return func(args=args, **kwargs)
 
     @classmethod
+    def get_celery_result(cls, task_id):
+        """
+        Proxy for fetching Celery results.
+        """
+        return celery.result.AsyncResult(task_id)
+
+    @classmethod
     def run_multiple(cls, task_name, tasks, **kwargs):
         """
         Run multiple tasks efficiently, using the same
