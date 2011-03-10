@@ -86,11 +86,10 @@ function loadState() {
 }
 
 
-function addPageToWorkspace(pagename, jobname) {
+function addPageToWorkspace(page_name, task_id, linedata) {
     var workspace = document.getElementById("workspace");
-    var page = new OCRJS.PageWidget(workspace, pagename, jobname);
+    var page = new OCRJS.PageWidget(workspace, page_name, task_id);
     PAGES.push(page);
-    PENDING[jobname] = page;
     $(workspace).append(page.init());
     page.onLinesReady = function() {
         // trigger a reformat
@@ -106,6 +105,10 @@ function addPageToWorkspace(pagename, jobname) {
         PAGES = temp;
         updateUiState();
     }
+    if (linedata)
+        page.setResults(linedata)
+    else
+        PENDING[task_id] = page;
 }
 
 
@@ -169,8 +172,8 @@ function onXHRLoad(event) {
         $("#dropzone").text("Drop images here...").removeClass("waiting");
         return;
     }
-    $.each(data, function(pagenum, results) {
-        addPageToWorkspace(results.page_name, results.task_id);
+    $.each(data, function(pagenum, data) {
+        addPageToWorkspace(data.page_name, data.task_id, data.results);
     }); 
     if (POLLTIMER == -1)
         pollForResults();
