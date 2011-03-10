@@ -19,29 +19,26 @@ class OcrBatch(models.Model):
 
     def username(self):
         return self.user.username
-    
+
     def subtasks(self):
         """
         Alias for 'tasks', for use when serializing
         """
         return self.tasks.all()
 
-
     def is_complete(self):
         """
         Check whether all tasks are done.
-        """        
+        """
         numrunning = self.tasks.exclude(
                 status__in=("SUCCESS", "FAILURE", "ABORTED")).count()
         return numrunning == 0
-
 
     def task_count(self):
         """
         Return the number of contained tasks.
         """
         return self.tasks.count()
-
 
     def estimate_progress(self):
         """
@@ -63,10 +60,10 @@ class OcrBatch(models.Model):
             lines = t.lines or 50
             weight = float(lines) / float(totallines)
             if t.status in ("FAILURE", "ABORTED", "SUCCESS"):
-                percentdone += (weight * 100)            
+                percentdone += (weight * 100)
             else:
                 runningtasks += 1
-                percentdone += (weight * t.progress)            
+                percentdone += (weight * t.progress)
         done = min(100.0, percentdone)
         # if there are running tasks, never go above
         # 99%
@@ -74,13 +71,19 @@ class OcrBatch(models.Model):
             done -= 1.0
         return max(0, done)
 
-
     def errored_tasks(self):
         """
         Get all errored tasks.
         """
         return self.tasks.filter(status="FAILURE")
 
+    def __unicode__(self):
+        """
+        Unicode representation.
+        """
+        return "<%s: %s>" % (self.__class__.__name__, self.name)
+
 
     class Meta:
         unique_together = ("project", "name")
+
