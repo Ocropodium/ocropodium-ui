@@ -45,14 +45,7 @@ def binarize(request):
     """
         Save a posted image to the DFS.  Binarize it with Celery.
     """
-
-    return _ocr_task(
-        request,
-        "ocr/binarize.html",
-        {},
-        "Binarize",
-        tasks.BinarizePageTask,
-    )
+    return _ocr_task(request, "ocr/binarize.html", "binarize.page")
 
 
 @login_required
@@ -62,15 +55,7 @@ def convert(request):
     """
     Save a posted image to the DFS and convert it with Celery.
     """
-    context = dict(
-    )
-    return _ocr_task(
-        request,
-        "ocr/convert.html",
-        context,
-        "Convert",
-        tasks.ConvertPageTask,
-    )
+    return _ocr_task(request, "ocr/convert.html", "convert.page")
 
 
 @login_required
@@ -127,7 +112,6 @@ def save_transcript(request, task_pk):
             mimetype="application/json")
 
 
-
 @login_required
 @saves_files
 @transaction.commit_manually
@@ -135,16 +119,7 @@ def segment(request):
     """
         Save a posted image to the DFS.  Segment it with Celery.
     """
-
-    # add available seg and bin presets to the context
-    context = dict()
-    return _ocr_task(
-        request,
-        "ocr/segment.html",
-        context,
-        "Segment",
-        tasks.SegmentPageTask,
-    )
+    return _ocr_task(request, "ocr/segment.html", "segment.page")
 
 
 @login_required
@@ -272,7 +247,6 @@ def test(request):
     Dummy action for running JS unit tests.  Probably needs to
     be put somewhere else.
     """
-
     return render_to_response("ocr/test.html", {})
 
 
@@ -285,7 +259,7 @@ def testparams(request):
     return render_to_response("ocr/testparams.html", {})
 
 
-def _ocr_task(request, template, context, tasktype, celerytask):
+def _ocr_task(request, template, tasktype, context={}):
     """
     Generic handler for OCR tasks which run a celery job.
     """
@@ -313,31 +287,24 @@ def _ocr_task(request, template, context, tasktype, celerytask):
             task_id=tid,
             user=request.user,
             page_name=os.path.basename(path),
-            task_name=celerytask.name,
+            task_name=tasktype,
             status="INIT",
             args=args,
             kwargs=kwargs,
         )
         ocrtask.save()
-        try:
-            asynctasks.append(
-                (os.path.basename(path),
-                    celerytask.apply_async(args=args, **kwargs)))
-        except Exception, err:
-            print err
-            for t in traceback.extract_stack():
-                print t
-            raise
+        asynctasks.append(ocrtask)
     try:
         # aggregate the results.  If necessary wait for tasks.
         out = []
-        for pagename, async in asynctasks:
-            result = async.wait() if _should_wait(request) else async.result
+        for task in asynctasks:
+            res = task.run_async() if not _should_wait(request) \
+                    else task.run()
             out.append({
-                "page_name": pagename,
-                "task_id": async.task_id,
-                "status": async.status,
-                "results": result,
+                "page_name": task.page_name,
+                "task_id": task.task_id,
+                "status": res.status,
+                "results": res.result,
             })
         # should be past the danger zone now...
         transaction.commit()
