@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
-TESTFILE = "etc/simple.png" 
+TESTFILE = "etc/simple.png"
 
 class OcrSegmentTest(TestCase):
     def setUp(self):
@@ -26,7 +26,6 @@ class OcrSegmentTest(TestCase):
         """
         self.testuser.delete()
 
-
     def test_segment_view(self):
         """
         Test the segment view as a standard GET (no processing.)
@@ -41,7 +40,7 @@ class OcrSegmentTest(TestCase):
             "%options.engine": "ocropus",
             "%options.engine.ocropus[0].binarizer": 'BinarizeBySauvola',
             "%options.engine.ocropus[1].page_segmenter": 'SegmentPageByRAST',
-        })        
+        })
 
     def test_convert_action_seg(self):
         """
@@ -51,7 +50,7 @@ class OcrSegmentTest(TestCase):
             "%options.engine": "ocropus",
             "%options.engine.ocropus[0].binarizer": 'BinarizeBySauvola',
             "%options.engine.ocropus[1].page_segmenter": 'SegmentPageBy1CP',
-        })        
+        })
 
     def test_results_action(self):
         """
@@ -72,7 +71,7 @@ class OcrSegmentTest(TestCase):
         """
         if params is None:
             params = {}
-        r = self._get_segment_response(params, headers) 
+        r = self._get_segment_response(params, headers)
         self.assertEqual(r.status_code, 200)
 
         # check we recieve JSON back
@@ -80,10 +79,9 @@ class OcrSegmentTest(TestCase):
         content = simplejson.loads(r.content)
         self.assertEqual(len(content), 1)
         # Note: we'd not normally expect any results here because we're
-        # not using the "nohang" parameter, but since tests are executed 
+        # not using the "nohang" parameter, but since tests are executed
         # locally we will
         self.assertTrue(content[0]["results"] is not None, "Unable to get results")
-      
 
     def _get_segment_response(self, params={}, headers={}):
         """
@@ -94,6 +92,5 @@ class OcrSegmentTest(TestCase):
         r = self.client.post("/ocr/segment", params, **headers)
         tf.close()
         return r
-        
 
 
