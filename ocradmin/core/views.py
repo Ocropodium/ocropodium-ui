@@ -305,7 +305,7 @@ def _ocr_task(request, template, tasktype, context={}):
         # should be past the danger zone now...
         transaction.commit()
         return _format_response(request, out)
-    except Exception, err:
+    except StandardError, err:
         transaction.rollback()
         return HttpResponse(
             simplejson.dumps({
