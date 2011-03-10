@@ -1,20 +1,18 @@
+"""
+OcrBatch-related views.
+"""
+
 import os
-import traceback
 from types import MethodType
-import tempfile
-import gzip
 import tarfile
 import StringIO
 
-from celery import result as celeryresult
-from datetime import datetime
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core import serializers
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.servers.basehttp import FileWrapper
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Count
@@ -23,14 +21,11 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
-from django.utils.encoding import smart_str, smart_unicode
+from django.utils.encoding import smart_str
 from ocradmin.batch import utils as batchutils
-from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
-from ocradmin.projects.tasks import IngestTask
-from ocradmin.training.tasks import ComparisonTask
 from ocradmin.core.views import _handle_request, AppException
 from ocradmin.core.tools.manager import PluginManager
 
@@ -89,7 +84,7 @@ def new(request):
 
 @login_required
 @project_required
-def list(request):
+def batch_list(request):
     """
     List recent batches.
     """
@@ -143,10 +138,9 @@ def list(request):
 @transaction.commit_manually
 def create(request):
     """
-    Create a batch from pre-saved images convert them with Celery.
+    Create a batch from pre-saved images convert them asyncronously.
     """
-
-    celerytask = tasks.ConvertPageTask
+    taskname = "convert.page"
 
     # get the subject file paths from comma seperated POST data
     paths = _get_batch_file_paths(request)
@@ -164,7 +158,7 @@ def create(request):
         name=form.cleaned_data["name"],
         description=form.cleaned_data["description"],
         tags=form.cleaned_data["tags"],
-        task_type=celerytask.name,
+        task_type=taskname,
         project=request.session["project"]
     )
     batch.save()
@@ -174,41 +168,30 @@ def create(request):
 
     # preserve intermediate binary & segmentation results            
     params["write_intermediate_results"] = True
-    asyncparams = []
+    ocrtasks = []
+    for path in paths:
+        tid = OcrTask.get_new_task_id()
+        args = (path.encode(), request.output_path.encode(), params, config)
+        kwargs = dict(task_id=tid, loglevel=60, retries=2)
+        ocrtask = OcrTask(
+            task_id=tid,
+            user=request.user,
+            batch=batch,
+            project=request.session["project"],
+            page_name=os.path.basename(path),
+            task_name=taskname,
+            status="INIT",
+            args=args,
+            kwargs=kwargs,
+        )
+        ocrtask.save()
+        ocrtasks.append(ocrtask)
     try:
-        for path in paths:
-            tid = OcrTask.get_new_task_id()
-            args = (path.encode(), request.output_path.encode(), params, config)
-            kwargs = dict(task_id=tid, loglevel=60, retries=2)
-            ocrtask = OcrTask(
-                task_id=tid,
-                user=request.user,
-                batch=batch,
-                project=request.session["project"],
-                page_name=os.path.basename(path),
-                task_name=celerytask.name,
-                status="INIT",
-                args=args,
-                kwargs=kwargs,
-            )
-            ocrtask.save()
-            asyncparams.append((args, kwargs))
-
-        publisher = celerytask.get_publisher(connect_timeout=5)
-        try:
-            for args, kwargs in asyncparams:
-                celerytask.apply_async(args=args,
-                        publisher=publisher, **kwargs)
-        finally:
-            publisher.close()
-            publisher.connection.close()
-
-    except Exception, err:
+        # ignoring the result for now
+        OcrTask.run_multiple(taskname, ocrtasks)
+    except StandardError:
         transaction.rollback()
-        print err.message
-        return HttpResponse(err.message, mimetype="application/json")
-
-    # return a serialized result
+        raise
     transaction.commit()
     return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
 
@@ -244,8 +227,8 @@ def page_results(request, batch_pk, page_index):
     batch = get_object_or_404(OcrBatch, pk=batch_pk)
     try:
         page = batch.tasks.all().order_by("page_name")[int(page_index)]
-    except OcrBatch.DoesNotExist, err:
-        raise err
+    except OcrBatch.DoesNotExist:
+        raise
 
     pyserializer = serializers.get_serializer("python")()
     response = HttpResponse(mimetype="application/json")
@@ -257,14 +240,6 @@ def page_results(request, batch_pk, page_index):
     simplejson.dump(taskssl, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
-
-
-@login_required
-def reconvert_results(request):
-    """
-    Get results of a batch of reconvert tasks.
-    """
-    pass
 
 
 @login_required
@@ -339,7 +314,6 @@ def _show_batch(request, batch):
     """
     template = "batch/show.html"
     context = {"batch": batch}
-
     return render_to_response(template, context,
             context_instance=RequestContext(request))
 
@@ -354,8 +328,11 @@ def abort_batch(request, batch_pk):
     for task in batch.tasks.all():
         task.abort()
     transaction.commit()
-    return HttpResponse(simplejson.dumps({"ok": True}),
-            mimetype="application/json")
+    if request.is_ajax():
+        return HttpResponse(simplejson.dumps({"ok": True}),
+                mimetype="application/json")
+    else:
+        return HttpResponseRedirect("/batch/show/%s/" % batch_pk)
 
 
 @transaction.commit_manually
@@ -368,8 +345,11 @@ def retry(request, batch_pk):
     for task in batch.tasks.all():
         task.retry()
     transaction.commit()
-    return HttpResponse(simplejson.dumps({"ok": True}),
-            mimetype="application/json")
+    if request.is_ajax():
+        HttpResponse(simplejson.dumps({"ok": True}),
+                mimetype="application/json")
+    else:
+        return HttpResponseRedirect("/batch/show/%s/" % batch_pk)
 
 
 @transaction.commit_manually
@@ -382,8 +362,11 @@ def retry_errored(request, batch_pk):
     for task in batch.errored_tasks():
         task.retry()
     transaction.commit()
-    return HttpResponse(simplejson.dumps({"ok": True}),
-            mimetype="application/json")
+    if request.is_ajax():
+        return HttpResponse(simplejson.dumps({"ok": True}),
+                mimetype="application/json")
+    else:
+        return HttpResponseRedirect("/batch/show/%s/" % batch_pk)
 
 
 def test(request):
@@ -427,10 +410,10 @@ def export(request, batch_pk):
     tar = tarfile.open(fileobj=response, mode='w|gz')
     for task in batch.tasks.all():
         json = task.latest_transcript()
-        for format, ext in formats.iteritems():
-            if not format in reqformats:
+        for fmt, ext in formats.iteritems():
+            if not fmt in reqformats:
                 continue
-            output = getattr(ocrutils, "output_to_%s" % format)(json)
+            output = getattr(ocrutils, "output_to_%s" % fmt)(json)
             info = tarfile.TarInfo(
                     "%s.%s" % (os.path.splitext(task.page_name)[0], ext))
             info.size = len(output)

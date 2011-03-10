@@ -61,20 +61,19 @@ class OcrTask(models.Model):
                 self.status = "ABORTED"
                 self.save()
 
-    def run(self, dbhandle=None):
+    def run(self, task_name=None, asyncronous=True, untracked=False, **kwargs):
         """
         Run the task in a blocking manner and return 
         the sync object.
         """
-        task = celery.registry.tasks[self.task_name]
-        return task.apply(args=self.args, **self.kwargs)
-
-    def run_async(self, dbhandle=None):
-        """
-        Run the task in an asyncronous manner.
-        """
-        task = celery.registry.tasks[self.task_name]
-        return task.apply_async(args=self.args, **self.kwargs)
+        tname = task_name if task_name is not None else self.task_name
+        if untracked:
+            tname = "_%s" % tname
+        celerytask = celery.registry.tasks[tname]
+        func = celerytask.apply_async if asyncronous else celerytask.apply
+        kwds = self.kwargs
+        kwds.update(kwargs)
+        return func(args=self.args, **kwds)
 
     def retry(self):
         """
@@ -125,6 +124,38 @@ class OcrTask(models.Model):
         """
         return self.status in ("INIT", "PENDING", "RETRY", "STARTED")
 
+
+    @classmethod
+    def run_celery_task(cls, *args, **kwargs):
+        tname = kwargs.get("task_name")
+        if kwargs.get("untracked", False):
+            tname = "_%s" % tname
+        task = celery.registry.tasks[tname]
+        func = task.apply_async if kwargs.get("asyncronous", False) \
+                else task.apply
+        return func(args=args, **kwargs)
+
+    @classmethod
+    def run_multiple(cls, task_name, tasks, **kwargs):
+        """
+        Run multiple tasks efficiently, using the same
+        celery publisher.
+        """
+        if len(tasks) == 0:
+            return []        
+        celerytask = celery.registry.tasks[task_name]
+        publisher = celerytask.get_publisher(connect_timeout=5)
+        func = celerytask.apply_async if kwargs.get("asyncronous", True) \
+                else celerytask.apply
+        results = []
+        try:
+            for task in tasks:
+                results.append(func(args=task.args,
+                        publisher=publisher, **task.kwargs))
+        finally:
+            publisher.close()
+            publisher.connection.close()
+        return results
 
     @classmethod
     def get_new_task_id(cls):
