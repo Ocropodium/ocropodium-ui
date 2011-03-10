@@ -218,13 +218,10 @@ def submit_viewer_binarization(request, task_pk):
     # that we don't want to remake an existing binary
     args = task.args
     args[2]["allowcache"] = True
-    async = tasks.UnhandledBinarizePageTask.apply_async(args=args,
-            queue="interactive")
-    out = dict(
-        task_id=async.task_id,
-        status=async.status,
-        results=async.result
-    )
+    async = OcrTask.run_celery_task(*args, untracked=True,
+            task_name="binarize.page", queue="interactive")
+    out = dict(task_id=async.task_id, status=async.status,
+        results=async.result)
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
@@ -298,8 +295,7 @@ def _ocr_task(request, template, tasktype, context={}):
         # aggregate the results.  If necessary wait for tasks.
         out = []
         for task in asynctasks:
-            res = task.run_async() if not _should_wait(request) \
-                    else task.run()
+            res = task.run(asyncronous=not _should_wait(request))
             out.append({
                 "page_name": task.page_name,
                 "task_id": task.task_id,

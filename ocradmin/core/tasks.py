@@ -106,12 +106,12 @@ def make_deepzoom_proxies(logger, inpath, outpath, params):
 
 
 @register_handlers
-class ConvertPageTask(AbortableTask):
+class UnhandledConvertPageTask(AbortableTask):
     """
     Convert an image of text into some JSON.  This is done using
     the OcropusWrapper (and it's proxy, TessWrapper) in util.py.
     """
-    name = "convert.page"
+    name = "_convert.page"
     max_retries = None
 
     def run(self, filepath, outdir, params, config, **kwargs):
@@ -136,6 +136,14 @@ class ConvertPageTask(AbortableTask):
         out = converter.convert(filepath, progress_func=progress_func, **params)
         #create_binary_deepzoom(params, logger)
         return out
+
+
+@register_handlers
+class ConvertPageTask(UnhandledConvertPageTask):
+    """
+    Simply a version of above which calls the DB handlers.
+    """
+    name = "convert.page"
 
 
 @register_handlers
