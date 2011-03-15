@@ -88,7 +88,8 @@ $(function() {
     updateButtons();
 
     $(".option_box").each(function(i, elem) {
-        pbuilders[i] = new OCRJS.ParameterBuilder(elem);        
+        pbuilders[i] = new OCRJS.ParameterBuilder(elem);
+        pbuilders[i].init();
     });
 
 });
