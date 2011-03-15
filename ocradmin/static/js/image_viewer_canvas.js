@@ -49,6 +49,8 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
         setTimeout(function() {
             //self.toggleDrawMode(true);        
         });
+
+        this.registerListener("onCanvasChanged");
     },
 
     toggleDrawMode: function(draw) {
@@ -60,6 +62,14 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
         });
         this._canvas.toggle(draw);
     },
+
+    
+    getRects: function() {
+        for (var i in this._shapes) {
+            var shape = this._shapes[i];
+            console.log(shape);
+        }            
+    },                  
 
     
     setupEvents: function() {
@@ -85,7 +95,6 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
                 if (self._dragstart != null &&
                     self._normalisedRectArea(self._dragstart.x, self._dragstart.y,
                         event.pageX, event.pageY) > 300) {
-
                     if (self._droprect == null) {
                         self._initialiseNewRect();
                         create = true;
@@ -113,6 +122,7 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
                 self._hndl.setTracking(true);
                 self._canvas.unbind("mousemove.drawcanvas");
                 self._canvas.unbind("mouseup.drawcanvas");
+                self.callListeners("onCanvasChanged");
             });
         });
 
