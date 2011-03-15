@@ -212,12 +212,13 @@ def submit_viewer_binarization(request, task_pk):
     Trigger a re-binarization of the image for viewing purposes.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
+    taskname = "binarize.page"
     # hack!  add an allowcache to the params dict to indicate
     # that we don't want to remake an existing binary
     args = task.args
     args[2]["allowcache"] = True
-    async = OcrTask.run_celery_task(*args, untracked=True,
-            task_name="binarize.page", queue="interactive")
+    async = OcrTask.run_celery_task(taskname, *args, untracked=True,
+            queue="interactive")
     out = dict(task_id=async.task_id, status=async.status,
         results=async.result)
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")

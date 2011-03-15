@@ -188,7 +188,7 @@ def create(request):
         ocrtasks.append(ocrtask)
     try:
         # ignoring the result for now
-        OcrTask.run_multiple(taskname, ocrtasks)
+        OcrTask.run_celery_task_multiple(taskname, ocrtasks)
     except StandardError:
         transaction.rollback()
         raise
