@@ -199,7 +199,10 @@ function onXHRLoad(event) {
 $(function() {
 
     // initialise the viewer
-    sdviewer = new OCRJS.ImageViewer($("#viewer").get(0), {
+    viewclass = OCRJS.ImageViewer;
+    if (window.location.pathname.search("/segment") != -1)
+        viewclass = OCRJS.ImageViewerCanvas;        
+    sdviewer = new viewclass($("#viewer").get(0), {
         numBuffers: 3,
         log: false,
         dashboard: false,
