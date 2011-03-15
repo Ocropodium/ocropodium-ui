@@ -126,34 +126,26 @@ class OcrTask(models.Model):
 
 
     @classmethod
-    def run_celery_task(cls, *args, **kwargs):
+    def run_celery_task(cls, taskname, *args, **kwargs):
         """
         Run an arbitary Celery task.
         """
-        tname = kwargs.get("task_name")
         if kwargs.get("untracked", False):
-            tname = "_%s" % tname
-        task = celery.registry.tasks[tname]
+            taskname = "_%s" % taskname
+        task = celery.registry.tasks[taskname]
         func = task.apply_async if kwargs.get("asyncronous", False) \
                 else task.apply
         return func(args=args, **kwargs)
 
     @classmethod
-    def get_celery_result(cls, task_id):
+    def run_celery_task_multiple(cls, taskname, tasks, **kwargs):
         """
-        Proxy for fetching Celery results.
-        """
-        return celery.result.AsyncResult(task_id)
-
-    @classmethod
-    def run_multiple(cls, task_name, tasks, **kwargs):
-        """
-        Run multiple tasks efficiently, using the same
-        celery publisher.
+        Optimised method for running multiple Celery tasks
+        (uses the same celery publisher.)
         """
         if len(tasks) == 0:
             return []        
-        celerytask = celery.registry.tasks[task_name]
+        celerytask = celery.registry.tasks[taskname]
         publisher = celerytask.get_publisher(connect_timeout=5)
         func = celerytask.apply_async if kwargs.get("asyncronous", True) \
                 else celerytask.apply
@@ -166,6 +158,13 @@ class OcrTask(models.Model):
             publisher.close()
             publisher.connection.close()
         return results
+
+    @classmethod
+    def get_celery_result(cls, task_id):
+        """
+        Proxy for fetching Celery results.
+        """
+        return celery.result.AsyncResult(task_id)
 
     @classmethod
     def get_new_task_id(cls):
