@@ -12,6 +12,12 @@ RegExp.escape = function(text) {
   return text.replace(arguments.callee.sRE, '\\$1');
 }
 
+function toCamelCase(str) {
+    return str.replace(/_/g, " ").replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
+
 
 function defined(x) {
     return typeof(x) !== "undefined";
@@ -195,6 +201,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             } else
                 self.buildChoicesSection(container, ident, data);
         } else if (data.parameters) {
+            console.log("Building parameter section: ", data.parameters);
             self.buildParameterList(parent, container, ident, data);
         } else {
             self.buildParameterSection(container, ident, data);
@@ -229,9 +236,10 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var ctrlname = self.getKeyName(ident, data, multiindex);
         var label = $("<label></label>")
             .attr("for", ident + "_ctrl")
-            .attr("title", data.description)
-            .text(data.name)
-            .appendTo(container);
+            .attr("title", data.description ? data.description : data.name)
+            .text(toCamelCase(data.name))
+            .appendTo(container)
+            .textOverflow("...", true);
         var control = $("<select></select>")
             .attr("id", ident + "_ctrl")
             .addClass("option_select")
@@ -288,6 +296,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         }
 
         $.each(data.parameters, function(i, param) {
+            console.log("param: ", param);
             container.append(
                 self.buildSection(container.get(0), param, i)
             );
@@ -296,18 +305,20 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
 
     buildParameterSection: function(container, ident, data) {
         var self = this;
-        if (!(data.value || data.parameters || data.choices))
+        if (!(defined(data.value) || data.parameters || data.choices))
             return;
         var label = $("<label></label>")
             .attr("for", ident + "_ctrl")
-            .text(data.name).attr("title", data.description);
+            .text(toCamelCase(data.name))
+            .attr("title", data.description ? data.description : data.name)
+            .appendTo(container)
+            .textOverflow("...", true);
         var control = $("<input></input>")
             .attr("id", ident + "_ctrl")
-            .attr("name", self.getKeyName(ident, data));
-        if (data.type == "bool")
-            control.attr("type", "checkbox");
+            .attr("type", data.type == "bool" ? "checkbox" : "text")
+            .attr("name", self.getKeyName(ident, data))
+            .appendTo(container);
         self.loadOptionState(control, data.value);
-        container.append(label).append(control);
     },
                            
     saveState: function() {
@@ -317,7 +328,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var val = {};
         $("select, input", this.parent).each(function(index, item) {
             var key = $(item).attr("name").substr(1);
-
             if ($(item).attr("type") == "checkbox")
                 val[key] = $(item).attr("checked");
             else
@@ -332,10 +342,11 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var key = item.attr("name").substr(1);
         var val = this._storedValue(key);
         var setval = val ? val : defaultoption;
-        item.val(setval);
-        if (item.attr("type") == "checkbox") {
+        if (item.attr("type") != "checkbox") {
+            item.val(setval);
+        } else {
             item.attr("checked", !(parseInt(setval) == 0 || setval == "false"
-                        || setval == "off"));
+                        || setval == "off" || setval == false));
         }
         return val !== null ? true : false;
     },
