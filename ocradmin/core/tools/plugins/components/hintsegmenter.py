@@ -6,6 +6,7 @@ from optparse import OptionParser
 
 import iulib
 import ocropus
+import ocrolib
 
 import pylab as P
 import numpy
@@ -321,7 +322,6 @@ class SegmentPageByHint(ocropus.ISegmentPage):
         """
         Get the first found line in an image.
         """
-        print "Getting header"
         boxes = self.get_char_boxes(self.boxes)
         # eliminate boxes above our top-of-the-page
         # pointer
@@ -352,11 +352,11 @@ class SegmentPageByHint(ocropus.ISegmentPage):
         self.topptr = line.y0
 
 
-    def segment(self, page_seg, page_bin):
+    def segment(self, page_bin):
         """
         Segment an image array.
         """
-        self.inarray = page_bin
+        self.inarray = ocrolib.page2narray(page_bin, type='B')
         self.init()
 
         for topline in range(int(self.pget("toplines"))):
@@ -364,9 +364,10 @@ class SegmentPageByHint(ocropus.ISegmentPage):
         self.columns.append(Rectangle.union_of(*self.textlines))
         self.find_columns()
         self.find_lines()
+        page_seg = iulib.intarray()
         self.encode_lines(page_seg)
         self.draw_rects(page_seg, self.textlines)
-        #iulib.write_image_packed("segout.png", encoded)
+        return ocrolib.narray2pseg(page_seg)
 
 
     def get_possible_columns(self, projection):
@@ -499,8 +500,10 @@ class SegmentPageByHint(ocropus.ISegmentPage):
         for i in range(len(self.textlines)):
             colenc.textlines.put(i, r2i(self.textlines[i]))
         colenc.textcolumns.resize(len(self.columns))
+        colenc.paragraphs.resize(len(self.columns))
         for i in range(len(self.columns)):
             colenc.textcolumns.put(i, r2i(self.columns[i]))
+            colenc.paragraphs.put(i, r2i(self.columns[i]))
         colenc.encode()
         encoded.copy(colenc.outputImage)
         return encoded
@@ -535,7 +538,8 @@ if __name__ == "__main__":
 
     outarray = iulib.intarray()
     hs = SegmentPageByHint()
-    hs.pset("toplines", 2)
-    hs.segment(outarray, inarray)
-    iulib.write_image_packed(outf, outarray)
+    hs.pset("toplines", 1)
+    hs.pset("columns", 2)
+    tmp2 = hs.segment(ocrolib.narray2numpy(inarray))
+    ocrolib.write_page_segmentation(outf, tmp2, white=0)
 
