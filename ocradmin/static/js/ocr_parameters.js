@@ -201,7 +201,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             } else
                 self.buildChoicesSection(container, ident, data);
         } else if (data.parameters) {
-            console.log("Building parameter section: ", data.parameters);
+            //console.log("Building parameter section: ", data.parameters);
             self.buildParameterList(parent, container, ident, data);
         } else {
             self.buildParameterSection(container, ident, data);
@@ -296,7 +296,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         }
 
         $.each(data.parameters, function(i, param) {
-            console.log("param: ", param);
+            //console.log("param: ", param);
             container.append(
                 self.buildSection(container.get(0), param, i)
             );
@@ -361,7 +361,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             // prefix                    
             var key = $(elem).attr("name").substr(1);
             if (data[key]) {
-                console.log("Restoring parameter: ", key);
+                //console.log("Restoring parameter: ", key);
                 $(elem).val(data[key]);
             }
         });
@@ -402,7 +402,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         } else {
             var orig = options.success;
             var newfunc = function(data) {
-                console.log("Caching url: ", options.url);
+                //console.log("Caching url: ", options.url);
                 OCRJS._ajaxCache[options.url] = data;
                 orig.call(this, data);    
             };
