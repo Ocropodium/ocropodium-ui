@@ -65,26 +65,64 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
 
     
     getRects: function() {
-        for (var i in this._shapes) {
-            var shape = this._shapes[i];
-            console.log(shape);
-        }            
+        var bufelem = this.activeViewer().elmt;
+        var bufpos = Seadragon.Utils.getElementPosition(bufelem);
+        var bufsize = Seadragon.Utils.getElementSize(bufelem);
+
+        var vp = this.activeViewer().viewport;
+        var csize = vp.getContainerSize();
+        var zoom = vp.getZoom();
+        var centre = vp.getCenter();
+        var bounds = vp.getBounds();
+
+        var fw = csize.x * zoom, fh = csize.y * zoom;
+        var fx = -1 * ((fw * centre.x) - (csize.x / 2)),
+            fy = -1 * ((fh * centre.y) - (csize.y / 2));
+
+        console.log("Viewer: ", bufpos, bufsize);
+
+        var fsize = this.activeViewer().source.dimensions;
+
+        var shapepos, shapesize;
+        $.each(this._shapes, function(i, elem) {
+            shapepos = vp.pointFromPixel(Seadragon.Utils.getElementPosition(elem));                 
+            shapesize = vp.pointFromPixel(Seadragon.Utils.getElementSize(elem));
+
+            var x = (shapepos.x * fsize.x) - bufpos.x,
+                y = (shapepos.y * fsize.x) - bufpos.y,
+                w = shapesize.x * fsize.x,
+                h = shapesize.y * fsize.y;
+
+            console.log("Rect: ", x, y, w, h); 
+        });            
     },                  
+
+
+    dragDone: function() {
+        this._logger("up");
+        this._droprect = null;
+        this._dragstart = null;
+        this._hndl.setTracking(true);
+        this._canvas.unbind("mousemove.drawcanvas");
+        this._canvas.unbind("mouseup.drawcanvas");
+        this.callListeners("onCanvasChanged");
+    },              
 
     
     setupEvents: function() {
         var self = this;
 
         $(window).bind("keydown", function(event) {
-            self._logger(event.keyCode + " " + event.altKey);
-            if (event.keyCode == 17 && event.altKey 
-                    || event.keyCode == 18 && event.ctrlKey)
+            console.log(event.keyCode + " " + event.ctrlKey);
+            if (event.keyCode == KC_CTRL)
                 self.toggleDrawMode(true);
         });
 
         $(window).bind("keyup", function(event) {
-            if (event.keyCode == 17 || event.keyCode == 18)
-                self.toggleDrawMode(false);            
+            if (event.keyCode == KC_CTRL) {
+                self.dragDone();
+                self.toggleDrawMode(false);
+            }            
         });
 
         this._canvas.bind("mousedown.drawcanvas", function(event) {
@@ -102,11 +140,11 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
                 }
 
                 if (self._droprect) {
-                    var x0 = self._dragstart.x - self._canvas.offset().left;
-                    var y0 = self._dragstart.y - self._canvas.offset().top;
-                    var x1 = event.pageX - self._canvas.offset().left;                        
-                    var y1 = event.pageY - self._canvas.offset().top;
-                    var sdrect = self._normalisedRect(x0, y0, x1, y1);
+                    var x0 = self._dragstart.x - self._canvas.offset().left,
+                        y0 = self._dragstart.y - self._canvas.offset().top,
+                        x1 = event.pageX - self._canvas.offset().left,                        
+                        y1 = event.pageY - self._canvas.offset().top,
+                        sdrect = self._normalisedRect(x0, y0, x1, y1);
 
                     var func = create
                         ? self.activeViewer().drawer.addOverlay
@@ -116,13 +154,7 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
             });
 
             self._canvas.bind("mouseup.drawcanvas", function(event) {
-                self._logger("up");
-                self._droprect = null;
-                self._dragstart = null;
-                self._hndl.setTracking(true);
-                self._canvas.unbind("mousemove.drawcanvas");
-                self._canvas.unbind("mouseup.drawcanvas");
-                self.callListeners("onCanvasChanged");
+                self.dragDone();                    
             });
         });
 
@@ -172,16 +204,14 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
             self._logger("ok!");
         }
         self._hndl.clickHandler = function(tracker, pos, quick, shift) {
-            if (shift) {
+            if (shift)
                 self._deleteRect(tracker.target);
-            }
-
         }
         self._hndl.enterHandler = function(tracker, pos, btelem, btany) {
             $(window).bind("keydown.setorder", function(event) {
-                if (event.keyCode >= 49 && event.keyCode <= 57) {
-                    self._setRectOrder(tracker.target, event.keyCode - 48);
-                }
+                if (event.keyCode >= KC_ONE && event.keyCode <= KC_NINE)
+                    self._setRectOrder(
+                            tracker.target, event.keyCode - KC_ZERO);
             });
         }
         self._hndl.exitHandler = function(tracker, pos, btelem, btany) {
@@ -192,12 +222,12 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
 
         self._hndl.releaseHandler = function(tracker, pos, insidepress, insiderelease) {
             self.activeViewer().setMouseNavEnabled(true);
-            var ele = $(tracker.target);
-            var x0 = ele.position().left;
-            var y0 = ele.position().top;
-            var x1 = x0 + ele.width();                        
-            var y1 = y0 + ele.height();
-            var sdrect = self._normalisedRect(x0, y0, x1, y1);
+            var ele = $(tracker.target),
+                x0 = ele.position().left,
+                y0 = ele.position().top,
+                x1 = x0 + ele.width(),                        
+                y1 = y0 + ele.height(),
+                sdrect = self._normalisedRect(x0, y0, x1, y1);
             self.activeViewer().drawer.updateOverlay(tracker.target, sdrect);
         } 
     },
@@ -205,9 +235,8 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
     _deleteRect: function(elem) {
         var tmp = [];
         for (var i in this._shapes) {
-            if (this._shapes[i] !== elem) {
+            if (this._shapes[i] !== elem)
                 tmp.push(this._shapes[i]);
-            }
         }
         this._shapes = tmp;        
         var next = parseInt($(".layout_rect_label", elem).text());
