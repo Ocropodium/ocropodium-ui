@@ -106,7 +106,9 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
         colenc.paragraphs.resize(len(paragraphs))
         for i in range(len(paragraphs)):
             colenc.paragraphs.put(i, r2i(paragraphs[i]))
-        colenc.encode()
+        try:
+            colenc.encode()
+        except IndexError: pass
         encoded = ocrolib.iulib.intarray()
         encoded.copy(colenc.outputImage)
         return encoded
