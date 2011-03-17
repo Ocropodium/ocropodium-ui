@@ -121,11 +121,11 @@ body {
 }
 
 #sidebar {
-    min-height: 500px;
+    min-height: 300px;
 }
 
 #sidebar {
-    width: 400px;
+    width: 350px;
     float: right;
     /* need this because the document_window
      * somehow shifts the sidebar down... 
@@ -133,7 +133,7 @@ body {
 }
 
 #sidebar .widget_content {
-    padding: 10px 10px 20px 10px;
+    padding: 10px 10px;
 }
 
 #sideviewer {

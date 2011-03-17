@@ -16,7 +16,7 @@
 
 .compparam input {
     border: 1px solid #999999;
-    height: 1em;
+    /*height: 1em;*/
     background-color: #FFFFDD;
 }
 
@@ -25,13 +25,13 @@
 }
 
 .option_box * {
-    font-size: 0.95em;
+    font-size: 0.98em;
 }
 
 .option_box label {
     float: left;
     clear: left;
-    width: 10em;    
+    width: 14em;   
 }
 
 .option_box select {
@@ -40,12 +40,12 @@
 
 .component_opts {
     /*display: none;*/
-    font-size: 0.9em;
+    /*font-size: 0.9em;*/
     margin-bottom: 20px;        
 }
 .component_opts label {
     float: left;
-    width: 8em;
+    /*width: 8em;*/
     text-align: right;
     padding-right: 5px;
     clear: left;
@@ -58,7 +58,7 @@
     background-color: FFFFDD;
     text-align: right;
     padding-right: 5px;
-    font-size: 0.9em;
+    /*font-size: 0.9em;*/
 }
 /* HACK */
 .clear {
@@ -112,3 +112,8 @@
     float: left;
 }
 
+
+/* Hack width when inside an accordion */
+.ui-accordion .ui-accordion-content {
+    padding: 1em 0em;
+}
