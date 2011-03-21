@@ -430,10 +430,11 @@ class SegmentPageByHint(ocropus.ISegmentPage):
         #segout.copy(self.inarray)
 
         for colrect in self.columns:
-            #self.draw_rect(segout, colrect, colour=0x0044FFFF)
+            newrect = Rectangle(colrect.x0, 0, colrect.x1, self.topptr)
+            if newrect.area() < 1:
+                continue
             portion = iulib.bytearray()
-            iulib.extract_subimage(portion, self.inverted, colrect.x0, 0,
-                    colrect.x1, self.topptr)
+            iulib.extract_subimage(portion, self.inverted, *newrect.points())
             regions = get_lines_by_projection(portion)
             plines = []
             for bottom, top in regions:
