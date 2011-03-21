@@ -68,33 +68,34 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
         var bufelem = this.activeViewer().elmt;
         var bufpos = Seadragon.Utils.getElementPosition(bufelem);
         var bufsize = Seadragon.Utils.getElementSize(bufelem);
+        var bufrect = new Seadragon.Rect(0, 0, bufsize.x, bufsize.y);
+        var srcsize = this.activeViewer().source.dimensions;
 
         var vp = this.activeViewer().viewport;
-        var csize = vp.getContainerSize();
         var zoom = vp.getZoom();
+        var adjust = bufsize.x / srcsize.x;
+        var factor = zoom * adjust;
+
         var centre = vp.getCenter();
-        var bounds = vp.getBounds();
-
-        var fw = csize.x * zoom, fh = csize.y * zoom;
-        var fx = -1 * ((fw * centre.x) - (csize.x / 2)),
-            fy = -1 * ((fh * centre.y) - (csize.y / 2));
-
-        console.log("Viewer: ", bufpos, bufsize);
-
-        var fsize = this.activeViewer().source.dimensions;
-
-        var shapepos, shapesize;
+        var aspect = srcsize.x / srcsize.y;
+        var zoomsize = srcsize.times(zoom * adjust);
+        var zoomrect = new Seadragon.Rect(0, 0, zoomsize.x, zoomsize.y);
+        var pointonzoomrectatcentre = new Seadragon.Point(
+                zoomsize.x * centre.x, zoomsize.y * (centre.y * aspect));
+        var bufcentre = bufrect.getCenter();
+        var absrect = new Seadragon.Rect(bufcentre.x - pointonzoomrectatcentre.x,
+                bufcentre.y - pointonzoomrectatcentre.y, zoomsize.x, zoomsize.y);
+        var shapes = [];
         $.each(this._shapes, function(i, elem) {
-            shapepos = vp.pointFromPixel(Seadragon.Utils.getElementPosition(elem));                 
-            shapesize = vp.pointFromPixel(Seadragon.Utils.getElementSize(elem));
-
-            var x = (shapepos.x * fsize.x) - bufpos.x,
-                y = (shapepos.y * fsize.x) - bufpos.y,
-                w = shapesize.x * fsize.x,
-                h = shapesize.y * fsize.y;
-
-            console.log("Rect: ", x, y, w, h); 
-        });            
+            var pos = $(elem).position();
+            var x = Math.max(0, (pos.left - absrect.x) / factor),
+                y = Math.max(0, (absrect.height - $(elem).height() - (pos.top - absrect.y)) / factor);
+            var w = Math.min(srcsize.x, x + ($(elem).width() / factor)),
+                h = Math.min(srcsize.y, y + ($(elem).height() / factor));
+            console.log(i, x, y, w, h);
+            shapes.push([x, y, w, h]);                                        
+        });
+        return shapes;
     },                  
 
 
@@ -194,8 +195,17 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
                         .addClass("layout_rect_label")
                         .text(idx + 1)
             )
-            .resizable({handles: "all"})
-            .draggable();
+            .resizable({
+                handles: "all",
+                stop: function() {
+                    self.callListeners("onCanvasChanged");
+                },
+            })
+            .draggable({
+                stop: function() {
+                    self.callListeners("onCanvasChanged");
+                },
+            });
         self._shapes.push(self._droprect);
 
         self._hndl = new Seadragon.MouseTracker(self._droprect);

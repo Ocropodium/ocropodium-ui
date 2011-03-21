@@ -6,7 +6,13 @@ $(function() {
 
 
     sdviewer.addListener("onCanvasChanged", function() {
-        sdviewer.getRects(); 
+        var shapes = sdviewer.getRects(); 
+        var str = $.map(shapes, function(arr, index) {
+            return $.map(arr, function(v, i) {
+                return Math.round(v);
+            }).join(",");
+        }).join("~");
+        $("input[name$='.coords']").val(str);
     });
 });
 
