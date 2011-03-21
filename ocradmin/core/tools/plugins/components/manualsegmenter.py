@@ -75,15 +75,15 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
                 page_bin.shape[1] - 1, page_bin.shape[0] - 1))
         boxes = {}
         for rect in coords:
+            points = rect.points()
             col = ocrolib.iulib.bytearray()
-            ocrolib.iulib.extract_subimage(col, self.inarray, *rect.points())
-            pout = self.segment_portion(col)
+            ocrolib.iulib.extract_subimage(col, self.inarray, *points)
+            pout = self.segment_portion(col, points[0], points[1])
             for key, lines in pout.iteritems():
                 if boxes.get(key) is not None:
                     boxes.get(key).extend(lines)
                 else:
                     boxes[key] = lines
-
         encoded = self.encode_boxes(boxes)        
         return ocrolib.narray2pseg(encoded)
 
@@ -108,17 +108,18 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
             colenc.paragraphs.put(i, r2i(paragraphs[i]))
         try:
             colenc.encode()
-        except IndexError: pass
+        except IndexError, err:
+            print err     
         encoded = ocrolib.iulib.intarray()
         encoded.copy(colenc.outputImage)
         return encoded
 
-    def segment_portion(self, portion):
+    def segment_portion(self, portion, dx, dy):
         """
         Segment a single-column chunk.
         """
-        portionseg = self._segmenter.segment(ocrolib.narray2numpy(portion))
-        return self.extract_boxes(self._regions, portionseg)
+        page_seg = self._segmenter.segment(ocrolib.narray2numpy(portion))
+        return self.extract_boxes(self._regions, page_seg, dx, dy)
 
     def get_coords(self):
         """
@@ -141,18 +142,20 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
         return rects            
 
     @classmethod
-    def extract_boxes(cls, regions, page_seg):
+    def extract_boxes(cls, regions, page_seg, dx, dy):
         """
         Extract line/paragraph geoocrolib.metry info.
         """
         out = dict(columns=[], lines=[], paragraphs=[])
+        #ocrolib.write_page_segmentation("page_seg.png", page_seg)
         exfuncs = dict(lines=regions.setPageLines,
-                paragraphs=regions.setPageParagraphs)
+                paragraphs=regions.setPageParagraphs,
+                columns=regions.setPageColumns)
         for box, func in exfuncs.iteritems():
             func(page_seg)
             for i in range(1, regions.length()):
-                out[box].append(Rectangle(regions.x0(i),
-                    regions.y0(i), regions.x1(i), regions.y1(i)))
+                out[box].append(Rectangle(regions.x0(i) + dx,
+                    regions.y0(i) + dy, regions.x1(i) + dx, regions.y1(i) + dy))
         return out
 
 
