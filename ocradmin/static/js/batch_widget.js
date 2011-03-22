@@ -346,7 +346,6 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
 
     setBatchResults: function(batchdata) {
-        this.setBatchType(batchdata);                                 
         var batch = this._batchdiv.find(".batch");
         batch.attr("id", "batch" + batchdata.pk)
         batch.find(".batch_header").attr("class", "batch_header " + this._batchclass);
@@ -600,29 +599,6 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 task_type.search(/\./));
     },
                
-    setBatchType: function(batchdata) {                      
-        this._batchclass = this.getBatchClass(batchdata.fields.task_type);
-        switch (this._batchclass) {
-            case "convert":
-                this._viewurl = "/batch/transcript/" + this._batch_id;
-                this._viewtext = "View Transcripts";
-                this._exporturl = "/batch/export_options/" + this._batch_id;
-                break;
-            case "fedora":
-                this._viewurl = "/batch/transcript/" + this._batch_id;
-                this._viewtext = "View Transcripts";
-                this._exporturl = null;
-                break;
-            case "compare":
-                this._viewurl = "/training/comparison/?batch=" + this._batch_id;
-                this._viewtext = "View Comparison";
-                this._exporturl = null;
-                break;
-            default:
-                break;
-        }
-    },
-
     _createBatchHeaderUi: function() {
         var self = this;
         var batch = $("<div></div>")

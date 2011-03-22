@@ -1,6 +1,6 @@
+var batch = null;
 $(function() {
 
-    var batch = null;
     var sideparams = null;
     var selectedtab = $.cookie("selectedtab") || 0;
     var sidebar = $("#sidebar_content");
@@ -103,7 +103,20 @@ $(function() {
 
 
     if ($("#batch_id").length) {
-        batch = new OCRJS.BatchWidget($("#workspace").get(0), $("#batch_id").val());
+        var type = $("#batch_type").val();
+        var widget;
+        switch (type) {
+            case "compare.groundtruth":
+                widget = OCRJS.ComparisonWidget;
+                break;
+            case "fedora.ingest":
+                widget = OCRJS.ExportWidget;
+                break;
+            default:
+                widget = OCRJS.BatchWidget;
+        }
+        console.log(widget);
+        batch = new widget($("#workspace").get(0), $("#batch_id").val());
         batch.addListeners({
             onTaskSelected: loadTaskDetails,
             onTaskDeselected: function() {
