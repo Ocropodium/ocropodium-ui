@@ -20,7 +20,7 @@ class PluginManager(object):
         List available OCR plugins.
         """
         engines = []
-        plugdir = os.path.join(os.path.dirname(__file__), "plugins")
+        plugdir = os.path.join(os.path.dirname(__file__), "tools")
         for fname in os.listdir(plugdir):
             if not fname.endswith("wrapper.py"):
                 continue
@@ -46,7 +46,7 @@ class PluginManager(object):
         Get a list of available OCR engines.        
         """
         engines = []
-        plugdir = os.path.join(os.path.dirname(__file__), "plugins")
+        plugdir = os.path.join(os.path.dirname(__file__), "tools")
         for fname in os.listdir(plugdir):
             if fname.endswith("wrapper.py"):
                 modname = os.path.splitext(os.path.basename(fname))[0]
@@ -131,7 +131,7 @@ class PluginManager(object):
         """
         Get the plugin class with a given name.
         """
-        plugdir = os.path.join(os.path.dirname(__file__), "plugins")
+        plugdir = os.path.join(os.path.dirname(__file__), "tools")
         for fname in os.listdir(plugdir):
             modname = "%s_wrapper.py" % name
             if fname == modname:
