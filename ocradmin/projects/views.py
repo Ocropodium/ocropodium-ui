@@ -23,8 +23,41 @@ from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject
 from fedora.adaptor import fcobject
 from ordereddict import OrderedDict
-from ocradmin.projects.tasks import IngestTask
 PER_PAGE = 10
+
+
+class ExportForm(forms.Form):
+    """
+    Fedora Export form.
+    """
+    username = forms.CharField(max_length=50)
+    password = forms.CharField(max_length=255,
+            widget=forms.PasswordInput(render_value=False))
+    repository_url = forms.CharField(max_length=255)
+    namespace = forms.CharField(max_length=255)
+
+
+class DublinCoreForm(forms.Form):
+    """
+    Dublin Core Metadata form.
+    """
+    title = forms.CharField(max_length=255)
+    creator = forms.CharField(max_length=255)
+    subject = forms.CharField(max_length=255)
+    description = forms.CharField(max_length=255, required=False)
+    publisher = forms.CharField(max_length=255, required=False)
+    contributors = forms.CharField(max_length=255, required=False)
+    date = forms.DateField(required=False)
+    type = forms.CharField(max_length=255, required=False)
+    format = forms.CharField(max_length=255, required=False)
+    identifier = forms.CharField(max_length=255, required=False)
+    source = forms.CharField(max_length=255, required=False)
+    language = forms.CharField(max_length=255, required=False)
+    relation = forms.CharField(max_length=255, required=False)
+    coverage = forms.CharField(max_length=255, required=False)
+    right = forms.CharField(max_length=255, required=False)
+
+
 
 
 class DeleteProjectForm(forms.Form):
@@ -238,17 +271,25 @@ def export(request, project_pk):
     project = get_object_or_404(OcrProject, pk=project_pk)
     template = "projects/export.html" if not request.is_ajax() \
             else "projects/includes/export_form.html"
-    dublincore = OrderedDict([(v, "") for v in \
-            fcobject.FedoraObject.DUBLINCORE])
-    dublincore["title"] = "<page_name>"
-    dublincore["creator"] = request.user.get_full_name()
-    dublincore["description"] = project.description
-    dublincore["subject"] = project.name
-    dublincore["date"] = datetime.today()
+
+    exportform = ExportForm(initial=dict(
+        username="fedoraAdmin",
+        password="fedora",
+        repository_url="http://localhost:8080/fedora/",
+        namespace=project.slug,
+    ))
+    dcform = DublinCoreForm(initial=dict(
+        title="<page_name>",
+        creator=request.user.get_full_name(),
+        description=project.description,
+        subject=project.name,
+        date=datetime.today(),
+    ))
 
     context = dict(
         project=project,
-        dublincore=dublincore
+        exportform=exportform,
+        dcform=dcform,
     )
     return render_to_response(template, context,
             context_instance=RequestContext(request))
@@ -260,31 +301,36 @@ def ingest(request, project_pk):
     """
     Ingest project training data into fedora.
     """
+    taskname = "fedora.ingest"
     project = get_object_or_404(OcrProject, pk=project_pk)
-    if not request.method == "POST":
-        return export(request)
+    template = "projects/export.html" if not request.is_ajax() \
+            else "projects/includes/export_form.html"
+    exportform = ExportForm(request.POST)
+    dcform = DublinCoreForm(request.POST)
+    if not request.method == "POST" or not exportform.is_valid() \
+            or not dcform.is_valid():
+        context = dict(exportform=exportform, dcform=dcform,
+                project=project)
+        return render_to_response(template, context,
+                context_instance=RequestContext(request))
 
-    namespace = request.POST.get("fedora_namespace", slugify(project.name))
-    dublincore = OrderedDict()
-    for key, val in request.POST.iteritems():
-        if key.startswith("dc_"):
-            dublincore[key.replace("dc_", "", 1)] = val
-
-    asyncparams = []
+    # get all-string dublincore data
+    dc = dict([(k, str(v)) for k, v in dcform.cleaned_data.iteritems()])
 
     # create a batch db job
     batch = OcrBatch(
         user=request.user,
-        name="Fedora Ingest: %s" % namespace,
+        name="Fedora Ingest: %s" % exportform.cleaned_data.get("namespace"),
         description="",
-        task_type=IngestTask.name,
+        task_type=taskname,
         project=project
     )
     batch.save()
 
+    ingesttasks = []
     for rset in project.reference_sets.all():
         tid = OcrTask.get_new_task_id()
-        args = (rset.pk, namespace, dublincore)
+        args = (rset.pk, exportform.cleaned_data, dc)
         kwargs = dict(task_id=tid, queue="interactive")
         task = OcrTask(
             task_id=tid,
@@ -292,23 +338,16 @@ def ingest(request, project_pk):
             batch=batch,
             project=project,
             page_name=os.path.basename(rset.page_name),
-            task_name=IngestTask.name,
+            task_name=taskname,
             status="INIT",
             args=args,
             kwargs=kwargs,
         )
         task.save()
-        asyncparams.append((args, kwargs))
+        ingesttasks.append(task)
 
     # launch all the tasks
-    publisher = IngestTask.get_publisher(connect_timeout=5)
-    try:
-        for args, kwargs in asyncparams:
-            IngestTask.apply_async(args=args, publisher=publisher, **kwargs)
-    finally:
-        publisher.close()
-        publisher.connection.close()
-
+    OcrTask.run_celery_task_multiple(taskname, ingesttasks)
     return HttpResponseRedirect("/batch/show/%d/" % batch.pk)
 
 
