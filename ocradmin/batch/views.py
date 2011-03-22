@@ -27,7 +27,7 @@ from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.core.views import _handle_request, AppException
-from ocradmin.core.tools.manager import PluginManager
+from ocradmin.plugins.manager import PluginManager
 
 
 PER_PAGE = 25

@@ -3,7 +3,7 @@ Wrapper for Abbyy Finereader 8.0 CLI.
 """
 
 
-from ocradmin.core.tools import base, check_aborted, get_binary, ExternalToolError, set_progress
+from ocradmin.plugins import base, check_aborted, get_binary, ExternalToolError, set_progress
 import generic_wrapper
 import copy
 

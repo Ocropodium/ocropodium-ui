@@ -18,7 +18,7 @@ from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask, Transcript
-from ocradmin.core.tools.manager import PluginManager
+from ocradmin.plugins.manager import PluginManager
 
 from ocradmin.plugins import parameters
 
