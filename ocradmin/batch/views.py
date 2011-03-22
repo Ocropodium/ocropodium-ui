@@ -135,7 +135,7 @@ def batch_list(request):
 @login_required
 @project_required
 @saves_files
-@transaction.commit_manually
+@transaction.commit_on_success
 def create(request):
     """
     Create a batch from pre-saved images convert them asyncronously.
@@ -318,7 +318,7 @@ def _show_batch(request, batch):
             context_instance=RequestContext(request))
 
 
-@transaction.commit_manually
+@transaction.commit_on_success
 @login_required
 def abort_batch(request, batch_pk):
     """
@@ -335,7 +335,7 @@ def abort_batch(request, batch_pk):
         return HttpResponseRedirect("/batch/show/%s/" % batch_pk)
 
 
-@transaction.commit_manually
+@transaction.commit_on_success
 @login_required
 def retry(request, batch_pk):
     """
@@ -346,13 +346,13 @@ def retry(request, batch_pk):
         task.retry()
     transaction.commit()
     if request.is_ajax():
-        HttpResponse(simplejson.dumps({"ok": True}),
+        return HttpResponse(simplejson.dumps({"ok": True}),
                 mimetype="application/json")
     else:
         return HttpResponseRedirect("/batch/show/%s/" % batch_pk)
 
 
-@transaction.commit_manually
+@transaction.commit_on_success
 @login_required
 def retry_errored(request, batch_pk):
     """
