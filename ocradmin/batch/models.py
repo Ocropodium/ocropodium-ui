@@ -83,7 +83,3 @@ class OcrBatch(models.Model):
         """
         return self.name
 
-
-    class Meta:
-        unique_together = ("project", "name")
-
