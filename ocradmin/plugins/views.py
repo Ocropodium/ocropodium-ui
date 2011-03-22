@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 
 import pprint
 
-from ocradmin.core.tools.manager import PluginManager 
+from ocradmin.plugins.manager import PluginManager 
 from ocradmin.plugins import parameters
 
 

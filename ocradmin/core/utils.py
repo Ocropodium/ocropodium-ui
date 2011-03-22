@@ -310,14 +310,3 @@ def output_to_hocr(jsondata):
     return hocr
 
 
-def get_trainer(*args, **kwargs):
-    """
-    Get the appropriate class to do the conversion.
-    TODO: Convert this function to the plugin interface.
-    """
-    from ocradmin.core.tools.plugins.ocropus_wrapper import OcropusWrapper
-    return OcropusWrapper(*args, **kwargs)
-
-
-                
-                
