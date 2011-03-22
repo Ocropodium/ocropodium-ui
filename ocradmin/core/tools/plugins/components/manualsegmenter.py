@@ -2,7 +2,7 @@ import sys
 import ocrolib
 
 from rect import Rectangle
-
+import numpy
 
 
 def r2i(rect):
@@ -73,28 +73,28 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
         if len(coords) == 0:
             coords.append(Rectangle(0, 0, 
                 page_bin.shape[1] - 1, page_bin.shape[0] - 1))
+        height = page_bin.shape[1]
         boxes = {}
         for rect in coords:
             points = rect.points()
             col = ocrolib.iulib.bytearray()
             ocrolib.iulib.extract_subimage(col, self.inarray, *points)
-            pout = self.segment_portion(col, points[0], points[1])
+            pout = self.segment_portion(col, height, points[0], points[1])
             for key, lines in pout.iteritems():
                 if boxes.get(key) is not None:
                     boxes.get(key).extend(lines)
                 else:
                     boxes[key] = lines
-        encoded = self.encode_boxes(boxes)        
+        encoded = self.encode_boxes(boxes, height)        
         return ocrolib.narray2pseg(encoded)
 
-    def encode_boxes(self, boxes):
+    def encode_boxes(self, boxes, height):
         """
         Encode a pretty pattern.
         """
         lines = boxes.get("lines", [])
         columns = boxes.get("columns", [])
         paragraphs = boxes.get("paragraphs", [])
-
         colenc = ocrolib.ocropus.ColorEncodeLayout()
         colenc.inputImage.copy(self.inverted)
         colenc.textlines.resize(len(lines))
@@ -114,12 +114,12 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
         encoded.copy(colenc.outputImage)
         return encoded
 
-    def segment_portion(self, portion, dx, dy):
+    def segment_portion(self, portion, height, dx, dy):
         """
         Segment a single-column chunk.
         """
         page_seg = self._segmenter.segment(ocrolib.narray2numpy(portion))
-        return self.extract_boxes(self._regions, page_seg, dx, dy)
+        return self.extract_boxes(self._regions, page_seg, height, dx, dy)
 
     def get_coords(self):
         """
@@ -142,7 +142,7 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
         return rects            
 
     @classmethod
-    def extract_boxes(cls, regions, page_seg, dx, dy):
+    def extract_boxes(cls, regions, page_seg, height, dx, dy):
         """
         Extract line/paragraph geoocrolib.metry info.
         """
@@ -151,11 +151,13 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
         exfuncs = dict(lines=regions.setPageLines,
                 paragraphs=regions.setPageParagraphs,
                 columns=regions.setPageColumns)
+        page_seg = numpy.flipud(page_seg)
         for box, func in exfuncs.iteritems():
             func(page_seg)
             for i in range(1, regions.length()):
                 out[box].append(Rectangle(regions.x0(i) + dx,
-                    regions.y0(i) + dy, regions.x1(i) + dx, regions.y1(i) + dy))
+                    (regions.y0(i)) + dy, regions.x1(i) + dx,
+                    (regions.y1(i)) + dy))
         return out
 
 
