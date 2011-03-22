@@ -7,6 +7,8 @@
 	<script type='application/javascript' src='/static/js/batch/show.js'></script>
 	<script type='application/javascript' src='/static/js/multi_filter_list.js'></script>
 	<script type='application/javascript' src='/static/js/batch_widget.js'></script>
+	<script type='application/javascript' src='/static/js/export_widget.js'></script>
+	<script type='application/javascript' src='/static/js/comparison_widget.js'></script>
 	<script type='application/javascript' src='/static/js/ocr_parameters.js'></script>
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
@@ -29,6 +31,7 @@
 {% if batch %}
     <form id="batch_form" action="{{request.path}}" >
         <input type="hidden" name="batch_id" value="{{batch.pk}}" id="batch_id" />
+        <input type="hidden" name="batch_type" value="{{batch.task_type}}" id="batch_type" />
     </form>
 {% endif %}
 
