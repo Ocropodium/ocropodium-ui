@@ -44,7 +44,11 @@ class FedoraBase(object):
            Initialise a base object.
 
         """
-        pass 
+        self._params = {}
+        self._params.update(DEFAULTS)
+        self._params.update([(k, v) for k, v in kwargs.iteritems() \
+                if DEFAULTS.get(k)])
+        self._handler = FCRepoRestAPI(**self._params)
 
     def errors(self):
         """
