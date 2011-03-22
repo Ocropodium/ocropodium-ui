@@ -20,7 +20,7 @@ from ocradmin.training.models import OcrComparison, ParameterScore
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
-from ocradmin.core.tools.manager import PluginManager
+from ocradmin.plugins.manager import PluginManager
 
 from ocradmin.plugins import parameters
 

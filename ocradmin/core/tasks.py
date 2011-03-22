@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from ocradmin.core import utils
 from ocradmin.vendor import deepzoom
-from ocradmin.core.tools.manager import PluginManager
+from ocradmin.plugins.manager import PluginManager
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.ocrtasks.utils import get_progress_callback, get_abort_callback
 from ocradmin.ocrtasks.decorators import register_handlers

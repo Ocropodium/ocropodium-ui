@@ -5,7 +5,7 @@ import copy
 import tempfile
 import shutil
 import subprocess as sp
-from ocradmin.core.tools import check_aborted, set_progress, convert_to_temp_image, get_binary
+from ocradmin.plugins import check_aborted, set_progress, convert_to_temp_image, get_binary
 from ocradmin.ocrmodels.models import OcrModel
 import generic_wrapper
 reload(generic_wrapper)
