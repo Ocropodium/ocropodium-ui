@@ -43,6 +43,9 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
             ["#9966CC", "#9900CC"],
             ["#FFFF88", "#FFFF66"],
             ["#66BB00", "#339900"],
+            ["#F7BE81", "#B45F04"],
+            ["#D0A9F5", "#5F04B4"],
+            ["#A9F5F2", "#088A85"],
         ];
 
         var self = this;
@@ -92,7 +95,6 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
                 y = Math.max(0, (absrect.height - $(elem).height() - (pos.top - absrect.y)) / factor);
             var w = Math.min(srcsize.x, x + ($(elem).width() / factor)),
                 h = Math.min(srcsize.y, y + ($(elem).height() / factor));
-            console.log(i, x, y, w, h);
             shapes.push([x, y, w, h]);                                        
         });
         return shapes;
@@ -135,7 +137,8 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
                     self._normalisedRectArea(self._dragstart.x, self._dragstart.y,
                         event.pageX, event.pageY) > 300) {
                     if (self._droprect == null) {
-                        self._initialiseNewRect();
+                        self._droprect = document.createElement("div");
+                        self._initialiseNewRect(self._droprect);
                         create = true;
                     }
                 }
@@ -159,15 +162,10 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
             });
         });
 
-        //$(".layout_rect").live("hover", function(event) {
-        //    self._logger(event.type);
-        //    if (event.type == "mouseover") {
-        //        $(this).addClass("hover");
-        //    } else {
-        //        $(this).removeClass("hover");
-        //    }
-        //});        
-
+        self.addListener("onBufferRefresh", function(bufnum) {
+            self.deleteRects();
+            console.log("Shapes: ", self._shapes);
+        });
     },                    
 
     updateSize: function(width, height) {
@@ -180,11 +178,16 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
         });
     },
 
-    _initialiseNewRect: function() {                
+    deleteRects: function() {
+        $(".layout_rect").remove();
+        this._shapes = [];
+    },                
+
+    _initialiseNewRect: function(elem) {                
         var self = this;
-        self._droprect = document.createElement("div");
         var idx = self._shapes.length;
-        $(self._droprect)
+
+        $(elem)
             .addClass("layout_rect")
             .css({
                 backgroundColor: self._colors[idx][0],
@@ -206,9 +209,9 @@ OCRJS.ImageViewerCanvas = OCRJS.ImageViewer.extend({
                     self.callListeners("onCanvasChanged");
                 },
             });
-        self._shapes.push(self._droprect);
+        self._shapes.push(elem);
 
-        self._hndl = new Seadragon.MouseTracker(self._droprect);
+        self._hndl = new Seadragon.MouseTracker(elem);
         self._hndl.pressHandler = function(tracker, pos, quick, shift) {
             self.activeViewer().setMouseNavEnabled(false);
             self._logger("ok!");
