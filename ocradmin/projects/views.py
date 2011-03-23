@@ -272,20 +272,7 @@ def export(request, project_pk):
     template = "projects/export.html" if not request.is_ajax() \
             else "projects/includes/export_form.html"
 
-    exportform = ExportForm(initial=dict(
-        username="fedoraAdmin",
-        password="fedora",
-        repository_url="http://localhost:8080/fedora/",
-        namespace=project.slug,
-    ))
-    dcform = DublinCoreForm(initial=dict(
-        title="<page_name>",
-        creator=request.user.get_full_name(),
-        description=project.description,
-        subject=project.name,
-        date=datetime.today(),
-    ))
-
+    exportform, dcform = _get_default_export_forms(request, project)
     context = dict(
         project=project,
         exportform=exportform,
@@ -380,3 +367,24 @@ def delete_project(request, project_pk):
         project.delete()
         messages.success(request, "Project '%s' deleted." % project.name)
     return HttpResponseRedirect("/projects/list")
+
+
+def _get_default_export_forms(request, project):
+    """
+    Fill in default values for DC.
+    """
+    exportform = ExportForm(initial=dict(
+        username="fedoraAdmin",
+        password="fedora",
+        repository_url="http://localhost:8080/fedora/",
+        namespace=project.slug,
+    ))
+    dcform = DublinCoreForm(initial=dict(
+        title="<page_name>",
+        creator=request.user.get_full_name(),
+        description=project.description,
+        subject=project.name,
+        date=datetime.today(),
+    ))
+    return exportform, dcform
+
