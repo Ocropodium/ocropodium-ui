@@ -64,6 +64,15 @@ fieldset .field_wrapper select {
     float: right;
 }
 
+ul.errorlist {
+	display: inline;
+}
+
+ul.errorlist li {
+	display: inline;
+    color: red;
+}
+
 fieldset {
     border: 1px solid #999;
     margin-top: 10px;
