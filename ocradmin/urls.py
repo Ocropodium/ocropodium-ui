@@ -15,7 +15,6 @@ urlpatterns = patterns('',
     
     (r'^accounts/login', login),
     (r'^accounts/logout', logout, {"next_page": "/ocr/"}),
-	(r'^accounts/unauthorised', 'ocradmin.accounts.views.unauthorised'),
     (r'^/?$', include('ocradmin.core.urls')),
     (r'^ocr/?', include('ocradmin.core.urls')),
     (r'^filebrowser/?', include('ocradmin.filebrowser.urls')),
