@@ -10,6 +10,12 @@ body {
     height: 100%;
 }
 
+/* never allow selection! */
+* {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
 
 #header_logo {
     float: right;

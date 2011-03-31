@@ -19,6 +19,12 @@
     min-height: 50px;
 }
 
+.ocr_page * {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
+
 .ocr_page_header {
     padding: 5px;
     font-size: 1.1em;
