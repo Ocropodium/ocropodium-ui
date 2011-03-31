@@ -17,6 +17,12 @@ body {
     -moz-user-select: none;
 }
 
+input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
+
 #header_logo {
     float: right;
 }
