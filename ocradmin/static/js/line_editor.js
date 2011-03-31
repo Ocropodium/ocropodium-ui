@@ -397,12 +397,17 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
     },
 
     updateSelection: function(start, end) {
+        // FIXME: the element is weirdly borked the first time it's 
+        // accessed (childElementCount and the children array don't 
+        // work.  Hack around this by resetting it...???                         
+        this._e = $(this._e).get(0);
         if (start == end) {
             $(this._e).children().removeClass("sl");
+            console.log("Start == end");
             return;
         }
         var gotstart = false;
-        for (var i = 0; i < this._e.childElementCount; i++) {         
+        for (var i = 0; i < $(this._e).children().length; i++) {         
             if (this._e.children[i] == start || this._e.children[i] == end) {
                 gotstart = !gotstart;
             }
