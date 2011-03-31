@@ -764,6 +764,8 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         for (var i = 0; i < $(this._e).children("span").length; i++) {
             var elem = $(this._e.children[i]);
             var elemoffset = elem.offset();
+            if (!elemoffset)
+                continue;
             if (event.pageX < elemoffset.left)
                 continue;
             if (event.pageX > elemoffset.left + elem.width())
