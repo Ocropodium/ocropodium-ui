@@ -47,6 +47,12 @@ h1.ocr_line {
     min-height: 200px;
 }
 
+.transcript_lines * {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
+
 #scroll_container {
     height: 320px;
     overflow: auto;
