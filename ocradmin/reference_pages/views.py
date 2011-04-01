@@ -83,7 +83,7 @@ def create_from_task(request, task_pk):
 
     srcpath = task.args[0]
     binpath = os.path.join(request.output_path, 
-            "%s_bin%s" % os.path.splitext(os.path.basename(srcpath)))
+            "%s_bin.png" % os.path.splitext(os.path.basename(srcpath))[0])
     if not os.path.exists(binpath):
         return HttpResponseServerError(
                 "Unable to find binary path for file: %s (%s)" % (
