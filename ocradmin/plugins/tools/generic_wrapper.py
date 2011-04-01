@@ -66,7 +66,7 @@ class GenericWrapper(base.OcrBase):
             }, {
                 "name": "binarizer",
                 "description": "Binarizer",
-                "type": "list",
+                "type": "object",
                 "help": "Filter for binarizing greyscale images",
                 "value": "BinarizeBySauvola",
                 "multiple": False,
@@ -75,7 +75,7 @@ class GenericWrapper(base.OcrBase):
             }, {
                 "name": "binary_preprocessing",
                 "description": "Binary Preprocessor",
-                "type": "object",
+                "type": "list",
                 'value': ['DeskewPageByRAST', 'RmBig', 'RmHalftone'],
                 "help": "Filters for preprocessing binary images",
                 "multiple": True,

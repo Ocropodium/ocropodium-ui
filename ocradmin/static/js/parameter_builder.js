@@ -62,6 +62,9 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var self = this;
         self.setupEvents();
         self.queryOptions(null, null);
+        var val = $.cookie("ocr-parameters");
+        console.log(JSON.parse(val));
+
     },
 
     isReady: function() {
@@ -120,7 +123,11 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     renumberMultiples: function(baseid) {
         var base = baseid.replace(/\[\d+\]_ctrl$/, "");                           
         var re = new RegExp(RegExp.escape(base) + "\\[\\d+\\]", "g");
+        var fs = "input[name='" + base + "_len']";
+        var lencount = $(fs);
+        var count = 0;
         $(".multiple[id^='" + base + "']").each(function(index, elem) {
+            count++;
             var newid = base + "[" + index + "]";                        
             $(elem).attr("id", $(elem).attr("id").replace(re, newid))
                 .find("*").each(function(i, e) {
@@ -131,6 +138,9 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 });
             });
         });
+        if (lencount.length) {
+            lencount.val(count);
+        }
     },                 
 
     queryOptions: function(parent) {
@@ -181,20 +191,26 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         if (data.choices) {
             if (data.multiple) {
                 var mtemp = container.clone();
-                mcount = 0;
-                while (true) {
+                var lenident = ident + "_len";
+                var flen = self._storedValue(lenident);
+                if (!defined(flen) || isNaN(flen) || isnull(flen))
+                    flen = data.value.length;
+                else
+                    console.log("got store flen", flen);
+                flen = Math.max(1, flen);
+                var leninput = $("<input></input>")
+                    .attr("type", "hidden")
+                    .attr("name", lenident)
+                    .attr("id", lenident + "_ctrl")
+                    .val(flen)
+                    .appendTo(container);
+                var mcount = 0;
+                while (mcount < flen) {
                     var mident = self.getIdent(parent, data, index, mcount);
-                    var stored = self._storedValue(mident);
-                    if (stored === null || !defined(stored)) {
-                        if (typeof data.value == "object" && data.value.length > 0) {
-                            stored = data.value[mcount];
-                        }
-                    }
-                    if ((isnull(stored) || !defined(stored)) && mcount > 0)
-                       break; 
+                    var stored = self._storedValue(mident) || data.value[mcount]; 
                     var mcontainer = mtemp.clone()
-                        .attr("id", mident);
-                    container.append(mcontainer);
+                        .attr("id", mident)
+                        .appendTo(container);
                     self.buildChoicesSection(mcontainer, mident, data, mcount);
                     mcount++;
                 }
@@ -273,7 +289,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             var value = data.choices[0].name;
             if (!defined(multiindex) && defined(data.value))
                 value = data.value;
-            else if (defined(multiindex) && !defined(data.value))
+            else if (defined(multiindex) && defined(data.value))
                 value = data.value[multiindex];
             self.loadOptionState(control, value);
             control.change();
@@ -327,7 +343,11 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         // Delete all existing state cookies
         var val = {};
         $("select, input", this.parent).each(function(index, item) {
-            var key = $(item).attr("name").substr(1);
+            var key = $(item).attr("name");
+            if (key.match(/^[%\$@]/))
+                key = key.substr(1);
+            if ($(item).attr("type") == "hidden")
+                console.log("Got hidden: ", $(item).attr("id"));
             if ($(item).attr("type") == "checkbox")
                 val[key] = $(item).attr("checked");
             else
@@ -339,7 +359,9 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     loadOptionState: function(item, defaultoption) {
         // check for a cookie with the given 'name'
         // otherwise, select the first available option
-        var key = item.attr("name").substr(1);
+        var key = item.attr("name");
+        if (key.match(/^[%\$@]/))
+            key = key.substr(1);
         var val = this._storedValue(key);
         var setval = val ? val : defaultoption;
         if (item.attr("type") != "checkbox") {
