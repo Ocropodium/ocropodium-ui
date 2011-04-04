@@ -56,15 +56,16 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         this._cache = null;
         this._temp = null;
         this._waiting = {};
+        this._initialised = false;
     },
 
     init: function() {
         var self = this;
-        self.setupEvents();
+        if (!self._initialised) {            
+            self.setupEvents();
+            self._initialised = true;
+        }
         self.queryOptions(null, null);
-        var val = $.cookie("ocr-parameters");
-        console.log(JSON.parse(val));
-
     },
 
     isReady: function() {
@@ -73,7 +74,10 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
 
     setupEvents: function() {
         var self = this;
-        $(".multiple").live("mouseenter", function(event) {
+        $(".multiple")
+            .die("mouseeneter.addrem")
+            .die("mouseleave.addrem")
+            .live("mouseenter.addrem", function(event) {
             var select = $(this).children("select").first();
             var ctrl = $("<div></div>")
                 .addClass("control_manip");
@@ -92,11 +96,12 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 top: select.position().top,
                 left: select.position().left + select.width(),
             }).appendTo(this);
-        }).live("mouseleave", function(event) {
+        }).live("mouseleave.addrem", function(event) {
             $(".control_manip", this).remove();
         });
 
-        $(".control_manip_remove").live("click", function(event) {                
+        $(".control_manip_remove")
+            .die("click.addrem").live("click.addrem", function(event) {                
             var elem = $(this).data("ctrl");
             if ($(elem).siblings().length > 0) {
                 var id = $(elem).find("select").first().attr("id");
@@ -105,7 +110,8 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             }
         });
 
-        $(".control_manip_add").live("click", function(event) {            
+        $(".control_manip_add")
+            .die("click.addrem").live("click.addrem", function(event) {            
             var elem = $(this).data("ctrl");
             // clone the element with both data and events,
             // then remove any existing hover controls and
@@ -121,9 +127,9 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     },
 
     renumberMultiples: function(baseid) {
-        var base = baseid.replace(/\[\d+\]_ctrl$/, "");                           
+        var base = baseid.replace(/(\[\d+\])?_ctrl$/, "");                           
         var re = new RegExp(RegExp.escape(base) + "\\[\\d+\\]", "g");
-        var fs = "input[name='" + base + "_len']";
+        var fs = "input[name='@" + base + "']";
         var lencount = $(fs);
         var count = 0;
         $(".multiple[id^='" + base + "']").each(function(index, elem) {
@@ -139,7 +145,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             });
         });
         if (lencount.length) {
-            lencount.val(count);
+            lencount.val("[" + count + "]");
         }
     },                 
 
@@ -191,18 +197,17 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         if (data.choices) {
             if (data.multiple) {
                 var mtemp = container.clone();
-                var lenident = ident + "_len";
-                var flen = self._storedValue(lenident);
-                if (!defined(flen) || isNaN(flen) || isnull(flen))
+                var flen = self._storedValue(ident);
+                if (!defined(flen) || isnull(flen))
                     flen = data.value.length;
                 else
-                    console.log("got store flen", flen);
+                    flen = parseInt(flen.replace(/^\[|\]$/g, ""));
                 flen = Math.max(1, flen);
-                var leninput = $("<input></input>")
+                var input = $("<input></input>")
                     .attr("type", "hidden")
-                    .attr("name", lenident)
-                    .attr("id", lenident + "_ctrl")
-                    .val(flen)
+                    .attr("name", "@" + ident)
+                    .attr("id", ident + "_ctrl")
+                    .val("[" + flen + "]")
                     .appendTo(container);
                 var mcount = 0;
                 while (mcount < flen) {
@@ -217,7 +222,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             } else
                 self.buildChoicesSection(container, ident, data);
         } else if (data.parameters) {
-            //console.log("Building parameter section: ", data.parameters);
             self.buildParameterList(parent, container, ident, data);
         } else {
             self.buildParameterSection(container, ident, data);
@@ -310,6 +314,11 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             });
             return;
         }
+        container.append(
+                $("<input></input>")
+                    .attr("type", "hidden")
+                    .attr("name", "@" + ident)
+                    .val("[" + data.parameters.length + "]"));
 
         $.each(data.parameters, function(i, param) {
             //console.log("param: ", param);
@@ -346,8 +355,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             var key = $(item).attr("name");
             if (key.match(/^[%\$@]/))
                 key = key.substr(1);
-            if ($(item).attr("type") == "hidden")
-                console.log("Got hidden: ", $(item).attr("id"));
             if ($(item).attr("type") == "checkbox")
                 val[key] = $(item).attr("checked");
             else

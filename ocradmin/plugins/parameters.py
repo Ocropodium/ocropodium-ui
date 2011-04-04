@@ -249,6 +249,7 @@ class OcrParameters(object):
                 strings["%s.%s" % (path, item["name"])] = None
             elif isinstance(item["value"], list):
                 strings[path] = item["name"]
+                strings["%s.%s" % (path, item["name"])] = "[%d]" % len(item["value"])
                 for i in range(len(item["value"])):
                     p = "%s.%s[%d]" % (path, item["name"], i)
                     stringify(strings, item["value"][i], p)
