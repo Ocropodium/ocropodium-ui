@@ -35,6 +35,8 @@ def _initialise_param_structure(post):
         parts = name.split(".")
         if len(parts) < 3:
             continue
+        if re.match("^\[\d+\]$", str(value)):
+            continue
         parts.pop(0)
         parts.pop(0)
         curr = cleaned
@@ -84,6 +86,8 @@ def _populate_param_structure(post, params):
         lastindex = None
         parts = name.split(".")
         if len(parts) < 3:
+            continue
+        if re.match("^\[\d+\]$", str(value)):
             continue
         parts.pop(0)
         parts.pop(0)
@@ -744,22 +748,28 @@ TESTPOST_OCROPUS = {
     '%options.engine': 'ocropus',
 #    '@options.engine.ocropus[0].grayscale_preprocessing[0]': None,
     '%options.engine.ocropus[1].binarizer': 'BinarizeBySauvola',
+    '$options.engine.ocropus[1].binarizer.BinarizeBySauvola': '[2]',
     '$options.engine.ocropus[1].binarizer.BinarizeBySauvola[0].k': 0.3,
     '$options.engine.ocropus[1].binarizer.BinarizeBySauvola[1].w': 40,
+    '%options.engine.ocropus[2].binary_preprocessing': '[3]',
     '%options.engine.ocropus[2].binary_preprocessing[0]': 'AutoInvert',
+    '%options.engine.ocropus[2].binary_preprocessing[0].AutoInvert': '[2]',
     '$options.engine.ocropus[2].binary_preprocessing[0].AutoInvert[0].fraction': 0.7,
     '$options.engine.ocropus[2].binary_preprocessing[0].AutoInvert[1].minheight': 100,
     '%options.engine.ocropus[2].binary_preprocessing[1]': 'RmBig',
+    '$options.engine.ocropus[2].binary_preprocessing[1].RmBig': '[5]',
     '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[0].mh': 100,
     '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[1].mw': 300,
     '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[2].minaspect': 0.03,
     '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[3].maxaspect': 30,
     '$options.engine.ocropus[2].binary_preprocessing[1].RmBig[4].max_n': 50000,
     '%options.engine.ocropus[2].binary_preprocessing[2]': 'RmHalftone',
+    '$options.engine.ocropus[2].binary_preprocessing[2].RmHalftone': '[3]',
     '$options.engine.ocropus[2].binary_preprocessing[2].RmHalftone[0].factor': 3,
     '$options.engine.ocropus[2].binary_preprocessing[2].RmHalftone[1].threshold': 4,
     '$options.engine.ocropus[2].binary_preprocessing[2].RmHalftone[2].max_n': 20000,
     '%options.engine.ocropus[3].page_segmenter': 'SegmentPageByRAST',
+    '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST': '[5]',
     '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST[0].all_pixels': 0,
     '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST[1].gap_factor': 10,
     '$options.engine.ocropus[3].page_segmenter.SegmentPageByRAST[2].max_results': 1000,
