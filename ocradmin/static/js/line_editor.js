@@ -118,6 +118,15 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
                 .text("").get(0);
         this._endmarker = $("<div></div>")  // anchor for the end of the line 
                 .addClass("endmarker").get(0);
+        this._keyhacks = {
+            190: [62, 46],
+            57:  [40, 57],
+            55:  [38, 55],
+            53:  [37, 53],
+            52:  [36, 52],
+        }
+
+
     },    
 
     /*
@@ -403,7 +412,6 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         this._e = $(this._e).get(0);
         if (start == end) {
             $(this._e).children().removeClass("sl");
-            console.log("Start == end");
             return;
         }
         var gotstart = false;
@@ -484,8 +492,9 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         // accordingly.  JS keyCodes are a total mess, but
         // there's got to be a better way.
         if ($.browser.webkit) {
-            if (event.which == 190) {
-                event.which = event.shiftKey ? 62 : 46;
+            var hack = this._keyhacks[event.which];
+            if (hack) {
+                event.which = event.shiftKey ? hack[0] : hack[1];
             }
         }
 
@@ -505,8 +514,6 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
     // IS handled                       
     _handleKeyEvent: function(event) {
     
-        this._logger(event.type + " " + event.keyCode);                            
-
         // BROWSER HACK - FIXME: Firefox only receives
         // repeat key events for keypress, but ALSO 
         // fires keydown for non-char keys
@@ -518,13 +525,16 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         // FIXME: Another chrome hack, to prevent the 'period' key
         // generating a keyCode 46 'delete' code.  The other part of
         // this hack switches the charCodes in this.insertChar!
-        if (event.type == "keydown" && event.keyCode == 190) {
-            this._ignore_keypress_delete = true;
-            event.type = "keypress";
-        } else if (this._ignore_keypress_delete && event.type == "keypress"
-                && event.keyCode == KC_DELETE) {
-            delete this._ignore_keypress_delete;
-            return;
+        var hack = this._keyhacks[event.keyCode];
+        if (typeof hack != "undefined") {
+            if (event.type == "keydown") {
+                this._ignore_keypress = true;
+                event.type = "keypress";
+            } else if (this._ignore_keypress && event.type == "keypress"
+                    && event.keyCode == hack[1]) {
+                delete this._ignore_keypress;
+                return;
+            }
         }
 
         if (event.ctrlKey) {
@@ -578,7 +588,6 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         return true;
     },
 
-
     _initialiseCursor: function(clickevent) {
         // find the first letter in the series (ignore spaces)        
         this._c = $(this._e).find("span").filter(function(index) {
@@ -592,8 +601,6 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
 
 
     _keyNav: function(event) {
-        this._logger("Nav -> " + event.type + ": " + event.keyCode); 
-
         // break command compressions so further deletes/inserts
         // are undone/redone discretely
         this._undostack.breakCompression();
