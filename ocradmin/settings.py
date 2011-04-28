@@ -82,7 +82,7 @@ SEND_EVENTS = True
 
 # User Celery's test_runner.  This sets ALWAYS_EAGER to True so
 # that tasks skip the DB infrastructure and run locally
-TEST_RUNNER = "djcelery.contrib.test_runner.run_tests" 
+TEST_RUNNER = "celery_test_runner.CeleryTestSuiteRunner" 
 
 # tagging stuff
 FORCE_LOWERCASE_TAGS = True
