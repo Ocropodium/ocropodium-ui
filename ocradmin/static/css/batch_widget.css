@@ -2,18 +2,22 @@
 }
 
 .batch_task {
-    margin: 5px 5px 5px 5px;
+    margin: 5px;
     border: 1px solid #999;
     border-radius: 2px;
     -moz-border-radius: 2px;
     padding: 5px;
     background-color: #FCFCFC;
-    height: 15px;
+    /*height: 15px;*/
+    overflow: auto;    
     vertical-align: middle;
     min-width: 540px;
     display: block;
     text-decoration: none;
     color: #333;
+    background-position: 5px;
+    background-repeat: no-repeat;
+    padding-left: 30px;
 }
 
 .batch_task:hover {
@@ -22,6 +26,11 @@
 
 .batch_task.current {
     background-color: #E0E8EF;
+}
+
+.batch_task.loading {
+    opacity: 0.7;
+    background-image: url('/static/ajax-loader-hz3.gif');
 }
 
 #overlay {
