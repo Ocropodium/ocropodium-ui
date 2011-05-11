@@ -312,7 +312,8 @@ def _show_batch(request, batch):
     """
     View a (passed-in) batch.
     """
-    template = "batch/show.html"
+    template = "batch/show.html" if not request.is_ajax() \
+            else "batch/includes/show_batch.html"
     context = {"batch": batch}
     return render_to_response(template, context,
             context_instance=RequestContext(request))
