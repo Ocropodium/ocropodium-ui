@@ -84,24 +84,27 @@
     background-color: #045FB4;
 }
 
-.progressbar.error span {
+.progressbar.failure span {
     background-color: #FA5858;
 }
 
 .batch_header {
     padding-left: 36px;
     height: 32px;
-    background-image: url(/static/icons/transcript.png);
     background-position: center left;
     background-repeat: no-repeat;
     float: left;
 }
 
-.batch_header.fedora {
+.batch_header.convertpage {
+    background-image: url(/static/icons/transcript.png);
+}
+
+.batch_header.fedoraingest {
     background-image: url(/static/icons/fedora.png);
 }
 
-.batch_header.compare {
+.batch_header.comparegroundtruth {
     background-image: url(/static/icons/compare.png);
 }
 
@@ -162,62 +165,6 @@
     background-color: #FFF;
 }
 
-.tl_scrollcontainer {
-    float: right;
-}
-
-.tl_scrollup, .tl_scrolldown {
-    width: 14px;
-    height: 14px;    
-    background-color: #FDFDFD;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-left: 1px solid #999;
-}
-
-.tl_scrollup {
-    background-image: url("/static/hz_scroll_up.gif");
-}
-
-.tl_scrolldown {
-    background-image: url("/static/hz_scroll_down.gif");
-}
-
-.tl_scrollbar {
-    width: 14px;
-    height: 460px;    
-    border-left: 1px solid #999;
-    border-bottom: 1px solid #999;
-    border-top: 1px solid #999;
-
-}
-
-.tl_scrollhandle {
-    width: 100%;
-    height: 80px;
-    float: right;
-    background-color: #999; 
-    background-position: center;
-    background-repeat: no-repeat;
-    background: -webkit-gradient(
-        linear,
-        left top,
-        right top,
-        color-stop(0.35, rgb(135,180,255)),
-        color-stop(0.48, rgb(143,184,255))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(135,180,255) 35%,
-        rgb(143,184,255) 48%
-    );
-    /*background-image: url("/static/hz_scroll_handle.gif");*/
-}
-
-.task_list {
-    margin-right: 15px;
-}
-
 .batch_controls {
     overflow: auto;
     padding: 10px 10px 0px 10px;
@@ -270,6 +217,14 @@
 
 .list_popup div.status_filter * {    
     float: left;
+}
+
+.list_popup input[type=text] {
+    border: 1px solid #999;
+    width: 7em;
+    font-size: 0.95em;
+    background-color: #FFFFDD;
+    margin: 5px;
 }
 
 .list_popup label {
