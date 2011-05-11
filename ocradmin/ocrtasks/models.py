@@ -12,6 +12,7 @@ from ocradmin.projects.models import OcrProject
 
 from django.contrib.auth.models import User
 import celery
+from celery.contrib.abortable import AbortableAsyncResult
 
 
 class OcrTask(models.Model):
