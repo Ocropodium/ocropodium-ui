@@ -1,6 +1,6 @@
 // Replacement batch widget
 
-OCRJS.BatchWidget2 = OCRJS.OcrBaseWidget.extend({
+OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, batch_id, options) {
         this.base(parent, options);
         this.options = {
@@ -20,7 +20,8 @@ OCRJS.BatchWidget2 = OCRJS.OcrBaseWidget.extend({
         // reference some useful stuff
         this._container = $(".tl_container", parent);
         this._tasks = $(".batch_task", parent);
-        this._
+        this._taskcount = this._tasks.length;
+        this._rowtemplate = $.template($("#row_template"));
 
     },
 
@@ -34,7 +35,8 @@ OCRJS.BatchWidget2 = OCRJS.OcrBaseWidget.extend({
         var self = this;
 
         this._container.scroll(function(event) {
-            self.triggerRefresh(100);            
+            if ($(".batch_task.empty").length > 0 || !self.isComplete())
+                self.triggerRefresh(100);            
         });
 
         this._tasks.bind("click", function(event) {
@@ -119,54 +121,35 @@ OCRJS.BatchWidget2 = OCRJS.OcrBaseWidget.extend({
 
         $(".filter_none").change(function(event) {
             $(".filter_type:checked").prop("checked", !$(this).prop("checked"));
-            self.filterTasks();
+            self.triggerRefresh(1); 
         });
 
         $(".filter_type").click(function(event) {           
             $(".filter_none").prop("checked",  
                 $(".filter_type:checked").length == 0);
-            self.filterTasks();
+            self.triggerRefresh(1); 
         });
 
         $("#text_filter").keyup(function(event) {
-            self.filterTasks();
+            self.triggerRefresh(50); 
         });
     },      
-
-    filterTasks: function() {
-        return this.triggerRefresh(0);                     
-        var self = this;
-
-        var textfilter = new RegExp($.trim($("#text_filter").val().toLowerCase()));
-        var statuses = $(".filter_type:checked").map(function(i, elem) {
-            return $(this).attr("name").replace(/^status_/, "");
-        });
-        var name, status;
-        self._tasks.each(function(i, elem) {
-            var inarr = $.inArray($(elem).data("status"), statuses); 
-            if (statuses.length != 0)
-                $(elem).toggle(inarr != -1);
-            else
-                $(elem).show();
-            if ($(elem).is(":visible")) {            
-                var name = $(elem).data("name");
-                if (textfilter.source != "" && name)
-                    $(elem).toggle(name.toLowerCase().match(textfilter) != null);
-            }
-        });
-    },                 
 
     setTaskWaiting: function(task, waiting) {
         task.find(".progressbar_container").toggleClass("waiting", waiting);        
     },
     
-    topVisibleTask: function(scroll) {
+    topVisibleTask: function(scroll) {                                
+        if (this._tasks.length == 0)
+            return 0;            
         var top = this._container.scrollTop(),
             margin = parseInt(this._tasks.css("marginBottom").replace(/px/, ""));
         return Math.floor(top / (this._tasks.outerHeight() + margin));
     },
 
     visibleTaskCount: function(scroll) {
+        if (this._tasks.length < 10)
+            return 50;            
         var windowheight = this._container.height(),
             tasks = $(".batch_task", scroll),
             margin = parseInt(this._tasks.css("marginBottom").replace(/px/, ""));
@@ -182,6 +165,16 @@ OCRJS.BatchWidget2 = OCRJS.OcrBaseWidget.extend({
     updateTaskData: function(from, to) {
         var self = this;                        
         var taskdata = self._batchdata.fields.tasks;
+
+        // if we don't have the same amount of tasks
+        // we need to reset the whole widget
+        if (self._batchdata.extras.task_count != this._taskcount) {
+            this._taskcount = self._batchdata.extras.task_count;
+            this.reinitialiseRowData(taskdata);
+        }
+
+        to = Math.min(to, this._taskcount);
+
         var pk, progress, status, name;
         this._tasks.slice(from, to).each(function(i, elem) {
             pk = taskdata[i].pk, progress = taskdata[i].fields.progress,
@@ -215,16 +208,36 @@ OCRJS.BatchWidget2 = OCRJS.OcrBaseWidget.extend({
         });
     },
 
+    reinitialiseRowData: function(taskdata) {
+        console.log("reinit row data", this._tasks.length, this._taskcount);
+        if (this._tasks.length < this._taskcount) {
+            for (var i = this._tasks.length; i < this._taskcount; i++) {
+                var row = $.tmpl(this._rowtemplate, {
+                    index: i                    
+                });
+                console.log(row);
+                this._container.append(row);
+            }
+        } else
+            this._tasks.slice(this._taskcount, this._tasks.length).remove();
+        this._tasks = $(".batch_task", this._container);        
+    },                    
+
     refreshTasks: function() {
         var self = this;                      
         var first = Math.max(0, this.topVisibleTask() - 5)
             count = this.visibleTaskCount() + 10;
+        var statuses = $(".filter_type").filter(function(i, e) {
+                return $(e).prop("checked");
+        }).map(function(i, e) {
+            return "status=" + $(e).attr("name").replace(/status_/, "")
+        }).toArray().join("&");
+        var data = {start: first, limit: count};
+        if ($.trim($("#text_filter").val()))
+            data["name"] = $.trim($("#text_filter").val());
         $.ajax({
-            url: "/batch/results/" + self._batch_id + "/",
-            data: {
-                start: first,
-                limit: count,
-            },
+            url: "/batch/results/" + self._batch_id + "/?" + statuses,
+            data: data,
             beforeSend: function() {
                 self._tasks.slice(first, first + count)
                     .filter(".empty")
