@@ -211,10 +211,11 @@ def results(request, batch_pk):
     except ValueError:
         limit = 25
     statuses = request.GET.getlist("status")
+    name = request.GET.get("name")
     if "ALL" in statuses:
         statuses = None
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch, start, limit, statuses),
+    simplejson.dump(_serialize_batch(batch, start, limit, statuses, name),
             response, cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
@@ -456,15 +457,17 @@ def delete(request, batch_pk):
     return HttpResponseRedirect("/batch/list/")
 
 
-def _serialize_batch(batch, start=0, limit=25, statuses=None):
+def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):
     """
     Hack around the problem of serializing
     an object AND it's child objects.
     """
+    print "FILTERING: %s" % statuses
+    taskqset = batch.tasks.all()
     if statuses:
         taskqset = batch.tasks.filter(status__in=statuses)
-    else:
-        taskqset = batch.tasks.all()
+    if name:
+        taskqset = taskqset.filter(page_name__icontains=name)    
     task_count = taskqset.count()
     pyserializer = serializers.get_serializer("python")()
     batchsl = pyserializer.serialize(
