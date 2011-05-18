@@ -114,7 +114,7 @@ $(function() {
     });
 
     if ($("#batch_id").length) {
-        batch = new OCRJS.BatchWidget2(
+        batch = new OCRJS.BatchWidget(
                 document.getElementById("batchcontainer"),
                 $("#ocr_batch").data("index"));
         batch.addListeners({
