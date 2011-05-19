@@ -124,6 +124,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
             55:  [38, 55],
             53:  [37, 53],
             52:  [36, 52],
+            222: [39, 39],
         }
 
 
@@ -238,8 +239,6 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
                 event.preventDefault();
                 return false;
             }
-            //self._logger(event.type + ": " + event.keyCode + "  Char: " + event.charCode);
-            //alert(typeof event.which);
         });
 
         $(window).bind("keypress.editortype", function(event) {
@@ -248,8 +247,6 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
                 event.preventDefault();
                 return false;
             }
-            self._logger(event.type + ": " + event.keyCode + "  Char: " + event.charCode);
-            //alert(typeof event.which);
         });
 
         $(window).bind("keyup.editortype", function(event) {
@@ -513,7 +510,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
     // handle key event - return true IF the event
     // IS handled                       
     _handleKeyEvent: function(event) {
-    
+        console.log(event.keyCode);
         // BROWSER HACK - FIXME: Firefox only receives
         // repeat key events for keypress, but ALSO 
         // fires keydown for non-char keys
