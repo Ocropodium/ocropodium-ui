@@ -75,7 +75,6 @@ $(function() {
                         onReadyState: function() {
                             if (!loaded) {
                                 sidebar.html(html);
-                                console.log("Active: ", selectedtab);
                                 sidebar.find("#tabs")
                                     .accordion({
                                         collapsible: true,
@@ -101,27 +100,26 @@ $(function() {
         });
     }
 
+    //$("#batchcontainer").resizable({
+    //    minHeight: $("#batchcontainer").height() - $(".tl_container", this).height(),
+    //    resize: function(event, ui) {
+    //        var outer = $(this), inner = $(".tl_container", this);
+    //        var possdiff = inner.offset().top - (outer.offset().top
+    //                - outer.css("marginTop").replace(/px/, ""));
+    //        inner.outerHeight(outer.height() - possdiff);
+    //    },
+    //    stop: function(event, ui) {
+    //        batch.refreshTasks();
+    //    }        
+    //});
 
     if ($("#batch_id").length) {
-        var type = $("#batch_type").val();
-        var widget;
-        switch (type) {
-            case "compare.groundtruth":
-                widget = OCRJS.ComparisonWidget;
-                break;
-            case "fedora.ingest":
-                widget = OCRJS.ExportWidget;
-                break;
-            default:
-                widget = OCRJS.BatchWidget;
-        }
-        console.log(widget);
-        batch = new widget($("#workspace").get(0), $("#batch_id").val());
+        batch = new OCRJS.BatchWidget(
+                document.getElementById("batchcontainer"),
+                $("#ocr_batch").data("index"));
         batch.addListeners({
             onTaskSelected: loadTaskDetails,
-            onTaskDeselected: function() {
-                loadBatchList();
-            },
+            onTaskDeselected: loadBatchList,
             onUpdate: hashNavigate,                                
         }).init();
 
@@ -143,7 +141,7 @@ $(function() {
                     $(button).attr("disabled", false);
                     if (button.attr("id").search("rerun") != -1) {
                         $.post("/ocrtasks/retry/" + pk + "/");
-                        batch.pollForResults();
+                        batch.triggerRefresh();
                     }
                 },                                
             });
@@ -158,6 +156,11 @@ $(function() {
             loadBatchList();
         }
     }
+
+    $(window).resize(function(event) {
+        maximiseWidgets(batch);
+    });
+    maximiseWidgets(batch);
 });        
 
 
