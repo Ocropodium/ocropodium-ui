@@ -70,9 +70,8 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                         $("#export_dialog").remove();
                     },
                 });
-
-
-            event.preventDefault();                
+            event.preventDefault();
+            event.stopPropagation();            
         });
 
         $(".ui-icon", this.parent).bind("mouseover mouseout", function(event) {
