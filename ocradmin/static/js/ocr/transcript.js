@@ -1,5 +1,6 @@
 var transcript = null;
 var sdviewer = null;
+var pbuilder = null;
 var formatter = null;
 var polltimeout = -1;
 
@@ -50,13 +51,12 @@ function reconvertLines(lines) {
             box: $(elem).data("bbox"),
         });
     });
+    var pdata = pbuilder.values();
+    pdata["coords"] =  JSON.stringify(linedata);
 
     $.ajax({
         url: "/ocr/reconvert_lines/" + transcript.taskData().pk + "/",
-        data: { 
-            coords: JSON.stringify(linedata),
-            engine: $("#reconvert_engine").val(),
-        },
+        data: pdata,
         type: "POST",
         beforeSend: function(event) {
             lines.addClass("reconverting");
@@ -145,9 +145,13 @@ $(function() {
         disabled: true,
         text: true,
     });
-    $("#reconvert").button({
-        text: true,
-    });        
+    $("#reocr").buttonset();
+    $("#reocr_options").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-wrench",
+        }        
+    });
 
 
     $("#vlink").buttonset();
@@ -185,13 +189,12 @@ $(function() {
     }
 
     $("#reconvert").change(function(event) {
-        $("#reconvert_engine").attr("disabled", !$("#reconvert").attr("checked"));
         $("#transcript_toolbar")
             .find("#spellcheck")
             .button({
                 disabled: $(this).attr("checked"),
             });
-        if (!$(this).attr("checked")) {
+        if (!$(this).prop("checked")) {
             //transcript.enable();
             $(".reconverted")
                 .removeClass("reconverted");
@@ -213,8 +216,29 @@ $(function() {
         }
     });
 
-    $("#reconvert_engine").attr("disabled", !$("#reconvert").attr("checked"));
+    $("#reocr, #reocr_options").change(function(event) {
+        if ($("#options", $("#dialog")).length == 0) {
+            $("#dialog").dialog({
+                autoOpen: false,
+                width: 350,
+                close: function(event) {
+                    $(elem).prop("checked", false).button("refresh");
+                }
+            }).append($("<div></div>").attr("id", "options"));
+            pbuilder = new OCRJS.ParameterBuilder(
+                    document.getElementById("options"));
+            pbuilder.init();
+        }
+    });
 
+    $("#reocr_options").change(function(event) {
+        var elem = this;
+        if ($(this).prop("checked")) {
+            $("#dialog").dialog("open");
+        } else {
+            $("#dialog").dialog("close");
+        }
+    });
 
     $("#heading").change(function() {
         transcript.setCurrentLineType($(this).attr("checked") ? "h1" : "span");        

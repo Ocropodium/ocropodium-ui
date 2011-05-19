@@ -146,8 +146,7 @@ class ConvertPageTask(UnhandledConvertPageTask):
     name = "convert.page"
 
 
-@register_handlers
-class ConvertLineTask(AbortableTask):
+class UnhandledConvertLineTask(AbortableTask):
     """
     Convert a single line (from the given coords).  This is done using
     the OcropusWrapper (and it's proxy, TessWrapper) in util.py.
@@ -172,7 +171,7 @@ class ConvertLineTask(AbortableTask):
         params["prebinarized"] = True
         return converter.convert_lines(
                 params.get("bin_out").encode(),
-                params.get("coords"), **params)
+                params.get("region"), **params)
 
 
 class UnhandledBinarizePageTask(AbortableTask):

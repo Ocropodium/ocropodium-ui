@@ -117,3 +117,13 @@
 .ui-accordion .ui-accordion-content {
     padding: 1em 0em;
 }
+
+.paramsdialog .ui-dialog-titlebar {
+    display: none;
+}
+
+.paramsdialog {
+    box-shadow: 4px 5px 3px #919598;
+    -webkit-box-shadow: 4px 5px 3px #919598;
+    -moz-box-shadow: 4px 5px 3px #919598;
+}

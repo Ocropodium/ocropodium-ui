@@ -380,6 +380,14 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         return val !== null ? true : false;
     },
 
+    values: function() {
+        var vals = {};
+        $("input, select", this.parent).each(function(i, elem) {
+            vals[$(elem).attr("name")] = $(elem).val();
+        });
+        return vals;
+    },
+
     serializedData: function() {
         return $("input, select", this.parent).serialize();
     },
