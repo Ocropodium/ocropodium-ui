@@ -255,7 +255,7 @@ $(function() {
     $("#hl_lines, #hl_paragraphs, #hl_columns").click(function(event) {
         var class = this.id.replace(/hl_/, "");
         $(".viewer_highlight." + class).globalcss(
-            "display", $(this).attr("checked") ? "block" : "none");
+            "display", $(this).prop("checked") ? "block" : "none");
     });
 
     // make interactive params disabled at the start
@@ -325,13 +325,13 @@ $(function() {
                 } else if (String.fromCharCode(event.which).toLowerCase().match(/[s]/)) {
                     $("#output_s").click().button("refresh");
                 } else if (String.fromCharCode(event.which).toLowerCase().match(/[t]/)) {
-                    if ($("#output_s").attr("checked")) {
+                    if ($("#output_s").prop("checked")) {
                         $("#output_a").click().button("refresh");
                     } else {
                         $("#output_s").click().button("refresh");
                     }
                 } else if (String.fromCharCode(event.which).toLowerCase().match(/[o]/)) {
-                    if ($("#output_a").attr("checked")) {
+                    if ($("#output_a").prop("checked")) {
                         $("#output_b").click().button("refresh");
                     } else {
                         $("#output_a").click().button("refresh");

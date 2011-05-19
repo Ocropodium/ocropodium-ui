@@ -36,7 +36,7 @@ function loadState() {
     }
     if (stat) {
         $.each(stat.split(","), function(i, s) {
-            $("input[value='" + s + "']").attr("checked", true);
+            $("input[value='" + s + "']").prop("checked", true);
         });
     }
     if (autorf) {
