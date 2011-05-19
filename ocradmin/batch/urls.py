@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
-    (r'^abort_batch/(?P<batch_pk>\d+)/?$', 'ocradmin.batch.views.abort_batch'),
+    (r'^abort/(?P<batch_pk>\d+)/?$', 'ocradmin.batch.views.abort_batch'),
 	(r'^create/?$', 'ocradmin.batch.views.create'),
 	(r'^delete/(?P<batch_pk>\d+)/?$', 'ocradmin.batch.views.delete'),
 	(r'^export_options/(?P<batch_pk>\d+)/?$', 'ocradmin.batch.views.export_options'),

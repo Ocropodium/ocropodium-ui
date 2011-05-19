@@ -1,0 +1,86 @@
+{% load get_range %}
+<div class="ocr_batch" id="ocr_batch" data-index="{{batch.pk}}">
+    <div class="batch" id="batch{{batch.pk}}">
+        <div class="batch_controls">
+            <div class="batch_header {{batch.task_type|cut:"."}}">
+                <div class="batch_name">{{batch.name}}</div>
+                <a href="{{batch.inspection_url}}" class="transcript_link" title="Inspect Batch">Inspect Batch</a>
+                <a href="/batch/export_options/{{batch.pk}}/" class="export_link" title="Export Batch Transcripts">Export</a>
+            </div>
+            <div class="progressbar_container">
+                <span class="progressbar success">
+                    <span class="progress" style="width: {{batch.estimate_progress}}%; "
+                        title="{{batch.estimate_progress}}%"></span>
+                </span>
+            </div>
+            <span class="page_info"></span>
+            <a href="/batch/retry_errored/{{batch.pk}}/" data-pk="{{batch.pk}}" 
+                class="ui-state-default ui-corner-all button_link ui-icon ui-icon-refresh retry_errored"
+                title="Retry Errored Tasks"></a>
+            <a href="/batch/retry/{{batch.pk}}/" data-pk="{{batch.pk}}"
+                class="ui-state-default ui-corner-all button_link ui-icon ui-icon-refresh retry_batch"
+                title="Retry All Tasks"></a>
+            <a href="/batch/abort/{{batch.pk}}/" data-pk="{{batch.pk}}"
+                class="ui-state-default ui-corner-all button_link ui-icon ui-icon-circle-close retry_batch"
+                title="Abort Entire Batch"></a>
+            <div class="filter_container" id="status_filter">
+                <div class="toggle_button ui-state-default ui-corner-all">Filter Tasks</div>
+                <div class="list_popup" style="display: none; ">
+                    <div class="state_filter">
+                        <input type="text" id="text_filter" />                        
+                    </div>
+                    <div class="state_filter">
+                        <label class="state_label" for="ALL">ALL</label>
+                        <input type="checkbox" name="ALL" class="filter_none" checked="checked">
+                    </div>
+                    <div class="state_filter">
+                        <label class="state_label" for="INIT">INIT</label>
+                        <input type="checkbox" name="status_INIT" class="filter_type" />
+                    </div>
+                    <div class="state_filter">
+                        <label class="state_label" for="PENDING">PENDING</label>
+                        <input type="checkbox" name="status_PENDING" class="filter_type" />
+                    </div>
+                    <div class="state_filter">
+                        <label class="state_label" for="RETRY">RETRY</label>
+                        <input type="checkbox" name="status_RETRY" class="filter_type" />
+                    </div>
+                    <div class="state_filter">
+                        <label class="state_label" for="STARTED">STARTED</label>
+                        <input type="checkbox" name="status_STARTED" class="filter_type" />
+                    </div>
+                    <div class="state_filter">
+                        <label class="state_label" for="SUCCESS">SUCCESS</label>
+                        <input type="checkbox" name="status_SUCCESS" class="filter_type" />
+                    </div>
+                    <div class="state_filter">
+                        <label class="state_label" for="FAILURE">FAILURE</label>
+                        <input type="checkbox" name="status_FAILURE" class="filter_type" />
+                    </div>
+                    <div class="state_filter">
+                        <label class="state_label" for="ABORTED">ABORTED</label>
+                        <input type="checkbox" name="status_ABORTED" class="filter_type" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tl_container">
+        <div class="task_list" style="margin-right: 0px; ">
+            {% for i in batch.task_count|get_range %}
+            <div class="batch_task empty" style="" data-index="{{i}}" href="#">
+                <span class="page_name">Loading... {{i}}</span>                
+                <div class="progressbar_container">
+                    <span class="progressbar success">
+                        <span class="progress" style="width: 0%; " title="0%"></span>
+                    </span>
+                </div>
+                <a href="#" class="ui-state-default ui-corner-all button_link ui-icon ui-icon-circle-close abort_task" title="Abort Task"></a>
+                <a href="#" class="ui-state-default ui-corner-all button_link ui-icon ui-icon-refresh retry_task" title="Retry Task"></a>
+                <span class="page_info"></span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
