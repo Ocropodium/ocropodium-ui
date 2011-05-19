@@ -26,15 +26,15 @@ var MultiFilterList = Base.extend({
         if (self.includeall) {
             var allfilter = statetemp
                 .clone()
-                .attr("checked", true)
+                .prop("checked", true)
                 .appendTo(filterlist)
                 .find("input")
                 .attr("name", "ALL")
                 .attr("class", "filter_none")
-                .attr("checked", true)
+                .prop("checked", true)
                 .click(function(event) {
-                    if ($(this).attr("checked")) {
-                        $(".filter_type").removeAttr("checked");
+                    if ($(this).prop("checked")) {
+                        $(".filter_type").prop("checked", false);
                     }
                     self.onChange();
                 });
@@ -51,10 +51,10 @@ var MultiFilterList = Base.extend({
                 .attr("name", self.name + "_" + state)
                 .addClass("filter_type")
                 .click(function(event) {
-                    if ($(this).attr("checked")) {
-                        $(".filter_none:checked").removeAttr("checked");
+                    if ($(this).prop("checked")) {
+                        $(".filter_none:checked").prop("checked", false);
                     } else {
-                        $(".filter_none").attr("checked", $(".filter_type:checked").length == 0);
+                        $(".filter_none").prop("checked", $(".filter_type:checked").length == 0);
                     }
                     self.onChange();
                 })
@@ -91,7 +91,7 @@ var MultiFilterList = Base.extend({
         var self = this;
         var vals = [];
         $("#" + self.name + "_filter").find(".filter_type").each(function(i, elem) {
-            if ($(elem).attr("checked")) {
+            if ($(elem).prop("checked")) {
                 vals.push($(elem).attr("name").replace(self.name + "_", ""));
             }
         });

@@ -356,7 +356,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             if (key.match(/^[%\$@]/))
                 key = key.substr(1);
             if ($(item).attr("type") == "checkbox")
-                val[key] = $(item).attr("checked");
+                val[key] = $(item).prop("checked");
             else
                 val[key] = $(item).val();
         });
@@ -374,7 +374,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         if (item.attr("type") != "checkbox") {
             item.val(setval);
         } else {
-            item.attr("checked", !(parseInt(setval) == 0 || setval == "false"
+            item.prop("checked", !(parseInt(setval) == 0 || setval == "false"
                         || setval == "off" || setval == false));
         }
         return val !== null ? true : false;

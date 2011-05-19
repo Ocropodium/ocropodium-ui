@@ -36,7 +36,7 @@ function loadState() {
     }
     if (stat) {
         $.each(stat.split(","), function(i, s) {
-            $("input[value='" + s + "']").attr("checked", true);
+            $("input[value='" + s + "']").prop("checked", true);
         });
     }
     if (autorf) {
@@ -70,8 +70,8 @@ $(function() {
     // init filters
     var statusfilter = $("#status_filter");
     $(".filter_type", statusfilter).click(function(event) {
-        if ($(this).attr("checked")) {
-            $("#filter_none:checked", statusfilter).removeAttr("checked");
+        if ($(this).prop("checked")) {
+            $("#filter_none:checked", statusfilter).prop("checked", false);
         }
     });  
     $(".filter_button", statusfilter).hover(function(event) {
