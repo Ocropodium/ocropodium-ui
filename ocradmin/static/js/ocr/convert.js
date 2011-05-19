@@ -16,39 +16,6 @@ var formatter = null;
 var pbuilder = null;
 
 
-// Function to build the lang & char models selects when
-// the engine type is changed.
-function rebuildModelLists(appname) {
-    var opt = $("<option />");
-    var copt = $("#form_cmodel").val();
-    var lopt = $("#form_lmodel").val();
-
-    $("#uploadform").attr("disabled", "disabled");
-    $.get(
-        "/ocrmodels/search",
-        { app: appname },
-        function(response) {
-            $("#form_cmodel").html("");
-            $("#form_lmodel").html("");
-            $.each(response, function(index, item) {
-                var select = item.fields.type == "char"
-                    ? $("#form_cmodel")
-                    : $("#form_lmodel");
-
-                var newopt = opt.clone()
-                        .text(item.fields.name)
-                        .attr("value", item.fields.name);
-                if (item.fields.name == copt) {
-                    newopt.attr("selected", "selected");
-                }
-                select.append(newopt);
-            });
-            $("#uploadform").removeAttr("disabled");
-        }
-    );
-}
-
-
 function saveState() {
     pbuilder.saveState();
 
@@ -240,9 +207,6 @@ $(function() {
         icons: {
             primary: "ui-icon-zoomout",
         }
-    });
-    $("select[name=$engine]").change(function(e) {
-        rebuildModelLists($(this).val());
     });
     $("#format_block").click(function(event) {
         formatter.blockLayout($(".ocr_page"));
