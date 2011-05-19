@@ -184,7 +184,7 @@ $(function() {
     }
     transcript.onLineSelected = function(type) {
         $("#heading").button({disabled: false});
-        $("#heading").attr("checked", type == "h1")
+        $("#heading").prop("checked", type == "h1")
             .button("refresh");
     }
 
@@ -192,7 +192,7 @@ $(function() {
         $("#transcript_toolbar")
             .find("#spellcheck")
             .button({
-                disabled: $(this).attr("checked"),
+                disabled: $(this).prop("checked"),
             });
         if (!$(this).prop("checked")) {
             //transcript.enable();
@@ -241,7 +241,7 @@ $(function() {
     });
 
     $("#heading").change(function() {
-        transcript.setCurrentLineType($(this).attr("checked") ? "h1" : "span");        
+        transcript.setCurrentLineType($(this).prop("checked") ? "h1" : "span");        
     });
 
     // When a page loads, read the data and request the source
@@ -300,7 +300,7 @@ $(function() {
         sdviewer.setBufferOverlays({
             "current": [rect],
         });
-        if ($("#centre").attr("checked")) {
+        if ($("#centre").prop("checked")) {
             sdviewer.fitBounds(rect, true); 
         }
     }
@@ -320,7 +320,7 @@ $(function() {
     });
 
     $("#spellcheck").change(function(event) {
-        if ($(this).attr("checked")) {
+        if ($(this).prop("checked")) {
             transcript.startSpellcheck();
         } else {
             transcript.endSpellcheck();
