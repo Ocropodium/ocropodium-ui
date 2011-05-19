@@ -56,7 +56,7 @@ class OcrTask(models.Model):
             return
         asyncres = AbortableAsyncResult(self.task_id)
         asyncres.revoke()
-        if asyncres.is_abortable():
+        if self.is_abortable():
             asyncres.abort()
             if asyncres.is_aborted():
                 self.status = "ABORTED"
