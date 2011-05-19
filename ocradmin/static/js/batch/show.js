@@ -100,18 +100,18 @@ $(function() {
         });
     }
 
-    $("#batchcontainer").resizable({
-        minHeight: $("#batchcontainer").height() - $(".tl_container", this).height(),
-        resize: function(event, ui) {
-            var outer = $(this), inner = $(".tl_container", this);
-            var possdiff = inner.offset().top - (outer.offset().top
-                    - outer.css("marginTop").replace(/px/, ""));
-            inner.outerHeight(outer.height() - possdiff);
-        },
-        stop: function(event, ui) {
-            batch.refreshTasks();
-        }        
-    });
+    //$("#batchcontainer").resizable({
+    //    minHeight: $("#batchcontainer").height() - $(".tl_container", this).height(),
+    //    resize: function(event, ui) {
+    //        var outer = $(this), inner = $(".tl_container", this);
+    //        var possdiff = inner.offset().top - (outer.offset().top
+    //                - outer.css("marginTop").replace(/px/, ""));
+    //        inner.outerHeight(outer.height() - possdiff);
+    //    },
+    //    stop: function(event, ui) {
+    //        batch.refreshTasks();
+    //    }        
+    //});
 
     if ($("#batch_id").length) {
         batch = new OCRJS.BatchWidget(
@@ -141,7 +141,7 @@ $(function() {
                     $(button).attr("disabled", false);
                     if (button.attr("id").search("rerun") != -1) {
                         $.post("/ocrtasks/retry/" + pk + "/");
-                        batch.pollForResults();
+                        batch.triggerRefresh();
                     }
                 },                                
             });
@@ -156,6 +156,11 @@ $(function() {
             loadBatchList();
         }
     }
+
+    $(window).resize(function(event) {
+        maximiseWidgets(batch);
+    });
+    maximiseWidgets(batch);
 });        
 
 

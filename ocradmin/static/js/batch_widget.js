@@ -85,6 +85,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
         $(".retry_task, .abort_task, .retry_batch, .retry_errored, .abort_batch")
                 .click(function(event) {
+            var elem = this;                        
             var action = $(this).attr("title").toLowerCase();
             var pk = $(this).data("pk");
             if (pk == undefined)
@@ -94,7 +95,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                 type: "POST",
                 dataType: "json",
                 beforeSend: function(e) {
-                    if (!$(this).parent().hasClass("batch_task")) {
+                    if (!$(elem).parent().hasClass("batch_task")) {
                         if (!confirm("Really " + action + "?"))
                             return false;
                     }
@@ -121,7 +122,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
         $(".filter_none").change(function(event) {
             $(".filter_type:checked").prop("checked", !$(this).prop("checked"));
-            self.triggerRefresh(1); 
+            if ($(".filter_type:checked").length == 0 && !$(this).prop("checked"))
+                $(this).prop("checked", true);
+            else
+                self.triggerRefresh(1); 
         });
 
         $(".filter_type").click(function(event) {           
@@ -131,9 +135,42 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         });
 
         $("#text_filter").keyup(function(event) {
+            $(".toggle_button").toggleClass("filtered", self.isFiltered());
             self.triggerRefresh(50); 
         });
-    },      
+
+        $(".filter_none, .filter_type").change(function(event) {
+            $(".toggle_button").toggleClass("filtered", self.isFiltered());
+        });
+    },
+
+    container: function() {
+        return this.containerWidget();
+    },
+
+    refreshSize: function() {
+        // FIXME: Need to determine correct
+        // css margin.  For the moment, assume
+        // top and bottom margin are each 10px,
+        // so outer is 20px                     
+        this._container
+            .css(
+                "height", 
+                this._container.height() - 
+                    ($(".batch", this.parent).height() + 20)            
+            );
+    },
+
+    setHeight: function(newheight) {
+        this._container.height(newheight);
+        this.refreshSize();
+        this.triggerRefresh();
+    },
+
+    isFiltered: function() {
+        return !($(".filter_type:checked").length == 0
+                        && $.trim($("#text_filter").val()) == "");
+    },                 
 
     setTaskWaiting: function(task, waiting) {
         task.find(".progressbar_container").toggleClass("waiting", waiting);        
@@ -174,49 +211,51 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         }
 
         to = Math.min(to, this._taskcount);
-
         var pk, progress, status, name;
         this._tasks.slice(from, to).each(function(i, elem) {
-            pk = taskdata[i].pk, progress = taskdata[i].fields.progress,
-                status = taskdata[i].fields.status,
-                name = taskdata[i].fields.page_name;
-            $(elem)
-                .attr("id", "task" + taskdata[i].pk)
-                .data("pk", pk)
-                .data("status", status)
-                .data("name", name)
-                .removeClass("empty")
-                .find(".page_name")
-                .text(name)
-                .end()
-                .find(".page_info")
-                .text("Lines: " + taskdata[i].fields.lines)
-                .end()
-                .find(".retry_task")
-                .data("pk", pk)
-                .attr("href", "/ocrtasks/retry/" + pk + "/")
-                .end()
-                .find(".abort_task")
-                .attr("href", "/ocrtasks/abort/" + pk + "/")
-                .data("pk", pk)
-                .end()
-                .find(".progress")
-                .css("width", progress + "%")
-                .attr("title", progress + "%")
-                .end();
-            self.setProgressStatus($(elem), progress, status);                
+            // FIXME: Find out why we occasionally get null data here...
+            // it shouldn't really happen...
+            if (taskdata[i]) {
+                pk = taskdata[i].pk, progress = taskdata[i].fields.progress,
+                    status = taskdata[i].fields.status,
+                    name = taskdata[i].fields.page_name;
+                $(elem)
+                    .attr("id", "task" + pk)
+                    .data("pk", pk)
+                    .data("status", status)
+                    .data("name", name)
+                    .removeClass("empty")
+                    .find(".page_name")
+                    .text(name)
+                    .end()
+                    .find(".page_info")
+                    .text("Lines: " + taskdata[i].fields.lines)
+                    .end()
+                    .find(".retry_task")
+                    .data("pk", pk)
+                    .attr("href", "/ocrtasks/retry/" + pk + "/")
+                    .end()
+                    .find(".abort_task")
+                    .attr("href", "/ocrtasks/abort/" + pk + "/")
+                    .data("pk", pk)
+                    .end()
+                    .find(".progress")
+                    .css("width", progress + "%")
+                    .attr("title", progress + "%")
+                    .end();
+                self.setProgressStatus($(elem), progress, status);
+            }       
         });
     },
 
     reinitialiseRowData: function(taskdata) {
-        console.log("reinit row data", this._tasks.length, this._taskcount);
         if (this._tasks.length < this._taskcount) {
             for (var i = this._tasks.length; i < this._taskcount; i++) {
                 var row = $.tmpl(this._rowtemplate, {
                     index: i                    
                 });
                 console.log(row);
-                this._container.append(row);
+                $(".task_list", this._container).append(row);
             }
         } else
             this._tasks.slice(this._taskcount, this._tasks.length).remove();
