@@ -4,7 +4,7 @@
         <div class="batch_controls">
             <div class="batch_header {{batch.task_type|cut:"."}}">
                 <div class="batch_name">{{batch.name}}</div>
-                <a href="/batch/transcript/{{batch.pk}}" class="transcript_link" title="View Transcript">View Transcripts</a>
+                <a href="{{batch.inspection_url}}" class="transcript_link" title="Inspect Batch">Inspect Batch</a>
                 <a href="/batch/export_options/{{batch.pk}}/" class="export_link" title="Export Batch Transcripts">Export</a>
             </div>
             <div class="progressbar_container">
