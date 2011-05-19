@@ -15,8 +15,9 @@
     display: block;
     text-decoration: none;
     color: #333;
-    background-position: 5px;
+    background-position: 5px -20px;
     background-repeat: no-repeat;
+    background-image: url('/static/icons/document.svg');
     padding-left: 30px;
 }
 
@@ -30,6 +31,7 @@
 
 .batch_task.loading {
     opacity: 0.7;
+    background-position: 5px;
     background-image: url('/static/ajax-loader-hz3.gif');
 }
 
@@ -236,6 +238,10 @@
     padding: 2px 5px;
     margin: 0px 5px;
     cursor: pointer;
+}
+
+.toggle_button.filtered {
+    text-decoration: underline;
 }
 
 .filter_container {
