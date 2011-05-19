@@ -77,6 +77,17 @@ class OcrBatch(models.Model):
         """
         return self.tasks.filter(status="FAILURE")
 
+    def inspection_url(self):
+        """
+        URL for viewing results
+        """
+        if self.task_type == "compare.groundtruth":
+            return "/training/comparison/%d/" % self.pk
+        elif self.task_type == "fedora.ingest":
+            return "#"
+        else:
+            return "/batch/transcript/%d/" % self.pk
+
     def __unicode__(self):
         """
         Unicode representation.
