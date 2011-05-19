@@ -1,0 +1,64 @@
+{% include "includes/form_errors.html" %}
+
+<form name="batchform" method="POST" action="/batch/create/" id="batchform">
+    <div id="tabs">
+        <ul>
+            <li><a id="tabs_1_link" href="#tabs_1">Naming &amp; Tags</a></li>
+            <li><a id="tabs_2_link" href="#tabs_2">Select Files</a></li>
+            <li><a id="tabs_3_link" href="#tabs_3">OCR Options</a></li>
+        </ul>
+        <div id="tabs_1">
+            <div class="form_body">
+                <fieldset>
+                    <legend class="collapsed">Information</legend>
+                    <div class="field_wrapper">
+                        <label for="batch_name">Identifier:</label>
+                        {{form.name}}
+                    </div>
+                    <br />
+                    <div class="field_wrapper">
+                        <label for="batch_tags">Tags:</label>
+                        {{form.tags}}
+                    </div>
+                    <br />
+                    <div class="field_wrapper">
+                        <label for="batch_desc">Notes:</label>
+                        {{form.description}}
+                    </div>
+                </fieldset>
+            </div>
+            <div class="form_footer">
+                <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Files" />
+            </div>
+        </div>
+        <div id="tabs_2">
+            <div class="form_body">
+                <h3>Select Files</h3>
+                <input type="hidden" id="id_files" name="files" />
+                <div class="form_field">
+                    <div id="batch_file_list">
+
+                    </div>
+                    <input type="button" value="Browse Server" id="browse" />
+                </div>
+            </div>
+            <div class="form_footer">
+
+                <input type="button" disabled="disabled" class="next_tab" id="tabs_3_next" value="Next - OCR Settings" />
+            </div>
+        </div>
+        <div id="tabs_3">
+            <div class="form_body">
+                <fieldset>
+                    <legend>OCR Settings</legend>
+                    <div id="options" class="option_box">
+                    </div>
+                </fieldset>
+            </div>
+            <div class="form_footer">
+                <input type="submit" disabled="disabled" id="submit_batch" value="Submit Batch" />
+            </div>
+        </div>
+    </div>
+</form>
+

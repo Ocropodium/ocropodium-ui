@@ -1,0 +1,25 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/projects_new.js'></script>
+
+
+{% endblock %}
+
+
+{% block content %}
+    {% include "projects/includes/sidebar.html" %}
+
+    <div id="document_window">
+        <div class="widget">
+            <div class="widget_header">New Project</div>
+            <div class="widget_content">
+                <form action="/projects/update/{{project.pk}}/" method="POST">
+                    {% include "projects/includes/project_form.html" %}
+                </form>
+            </div>
+    </div>
+
+
+{% endblock %}
+

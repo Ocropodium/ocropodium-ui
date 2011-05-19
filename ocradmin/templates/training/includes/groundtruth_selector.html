@@ -1,0 +1,17 @@
+<div class="form_body">
+    <fieldset>
+        <legend>Ground Truth</legend>
+        <div class="toggle_box" id="ground_truth_list">
+            <div class="field_wrapper">
+                {% for tset in tsets %}
+                    <div class="ground_truth_item">
+                        {{tset.data.page}}
+                        <input type="checkbox" class="ground_truth_enabled"
+                            name="tset" value="{{tset.pk}}" />
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </fieldset>
+</div>
+

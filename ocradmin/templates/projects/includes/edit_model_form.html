@@ -1,0 +1,26 @@
+{% include "includes/form_errors.html" %}
+
+<form id="new_model_form" enctype="multipart/form-data" action="/ocrmodels/update/{{model.pk}}/" method="POST">
+    <div class="field_wrapper">
+        <label for="id_name">Name:</label>
+        {{ form.name }}
+    </div>
+    <div class="field_wrapper">
+        <label for="id_public">Public:</label>
+        {{ form.public }}
+    </div>
+    <div class="field_wrapper">
+        <label for="id_tags">Tags:</label>
+        {{ form.tags }}
+    </div>
+    <div class="field_wrapper textfield_wrapper">
+        <label for="id_description">Description:</label><br />
+        {{ form.description }}
+    </div>
+
+    <div class="form_submit_buttons">
+        <input type="submit" value="Submit" id="submit_edit_model_form" />
+        <a href="/ocrmodels/list" id="cancel_new_model_form">Cancel</a>
+    </div>
+</form>
+

@@ -1,0 +1,56 @@
+
+.toggle_box {
+}
+
+#ground_truth_list {
+    width: 330px;
+    padding-right: 5px;
+    margin-left: 3em;
+}
+
+.ground_truth_item {
+    overflow: auto;    
+}
+
+.ground_truth_item input {
+    float: right;
+}
+
+#comparison {
+    min-height: 400px;
+}
+
+#comparison_details {
+    font-size: 1.1em;
+    background-color: #FFF;
+    padding: 10px;    
+}
+
+#comparison_details tr {
+}
+
+#comparison_details th {
+    text-align: left;
+}
+
+#comparison_details td, th {
+    padding: 10px;
+}
+
+#comparison_details th {
+    background: -webkit-gradient(
+        linear, 0% 100%, 0% 0%,
+        color-stop(0.35, #EBEBEB),
+        color-stop(0.5, #F0F0F0)
+    );
+    border-bottom: #999;
+}
+
+#comparison_details .totals {
+    font-size: 1.2em;
+    font-weight: bolder;
+}
+
+.add_paramset, .del_paramset {
+    float: right;
+}

@@ -1,0 +1,26 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - Convert {% endblock %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/ocr/testparams.js'></script>
+    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block content %}
+<div id="sidebar" class="widget">
+    <div class="widget_header">Options</div>
+    <div class="widget_content">
+        <form id="optionsform" name="options" action="/ocr/convert2/" method="POST">
+            <h4>Options:</h4>
+
+            <div id="options">
+            
+            </div>
+            <input type="submit" value="Submit" />    
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+

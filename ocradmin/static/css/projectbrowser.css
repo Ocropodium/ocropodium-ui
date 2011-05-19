@@ -1,0 +1,25 @@
+
+
+#scroll_container {
+    height: 400px;
+    overflow: auto;
+    border: 1px solid #D0D0D0;
+}
+
+.project_item {
+    padding: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+}
+
+.project_item.odd {
+    background-color: #F4F4F4;
+}
+
+.button_box {
+    overflow: auto;
+}
+
+.button_box input {
+    float: right;
+}

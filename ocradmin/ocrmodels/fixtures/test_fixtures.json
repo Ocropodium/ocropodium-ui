@@ -1,0 +1,56 @@
+[
+    {
+        "pk": 1, 
+        "model": "ocrmodels.ocrmodel", 
+        "fields": {
+            "file": "test/ocropus_default_char.model", 
+            "name": "Ocropus Default Char", 
+            "tags": "default cmodel", 
+            "app": "ocropus", 
+            "created_on": "2010-06-02", 
+            "user": 1, 
+            "derived_from": null, 
+            "updated_on": null, 
+            "type": "char", 
+            "public": true, 
+            "description": "OCRopus default character model."
+        }
+    } 
+,
+    {
+        "pk": 2, 
+        "model": "ocrmodels.ocrmodel", 
+        "fields": {
+            "file": "test/tesseract_default_lang.tgz", 
+            "name": "Default Tesseract English", 
+            "tags": "default tesseract english", 
+            "app": "tesseract", 
+            "created_on": "2010-06-02", 
+            "user": 1, 
+            "derived_from": null, 
+            "updated_on": null, 
+            "type": "lang", 
+            "public": true, 
+            "description": "Tesseract default language model."
+        }
+    } 
+,
+    {
+        "pk": 3, 
+        "model": "ocrmodels.ocrmodel", 
+        "fields": {
+            "file": "test/ocropus_default_lang.fst", 
+            "name": "Ocropus Default Lang", 
+            "tags": "default ocropus english", 
+            "app": "ocropus", 
+            "created_on": "2010-06-02", 
+            "user": 1, 
+            "derived_from": null, 
+            "updated_on": null, 
+            "type": "lang", 
+            "public": true, 
+            "description": "OCRopus default language model."
+        }
+    } 
+]
+

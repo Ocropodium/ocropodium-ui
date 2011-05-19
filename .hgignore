@@ -1,0 +1,28 @@
+syntax: glob
+
+.svn/*
+.svnignore
+*.o
+*.pro.user
+*.swp
+*.swo
+*.pyc
+
+^OLD
+syntax: regexp
+^release
+^debug
+^moc_.+
+^segviewer
+^Makefile.*
+^ui_.+
+^ocradmin/media/temp.+
+^ocradmin/log/.+
+^ocradmin/apache
+^logincookie.txt
+^ocradmin/celerybeat-schedule
+^simple.png
+^ocradmin/media/.+
+^ocradmin/cluster-hosts
+^ocradmin/deploy.sh
+^ocradmin/ocradmin.vim

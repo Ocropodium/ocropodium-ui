@@ -1,0 +1,21 @@
+
+{% include "includes/form_errors.html" %}
+
+<form action="/projects/delete_project/{{project.pk}}/" method="POST">
+    <div class="form_body">
+        <fieldset>
+            <legend>Confirm Project Deletion</legend>
+            Are you <strong>sure</strong> you want to delete this project?  Type &quot;yes&quot; to continue.
+            <br />
+            <div class="field_wrapper">
+                {{ form.confirm }}
+            </div>
+        </fieldset>
+    </div>
+    <div class="form_footer">
+        <div class="form_submit_buttons">
+            <input disabled="disabled" type="submit" value="Submit" id="submit_delete_project_form" />
+        </div>
+    </div>
+</form>
+

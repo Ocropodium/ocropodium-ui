@@ -1,0 +1,71 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - Convert {% endblock %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/jquery/jquery.hoverIntent.min.js'></script>
+	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
+	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
+	<script type='application/javascript' src='/static/js/page_widget.js'></script>
+	<script type='application/javascript' src='/static/js/ocr/convert.js'></script>
+	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
+	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/page_widget.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block subtoolbar %}
+    <div class="sub_toolbar" id="convert_toolbar">
+        <button class="tbbutton" id="clear">Clear</button>
+        <span>&nbsp;&nbsp;&nbsp;</span>
+        <span id="format">
+            <input type="radio" class="tbbutton" id="format_block" name="format" checked="checked" />
+            <label for="format_block">Block</label>
+            <input type="radio" class="tbbutton" id="format_line" name="format" />
+            <label for="format_line">Line</label>
+            <input type="radio" class="tbbutton" id="format_column" name="format" />
+            <label for="format_column">Column</label>
+        </span>
+        <span>&nbsp;&nbsp;&nbsp;</span>
+        <button class="tbbutton" id="zoomin">Zoom In</button>
+        <button class="tbbutton" id="zoomout">Zoom Out</button>
+        <span>&nbsp;&nbsp;&nbsp;</span>
+        <input type="hidden" id="font_size" value="16" />
+    </div>
+{% endblock %}
+
+
+{% block content %}
+
+<div id="sidebar" class="widget">
+    <div class="widget_header">Options</div>
+    <div class="widget_content">
+        {% if not task %}
+        <form id="uploadform" name="convertoptions" action="{{request.path}}" method="POST" enctype="multipart/form-data">
+            <div id="dragdrop">
+                <div id="dropzone">
+                    Drop images here...
+                </div>
+            </div>
+        </form>
+        {% endif %}
+        <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
+            <h4>Options:</h4>
+            
+            <div id="options" class="option_box">
+            
+            </div>
+             
+            {% if task %}
+                <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
+                <input type="hidden" name="preload_params" value="{{preload_params}}" />
+                <input type="hidden" name="preload_page_name" value="{{task.page_name}}" />
+                <input type="submit" value="Update" id="submit_update_task" />
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+

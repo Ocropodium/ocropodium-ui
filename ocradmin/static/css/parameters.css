@@ -1,0 +1,119 @@
+
+#options {
+    min-height: 500px;
+}
+
+.option_box {
+    min-height: 50px;
+}
+
+.compparam {
+    padding-right: 10px;
+    padding-left: 15px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.compparam input {
+    border: 1px solid #999999;
+    /*height: 1em;*/
+    background-color: #FFFFDD;
+}
+
+.compparam * {
+    margin-bottom: 5px;
+}
+
+.option_box * {
+    font-size: 0.98em;
+}
+
+.option_box label {
+    float: left;
+    clear: left;
+    width: 14em;   
+}
+
+.option_box select {
+    width: 13em;
+}
+
+.component_opts {
+    /*display: none;*/
+    /*font-size: 0.9em;*/
+    margin-bottom: 20px;        
+}
+.component_opts label {
+    float: left;
+    /*width: 8em;*/
+    text-align: right;
+    padding-right: 5px;
+    clear: left;
+}
+.component_opts input {
+    float: left;
+    width: 12em;
+    height: 1em;
+    border: 1px solid #999999;
+    background-color: FFFFDD;
+    text-align: right;
+    padding-right: 5px;
+    /*font-size: 0.9em;*/
+}
+/* HACK */
+.clear {
+    clear: left;
+}
+
+
+#logwindow {
+    background-color: #FDFDFD;
+    position: absolute;
+    top:20px;
+    left:20px;
+    overflow: auto;;
+    height: 150px;
+    width: 300px;
+    font-size: 0.8em;
+    font-family: monospace;
+    border: 2px solid #999999;
+    display: none;
+}
+
+.addmulti, .remmulti {
+    height: 20px;
+    width: 18px;
+    margin-left: 2px;
+    text-align: center;
+    opacity: 0;
+}
+
+.param_section {
+    padding-left: 5px;
+}
+
+.param_section * {
+    margin-bottom: 2px;
+}
+
+.param_section input {
+    border: 1px solid #999999;
+    height: 1em;
+    background-color: #FFFFDD;
+}
+
+.control_manip {
+    position: absolute;
+    float: left;
+    width: 40px;
+}
+
+.control_manip_add, .control_manip_remove {
+    float: left;
+}
+
+
+/* Hack width when inside an accordion */
+.ui-accordion .ui-accordion-content {
+    padding: 1em 0em;
+}

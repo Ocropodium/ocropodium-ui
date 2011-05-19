@@ -1,0 +1,51 @@
+<div id="tabs">
+    <ul>
+        <li><a href="#tab_1">
+                {% if comparison.batch.is_complete %}
+                    Model Comparison
+                {% else %}
+                    <span class="inprogress">Model Comparison - In Progress:
+                        {{comparison.batch.estimate_progress|floatformat:2}}% </span>
+                {% endif %}
+            </a>
+        </li>
+    </ul>
+    <div id="tab_1">
+        <div id="comparison">
+            <table id="comparison_details" class="properties_table">
+                <tr>
+                    <th>Page</th>
+                    <th>Model</th>
+                    <th>Score</th>
+                    <th></th>
+                </tr>
+                {% for score in scores %}
+                    <tr class="{% cycle 'odd' 'even' %}">
+                        <td class="training_page_name">{{score.ground_truth.page_name}}</td>
+                        <td class="training_score_name">{{score.name}}</td>
+                        <td class="training_score">{{score.score|default_if_none:"-"}}</td>
+                        <td><a class="score_details" href="/training/show_paramscore/{{score.pk}}/">Details</a></td>
+                    </tr>        
+               {% endfor %}
+               <tr>
+                   <td></td>
+                   <td></td>
+                   <td></td>
+                   <td></td>
+               </tr>
+               {% for name, total in totals.iteritems %}
+                <tr>
+                    <td class="totals">{% if forloop.first %} Aggregate {% endif %}</td>
+                    <td class="totals">{{name}}</td>
+                    <td class="totals">{{total|floatformat:2|default_if_none:"-"}}</td>
+                   <td></td>
+               </tr>
+               {% endfor %}        
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
