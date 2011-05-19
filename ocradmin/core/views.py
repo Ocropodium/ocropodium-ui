@@ -135,6 +135,7 @@ def multiple_results(request):
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
 
 
+@saves_files
 @login_required
 def reconvert_lines(request, task_pk):
     """
@@ -144,18 +145,20 @@ def reconvert_lines(request, task_pk):
     linedata = simplejson.loads(jsonstr)
 
     task = get_object_or_404(OcrTask, pk=task_pk)
-    config = parameters.parse_post_data(request.POST)
-    params = _cleanup_params(request.POST)
+    _, config, params = _handle_request(request, request.output_path)
     # hack!  add an allowcache to the params dict to indicate
     # that we don't want to remake an existing binary
-    task.args[2].update(dict(
+    import copy
+    args = copy.deepcopy(task.args)
+    args[2].update(dict(
             allowcache=True,
             prebinarized=True,
             write_intermediate_results=True,
+            region=linedata,
             **params))
-    task.args[2]["coords"] = linedata
-    task.args[3] = config
-    sync = tasks.ConvertLineTask.apply(throw=True, args=task.args,
+    args[3].clear()
+    args[3].update(**config)
+    sync = tasks.UnhandledConvertLineTask.apply(throw=True, args=args,
             queue="interactive")
     out = dict(
         task_id=sync.task_id,

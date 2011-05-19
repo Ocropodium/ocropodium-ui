@@ -7,6 +7,7 @@
 	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
 	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
 	<script type='application/javascript' src='/static/js/ocr/transcript.js'></script>
+	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
 	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/undo/command.js'></script>
 	<script type='application/javascript' src='/static/js/undo/stack.js'></script>
@@ -21,6 +22,7 @@
     <link rel="stylesheet" href="/static/css/transcript_editor.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/line_editor.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/spellcheck.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
 {% endblock %}
 
 {% block subtoolbar %}
@@ -50,15 +52,12 @@
             <input type="checkbox" id="spellcheck" />
             <label for="spellcheck">Spellcheck</label>
             <span>&nbsp;&nbsp;&nbsp;</span>
-            <input type="checkbox" id="reconvert" />
-            <label for="reconvert">Re-OCR</label>
-            <select id="reconvert_engine" name="engine">
-                <option value="ocropus">OCRopus</option>
-                <option value="tesseract">Tesseract</option>
-                <option value="cuneiform">Cuneiform</option>
-                <option value="gocr">GOCR</option>
-            </select>
-
+            <span id="reocr">
+                <input type="checkbox" id="reconvert" />
+                <label for="reconvert">Re-OCR</label>
+                <input type="checkbox" id="reocr_options" />
+                <label for="reocr_options">Re-OCR Options</label>
+            </span>
 
             <span>&nbsp;&nbsp;&nbsp;</span>
             <input type="checkbox" id="heading" />
@@ -96,7 +95,7 @@
             <div id="transcript"></div>
         </div> 
     </div>
-
+    <div id="dialog"></div>
 
 
 {% endblock %}
