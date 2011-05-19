@@ -462,7 +462,6 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):
     Hack around the problem of serializing
     an object AND it's child objects.
     """
-    print "FILTERING: %s" % statuses
     taskqset = batch.tasks.all()
     if statuses:
         taskqset = batch.tasks.filter(status__in=statuses)
