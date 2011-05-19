@@ -376,6 +376,5 @@ def _get_comparison_context(request):
         form=ComparisonForm(initial={"name": "Parameter Comparison"}),
         prefixes=["p0_", "p1_"],
         project=request.session["project"],
-        engines=PluginManager.get_provider("line"),
         tsets=request.session["project"].reference_sets.all(),
     )

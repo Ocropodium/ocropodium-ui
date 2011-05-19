@@ -501,7 +501,6 @@ def _new_batch_context(request):
     return dict(
         prefix="",
         form=form,
-        engines=PluginManager.get_provider("line"),
     )
 
 
