@@ -18,7 +18,7 @@ def index(request):
     """
     List available plugins.
     """
-    return HttpResponse(simplejson.dumps(PluginManager.get_provider()),
+    return HttpResponse(simplejson.dumps(PluginManager.get_plugins()),
             mimetype="application/json")
 
 

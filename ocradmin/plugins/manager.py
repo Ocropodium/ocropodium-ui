@@ -41,34 +41,6 @@ class PluginManager(object):
 
 
     @classmethod
-    def get_provider(cls, provides=None):
-        """
-        Get a list of available OCR engines.        
-        """
-        engines = []
-        plugdir = os.path.join(os.path.dirname(__file__), "tools")
-        for fname in os.listdir(plugdir):
-            if fname.endswith("wrapper.py"):
-                modname = os.path.splitext(os.path.basename(fname))[0]
-                pm = __import__(
-                        modname,
-                        fromlist=["main_class"])
-                if not hasattr(pm, "main_class"):
-                    continue
-                mod = pm.main_class()
-                if provides is None:
-                    engines.append(mod.name)
-                elif isinstance(provides, str) and provides in mod.capabilities:
-                    engines.append(mod.name)
-                elif isinstance(provides, tuple):
-                    for cap in provides:
-                        if cap in mod.capabilities:
-                            engines.append(mod.name)
-                            break
-        return engines
-
-
-    @classmethod
     def get(cls, name, *args, **kwargs):
         """
         Get a plugin directly.

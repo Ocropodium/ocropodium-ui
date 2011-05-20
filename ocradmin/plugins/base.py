@@ -25,14 +25,6 @@ class OcrBase(object):
         return logging.getLogger(self.__class__.__name__)
 
 
-    @classmethod
-    def get_parameters(cls, *args, **kwargs):
-        """
-        Get general options.
-        """
-        raise NotImplementedError
-
-
     def convert(self, *args, **kwargs):
         """
         Convert an image file.

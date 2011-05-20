@@ -11,11 +11,13 @@ import UserDict
 import tempfile
 import subprocess as sp
 from ocradmin.plugins import base, check_aborted, get_binary, ExternalToolError, set_progress
+#reload(base)
 import ocrolib
 
 from ocradmin.plugins import parameters
 
-
+import generic_options
+#reload(generic_options)
 
 class GenericWrapper(base.OcrBase):
     """
@@ -26,72 +28,15 @@ class GenericWrapper(base.OcrBase):
     description = "Generic command-line OCR wrapper"
     binary = "unimplemented"
 
-    # map of friendly names to OCRopus component names
-    _component_map = dict(
-        grayscale_preprocessing="ICleanupGray",
-        binary_preprocessing="ICleanupBinary",
-        binarizer="IBinarize",
-        page_segmenter="ISegmentPage",
-    )
-
-    _ignored_components = [
-        "StandardPreprocessing",
-    ]
-
     def __init__(self, logger=None, abort_func=None, config=None):
         """
         Initialise an OcropusWrapper object.
         """
         self.config = config if config is not None \
                 else parameters.OcrParameters.from_parameters(
-                        dict(name=self.name, value=self.parameters()))
+                        dict(name=self.name, value=self.get_parameters()))
         self.abort_func = abort_func
         self.logger = logger if logger else self.get_default_logger()
-
-    @classmethod
-    def parameters(cls):
-        """
-        Get parameters for this plugin.
-        """
-        # top-level parameters
-        return [{
-                "name": "grayscale_preprocessing",
-                "description": "Greyscale Preprocessor",
-                "type": "list",
-                "help": "Filters for preprocessing greyscale images",
-                "value": [],
-                "multiple": True,
-                "choices": cls.get_components(oftypes=["ICleanupGray"],
-                    exclude=cls._ignored_components),
-            }, {
-                "name": "binarizer",
-                "description": "Binarizer",
-                "type": "object",
-                "help": "Filter for binarizing greyscale images",
-                "value": "BinarizeBySauvola",
-                "multiple": False,
-                "choices": cls.get_components(oftypes=["IBinarize"],
-                    exclude=cls._ignored_components),
-            }, {
-                "name": "binary_preprocessing",
-                "description": "Binary Preprocessor",
-                "type": "list",
-                'value': ['DeskewPageByRAST', 'RmBig', 'RmHalftone'],
-                "help": "Filters for preprocessing binary images",
-                "multiple": True,
-                "choices": cls.get_components(oftypes=["ICleanupBinary"],
-                    exclude=cls._ignored_components),
-            }, {
-                "name": "page_segmenter",
-                "description": "Page Segmenter",
-                "type": "object",
-                "value": "SegmentPageByRAST",
-                "help": "Algorithm for segmenting binary page images",
-                "multiple": False,
-                "choices": cls.get_components(oftypes=["ISegmentPage"],
-                    exclude=cls._ignored_components),
-            },
-        ]
 
     @classmethod
     def write_binary(cls, path, data):
@@ -106,36 +51,6 @@ class GenericWrapper(base.OcrBase):
         Write a packed image.
         """
         ocrolib.iulib.write_image_packed(path, ocrolib.pseg2narray(data))
-
-    @classmethod
-    def _get_toplevel_parameter_info(cls, name):
-        try:
-            out = [i for i in cls.parameters() if i["name"] == name][0]
-        except IndexError:
-            out = None
-        return out
-
-    @classmethod
-    def get_parameters(cls, *args):
-        """
-        Get general OCR parameters.
-        """
-        # Note: we ignore all but the last args given here,
-        # because other plugins might implement nested options
-        # as a proper tree structure
-        if len(args) == 0:
-            return dict(
-                name="%s" % cls.name,
-                type="list",
-                description="Available configuration for OCR settings",
-                parameters=cls.parameters(),
-            )
-        elif hasattr(cls, "_get_%s_parameter_info" % args[-1]):
-            return getattr(cls, "_get_%s_parameter_info" % args[-1])()
-        elif cls._component_map.get(args[-1]):
-            return cls._get_toplevel_parameter_info(args[-1])
-        else:
-            return cls.get_component_parameters(args[-1])
 
     @classmethod
     def extract_boxes(cls, page_seg):
@@ -413,99 +328,4 @@ class GenericWrapper(base.OcrBase):
         if comp is None:
             raise IndexError("no such component: %s" % name)
         return comp()
-
-    @classmethod
-    def _get_native_components(cls, oftypes=None, withnames=None, exclude=None):
-        """
-        Get a datastructure contraining all Ocropus native components
-        (possibly of a given type) and their default parameters.
-        """
-        out = []
-        clist = ocrolib.ComponentList()
-        for i in range(clist.length()):
-            ckind = clist.kind(i)
-            if oftypes and not \
-                    ckind.lower() in [c.lower() for c in oftypes]:
-                continue
-            cname = clist.name(i)
-            if withnames and not \
-                    cname.lower() in [n.lower() for n in withnames]:
-                continue
-            if exclude and cname.lower() in [n.lower() for n in exclude]:
-                continue
-            compdict = dict(name=cname, type=ckind, parameters=[])
-            # TODO: Fix this heavy-handed exception handling which is
-            # liable to mask genuine errors - it's needed because of
-            # various inconsistencies in the Python/native component
-            # wrappers.
-            try:
-                comp = getattr(ocrolib, cname)()
-                compdict = dict(
-                    name=cname,
-                    type="list",
-                    description=comp.description(),
-                    parameters=[])
-            except (AttributeError, AssertionError, IndexError):
-                continue
-            for paramnum in range(0, comp.plength()):
-                pname = comp.pname(paramnum)
-                compdict["parameters"].append(dict(
-                    name=pname,
-                    type="scalar",
-                    value=comp.pget(pname),
-                    description="",
-                    choices=None,
-                ))
-            out.append(compdict)
-        return out
-
-    @classmethod
-    def _get_python_components(cls, oftypes=None, withnames=None, exclude=None):
-        """
-        Get native python components.
-        """
-        out = []
-        directory = os.path.join(os.path.dirname(__file__), "components")
-        for fname in os.listdir(directory):
-            if not fname.endswith(".py"):
-                continue
-            modname = fname.replace(".py", "", 1)
-            pmod = __import__("%s" % modname, fromlist=["main_class"])
-            if not hasattr(pmod, "main_class"):
-                continue
-            ctype = pmod.main_class()
-            ckind = ctype.__base__.__name__
-            # note: the loading function in ocropy/components.py expects
-            # python components to have a module-qualified name, i.e:
-            # mymodule.MyComponent.
-            cname = ctype.__name__
-            if oftypes and not \
-                    ckind.lower() in [c.lower() for c in oftypes]:
-                continue
-            if withnames and not \
-                    cname.lower() in [n.lower() for n in withnames]:
-                continue
-            if exclude and cname.lower() in [n.lower() for n in exclude]:
-                continue
-            comp = ctype()
-            # FIXME: Extreme dodginess getting the interface type,
-            # very fragile
-            compdict = dict(
-                name=cname,
-                type="list",
-                parameters=[],
-                description=comp.description()
-            )
-            for paramnum in range(0, comp.plength()):
-                pname = comp.pname(paramnum)
-                compdict["parameters"].append(dict(
-                    name=pname,
-                    description="",
-                    type="scalar",
-                    value=comp.pget(pname),
-                    choices=None,
-                ))
-            out.append(compdict)
-        return out
-
 

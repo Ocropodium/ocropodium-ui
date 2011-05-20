@@ -2,24 +2,26 @@
 Wrapper for GOCR.
 """
 
+import generic_wrapper
+#reload(generic_wrapper)
 
-
-from generic_wrapper import *
+import gocr_options
+#reload(gocr_options)
 
 
 def main_class():
     return GocrWrapper
 
 
-class GocrWrapper(GenericWrapper):
+class GocrWrapper(generic_wrapper.GenericWrapper, 
+            gocr_options.GocrOptions):
     """
     Override certain methods of the OcropusWrapper to
     use Gocr for recognition of individual lines.
     """
     name = "gocr"
     description = "Wrapper for GNU GOCR"
-    binary = get_binary("gocr")
-    _parameters = []
+    binary = generic_wrapper.get_binary("gocr")
 
     def get_command(self, outfile, image):
         """

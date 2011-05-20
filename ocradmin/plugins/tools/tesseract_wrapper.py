@@ -8,7 +8,10 @@ import subprocess as sp
 from ocradmin.plugins import check_aborted, set_progress, convert_to_temp_image, get_binary
 from ocradmin.ocrmodels.models import OcrModel
 import generic_wrapper
-reload(generic_wrapper)
+#reload(generic_wrapper)
+
+import tesseract_options
+#reload(tesseract_options)
 
 from ocradmin.plugins import parameters
 reload(parameters)
@@ -18,7 +21,8 @@ def main_class():
     return TesseractWrapper
 
 
-class TesseractWrapper(generic_wrapper.GenericWrapper):
+class TesseractWrapper(generic_wrapper.GenericWrapper, 
+            tesseract_options.TesseractOptions):
     """
     Override certain methods of the OcropusWrapper to
     use Tesseract for recognition of individual lines.
@@ -34,7 +38,7 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
         super(TesseractWrapper, self).__init__(*args, **kwargs)
         self.config = kwargs.get("config") if kwargs.get("config") \
                 else parameters.OcrParameters.from_parameters(
-                    dict(name=self.name, parameters=self.parameters()))
+                    dict(name=self.name, parameters=self.get_parameters()))
         self._tessdata = None
         self._lang = None
         self._tesseract = None
@@ -50,34 +54,6 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
             self.unpack_tessdata(modpath)
         self._tesseract = get_binary("tesseract")
         self.logger.info("Using Tesseract: %s" % self._tesseract)
-
-    @classmethod
-    def parameters(cls):
-        params = copy.deepcopy(generic_wrapper.GenericWrapper.parameters())
-        mods = OcrModel.objects.filter(app="tesseract")
-        lmods = [dict(name=m.name, description=m.description) for m in
-                 mods if m.type == "lang"]
-        _parameters = [
-            {
-                "name": "language_model",
-                "description": "Language Model",
-                "type": "scalar",
-                "value": "Tesseract Default Lang",
-                "help": "Model for language processing",
-                "multiple": False,
-                "choices": lmods,
-            },
-        ]
-        params.extend(_parameters)
-        return params
-
-    @classmethod
-    def _get_language_model_parameter_info(cls):
-        info = [i for i in cls.parameters() if i["name"] == "language_model"][0]
-        mods = OcrModel.objects.filter(app="tesseract", type="lang")
-        info["choices"] = [
-                dict(name=m.name, description=m.description) for m in mods]
-        return info
 
     @check_aborted
     def get_transcript(self, line):

@@ -1,0 +1,65 @@
+<script type="application/x-jquery-tmpl">
+    <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
+        <fieldset>
+            <legend>
+                <label for="id_engine">Engine</label> 
+                <select name="engine" id="id_engine">
+                    <option value="0">Ocropus</option>
+                    <option value="1">Tesseract</option>
+                </select>
+            </legend>
+
+            <fieldset id="preprocessing_options" class="collapsible">
+                <legend>Preprocessing</legend>
+                <fieldset id="grayscale_filters" class="collapsible">
+                    <legend>Grayscale Filters</legend>
+                    <input type="hidden" name="num_grayscale_filters" value="${preprocessing.grayscale_filters.length}" />
+                    {% templatetag openvariable %}each preprocessing.grayscale_filters{% templatetag closevariable %}
+                    <div id="grayscale_filter${$index}_options">
+                        <label for="grayscale_filter${$index}">Grayscale Filter 1</label>
+                        <select name="grayscale_filter${$index}">
+                            <option value="deskew">Gray Deskew</option>
+                            <option value="autoinvert">Auto Invert</option>
+                        </select>
+                    </div>
+                    {% templatetag openvariable %}/each{% templatetag closevariable %}
+                </fieldset>
+                <fieldset id="binarizer_options" class="collapsible">
+                    <legend>Binarizer</legend>
+                    <label for="binarizer" id="binarizer">Binarizer</label>
+                    <select name="binarizer">
+                        <option name="BinarizeByHT">BinarizeByHT</option>
+                        <option name="BinarizeBySauvola">BinarizeBySauvola</option>
+                        <option name="BinarizeByRange">BinarizeByRange</option>
+                    </select>                        
+                </fieldset>
+                <fieldset id="binary_filters" class="collapsible">
+                    <legend>Binary Filters</legend>
+                    <input type="hidden" name="num_binary_filters" value="2" />
+                    {% templatetag openvariable %}each preprocessing.grayscale_filters{% templatetag closevariable %}
+                    <div id="binary_filter${$index}_options">
+                        <label for="binary_filter${$index}">Binary Filter 1</label>
+                        <select name="binary_filter${$index}">
+                            <option value="deskew">Deskew</option>
+                            <option value="autoinvert">Auto Invert</option>
+                        </select>
+                    </div>
+                    {% templatetag openvariable %}/each{% templatetag closevariable %}
+                </fieldset>
+            </fieldset>
+            <fieldset id="page_segmentation" class="collapsible">
+                <legend>Page Segmentation</legend>
+
+            </fieldset>                    
+            <fieldset id="recognition" class="collapsible">
+                <legend>Recognition</legend>
+
+            </fieldset>                    
+            <fieldset id="general" class="collapsible">
+                <legend>General</legend>
+
+            </fieldset>                    
+        </fieldset>
+    </form>
+</script>
+
