@@ -50,20 +50,74 @@
             </div>
         </form>
         {% endif %}
-        <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
-            <h4>Options:</h4>
-            
-            <div id="options" class="option_box">
-            
-            </div>
-             
-            {% if task %}
-                <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
-                <input type="hidden" name="preload_params" value="{{preload_params}}" />
-                <input type="hidden" name="preload_page_name" value="{{task.page_name}}" />
-                <input type="submit" value="Update" id="submit_update_task" />
-            {% endif %}
-        </form>
+        <h4>Options:</h4>
+        <div id="options" class="option_box">
+            <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
+                <fieldset>
+                    <legend>
+                        <label for="id_engine">Engine</label> 
+                        <select name="engine" id="id_engine">
+                            <option value="0">Ocropus</option>
+                            <option value="1">Tesseract</option>
+                        </select>
+                    </legend>
+
+                    <fieldset id="preprocessing_options" class="collapsible">
+                        <legend>Preprocessing</legend>
+                        <fieldset id="grayscale_filters" class="collapsible">
+                            <legend>Grayscale Filters</legend>
+                            <input type="hidden" name="num_grayscale_filters" value="1" />
+                            <div id="grayscale_filter0_options">
+                                <label for="grayscale_filter0">Grayscale Filter 1</label>
+                                <select name="grayscale_filter0">
+                                    <option value="deskew">Gray Deskew</option>
+                                    <option value="autoinvert">Auto Invert</option>
+                                </select>
+                            </div>
+                        </fieldset>
+                        <fieldset id="binarizer_options" class="collapsible">
+                            <legend>Binarizer</legend>
+                            <label for="binarizer" id="binarizer">Binarizer</label>
+                            <select name="binarizer">
+                                <option name="BinarizeByHT">BinarizeByHT</option>
+                                <option name="BinarizeBySauvola">BinarizeBySauvola</option>
+                                <option name="BinarizeByRange">BinarizeByRange</option>
+                            </select>                        
+                        </fieldset>
+                        <fieldset id="binary_filters" class="collapsible">
+                            <legend>Binary Filters</legend>
+                            <input type="hidden" name="num_binary_filters" value="2" />
+                            <div id="binary_filter0_options">
+                                <label for="binary_filter0">Binary Filter 1</label>
+                                <select name="binary_filter0">
+                                    <option value="deskew">Deskew</option>
+                                    <option value="autoinvert">Auto Invert</option>
+                                </select>
+                            </div>
+                            <div id="binary_filter1_options">
+                                <label for="binary_filter1">Binary Filter 2</label>
+                                <select name="binary_filter1">
+                                    <option value="deskew">Binary Deskew</option>
+                                    <option value="autoinvert">Auto Invert</option>
+                                </select>
+                            </div>
+                        </fieldset>
+                    </fieldset>
+                    <fieldset id="page_segmentation" class="collapsible">
+                        <legend>Page Segmentation</legend>
+
+                    </fieldset>                    
+                    <fieldset id="recognition" class="collapsible">
+                        <legend>Recognition</legend>
+
+                    </fieldset>                    
+                    <fieldset id="general" class="collapsible">
+                        <legend>General</legend>
+
+                    </fieldset>                    
+                </fieldset>
+            </form>
+        </div>
     </div>
 </div>
 

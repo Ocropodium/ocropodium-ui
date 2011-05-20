@@ -7,21 +7,25 @@ import tempfile
 import subprocess as sp
 from ocradmin.plugins import check_aborted, set_progress
 from ocradmin.core.utils import HocrParser
-from generic_wrapper import *
+
+import generic_wrapper
+#reload(generic_wrapper)
+import cuneiform_options
+#reload(cuneiform_options)
 
 
 def main_class():
     return CuneiformWrapper
 
-class CuneiformWrapper(GenericWrapper):
+class CuneiformWrapper(generic_wrapper.GenericWrapper,
+            cuneiform_options.CuneiformOptions):
     """
     Override certain methods of the OcropusWrapper to
     use Cuneiform for recognition of individual lines.
     """
     name = "cuneiform"
     description = "Wrapper for Cuneiform Linux"
-    capabilities = ("line", "page")
-    binary = get_binary("cuneiform")
+    binary = generic_wrapper.get_binary("cuneiform")
 
     def get_command(self, outfile, image):
         """

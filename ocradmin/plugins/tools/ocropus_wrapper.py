@@ -9,7 +9,11 @@ from ocradmin.plugins import check_aborted, \
         ExternalToolError
 from ocradmin.ocrmodels.models import OcrModel
 import generic_wrapper
-reload(generic_wrapper)
+#reload(generic_wrapper)
+
+import ocropus_options
+#reload(ocropus_options)
+
 import ocrolib
 
 from ocradmin.plugins import parameters
@@ -32,7 +36,8 @@ def main_class():
 
 
 
-class OcropusWrapper(generic_wrapper.GenericWrapper):
+class OcropusWrapper(generic_wrapper.GenericWrapper,
+            ocropus_options.OcropusOptions):
     """
     Wrapper around OCRopus's basic page-recognition functions so
     that bits and peices can be reused more easily.
@@ -48,63 +53,11 @@ class OcropusWrapper(generic_wrapper.GenericWrapper):
         super(OcropusWrapper, self).__init__(*args, **kwargs)
         self.config = kwargs.get("config") if kwargs.get("config") \
                 else parameters.OcrParameters.from_parameters(
-                    dict(name=self.name, parameters=self.parameters()))
+                    dict(name=self.name, parameters=self.get_parameters()))
         self._cmodel = None
         self._lmodel = None
         self._trainbin = None
         self.training = False
-
-    @classmethod
-    def parameters(cls):
-        params = copy.deepcopy(generic_wrapper.GenericWrapper.parameters())
-        mods = OcrModel.objects.filter(app="ocropus")
-        cmods = [dict(name=m.name, type="scalar", description=m.description) for m in
-                 mods if m.type == "char"]
-        lmods = [dict(name=m.name, type="scalar", description=m.description) for m in
-                 mods if m.type == "lang"]
-        _parameters = [
-            {
-                "name": "character_model",
-                "description": "Character Model",
-                "type": "scalar",
-                "help": "Model for character recognition",
-                "value": cmods[0]["name"] if len(cmods) else None,
-                "multiple": False,
-                "choices": cmods,
-            }, {
-                "name": "language_model",
-                "description": "Language Model",
-                "type": "scalar",
-                "value": lmods[0]["name"] if len(lmods) else None,
-                "help": "Model for language processing",
-                "multiple": False,
-                "choices": lmods,
-            }, {
-                "name": "debug",
-                "description": "Dump debug info",
-                "multiple": False,
-                "value": True,
-                "type": "bool",
-            },
-        ]
-        params.extend(_parameters)
-        return params
-
-    @classmethod
-    def _get_character_model_parameter_info(cls):
-        info = [i for i in cls.parameters() if i["name"] == "character_model"][0]
-        mods = OcrModel.objects.filter(app="ocropus", type="char")
-        info["choices"] = [
-                dict(name=m.name, description=m.description) for m in mods]
-        return info
-
-    @classmethod
-    def _get_language_model_parameter_info(cls):
-        info = [i for i in cls.parameters() if i["name"] == "language_model"][0]
-        mods = OcrModel.objects.filter(app="ocropus", type="lang")
-        info["choices"] = [
-                dict(name=m.name, description=m.description) for m in mods]
-        return info
 
     @classmethod
     def _lookup_model_file(cls, modelname):
