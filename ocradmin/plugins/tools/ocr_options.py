@@ -16,7 +16,7 @@ class OcrOptions(object):
         if len(args) == 0:
             return dict(
                 preprocessing=cls.get_preprocessing_parameters(),
-                page_segmentation=cls.get_page_segmentation_parameters(),
+                page_segmentation=cls.get_page_segmenters(),
                 recognition=cls.get_recognition_parameters(),
                 general=cls.get_general_parameters()
             )
@@ -69,7 +69,7 @@ class OcrOptions(object):
         return []
 
     @classmethod
-    def get_page_segmentation_parameters(cls):
+    def get_page_segmenters(cls):
         """
         Get page segmentation options.
         """                
