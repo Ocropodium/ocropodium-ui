@@ -20,6 +20,7 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     _name = "CuneiformNativeRecognizer"
     _desc = "Cuneiform Native Text Recognizer"
     binary = "cuneiform"
+    _arity = 1
 
     def get_command(self, outfile, image):
         """
@@ -27,11 +28,11 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         """
         return [self.binary, "-o", outfile, image] 
 
-    def eval(self, input):
+    def eval(self):
         """
         Convert a full page.
         """
-        binary, _ = input
+        binary = self.eval_input(0)
         json = None
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.close()

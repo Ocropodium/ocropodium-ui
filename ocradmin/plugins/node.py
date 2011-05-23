@@ -8,6 +8,9 @@ logging.basicConfig(format=FORMAT)
 LOGGER = logging.getLogger()
 
 
+def UnsetParameterError(StandardError):
+    pass
+
 def noop_abort_func(*args):
     return False
 
@@ -19,6 +22,8 @@ class Node(object):
     Node object.  Evaluates some input and
     return the output.
     """
+    _arity = 1
+
     def __init__(self, abort_func=None, progress_func = None, logger=None):
         """
         Initialise a node.
@@ -36,6 +41,8 @@ class Node(object):
         else:
             self.progress_func = noop_progress_func
         self._params = {}
+        self._cache = None
+        self._inputs = [None for n in range(self._arity)]
 
     def set_param(self, param, name):
         """
@@ -55,17 +62,44 @@ class Node(object):
         """
         pass
 
-    def _eval(self, input):
+    def _eval(self):
         """
         Perform actual processing.
         """
         pass
 
-    def eval(self, input):
+    def set_input(self, num, node):
+        """
+        Set an input.
+
+        num: 0-based input number
+        node: input node
+        """
+        if num > len(self._inputs) - 1:
+            raise InputOutOfRange(self._name)
+        self._inputs[num] = node
+
+    def mark_dirty(self):
+        """
+        Tell the node it needs to reevaluate.
+        """
+        self._cache = None
+
+    def eval_input(self, num):
+        """
+        Eval an input node.
+        """
+        return self._inputs[num].eval()
+
+    def eval(self):
         """
         Eval the node.
         """
         for p, v in self._params.iteritems():
             self._set_p(p, v)
-        return self._eval(input)
+        if self._cache is not None:
+            return self._cache
+        else:
+            self._cache = self._eval()
+        return self._cache
 

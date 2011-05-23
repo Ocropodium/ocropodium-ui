@@ -80,91 +80,144 @@ def apply_tree(input, tree):
     return apply_node((binary, boxes), tree.get_recognizer())
 
 
-TESTTREE = {
-    "grayscale_filters": [
-    ],
-    "binary_filters": [
+TESTTREE = [
         {
-            "name": "Ocropus::DeskewPageByRAST",
+            "name": "filein",
+            "type": "Ocropus::FileIn",
+            "params": [
+                ("path", "etc/simple.png"),
+            ],
+            "inputs": [],
+        }, {
+            "name": "DeskewPageByRAST",
+            "type": "Ocropus::DeskewPageByRAST",
             "params": [
                 ("max_n", 10000),
-            ]
+            ],
+            "inputs": ["BinarizeBySauvola"]
         }, {
-            "name": "Ocropus::RmHalftone",
+            "name": "RmHalftone",
+            "type": "Ocropus::RmHalftone",
             "params": [
                 ("factor", 3),
                 ("threshold", 4)
-            ]
-        }
-    ],
-    "binarizer": {
-        "name": "Ocropus::BinarizeBySauvola",
+            ],
+            "inputs": ["DeskewPageByRAST"]
+        }, {
+        "name": "BinarizeBySauvola",
+        "type": "Ocropus::BinarizeBySauvola",
         "params": [
             ("k", 0.3),
             ("w", 40),
-        ]
-    },
-    "page_segmenter": {
-        "name": "Ocropus::SegmentPageByRAST",
+        ],
+        "inputs": ["filein"]
+    }, {
+        "name": "SegmentPageByRAST",
+        "type": "Ocropus::SegmentPageByRAST",
         "params": [
             ("all_pixels", 0),
             ("gap_factor", 10),
-        ]
+        ],
+        "inputs": ["RmHalftone"]
     },
-}
+]
 
-TESTTREE_OCROPUS = {
-    "recognizer": {
-        "name": "Ocropus::NativeRecognizer",
+TESTTREE_OCROPUS = [
+    {
+        "name": "NativeRecognizer",
+        "type": "Ocropus::NativeRecognizer",
         "params": [
             ("character_model", "Ocropus Default Char"),
             ("language_model", "Ocropus Default Lang"),
-        ]
+        ],
+        "inputs": ["RmHalftone", "SegmentPageByRAST"]
     }
-}
+]
 
-TESTTREE_TESSERACT = {
-    "recognizer": {
-        "name": "Tesseract::NativeRecognizer",
+TESTTREE_TESSERACT = [
+    {
+        "name": "NativeRecognizer",
+        "type": "Tesseract::NativeRecognizer",
         "params": [
             ("language_model", "Tesseract Default Lang"),
-        ]
+        ],
+        "inputs": ["RmHalftone", "SegmentPageByRAST"]
     }
-}
+]
 
-TESTTREE_CUNEIFORM = {
-    "recognizer": {
-        "name": "Cuneiform::NativeRecognizer",
+TESTTREE_CUNEIFORM = [
+    {
+        "name": "NativeRecognizer",
+        "type": "Cuneiform::NativeRecognizer",
         "params": [
-        ]
+        ],
+        "inputs": ["RmHalftone",]
     }
-}
+]
+
+def get_node(type, params):
+    mod, name = type.split("::")
+    reload(cuneiform_nodes)
+    reload(tesseract_nodes)
+    s = None    
+    if mod == "Ocropus":
+        s = ocropus_nodes.OcropusModule.get_node(name)
+    elif mod == "Tesseract":
+        s = tesseract_nodes.TesseractModule.get_node(name)
+    elif mod == "Cuneiform":
+        s = cuneiform_nodes.CuneiformModule.get_node(name)
+    for p, v in params:
+        s.set_param(p, v)
+    return s
 
 
-def test(*args, **kwargs):
-    tree = kwargs.get("tree", TESTTREE)
-    import ocrolib
-    for f in args:
-        ia = ocrolib.iulib.bytearray()
-        ocrolib.iulib.read_image_gray(ia, f)
-        doc = apply_tree(ocrolib.narray2numpy(ia), OcrPipeline(tree))
+
+def test_dag(tree):
+    d = {}
+    s = {}
+    for n in tree:
+        if d.get(n["name"]):
+            raise ValueError("Duplicate node in tree: %s" % n["name"])
+        s[n["name"]] = n
+        node = get_node(n["type"], n["params"])
+        d[n["name"]] = node
+    for name, n in s.iteritems():
+        for i in range(len(s[name]["inputs"])):            
+            d[name].set_input(i, d[s[name]["inputs"][i]])
+    base = d[tree[-1]["name"]]
+    return base.eval()
+
+
+
+
+
+def test(files, tree):
+    import copy
+    for f in files:
+        tnew = copy.deepcopy(tree)
+        for n in tnew:
+            if n["name"] == "filein":
+                for p in n["params"]:
+                    if p[0] == "path":
+                        p = ("path", f)
+        doc = test_dag(tnew)
         for line in doc["lines"]:
             print line["text"]
 
-def test_ocropus(*args):
+def test_ocropus(*files):
     tree = TESTTREE
-    tree.update(TESTTREE_OCROPUS)
-    test(*args, tree=tree)
+    tree.extend(TESTTREE_OCROPUS)
+    test(files, tree)
 
-def test_tesseract(*args):
+def test_tesseract(*files):
     tree = TESTTREE
-    tree.update(TESTTREE_TESSERACT)
-    test(*args, tree=tree)
+    tree.extend(TESTTREE_TESSERACT)
+    test(files, tree)
 
-def test_cuneiform(*args):
+def test_cuneiform(*files):
     tree = TESTTREE
-    tree.update(TESTTREE_CUNEIFORM)
-    test(*args, tree=tree)
+    tree.extend(TESTTREE_CUNEIFORM)
+    test(files, tree)
 
 
 
