@@ -8,6 +8,22 @@ reload(node)
 
 import ocrolib
 
+
+class OcropusFileInNode(node.Node):
+    """
+    A node that takes a file and returns a numpy object.
+    """
+    _arity = 0
+
+    def _eval(self):
+        if not self._params.get("path"):
+            raise node.UnsetParameterError("path")
+        ba = ocrolib.iulib.bytearray()
+        ocrolib.iulib.read_image_binary(ba, self._params.get("path"))
+        return ocrolib.narray2numpy(ba)
+        
+    
+
 class OcropusNode(node.Node):
     """
     Wrapper around Ocropus component interface.
@@ -43,13 +59,15 @@ class OcropusBinarizeNode(OcropusNode):
     """
     Binarize an image with an Ocropus component.
     """
-    def _eval(self, input):
+    _arity = 1
+    def _eval(self):
         """
         Perform binarization on an image.
         
         input: a grayscale image.
         return: a binary image.
         """
+        input = self.eval_input(0)
         return self._comp.binarize(input)[0]
 
 
@@ -57,7 +75,8 @@ class OcropusPageSegmentNode(OcropusNode):
     """
     Segment an image using Ocropus.
     """
-    def _eval(self, input):
+    _arity = 1
+    def _eval(self):
         """
         Segment a binary image.
 
@@ -68,6 +87,7 @@ class OcropusPageSegmentNode(OcropusNode):
             columns
             images
         """
+        input = self.eval_input(0)
         page_seg = self._comp.segment(input)
         regions = ocrolib.RegionExtractor()
         out = dict(columns=[], lines=[], paragraphs=[])
@@ -86,7 +106,9 @@ class OcropusGrayscaleFilterNode(OcropusNode):
     """
     Filter a binary image.
     """
-    def _eval(self, input):
+    _arity = 1
+    def _eval(self):
+        input = self.eval_input(0)
         return self._comp.cleanup_gray(input)
 
 
@@ -94,7 +116,9 @@ class OcropusBinaryFilterNode(OcropusNode):
     """
     Filter a binary image.
     """
-    def _eval(self, input):
+    _arity = 1
+    def _eval(self):
+        input = self.eval_input(0)
         return self._comp.cleanup(input)
 
 
@@ -104,19 +128,21 @@ class OcropusRecognizerNode(node.Node):
     """
     _name = "OcropusNativeRecognizer"
     _desc = "Ocropus Native Text Recognizer"
+    _arity = 2
 
     def __init__(self, **kwargs):
         super(OcropusRecognizerNode, self).__init__(**kwargs)
         self._params = kwargs        
 
-    def _eval(self, input):
+    def _eval(self):
         """
         Recognize page text.
 
         input: tuple of binary, input boxes
         return: page data
         """
-        binary, boxes = input
+        binary = self.eval_input(0)
+        boxes = self.eval_input(1)
         pageheight, pagewidth = binary.shape
         iulibbin = ocrolib.numpy2narray(binary)
         out = dict(
@@ -178,8 +204,10 @@ class OcropusModule(object):
         """
         if name == "NativeRecognizer":
             return OcropusRecognizerNode()
+        elif name == "FileIn":
+            return OcropusFileInNode()
         if not hasattr(ocrolib, name):
-            raise NoSuchNodeException(name)
+            raise plugins.NoSuchNodeException(name)
         comp = getattr(ocrolib, name)()
         if comp.c_interface == "IBinarize":
             return OcropusBinarizeNode(comp)
