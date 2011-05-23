@@ -2,8 +2,9 @@
 Apply a processing tree for a full OCR pipeline.
 """
 
-import ocropus_stages
-import tesseract_stages
+import ocropus_nodes
+import tesseract_nodes
+import cuneiform_nodes
 
 class OcrPipeline(object):
     """
@@ -15,13 +16,13 @@ class OcrPipeline(object):
         """
         self._tree = tree
     
-    def get_grayscale_stages(self):
+    def get_grayscale_nodes(self):
         """
         Get grayscale preprocessors.
         """
         return self._tree.get("grayscale_filters", [])
 
-    def get_binary_stages(self):
+    def get_binary_nodes(self):
         """
         Get binary preprocessors.
         """
@@ -46,34 +47,37 @@ class OcrPipeline(object):
         return self._tree.get("recognizer")
 
 
-def apply_stage(input, stage):
+def apply_node(input, node):
     """
-    Apply a single stage.
+    Apply a single node.
     """
-    mod, name = stage["name"].split("::")
-    #reload(ocropus_stages)
-    reload(tesseract_stages)
+    mod, name = node["name"].split("::")
+    #reload(ocropus_nodes)
+    reload(cuneiform_nodes)
+    reload(tesseract_nodes)
     s = None    
     if mod == "Ocropus":
-        s = ocropus_stages.OcropusModule.get_stage(name)
+        s = ocropus_nodes.OcropusModule.get_node(name)
     elif mod == "Tesseract":
-        s = tesseract_stages.TesseractModule.get_stage(name)
-    for p, v in stage["params"]:
+        s = tesseract_nodes.TesseractModule.get_node(name)
+    elif mod == "Cuneiform":
+        s = cuneiform_nodes.CuneiformModule.get_node(name)
+    for p, v in node["params"]:
         s.set_param(p, v)
     return s.eval(input)
 
 
 def apply_tree(input, tree):
     """
-    Apply a tree of stages for the full OCR pipeline.
+    Apply a tree of nodes for the full OCR pipeline.
     """
     gray = reduce(
-            apply_stage, list(tree.get_grayscale_stages()), input)
-    rawbin = apply_stage(input, tree.get_binarizer())
+            apply_node, list(tree.get_grayscale_nodes()), input)
+    rawbin = apply_node(input, tree.get_binarizer())
     binary = reduce(
-            apply_stage, list(tree.get_binary_stages()), rawbin)
-    boxes = apply_stage(binary, tree.get_page_segmenter())
-    return apply_stage((binary, boxes), tree.get_recognizer())
+            apply_node, list(tree.get_binary_nodes()), rawbin)
+    boxes = apply_node(binary, tree.get_page_segmenter())
+    return apply_node((binary, boxes), tree.get_recognizer())
 
 
 TESTTREE = {
@@ -107,24 +111,60 @@ TESTTREE = {
             ("gap_factor", 10),
         ]
     },
+}
+
+TESTTREE_OCROPUS = {
+    "recognizer": {
+        "name": "Ocropus::NativeRecognizer",
+        "params": [
+            ("character_model", "Ocropus Default Char"),
+            ("language_model", "Ocropus Default Lang"),
+        ]
+    }
+}
+
+TESTTREE_TESSERACT = {
     "recognizer": {
         "name": "Tesseract::NativeRecognizer",
         "params": [
-            ("character_model", "Ocropus Default Char"),
-            ("language_model", "Default Tesseract English"),
+            ("language_model", "Tesseract Default Lang"),
+        ]
+    }
+}
+
+TESTTREE_CUNEIFORM = {
+    "recognizer": {
+        "name": "Cuneiform::NativeRecognizer",
+        "params": [
         ]
     }
 }
 
 
-def test(*args):
+def test(*args, **kwargs):
+    tree = kwargs.get("tree", TESTTREE)
     import ocrolib
     for f in args:
         ia = ocrolib.iulib.bytearray()
         ocrolib.iulib.read_image_gray(ia, f)
-        doc = apply_tree(ocrolib.narray2numpy(ia), OcrPipeline(TESTTREE))
+        doc = apply_tree(ocrolib.narray2numpy(ia), OcrPipeline(tree))
         for line in doc["lines"]:
             print line["text"]
+
+def test_ocropus(*args):
+    tree = TESTTREE
+    tree.update(TESTTREE_OCROPUS)
+    test(*args, tree=tree)
+
+def test_tesseract(*args):
+    tree = TESTTREE
+    tree.update(TESTTREE_TESSERACT)
+    test(*args, tree=tree)
+
+def test_cuneiform(*args):
+    tree = TESTTREE
+    tree.update(TESTTREE_CUNEIFORM)
+    test(*args, tree=tree)
 
 
 

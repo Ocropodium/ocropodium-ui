@@ -9,11 +9,11 @@ import tempfile
 from ocradmin.ocrmodels.models import OcrModel
 
 
-class NoSuchStageException(StandardError):
+class NoSuchNodeException(StandardError):
     pass
 
 
-class UnknownOcropusStageType(StandardError):
+class UnknownOcropusNodeType(StandardError):
     pass
 
 
