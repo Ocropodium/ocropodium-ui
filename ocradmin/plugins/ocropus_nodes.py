@@ -13,6 +13,8 @@ class OcropusFileInNode(node.Node):
     """
     A node that takes a file and returns a numpy object.
     """
+    _name = "FileIn"
+    _description = "File Input Node"
     _arity = 0
 
     def _eval(self):
@@ -34,6 +36,7 @@ class OcropusNode(node.Node):
         """
         super(OcropusNode, self).__init__(**kwargs)
         self._comp = comp
+        self._name = comp.__class__.__name__
         self._params = kwargs.get("params", {})
 
     def _set_p(self, p, v):
@@ -169,6 +172,7 @@ class OcropusRecognizerNode(node.Node):
         try:
             self._linerec = ocrolib.RecognizeLine()
             cmodpath = plugins.lookup_model_file(self._params["character_model"])
+            self.logger.info("Loading file: %s" % cmodpath)
             self._linerec.load_native(cmodpath)
             self._lmodel = ocrolib.OcroFST()
             lmodpath = plugins.lookup_model_file(self._params["language_model"])
