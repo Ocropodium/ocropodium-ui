@@ -1,14 +1,14 @@
 """
-Ocropus OCR processing stages.
+Ocropus OCR processing nodes.
 """
 
 import plugins
-import stage
-reload(stage)
+import node
+reload(node)
 
 import ocrolib
 
-class OcropusStage(stage.Stage):
+class OcropusNode(node.Node):
     """
     Wrapper around Ocropus component interface.
     """
@@ -16,7 +16,7 @@ class OcropusStage(stage.Stage):
         """
         Initialise with the ocropus component.
         """
-        super(OcropusStage, self).__init__(**kwargs)
+        super(OcropusNode, self).__init__(**kwargs)
         self._comp = comp
         self._params = kwargs.get("params", {})
 
@@ -39,7 +39,7 @@ class OcropusStage(stage.Stage):
         return self._comp.description()
 
 
-class OcropusBinarizeStage(OcropusStage):
+class OcropusBinarizeNode(OcropusNode):
     """
     Binarize an image with an Ocropus component.
     """
@@ -53,7 +53,7 @@ class OcropusBinarizeStage(OcropusStage):
         return self._comp.binarize(input)[0]
 
 
-class OcropusPageSegmentStage(OcropusStage):
+class OcropusPageSegmentNode(OcropusNode):
     """
     Segment an image using Ocropus.
     """
@@ -82,7 +82,7 @@ class OcropusPageSegmentStage(OcropusStage):
                     regions.y1(i) - regions.y0(i)])
         return out
 
-class OcropusGrayscaleFilterStage(OcropusStage):
+class OcropusGrayscaleFilterNode(OcropusNode):
     """
     Filter a binary image.
     """
@@ -90,7 +90,7 @@ class OcropusGrayscaleFilterStage(OcropusStage):
         return self._comp.cleanup_gray(input)
 
 
-class OcropusBinaryFilterStage(OcropusStage):
+class OcropusBinaryFilterNode(OcropusNode):
     """
     Filter a binary image.
     """
@@ -98,7 +98,7 @@ class OcropusBinaryFilterStage(OcropusStage):
         return self._comp.cleanup(input)
 
 
-class OcropusRecognizerStage(stage.Stage):
+class OcropusRecognizerNode(node.Node):
     """
     Recognize an image using Ocropus.
     """
@@ -106,7 +106,7 @@ class OcropusRecognizerStage(stage.Stage):
     _desc = "Ocropus Native Text Recognizer"
 
     def __init__(self, **kwargs):
-        super(OcropusRecognizerStage, self).__init__(**kwargs)
+        super(OcropusRecognizerNode, self).__init__(**kwargs)
         self._params = kwargs        
 
     def _eval(self, input):
@@ -172,30 +172,30 @@ class OcropusModule(object):
     """
     
     @classmethod
-    def get_stage(self, name):
+    def get_node(self, name):
         """
-        Get a stage by the given name.
+        Get a node by the given name.
         """
         if name == "NativeRecognizer":
-            return OcropusRecognizerStage()
+            return OcropusRecognizerNode()
         if not hasattr(ocrolib, name):
-            raise NoSuchStageException(name)
+            raise NoSuchNodeException(name)
         comp = getattr(ocrolib, name)()
         if comp.c_interface == "IBinarize":
-            return OcropusBinarizeStage(comp)
+            return OcropusBinarizeNode(comp)
         elif comp.c_interface == "ISegmentPage":
-            return OcropusPageSegmentStage(comp)
+            return OcropusPageSegmentNode(comp)
         elif comp.c_interface == "ICleanupGray":
-            return OcropusGrayscaleFilterStage(comp)
+            return OcropusGrayscaleFilterNode(comp)
         elif comp.c_interface == "ICleanupBinary":
-            return OcropusBinaryFilterStage(comp)
+            return OcropusBinaryFilterNode(comp)
         else:
-            raise UnknownOcropusStageType(name)
+            raise UnknownOcropusNodeType(name)
 
     @classmethod
-    def get_stages(self, *types):
+    def get_nodes(self, *types):
         """
-        Get stages of the given type.
+        Get nodes of the given type.
         """
         pass
 

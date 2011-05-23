@@ -1,17 +1,17 @@
 """
-Generic base classes for other stages.
+Generic base classes for other nodes.
 """
 
 import plugins
-import stage
+import node
 import ocrolib
-import ocropus_stages
+import ocropus_nodes
 
 class ExternalToolError(StandardError):
     pass
 
 
-class CommandLineRecognizerStage(ocropus_stages.OcropusRecognizerStage):
+class CommandLineRecognizerNode(ocropus_nodes.OcropusRecognizerNode):
     """
     Generic recogniser based on a command line tool.
     """
@@ -21,7 +21,7 @@ class CommandLineRecognizerStage(ocropus_stages.OcropusRecognizerStage):
         """
         Initialise.
         """
-        super(CommandLineRecognizerStage, self).__init__(*args, **kwargs)
+        super(CommandLineRecognizerNode, self).__init__(*args, **kwargs)
 
 
     def get_command(self, *args, **kwargs):

@@ -3,8 +3,8 @@ Tesseract Recogniser
 """
 
 import plugins
-import stage
-import generic_stages
+import node
+import generic_nodes
 
 import os
 import shutil
@@ -12,7 +12,7 @@ import tempfile
 import subprocess as sp
 
 
-class TesseractRecognizerStage(generic_stages.CommandLineRecognizerStage):
+class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     Recognize an image using Tesseract.
     """
@@ -117,10 +117,10 @@ class TesseractRecognizerStage(generic_stages.CommandLineRecognizerStage):
 
 class TesseractModule(object):
     """
-    Handle Tesseract stages.
+    Handle Tesseract nodes.
     """
     @classmethod
-    def get_stage(self, name):
+    def get_node(self, name):
         if name == "NativeRecognizer":
-            return TesseractRecognizerStage()
+            return TesseractRecognizerNode()
 
