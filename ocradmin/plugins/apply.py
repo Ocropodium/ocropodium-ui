@@ -2,6 +2,8 @@
 Apply a processing tree for a full OCR pipeline.
 """
 
+import node
+reload(node)
 import ocropus_nodes
 import tesseract_nodes
 import cuneiform_nodes
@@ -156,6 +158,7 @@ TESTTREE_CUNEIFORM = [
 ]
 
 def get_node(type, params):
+    reload(node)
     mod, name = type.split("::")
     reload(cuneiform_nodes)
     reload(tesseract_nodes)

@@ -4,6 +4,7 @@ Tesseract Recogniser
 
 import plugins
 import node
+reload(node)
 import generic_nodes
 
 import os
