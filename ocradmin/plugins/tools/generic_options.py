@@ -34,7 +34,7 @@ class GenericOptions(ocr_options.OcrOptions):
                     exclude=cls._ignored_components)
 
     @classmethod
-    def get_page_segmentation_parameters(cls):
+    def get_page_segmenters(cls):
         """
         Ocropus grayscale filters.
         """
@@ -56,7 +56,6 @@ class GenericOptions(ocr_options.OcrOptions):
         """
         Generic recognition options.
         """
-        print cls
         return super(GenericOptions, cls).get_recognition_parameters()
 
     @classmethod

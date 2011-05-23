@@ -101,7 +101,7 @@ class FinereaderOptions(ocr_options.OcrOptions):
         ]
 
     @classmethod
-    def get_page_segmentation_parameters(cls):
+    def get_page_segmenters(cls):
         """
         Finereader segmentation options.
         """
