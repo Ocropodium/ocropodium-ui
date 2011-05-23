@@ -1,85 +1,37 @@
+"""
+Tesseract Recogniser
+"""
 
+import plugins
+import stage
+import generic_stages
 
 import os
-import copy
-import tempfile
 import shutil
+import tempfile
 import subprocess as sp
-from ocradmin.plugins import check_aborted, set_progress, convert_to_temp_image, get_binary
-from ocradmin.ocrmodels.models import OcrModel
-import generic_wrapper
-reload(generic_wrapper)
-
-from ocradmin.plugins import parameters
-reload(parameters)
 
 
-def main_class():
-    return TesseractWrapper
-
-
-class TesseractWrapper(generic_wrapper.GenericWrapper):
+class TesseractRecognizerStage(generic_stages.CommandLineRecognizerStage):
     """
-    Override certain methods of the OcropusWrapper to
-    use Tesseract for recognition of individual lines.
+    Recognize an image using Tesseract.
     """
-    name = "tesseract"
-    description = "Wrapper for Tesseract 3.0 OCR"
-    capabilities = ["line"]
-
-    def __init__(self, *args, **kwargs):
-        """
-        Initialise a TesseractWrapper object.
-        """
-        super(TesseractWrapper, self).__init__(*args, **kwargs)
-        self.config = kwargs.get("config") if kwargs.get("config") \
-                else parameters.OcrParameters.from_parameters(
-                    dict(name=self.name, parameters=self.parameters()))
-        self._tessdata = None
-        self._lang = None
-        self._tesseract = None
+    _name = "TesseractNativeRecognizer"
+    _desc = "Tesseract Native Text Recognizer"
+    binary = "tesseract"
 
     def init_converter(self):
         """
         Extract the lmodel to a temporary directory.  This is
         cleaned up in the destructor.
         """
-        if self._tessdata is None:
-            modpath = OcrModel.objects.get(
-                    name=self.config.language_model).file.path.encode()
+        if not hasattr(self, "_tessdata") is None:
+            modpath = plugins.lookup_model_file(self._params["language_model"])
             self.unpack_tessdata(modpath)
-        self._tesseract = get_binary("tesseract")
+        self._tesseract = plugins.get_binary("tesseract")
         self.logger.info("Using Tesseract: %s" % self._tesseract)
 
-    @classmethod
-    def parameters(cls):
-        params = copy.deepcopy(generic_wrapper.GenericWrapper.parameters())
-        mods = OcrModel.objects.filter(app="tesseract")
-        lmods = [dict(name=m.name, description=m.description) for m in
-                 mods if m.type == "lang"]
-        _parameters = [
-            {
-                "name": "language_model",
-                "description": "Language Model",
-                "type": "scalar",
-                "value": "Tesseract Default Lang",
-                "help": "Model for language processing",
-                "multiple": False,
-                "choices": lmods,
-            },
-        ]
-        params.extend(_parameters)
-        return params
-
-    @classmethod
-    def _get_language_model_parameter_info(cls):
-        info = [i for i in cls.parameters() if i["name"] == "language_model"][0]
-        mods = OcrModel.objects.filter(app="tesseract", type="lang")
-        info["choices"] = [
-                dict(name=m.name, description=m.description) for m in mods]
-        return info
-
-    @check_aborted
+    @plugins.check_aborted
     def get_transcript(self, line):
         """
         Recognise each individual line by writing it as a temporary
@@ -90,7 +42,7 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
         with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
             tmp.close()
             self.write_binary(tmp.name, line)
-            tiff = convert_to_temp_image(tmp.name, "tif")
+            tiff = plugins.convert_to_temp_image(tmp.name, "tif")
             text = self.process_line(tiff)
             os.unlink(tmp.name)
             os.unlink(tiff)
@@ -118,7 +70,7 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
         # this DOESN'T include the "tessdata" part
         os.environ["TESSDATA_PREFIX"] = self._tessdata
 
-    @check_aborted
+    @plugins.check_aborted
     def process_line(self, imagepath):
         """
         Run Tesseract on the TIFF image, using YET ANOTHER temporary
@@ -127,7 +79,7 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
         Tesseract's external interface is quite inflexible.
         TODO: Fix hardcoded path to Tesseract.
         """
-        if self._tessdata is None:
+        if not hasattr(self, "_tessdata"):
             self.init_converter()
 
         lines = []
@@ -140,10 +92,6 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
             err = proc.stderr.read()
             if proc.wait() != 0:
                 return "!!! TESSERACT CONVERSION ERROR %d: %s !!!" % (proc.returncode, err)
-                #raise RuntimeError(
-                #    "tesseract failed with errno %d: %s" % (
-                #        proc.returncode, err))
-
             # read and delete Tesseract's temp text file
             # whilst writing to our file
             with open(tmp.name + ".txt", "r") as txt:
@@ -157,7 +105,7 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
         """
         Cleanup temporarily-extracted lmodel directory.
         """
-        if self._tessdata and os.path.exists(self._tessdata):
+        if hasattr(self, "_tessdata") and os.path.exists(self._tessdata):
             try:
                 self.logger.info(
                     "Cleaning up temp tessdata folder: %s" % self._tessdata)
@@ -165,4 +113,14 @@ class TesseractWrapper(generic_wrapper.GenericWrapper):
             except OSError, (errno, strerr):
                 self.logger.error(
                     "RmTree raised error: %s, %s" % (errno, strerr))
+
+
+class TesseractModule(object):
+    """
+    Handle Tesseract stages.
+    """
+    @classmethod
+    def get_stage(self, name):
+        if name == "NativeRecognizer":
+            return TesseractRecognizerStage()
 
