@@ -131,44 +131,45 @@ TESTTREE_CUNEIFORM = [
 
 
 
-def test(files, tree):
-    for f in files:
-        tnew = copy.deepcopy(tree)
-        for n in tnew:
-            if n["name"] == "filein":
-                for p in n["params"]:
-                    if p[0] == "path":
-                        p = ("path", f)
-        pl = OcrPipeline(tnew)
-        doc = pl.get_terminals()[0].eval()
-        for line in doc["lines"]:
-            print line["text"]
+def test(name, f, tree):
+    print "\nTesting %s: %s" % (name, f)
+    tnew = copy.deepcopy(tree)
+    for n in tnew:
+        if n["name"] == "filein":
+            for i in range(len(n["params"])):
+                if n["params"][i][0] == "path":
+                    n["params"][i] = ("path", f)
+    pl = OcrPipeline(tnew)
+    doc = pl.get_terminals()[0].eval()
+    for line in doc["lines"]:
+        print line["text"]
 
 def test_ocropus(*files):
-    print "\nTesting Ocropus"
     tree = copy.deepcopy(TESTTREE)
     tree.extend(TESTTREE_OCROPUS)
-    test(files, tree)
+    for f in files:
+        test("Ocropus", f, tree)
 
 def test_tesseract(*files):
-    print "\nTesting Tesseract"
     tree = copy.deepcopy(TESTTREE)
     tree.extend(TESTTREE_TESSERACT)
-    test(files, tree)
+    for f in files:
+        test("Tesseract", f, tree)
 
 def test_cuneiform(*files):
-    print "\nTesting Cuneiform"
     tree = copy.deepcopy(TESTTREE)
     tree.extend(TESTTREE_CUNEIFORM)
-    test(files, tree)
+    for f in files:
+        test("Cuneiform", f, tree)
 
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        test_ocropus(sys.argv[1:])
-        test_tesseract(sys.argv[1:])
-        test_cuneiform(sys.argv[1:])
+        files = sys.argv[1:]
+        test_ocropus(*files)
+        test_tesseract(*files)
+        test_cuneiform(*files)
 
 
 
