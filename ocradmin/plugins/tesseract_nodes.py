@@ -19,6 +19,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     _name = "TesseractNativeRecognizer"
     _desc = "Tesseract Native Text Recognizer"
+    _stage = "recognize"
     binary = "tesseract"
 
     def init_converter(self):

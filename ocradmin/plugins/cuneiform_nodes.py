@@ -21,6 +21,7 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     _name = "CuneiformNativeRecognizer"
     _desc = "Cuneiform Native Text Recognizer"
     binary = "cuneiform"
+    _stage = "recognize"
     _arity = 1
 
     def get_command(self, outfile, image):

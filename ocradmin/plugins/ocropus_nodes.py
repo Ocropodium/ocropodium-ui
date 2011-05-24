@@ -16,6 +16,7 @@ class OcropusFileInNode(node.Node):
     _name = "FileIn"
     _description = "File Input Node"
     _arity = 0
+    _stage = "filein"
 
     def _eval(self):
         if not self._params.get("path"):
@@ -38,6 +39,7 @@ class OcropusNode(node.Node):
         self._comp = comp
         self._name = comp.__class__.__name__
         self._params = kwargs.get("params", {})
+        _stage = None
 
     def _set_p(self, p, v):
         """
@@ -63,6 +65,7 @@ class OcropusBinarizeNode(OcropusNode):
     Binarize an image with an Ocropus component.
     """
     _arity = 1
+    _stage = "binarize"
     def _eval(self):
         """
         Perform binarization on an image.
@@ -79,6 +82,7 @@ class OcropusPageSegmentNode(OcropusNode):
     Segment an image using Ocropus.
     """
     _arity = 1
+    _stage = "page_segment"
     def _eval(self):
         """
         Segment a binary image.
@@ -110,6 +114,7 @@ class OcropusGrayscaleFilterNode(OcropusNode):
     Filter a binary image.
     """
     _arity = 1
+    _stage = "filter"
     def _eval(self):
         input = self.eval_input(0)
         return self._comp.cleanup_gray(input)
@@ -120,6 +125,7 @@ class OcropusBinaryFilterNode(OcropusNode):
     Filter a binary image.
     """
     _arity = 1
+    _stage = "filter"
     def _eval(self):
         input = self.eval_input(0)
         return self._comp.cleanup(input)
@@ -131,6 +137,7 @@ class OcropusRecognizerNode(node.Node):
     """
     _name = "OcropusNativeRecognizer"
     _desc = "Ocropus Native Text Recognizer"
+    _stage = "recognize"
     _arity = 2
 
     def __init__(self, **kwargs):
@@ -182,11 +189,11 @@ class OcropusRecognizerNode(node.Node):
             raise
 
     @plugins.check_aborted
-    def get_transcript(self, line):
+    def get_transcript(self, line):        
         """
         Run line-recognition on an ocrolib.iulib.bytearray images of a
         single line.
-        """
+        """        
         if not hasattr(self, "_lmodel"):
             self.init_converter()
         fst = self._linerec.recognizeLine(line)
