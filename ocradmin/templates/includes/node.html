@@ -1,5 +1,23 @@
-<script id="nodeTemplate" type="application/x-jquery-tmpl">
+<script id="nodeTmpl" type="application/x-jquery-tmpl">
     <div class="node ${stage} arity${arity}" title="${description}">
         <div class="nodename">${name}</div>
+    </div>
+</script>
+
+<script id="nodeMenuTmpl" type="application/x-jquery-tmpl">
+    <div class="nodemenu" id="nodemenu">
+        <h4>OCR Nodes</h4>
+        <ul>
+        {% templatetag openvariable %}each(stage,stagenodes) stages{% templatetag closevariable %}    
+            <li class="topmenu">
+                ${stage}
+                <ul class="nodemenu submenu hidden">
+                {% templatetag openvariable %}each(i,node) stagenodes{% templatetag closevariable %}    
+                    <li>${node.name}</li>
+                {% templatetag openvariable %}/each{% templatetag closevariable %}    
+                </ul>
+            </li>
+        {% templatetag openvariable %}/each{% templatetag closevariable %}    
+        </ul>
     </div>
 </script>

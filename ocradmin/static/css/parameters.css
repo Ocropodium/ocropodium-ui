@@ -1,6 +1,56 @@
+div#options {
+    height: 300px;
+
+}
+
+.nodemenu {
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+    position: absolute;
+    border: 1px solid #999;
+    padding: 3px;
+
+    background: #f8f8f8;
+    background: -moz-linear-gradient(top, #f8f8f8 0%, #ebebeb 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#ebebeb));
+    background: -webkit-linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
+    background: -o-linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
+    background: -ms-linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f8f8f8', endColorstr='#ebebeb',GradientType=0 );
+    background: linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
+}
+
+.nodemenu h4 {
+    margin: 2px;
+}
+
+.nodemenu .hidden {
+    display: none;
+}
+
+.nodemenu ul {
+    list-style-type: none;
+    margin-left: 5px;
+    padding-left: 0px;
+    cursor: default;
+}
+
+.nodemenu li {
+    display: block;
+    padding: 2px;
+    padding-right: 15px;
+    padding-left: 5px;
+}
+
+.nodemenu li.topmenu {
+    background-image: url("/static/vt_scroll_right.gif");
+    background-position: right center;
+    background-repeat: no-repeat;
+}
 
 div.node {
-    width: 40%;
+    width: 150px;
     height: 30px;
     overflow: hidden;
     border-top: 1px solid #999;
@@ -9,7 +59,7 @@ div.node {
     border-bottom: 1px solid #BBB;
     text-align: center;
     vertical-align: middle;
-    padding-top: 2px;
+    padding: 2px;
     box-shadow: 1px 2px 2px #919598;
     -webkit-box-shadow: 1px 2px 2px #919598;
     -moz-box-shadow: 1px 2px 2px #919598;
@@ -22,5 +72,9 @@ div.node {
     background: -ms-linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f8f8f8', endColorstr='#ebebeb',GradientType=0 );
     background: linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
+}
+
+div.node.floating {
+    opacity: 0.7;
 }
 
