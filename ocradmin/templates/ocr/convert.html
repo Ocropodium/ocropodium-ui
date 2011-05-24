@@ -38,6 +38,8 @@
 
 {% block content %}
 
+{% include "includes/node.html" %}
+
 <div id="sidebar" class="widget">
     <div class="widget_header">Options</div>
     <div class="widget_content">
@@ -56,13 +58,6 @@
             <div id="options" class="option_box">
             
             </div>
-             
-            {% if task %}
-                <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
-                <input type="hidden" name="preload_params" value="{{preload_params}}" />
-                <input type="hidden" name="preload_page_name" value="{{task.page_name}}" />
-                <input type="submit" value="Update" id="submit_update_task" />
-            {% endif %}
         </form>
     </div>
 </div>
