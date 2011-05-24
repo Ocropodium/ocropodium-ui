@@ -12,6 +12,9 @@ LOGGER.setLevel(logging.DEBUG)
 def UnsetParameterError(StandardError):
     pass
 
+def InvalidParameterError(StandardError):
+    pass
+
 def CircularDagError(StandardError):
     pass
 
@@ -26,11 +29,15 @@ class Node(object):
     Node object.  Evaluates some input and
     return the output.
     """
-    _name = "node"
-    _description = "Base node"
-    _arity = 1
+    name = "node"
+    description = "Base node"
+    arity = 1
+    stage = "general"
+    _parameters = [
 
-    def __init__(self, abort_func=None, progress_func = None, logger=None):
+    ]
+
+    def __init__(self, label=None, abort_func=None, progress_func=None, logger=None):
         """
         Initialise a node.
         """
@@ -47,21 +54,20 @@ class Node(object):
         else:
             self.progress_func = noop_progress_func
         self._params = {}
+        self.label = label
         self._cache = None
         self._parents = []
-        self._inputs = [None for n in range(self._arity)]
+        self._inputs = [None for n in range(self.arity)]
+
+    @classmethod
+    def parameters(cls):
+        return cls._parameters
 
     def set_param(self, param, name):
         """
         Set a parameter.
         """
         self._params[param] = name
-
-    def params(self):
-        """
-        Get all params.
-        """
-        return self._params
 
     def _set_p(self, p, v):
         """
@@ -75,16 +81,23 @@ class Node(object):
         """
         pass
 
-    def add_parent(self, node):
+    def add_parent(self, n):
         """
         Add a parent node.
         """
-        if self == node:
+        if self == n:
             raise CircularDagError("Node added as parent to self")
-        if not node in self._parents:
-            self._parents.append(node)
+        if not n in self._parents:
+            self._parents.append(n)
 
-    def set_input(self, num, node):
+    def has_parents(self):
+        """
+        Check if the node is a terminal node
+        or if there's a tree further down.
+        """
+        return bool(len(self._parents))
+
+    def set_input(self, num, n):
         """
         Set an input.
 
@@ -93,8 +106,8 @@ class Node(object):
         """
         if num > len(self._inputs) - 1:
             raise InputOutOfRange(self._name)
-        node.add_parent(self)
-        self._inputs[num] = node
+        n.add_parent(self)
+        self._inputs[num] = n
 
     def mark_dirty(self):
         """
@@ -118,24 +131,33 @@ class Node(object):
         """
         return self._inputs[num].eval()
 
+    def validate(self):
+        """
+        Check params are present and correct.
+        """
+        pass
+
     def eval(self):
         """
         Eval the node.
         """
-        for p, v in self._params.iteritems():
-            self.logger.debug("Set Param %s.%s -> %s" % (
-                    self._name, p, v))
-            self._set_p(p, v)
+        self.logger.debug("Evaluating '%s' Node", self)
         if self._cache is not None:
             self.logger.debug("%s returning cached input", self)
             return self._cache
-        else:
-            self._cache = self._eval()
+        self.validate()
+        for p, v in self._params.iteritems():
+            self.logger.debug("Set Param %s.%s -> %s",
+                    self, p, v)
+            self._set_p(p, v)            
+        self._cache = self._eval()
         return self._cache
 
     def __repr__(self):
-        return "<Node: %s" % self._name
+        return "<Node: %s" % self.name
 
     def __str__(self):
-        return self._name
+        return self.name
+
+
 
