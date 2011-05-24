@@ -10,6 +10,7 @@ div#options {
     position: absolute;
     border: 1px solid #999;
     padding: 3px;
+    z-index: 1000;
 
     background: #f8f8f8;
     background: -moz-linear-gradient(top, #f8f8f8 0%, #ebebeb 100%);
