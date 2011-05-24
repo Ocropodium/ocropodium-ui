@@ -5,7 +5,7 @@ Cuneiform Recogniser
 import plugins
 import manager
 import node
-#reload(node)
+import stages
 import generic_nodes
 import types
 
@@ -22,7 +22,7 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     name = "CuneiformNativeRecognizer"
     description = "Cuneiform Native Text Recognizer"
     binary = "cuneiform"
-    stage = "recognize"
+    stage = stages.RECOGNIZE
     arity = 1
 
     def get_command(self, outfile, image):
@@ -70,11 +70,8 @@ class Manager(manager.StandardManager):
 
     @classmethod
     def get_nodes(cls, *oftypes):
-        nodes = []
-        for name, item in globals().iteritems():
-            if isinstance(item, type) and name.endswith("Node"):
-                nodes.append(item)
-        return nodes            
+        return super(Manager, cls).get_nodes(
+                *oftypes, globals=globals())
 
 if __name__ == "__main__":
     for n in Manager.get_nodes():

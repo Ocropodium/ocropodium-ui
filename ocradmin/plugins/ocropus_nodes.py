@@ -8,6 +8,7 @@ import sys
 import plugins
 import node
 import manager
+import stages
 #reload(node)
 
 import ocrolib
@@ -24,7 +25,7 @@ class OcropusFileInNode(node.Node):
     name = "FileIn"
     description = "File Input Node"
     arity = 0
-    stage = "filein"
+    stage = stages.INPUT
     _parameters = [dict(name="path", value="")]
         
 
@@ -46,7 +47,6 @@ class OcropusBase(node.Node):
     """
     _comp = None
     name = "base"
-    stage = "none"
 
     def __init__(self, **kwargs):
         """
@@ -80,7 +80,8 @@ class OcropusBinarizeBase(OcropusBase):
     Binarize an image with an Ocropus component.
     """
     arity = 1
-    stage = "binarize"
+    stage = stages.BINARIZE
+
     def _eval(self):
         """
         Perform binarization on an image.
@@ -97,7 +98,7 @@ class OcropusSegmentPageBase(OcropusBase):
     Segment an image using Ocropus.
     """
     arity = 1
-    stage = "page_segment"
+    stage = stages.PAGE_SEGMENT
 
     def _eval(self):
         """
@@ -131,7 +132,7 @@ class OcropusGrayscaleFilterBase(OcropusBase):
     Filter a binary image.
     """
     arity = 1
-    stage = "filter_grayscale"
+    stage = stages.FILTER_GRAY
 
     def _eval(self):
         input = self.eval_input(0)
@@ -143,7 +144,7 @@ class OcropusBinaryFilterBase(OcropusBase):
     Filter a binary image.
     """
     arity = 1
-    stage = "filter_binary"
+    stage = stages.FILTER_BINARY
 
     def _eval(self):
         input = self.eval_input(0)
@@ -156,7 +157,7 @@ class OcropusRecognizerNode(node.Node):
     """
     name = "OcropusNativeRecognizer"
     description = "Ocropus Native Text Recognizer"
-    stage = "recognize"
+    stage = stages.RECOGNIZE
     arity = 2
 
     def __init__(self, **kwargs):
@@ -264,6 +265,7 @@ class Manager(manager.StandardManager):
             return OcropusRecognizerNode
         elif name == "FileIn":
             return OcropusFileInNode
+        # FIXME: This clearly sucks
         comp = None
         if comps is not None:
             for c in comps:
@@ -303,7 +305,11 @@ class Manager(manager.StandardManager):
         nodes = super(Manager, cls).get_nodes(*oftypes, **kwargs)
         rawcomps = cls.get_components(oftypes=cls._use_types, exclude=cls._ignored)
         for comp in rawcomps:
-            nodes.append(cls.get_node_class(comp.__class__.__name__, comps=rawcomps))
+            n = cls.get_node_class(comp.__class__.__name__, comps=rawcomps)
+            if len(oftypes) > 0:
+                if n.stage not in oftypes:
+                    continue
+            nodes.append(n)
         return nodes
 
 
