@@ -4,7 +4,8 @@ Tesseract Recogniser
 
 import plugins
 import node
-reload(node)
+import manager
+#reload(node)
 import generic_nodes
 
 import os
@@ -17,9 +18,9 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     Recognize an image using Tesseract.
     """
-    _name = "TesseractNativeRecognizer"
-    _desc = "Tesseract Native Text Recognizer"
-    _stage = "recognize"
+    name = "TesseractNativeRecognizer"
+    description = "Tesseract Native Text Recognizer"
+    stage = "recognize"
     binary = "tesseract"
 
     def init_converter(self):
@@ -117,12 +118,24 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                     "RmTree raised error: %s, %s" % (errno, strerr))
 
 
-class TesseractModule(object):
+class Manager(manager.StandardManager):
     """
     Handle Tesseract nodes.
     """
     @classmethod
-    def get_node(self, name):
+    def get_node(self, name, **kwargs):
         if name == "NativeRecognizer":
-            return TesseractRecognizerNode()
+            return TesseractRecognizerNode(**kwargs)
+
+    @classmethod
+    def get_nodes(cls, *oftypes):
+        return super(Manager, cls).get_nodes(
+                *oftypes, globals=globals())
+
+
+if __name__ == "__main__":
+    for n in Manager.get_nodes():
+        print n
+
+
 

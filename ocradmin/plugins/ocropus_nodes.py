@@ -2,44 +2,57 @@
 Ocropus OCR processing nodes.
 """
 
+import os
+import sys
+
 import plugins
 import node
-reload(node)
+import manager
+#reload(node)
 
 import ocrolib
+
+class UnknownOcropusNodeType(StandardError):
+    pass
+
 
 
 class OcropusFileInNode(node.Node):
     """
     A node that takes a file and returns a numpy object.
     """
-    _name = "FileIn"
-    _description = "File Input Node"
-    _arity = 0
-    _stage = "filein"
+    name = "FileIn"
+    description = "File Input Node"
+    arity = 0
+    stage = "filein"
+    _parameters = [dict(name="path", value="")]
+        
 
-    def _eval(self):
+    def validate(self):
+        super(OcropusFileInNode, self).validate()
         if not self._params.get("path"):
             raise node.UnsetParameterError("path")
+
+    def _eval(self):
         ba = ocrolib.iulib.bytearray()
         ocrolib.iulib.read_image_binary(ba, self._params.get("path"))
         return ocrolib.narray2numpy(ba)
         
     
 
-class OcropusNode(node.Node):
+class OcropusBase(node.Node):
     """
     Wrapper around Ocropus component interface.
     """
-    def __init__(self, comp, **kwargs):
+    _comp = None
+    name = "base"
+    stage = "none"
+
+    def __init__(self, **kwargs):
         """
-        Initialise with the ocropus component.
+        Initialise with the ocropus component.  
         """
-        super(OcropusNode, self).__init__(**kwargs)
-        self._comp = comp
-        self._name = comp.__class__.__name__
-        self._params = kwargs.get("params", {})
-        _stage = None
+        super(OcropusBase, self).__init__(**kwargs)
 
     def _set_p(self, p, v):
         """
@@ -47,25 +60,27 @@ class OcropusNode(node.Node):
         """
         self._comp.pset(p, v)
 
-    def name(self):
+    @classmethod
+    def parameters(cls):
         """
-        Get the inner component name.
+        Get parameters from an Ocropus Node.
         """
-        return self._comp.__class__.__name__
+        p = []
+        for i in range(cls._comp.plength()):
+            n = cls._comp.pname(i)
+            p.append(dict(
+                name=n,
+                value=cls._comp.pget(n),
+            ))
+        return p            
 
-    def description(self):
-        """
-        Get the inner component description.
-        """
-        return self._comp.description()
 
-
-class OcropusBinarizeNode(OcropusNode):
+class OcropusBinarizeBase(OcropusBase):
     """
     Binarize an image with an Ocropus component.
     """
-    _arity = 1
-    _stage = "binarize"
+    arity = 1
+    stage = "binarize"
     def _eval(self):
         """
         Perform binarization on an image.
@@ -77,12 +92,13 @@ class OcropusBinarizeNode(OcropusNode):
         return self._comp.binarize(input)[0]
 
 
-class OcropusPageSegmentNode(OcropusNode):
+class OcropusSegmentPageBase(OcropusBase):
     """
     Segment an image using Ocropus.
     """
-    _arity = 1
-    _stage = "page_segment"
+    arity = 1
+    stage = "page_segment"
+
     def _eval(self):
         """
         Segment a binary image.
@@ -109,23 +125,26 @@ class OcropusPageSegmentNode(OcropusNode):
                     regions.y1(i) - regions.y0(i)])
         return out
 
-class OcropusGrayscaleFilterNode(OcropusNode):
+
+class OcropusGrayscaleFilterBase(OcropusBase):
     """
     Filter a binary image.
     """
-    _arity = 1
-    _stage = "filter"
+    arity = 1
+    stage = "filter_grayscale"
+
     def _eval(self):
         input = self.eval_input(0)
         return self._comp.cleanup_gray(input)
 
 
-class OcropusBinaryFilterNode(OcropusNode):
+class OcropusBinaryFilterBase(OcropusBase):
     """
     Filter a binary image.
     """
-    _arity = 1
-    _stage = "filter"
+    arity = 1
+    stage = "filter_binary"
+
     def _eval(self):
         input = self.eval_input(0)
         return self._comp.cleanup(input)
@@ -135,10 +154,10 @@ class OcropusRecognizerNode(node.Node):
     """
     Recognize an image using Ocropus.
     """
-    _name = "OcropusNativeRecognizer"
-    _desc = "Ocropus Native Text Recognizer"
-    _stage = "recognize"
-    _arity = 2
+    name = "OcropusNativeRecognizer"
+    description = "Ocropus Native Text Recognizer"
+    stage = "recognize"
+    arity = 2
 
     def __init__(self, **kwargs):
         super(OcropusRecognizerNode, self).__init__(**kwargs)
@@ -203,40 +222,154 @@ class OcropusRecognizerNode(node.Node):
 
 
 
-class OcropusModule(object):
+class Manager(manager.StandardManager):
     """
     Interface to ocropus.
     """
+    _use_types = (
+        "IBinarize",
+        "ISegmentPage",
+        "ICleanupGray",
+        "ICleanupBinary",
+    )
+    _ignored = (
+        "StandardPreprocessing",
+    )
+
+    @classmethod
+    def get_components(cls, oftypes=None, withnames=None, exclude=None):
+        """
+        Get a datastructure contraining all Ocropus components
+        (possibly of a given type) and their default parameters.
+        """
+        out = cls._get_native_components(oftypes, withnames, exclude=exclude)
+        out.extend(cls._get_python_components(oftypes, withnames, exclude=exclude))
+        return out
+    
     
     @classmethod
-    def get_node(self, name):
+    def get_node(cls, name, **kwargs):
         """
         Get a node by the given name.
         """
-        if name == "NativeRecognizer":
-            return OcropusRecognizerNode()
-        elif name == "FileIn":
-            return OcropusFileInNode()
-        if not hasattr(ocrolib, name):
-            raise plugins.NoSuchNodeException(name)
-        comp = getattr(ocrolib, name)()
-        if comp.c_interface == "IBinarize":
-            return OcropusBinarizeNode(comp)
-        elif comp.c_interface == "ISegmentPage":
-            return OcropusPageSegmentNode(comp)
-        elif comp.c_interface == "ICleanupGray":
-            return OcropusGrayscaleFilterNode(comp)
-        elif comp.c_interface == "ICleanupBinary":
-            return OcropusBinaryFilterNode(comp)
-        else:
-            raise UnknownOcropusNodeType(name)
+        klass = cls.get_node_class(name)
+        return klass(**kwargs)
 
     @classmethod
-    def get_nodes(self, *types):
+    def get_node_class(cls, name, comps=None):
+        """
+        Get a node class for the given name.
+        """
+        if name == "NativeRecognizer":
+            return OcropusRecognizerNode
+        elif name == "FileIn":
+            return OcropusFileInNode
+        comp = None
+        if comps is not None:
+            for c in comps:
+                if name == c.__class__.__name__:
+                    comp = c
+                    break
+        else:
+            comp = getattr(ocrolib, name)()
+        if node is None:
+            raise plugins.NoSuchNodeException(name)
+
+        base = OcropusBase
+        if comp.interface() == "IBinarize":
+            base = OcropusBinarizeBase
+        elif comp.interface() == "ISegmentPage":
+            base = OcropusSegmentPageBase
+        elif comp.interface() == "ICleanupGray":
+            base = OcropusGrayscaleFilterBase
+        elif comp.interface() == "ICleanupBinary":
+            base = OcropusBinaryFilterBase
+        else:
+            raise UnknownOcropusNodeType(name, comp.interface())
+        # this is a bit weird
+        # create a new class with the name '<OcropusComponentName>Node'
+        # and the component as the inner _comp attribute
+        return type("%sNode" % comp.__class__.__name__,
+                    (base,), 
+                    dict(_comp=comp, description=comp.description(),
+                        name=comp.__class__.__name__))
+
+    @classmethod
+    def get_nodes(cls, *oftypes, **kwargs):
         """
         Get nodes of the given type.
         """
-        pass
+        kwargs.update(dict(globals=globals()))
+        nodes = super(Manager, cls).get_nodes(*oftypes, **kwargs)
+        rawcomps = cls.get_components(oftypes=cls._use_types, exclude=cls._ignored)
+        for comp in rawcomps:
+            nodes.append(cls.get_node_class(comp.__class__.__name__, comps=rawcomps))
+        return nodes
+
+
+    @classmethod
+    def _get_native_components(cls, oftypes=None, withnames=None, exclude=None):
+        """
+        Get a datastructure contraining all Ocropus native components
+        (possibly of a given type) and their default parameters.
+        """
+        out = []
+        clist = ocrolib.ComponentList()
+        for i in range(clist.length()):
+            ckind = clist.kind(i)
+            if oftypes and not \
+                    ckind.lower() in [c.lower() for c in oftypes]:
+                continue
+            cname = clist.name(i)
+            if withnames and not \
+                    cname.lower() in [n.lower() for n in withnames]:
+                continue
+            if exclude and cname.lower() in [n.lower() for n in exclude]:
+                continue
+            compdict = dict(name=cname, type=ckind, parameters=[])
+            # TODO: Fix this heavy-handed exception handling which is
+            # liable to mask genuine errors - it's needed because of
+            # various inconsistencies in the Python/native component
+            # wrappers.
+            try:
+                comp = getattr(ocrolib, cname)()
+            except (AttributeError, AssertionError, IndexError):
+                continue
+            out.append(comp)
+        return out
+
+    @classmethod
+    def _get_python_components(cls, oftypes=None, withnames=None, exclude=None):
+        """
+        Get native python components.
+        """
+        out = []
+        directory = os.path.join(os.path.dirname(__file__), "tools/components")
+        for fname in os.listdir(directory):
+            if not fname.endswith(".py"):
+                continue
+            if not directory in sys.path:
+                sys.path.insert(0, directory)
+            modname = fname.replace(".py", "", 1)
+            pmod = __import__("%s" % modname, fromlist=["main_class"])
+            if not hasattr(pmod, "main_class"):
+                continue
+            ctype = pmod.main_class()
+            ckind = ctype.__base__.__name__
+            # note: the loading function in ocropy/components.py expects
+            # python components to have a module-qualified name, i.e:
+            # mymodule.MyComponent.
+            cname = ctype.__name__
+            if oftypes and not \
+                    ckind.lower() in [c.lower() for c in oftypes]:
+                continue
+            if withnames and not \
+                    cname.lower() in [n.lower() for n in withnames]:
+                continue
+            if exclude and cname.lower() in [n.lower() for n in exclude]:
+                continue
+            out.append(ctype())
+        return out
 
 
 

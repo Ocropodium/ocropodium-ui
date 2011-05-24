@@ -16,8 +16,9 @@ SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(SITE_ROOT, "lib"))
 
 # add plugin path to pythonpath
-sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools"))
-sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools/components"))
+#sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools"))
+
+#sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools/components"))
 
 # flag whether we're on a server.  Really need a better way of doing this.
 # ocr1 is the db master

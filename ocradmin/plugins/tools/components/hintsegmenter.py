@@ -247,6 +247,12 @@ class SegmentPageByHint(ocropus.ISegmentPage):
         """
         return "seghint"
 
+    def interface(self):
+        """
+        Override interface.
+        """
+        return "ISegmentPage"
+
     def description(self):
         """
         Descriptive string for help etc.

@@ -6,14 +6,8 @@ import os
 import subprocess as sp
 import tempfile
 
-from ocradmin.ocrmodels.models import OcrModel
-
 
 class NoSuchNodeException(StandardError):
-    pass
-
-
-class UnknownOcropusNodeType(StandardError):
     pass
 
 
@@ -36,6 +30,7 @@ def lookup_model_file(modelname):
     Lookup the filename of a model from its
     database name.
     """
+    from ocradmin.ocrmodels.models import OcrModel
     mod = OcrModel.objects.get(name=modelname)
     return mod.file.path.encode()
 

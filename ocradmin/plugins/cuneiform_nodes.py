@@ -1,28 +1,29 @@
 """
-Tesseract Recogniser
+Cuneiform Recogniser
 """
 
 import plugins
+import manager
 import node
-reload(node)
+#reload(node)
 import generic_nodes
+import types
 
 import os
 import shutil
 import tempfile
 import subprocess as sp
-from ocradmin.core.utils import HocrParser
 
 
 class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     Recognize an image using Cuneiform.
     """
-    _name = "CuneiformNativeRecognizer"
-    _desc = "Cuneiform Native Text Recognizer"
+    name = "CuneiformNativeRecognizer"
+    description = "Cuneiform Native Text Recognizer"
     binary = "cuneiform"
-    _stage = "recognize"
-    _arity = 1
+    stage = "recognize"
+    arity = 1
 
     def get_command(self, outfile, image):
         """
@@ -34,6 +35,7 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         """
         Convert a full page.
         """
+        from ocradmin.core.utils import HocrParser
         binary = self.eval_input(0)
         json = None
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
@@ -57,12 +59,25 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         return json   
 
 
-class CuneiformModule(object):
+class Manager(manager.StandardManager):
     """
     Handle Tesseract nodes.
     """
     @classmethod
-    def get_node(self, name):
+    def get_node(self, name, **kwargs):
         if name == "NativeRecognizer":
-            return CuneiformRecognizerNode()
+            return CuneiformRecognizerNode(**kwargs)
+
+    @classmethod
+    def get_nodes(cls, *oftypes):
+        nodes = []
+        for name, item in globals().iteritems():
+            if isinstance(item, type) and name.endswith("Node"):
+                nodes.append(item)
+        return nodes            
+
+if __name__ == "__main__":
+    for n in Manager.get_nodes():
+        print n
+
 

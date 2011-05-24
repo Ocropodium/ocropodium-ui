@@ -44,6 +44,12 @@ class SegmentPageManual(ocrolib.ocropus.ISegmentPage):
         """
         return "Segment Page by Manual Coordinated."
 
+    def interface(self):
+        """
+        Override interface.
+        """
+        return "ISegmentPage"
+
     def plength(self):
         return len(self._params)
 
