@@ -105,6 +105,13 @@ class Node(object):
             parent.mark_dirty()
         self._cache = None
 
+    def set_cache(self, cache):
+        """
+        Set the cache on a node, preventing it
+        from eval'ing its inputs.
+        """
+        self._cache = cache
+
     def eval_input(self, num):
         """
         Eval an input node.
