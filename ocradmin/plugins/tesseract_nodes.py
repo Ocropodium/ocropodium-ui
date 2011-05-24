@@ -5,7 +5,7 @@ Tesseract Recogniser
 import plugins
 import node
 import manager
-#reload(node)
+import stages
 import generic_nodes
 
 import os
@@ -20,7 +20,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     name = "TesseractNativeRecognizer"
     description = "Tesseract Native Text Recognizer"
-    stage = "recognize"
+    stage = stages.RECOGNIZE
     binary = "tesseract"
 
     def init_converter(self):

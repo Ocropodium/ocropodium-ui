@@ -1,6 +1,7 @@
 
 import node
 import manager
+import stages
 import numpy
 
 
@@ -9,6 +10,7 @@ class Rotate90Node(node.Node):
     Rotate a Numpy image by num*90 degrees.
     """
     arity = 1
+    stage = stages.FILTER_BINARY
 
     def validate(self):
         super(RotateNode, self).validate()

@@ -3,6 +3,7 @@ Image transformation nodes based on the Python Image Library (PIL).
 """
 
 import node
+import stages
 import numpy
 from PIL import Image
 
@@ -31,6 +32,7 @@ class PilTestNode(node.Node):
     Test PIL OPs.
     """
     arity = 1
+    stage = stages.FILTER_BINARY
 
     def validate(self):
         super(PilTestNode, self).validate()
