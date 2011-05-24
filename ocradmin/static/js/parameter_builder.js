@@ -140,7 +140,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                     top: con.top,
                 });
             });
-            $(this).hide();
             self._menu.hide();
             event.stopPropagation();
             event.preventDefault();
