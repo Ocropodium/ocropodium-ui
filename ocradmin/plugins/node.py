@@ -8,6 +8,7 @@ logging.basicConfig(format=FORMAT)
 LOGGER = logging.getLogger("Node")
 LOGGER.setLevel(logging.DEBUG)
 
+import cache
 
 def UnsetParameterError(StandardError):
     pass
@@ -37,25 +38,22 @@ class Node(object):
 
     ]
 
-    def __init__(self, label=None, abort_func=None, progress_func=None, logger=None):
+    def __init__(self, label=None, abort_func=None, 
+                cacher=None,
+                progress_func=None, logger=None):
         """
         Initialise a node.
         """
-        if abort_func is not None:
-            self.abort_func = abort_func
-        else:
-            self.abort_func = noop_abort_func
-        if logger is not None:
-            self.logger = logger
-        else:
-            self.logger = LOGGER
-        if progress_func is not None:
-            self.progress_func = progress_func
-        else:
-            self.progress_func = noop_progress_func
+        self.abort_func = abort_func if abort_func is not None \
+                else noop_abort_func
+        self.logger = logger if logger is not None \
+                else LOGGER
+        self.progress_func = progress_func if progress_func is not None \
+                else noop_progress_func
+        self._cacher = cacher if cacher is not None \
+                else cache.BasicCacher(logger=self.logger)
         self._params = {}
         self.label = label
-        self._cache = None
         self._parents = []
         self._inputs = [None for n in range(self.arity)]
 
@@ -116,14 +114,14 @@ class Node(object):
         self.logger.debug("%s marked dirty", self)
         for parent in self._parents:
             parent.mark_dirty()
-        self._cache = None
+        self._cacher.clear_cache()
 
     def set_cache(self, cache):
         """
         Set the cache on a node, preventing it
         from eval'ing its inputs.
         """
-        self._cache = cache
+        self._cacher.set_cache(self, cache)
 
     def eval_input(self, num):
         """
@@ -142,16 +140,17 @@ class Node(object):
         Eval the node.
         """
         self.logger.debug("Evaluating '%s' Node", self)
-        if self._cache is not None:
+        if self._cacher.has_cache(self):
             self.logger.debug("%s returning cached input", self)
-            return self._cache
+            return self._cacher.get_cache(self)
         self.validate()
         for p, v in self._params.iteritems():
             self.logger.debug("Set Param %s.%s -> %s",
                     self, p, v)
             self._set_p(p, v)            
-        self._cache = self._eval()
-        return self._cache
+        data = self._eval()
+        self._cacher.set_cache(self, data)
+        return data
 
     def __repr__(self):
         return "<Node: %s" % self.name
