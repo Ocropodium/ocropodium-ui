@@ -16,10 +16,11 @@ class OcrPipeline(object):
     """
     Object describing the OCR pipeline.
     """
-    def __init__(self, script):
+    def __init__(self, script, logger=None):
         """
         Initialiser.
         """
+        self.logger = logger
         self._script = script
         self._error = None
         self._tree = {}
@@ -36,7 +37,7 @@ class OcrPipeline(object):
                 raise ValueError("Duplicate node in tree: %s" % n["name"])
             lookup[n["name"]] = n
             self._tree[n["name"]] = self._manager.get_new_node(
-                    n["type"], n["name"], n["params"])
+                    n["type"], n["name"], n["params"], logger=self.logger)
         for name, n in lookup.iteritems():
             for i in range(len(n["inputs"])):            
                 self._tree[name].set_input(i, self._tree[n["inputs"][i]])
