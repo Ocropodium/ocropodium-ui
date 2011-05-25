@@ -29,7 +29,7 @@ class Node(object):
     Node object.  Evaluates some input and
     return the output.
     """
-    name = "node"
+    name = "Base::None"
     description = "Base node"
     arity = 1
     stage = "general"

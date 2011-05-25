@@ -33,6 +33,7 @@ class PilTestNode(node.Node):
     """
     arity = 1
     stage = stages.FILTER_BINARY
+    name = "Pil::Test"
 
     def validate(self):
         super(PilTestNode, self).validate()

@@ -93,7 +93,7 @@ TESTTREE_OCROPUS = [
         "inputs": ["RmHalftone"]
     }, {
         "name": "NativeRecognizer",
-        "type": "Ocropus::NativeRecognizer",
+        "type": "Ocropus::Recognizer",
         "params": [
             ("character_model", "Ocropus Default Char"),
             ("language_model", "Ocropus Default Lang"),
@@ -111,7 +111,7 @@ TESTTREE_TESSERACT = [
         "inputs": ["RmHalftone"]
     }, {
         "name": "NativeRecognizer",
-        "type": "Tesseract::NativeRecognizer",
+        "type": "Tesseract::Recognizer",
         "params": [
             ("language_model", "Tesseract Default Lang"),
         ],
@@ -122,7 +122,7 @@ TESTTREE_TESSERACT = [
 TESTTREE_CUNEIFORM = [
     {
         "name": "NativeRecognizer",
-        "type": "Cuneiform::NativeRecognizer",
+        "type": "Cuneiform::Recognizer",
         "params": [
         ],
         "inputs": ["RmHalftone",]

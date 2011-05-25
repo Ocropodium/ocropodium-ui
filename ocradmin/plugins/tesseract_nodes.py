@@ -18,7 +18,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     Recognize an image using Tesseract.
     """
-    name = "TesseractNativeRecognizer"
+    name = "Tesseract::Recognizer"
     description = "Tesseract Native Text Recognizer"
     stage = stages.RECOGNIZE
     binary = "tesseract"
@@ -124,7 +124,9 @@ class Manager(manager.StandardManager):
     """
     @classmethod
     def get_node(self, name, **kwargs):
-        if name == "NativeRecognizer":
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+        if name == "Recognizer":
             return TesseractRecognizerNode(**kwargs)
 
     @classmethod

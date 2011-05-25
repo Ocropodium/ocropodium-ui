@@ -8,6 +8,9 @@ import json
 import node
 import utils
 
+class UnknownNodeError(StandardError):
+    pass
+
 class StandardManager(object):
     """
     Manager that simple returns a list
@@ -64,9 +67,9 @@ class ModuleManager(object):
         newnode = None
         for pm in self._mods:
             if pm.__name__.endswith("%s_nodes" % modname.lower()):
-                newnode = pm.Manager.get_node(name, **kwargs)
+                newnode = pm.Manager.get_node(type, **kwargs)
         if newnode is None:
-            raise node.UnknownNodeError(type)
+            raise UnknownNodeError(type)
         for p, v in params:
             newnode.set_param(p, v)
         return newnode
