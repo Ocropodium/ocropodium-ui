@@ -61,9 +61,9 @@ class ModuleManager(object):
         self._mods = self.get_modules()
         self._nodes = self.get_nodes()
 
-    def get_new_node(self, type, label, params):
+    def get_new_node(self, type, label, params, **kwargs):
         modname, name = type.split("::")
-        kwargs = dict(label=label)
+        kwargs.update(dict(label=label))
         newnode = None
         for pm in self._mods:
             if pm.__name__.endswith("%s_nodes" % modname.lower()):
