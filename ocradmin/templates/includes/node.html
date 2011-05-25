@@ -4,6 +4,22 @@
     </div>
 </script>
 
+<script id="nodeListTmpl" type="application/x-jquery-tmpl">
+    <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${name}" title="${description}">
+        <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
+    </li>
+</script>
+
+<script id="paramTmpl" type="application/x-jquery-tmpl">
+    <h4>${nodename}</h4>
+    {% templatetag openvariable %}each(i,param) params{% templatetag closevariable %}    
+        <div class="node_parameter">
+            <label for="${nodename}${param.name}">${param.name}</label>
+            <input type="text" id="${nodename}${param.name}" value="${param.value}" />
+        </div>
+    {% templatetag openvariable %}/each{% templatetag closevariable %}    
+</script>
+
 <script id="nodeMenuTmpl" type="application/x-jquery-tmpl">
     <div class="nodemenu" id="nodemenu">
         <h4>OCR Nodes</h4>
