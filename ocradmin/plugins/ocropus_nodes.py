@@ -17,6 +17,11 @@ class UnknownOcropusNodeType(StandardError):
     pass
 
 
+def makesafe(val):
+    if isinstance(val, unicode):
+        return val.encode()
+    return val
+
 
 class OcropusFileInNode(node.Node):
     """
@@ -36,7 +41,8 @@ class OcropusFileInNode(node.Node):
 
     def _eval(self):
         ba = ocrolib.iulib.bytearray()
-        ocrolib.iulib.read_image_binary(ba, self._params.get("path"))
+        ocrolib.iulib.read_image_binary(
+                ba, makesafe(self._params.get("path")))
         return ocrolib.narray2numpy(ba)
         
     
@@ -58,7 +64,7 @@ class OcropusBase(node.Node):
         """
         Set a component param.
         """
-        self._comp.pset(p, v)
+        self._comp.pset(makesafe(p), makesafe(v))
 
     @classmethod
     def parameters(cls):
@@ -159,6 +165,15 @@ class OcropusRecognizerNode(node.Node):
     description = "Ocropus Native Text Recognizer"
     stage = stages.RECOGNIZE
     arity = 2
+    _parameters = [
+        {
+            "name": "character_model",
+            "value": "Ocropus Default Char"
+        }, {
+            "name": "language_model",
+            "value": "Ocropus Default Lang",
+        }
+    ]
 
     def __init__(self, **kwargs):
         super(OcropusRecognizerNode, self).__init__(**kwargs)
