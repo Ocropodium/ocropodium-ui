@@ -12,9 +12,14 @@ class Rotate90Node(node.Node):
     arity = 1
     stage = stages.FILTER_BINARY
     name = "Numpy::Rotate90"
+    _parameters = [{
+        "name": "num",
+        "value": 1,
+    }]
+                    
 
     def validate(self):
-        super(RotateNode, self).validate()
+        super(Rotate90Node, self).validate()
         if not self._params.get("num"):
             raise node.UnsetParameterError("num")
         try:
@@ -31,6 +36,13 @@ class Manager(manager.StandardManager):
     """
     Handle Tesseract nodes.
     """
+    @classmethod
+    def get_node(self, name, **kwargs):
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+        if name == "Rotate90":
+            return Rotate90Node(**kwargs)
+
     @classmethod
     def get_nodes(cls, *oftypes):
         return super(Manager, cls).get_nodes(
