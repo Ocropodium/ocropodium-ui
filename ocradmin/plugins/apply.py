@@ -42,6 +42,12 @@ class OcrPipeline(object):
             for i in range(len(n["inputs"])):            
                 self._tree[name].set_input(i, self._tree[n["inputs"][i]])
 
+    def get_node(self, name):
+        """
+        Find a node in the tree.
+        """
+        return self._tree.get(name)
+
     def get_terminals(self):
         """
         Get nodes that end a branch.
