@@ -4,12 +4,16 @@ RESTful interface to interacting with OCR plugins.
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response
 
+from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.plugins.manager import ModuleManager 
 
 import logging
 logger = logging.getLogger(__name__)
 
 import simplejson
+
+import tasks
+
 
 def query(request):
     """
@@ -25,19 +29,12 @@ def runscript(request):
     """
     Execute a script (sent as JSON).
     """
-    node = request.POST.get("node", "")
-    script = request.POST.get("script", simplejson.dumps({"arse":"spaz"}))
-    data = simplejson.loads(script)
-
-    import apply
-    try:
-        pl = apply.OcrPipeline(data)
-        term = pl.get_node(node)
-        val = term.eval()
-        print "VALUE: ", val
-        logger.debug("Val is: %s", val)
-    except StandardError, err:
-        raise
-
-
-    return HttpResponse(simplejson.dumps(val), mimetype="application/json")
+    evalnode = request.POST.get("node", "")
+    jsondata = request.POST.get("script", simplejson.dumps({"arse":"spaz"}))
+    script = simplejson.loads(jsondata)
+    
+    async = OcrTask.run_celery_task("run.script", evalnode, script,
+            untracked=True, asyncronous=True, queue="interactive")
+    out = dict(task_id=async.task_id, status=async.status,
+        results=async.result)
+    return HttpResponse(simplejson.dumps(out), mimetype="application/json")
