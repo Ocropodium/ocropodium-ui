@@ -56,135 +56,137 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         this._temp = null;
         this._waiting = {};
         this._initialised = false;
-        this._nodetemplate = $.template($("#nodeTmpl"));
-        this._menutemplate = $.template($("#nodeMenuTmpl"));
-        this._menu = null;
+        this._nodelisttmpl = $.template($("#nodeListTmpl"));
+        this._paramtmpl = $.template($("#paramTmpl"));
         this._nodedata = {};
+        this._nodetypes = {};
+        this._usednames = {};
     },
 
     init: function() {
         var self = this;
         if (!self._initialised) {            
-            self.setupEvents();
+            //self.setupEvents();
             self._initialised = true;
         }
         self.queryOptions(null, null);
     },
 
-    setupEvents: function() {
-        var self = this;
-        console.log(self.parent);
-        $(self.parent).noContext().rightClick(function(event) {
-            self._menu.show();
-            var maxx = $(self.parent).offset().left + $(self.parent).width();
-            var left = event.clientX;
-            if (event.clientX + self._menu.outerWidth() > maxx)
-                left = maxx - (self._menu.outerWidth() + 20);
-            self._menu.css({
-                top: event.clientY,
-                left: left,    
-            });
-        });
-        $(self.parent).click(function(event) {
-           self._menu.hide();
-        });
+    newNodeName: function(type) {
+        var count = 1;
+        var tname = $.trim(type);
+        while (this._usednames[tname + count])
+            count += 1;
+        return tname + count;
+    },
 
-        $(".node.floating").live("click", function(event) {
-            $(this).removeClass("floating");
-            $(document).unbind("mousemove.dropnode");
-        });
-
+    removeNode: function(elem) {
+        delete this._usednames[$(elem).text()];
+        $(elem).remove();        
     },                 
 
-    setupMenuEvents: function() {
-        var self = this;                         
-        console.log("setup menu");         
-
-        self._menu.find("li").hover(function(event) {
-            $(this).addClass("selected");
-        }, function(event) {
-            $(this).removeClass("selected");
-        });
-
-        self._menu.find("li.topmenu").hover(function(event) {
-            var pos = $(this).position();
-            var left = pos.left + $(this).outerWidth() - 5;
-            var sub = $(this).find("ul");
-            sub.show();
-            sub.css({left: left, top: $(this).position().top})
-            var span = $(this).offset().left + $(this).outerWidth() + sub.outerWidth();
-            var outer = $(self.parent).offset().left + $(self.parent).width();
-            console.log("span", span, "doc", outer);
-            if (span > outer) {
-                console.log("moving left");
-                sub.css("left", pos.left - sub.outerWidth());
-            }
-        }, function(event) {
-            $(this).find("ul").delay(1000).hide();            
-        });
-
-        self._menu.find(".topmenu").find("li").click(function(event) {
-            var node = self.createNode($(this).text());
-            node.css({
-                position: "absolute",
-                left: event.clientX - (node.width() / 2),
-                top: event.clientY - (node.height() / 2),
-            });
-            $(document).bind("mousemove.dropnode", function(e) {
-                var con = self._constrainDrag({
-                    left: e.clientX - (node.width() / 2),
-                    top: e.clientY - (node.height() / 2),
-                }, node, $(self.parent));
-                node.css({
-                    left: con.left,
-                    top: con.top,
-                });
-            });
-            self._menu.hide();
-            event.stopPropagation();
-            event.preventDefault();
-        });
-
-    },
-
-    _constrainDrag: function(pos, node, parent) {
-        var self = this;                        
-        var left = pos.left;
-        left = Math.max(left, parent.offset().left);
-        left = Math.min(left, (parent.offset().left + parent.width()) - node.width());
-        var top = pos.top;
-        top = Math.max(top, $(self.parent).offset().top);
-        top = Math.min(top, (parent.offset().top + parent.height()) - node.height());                
-        return {left: left, top: top};
-    },            
-
-    createNode: function(name) {
+    setupEvents: function() {
         var self = this;
-        console.log("Creating node: ", name);
-        var nodeinfo;
-        $.each(self._nodedata, function(stage, nodes) {
-            if (!nodeinfo) {
-                for (var i = 0; i < nodes.length; i++) {
-                    if (nodes[i].name == name) {
-                        nodeinfo = nodes[i];
-                        break;
-                    }
-                }
+
+        // HACK: see:
+        // http://stackoverflow.com/questions/5020695/jquery-draggable-element-no-longer-draggable-after-drop
+        $.ui.draggable.prototype.destroy = function (ul, item) { };
+
+        $(".available h4").click(function(event) {
+            $(".available ul").not(this).hide();
+            $(this).next("ul").show();
+
+        });
+
+        $(window).keydown(function(event) {
+            if (event.which == KC_DELETE) {
+                var current = $(".node.current");
+                if (current.length == 0)
+                    return;
+                if (confirm("Remove node: " + current.text()))
+                    self.removeNode(current.get(0));
             }
         });
-        return $.tmpl(self._nodetemplate, nodeinfo)
-            .draggable({
-                containment: self.parent,
-                stack: ".node",
-                cursor: "default",
-            })
-            .appendTo($(self.parent))
-            .addClass("floating");
-    },
 
-    isReady: function() {
-        return OCRJS.countProperties(this._waiting) > 0 ? false : true;
-    },
+        $(".nodelist.available").find("li.node").each(function(i, elem) {
+            $(elem).draggable({
+                scope: $(elem).data("stage"),
+                    //helper: "clone",
+                    helper: function() {
+                        var helper = $(this).clone(true);
+                        helper.text(self.newNodeName($(this).text()));
+                        return helper.get(0);                                        
+                    },
+                    stop: function() {
+                        console.log("drag stopped");
+                        $(this).addClass("ui-draggable");
+                    },
+                    //connectToSortable: ".nodelist.used ul",
+                    opacity: 0.8,        
+                });
+        });
+
+        $(".nodelist.used ul").each(function(i, elem) {
+            $(elem).droppable({
+                hoverClass: "drop_target",
+                scope: $(elem).data("stage"),
+                activate: function(event, ui) {
+                    $(this).addClass("drop_possible");
+                },
+                deactivate: function(event, ui) {
+                    $(this).removeClass("drop_possible");
+                },
+                drop: function(event, ui) {
+                    if (ui.draggable.hasClass("available")) {
+                        var newnode = $.tmpl(self._nodelisttmpl, 
+                                ui.draggable.data("nodedata"))
+                            .data("nodedata", 
+                                $.extend(true, {}, ui.draggable.data("nodedata")))
+                            .text(ui.helper.text());
+                        if ($(this).hasClass("multiple"))
+                            newnode.appendTo(this);
+                        else
+                            $(this).children().remove().end()
+                                .append(newnode);
+                        self._usednames[ui.helper.text()] = true;                        
+                    }
+                }, 
+            }).sortable({
+                containment: "parent",    
+            });
+        });
+
+        $("li.node").live("click", function(event) {
+            if ($(this).hasClass("current")) {
+                $(this).removeClass("current");
+                $("#parameters").html("<h4>No node selected</h4>"); 
+            } else {
+                $(".used li").not(this).removeClass("current");
+                $(this).addClass("current"); 
+                self.buildParams($(this).text(), 
+                    $(this).data("nodedata").parameters);
+            }
+        });
+    },                 
+
+    buildParams: function(name, params) {
+        var self = this;
+        $("input").unbind("keyup.paramval");
+        $("#parameters").html("");
+        $("#parameters").append(
+            $.tmpl(self._paramtmpl, {
+                nodename: name,
+                params: params,
+            })
+        );
+        // bind each param to its actual value
+        $.each(params, function(i, param) {
+            $("input#" + name + param.name).bind("keyup.paramval", function(event) {
+                console.log("updating val", param.name);
+                params[i].value = $(this).val();
+            });
+        });        
+    },                 
 
     queryOptions: function(parent) {
         var self = this;
@@ -202,34 +204,169 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                     if (!self._nodedata[nodeinfo.stage])
                         self._nodedata[nodeinfo.stage] = [];
                     self._nodedata[nodeinfo.stage].push(nodeinfo);
-                });                
-                self.buildNodeMenu();
-                console.log("Building node menu");
+                    self._nodetypes[nodeinfo.name] = nodeinfo;
+                });
+                self.populateAvailableList();                
                 self._queryDone(parent.id);
             },
         });
     },
 
-    buildNodeMenu: function() {
+    populateAvailableList: function() {
         var self = this;
-        self._menu = $.tmpl(this._menutemplate, {
-            stages: self._nodedata,
-        }).hide();
-        $(self.parent).append(self._menu);
-        self.setupMenuEvents();
+        $.each(self._nodedata, function(stage, nodes) {
+            console.log("adding", nodes.length, " nodes for", stage);
+            $.each(nodes, function(i, node) {
+                $(".available ul." + stage).append(
+                    $.tmpl(self._nodelisttmpl, node)
+                        .addClass("available")
+                        .data("nodedata", node));
+            });
+        });
+        $(".available ul").slice(1).hide();
+        $(".available ul").filter(function() {
+            return $(this).children().length > 0;
+        }).first().show();
+
+        self.setupEvents();
+        self.loadState();
+
+    },
+
+    getEvalNode: function() {
+        var node = $(".used ul li.current").first();
+        if (node.length == 1)
+            return $.trim(node.text());
+        else
+            return $(".used li.recognize").first().text();
+    },                     
+
+    runScript: function() {
+        var self = this;                   
+        var script = self.buildScript();
+
+        $.ajax({
+            url: "/plugins/run",
+            type: "POST",
+            data: {
+                script: JSON.stringify(script),
+                node: self.getEvalNode(),
+            },
+            error: OCRJS.ajaxErrorHandler,
+        });
+    },                   
+
+    // turn our GUI into an acceptable
+    // script... hopefully...                           
+    buildScript: function() {
+        var self = this;
+        var script = [];
+
+        script.push({
+            name: "filein",
+            type: "Ocropus::FileIn",
+            params: [
+                ["path", "etc/simple.png"],
+            ],
+            inputs: [],
+        });
+
+        function scriptNode(elem) {
+            var arity = parseInt($(elem).data("nodedata").arity);
+            var args = Array.prototype.slice.call(arguments).slice(1, arity + 1);
+            var params = [];
+            $.each($(elem).data("nodedata").parameters, function(i, p) {
+                params.push([p.name, p.value]);
+            });
+            return {
+                name: $(elem).text(),
+                type: $(elem).data("type"),
+                stage: $(elem).data("nodedata").stage,
+                params: params,
+                inputs: args,                    
+            };
+        }
+
+        // this makes lots of assumptions about
+        // where things are...
+        var last = "filein", 
+            segmenter = null,
+            lastbinarizer = null;
+        $(".nodelist.used ul")
+                .filter(".filter_gray")
+            .children().each(function(i, elem) {
+                script.push(scriptNode($(elem), last));
+                last = $(elem).text();
+            }).end().end()
+                .filter(".binarize")
+            .children().each(function(i, elem) {
+                script.push(scriptNode($(elem), last));
+                last = $(elem).text();
+            }).end().end()
+                .filter(".filter_binary")
+            .children().each(function(i, elem) {
+                script.push(scriptNode($(elem), last));
+                last = $(elem).text();
+                lastbinarizer = $(elem).text();
+            }).end().end()
+                .filter(".page_segment")
+            .children().each(function(i, elem) {
+                script.push(scriptNode($(elem), last));
+                segmenter = $(elem).text();
+                last = $(elem).text();
+            }).end().end()
+                .filter(".recognize")
+            .children().each(function(i, elem) {
+                script.push(
+                    scriptNode($(elem), lastbinarizer, segmenter));
+            });
+        return script;
+    },
+
+    loadScript: function(script) {
+        var self = this;                    
+        console.log("loading script: ", script);
+        $.each(script, function(i, node) {
+            var typedata = self._nodetypes[node.type];
+            var newnode = $.tmpl(self._nodelisttmpl, typedata);
+            newnode.text(node.name);
+            self._usednames[node.name] = true;
+            newnode.data("nodedata", $.extend(true, {}, typedata));
+            $.each(node.params, function(i, p) {
+                newnode.data("nodedata").parameters[i].value = p[1];
+            });
+            console.log(newnode);
+            $(".used ul." + typedata.stage)
+                .append(newnode);
+        });        
+    },
+
+    clearScript: function() {
+        var self = this;
+        self._usednames = {};
+        $(".used li.node").remove();
+    },               
+
+    isReady: function() {
+        return OCRJS.countProperties(this._waiting) > 0 ? false : true;
     },
 
     buildSection: function(parent, data) {
         var self = this;
-        $.each(data, function(i, nodeinfo) {        
-            var d = $.tmpl(self._nodetemplate, nodeinfo);
-            console.log(d);
-            $(parent).append(d);                      
-        });
     },                  
 
     saveState: function() {
+        $.cookie("script", JSON.stringify(this.buildScript()));
     },
+
+    loadState: function() {
+        var self = this;                   
+        var scriptjson = $.cookie("script");
+        if (scriptjson) {
+            var script = JSON.parse(scriptjson);        
+            self.loadScript(script);
+        }
+    },               
 
     _queryDone: function(key) {
         delete this._waiting[key];                    
