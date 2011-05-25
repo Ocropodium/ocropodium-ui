@@ -19,7 +19,7 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     Recognize an image using Cuneiform.
     """
-    name = "CuneiformNativeRecognizer"
+    name = "Cuneiform::Recognizer"
     description = "Cuneiform Native Text Recognizer"
     binary = "cuneiform"
     stage = stages.RECOGNIZE
@@ -65,7 +65,9 @@ class Manager(manager.StandardManager):
     """
     @classmethod
     def get_node(self, name, **kwargs):
-        if name == "NativeRecognizer":
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+        if name == "Recognizer":
             return CuneiformRecognizerNode(**kwargs)
 
     @classmethod

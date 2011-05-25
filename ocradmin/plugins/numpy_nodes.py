@@ -11,6 +11,7 @@ class Rotate90Node(node.Node):
     """
     arity = 1
     stage = stages.FILTER_BINARY
+    name = "Numpy::Rotate90"
 
     def validate(self):
         super(RotateNode, self).validate()
@@ -30,11 +31,6 @@ class Manager(manager.StandardManager):
     """
     Handle Tesseract nodes.
     """
-    @classmethod
-    def get_node(self, name, **kwargs):
-        if name == "NativeRecognizer":
-            return TesseractRecognizerNode(**kwargs)
-
     @classmethod
     def get_nodes(cls, *oftypes):
         return super(Manager, cls).get_nodes(

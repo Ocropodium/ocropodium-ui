@@ -22,7 +22,7 @@ class OcropusFileInNode(node.Node):
     """
     A node that takes a file and returns a numpy object.
     """
-    name = "FileIn"
+    name = "Ocropus::FileIn"
     description = "File Input Node"
     arity = 0
     stage = stages.INPUT
@@ -155,7 +155,7 @@ class OcropusRecognizerNode(node.Node):
     """
     Recognize an image using Ocropus.
     """
-    name = "OcropusNativeRecognizer"
+    name = "Ocropus::Recognizer"
     description = "Ocropus Native Text Recognizer"
     stage = stages.RECOGNIZE
     arity = 2
@@ -261,7 +261,14 @@ class Manager(manager.StandardManager):
         """
         Get a node class for the given name.
         """
-        if name == "NativeRecognizer":
+        # if we get a qualified name like
+        # Ocropus::Recognizer, remove the
+        # path, since we ASSume that we're
+        # looking in the right module
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+
+        if name == "Recognizer":
             return OcropusRecognizerNode
         elif name == "FileIn":
             return OcropusFileInNode
@@ -294,7 +301,7 @@ class Manager(manager.StandardManager):
         return type("%sNode" % comp.__class__.__name__,
                     (base,), 
                     dict(_comp=comp, description=comp.description(),
-                        name=comp.__class__.__name__))
+                        name="Ocropus::%s" % comp.__class__.__name__))
 
     @classmethod
     def get_nodes(cls, *oftypes, **kwargs):
