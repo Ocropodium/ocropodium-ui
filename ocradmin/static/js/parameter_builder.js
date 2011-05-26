@@ -88,6 +88,11 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     setupEvents: function() {
         var self = this;
 
+        $("#run_script").click(function(event) {
+            self.runScript();
+            event.preventDefault();
+        });
+
         // HACK: see:
         // http://stackoverflow.com/questions/5020695/jquery-draggable-element-no-longer-draggable-after-drop
         $.ui.draggable.prototype.destroy = function (ul, item) { };
@@ -156,7 +161,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             });
         });
 
-        $("li.node").live("click", function(event) {
+        $(".used li.node").live("click", function(event) {
             if ($(this).hasClass("current")) {
                 $(this).removeClass("current");
                 $("#parameters").html("<h4>No node selected</h4>"); 
@@ -215,7 +220,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     populateAvailableList: function() {
         var self = this;
         $.each(self._nodedata, function(stage, nodes) {
-            console.log("adding", nodes.length, " nodes for", stage);
             $.each(nodes, function(i, node) {
                 $(".available ul." + stage).append(
                     $.tmpl(self._nodelisttmpl, node)
@@ -325,7 +329,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
 
     loadScript: function(script) {
         var self = this;                    
-        console.log("loading script: ", script);
         $.each(script, function(i, node) {
             var typedata = self._nodetypes[node.type];
             var newnode = $.tmpl(self._nodelisttmpl, typedata);
@@ -335,7 +338,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             $.each(node.params, function(i, p) {
                 newnode.data("nodedata").parameters[i].value = p[1];
             });
-            console.log(newnode);
             $(".used ul." + typedata.stage)
                 .append(newnode);
         });        
