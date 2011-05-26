@@ -85,7 +85,7 @@
                 "Ocropus Default Lang"
             ]
         ], 
-        "type": "Ocropus::Recognizer", 
+        "type": "Ocropus::OcropusRecognizer", 
         "name": "NativeRecognizer", 
         "inputs": [
             "RmHalftone", 

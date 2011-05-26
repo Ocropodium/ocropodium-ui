@@ -72,7 +72,7 @@
                 "Tesseract Default Lang"
             ]
         ], 
-        "type": "Tesseract::Recognizer", 
+        "type": "Tesseract::TesseractRecognizer", 
         "name": "NativeRecognizer", 
         "inputs": [
             "RmHalftone", 

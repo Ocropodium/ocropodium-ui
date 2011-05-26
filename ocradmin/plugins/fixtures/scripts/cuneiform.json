@@ -59,7 +59,7 @@
     }, 
     {
         "params": [], 
-        "type": "Cuneiform::Recognizer", 
+        "type": "Cuneiform::CuneiformRecognizer", 
         "name": "NativeRecognizer", 
         "inputs": [
             "RmHalftone"
