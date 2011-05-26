@@ -43,17 +43,11 @@
 <div id="sidebar" class="widget">
     <div class="widget_header">Options</div>
     <div class="widget_content">
-        {% if not task %}
-        <form id="uploadform" name="convertoptions" action="{{request.path}}" method="POST" enctype="multipart/form-data">
-            <div id="dragdrop">
-                <div id="dropzone">
-                    Drop images here...
-                </div>
-            </div>
-        </form>
-        {% endif %}
         <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
             <div id="options" class="option_box">
+                <div id="script_toolbar">
+                    <button id="run_script">Run Script</button>
+                </div>
                 <div class="nodelist used">
                     <h4>Input File</h4>
                     <ul class="input" data-stage="input">
