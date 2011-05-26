@@ -10,9 +10,14 @@
 	<script type='application/javascript' src='/static/js/ocr/convert.js'></script>
 	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+    <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
+	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/page_widget.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/viewer.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/text_viewer.css" type="text/css" media="screen" />
+
 {% endblock %}
 
 {% block subtoolbar %}
@@ -40,62 +45,71 @@
 
 {% include "includes/node.html" %}
 
-<div id="sidebar" class="widget">
-    <div class="widget_header">Options</div>
-    <div class="widget_content">
-        <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
-            <div id="options" class="option_box">
-                <div id="script_toolbar">
-                    <button id="run_script">Run Script</button>
+    <div id="sidebar" class="widget">
+        <div class="widget_header">Options</div>
+        <div class="widget_content">
+            <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
+                <div id="options" class="option_box">
+                    <div id="script_toolbar">
+                        <button id="run_script">Run Script</button>
+                        <button id="load_image">Load Image</button>
+                        <button id="open_script">Open Script</button>
+                    </div>
+                    <div id="dropzone">Drop image here...</div>
+                    <div class="nodelist used">
+                        <h4>Input File</h4>
+                        <ul class="input" data-stage="input">
+                        </ul>
+                        <h4>Grayscale Filters</h4>
+                        <ul class="filter_gray multiple" data-stage="filter_gray">
+                        </ul>                    
+                        <h4>Binarizer</h4>
+                        <ul class="binarize" data-stage="binarize">
+                        </ul>                    
+                        <h4>Binary Filters</h4>
+                        <ul class="filter_binary multiple" data-stage="filter_binary">
+                        </ul>                    
+                        <h4>Page Segmenter</h4>
+                        <ul class="page_segment" data-stage="page_segment">
+                        </ul>                    
+                        <h4>Recogniser</h4>
+                        <ul class="recognize" data-stage="recognize">
+                        </ul>                    
+                    </div>
+                    <div class="nodelist available">
+                        <h4>File Input</h4>
+                        <ul class="input multiple" data-stage="input">
+                        </ul>                    
+                        <h4>Grayscale Filers</h4>
+                        <ul class="filter_gray" data-stage="filter_gray">
+                        </ul>                    
+                        <h4>Binarizers</h4>
+                        <ul class="binarize" data-stage="binarize">
+                        </ul>                    
+                        <h4>Binary Filters</h4>
+                        <ul class="filter_binary" data-stage="filter_binary">
+                        </ul>                    
+                        </ul>                    
+                        <h4>Page Segmenters</h4>
+                        <ul class="page_segment" data-stage="page_segment">
+                        </ul>                    
+                        <h4>Recognisers</h4>
+                        <ul class="recognize" data-stage="recognize">
+                        </ul>                    
+                    </div>
+                    <div id="parameters" class="node_parameters">
+                        <h4>No node selected</h4>
+                    </div>
                 </div>
-                <div class="nodelist used">
-                    <h4>Input File</h4>
-                    <ul class="input" data-stage="input">
-                    </ul>
-                    <h4>Grayscale Filters</h4>
-                    <ul class="filter_gray multiple" data-stage="filter_gray">
-                    </ul>                    
-                    <h4>Binarizer</h4>
-                    <ul class="binarize" data-stage="binarize">
-                    </ul>                    
-                    <h4>Binary Filters</h4>
-                    <ul class="filter_binary multiple" data-stage="filter_binary">
-                    </ul>                    
-                    <h4>Page Segmenter</h4>
-                    <ul class="page_segment" data-stage="page_segment">
-                    </ul>                    
-                    <h4>Recogniser</h4>
-                    <ul class="recognize" data-stage="recognize">
-                    </ul>                    
-                </div>
-                <div class="nodelist available">
-                    <h4>File Input</h4>
-                    <ul class="input multiple" data-stage="input">
-                    </ul>                    
-                    <h4>Grayscale Filers</h4>
-                    <ul class="filter_gray" data-stage="filter_gray">
-                    </ul>                    
-                    <h4>Binarizers</h4>
-                    <ul class="binarize" data-stage="binarize">
-                    </ul>                    
-                    <h4>Binary Filters</h4>
-                    <ul class="filter_binary" data-stage="filter_binary">
-                    </ul>                    
-                    </ul>                    
-                    <h4>Page Segmenters</h4>
-                    <ul class="page_segment" data-stage="page_segment">
-                    </ul>                    
-                    <h4>Recognisers</h4>
-                    <ul class="recognize" data-stage="recognize">
-                    </ul>                    
-                </div>
-                <div id="parameters" class="node_parameters">
-                    <h4>No node selected</h4>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
+    <div class="widget" id="viewercontainer">
+        <div class="widget_header">Viewer</div>
+        <div class="widget_content">
+            <div class="viewer"></div>
+        </div> 
+    </div>
 {% endblock %}
 
