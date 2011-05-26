@@ -5,4 +5,4 @@
 -e git+https://github.com/ask/celery.git@v2.2.6#egg=celery
 -e git+https://github.com/ask/django-celery.git@v2.2.3#egg=django-celery
 -e git+https://github.com/rfk/tnetstring.git#egg=tnetstrings
- 
+bencode 
