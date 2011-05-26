@@ -6,7 +6,9 @@
 
 <script id="nodeListTmpl" type="application/x-jquery-tmpl">
     <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${name}" title="${description}">
+        <div class="focusbuttom"></div>
         <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
+        <div class="ignorebuttom"></div>
     </li>
 </script>
 
