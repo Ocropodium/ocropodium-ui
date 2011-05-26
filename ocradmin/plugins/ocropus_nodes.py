@@ -161,7 +161,7 @@ class OcropusRecognizerNode(node.Node):
     """
     Recognize an image using Ocropus.
     """
-    name = "Ocropus::Recognizer"
+    name = "Ocropus::OcropusRecognizer"
     description = "Ocropus Native Text Recognizer"
     stage = stages.RECOGNIZE
     arity = 2
@@ -279,7 +279,7 @@ class Manager(manager.StandardManager):
         if name.find("::") != -1:
             name = name.split("::")[-1]
 
-        if name == "Recognizer":
+        if name == "OcropusRecognizer":
             return OcropusRecognizerNode
         elif name == "FileIn":
             return OcropusFileInNode
