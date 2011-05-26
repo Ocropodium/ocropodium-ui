@@ -1,0 +1,82 @@
+[
+    {
+        "params": [
+            [
+                "path", 
+                "etc/simple.png"
+            ]
+        ], 
+        "type": "Ocropus::FileIn", 
+        "name": "filein", 
+        "inputs": []
+    }, 
+    {
+        "params": [
+            [
+                "max_n", 
+                10000
+            ]
+        ], 
+        "type": "Ocropus::DeskewPageByRAST", 
+        "name": "DeskewPageByRAST", 
+        "inputs": [
+            "BinarizeBySauvola"
+        ]
+    }, 
+    {
+        "params": [
+            [
+                "factor", 
+                3
+            ], 
+            [
+                "threshold", 
+                4
+            ]
+        ], 
+        "type": "Ocropus::RmHalftone", 
+        "name": "RmHalftone", 
+        "inputs": [
+            "DeskewPageByRAST"
+        ]
+    }, 
+    {
+        "params": [
+            [
+                "k", 
+                0.29999999999999999
+            ], 
+            [
+                "w", 
+                40
+            ]
+        ], 
+        "type": "Ocropus::BinarizeBySauvola", 
+        "name": "BinarizeBySauvola", 
+        "inputs": [
+            "filein"
+        ]
+    }, 
+    {
+        "params": [], 
+        "type": "Ocropus::SegmentPageBy1CP", 
+        "name": "SegmentPageBy1CP", 
+        "inputs": [
+            "RmHalftone"
+        ]
+    }, 
+    {
+        "params": [
+            [
+                "language_model", 
+                "Tesseract Default Lang"
+            ]
+        ], 
+        "type": "Tesseract::Recognizer", 
+        "name": "NativeRecognizer", 
+        "inputs": [
+            "RmHalftone", 
+            "SegmentPageBy1CP"
+        ]
+    }
+]
