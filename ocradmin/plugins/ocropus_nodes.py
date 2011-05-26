@@ -175,10 +175,6 @@ class OcropusRecognizerNode(node.Node):
         }
     ]
 
-    def __init__(self, **kwargs):
-        super(OcropusRecognizerNode, self).__init__(**kwargs)
-        self._params = kwargs        
-
     def _eval(self):
         """
         Recognize page text.
