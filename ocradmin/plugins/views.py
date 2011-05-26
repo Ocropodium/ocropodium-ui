@@ -35,6 +35,10 @@ def runscript(request):
     
     async = OcrTask.run_celery_task("run.script", evalnode, script,
             untracked=True, asyncronous=True, queue="interactive")
-    out = dict(task_id=async.task_id, status=async.status,
-        results=async.result)
+    out = dict(
+        node=evalnode,
+        task_id=async.task_id,
+        status=async.status,
+        results=async.result
+    )
     return HttpResponse(simplejson.dumps(out), mimetype="application/json")
