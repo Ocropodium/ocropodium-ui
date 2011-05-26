@@ -50,6 +50,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         this._listeners = {
             onReadyState: [],
             onUpdateStarted: [],
+            resultPending: [],
         };
         this._valuedata = valuedata || null;
         this._cache = null;
@@ -170,6 +171,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 $(this).addClass("current"); 
                 self.buildParams($(this).text(), 
                     $(this).data("nodedata").parameters);
+                self.runScript();
             }
         });
     },                 
@@ -248,15 +250,18 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     runScript: function() {
         var self = this;                   
         var script = self.buildScript();
-
+        var node = self.getEvalNode();
         $.ajax({
             url: "/plugins/run",
             type: "POST",
             data: {
                 script: JSON.stringify(script),
-                node: self.getEvalNode(),
+                node: node,
             },
             error: OCRJS.ajaxErrorHandler,
+            success: function(data) {
+                self.callListeners("resultPending", node, data);
+            },
         });
     },                   
 

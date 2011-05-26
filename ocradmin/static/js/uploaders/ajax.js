@@ -10,6 +10,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this.options = {
             log: true,      // whether to, uh, log
             multi: true,    // whether to accept multiple files
+            errorhandler: function() {alert("arse");},
         };
         $.extend(this.options, options);
 
@@ -147,6 +148,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             self.postNextItem();
             self.callListeners("onXHRLoad", event);        
         };
+        xhr.onerror = this.options.errorhandler;
 
         var params = this.parameters();
         params["inlinefile"] = file.fileName;
