@@ -17,7 +17,6 @@ class Rotate90Node(node.Node):
         "value": 1,
     }]
                     
-
     def validate(self):
         super(Rotate90Node, self).validate()
         if not self._params.get("num"):
