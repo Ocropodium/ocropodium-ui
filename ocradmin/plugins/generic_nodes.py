@@ -17,13 +17,6 @@ class CommandLineRecognizerNode(ocropus_nodes.OcropusRecognizerNode):
     """
     binary = "unimplemented"
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialise.
-        """
-        super(CommandLineRecognizerNode, self).__init__(*args, **kwargs)
-
-
     def get_command(self, *args, **kwargs):
         """
         Get the command line for converting a given image.
