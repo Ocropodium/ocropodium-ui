@@ -14,7 +14,7 @@ const MAXFONTSIZE = 40;
 var uploader = null;
 var formatter = null;
 var pbuilder = null;
-
+var sdviewer = null;
 
 function saveState() {
     pbuilder.saveState();
@@ -29,140 +29,8 @@ function saveState() {
 
 function loadState() {
 
-    var jobnames = $.cookie("jobnames");
-    var tid = $("input[name='preload_task_id']").val();
-    var pname = $("input[name='preload_page_name']").val();
-    var pagename, jobname;
-    if (tid) {
-        jobnames = tid
-    }
-    if (jobnames) {
-        $.each(jobnames.split(","), function(index, pagejob) {
-            if (pagejob.search(":") != -1) {
-                pagename = pagejob.split(":")[0], jobname = pagejob.split(":")[1];
-            } else {
-                pagename = pname, jobname = pagejob;
-            }
-            addPageToWorkspace(pagename, jobname);
-        });
-    }
-
-    pollForResults();
-    layoutWidgets();
-    updateUiState();
 }
 
-
-function addPageToWorkspace(page_name, task_id, linedata) {
-    var workspace = document.getElementById("workspace");
-    var page = new OCRJS.PageWidget(workspace, page_name, task_id);
-    PAGES.push(page);
-    $(workspace).append(page.init());
-    page.onLinesReady = function() {
-        // trigger a reformat
-        $("input[name=format]:checked").click();
-    }
-    page.onClose = function() {
-        delete PENDING[page.id()];
-        var temp = [];
-        for (var i in PAGES) {
-            if (page != PAGES[i])
-                temp.push(PAGES[i])
-        }
-        PAGES = temp;
-        updateUiState();
-    }
-    if (linedata)
-        page.setResults(linedata)
-    else
-        PENDING[task_id] = page;
-}
-
-
-function setResults(data) {
-    for (var i in data) {
-        var job = data[i];
-        if (job.status == "PENDING")
-            continue;
-        var page = PENDING[job.task_id];
-        if (!page) 
-            continue;
-
-        if (job.error || job.trace || job.status == "FAILURE") {
-            page.setError(job.error, job.trace);
-        } else if (job.status == "SUCCESS") {
-            page.setResults(job.results);    
-        }    
-        delete PENDING[job.task_id];        
-    };
-
-    var count = 0;
-    for (k in PENDING) if (PENDING.hasOwnProperty(k)) count++;
-    if (count) {
-        POLLTIMER = setTimeout(function() {
-            pollForResults();
-        }, 100);
-    } else {
-        POLLTIMER = -1;
-    }
-}
-
-function pollForResults() {
-    var tidstr = [];
-    $.each(PENDING, function(tid, obj) {
-        tidstr.push("job=" + tid);
-    });
-    if (!tidstr.length)
-        return;
-    $.ajax({
-        url: "/ocr/results/",
-        data: tidstr.join("&"),
-        type: "GET",
-        error: OCRJS.ajaxErrorHandler,
-        success: setResults,
-    });
-}
-
-
-
-function onXHRLoad(event) {
-    var xhr = event.target;
-    if (!xhr.responseText) {
-        return;
-    }                
-    if (xhr.status != 200) {
-        return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
-    } 
-    var data = $.parseJSON(xhr.responseText);
-    if (data.error) {
-        alert("Error: " + data.error + "\n\n" + data.trace);
-        $("#dropzone").text("Drop images here...").removeClass("waiting");
-        return;
-    }
-    $.each(data, function(pagenum, data) {
-        addPageToWorkspace(data.page_name, data.task_id, data.results);
-    }); 
-    if (POLLTIMER == -1)
-        pollForResults();
-    layoutWidgets();
-    updateUiState();
-};
-
-
-function relayoutPages(maxheight) {
-    var top = $(".ocr_page_container").first();
-    var start = top.position().top + top.outerHeight(true);
-    top.nextAll().each(function(i, elem) {
-        $(elem).css("top", start + "px");
-        start = start + $(elem).outerHeight(true);
-    });
-}
-
-function updateUiState() {
-    var pcount = PAGES.length;
-    $(".tbbutton").button({disabled: pcount < 1});
-    $(".ocr_page").css("font-size", $("#font_size").val() + "px");
-}
 
 
 
@@ -179,17 +47,13 @@ $(function() {
     });
     $("#format").buttonset();
     $("#clear").click(function(event) {
-        PAGES = [];
-        $(".ocr_page_container").remove();
-        $.cookie("jobnames", null);
-        updateUiState();
+        alert("I don't do anything!");
     });
     $("#zoomin").click(function(event) {
         $("#font_size").val(parseInt($("#font_size").val()) + 2);
         $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
         $("#zoomout").button({"disabled": $("#font_size").val() <= MINFONTSIZE});
         $(".ocr_page").css("font-size", $("#font_size").val() + "px");
-        relayoutPages();
     }).button({
         text: false,
         icons: {
@@ -201,7 +65,6 @@ $(function() {
         $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
         $("#zoomout").button({"disabled": $("#font_size").val() <= MINFONTSIZE});
         $(".ocr_page").css("font-size", $("#font_size").val() + "px");
-        relayoutPages();
     }).button({
         text: false,
         icons: {
@@ -210,37 +73,22 @@ $(function() {
     });
     $("#format_block").click(function(event) {
         formatter.blockLayout($(".ocr_page"));
-        relayoutPages();
     });
     $("#format_line").click(function(event) {
         formatter.lineLayout($(".ocr_page"));
-        relayoutPages();
     });
     $("#format_column").click(function(event) {
         $(".ocr_page").each(function(pos, elem) {
             formatter.columnLayout($(elem));
         });
-        relayoutPages();
     });
 
-
     // initialise the uploader...
-    if ($("#uploadform").length) {
-        uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
-        uploader.addListeners({
-            onXHRLoad: onXHRLoad,
-            onUploadsStarted: function(event) {
-                uploader.clearParameters();
-                $("#dropzone").text("Please wait...").addClass("waiting");
-                $("#optionsform input, #optionsform select").each(function(i, elem) {
-                    uploader.registerTextParameter(elem);
-                });
-            },
-            onUploadsFinished: function(e) {
-                $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-            },
-        });
-    }
+    var uploader  = new OCRJS.AjaxUploader(
+        $("#dropzone").get(0),
+        "/plugins/upload/", 
+        { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
+    );
 
     // load state stored from last time
     loadState();
@@ -254,9 +102,34 @@ $(function() {
         }
     }
 
+    var timer = null;
+
+    function pollForResults(node, taskid) {
+        console.log("Polling", node, taskid);
+        timer = setTimeout(function() {
+            $.ajax({
+                url: "/plugins/results/" + taskid,
+                success: function(ndata) {
+                    ndata = ndata[0];
+                    console.log("Data: status", ndata["status"], "Data", ndata);
+                    if (ndata.status == "PENDING")
+                        return pollForResults(node, taskid);
+                    else {
+                        // assume success!
+                        sdviewer.setBufferPath(0, ndata.result.dzi); 
+                    }
+                }
+            });
+        }, 200);        
+    }
+
     // line formatter object
+    sdviewer = new OCRJS.ImageViewer($(".viewer").get(0));
     formatter = new OCRJS.LineFormatter();
     pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
+    pbuilder.addListener("resultPending", function(node, pendingdata) {
+        pollForResults(node, pendingdata.task_id);
+    });
     pbuilder.init();
 });
 
