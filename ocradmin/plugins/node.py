@@ -135,6 +135,28 @@ class Node(object):
         """
         pass
 
+    def hash_value(self):
+        """
+        Get a representation of this
+        node's current state.  This is a data
+        structure the node type, it's
+        parameters, and it's children's hash_values.
+        """
+        def makesafe(val):
+            if isinstance(val, unicode):
+                return val.encode()
+            elif isinstance(val, float):
+                return str(val)
+            return val
+
+        return dict(
+            name=self.name.encode(),
+            params=[[makesafe(v) for v in p] for p \
+                    in self._params.iteritems()],
+            children=[n.hash_value() for n in self._inputs \
+                    if n is not None]
+        )
+
     def eval(self):
         """
         Eval the node.
