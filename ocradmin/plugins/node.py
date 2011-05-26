@@ -175,7 +175,7 @@ class Node(object):
         return data
 
     def __repr__(self):
-        return "<Node: %s" % self.name
+        return "<%s: %s" % (self.__class__.__name__, self.name)
 
     def __str__(self):
         return self.name
