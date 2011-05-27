@@ -89,6 +89,10 @@ $(function() {
         "/plugins/upload/", 
         { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
     );
+    // FIXME: No error handling
+    uploader.addListener("onXHRLoad", function(data) {
+        pbuilder.setFileInPath(JSON.parse(data.target.response).file);
+    });
 
     // load state stored from last time
     loadState();
