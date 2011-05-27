@@ -12,6 +12,7 @@ class Rotate90Node(node.Node):
     arity = 1
     stage = stages.FILTER_BINARY
     name = "Numpy::Rotate90"
+    description = "Rotate image num*90 degrees counter-clockwise"
     _parameters = [{
         "name": "num",
         "value": 1,
