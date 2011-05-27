@@ -9,7 +9,6 @@ import plugins
 import node
 import manager
 import stages
-#reload(node)
 
 import ocrolib
 
@@ -32,7 +31,12 @@ class OcropusFileInNode(node.Node):
     arity = 0
     stage = stages.INPUT
     _parameters = [dict(name="path", value="")]
-        
+
+    def null_data(self):
+        """
+        Return an empty numpy image.
+        """
+        return ocrolib.numpy.zeros((640,480,3), dtype=ocrolib.numpy.uint8)
 
     def validate(self):
         super(OcropusFileInNode, self).validate()
@@ -165,6 +169,7 @@ class OcropusRecognizerNode(node.Node):
     description = "Ocropus Native Text Recognizer"
     stage = stages.RECOGNIZE
     arity = 2
+    passthrough = 1
     _parameters = [
         {
             "name": "character_model",
