@@ -302,23 +302,27 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 self.callListeners("resultPending", node, data);
             },
         });
-    },                   
+    },
+
+    setFileInPath: function(path) {
+        var node = $(".used ul.input li").first();
+        if (node.length == 1) {
+            var params = node.data("nodedata").parameters;
+            for (var i in params) {
+                if (params[i].name == "path")
+                    params[i].value = path;
+                break;
+            }
+        }
+        this.scriptChange();
+    },               
 
     // turn our GUI into an acceptable
     // script... hopefully...                           
     buildScript: function() {
         var self = this;
         var script = [];
-
-        script.push({
-            name: "filein",
-            type: "Ocropus::FileIn",
-            params: [
-                ["path", "etc/simple.png"],
-            ],
-            inputs: [],
-        });
-
+        
         function scriptNode(elem) {
             var arity = parseInt($(elem).data("nodedata").arity);
             var args = Array.prototype.slice.call(arguments).slice(1, arity + 1);
@@ -341,10 +345,15 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
 
         // this makes lots of assumptions about
         // where things are...
-        var last = "filein", 
+        var last = null, 
             segmenter = null,
             lastbinarizer = null;
         $(".nodelist.used ul")
+                .filter(".input")
+            .children().each(function(i, elem) {
+                script.push(scriptNode($(elem), last));
+                last = $(elem).attr("name");
+            }).end().end()
                 .filter(".filter_gray")
             .children().each(function(i, elem) {
                 script.push(scriptNode($(elem), last));
