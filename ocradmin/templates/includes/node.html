@@ -6,9 +6,15 @@
 
 <script id="nodeListTmpl" type="application/x-jquery-tmpl">
     <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${name}" title="${description}">
-        <div class="focusbuttom"></div>
         <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
-        <div class="ignorebuttom"></div>
+    </li>
+</script>
+
+<script id="nodeTreeTmpl" type="application/x-jquery-tmpl">
+    <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${name}" title="${description}">
+        <span class="focusbutton" title="Focus Viewer"></span>
+        <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
+        <span class="ignorebutton" title="Ignore Node"></span>
     </li>
 </script>
 

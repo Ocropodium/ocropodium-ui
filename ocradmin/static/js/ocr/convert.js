@@ -124,7 +124,9 @@ $(function() {
     }
 
     // line formatter object
-    sdviewer = new OCRJS.ImageViewer($(".viewer").get(0));
+    sdviewer = new OCRJS.ImageViewer($(".viewer").get(0), {
+        numBuffers: 1,        
+    });
     formatter = new OCRJS.LineFormatter();
     pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
     pbuilder.addListener("resultPending", function(node, pendingdata) {
