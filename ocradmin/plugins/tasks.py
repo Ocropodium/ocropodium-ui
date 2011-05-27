@@ -106,6 +106,8 @@ class UnhandledRunScriptTask(AbortableTask):
         try:
             pl = script.Script(nodelist, nodekwargs=dict(logger=logger, cacher=cacher))
             term = pl.get_node(evalnode)
+            if term is None:
+                term = pl.get_terminals()[0]
             result = term.eval()
         except StandardError, err:
             raise
