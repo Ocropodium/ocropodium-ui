@@ -109,14 +109,13 @@ div#options {
 .node {
     width: 150px;
     height: 30px;
+    list-style-image: none;
     overflow: hidden;
     border-top: 1px solid #999;
     border-left: 1px solid #999;
     border-right: 1px solid #BBB;
     border-bottom: 1px solid #BBB;
-    text-align: center;
     vertical-align: middle;
-    padding: 2px;
     box-shadow: 1px 2px 2px #919598;
     -webkit-box-shadow: 1px 2px 2px #919598;
     -moz-box-shadow: 1px 2px 2px #919598;
@@ -183,4 +182,48 @@ div#options {
     float: left;
     width: 40%;
 }
+
+.nodename {
+    float: left;
+    height: 30px;
+    width: 118px;
+    text-align: center;
+}
+
+.focusbutton {
+    float: left; 
+    width: 15px;
+    height: 30px;
+    border-right: 1px solid #DDD;
+}
+
+.focusbutton.active {
+    background: #a9cae5;
+    background: -moz-linear-gradient(top, #a9cae5 0%, #90b9da 41%, #6ea2cc 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#a9cae5), color-stop(41%,#90b9da), color-stop(100%,#6ea2cc));
+    background: -webkit-linear-gradient(top, #a9cae5 0%,#90b9da 41%,#6ea2cc 100%);
+    background: -o-linear-gradient(top, #a9cae5 0%,#90b9da 41%,#6ea2cc 100%);
+    background: -ms-linear-gradient(top, #a9cae5 0%,#90b9da 41%,#6ea2cc 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a9cae5', endColorstr='#6ea2cc',GradientType=0 );
+    background: linear-gradient(top, #a9cae5 0%,#90b9da 41%,#6ea2cc 100%);
+}
+
+.ignorebutton {
+    float: right; 
+    width: 15px;
+    height: 30px;
+    border-left: 1px solid #DDD;
+}
+
+.ignorebutton.active {
+    background: #ffffad;
+    background: -moz-linear-gradient(top, #ffffad 0%, #ffffad 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffad), color-stop(100%,#ffffad));
+    background: -webkit-linear-gradient(top, #ffffad 0%,#ffffad 100%);
+    background: -o-linear-gradient(top, #ffffad 0%,#ffffad 100%);
+    background: -ms-linear-gradient(top, #ffffad 0%,#ffffad 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffad', endColorstr='#ffffad',GradientType=0 );
+    background: linear-gradient(top, #ffffad 0%,#ffffad 100%);
+}
+
 

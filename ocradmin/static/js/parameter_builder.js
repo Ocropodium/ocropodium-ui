@@ -58,10 +58,12 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         this._waiting = {};
         this._initialised = false;
         this._nodelisttmpl = $.template($("#nodeListTmpl"));
+        this._nodetreetmpl = $.template($("#nodeTreeTmpl"));
         this._paramtmpl = $.template($("#paramTmpl"));
         this._nodedata = {};
         this._nodetypes = {};
         this._usednames = {};
+        this._sessionid = null;
     },
 
     init: function() {
@@ -82,9 +84,14 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     },
 
     removeNode: function(elem) {
-        delete this._usednames[$(elem).text()];
-        $(elem).remove();        
-    },                 
+        delete this._usednames[$(elem).attr("name")];
+        $(elem).remove();
+        this.scriptChange();        
+    },
+
+    selectLastNode: function() {
+        $(".used li").last().click();        
+    },                
 
     setupEvents: function() {
         var self = this;
@@ -109,7 +116,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 var current = $(".node.current");
                 if (current.length == 0)
                     return;
-                if (confirm("Remove node: " + current.text()))
+                //if (confirm("Remove node: " + current.attr("name")))
                     self.removeNode(current.get(0));
             }
         });
@@ -120,7 +127,8 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                     //helper: "clone",
                     helper: function() {
                         var helper = $(this).clone(true);
-                        helper.text(self.newNodeName($(this).text()));
+                        helper.text(
+                            self.newNodeName($(this).data("type").replace(/^[^:]+::/, "")));
                         return helper.get(0);                                        
                     },
                     stop: function() {
@@ -144,17 +152,20 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 },
                 drop: function(event, ui) {
                     if (ui.draggable.hasClass("available")) {
-                        var newnode = $.tmpl(self._nodelisttmpl, 
+                        var newnode = $.tmpl(self._nodetreetmpl, 
                                 ui.draggable.data("nodedata"))
                             .data("nodedata", 
                                 $.extend(true, {}, ui.draggable.data("nodedata")))
-                            .text(ui.helper.text());
+                        newnode
+                            .attr("name", ui.helper.text())
+                            .find(".nodename").text(ui.helper.text());
                         if ($(this).hasClass("multiple"))
                             newnode.appendTo(this);
                         else
                             $(this).children().remove().end()
                                 .append(newnode);
-                        self._usednames[ui.helper.text()] = true;                        
+                        self._usednames[ui.helper.text()] = true;
+                        newnode.click();                        
                     }
                 }, 
             }).sortable({
@@ -169,11 +180,34 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             } else {
                 $(".used li").not(this).removeClass("current");
                 $(this).addClass("current"); 
-                self.buildParams($(this).text(), 
+                self.buildParams($(this).attr("name"), 
                     $(this).data("nodedata").parameters);
-                self.runScript();
+                if ($(".focusbutton.active").length == 0)
+                    self.scriptChange();
             }
         });
+
+        $(".ignorebutton").live("click", function(event) {
+            $(this).toggleClass("active");
+            event.stopPropagation();
+            event.preventDefault();
+            self.scriptChange();
+        });
+
+        $(".focusbutton").live("click", function(event) {
+            if (!$(this).hasClass("active")) {
+                $(".focusbutton").not(this).removeClass("active");
+                $(this).addClass("active");
+            } else
+                $(this).removeClass("active");
+            event.stopPropagation();
+            event.preventDefault();
+            self.scriptChange();
+        });
+    },
+
+    scriptChange: function() {
+        this.runScript();
     },                 
 
     buildParams: function(name, params) {
@@ -240,11 +274,16 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     },
 
     getEvalNode: function() {
-        var node = $(".used ul li.current").first();
-        if (node.length == 1)
-            return $.trim(node.text());
-        else
-            return $(".used li.recognize").first().text();
+        var node = $(".focusbutton.active").first().parent();
+        if (node.length == 0)
+            node = $(".used ul li.current").first();
+            if (node.length == 0)
+                node = $(".used li.recognize").first();
+                if (node.length == 0)
+                    node = $(".used li.recognize").first();
+                    if (node.length == 0)
+                        node = $(".used ul li").last();
+        return $.trim(node.attr("name"));
     },                     
 
     runScript: function() {
@@ -287,13 +326,17 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             $.each($(elem).data("nodedata").parameters, function(i, p) {
                 params.push([p.name, p.value]);
             });
-            return {
-                name: $(elem).text(),
+            var out = {
+                name: $(elem).attr("name"),
                 type: $(elem).data("type"),
                 stage: $(elem).data("nodedata").stage,
                 params: params,
                 inputs: args,                    
             };
+            if ($(elem).find(".ignorebutton").hasClass("active")) {
+                out["ignored"] = true;
+            }
+            return out;
         }
 
         // this makes lots of assumptions about
@@ -305,24 +348,24 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 .filter(".filter_gray")
             .children().each(function(i, elem) {
                 script.push(scriptNode($(elem), last));
-                last = $(elem).text();
+                last = $(elem).attr("name");
             }).end().end()
                 .filter(".binarize")
             .children().each(function(i, elem) {
                 script.push(scriptNode($(elem), last));
-                last = $(elem).text();
+                last = $(elem).attr("name");
             }).end().end()
                 .filter(".filter_binary")
             .children().each(function(i, elem) {
                 script.push(scriptNode($(elem), last));
-                last = $(elem).text();
-                lastbinarizer = $(elem).text();
+                last = $(elem).attr("name");
+                lastbinarizer = $(elem).attr("name");
             }).end().end()
                 .filter(".page_segment")
             .children().each(function(i, elem) {
                 script.push(scriptNode($(elem), last));
-                segmenter = $(elem).text();
-                last = $(elem).text();
+                segmenter = $(elem).attr("name");
+                last = $(elem).attr("name");
             }).end().end()
                 .filter(".recognize")
             .children().each(function(i, elem) {
@@ -336,16 +379,21 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var self = this;                    
         $.each(script, function(i, node) {
             var typedata = self._nodetypes[node.type];
-            var newnode = $.tmpl(self._nodelisttmpl, typedata);
-            newnode.text(node.name);
+            var newnode = $.tmpl(self._nodetreetmpl, typedata);
+            newnode.find(".nodename").text(node.name);
+            newnode.attr("name", node.name);
             self._usednames[node.name] = true;
             newnode.data("nodedata", $.extend(true, {}, typedata));
             $.each(node.params, function(i, p) {
                 newnode.data("nodedata").parameters[i].value = p[1];
             });
+            console.log("Loading", newnode.data("nodedata"));
+            if (node.ignored)
+                newnode.find(".ignorebutton").addClass("active");
             $(".used ul." + typedata.stage)
                 .append(newnode);
-        });        
+        });
+        self.selectLastNode();
     },
 
     clearScript: function() {
@@ -373,6 +421,8 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             var script = JSON.parse(scriptjson);        
             self.loadScript(script);
         }
+        this._sessionid = $.cookie("sessionid") 
+            || new Date().getTime(); 
     },               
 
     _queryDone: function(key) {
