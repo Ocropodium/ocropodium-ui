@@ -31,6 +31,14 @@ class Rotate90Node(node.Node):
         return numpy.rot90(image, int(self._params.get("num", 1)))
 
 
+class Rotate90GrayNode(Rotate90Node):
+    """
+    Grayscale version of above.
+    """
+    stage = stages.FILTER_GRAY
+    name = "Numpy::Rotate90Gray"
+
+
 class Manager(manager.StandardManager):
     """
     Handle Tesseract nodes.
@@ -40,6 +48,8 @@ class Manager(manager.StandardManager):
         if name.find("::") != -1:
             name = name.split("::")[-1]
         if name == "Rotate90":
+            return Rotate90Node(**kwargs)
+        elif name == "Rotate90Gray":
             return Rotate90Node(**kwargs)
 
     @classmethod
