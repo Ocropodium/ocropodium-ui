@@ -44,7 +44,9 @@ class OcropusFileInNode(node.Node):
             raise node.UnsetParameterError("path")
 
     def _eval(self):
-        ba = ocrolib.iulib.bytearray()
+        if not os.path.exists(self._params.get("path", "")):
+            return self.null_data()
+        ba = ocrolib.iulib.bytearray()                        
         ocrolib.iulib.read_image_binary(
                 ba, makesafe(self._params.get("path")))
         return ocrolib.narray2numpy(ba)
@@ -99,6 +101,9 @@ class OcropusBinarizeBase(OcropusBase):
         input: a grayscale image.
         return: a binary image.
         """
+        # NB. The Ocropus binarize function
+        # returns a tuple: (binary, gray)
+        # we ignore the latter.
         input = self.get_input_data(0)
         return self._comp.binarize(input)[0]
 
