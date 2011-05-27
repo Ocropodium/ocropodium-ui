@@ -164,6 +164,11 @@ class Node(object):
         structure the node type, it's
         parameters, and it's children's hash_values.
         """
+        # if ignore, return the hash of the
+        # passthrough input
+        if self.ignored:
+            return self._inputs[self.passthrough].hash_value()
+
         def makesafe(val):
             if isinstance(val, unicode):
                 return val.encode()
