@@ -56,6 +56,7 @@ class Node(object):
         self.label = label
         self._parents = []
         self._inputs = [None for n in range(self.arity)]
+        self._inputdata = [None for n in range(self.arity)]
 
     @classmethod
     def parameters(cls):
@@ -129,6 +130,24 @@ class Node(object):
         """
         return self._inputs[num].eval()
 
+    def eval_inputs(self):
+        """
+        Eval all inputs and store the data in
+        self._inputdata.
+        """
+        for i in range(len(self._inputs)):
+            self._inputdata[i] = self.eval_input(i)
+
+    def get_input_data(self, num):
+        """
+        Fetch data for a given input, eval'ing
+        it if necessary.
+        """
+        if self._inputdata[num] is None:
+            self._inputdata[num] = self.eval_input(num)
+            return self._inputdata[num]
+        return self._inputdata[num]
+
     def validate(self):
         """
         Check params are present and correct.
@@ -161,15 +180,16 @@ class Node(object):
         """
         Eval the node.
         """
-        self.logger.debug("Evaluating '%s' Node", self)
-        if self._cacher.has_cache(self):
-            self.logger.debug("%s returning cached input", self)
-            return self._cacher.get_cache(self)
         self.validate()
+        self.eval_inputs()
+        self.logger.debug("Evaluating '%s' Node", self)
         for p, v in self._params.iteritems():
             self.logger.debug("Set Param %s.%s -> %s",
                     self, p, v)
             self._set_p(p, v)            
+        if self._cacher.has_cache(self):
+            self.logger.debug("%s returning cached input", self)
+            return self._cacher.get_cache(self)
         data = self._eval()
         self._cacher.set_cache(self, data)
         return data

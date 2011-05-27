@@ -42,5 +42,5 @@ class PilTestNode(node.Node):
         """
         No-op, for now.
         """
-        return self.eval_input(0)
+        return self.get_input_data(0)
 

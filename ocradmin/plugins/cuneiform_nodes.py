@@ -31,12 +31,12 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         """
         return [self.binary, "-o", outfile, image] 
 
-    def eval(self):
+    def _eval(self):
         """
         Convert a full page.
         """
         from ocradmin.core.utils import HocrParser
-        binary = self.eval_input(0)
+        binary = self.get_input_data(0)
         json = None
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.close()

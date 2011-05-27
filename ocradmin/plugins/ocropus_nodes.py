@@ -95,7 +95,7 @@ class OcropusBinarizeBase(OcropusBase):
         input: a grayscale image.
         return: a binary image.
         """
-        input = self.eval_input(0)
+        input = self.get_input_data(0)
         return self._comp.binarize(input)[0]
 
 
@@ -117,7 +117,7 @@ class OcropusSegmentPageBase(OcropusBase):
             columns
             images
         """
-        input = self.eval_input(0)
+        input = self.get_input_data(0)
         page_seg = self._comp.segment(input)
         regions = ocrolib.RegionExtractor()
         out = dict(columns=[], lines=[], paragraphs=[])
@@ -141,7 +141,7 @@ class OcropusGrayscaleFilterBase(OcropusBase):
     stage = stages.FILTER_GRAY
 
     def _eval(self):
-        input = self.eval_input(0)
+        input = self.get_input_data(0)
         return self._comp.cleanup_gray(input)
 
 
@@ -153,7 +153,7 @@ class OcropusBinaryFilterBase(OcropusBase):
     stage = stages.FILTER_BINARY
 
     def _eval(self):
-        input = self.eval_input(0)
+        input = self.get_input_data(0)
         return self._comp.cleanup(input)
 
 
@@ -182,8 +182,8 @@ class OcropusRecognizerNode(node.Node):
         input: tuple of binary, input boxes
         return: page data
         """
-        binary = self.eval_input(0)
-        boxes = self.eval_input(1)
+        binary = self.get_input_data(0)
+        boxes = self.get_input_data(1)
         pageheight, pagewidth = binary.shape
         iulibbin = ocrolib.numpy2narray(binary)
         out = dict(
