@@ -6,6 +6,8 @@ if (OCRJS === undefined) {
     var OCRJS = {};
 }
 
+Seadragon.Config.blendTime = 0;
+Seadragon.Config.animationTime = 0;
 
 OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, options) {
