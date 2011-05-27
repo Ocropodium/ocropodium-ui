@@ -6,7 +6,8 @@
                 "path", 
                 "etc/simple.png"
             ]
-        ], 
+        ],
+        "ignored": true, 
         "name": "filein", 
         "inputs": []
     }, 
@@ -35,7 +36,8 @@
                 4
             ]
         ], 
-        "name": "RmHalftone", 
+        "name": "RmHalftone",
+        "ignored": true, 
         "inputs": [
             "DeskewPageByRAST"
         ]

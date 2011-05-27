@@ -32,7 +32,8 @@ class Node(object):
     """
     name = "Base::None"
     description = "Base node"
-    arity = 1
+    arity = 1       # number of inputs
+    passthrough = 0 # input to pass through if node ignored
     stage = "general"
     _parameters = [
 
@@ -40,7 +41,7 @@ class Node(object):
 
     def __init__(self, label=None, abort_func=None, 
                 cacher=None,
-                progress_func=None, logger=None):
+                progress_func=None, logger=None, ignored=False):
         """
         Initialise a node.
         """
@@ -57,6 +58,8 @@ class Node(object):
         self._parents = []
         self._inputs = [None for n in range(self.arity)]
         self._inputdata = [None for n in range(self.arity)]
+        self.logger.debug("Initialised %s with cacher: %s" % (self.label, self._cacher))
+        self.ignored = ignored
 
     @classmethod
     def parameters(cls):
@@ -176,13 +179,24 @@ class Node(object):
                     if n is not None]
         )
 
+    def null_data(self):
+        """
+        What we return when ignored.
+        """
+        if self.arity > 0:
+            return self.eval_input(self.passthrough)
+        else:
+            return None
+
+
     def eval(self):
         """
         Eval the node.
         """
+        if self.ignored:
+            self.logger.debug("Ignoring node: %s", self)
+            return self.null_data()
         self.validate()
-        self.eval_inputs()
-        self.logger.debug("Evaluating '%s' Node", self)
         for p, v in self._params.iteritems():
             self.logger.debug("Set Param %s.%s -> %s",
                     self, p, v)
@@ -190,6 +204,8 @@ class Node(object):
         if self._cacher.has_cache(self):
             self.logger.debug("%s returning cached input", self)
             return self._cacher.get_cache(self)
+        self.eval_inputs()
+        self.logger.debug("Evaluating '%s' Node", self)
         data = self._eval()
         self._cacher.set_cache(self, data)
         return data
@@ -199,6 +215,7 @@ class Node(object):
 
     def __str__(self):
         return self.name
+
 
 
 
