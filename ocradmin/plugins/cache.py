@@ -29,18 +29,7 @@ class BasicCacher(object):
     def clear_cache(self, node):
         del self._cache[node.label]
 
-
-class PersistantFileCacher(BasicCacher):
-    """
-    Store data in files for persistance.
-    """
-    def __init__(self, key=None, **kwargs):
-        super(PersistantFileCacher, self).__init__(**kwargs)
-        self._key = key
-
-    def set_cache(self, node, data):
-        self.logger.debug("FANCY CACHING")
-        super(PersistantFileCacher, self).set_cache(node, data)
-
+    def __repr__(self):
+        return "<%s>" % self.__class__.__name__
 
 
