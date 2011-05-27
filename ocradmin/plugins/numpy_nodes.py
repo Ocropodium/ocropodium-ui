@@ -27,7 +27,7 @@ class Rotate90Node(node.Node):
             raise node.InvalidParameterError("'num' must be an integer")
 
     def _eval(self):
-        image = self.eval_input(0)
+        image = self.get_input_data(0)
         return numpy.rot90(image, int(self._params.get("num", 1)))
 
 
