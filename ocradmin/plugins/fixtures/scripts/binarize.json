@@ -41,6 +41,19 @@
         ]
     }, 
     {
+        "type": "Numpy::Rotate90", 
+        "params": [
+            [
+                "num", 
+                4
+            ] 
+        ], 
+        "name": "Rotate360", 
+        "inputs": [
+            "RmHalftone"
+        ]
+    }, 
+    {
         "type": "Ocropus::BinarizeBySauvola", 
         "params": [
             [
