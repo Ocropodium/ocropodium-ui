@@ -162,6 +162,7 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     setBufferPath: function(bufnum, dzipath) {
         this._paths[bufnum] = dzipath;                       
         var buffer = this._buffers[bufnum];                       
+        buffer.openDzi(dzipath);
         if (buffer.isOpen()) {
             var center = buffer.viewport.getCenter();
             var zoom = buffer.viewport.getZoom();
@@ -171,7 +172,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             });
         }
         
-        buffer.openDzi(dzipath);
         this.callListeners("onBufferRefresh", bufnum);        
     },
 
