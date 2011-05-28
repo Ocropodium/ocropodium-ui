@@ -193,6 +193,15 @@ class Node(object):
         else:
             return None
 
+    def first_active(self):
+        """
+        Get the first node in the tree that is
+        active.  If not ignored this is 'self'.
+        """
+        if not self.ignored:
+            return self
+        else:
+            return self._inputs[self.passthrough].first_active()
 
     def eval(self):
         """
