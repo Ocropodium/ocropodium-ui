@@ -15,7 +15,8 @@ import hashlib
 import bencode
 import cache
 import ocrolib
-
+from django.conf import settings
+from ocradmin.vendor import deepzoom
 
 class UnsupportedNodeTypeError(StandardError):
     pass
@@ -51,41 +52,33 @@ class PersistantFileCacher(cache.BasicCacher):
             os.makedirs(path, 0777)
         if isinstance(data, numpy.ndarray):
             self.logger.debug("Writing cache: %s" % os.path.join(path, "cache.png"))
-            ocrolib.write_image_gray(os.path.join(path, "cache.png"), data)
+            pngpath = os.path.join(path, "cache.png")
+            ocrolib.write_image_gray(pngpath, data)
+            creator = deepzoom.ImageCreator(tile_size=512,
+                    tile_overlap=2, tile_format="png",
+                    image_quality=1, resize_filter="nearest")
+            creator.create(pngpath, "%s.dzi" % os.path.splitext(pngpath)[0])
         else:
             self.logger.debug("Writing cache: %s" % os.path.join(path, "cache.json"))
             with open(os.path.join(path, "cache.json"), "w") as f:
                 json.dump(data, f)
 
-    def get_cache(self, node):
+    def get_path(self, node):
         hash = hashlib.md5(bencode.bencode(node.hash_value())).hexdigest()
-        path = os.path.join(self._path, self._key, node.name, hash)
+        return os.path.join(self._path, self._key, node.name, hash)
+
+    
+    def get_cache(self, node):
+        path = self.get_path(node)
         if os.path.exists(path):
             return self._read_node_data(path)
         
     def set_cache(self, node, data):
-        hash = hashlib.md5(bencode.bencode(node.hash_value())).hexdigest()
-        # if the file already exists, return its data
-        path = os.path.join(self._path, self._key, node.name, hash)
-        self._write_node_data(path, data)
+        self._write_node_data(self.get_path(node), data)
 
     def has_cache(self, node):
-        hash = hashlib.md5(bencode.bencode(node.hash_value())).hexdigest()
-        path = os.path.join(self._path, self._key, node.name, hash)
-        return os.path.exists(path)
+        return os.path.exists(self.get_path(node))
 
-
-
-def save_nimage(fname, img):
-    import ocrolib
-    from ocradmin.vendor import deepzoom
-    ocrolib.write_image_gray(fname.encode(), img)
-    creator = deepzoom.ImageCreator(tile_size=512,
-            tile_overlap=2, tile_format="png",
-            image_quality=1, resize_filter="nearest")
-    dzipath = "%s.dzi" % os.path.splitext(fname)[0]
-    creator.create(fname, dzipath)
-    return dzipath
 
 
 class UnhandledRunScriptTask(AbortableTask):
@@ -101,7 +94,9 @@ class UnhandledRunScriptTask(AbortableTask):
         Runs the convert action.
         """
         logger = self.get_logger()
-        cacher = PersistantFileCacher(path="", key="foobar", logger=logger)
+        cacher = PersistantFileCacher(
+                path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+                key="sessionkey", logger=logger)
 
         try:
             pl = script.Script(nodelist, nodekwargs=dict(logger=logger, cacher=cacher))
@@ -111,16 +106,18 @@ class UnhandledRunScriptTask(AbortableTask):
             result = term.eval()
         except StandardError, err:
             raise
-        if isinstance(result, numpy.ndarray):            
-            if not os.path.exists(writepath):
-                os.makedirs(writepath, 0777)
-            path = os.path.join(writepath, "output.png")
-            dzi = save_nimage(path, result)
-            result = dict(
-                path=utils.media_path_to_url(path), 
-                dzi=utils.media_path_to_url(dzi)
+        if isinstance(result, numpy.ndarray):
+            path = cacher.get_path(term.first_active())
+            return dict(
+                type="image",
+                path=utils.media_path_to_url(os.path.join(path, "cache.png")),
+                dzi=utils.media_path_to_url(os.path.join(path, "cache.dzi"))
             )
-        return result
+        else:
+            return dict(
+                type="text",
+                data=result
+            )
 
 @register_handlers
 class RunScriptTask(UnhandledRunScriptTask):
