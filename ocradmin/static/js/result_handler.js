@@ -40,23 +40,26 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         var taskids = $.map(self._pending, function(nodename, taskid) {
             return taskid;
         }).join(",");
-
+        console.log("Polling with", taskids);
         this._timer = setTimeout(function() {
             $.ajax({
                 url: "/plugins/results/" + taskids,
                 success: function(ndata) {
                     $.each(ndata, function(i, data) {
                         console.log("Data: status", data["status"], "Data", data);
-                        if (data.status == "PENDING") {
-                        
-                        } else {
+                        if (data.status != "PENDING")
                             delete self._pending[data.task_id];
+                            
+                        
+                        if (data.status == "SUCCESS") {
                             self.callListeners("resultDone", 
                                     self._tasknodes[data.task_id], data); 
+                        } else if (data.status != "PENDING") {
+                            console.log("Got status", data.status);
                         }
 
                     });
-                    if (self._pending.length)
+                    if ($.map(self._pending, function(k,v) { return k}).length)
                         self.pollForResults();
                 }
             });
