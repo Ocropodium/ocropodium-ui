@@ -2,10 +2,6 @@
 // Handle drag and drop page conversions
 //
 
-var PAGES = [];     // list of current pages in view
-var PENDING = {};   // hash of jobnames -> pending pages
-var POLLTIMER = -1; // id of current results-polling timer
-
 // should probably be moved to app-global scope
 const MINFONTSIZE = 6;
 const MAXFONTSIZE = 40;
@@ -15,15 +11,10 @@ var uploader = null;
 var formatter = null;
 var pbuilder = null;
 var sdviewer = null;
+var reshandler = null;
 
 function saveState() {
     pbuilder.saveState();
-
-    // save the job names of the current pages...
-    var jobnames = $.map(PAGES, function(page, i) {
-        return page.pageName() + ":" + page.id();
-    }).join(",");
-    $.cookie("jobnames", jobnames, {expires: 7});
 }
 
 
@@ -106,36 +97,18 @@ $(function() {
         }
     }
 
-    var timer = null;
-
-    function pollForResults(node, taskid) {
-        console.log("Polling", node, taskid);
-        timer = setTimeout(function() {
-            $.ajax({
-                url: "/plugins/results/" + taskid,
-                success: function(ndata) {
-                    ndata = ndata[0];
-                    console.log("Data: status", ndata["status"], "Data", ndata);
-                    if (ndata.status == "PENDING")
-                        return pollForResults(node, taskid);
-                    else {
-                        // assume success!
-                        sdviewer.setBufferPath(0, ndata.result.dzi); 
-                    }
-                }
-            });
-        }, 200);        
-    }
-
-    // line formatter object
     sdviewer = new OCRJS.ImageViewer($(".viewer").get(0), {
         numBuffers: 1,        
     });
+    reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
     pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
     pbuilder.addListener("resultPending", function(node, pendingdata) {
-        pollForResults(node, pendingdata.task_id);
+        reshandler.watchNode(node, pendingdata);
     });
+    reshandler.addListener("resultDone", function(node, data) {
+        sdviewer.setBufferPath(0, data.result.dzi);
+    }); 
     pbuilder.init();
 });
 
