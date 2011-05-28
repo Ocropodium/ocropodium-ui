@@ -185,6 +185,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 if ($(".focusbutton.active").length == 0)
                     self.scriptChange();
             }
+            event.stopPropagation();
         });
 
         $(".ignorebutton").live("click", function(event) {

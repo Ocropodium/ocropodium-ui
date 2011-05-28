@@ -9,23 +9,60 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         this.base(parent);
         this.parent = parent;
 
+        this._timer = null;
+
         this._listeners = {
+            resultDone: [],
+            haveErrorForNode: [],
         };
         
-        this._tasks = {};
+        this._nodetasks = {};
+        this._tasknodes = {};
+        this._nodedata = {};
+        this._pending = {};
     },
 
     watchNode: function(nodename, data) {
         var self = this;
-
-        if (!self._tasks[data.status])
-            self._tasks[data.status] = {};
-        var stat = self._tasks[data.status];            
-        stat[data.node] = data;
+        console.log("Nodename", nodename, "Data", data);
+        this._nodetasks[nodename] = data.task_id;
+        this._tasknodes[data.task_id] = nodename;
+        this._nodedata[nodename] = data;
+        this._pending[data.task_id] = nodename;
+        self.pollForResults();
 
         
 
     },
+
+    pollForResults: function() {
+        var self = this;
+        var taskids = $.map(self._pending, function(nodename, taskid) {
+            return taskid;
+        }).join(",");
+
+        this._timer = setTimeout(function() {
+            $.ajax({
+                url: "/plugins/results/" + taskids,
+                success: function(ndata) {
+                    $.each(ndata, function(i, data) {
+                        console.log("Data: status", data["status"], "Data", data);
+                        if (data.status == "PENDING") {
+                        
+                        } else {
+                            delete self._pending[data.task_id];
+                            self.callListeners("resultDone", 
+                                    self._tasknodes[data.task_id], data); 
+                        }
+
+                    });
+                    if (self._pending.length)
+                        self.pollForResults();
+                }
+            });
+        }, 200);        
+    },
+
 });
 
 
