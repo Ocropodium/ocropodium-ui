@@ -132,6 +132,7 @@ $(function() {
             $("#viewertabs").tabs("select", 0);
         } else if (data.result.type == "text") {
             textviewer.setData(data.result.data);
+            formatter.blockLayout($(".textcontainer"));
             $("#viewertabs").tabs("select", 1);
         }
     }); 
