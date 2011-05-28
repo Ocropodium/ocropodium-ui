@@ -13,6 +13,7 @@
 	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
     <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
 	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
+	<script type='application/javascript' src='/static/js/text_viewer.js'></script>
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/viewer.css" type="text/css" media="screen" />
@@ -106,9 +107,16 @@
     </div>
 
     <div class="widget" id="viewercontainer">
-        <div class="widget_header">Viewer</div>
+        <div class="widget_header">Viewers</div>
         <div class="widget_content">
-            <div class="viewer"></div>
+            <div id="viewertabs">
+                <ul id="viewertabs">
+                    <li><a href="#imageviewer-1">Image Viewer</a></li>
+                    <li><a href="#textviewer-1">Text Viewer</a></li>
+                </ul>            
+                <div id="imageviewer-1" class="imageviewer"></div>
+                <div id="textviewer-1" class="textviewer"></div>
+            </div>
         </div> 
     </div>
 {% endblock %}

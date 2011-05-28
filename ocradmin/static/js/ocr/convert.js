@@ -97,9 +97,20 @@ $(function() {
         }
     }
 
-    sdviewer = new OCRJS.ImageViewer($(".viewer").get(0), {
+    $("#viewertabs").tabs({
+        select: function(event) {
+            // ensure we refresh the buffer when switching
+            // back to an image tab, otherwise the viewer
+            // loses its images...
+            sdviewer.setBufferPath(sdviewer.activeBuffer(),
+                sdviewer.activeBufferPath());
+        },
+    });
+
+    sdviewer = new OCRJS.ImageViewer($(".imageviewer").get(0), {
         numBuffers: 2,        
     });
+    textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
     pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
@@ -107,15 +118,22 @@ $(function() {
         reshandler.watchNode(node, pendingdata);
     });
     reshandler.addListener("resultDone", function(node, data) {
-        // this magic hides the buffer loading transition by putting the
-        // new data in the back buffer and switching them after a delay
-        // TODO: Find if we can subscript to an event to tell us exactly
-        // when it's safe to switch.  ATM just using a 200ms delay.
-        var active = sdviewer.activeBuffer();
-        sdviewer.setBufferPath(active^1, data.result.dzi);
-        setTimeout(function() {
-            sdviewer.setActiveBuffer(active^1);
-        }, 200);
+        console.log("result data", data);
+        if (data.result.type == "image") {
+            // this magic hides the buffer loading transition by putting the
+            // new data in the back buffer and switching them after a delay
+            // TODO: Find if we can subscript to an event to tell us exactly
+            // when it's safe to switch.  ATM just using a 200ms delay.
+            var active = sdviewer.activeBuffer();
+            sdviewer.setBufferPath(active^1, data.result.dzi);
+            setTimeout(function() {
+                sdviewer.setActiveBuffer(active^1);
+            }, 200);
+            $("#viewertabs").tabs("select", 0);
+        } else if (data.result.type == "text") {
+            textviewer.setData(data.result.data);
+            $("#viewertabs").tabs("select", 1);
+        }
     }); 
     pbuilder.init();
 });
