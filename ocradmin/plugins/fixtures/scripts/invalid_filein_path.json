@@ -1,0 +1,75 @@
+[
+    {
+        "type": "Ocropus::FileIn", 
+        "params": [
+            [
+                "path", 
+                "/foobar/doesnotexists.hello"
+            ]
+        ],
+        "ignored": true, 
+        "name": "filein", 
+        "inputs": []
+    }, 
+    {
+        "type": "Ocropus::DeskewPageByRAST", 
+        "params": [
+            [
+                "max_n", 
+                10000
+            ]
+        ], 
+        "name": "DeskewPageByRAST", 
+        "inputs": [
+            "BinarizeBySauvola"
+        ]
+    }, 
+    {
+        "type": "Ocropus::RmHalftone", 
+        "params": [
+            [
+                "factor", 
+                3
+            ], 
+            [
+                "threshold", 
+                4
+            ]
+        ], 
+        "name": "RmHalftone",
+        "ignored": true, 
+        "inputs": [
+            "DeskewPageByRAST"
+        ]
+    }, 
+    {
+        "type": "Numpy::Rotate90", 
+        "params": [
+            [
+                "num", 
+                4
+            ] 
+        ], 
+        "name": "Rotate360", 
+        "inputs": [
+            "RmHalftone"
+        ]
+    }, 
+    {
+        "type": "Ocropus::BinarizeBySauvola", 
+        "params": [
+            [
+                "k", 
+                0.29999999999999999
+            ], 
+            [
+                "w", 
+                40
+            ]
+        ], 
+        "name": "BinarizeBySauvola", 
+        "inputs": [
+            "filein"
+        ]
+    }
+]
