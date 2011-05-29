@@ -184,7 +184,7 @@ class Node(object):
         """
         # if ignore, return the hash of the
         # passthrough input
-        if self.ignored:
+        if self.arity > 0 and self.ignored:
             return self._inputs[self.passthrough].hash_value()
 
         def makesafe(val):
@@ -216,10 +216,9 @@ class Node(object):
         Get the first node in the tree that is
         active.  If not ignored this is 'self'.
         """
-        if not self.ignored:
-            return self
-        else:
+        if self.arity > 0 and self.ignored:
             return self._inputs[self.passthrough].first_active()
+        return self
 
     def eval(self):
         """
