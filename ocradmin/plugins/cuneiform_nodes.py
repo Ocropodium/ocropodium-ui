@@ -2,11 +2,9 @@
 Cuneiform Recogniser
 """
 
-import plugins
-import manager
-import node
-import stages
-import generic_nodes
+from nodetree import node, manager
+from ocradmin import plugins
+from ocradmin.plugins import stages, generic_nodes
 import types
 
 import os
@@ -14,6 +12,7 @@ import shutil
 import tempfile
 import subprocess as sp
 
+NAME = "Cuneiform"
 
 class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """

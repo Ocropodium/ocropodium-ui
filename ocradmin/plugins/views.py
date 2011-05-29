@@ -6,7 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response
 
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.plugins.manager import ModuleManager 
+from nodetree.manager import ModuleManager 
 from ocradmin.core.decorators import saves_files
 
 import logging
@@ -18,6 +18,12 @@ import tasks
 
 import numpy
 
+manager = ModuleManager()
+manager.register_module("ocradmin.plugins.ocropus_nodes")
+manager.register_module("ocradmin.plugins.tesseract_nodes")
+manager.register_module("ocradmin.plugins.cuneiform_nodes")
+manager.register_module("ocradmin.plugins.numpy_nodes")
+manager.register_module("ocradmin.plugins.pil_nodes")
 
 def query(request):
     """
@@ -27,7 +33,7 @@ def query(request):
     """
     stages=request.GET.getlist("stage")
     return HttpResponse(
-            ModuleManager.get_json(*stages), mimetype="application/json")
+            manager.get_json(*stages), mimetype="application/json")
 
 @saves_files
 def runscript(request):
@@ -39,10 +45,10 @@ def runscript(request):
     nodes = simplejson.loads(jsondata)
     
 
-    from ocradmin.plugins import script, node
+    from nodetree import script, node
 
     try:
-        pl = script.Script(nodes)
+        pl = script.Script(nodes, manager=manager)
         term = pl.get_node(evalnode)
         if term is None:
             term = pl.get_terminals()[0]

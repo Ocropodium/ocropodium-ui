@@ -2,11 +2,9 @@
 Tesseract Recogniser
 """
 
-import plugins
-import node
-import manager
-import stages
-import generic_nodes
+from nodetree import node, manager
+from ocradmin import plugins
+from ocradmin.plugins import stages, generic_nodes
 
 import os
 import shutil
@@ -15,6 +13,8 @@ import subprocess as sp
 
 from ocradmin.ocrmodels.models import OcrModel
 
+
+NAME = "Tesseract"
 
 class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """

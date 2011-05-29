@@ -3,7 +3,6 @@ Run plugin tasks on the Celery queue
 """
 
 import os
-import script
 
 from celery.contrib.abortable import AbortableTask
 from ocradmin.ocrtasks.decorators import register_handlers
@@ -14,10 +13,19 @@ import numpy
 import hashlib
 import bencode
 
-from ocradmin.plugins import cache, node
+from nodetree import cache, node, script
+from nodetree.manager import ModuleManager
 import ocrolib
 from django.conf import settings
 from ocradmin.vendor import deepzoom
+
+manager = ModuleManager()
+manager.register_module("ocradmin.plugins.ocropus_nodes")
+manager.register_module("ocradmin.plugins.tesseract_nodes")
+manager.register_module("ocradmin.plugins.cuneiform_nodes")
+manager.register_module("ocradmin.plugins.numpy_nodes")
+manager.register_module("ocradmin.plugins.pil_nodes")
+
 
 class UnsupportedNodeTypeError(StandardError):
     pass
@@ -100,7 +108,8 @@ class UnhandledRunScriptTask(AbortableTask):
                 key="sessionkey", logger=logger)
 
         try:
-            pl = script.Script(nodelist, nodekwargs=dict(logger=logger, cacher=cacher))
+            pl = script.Script(nodelist, manager=manager, 
+                    nodekwargs=dict(logger=logger, cacher=cacher))
             term = pl.get_node(evalnode)
             if term is None:
                 term = pl.get_terminals()[0]
