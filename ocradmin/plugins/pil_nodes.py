@@ -35,8 +35,8 @@ class PilTestNode(node.Node):
     stage = stages.FILTER_BINARY
     name = "Pil::Test"
 
-    def validate(self):
-        super(PilTestNode, self).validate()
+    def _validate(self):
+        super(PilTestNode, self)._validate()
 
     def _eval(self):
         """

@@ -5,14 +5,14 @@ Ocropus OCR processing nodes.
 import os
 import sys
 
-import plugins
-import node
-import manager
-import stages
+from ocradmin import plugins
+from ocradmin.plugins import node, manager, stages
 
 import ocrolib
+from ocradmin.ocrmodels.models import OcrModel
 
-class UnknownOcropusNodeType(StandardError):
+
+class UnknownOcropusNodeType(node.NodeError):
     pass
 
 
@@ -30,7 +30,7 @@ class OcropusFileInNode(node.Node):
     description = "File Input Node"
     arity = 0
     stage = stages.INPUT
-    _parameters = [dict(name="path", value="")]
+    _parameters = [dict(name="path", value="", type="filepath")]
 
     def null_data(self):
         """
@@ -38,10 +38,12 @@ class OcropusFileInNode(node.Node):
         """
         return ocrolib.numpy.zeros((640,480,3), dtype=ocrolib.numpy.uint8)
 
-    def validate(self):
-        super(OcropusFileInNode, self).validate()
-        if not self._params.get("path"):
-            raise node.UnsetParameterError("path")
+    def _validate(self):
+        super(OcropusFileInNode, self)._validate()
+        if self._params.get("path") is None:
+            raise node.ValidationError("%s: 'path' not set" % self)
+        if not os.path.exists(self._params.get("path", "")):
+            raise node.ValidationError("%s: 'path': file not found" % self)
 
     def _eval(self):
         if not os.path.exists(self._params.get("path", "")):
@@ -176,13 +178,17 @@ class OcropusRecognizerNode(node.Node):
     arity = 2
     passthrough = 1
     _parameters = [
-        {
-            "name": "character_model",
-            "value": "Ocropus Default Char"
-        }, {
-            "name": "language_model",
-            "value": "Ocropus Default Lang",
-        }
+        dict(
+            name="character_model",
+            value="Ocropus Default Char",
+            choices=[m.name for m in \
+                    OcrModel.objects.filter(app="ocropus", type="char")],
+        ), dict(
+            name="language_model",
+            value="Ocropus Default Lang",
+            choices=[m.name for m in \
+                    OcrModel.objects.filter(app="ocropus", type="lang")],
+        )
     ]
 
     def _eval(self):
@@ -315,7 +321,7 @@ class Manager(manager.StandardManager):
         elif comp.interface() == "ICleanupBinary":
             base = OcropusBinaryFilterBase
         else:
-            raise UnknownOcropusNodeType(name, comp.interface())
+            raise UnknownOcropusNodeType("%s: '%s'" % (name, comp.interface()))
         # this is a bit weird
         # create a new class with the name '<OcropusComponentName>Node'
         # and the component as the inner _comp attribute
