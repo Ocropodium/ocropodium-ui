@@ -26,6 +26,13 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this._queue = [];
         this._params = [];
 
+        if (self.target)
+            this.setTarget()
+
+    },
+
+    setTarget: function(elem) {
+        this.target = elem || this.target;
         $(this.target).wrap($("<div></div>"));
         this._fakeinput = $("<input></input>")
             .attr("type", "file")
@@ -42,6 +49,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this._cnt = $(this.target).parent().get(0);
         
         this.setupEvents();
+
     },
 
     setupEvents: function() {

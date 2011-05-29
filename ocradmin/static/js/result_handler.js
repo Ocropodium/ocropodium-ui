@@ -41,6 +41,10 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
             return taskid;
         }).join(",");
         console.log("Polling with", taskids);
+        if (this._timer) {
+            clearTimeout(this._timer);
+            this._timer = null;
+        }
         this._timer = setTimeout(function() {
             $.ajax({
                 url: "/plugins/results/" + taskids,
@@ -61,6 +65,8 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
                     });
                     if ($.map(self._pending, function(k,v) { return k}).length)
                         self.pollForResults();
+                    else
+                        self._timer = null;
                 }
             });
         }, 200);        
