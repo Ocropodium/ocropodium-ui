@@ -1,7 +1,6 @@
 """
 Base class for OCR nodes.
 """
-
 import logging
 FORMAT = '%(levelname)-5s %(name)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -10,13 +9,22 @@ LOGGER.setLevel(logging.DEBUG)
 
 import cache
 
-def UnsetParameterError(StandardError):
+class NodeError(Exception):
     pass
 
-def InvalidParameterError(StandardError):
+class UnsetParameterError(NodeError):
     pass
 
-def CircularDagError(StandardError):
+class ValidationError(NodeError):
+    pass
+
+class InvalidParameterError(NodeError):
+    pass
+
+class InputOutOfRange(NodeError):
+    pass
+
+class CircularDagError(NodeError):
     pass
 
 def noop_abort_func(*args):
@@ -88,7 +96,7 @@ class Node(object):
         Add a parent node.
         """
         if self == n:
-            raise CircularDagError("Node added as parent to self")
+            raise CircularDagError("%s added as parent to self" % self)
         if not n in self._parents:
             self._parents.append(n)
 
@@ -107,7 +115,7 @@ class Node(object):
         node: input node
         """
         if num > len(self._inputs) - 1:
-            raise InputOutOfRange(self._name)
+            raise InputOutOfRange("%s: '%d'" % (self, num))
         n.add_parent(self)
         self._inputs[num] = n
 
@@ -155,6 +163,13 @@ class Node(object):
         """
         Check params are present and correct.
         """
+        if self.arity > 0:
+            for n in self._inputs:
+                if n is not None:
+                    n.validate()
+        self._validate()                    
+
+    def _validate(self):
         pass
 
     def hash_value(self):
@@ -225,10 +240,10 @@ class Node(object):
         return data
 
     def __repr__(self):
-        return "<%s: %s" % (self.__class__.__name__, self.name)
+        return "<%s: %s: %s" % (self.__class__.__name__, self.name, self.label)
 
     def __str__(self):
-        return self.name
+        return self.label
 
 
 
