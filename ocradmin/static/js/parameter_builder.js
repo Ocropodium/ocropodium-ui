@@ -311,7 +311,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                     console.log(nodeelem);
                     nodeelem.addClass("validation_error")
                         .data("titlecache", nodeelem.attr("title"));
-                    nodelem
+                    nodeelem
                         .attr("title", "Validation error: " + data.error);
                 } else {
                     $(".node.validation_error").each(function(i, elem) {
