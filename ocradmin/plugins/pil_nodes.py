@@ -2,10 +2,12 @@
 Image transformation nodes based on the Python Image Library (PIL).
 """
 
-import node
-import stages
+from nodetree import node
+from ocradmin.plugins import stages
 import numpy
 from PIL import Image
+
+NAME = "Pil"
 
 def image2array(im):
     if im.mode not in ("L", "F"):

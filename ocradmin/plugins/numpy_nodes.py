@@ -1,9 +1,9 @@
 
-from ocradmin.plugins import node
-from ocradmin.plugins import manager
+from nodetree import node, manager
 from ocradmin.plugins import stages
 import numpy
 
+NAME = "Numpy"
 
 class Rotate90Node(node.Node):
     """

@@ -4,12 +4,18 @@
 import os
 from django.test import TestCase
 from django.utils import simplejson
+from django.conf import settings
 
-from ocradmin.plugins import script
-from ocradmin.plugins import node
+from nodetree import script, node
+from nodetree.manager import ModuleManager
 import numpy
 
 SCRIPTDIR = "plugins/fixtures/scripts"
+
+# nodetree bits
+from nodetree import manager
+
+
 
 class ScriptsTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json"]
@@ -19,6 +25,12 @@ class ScriptsTest(TestCase):
             Setup OCR tests.  Creates a test user.
         """
         self.scripts = {}
+        self.manager = manager.ModuleManager()
+        self.manager.register_module("ocradmin.plugins.ocropus_nodes")
+        self.manager.register_module("ocradmin.plugins.tesseract_nodes")
+        self.manager.register_module("ocradmin.plugins.cuneiform_nodes")
+        self.manager.register_module("ocradmin.plugins.numpy_nodes")
+        self.manager.register_module("ocradmin.plugins.pil_nodes")
         for fname in os.listdir(SCRIPTDIR):
             if fname.endswith("json"):
                 with open(os.path.join(SCRIPTDIR, fname), "r") as f:
@@ -37,7 +49,7 @@ class ScriptsTest(TestCase):
         for name, nodes in self.scripts.iteritems():
             if name.startswith("invalid"):
                 continue
-            s = script.Script(nodes)
+            s = script.Script(nodes, manager=self.manager)
             terms = s.get_terminals()
             self.assertTrue(len(terms) > 0, msg="No terminal nodes found.")
 
@@ -55,7 +67,7 @@ class ScriptsTest(TestCase):
         for name, nodes in self.scripts.iteritems():
             if not name.startswith("invalid"):
                 continue
-            s = script.Script(nodes)
+            s = script.Script(nodes, manager=self.manager)
             terms = s.get_terminals()
             self.assertTrue(len(terms) > 0, msg="No terminal nodes found.")
             # check we get an expected type from evaling the nodes

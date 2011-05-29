@@ -6,11 +6,14 @@ import os
 import sys
 
 from ocradmin import plugins
-from ocradmin.plugins import node, manager, stages
+from nodetree import node, manager
 
 import ocrolib
 from ocradmin.ocrmodels.models import OcrModel
 
+from ocradmin.plugins import stages
+
+NAME = "Ocropus"
 
 class UnknownOcropusNodeType(Exception):
     pass

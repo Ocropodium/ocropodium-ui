@@ -2,8 +2,8 @@
 Generic base classes for other nodes.
 """
 
-import plugins
-import node
+from ocradmin import plugins
+from nodetree import node
 import ocrolib
 import ocropus_nodes
 

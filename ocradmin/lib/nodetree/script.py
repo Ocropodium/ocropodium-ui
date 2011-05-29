@@ -2,14 +2,14 @@
 Object representation of a Node script.
 """
 
-import manager
+import manager as stdmanager
 
 
 class Script(object):
     """
     Object describing the OCR pipeline.
     """
-    def __init__(self, script, nodekwargs=None):
+    def __init__(self, script, manager=None, nodekwargs=None):
         """
         Initialiser.
         """
@@ -18,7 +18,8 @@ class Script(object):
         self._script = script
         self._error = None
         self._tree = {}
-        self._manager = manager.ModuleManager()
+        self._manager = manager if manager is not None \
+                else stdmanager.ModuleManager()
         self._build_tree()
 
     def _build_tree(self):
