@@ -1,7 +1,7 @@
 
-import node
-import manager
-import stages
+from ocradmin.plugins import node
+from ocradmin.plugins import manager
+from ocradmin.plugins import stages
 import numpy
 
 
@@ -21,11 +21,11 @@ class Rotate90Node(node.Node):
     def _validate(self):
         super(Rotate90Node, self)._validate()
         if not self._params.get("num"):
-            raise node.ValidationError("%s: 'num' is not set" % self)
+            raise node.ValidationError(self, "'num' is not set")
         try:
             num = int(self._params.get("num"))
-        except TypeError:
-            raise node.ValidationError("%s: 'num' must be an integer" % self)
+        except ValueError:
+            raise node.ValidationError(self, "'num' must be an integer")
 
     def _eval(self):
         image = self.get_input_data(0)

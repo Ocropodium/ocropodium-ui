@@ -10,7 +10,10 @@ LOGGER.setLevel(logging.DEBUG)
 import cache
 
 class NodeError(Exception):
-    pass
+    def __init__(self, node, msg):
+        super(NodeError, self).__init__(msg)
+        self.node = node
+        self.msg = msg
 
 class UnsetParameterError(NodeError):
     pass
@@ -96,7 +99,7 @@ class Node(object):
         Add a parent node.
         """
         if self == n:
-            raise CircularDagError("%s added as parent to self" % self)
+            raise CircularDagError(self, "added as parent to self")
         if not n in self._parents:
             self._parents.append(n)
 
@@ -115,7 +118,7 @@ class Node(object):
         node: input node
         """
         if num > len(self._inputs) - 1:
-            raise InputOutOfRange("%s: '%d'" % (self, num))
+            raise InputOutOfRange(self, "Input '%d'" % num)
         n.add_parent(self)
         self._inputs[num] = n
 
