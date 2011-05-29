@@ -35,10 +35,26 @@ def runscript(request):
     Execute a script (sent as JSON).
     """
     evalnode = request.POST.get("node", "")
-    jsondata = request.POST.get("script", simplejson.dumps({"arse":"spaz"}))
-    script = simplejson.loads(jsondata)
+    jsondata = request.POST.get("script")
+    nodes = simplejson.loads(jsondata)
     
-    async = OcrTask.run_celery_task("run.script", evalnode, script,
+
+    from ocradmin.plugins import script, node
+
+    try:
+        pl = script.Script(nodes)
+        term = pl.get_node(evalnode)
+        if term is None:
+            term = pl.get_terminals()[0]
+        result = term.validate()
+    except node.ValidationError, err:
+        return HttpResponse(simplejson.dumps(dict(
+            status="VALIDATION",
+            node=err.node.label,
+            error=err.msg,
+        )), mimetype="application/json")
+
+    async = OcrTask.run_celery_task("run.script", evalnode, nodes,
             request.output_path, untracked=True,
             asyncronous=True, queue="interactive")
     out = dict(
