@@ -13,7 +13,8 @@ import json
 import numpy
 import hashlib
 import bencode
-import cache
+
+from ocradmin.plugins import cache, node
 import ocrolib
 from django.conf import settings
 from ocradmin.vendor import deepzoom
@@ -63,21 +64,21 @@ class PersistantFileCacher(cache.BasicCacher):
             with open(os.path.join(path, "cache.json"), "w") as f:
                 json.dump(data, f)
 
-    def get_path(self, node):
-        hash = hashlib.md5(bencode.bencode(node.hash_value())).hexdigest()
-        return os.path.join(self._path, self._key, node.name, hash)
+    def get_path(self, n):
+        hash = hashlib.md5(bencode.bencode(n.hash_value())).hexdigest()
+        return os.path.join(self._path, self._key, n.name, hash)
 
     
-    def get_cache(self, node):
-        path = self.get_path(node)
+    def get_cache(self, n):
+        path = self.get_path(n)
         if os.path.exists(path):
             return self._read_node_data(path)
         
-    def set_cache(self, node, data):
-        self._write_node_data(self.get_path(node), data)
+    def set_cache(self, n, data):
+        self._write_node_data(self.get_path(n), data)
 
-    def has_cache(self, node):
-        return os.path.exists(self.get_path(node))
+    def has_cache(self, n):
+        return os.path.exists(self.get_path(n))
 
 
 
@@ -104,7 +105,7 @@ class UnhandledRunScriptTask(AbortableTask):
             if term is None:
                 term = pl.get_terminals()[0]
             result = term.eval()
-        except StandardError, err:
+        except node.NodeError, err:
             raise
         if isinstance(result, numpy.ndarray):
             path = cacher.get_path(term.first_active())
