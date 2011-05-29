@@ -51,6 +51,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             onReadyState: [],
             onUpdateStarted: [],
             resultPending: [],
+            registerUploader: [],
         };
         this._valuedata = valuedata || null;
         this._cache = null;
@@ -152,19 +153,20 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 },
                 drop: function(event, ui) {
                     if (ui.draggable.hasClass("available")) {
+                        var nodename = ui.helper.text();
                         var newnode = $.tmpl(self._nodetreetmpl, 
                                 ui.draggable.data("nodedata"))
                             .data("nodedata", 
                                 $.extend(true, {}, ui.draggable.data("nodedata")))
                         newnode
-                            .attr("name", ui.helper.text())
-                            .find(".nodename").text(ui.helper.text());
+                            .attr("name", nodename)
+                            .find(".nodename").text(nodename);
                         if ($(this).hasClass("multiple"))
                             newnode.appendTo(this);
                         else
                             $(this).children().remove().end()
                                 .append(newnode);
-                        self._usednames[ui.helper.text()] = true;
+                        self._usednames[nodename] = newnode;
                         newnode.click();                        
                     }
                 }, 
@@ -174,11 +176,8 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         });
 
         $(".used li.node").live("click", function(event) {
-            if ($(this).hasClass("current")) {
-                $(this).removeClass("current");
-                $("#parameters").html("<h4>No node selected</h4>"); 
-            } else {
-                $(".used li").not(this).removeClass("current");
+            if (!$(this).hasClass("current")) {
+               $(".used li").not(this).removeClass("current");
                 $(this).addClass("current"); 
                 self.buildParams($(this).attr("name"), 
                     $(this).data("nodedata").parameters);
@@ -223,9 +222,16 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         );
         // bind each param to its actual value
         $.each(params, function(i, param) {
-            $("input#" + name + param.name).bind("keyup.paramval", function(event) {
+            $("input#" + name + param.name).not(".proxy").bind("keyup.paramval", function(event) {
                 console.log("updating val", param.name);
                 params[i].value = $(this).val();
+            });
+            $("select#" + name + param.name + " input[type='hidden']")
+                    .bind("change.paramval", function(event) {
+                params[i].value = $(this).val();
+            });
+            $("input[type='file'].proxy").each(function(i, elem) {
+                self.callListeners("registerUploader", elem);
             });
         });        
     },                 
@@ -300,7 +306,21 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             },
             error: OCRJS.ajaxErrorHandler,
             success: function(data) {
-                self.callListeners("resultPending", node, data);
+                if (data.status == "VALIDATION") {
+                    var nodeelem = self._usednames[data.node];
+                    console.log(nodeelem);
+                    nodeelem.addClass("validation_error")
+                        .data("titlecache", nodeelem.attr("title"));
+                    nodelem
+                        .attr("title", "Validation error: " + data.error);
+                } else {
+                    $(".node.validation_error").each(function(i, elem) {
+                        $(elem).removeClass("validation_error")
+                            .attr("title", $(elem).data("titlecache"));
+                    });
+                    self.callListeners("resultPending", node, data);
+
+                }
             },
         });
     },
@@ -392,7 +412,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             var newnode = $.tmpl(self._nodetreetmpl, typedata);
             newnode.find(".nodename").text(node.name);
             newnode.attr("name", node.name);
-            self._usednames[node.name] = true;
+            self._usednames[node.name] = newnode;
             newnode.data("nodedata", $.extend(true, {}, typedata));
             $.each(node.params, function(i, p) {
                 newnode.data("nodedata").parameters[i].value = p[1];

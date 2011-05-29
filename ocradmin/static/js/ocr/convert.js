@@ -76,7 +76,7 @@ $(function() {
 
     // initialise the uploader...
     var uploader  = new OCRJS.AjaxUploader(
-        $("#dropzone").get(0),
+        null,
         "/plugins/upload/", 
         { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
     );
@@ -97,6 +97,10 @@ $(function() {
         }
     }
 
+    $(".nodefilein").live("change", function(event) {
+        console.log("Change:", $(this).val());
+    });
+
     $("#viewertabs").tabs({
         select: function(event) {
             // ensure we refresh the buffer when switching
@@ -116,6 +120,10 @@ $(function() {
     pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
     pbuilder.addListener("resultPending", function(node, pendingdata) {
         reshandler.watchNode(node, pendingdata);
+    });
+    pbuilder.addListener("registerUploader", function(elem) {
+        console.log("Registering uploader: ", elem);
+        uploader.setTarget(elem);
     });
     reshandler.addListener("resultDone", function(node, data) {
         console.log("result data", data);
