@@ -18,14 +18,14 @@ class Rotate90Node(node.Node):
         "value": 1,
     }]
                     
-    def validate(self):
-        super(Rotate90Node, self).validate()
+    def _validate(self):
+        super(Rotate90Node, self)._validate()
         if not self._params.get("num"):
-            raise node.UnsetParameterError("num")
+            raise node.ValidationError("%s: 'num' is not set" % self)
         try:
             num = int(self._params.get("num"))
         except TypeError:
-            raise node.InvalidParameterError("'num' must be an integer")
+            raise node.ValidationError("%s: 'num' must be an integer" % self)
 
     def _eval(self):
         image = self.get_input_data(0)

@@ -13,6 +13,8 @@ import shutil
 import tempfile
 import subprocess as sp
 
+from ocradmin.ocrmodels.models import OcrModel
+
 
 class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
@@ -23,10 +25,12 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     stage = stages.RECOGNIZE
     binary = "tesseract"
     _parameters = [
-        {
-            "name": "language_model",
-            "value": "Tesseract Default Lang",
-        }
+        dict(
+            name="language_model",
+            value="Tesseract Default Lang",
+            choices=[m.name for m in \
+                    OcrModel.objects.filter(app="tesseract", type="lang")],
+        )
     ]
 
     def init_converter(self):
