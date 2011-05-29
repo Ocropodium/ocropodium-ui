@@ -12,7 +12,7 @@ import ocrolib
 from ocradmin.ocrmodels.models import OcrModel
 
 
-class UnknownOcropusNodeType(node.NodeError):
+class UnknownOcropusNodeType(Exception):
     pass
 
 
@@ -41,9 +41,9 @@ class OcropusFileInNode(node.Node):
     def _validate(self):
         super(OcropusFileInNode, self)._validate()
         if self._params.get("path") is None:
-            raise node.ValidationError("%s: 'path' not set" % self)
+            raise node.ValidationError(self, "'path' not set")
         if not os.path.exists(self._params.get("path", "")):
-            raise node.ValidationError("%s: 'path': file not found" % self)
+            raise node.ValidationError(self, "'path': file not found")
 
     def _eval(self):
         if not os.path.exists(self._params.get("path", "")):
