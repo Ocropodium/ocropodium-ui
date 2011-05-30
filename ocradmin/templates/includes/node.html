@@ -11,9 +11,9 @@
 </script>
 
 <script id="nodeTreeTmpl" type="application/x-jquery-tmpl">
-    <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${name}" title="${description}">
-        <span class="focusbutton" title="Focus Viewer"></span>
-        <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
+    <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${type}" title="${description}">
+        <span class="viewingbutton" title="Focus Viewer"></span>
+        <div class="nodename">${name}</div>
         <span class="ignorebutton" title="Ignore Node"></span>
     </li>
 </script>

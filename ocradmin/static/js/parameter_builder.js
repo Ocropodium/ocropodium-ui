@@ -118,7 +118,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 if (current.length == 0)
                     return;
                 //if (confirm("Remove node: " + current.attr("name")))
-                    self.removeNode(current.get(0));
+                current.data("nodedata").removeNode();
             }
         });
 
@@ -154,55 +154,50 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 drop: function(event, ui) {
                     if (ui.draggable.hasClass("available")) {
                         var nodename = ui.helper.text();
-                        var newnode = $.tmpl(self._nodetreetmpl, 
-                                ui.draggable.data("nodedata"))
-                            .data("nodedata", 
-                                $.extend(true, {}, ui.draggable.data("nodedata")))
-                        newnode
-                            .attr("name", nodename)
-                            .find(".nodename").text(nodename);
+                        var node = new OCRJS.Nodetree.Node(nodename, 
+                                ui.draggable.data("nodedata"));
                         if ($(this).hasClass("multiple"))
-                            newnode.appendTo(this);
+                            node.elem.appendTo(this);
                         else
                             $(this).children().remove().end()
-                                .append(newnode);
-                        self._usednames[nodename] = newnode;
-                        newnode.click();                        
+                                .append(node.elem);
+                        self._usednames[nodename] = node;
+                        self.setupNodeListeners(node);
+                        node.elem.click();                        
                     }
                 }, 
             }).sortable({
                 containment: "parent",    
             });
         });
+    },
 
-        $(".used li.node").live("click", function(event) {
-            if (!$(this).hasClass("current")) {
-               $(".used li").not(this).removeClass("current");
-                $(this).addClass("current"); 
-                self.buildParams($(this).attr("name"), 
-                    $(this).data("nodedata").parameters);
-                if ($(".focusbutton.active").length == 0)
-                    self.scriptChange();
-            }
-            event.stopPropagation();
-        });
-
-        $(".ignorebutton").live("click", function(event) {
-            $(this).toggleClass("active");
-            event.stopPropagation();
-            event.preventDefault();
-            self.scriptChange();
-        });
-
-        $(".focusbutton").live("click", function(event) {
-            if (!$(this).hasClass("active")) {
-                $(".focusbutton").not(this).removeClass("active");
-                $(this).addClass("active");
-            } else
-                $(this).removeClass("active");
-            event.stopPropagation();
-            event.preventDefault();
-            self.scriptChange();
+    setupNodeListeners: function(node) {
+        var self = this;                            
+        node.addListeners({
+            toggleIgnored: function(ig) {
+                self.scriptChange();
+            },
+            toggleFocussed: function(foc) {
+                $.each(self._usednames, function(name, other) {
+                    console.log("Looking at other node: ", name);
+                    if (node.name != name)
+                        other.setFocussed(false);
+                });
+                self.buildParams(node.name, node.parameters);
+                self.scriptChange();
+            },
+            toggleViewing: function(view) {
+                $.each(self._usednames, function(name, other) {
+                    if (node.name != other.name)
+                        other.setViewing(false);
+                });
+                self.scriptChange();
+            },
+            deleted: function() {
+                console.log("Deleted node: ", node.name);
+                self.scriptChange();
+            },
         });
     },
 
@@ -290,36 +285,29 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                     node = $(".used li.recognize").first();
                     if (node.length == 0)
                         node = $(".used ul li").last();
-        return $.trim(node.attr("name"));
+        return $.trim(node.data("nodedata").name);
     },                     
 
     runScript: function() {
         var self = this;                   
         var script = self.buildScript();
-        var node = self.getEvalNode();
+        var nodename = self.getEvalNode();
         $.ajax({
             url: "/plugins/run",
             type: "POST",
             data: {
                 script: JSON.stringify(script),
-                node: node,
+                node: nodename,
             },
             error: OCRJS.ajaxErrorHandler,
             success: function(data) {
                 if (data.status == "VALIDATION") {
-                    var nodeelem = self._usednames[data.node];
-                    console.log(nodeelem);
-                    nodeelem.addClass("validation_error")
-                        .data("titlecache", nodeelem.attr("title"));
-                    nodeelem
-                        .attr("title", "Validation error: " + data.error);
+                    self._usednames[data.node].setErrored(true, data.error);
                 } else {
                     $(".node.validation_error").each(function(i, elem) {
-                        $(elem).removeClass("validation_error")
-                            .attr("title", $(elem).data("titlecache"));
+                        $(elem).data("nodedata").setErrored(false);
                     });
-                    self.callListeners("resultPending", node, data);
-
+                    self.callListeners("resultPending", nodename, data);
                 }
             },
         });
@@ -344,21 +332,21 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var self = this;
         var script = [];
         
-        function scriptNode(elem) {
-            var arity = parseInt($(elem).data("nodedata").arity);
+        function scriptNode(node) {
+            var arity = parseInt(node.arity);
             var args = Array.prototype.slice.call(arguments).slice(1, arity + 1);
             var params = [];
-            $.each($(elem).data("nodedata").parameters, function(i, p) {
+            $.each(node.parameters, function(i, p) {
                 params.push([p.name, p.value]);
             });
             var out = {
-                name: $(elem).attr("name"),
-                type: $(elem).data("type"),
-                stage: $(elem).data("nodedata").stage,
+                name: node.name,
+                type: node.type,
+                stage: node.stage,
                 params: params,
                 inputs: args,                    
             };
-            if ($(elem).find(".ignorebutton").hasClass("active")) {
+            if (node.isIgnored()) {
                 out["ignored"] = true;
             }
             return out;
@@ -368,60 +356,64 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         // where things are...
         var last = null, 
             segmenter = null,
-            lastbinarizer = null;
+            lastbinarizer = null,
+            node = null;
         $(".nodelist.used ul")
                 .filter(".input")
             .children().each(function(i, elem) {
-                script.push(scriptNode($(elem), last));
-                last = $(elem).attr("name");
+                node = $(elem).data("nodedata");
+                script.push(scriptNode(node, last));
+                last = node.name;
             }).end().end()
                 .filter(".filter_gray")
             .children().each(function(i, elem) {
-                script.push(scriptNode($(elem), last));
-                last = $(elem).attr("name");
+                node = $(elem).data("nodedata");
+                script.push(scriptNode(node, last));
+                last = node.name;
             }).end().end()
                 .filter(".binarize")
             .children().each(function(i, elem) {
-                script.push(scriptNode($(elem), last));
-                last = $(elem).attr("name");
+                node = $(elem).data("nodedata");
+                script.push(scriptNode(node, last));
+                last = node.name;
             }).end().end()
                 .filter(".filter_binary")
             .children().each(function(i, elem) {
-                script.push(scriptNode($(elem), last));
-                last = $(elem).attr("name");
-                lastbinarizer = $(elem).attr("name");
+                node = $(elem).data("nodedata");
+                script.push(scriptNode(node, last));
+                last = node.name;
+                lastbinarizer = node.name;
             }).end().end()
                 .filter(".page_segment")
             .children().each(function(i, elem) {
-                script.push(scriptNode($(elem), last));
-                segmenter = $(elem).attr("name");
-                last = $(elem).attr("name");
+                node = $(elem).data("nodedata");
+                script.push(scriptNode(node, last));
+                segmenter = node.name;
+                last = node.name;
             }).end().end()
                 .filter(".recognize")
             .children().each(function(i, elem) {
+                node = $(elem).data("nodedata");
                 script.push(
-                    scriptNode($(elem), lastbinarizer, segmenter));
+                    scriptNode(node, lastbinarizer, segmenter));
             });
         return script;
     },
 
     loadScript: function(script) {
         var self = this;                    
-        $.each(script, function(i, node) {
-            var typedata = self._nodetypes[node.type];
-            var newnode = $.tmpl(self._nodetreetmpl, typedata);
-            newnode.find(".nodename").text(node.name);
-            newnode.attr("name", node.name);
-            self._usednames[node.name] = newnode;
-            newnode.data("nodedata", $.extend(true, {}, typedata));
-            $.each(node.params, function(i, p) {
-                newnode.data("nodedata").parameters[i].value = p[1];
+        $.each(script, function(i, nodedata) {
+            var typedata = self._nodetypes[nodedata.type];
+            var node = new OCRJS.Nodetree.Node(nodedata.name, typedata);
+            console.log("Creating node", nodedata.name, "Setting ignored", nodedata.ignored);
+            node.setIgnored(nodedata.ignored);
+            self._usednames[nodedata.name] = node;
+            $.each(nodedata.params, function(i, p) {
+                node.parameters[i].value = p[1];
             });
-            console.log("Loading", newnode.data("nodedata"));
-            if (node.ignored)
-                newnode.find(".ignorebutton").addClass("active");
             $(".used ul." + typedata.stage)
-                .append(newnode);
+                .append(node.elem);
+            self.setupNodeListeners(node);
         });
         self.selectLastNode();
     },
