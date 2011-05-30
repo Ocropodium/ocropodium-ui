@@ -36,7 +36,7 @@ class Script(object):
             self._tree[n["name"]].ignored = n.get("ignored", False)
         for name, n in lookup.iteritems():
             for i in range(len(n["inputs"])):            
-                self._tree[name].set_input(i, self._tree[n["inputs"][i]])
+                self._tree[name].set_input(i, self._tree.get(n["inputs"][i]))
 
     def get_node(self, name):
         """
