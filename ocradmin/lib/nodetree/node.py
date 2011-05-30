@@ -152,7 +152,8 @@ class Node(object):
         """
         Eval an input node.
         """
-        return self._inputs[num].eval()
+        if self._inputs[num] is not None:
+            return self._inputs[num].eval()
 
     def eval_inputs(self):
         """
@@ -218,8 +219,6 @@ class Node(object):
         """
         if self.arity > 0:
             return self.eval_input(self.passthrough)
-        else:
-            return None
 
     def first_active(self):
         """
@@ -255,7 +254,7 @@ class Node(object):
         return "<%s: %s: %s" % (self.__class__.__name__, self.name, self.label)
 
     def __str__(self):
-        return self.label
+        return "%s<%s>" % (self.label, self.name)
 
 
 
