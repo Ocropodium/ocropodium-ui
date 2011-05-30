@@ -42,7 +42,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
             modpath = plugins.lookup_model_file(self._params["language_model"])
             self.unpack_tessdata(modpath)
         self._tesseract = plugins.get_binary("tesseract")
-        self.logger.info("Using Tesseract: %s" % self._tesseract)
+        self.logger.debug("Using Tesseract: %s" % self._tesseract)
 
     @plugins.check_aborted
     def get_transcript(self, line):
@@ -68,7 +68,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         var to point at it.
         """
         # might as well make this even less efficient!
-        self.logger.info("Unpacking tessdata: %s" % lmodelpath)
+        self.logger.debug("Unpacking tessdata: %s" % lmodelpath)
         import tarfile
         self._tessdata = tempfile.mkdtemp() + "/"
         datapath = os.path.join(self._tessdata, "tessdata")
@@ -120,7 +120,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         """
         if hasattr(self, "_tessdata") and os.path.exists(self._tessdata):
             try:
-                self.logger.info(
+                self.logger.debug(
                     "Cleaning up temp tessdata folder: %s" % self._tessdata)
                 shutil.rmtree(self._tessdata)
             except OSError, (errno, strerr):
