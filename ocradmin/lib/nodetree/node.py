@@ -31,15 +31,24 @@ class CircularDagError(NodeError):
     pass
 
 def noop_abort_func(*args):
+    """
+    A function for nodes to call that signals that 
+    they should abort.  By default it does nothing.
+    """
     return False
 
 def noop_progress_func(*args):
+    """
+    A function for nodes to call that reports on their
+    progress.  By default it does nothing.
+    """
     pass
+
 
 class Node(object):
     """
     Node object.  Evaluates some input and
-    return the output.
+    return the output.    
     """
     name = "Base::None"
     description = "Base node"
