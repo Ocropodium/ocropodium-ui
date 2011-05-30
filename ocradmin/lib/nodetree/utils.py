@@ -14,16 +14,9 @@ class NodeEncoder(json.JSONEncoder):
     """
     def default(self, n):
         """
-        Flatten node.
+        Flatten node for JSON encoding.
         """
-        # FIXME: issubclass doesn't work because the
-        # qualified module names don't match.  Work
-        # out why and remove this hack.
-        nbases = []
-        if type(n) == types.TypeType:
-            nbases = [b for b in n.__mro__ if \
-                    b.__name__.find("Node") != -1]
-        if len(nbases) > 0:
+        if issubclass(n, node.Node):
             return dict(
                 name=n.name,
                 description=n.description,
