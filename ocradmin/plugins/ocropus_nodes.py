@@ -237,11 +237,11 @@ class OcropusRecognizerNode(node.Node):
         try:
             self._linerec = ocrolib.RecognizeLine()
             cmodpath = plugins.lookup_model_file(self._params["character_model"])
-            self.logger.info("Loading file: %s" % cmodpath)
+            self.logger.debug("Loading char mod file: %s" % cmodpath)
             self._linerec.load_native(cmodpath)
             self._lmodel = ocrolib.OcroFST()
             lmodpath = plugins.lookup_model_file(self._params["language_model"])
-            self.logger.info("Loading file: %s" % lmodpath)
+            self.logger.debug("Loading lang mod file: %s" % lmodpath)
             self._lmodel.load(lmodpath)
         except (StandardError, RuntimeError):
             raise

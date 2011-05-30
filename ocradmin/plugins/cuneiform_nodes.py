@@ -43,7 +43,7 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                 btmp.close()
                 self.write_binary(btmp.name, binary)
                 args = [self.binary, "-f", "hocr", "-o", tmp.name, btmp.name]
-                self.logger.info(args)
+                self.logger.debug("Running: '%s'", " ".join(args))
                 proc = sp.Popen(args, stderr=sp.PIPE)
                 err = proc.stderr.read()
                 if proc.wait() != 0:
@@ -51,7 +51,6 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                             os.path.basename(self.binary).upper(),
                             proc.returncode, err)
                 json = HocrParser().parsefile(tmp.name)
-                self.logger.info("%s" % json)
             os.unlink(tmp.name)
             os.unlink(btmp.name)
         plugins.set_progress(self.logger, self.progress_func, 100, 100)
