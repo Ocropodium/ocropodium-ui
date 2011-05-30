@@ -128,7 +128,8 @@ class Node(object):
         """
         if num > len(self._inputs) - 1:
             raise InputOutOfRange(self, "Input '%d'" % num)
-        n.add_parent(self)
+        if n is not None:
+            n.add_parent(self)
         self._inputs[num] = n
 
     def mark_dirty(self):
