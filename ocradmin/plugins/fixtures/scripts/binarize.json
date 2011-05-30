@@ -7,7 +7,6 @@
                 "etc/simple.png"
             ]
         ],
-        "ignored": true, 
         "name": "filein", 
         "inputs": []
     }, 
