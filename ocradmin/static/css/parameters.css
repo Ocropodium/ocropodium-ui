@@ -203,14 +203,14 @@ div#options {
     text-align: center;
 }
 
-.focusbutton {
+.viewingbutton {
     float: left; 
     width: 15px;
     height: 30px;
     border-right: 1px solid #DDD;
 }
 
-.focusbutton.active {
+.viewingbutton.active {
     background: #a9cae5;
     background: -moz-linear-gradient(top, #a9cae5 0%, #90b9da 41%, #6ea2cc 100%);
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#a9cae5), color-stop(41%,#90b9da), color-stop(100%,#6ea2cc));
