@@ -4,6 +4,7 @@ Ocropus OCR processing nodes.
 
 import os
 import sys
+import json
 
 from ocradmin import plugins
 from nodetree import node, manager
@@ -25,28 +26,15 @@ def makesafe(val):
     return val
 
 
-class OcropusFileInNode(node.Node):
+class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
+            generic_nodes.FileNode):
     """
     A node that takes a file and returns a numpy object.
     """
     name = "Ocropus::FileIn"
     description = "File Input Node"
-    arity = 0
     stage = stages.INPUT
     _parameters = [dict(name="path", value="", type="filepath")]
-
-    def null_data(self):
-        """
-        Return an empty numpy image.
-        """
-        return ocrolib.numpy.zeros((640,480,3), dtype=ocrolib.numpy.uint8)
-
-    def _validate(self):
-        super(OcropusFileInNode, self)._validate()
-        if self._params.get("path") is None:
-            raise node.ValidationError(self, "'path' not set")
-        if not os.path.exists(self._params.get("path", "")):
-            raise node.ValidationError(self, "'path': file not found")
 
     def _eval(self):
         if not os.path.exists(self._params.get("path", "")):
@@ -56,7 +44,50 @@ class OcropusFileInNode(node.Node):
                 ba, makesafe(self._params.get("path")))
         return ocrolib.narray2numpy(ba)
         
-    
+
+class OcropusFileOutNode(node.Node):
+    """
+    A node that writes a file to disk.
+    """
+    name = "Ocropus::FileOut"
+    description = "File Output Node"
+    arity = 1
+    stage = stages.OUTPUT
+    _parameters = [dict(name="path", value="", type="filepath")]
+
+    def _validate(self):
+        """
+        Check params are OK.
+        """
+        if self._params.get("path") is None:
+            raise node.ValidationError(self, "'path' not set")
+
+
+    def null_data(self):
+        """
+        Return the input.
+        """
+        next = self.first_active()
+        if next is not None:
+            return next.eval()
+
+    def _eval(self):
+        """
+        Write the input to the given path.
+        """
+        input = self.eval_input(0)
+        if input is None:
+            return
+
+        path = self._params.get("path")
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path), 0777)
+        if isinstance(input, ocrolib.numpy.ndarray):
+            ocrolib.write_image_gray(path, input)
+        else: 
+            with open(path, "w") as f:
+                json.dump(input, f)
+
 
 class OcropusBase(node.Node):
     """
@@ -296,6 +327,8 @@ class Manager(manager.StandardManager):
             return OcropusRecognizerNode
         elif name == "FileIn":
             return OcropusFileInNode
+        elif name == "FileOut":
+            return OcropusFileOutNode
         # FIXME: This clearly sucks
         comp = None
         if comps is not None:
