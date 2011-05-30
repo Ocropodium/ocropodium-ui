@@ -2,11 +2,11 @@
 Generic base classes for other nodes.
 """
 
+import os
 from ocradmin import plugins
 from ocradmin.plugins import stages
 from nodetree import node
 import ocrolib
-import ocropus_nodes
 
 class ExternalToolError(StandardError):
     pass
@@ -37,7 +37,6 @@ class LineRecognizerNode(node.Node):
         for i in range(len(self._inputs)):
             if self._inputs[i] is None:
                 raise node.ValidationError(self, "missing input '%d'" % i)
-
 
     def _eval(self):
         """
@@ -139,4 +138,31 @@ class CommandLineRecognizerNode(LineRecognizerNode):
                 if lines and lines[-1] == "":
                     lines = lines[:-1]
                 os.unlink(txt.name)
-        return " ".join(lines)        
+        return " ".join(lines)
+
+
+class ImageGeneratorNode(node.Node):
+    """
+    Node which takes no input and returns an image.
+    """
+    arity = 0
+
+    def null_data(self):
+        """
+        Return an empty numpy image.
+        """
+        return ocrolib.numpy.zeros((640,480,3), dtype=ocrolib.numpy.uint8)
+
+
+class FileNode(node.Node):
+    """
+    Node which reads or writes to a file path.
+    """
+    def _validate(self):
+        super(FileNode, self)._validate()
+        if self._params.get("path") is None:
+            raise node.ValidationError(self, "'path' not set")
+        if not os.path.exists(self._params.get("path", "")):
+            raise node.ValidationError(self, "'path': file not found")
+
+
