@@ -276,7 +276,7 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     },
 
     getEvalNode: function() {
-        var node = $(".focusbutton.active").first().parent();
+        var node = $(".viewingbutton.active").first().parent();
         if (node.length == 0)
             node = $(".used ul li.current").first();
             if (node.length == 0)
