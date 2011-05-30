@@ -11,7 +11,7 @@ from nodetree import node, manager
 import ocrolib
 from ocradmin.ocrmodels.models import OcrModel
 
-from ocradmin.plugins import stages
+from ocradmin.plugins import stages, generic_nodes
 
 NAME = "Ocropus"
 
@@ -128,6 +128,12 @@ class OcropusSegmentPageBase(OcropusBase):
     arity = 1
     stage = stages.PAGE_SEGMENT
 
+    def null_data(self):
+        """
+        Return an empty list when ignored.
+        """
+        return dict(columns=[], lines=[], paragraphs=[])
+
     def _eval(self):
         """
         Segment a binary image.
@@ -179,15 +185,12 @@ class OcropusBinaryFilterBase(OcropusBase):
         return self._comp.cleanup(input)
 
 
-class OcropusRecognizerNode(node.Node):
+class OcropusRecognizerNode(generic_nodes.LineRecognizerNode):
     """
     Recognize an image using Ocropus.
     """
     name = "Ocropus::OcropusRecognizer"
     description = "Ocropus Native Text Recognizer"
-    stage = stages.RECOGNIZE
-    arity = 2
-    passthrough = 1
     _parameters = [
         dict(
             name="character_model",
@@ -202,33 +205,16 @@ class OcropusRecognizerNode(node.Node):
         )
     ]
 
-    def _eval(self):
+    def _validate(self):
         """
-        Recognize page text.
+        Check we're in a good state.
+        """
+        super(OcropusRecognizerNode, self)._validate()
+        if self._params.get("character_model", "").strip() == "":
+            raise node.ValidationError(self, "no character model given.")
+        if self._params.get("language_model", "").strip() == "":
+            raise node.ValidationError(self, "no language model given: %s" % self._params)
 
-        input: tuple of binary, input boxes
-        return: page data
-        """
-        binary = self.get_input_data(0)
-        boxes = self.get_input_data(1)
-        pageheight, pagewidth = binary.shape
-        iulibbin = ocrolib.numpy2narray(binary)
-        out = dict(
-                lines=[],
-                box=[0, 0, pagewidth, pageheight],
-        )
-        for i in range(len(boxes.get("lines", []))):
-            coords = boxes.get("lines")[i]
-            iulibcoords = (
-                coords[0], pageheight - coords[1], coords[0] + coords[2],
-                pageheight - (coords[1] - coords[3]))
-            lineimage = ocrolib.iulib.bytearray()
-            ocrolib.iulib.extract_subimage(lineimage, iulibbin, *iulibcoords)
-            out["lines"].append(dict(
-                    box=coords,
-                    text=self.get_transcript(ocrolib.narray2numpy(lineimage)),
-            ))
-        return out
 
     def init_converter(self):
         """

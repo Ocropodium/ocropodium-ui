@@ -33,6 +33,14 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         )
     ]
 
+    def _validate(self):
+        """
+        Check we're in a good state.
+        """
+        super(TesseractRecognizerNode, self)._validate()
+        if self._params.get("language_model", "").strip() == "":
+            raise node.ValidationError(self, "no language model given: %s" % self._params)
+
     def init_converter(self):
         """
         Extract the lmodel to a temporary directory.  This is
