@@ -77,6 +77,14 @@ class OcropusBase(node.Node):
         """
         self._comp.pset(makesafe(p), makesafe(v))
 
+    def __getstate__(self):
+        """
+        Used when pickled.  Here we simply ignore the
+        internal component, which itself contains an
+        unpickleable C++ type.
+        """
+        return super(OcropusBase, self).__dict__
+
     @classmethod
     def parameters(cls):
         """
