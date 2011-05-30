@@ -78,12 +78,15 @@ class ModuleManager(object):
         """
         mods = []
         for mname in self._modpaths:
-            pm = __import__(
+            try:
+                pm = __import__(
                     mname,
                     fromlist=["Manager"])
-            if not hasattr(pm, "Manager"):
-                continue
-            mods.append(pm)
+                if not hasattr(pm, "Manager"):
+                    continue
+                mods.append(pm)
+            except ImportError, err:
+                print "ModuleManager import error: %s" % err
         return mods          
 
     def get_nodes(self, *oftypes):
