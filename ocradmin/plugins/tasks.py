@@ -27,7 +27,7 @@ manager.register_module("ocradmin.plugins.numpy_nodes")
 manager.register_module("ocradmin.plugins.pil_nodes")
 
 
-class UnsupportedNodeTypeError(StandardError):
+class UnsupportedCacheTypeError(StandardError):
     pass
 
 
@@ -45,32 +45,45 @@ class PersistantFileCacher(cache.BasicCacher):
         Get the file data under path and return it.
         """
 
-        fname = os.listdir(path)[0] 
-        if fname.endswith(".png"):
-            self.logger.debug("Reading cache: %s" % os.path.join(path, fname))
-            return ocrolib.read_image_gray(os.path.join(path, fname))
+        fname = [f for f in os.listdir(path) if f.endswith(("png", "json"))][0]
+        filepath = os.path.join(path, fname)
+        if fname.endswith("bin.png"):
+            self.logger.debug("Reading binary cache: %s", filepath)
+            return ocrolib.read_image_gray(filepath)
+        elif fname.endswith(".png"):
+            self.logger.debug("Reading colour cache: %s", filepath)
+            packed = ocrolib.iulib.intarray()
+            ocrolib.iulib.read_image_packed(packed, filepath)
+            return ocrolib.narray2numpy(packed)
         elif fname.endswith(".json"):
-            self.logger.debug("Reading cache: %s" % os.path.join(path, fname))
-            with open(os.path.join(path, fname)) as f:
+            self.logger.debug("Reading JSON cache: %s", filepath)
+            with open(filepath) as f:
                 return json.load(f)
         else:
-            raise UnsupportedCacheTypeError(path)
+            raise UnsupportedCacheTypeError(filepath)
 
     def _write_node_data(self, path, data):
         if not os.path.exists(path):
             os.makedirs(path, 0777)
         if isinstance(data, numpy.ndarray):
-            self.logger.debug("Writing cache: %s" % os.path.join(path, "cache.png"))
             pngpath = os.path.join(path, "cache.png")
-            ocrolib.write_image_gray(pngpath, data)
+            if data.ndim == 2:
+                #pngpath = os.path.join(path, "cache.png")
+                ocrolib.write_image_gray(pngpath, data)
+            else:
+                packed = ocrolib.numpy2narray(data)
+                ocrolib.iulib.write_image_packed(
+                        pngpath, ocrolib.pseg2narray(data))
+            self.logger.debug("Wrote cache: %s", pngpath)
             creator = deepzoom.ImageCreator(tile_size=512,
                     tile_overlap=2, tile_format="png",
                     image_quality=1, resize_filter="nearest")
             creator.create(pngpath, "%s.dzi" % os.path.splitext(pngpath)[0])
         else:
-            self.logger.debug("Writing cache: %s" % os.path.join(path, "cache.json"))
-            with open(os.path.join(path, "cache.json"), "w") as f:
+            jsonpath = os.path.join(path, "cache.json")
+            with open(jsonpath, "w") as f:
                 json.dump(data, f)
+            self.logger.debug("Wrote cache: %s", jsonpath)
 
     def get_path(self, n):
         hash = hashlib.md5(bencode.bencode(n.hash_value())).hexdigest()

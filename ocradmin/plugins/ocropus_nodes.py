@@ -39,10 +39,10 @@ class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
     def _eval(self):
         if not os.path.exists(self._params.get("path", "")):
             return self.null_data()
-        ba = ocrolib.iulib.bytearray()                        
-        ocrolib.iulib.read_image_binary(
-                ba, makesafe(self._params.get("path")))
-        return ocrolib.narray2numpy(ba)
+        packed = ocrolib.iulib.intarray()
+        ocrolib.iulib.read_image_packed(
+                packed, makesafe(self._params.get("path")))
+        return ocrolib.narray2numpy(packed)
         
 
 class OcropusFileOutNode(node.Node):
