@@ -56,7 +56,7 @@ class ModuleManager(object):
         """
         if not module in self._modpaths:
             self._modpaths.append(module)
-        self._mods = self.get_modules()
+        self._mods.extend(self.get_modules(inpath=module))
         self._nodes = self.get_nodes()
 
     def get_new_node(self, type, label, params, **kwargs):
@@ -72,12 +72,14 @@ class ModuleManager(object):
             newnode.set_param(p, v)
         return newnode
 
-    def get_modules(self):
+    def get_modules(self, inpath=None):
         """
         List available node modules.
         """
         mods = []
-        for mname in self._modpaths:
+        modpaths = [inpath] if inpath is not None \
+                else self._modpaths
+        for mname in modpaths:
             try:
                 pm = __import__(
                     mname,
@@ -94,7 +96,9 @@ class ModuleManager(object):
         List available OCR plugins.
         """
         nodes = []
-        for pm in self.get_modules():
+        if not self._modpaths:
+            self.get_modules()
+        for pm in self._mods:
             nodes.extend(pm.Manager.get_nodes(*oftypes))
         return nodes
 
