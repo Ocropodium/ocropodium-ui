@@ -19,6 +19,8 @@ import ocrolib
 from django.conf import settings
 from ocradmin.vendor import deepzoom
 
+from ocradmin.plugins import ocropus_nodes
+
 manager = ModuleManager()
 manager.register_module("ocradmin.plugins.ocropus_nodes")
 manager.register_module("ocradmin.plugins.tesseract_nodes")
@@ -127,9 +129,10 @@ class UnhandledRunScriptTask(AbortableTask):
             if term is None:
                 term = pl.get_terminals()[0]
             result = term.eval()
-        except node.NodeError, err:
-            raise
-        logger.info("RESULT: %s", result)
+        except ocropus_nodes.OcropusNodeError, err:
+            logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
+            return dict(type="error", node=err.node.label, error=err.msg)
+
         if isinstance(result, numpy.ndarray):
             path = cacher.get_path(term.first_active())
             return dict(
@@ -143,6 +146,7 @@ class UnhandledRunScriptTask(AbortableTask):
             return dict(type="pseg", data=result, dzi=dzi)
         else:
             return dict(type="text", data=result)
+
 
 @register_handlers
 class RunScriptTask(UnhandledRunScriptTask):
