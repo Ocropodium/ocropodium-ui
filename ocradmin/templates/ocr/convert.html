@@ -60,6 +60,12 @@
                             <button id="abort">Abort</button>                                                    
                             <button id="rerun_script">Rerun</button>
                         </span>
+                        <select id="select_script" name="script">
+                            <option value="0">---</option>
+                            {% for preset in presets %}
+                                <option value="{{preset.pk}}">{{preset.name}}</option>
+                            {% endfor %}
+                        </select>
                         <span class="buttons_right">
                             <button id="open_script">Load Preset</button>
                             <button id="save_script">Store Preset</button>

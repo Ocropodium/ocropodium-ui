@@ -11,13 +11,14 @@ from django.db import transaction
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.serializers.json import DjangoJSONEncoder
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
 from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask, Transcript
+from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.plugins.manager import PluginManager
 
 from ocradmin.plugins import parameters
@@ -49,11 +50,14 @@ def binarize(request):
 
 @login_required
 @saves_files
-@transaction.commit_manually
 def convert(request):
     """
     Save a posted image to the DFS and convert it with Celery.
     """
+    template = "ocr/convert.html"
+    context = dict(presets=OcrPreset.objects.all())
+    if not request.method == "POST":
+        return render(request, template, context)
     return _ocr_task(request, "ocr/convert.html", "convert.page")
 
 
