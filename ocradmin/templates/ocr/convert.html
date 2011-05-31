@@ -7,6 +7,7 @@
 	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
 	<script type='application/javascript' src='/static/js/nodetree/node.js'></script>
 	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
+	<script type='application/javascript' src='/static/js/preset_manager.js'></script>
 	<script type='application/javascript' src='/static/js/result_handler.js'></script>
 	<script type='application/javascript' src='/static/js/page_widget.js'></script>
 	<script type='application/javascript' src='/static/js/ocr/convert.js'></script>
@@ -17,6 +18,7 @@
 	<script type='application/javascript' src='/static/js/text_viewer.js'></script>
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/preset_manager.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/viewer.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/text_viewer.css" type="text/css" media="screen" />
@@ -54,9 +56,16 @@
             <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
                 <div id="options" class="option_box">
                     <div id="script_toolbar">
-                        <button id="run_script">Run Script</button>
-                        <button id="load_image">Load Image</button>
-                        <button id="open_script">Open Script</button>
+                        <span class="buttons_left">
+                            <button id="abort">Abort</button>                                                    
+                            <button id="rerun_script">Rerun</button>
+                        </span>
+                        <span class="buttons_right">
+                            <button id="open_script">Load Preset</button>
+                            <button id="save_script">Store Preset</button>
+                            <button id="download_script">Download Preset</button>
+                        </span>
+                        
                     </div>
                     <div class="nodelist used">
                         <h4>Input File</h4>
@@ -120,5 +129,6 @@
             </div>
         </div> 
     </div>
+    <div id="dialog"></div>
 {% endblock %}
 

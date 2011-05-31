@@ -45,6 +45,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         this._timer = setTimeout(function() {
             $.ajax({
                 url: "/plugins/results/" + self._pending,
+                error: OCRJS.ajaxErrorHandler,
                 success: function(ndata) {
                     $.each(ndata, function(i, data) {
                         console.log("Data: status", data["status"], "Data", data);
