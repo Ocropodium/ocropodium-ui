@@ -7,7 +7,7 @@
 
 var OCRJS = OCRJS || {};
 
-var PresetManager = OCRJS.OcrBase.extend({
+OCRJS.PresetManager = OCRJS.OcrBase.extend({
     constructor: function(parent, type, options) {
         this.base(parent, options);
         this._type = type;
@@ -15,6 +15,17 @@ var PresetManager = OCRJS.OcrBase.extend({
         this._currentpreset = null;
     
         this._container = $(parent);
+
+        this._listeners = {
+            onClearPreset: [],
+            onPresetLoad: [],
+            onPresetLoadData: [],
+            onPresetSave: [],
+            onPresetDelete: [],
+            onBeforeAction: [],
+            onCompleteAction: [],
+            onPresetClear: [],        
+        };
 
         // build popup window html
         this._dialogdiv = $("<div></div>")
@@ -76,7 +87,7 @@ var PresetManager = OCRJS.OcrBase.extend({
         $(".pm_preset_item").live("dblclick", function(event) {
             self.loadPresetDetails($(this).text());
             self.loadPresetData(self._currentpreset.pk);
-            self.onPresetLoad(event);
+            self.callListeners("onPresetLoad");
         });
 
         $(".pm_preset_select").live("change", function(event) {
@@ -84,18 +95,18 @@ var PresetManager = OCRJS.OcrBase.extend({
             if (pk > 0) {
                 self.loadPresetData(pk);
             } else {
-                self.onPresetClear(event);
+                self.callListeners("onPresetClear");
             }        
         });
 
-        $("#load_button").live("click", function(event) {
+        $("#load_preset").live("click", function(event) {
             self.loadPresetData(self._currentpreset.pk);
-            self.onPresetLoad(event);
+            self.callListeners("onPresetLoad");
         });
 
-        $("#delete_button").live("click", function(event) {
+        $("#delete_preset").live("click", function(event) {
             self.deletePreset(self._currentpreset.pk);
-            self.onPresetDelete(event);
+            self.callListeners("onPresetDelete");
         });
 
         $("#load_preset").live("click", function(event) {
@@ -105,13 +116,13 @@ var PresetManager = OCRJS.OcrBase.extend({
 
         $("#save_preset").live("click", function(event) {
             self.save(event);
-            self.onPresetSave(event)
+            self.callListeners("onPresetSave");
             return false;
         });
 
         $("#clear_preset").live("click", function(event) {
             $("#options").empty();
-            self.onPresetClear(event);
+            self.callListeners("onPresetClear");
             $("#preset_id").val(0);
             return false;
         });
@@ -130,37 +141,20 @@ var PresetManager = OCRJS.OcrBase.extend({
 
                 
     // overrideable events
-    onClearPreset: function(event) {
-    },
+    getPresetData: function() {
 
-    onPresetLoad: function(event) {
-    },
-
-    onPresetLoadData: function(data) {
-    },
-
-    onPresetSave: function(event) {
-    },
-
-    onPresetDelete: function(event) {
-    },
-
-    onBeforeAction: function(event) {
-    },
-
-    onCompleteAction: function(event) {
-    },
+    },    
 
 
     // ajax callbacks
     beforeSend: function(event) {
         this._container.addClass("waiting");
-        this.onBeforeAction(event);
+        this.callListeners("onBeforeAction");
     },
 
     onComplete: function(event) {
         this._container.removeClass("waiting");
-        this.onCompleteAction(event);
+        this.callListeners("onCompleteAction");
     },
 
 
@@ -226,7 +220,7 @@ var PresetManager = OCRJS.OcrBase.extend({
         $.ajax({
             url: "/ocrpresets/data/" + preset_pk + "/",
             success: function(presetdata) {
-                self.onPresetLoadData(presetdata);
+                self.callListeners("onPresetLoadData", presetdata);
                 self.hide();
                 $("#preset_id").val(preset_pk);
             },
@@ -269,14 +263,11 @@ var PresetManager = OCRJS.OcrBase.extend({
         }
         $("#save_button").attr("disabled", true);
         var formdata = {
-            "preset_name": name, 
-            "preset_description": desc,
-            "preset_type": self._type,
+            "name": name, 
+            "description": desc,
+            "type": self._type,
+            "data": self.getPresetData(),
         };
-        // slurp all the form data
-        $(".ocroption, .compparam > input").each(function(index, item) {
-            formdata["ocrdata_" + $(item).attr("name")] = $(item).val();
-        });
 
         $.ajax({
             url: "/ocrpresets/create",

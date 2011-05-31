@@ -12,6 +12,7 @@ var formatter = null;
 var pbuilder = null;
 var sdviewer = null;
 var reshandler = null;
+var presetmanager = null;
 
 function saveState() {
     pbuilder.saveState();
@@ -74,6 +75,56 @@ $(function() {
         });
     });
 
+    // script builder buttons
+    $("#abort").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-cancel",
+        }        
+    });
+    $("#rerun_script").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-refresh",
+        }        
+    });
+    $("#open_script").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-folder-open",
+        }
+    });
+    $("#save_script").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-disk",
+        }
+    });
+    $("#download_script").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-document",
+        }        
+    });
+
+    $("#save_script").click(function(event) {
+        var w = 400, h = 300, elem = this;
+        var pos = [$(elem).offset().left + $(elem).width() - w,
+                $(elem).offset().top + $(elem).height()];
+        console.log("Position: ", pos);
+        $("#dialog").dialog({
+            dialogClass: "save_dialog",
+            position: pos,
+            width: w,
+            height: h,
+            show: "slide",
+        });
+        event.stopPropagation();
+        event.preventDefault();    
+    });
+
+
+
     // initialise the uploader...
     var uploader  = new OCRJS.AjaxUploader(
         null,
@@ -112,6 +163,20 @@ $(function() {
                 console.log(sdviewer._rects);
                 sdviewer.drawBufferOverlays();
             }, 100);
+        },
+    });
+
+    presetmanager = new OCRJS.PresetManager("#script_toolbar");
+    presetmanager.getPresetData = function() {
+        return JSON.stringify(pbuilder.buildScript(), false, '\t');
+    };
+    presetmanager.addListeners({
+        onPresetLoadData: function(data) {
+            pbuilder.clearScript();
+            pbuilder.loadScript(JSON.parse(data));
+        },
+        onPresetClear: function(data) {
+            pbuilder.clearScript();
         },
     });
 

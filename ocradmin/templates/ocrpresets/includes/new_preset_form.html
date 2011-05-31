@@ -1,0 +1,34 @@
+
+{% include "includes/form_errors.html" %}
+
+<form id="new_model_form" action="/ocrpresets/create" method="POST">
+    <div class="form_body">
+        <fieldset>
+            <legend>Preset Information</legend>
+            <div class="field_wrapper">
+                <label for="id_name">Name:</label>
+                {{ form.name }}
+            </div>
+            <div class="field_wrapper">
+                <label for="id_public">Public:</label>
+                {{ form.public }}
+            </div>
+            <div class="field_wrapper">
+                <label for="id_tags">Tags:</label>
+                {{ form.tags }}
+            </div>
+            <div class="field_wrapper textfield_wrapper">
+                <label for="id_description">Description:</label>
+                {{ form.description }}
+            </div>
+            <input type="hidden" id="id_data" name="data" />
+        </fieldset>
+    </div>
+    <div class="form_footer">
+        <div class="form_submit_buttons">
+            <input type="submit" value="Submit" id="submit_new_preset_form" />
+        </div>
+    </div>
+</form>
+
+

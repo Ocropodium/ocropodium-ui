@@ -3,6 +3,14 @@ div#options {
 
 }
 
+#options .buttons_left {
+
+}
+
+#options .buttons_right {
+    float: right;
+}
+
 .nodemenu {
     box-shadow: 2px 3px 3px #919598;
     -webkit-box-shadow: 2px 3px 3px #919598;
