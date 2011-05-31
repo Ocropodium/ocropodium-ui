@@ -189,6 +189,7 @@ class OcropusSegmentPageBase(OcropusBase):
                     regions.y0(i) + (regions.y1(i) - regions.y0(i)),
                     regions.x1(i) - regions.x0(i),
                     regions.y1(i) - regions.y0(i)])
+        out["box"] = [0, 0, input.shape[1], input.shape[0]]        
         return out
 
 
