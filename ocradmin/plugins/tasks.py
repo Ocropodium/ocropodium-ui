@@ -129,6 +129,7 @@ class UnhandledRunScriptTask(AbortableTask):
             result = term.eval()
         except node.NodeError, err:
             raise
+        logger.info("RESULT: %s", result)
         if isinstance(result, numpy.ndarray):
             path = cacher.get_path(term.first_active())
             return dict(
@@ -136,11 +137,12 @@ class UnhandledRunScriptTask(AbortableTask):
                 path=utils.media_path_to_url(os.path.join(path, "cache.png")),
                 dzi=utils.media_path_to_url(os.path.join(path, "cache.dzi"))
             )
+        elif isinstance(result, dict) and result.get("columns") is not None:
+            path = cacher.get_path(term._inputs[0].first_active())
+            dzi=utils.media_path_to_url(os.path.join(path, "cache.dzi"))
+            return dict(type="pseg", data=result, dzi=dzi)
         else:
-            return dict(
-                type="text",
-                data=result
-            )
+            return dict(type="text", data=result)
 
 @register_handlers
 class RunScriptTask(UnhandledRunScriptTask):
