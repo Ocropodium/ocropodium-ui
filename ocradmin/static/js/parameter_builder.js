@@ -201,6 +201,12 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         });
     },
 
+    setNodeErrored: function(nodename, error) {
+        if (!this._usednames[nodename])
+            throw "Unknown node name: " + nodename;
+        this._usednames[nodename].setErrored(true, error);
+    },                        
+
     scriptChange: function() {
         this.runScript();
     },                 

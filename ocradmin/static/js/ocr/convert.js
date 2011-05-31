@@ -108,7 +108,10 @@ $(function() {
             // loses its images...
             sdviewer.setBufferPath(sdviewer.activeBuffer(),
                 sdviewer.activeBufferPath());
-            sdviewer.drawBufferOverlays();
+            setTimeout(function() {
+                console.log(sdviewer._rects);
+                sdviewer.drawBufferOverlays();
+            }, 100);
         },
     });
 
@@ -127,6 +130,12 @@ $(function() {
         uploader.setTarget(elem);
     });
     reshandler.addListener("resultDone", function(node, data) {
+        if (data.result.type == "error") {
+            console.log("NODE ERROR: ", data.result.node, data.result.error);
+            pbuilder.setNodeErrored(data.result.node, data.result.error);
+            return;
+        }
+
         if (data.result.type == "image" || data.result.type == "pseg") {
             // this magic hides the buffer loading transition by putting the
             // new data in the back buffer and switching them after a delay
