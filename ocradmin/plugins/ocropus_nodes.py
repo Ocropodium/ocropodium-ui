@@ -20,6 +20,10 @@ class UnknownOcropusNodeType(Exception):
     pass
 
 
+class OcropusNodeError(node.NodeError):
+    pass
+
+
 def makesafe(val):
     if isinstance(val, unicode):
         return val.encode()
@@ -149,7 +153,11 @@ class OcropusBinarizeBase(OcropusBase):
         # returns a tuple: (binary, gray)
         # we ignore the latter.
         input = self.get_input_data(0)
-        return self._comp.binarize(input)[0]
+        try:
+            out = self._comp.binarize(input)[0]
+        except (IndexError, TypeError, ValueError), err:
+            raise OcropusNodeError(self, err.message)
+        return out
 
 
 class OcropusSegmentPageBase(OcropusBase):
@@ -177,7 +185,10 @@ class OcropusSegmentPageBase(OcropusBase):
             images
         """
         input = self.get_input_data(0)
-        page_seg = self._comp.segment(input)
+        try:
+            page_seg = self._comp.segment(input)
+        except (IndexError, TypeError, ValueError), err:
+            raise OcropusNodeError(self, err.message)
         regions = ocrolib.RegionExtractor()
         out = dict(columns=[], lines=[], paragraphs=[])
         exfuncs = dict(lines=regions.setPageLines,
@@ -202,7 +213,12 @@ class OcropusGrayscaleFilterBase(OcropusBase):
 
     def _eval(self):
         input = self.get_input_data(0)
-        return self._comp.cleanup_gray(input)
+        try:
+            out = self._comp.cleanup_gray(input)
+        except (IndexError, TypeError, ValueError), err:
+            raise OcropusNodeError(self, err.message)
+        return out
+
 
 
 class OcropusBinaryFilterBase(OcropusBase):
@@ -214,7 +230,11 @@ class OcropusBinaryFilterBase(OcropusBase):
 
     def _eval(self):
         input = self.get_input_data(0)
-        return self._comp.cleanup(input)
+        try:
+            out = self._comp.cleanup(input)
+        except (IndexError, TypeError, ValueError), err:
+            raise OcropusNodeError(self, err.message)
+        return out
 
 
 class OcropusRecognizerNode(generic_nodes.LineRecognizerNode):
