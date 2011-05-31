@@ -166,18 +166,35 @@ $(function() {
         },
     });
 
-    presetmanager = new OCRJS.PresetManager("#script_toolbar");
-    presetmanager.getPresetData = function() {
-        return JSON.stringify(pbuilder.buildScript(), false, '\t');
-    };
-    presetmanager.addListeners({
-        onPresetLoadData: function(data) {
+    //presetmanager = new OCRJS.PresetManager("#script_toolbar");
+    //presetmanager.getPresetData = function() {
+    //    return JSON.stringify(pbuilder.buildScript(), false, '\t');
+    //};
+    //presetmanager.addListeners({
+    //    onPresetLoadData: function(data) {
+    //        pbuilder.clearScript();
+    //        pbuilder.loadScript(JSON.parse(data));
+    //    },
+    //    onPresetClear: function(data) {
+    //        pbuilder.clearScript();
+    //    },
+    //});
+    
+    $("#select_script").change(function(event) {
+        if ($(this).val() < 1) {
             pbuilder.clearScript();
-            pbuilder.loadScript(JSON.parse(data));
-        },
-        onPresetClear: function(data) {
-            pbuilder.clearScript();
-        },
+        } else {
+            $.ajax({
+                url: "/ocrpresets/data/" + $(this).val(),
+                error: OCRJS.ajaxErrorHandler,
+                success: function(data) {
+                    pbuilder.clearScript();
+                    pbuilder.loadScript(JSON.parse(data));
+                },
+            });
+        }
+        event.stopPropagation();
+        event.preventDefault();    
     });
 
     sdviewer = new OCRJS.ImageViewer($(".imageviewer").get(0), {
