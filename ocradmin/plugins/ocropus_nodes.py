@@ -185,12 +185,12 @@ class OcropusSegmentPageBase(OcropusBase):
             images
         """
         input = self.get_input_data(0)
+        out = dict(columns=[], lines=[], paragraphs=[])
         try:
             page_seg = self._comp.segment(input)
         except (IndexError, TypeError, ValueError), err:
             raise OcropusNodeError(self, err.message)
         regions = ocrolib.RegionExtractor()
-        out = dict(columns=[], lines=[], paragraphs=[])
         exfuncs = dict(lines=regions.setPageLines,
                 paragraphs=regions.setPageParagraphs)
         for box, func in exfuncs.iteritems():
