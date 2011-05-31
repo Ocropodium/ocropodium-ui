@@ -102,12 +102,13 @@ $(function() {
     });
 
     $("#viewertabs").tabs({
-        select: function(event) {
+        select: function(event, ui) {
             // ensure we refresh the buffer when switching
             // back to an image tab, otherwise the viewer
             // loses its images...
             sdviewer.setBufferPath(sdviewer.activeBuffer(),
                 sdviewer.activeBufferPath());
+            sdviewer.drawBufferOverlays();
         },
     });
 
@@ -126,8 +127,7 @@ $(function() {
         uploader.setTarget(elem);
     });
     reshandler.addListener("resultDone", function(node, data) {
-        console.log("result data", data);
-        if (data.result.type == "image") {
+        if (data.result.type == "image" || data.result.type == "pseg") {
             // this magic hides the buffer loading transition by putting the
             // new data in the back buffer and switching them after a delay
             // TODO: Find if we can subscript to an event to tell us exactly
@@ -137,6 +137,19 @@ $(function() {
             setTimeout(function() {
                 sdviewer.setActiveBuffer(active^1);
             }, 200);
+            
+            if (data.result.type == "pseg") {
+                var overlays = {};
+                $.each(["lines", "paragraphs", "columns"], function(i, class) {
+                    if (data.result.data[class]) {
+                        overlays[class] = sdviewer.getViewerCoordinateRects(
+                            data.result.data.box, data.result.data[class]);
+                        console.log("Adding overlay: " + class);
+                    }
+                });
+                sdviewer.setBufferOverlays(sdviewer.bufferOverlays(0), 1);
+                sdviewer.setBufferOverlays(overlays, 0);
+            }
             $("#viewertabs").tabs("select", 0);
         } else if (data.result.type == "text") {
             textviewer.setData(data.result.data);
