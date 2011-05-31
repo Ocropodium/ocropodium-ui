@@ -19,7 +19,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         this._nodetasks = {};
         this._tasknodes = {};
         this._nodedata = {};
-        this._pending = {};
+        this._pending = null;
     },
 
     watchNode: function(nodename, data) {
@@ -28,7 +28,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         this._nodetasks[nodename] = data.task_id;
         this._tasknodes[data.task_id] = nodename;
         this._nodedata[nodename] = data;
-        this._pending[data.task_id] = nodename;
+        this._pending = data.task_id;
         self.pollForResults();
 
         
@@ -37,22 +37,19 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
 
     pollForResults: function() {
         var self = this;
-        var taskids = $.map(self._pending, function(nodename, taskid) {
-            return taskid;
-        }).join(",");
-        console.log("Polling with", taskids);
+        console.log("Polling with", self._pending);
         if (this._timer) {
             clearTimeout(this._timer);
             this._timer = null;
         }
         this._timer = setTimeout(function() {
             $.ajax({
-                url: "/plugins/results/" + taskids,
+                url: "/plugins/results/" + self._pending,
                 success: function(ndata) {
                     $.each(ndata, function(i, data) {
                         console.log("Data: status", data["status"], "Data", data);
                         if (data.status != "PENDING")
-                            delete self._pending[data.task_id];
+                            self._pending = null;
                             
                         
                         if (data.status == "SUCCESS") {
@@ -63,7 +60,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
                         }
 
                     });
-                    if ($.map(self._pending, function(k,v) { return k}).length)
+                    if (self._pending)
                         self.pollForResults();
                     else
                         self._timer = null;
