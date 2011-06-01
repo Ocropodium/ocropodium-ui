@@ -21,12 +21,15 @@
                 <label for="id_description">Description:</label>
                 {{ form.description }}
             </div>
-            <input type="hidden" id="id_data" name="data" />
+            <div id="data_field" class="field_wrapper textfield_wrapper">
+                <label for="id_description">Paste script here:</label>
+                {{ form.data}}
+            </div>
         </fieldset>
     </div>
     <div class="form_footer">
         <div class="form_submit_buttons">
-            <input type="submit" value="Submit" id="submit_new_preset_form" />
+            <input type="submit" disabled="disabled" value="Submit" id="submit_new_preset_form" />
         </div>
     </div>
 </form>

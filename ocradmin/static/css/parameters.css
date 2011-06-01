@@ -1,6 +1,5 @@
 div#options {
     height: 300px;
-
 }
 
 #options .buttons_left {
@@ -246,5 +245,4 @@ div#options {
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffad', endColorstr='#ffffad',GradientType=0 );
     background: linear-gradient(top, #ffffad 0%,#ffffad 100%);
 }
-
 

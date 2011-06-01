@@ -47,6 +47,24 @@
     {% templatetag openvariable %}/each{% templatetag closevariable %}    
 </script>
 
+<script id="scriptSaveDialog" type="application/x-jquery-tmpl">
+    <form method="POST" id="new_preset_form" action="/ocrpresets/create/">
+        <fieldset>
+            <legend>New Preset</legend>
+            <div class="field_wrapper">
+                <input type="text" id="preset_name" name="name" value="Enter preset name" />
+            </div>
+            <div class="field_wrapper">
+                <textarea id="preset_description" name="description" value=""></textarea>
+            </div>
+            <input type="hidden" name="data" value="${script}" />
+        </fieldset>
+        <div class="form_footer">
+            <input type="submit" disabled="disabled" id="new_preset_submit" value="Submit" />
+        </div>
+    </form>
+</script>
+
 <script id="nodeMenuTmpl" type="application/x-jquery-tmpl">
     <div class="nodemenu" id="nodemenu">
         <h4>OCR Nodes</h4>
