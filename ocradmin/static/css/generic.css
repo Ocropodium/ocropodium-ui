@@ -1,0 +1,54 @@
+.object_list {
+	width: 100%;
+    border-collapse: collapse;
+    background: #FFF;
+    font-size: 1.3em;
+    color: #000;
+}
+
+.object_list thead {
+    background: #ffffff;
+    background: -moz-linear-gradient(top, #ffffff 0%, #f6f6f6 47%, #ededed 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(47%,#f6f6f6), color-stop(100%,#ededed));
+    background: -webkit-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+    background: -o-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+    background: -ms-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed',GradientType=0 );
+    background: linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+}
+
+.object_list a {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.object_list a:hover {
+    text-decoration: underline;
+}
+
+.object_list td, .object_list th {
+    text-align: left;
+    padding: 5px;    
+    border-top: 1px solid #D0D0D0;
+    border-bottom: 1px solid #D0D0D0;
+}
+
+.object_list th {
+    font-size: 1.2em;
+}
+
+.object_list tr.odd {
+    background-color: #F4F4F4;
+}
+
+.pagination {
+    padding: 5px;
+    font-size: 1.2em;
+    float: right;
+}
+
+.pagination a {
+    text-decoration: none;
+    margin-left: 5px;
+}
+
