@@ -76,6 +76,9 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         self.queryOptions(null, null);
     },
 
+    setDisabled: function(disabled) {        
+    },          
+
     newNodeName: function(type) {
         var count = 1;
         var tname = $.trim(type);

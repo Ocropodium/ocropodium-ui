@@ -107,23 +107,16 @@ $(function() {
         }        
     });
 
-    $("#save_script").click(function(event) {
-        var w = 400, h = 300, elem = this;
-        var pos = [$(elem).offset().left + $(elem).width() - w,
-                $(elem).offset().top + $(elem).height()];
-        console.log("Position: ", pos);
-        $("#dialog").dialog({
-            dialogClass: "save_dialog",
-            position: pos,
-            width: w,
-            height: h,
-            show: "slide",
-        });
-        event.stopPropagation();
-        event.preventDefault();    
+    presetmanager = new OCRJS.PresetManager(
+            document.getElementById("script_toolbar"));
+    presetmanager.addListeners({
+        saveDialogOpen: function() {
+            pbuilder.setDisabled(true);
+        },
+        saveDialogClose: function() {
+            pbuilder.setDisabled(false);
+        },
     });
-
-
 
     // initialise the uploader...
     var uploader  = new OCRJS.AjaxUploader(

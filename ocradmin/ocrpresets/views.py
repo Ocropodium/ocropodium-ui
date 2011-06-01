@@ -36,16 +36,22 @@ def index(request):
     """
     List available presets.
     """
-
+    if request.GET.get("format", "") == "json":
+        return list_json(request)
     return list(request)
 
 
 def list(request):
+    return list_json(request)
+
+
+def list_json(request):
     """
     List available presets.
     """
 
-    presets = OcrPreset.objects.all()
+    presets = OcrPreset.objects.all().order_by(
+            request.GET.get("order", "name"))
     response = HttpResponse(mimetype="application/json")
     serializers.serialize("json", presets, ensure_ascii=False, 
             fields=("name", "description"), stream=response)
@@ -91,8 +97,8 @@ def create(request):
     if not form.is_valid():
         context = {"form": form}
         template = "ocrpresets/new.html" if not request.is_ajax() \
-                else "ocrpresets/includes/new_model_form.html"
-        return render(request, template, context)
+                else "ocrpresets/includes/new_preset_form.html"
+        return render(request, template, context, status=202)
     preset = form.instance
     preset.user = request.user
     preset.full_clean()
