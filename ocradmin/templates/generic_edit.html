@@ -1,0 +1,23 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="widget">
+    <div class="widget_header">{{page_name}}</div>
+    <div class="widget_content">
+        {% include "includes/messages.html" %}
+        <div id="object_form">
+            {% include "includes/edit_generic_object.html" %}
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+

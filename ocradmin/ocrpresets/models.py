@@ -13,6 +13,14 @@ class OcrPreset(models.Model):
     updated_on = models.DateField(null=True, blank=True, auto_now=True)
     data = models.TextField()
 
+    def get_absolute_url(self):
+        """URL to view an object detail"""
+        return "/ocrpresets/show/%i/" % self.id
+
+    def get_update_url(self):
+        """URL to update an object detail"""
+        return "/ocrpresets/update/%i/" % self.id
+
     def __unicode__(self):
         """
         String representation.

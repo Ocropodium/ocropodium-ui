@@ -1,16 +1,5 @@
 from django import forms
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.core import serializers
-from django.db.models import Q
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
-from django.utils import simplejson
-
-from tagging.models import TaggedItem
-
+from django.views.generic import ListView, FormView
 from ocradmin.ocrpresets.models import OcrPreset
 
 
@@ -30,121 +19,34 @@ class OcrPresetForm(forms.ModelForm):
         exclude = ["user", "created_on", "updated_on"]
 
 
+class PresetListView(ListView):
+    paginate_by = 20
+    fields=["name", "description", "user", "created_on"]
+
+    def get_queryset(self):        
+        order = self.request.GET.get("order", self.fields[0])
+        return OcrPreset.objects.all().order_by(order)
+
+    def get_context_data(self, **kwargs):
+        context = super(PresetListView, self).get_context_data(**kwargs)
+        context.update(
+            page_name="OCR Presets",
+            fields=self.fields,
+            order=self.request.GET.get("order", self.fields[0])
+        )
+        return context
 
 
-def index(request):
-    """
-    List available presets.
-    """
-    if request.GET.get("format", "") == "json":
-        return list_json(request)
-    return list(request)
+class PresetEditView(FormView):
+    form_class = OcrPresetForm
+    template_name = "generic_edit.html"
 
-
-def list(request):
-    return list_json(request)
-
-
-def list_json(request):
-    """
-    List available presets.
-    """
-
-    presets = OcrPreset.objects.all().order_by(
-            request.GET.get("order", "name"))
-    response = HttpResponse(mimetype="application/json")
-    serializers.serialize("json", presets, ensure_ascii=False, 
-            fields=("name", "description"), stream=response)
-    return response
-
-
-def data(request, pk):
-    """
-    Get a preset's unpickled data.
-    """
-    preset = get_object_or_404(OcrPreset, pk=pk)
-    return HttpResponse(simplejson.dumps(preset.data), 
-            mimetype="application/json")
-
-
-def show(request, pk):
-    """
-    Show a preset's details.
-    """
-
-    return Http404
-
-
-@login_required
-def new(request):
-    """
-        Show the new model form.
-    """
-    form = OcrPresetForm()
-    context = {"form": form}
-    template = "ocrpresets/new.html" if not request.is_ajax() \
-            else "ocrpresets/includes/new_preset_form.html"
-    return render(request, template, context)
-
-
-@login_required
-def create(request):
-    """
-        Create a new preset.
-    """
-    print request.POST
-    form = OcrPresetForm(request.POST)
-    if not form.is_valid():
-        context = {"form": form}
-        template = "ocrpresets/new.html" if not request.is_ajax() \
-                else "ocrpresets/includes/new_preset_form.html"
-        return render(request, template, context, status=202)
-    preset = form.instance
-    preset.user = request.user
-    preset.full_clean()
-    preset.save()
-    messages.success(request, "Preset was created successfully.")
-    return HttpResponseRedirect("/ocrpresets/list")
-
-
-def edit(request, pk):
-    """
-    Edit a preset.
-    """
-
-    return Http404
-
-
-def update(request, pk):
-    """
-    Update a preset.
-    """
-
-    return Http404
-
-
-def delete(request, pk):
-    """
-    Delete a preset.
-    """
-    preset = get_object_or_404(OcrPreset, pk=pk)
-    preset.delete()
-
-    presets = OcrPreset.objects.filter(type=preset.type)
-    response = HttpResponse(mimetype="application/json")
-    serializers.serialize("json", presets, ensure_ascii=False, 
-            fields=("name", "description"), stream=response)
-
-    return response
-
-
-def search(request):
-    """
-    Search available presets.
-    """
-
-    return Http404
-
+    def get_context_data(self, **kwargs):
+        context = super(PresetEditView, self).get_context_data(**kwargs)
+        context.update(
+            page_name="OCR Presets",
+        )
+        return context
 
 
 
