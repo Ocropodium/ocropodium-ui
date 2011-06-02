@@ -5,7 +5,7 @@ import logging
 FORMAT = '%(levelname)-5s %(module)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 LOGGER = logging.getLogger("Node")
-LOGGER.setLevel(logging.DEBUG)
+LOGGER.setLevel(logging.INFO)
 
 import cache
 
