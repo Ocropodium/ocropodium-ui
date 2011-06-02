@@ -60,7 +60,7 @@ class OcrModelTest(TestCase):
         """
         Test requesting a new upload form via Ajax works.
         """
-        r = self.client.get("/ocrmodels/new", {}, **AJAX_HEADERS)
+        r = self.client.get("/ocrmodels/create", {}, **AJAX_HEADERS)
         self.assertEqual(r.status_code, 200)
         # make sure there's a form in the results
         self.assertTrue(r.content.find("<form") != -1)
@@ -127,7 +127,7 @@ class OcrModelTest(TestCase):
         Update the fixture model.
         """
         return self.client.post(
-            "/ocrmodels/update/1/",
+            "/ocrmodels/edit/1/",
             dict(
                 name="Test Update Model",
                 tags="test model update",

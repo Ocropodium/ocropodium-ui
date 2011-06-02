@@ -34,7 +34,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
             var tb = $(self.parent);        
             var pos = [tb.offset().left, tb.offset().top + tb.height()];
-            self._dialog.load("/ocrpresets/new/", function() {
+            self._dialog.load("/ocrpresets/create/", function() {
                 self._dialog.find("#id_data")
                     .val(JSON.stringify(pbuilder.buildScript()));
                 self.handleForm();                    

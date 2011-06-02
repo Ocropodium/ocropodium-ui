@@ -1,0 +1,24 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="widget">
+    <div class="widget_header">{{page_name}}</div>
+    <div class="widget_content">
+        {% include "includes/messages.html" %}
+        <div id="object_form">
+            {% include "includes/generic_edit_body.html" %}
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
