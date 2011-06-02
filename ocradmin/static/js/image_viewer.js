@@ -6,6 +6,8 @@ if (OCRJS === undefined) {
     var OCRJS = {};
 }
 
+Seadragon.Config.blendTime = 0;
+Seadragon.Config.animationTime = 0;
 
 OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, options) {
@@ -160,6 +162,7 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     setBufferPath: function(bufnum, dzipath) {
         this._paths[bufnum] = dzipath;                       
         var buffer = this._buffers[bufnum];                       
+        buffer.openDzi(dzipath);
         if (buffer.isOpen()) {
             var center = buffer.viewport.getCenter();
             var zoom = buffer.viewport.getZoom();
@@ -169,7 +172,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             });
         }
         
-        buffer.openDzi(dzipath);
         this.callListeners("onBufferRefresh", bufnum);        
     },
 
@@ -313,7 +315,22 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
     fitBounds: function(rect, immediately) {
         this._buffers[this._cbuf].viewport.fitBounds(rect, immediately);        
-    },                 
+    },
+
+    // convert a list of page-coordinate rectangles into
+    // a list of seadragon normalized rect objects
+    getViewerCoordinateRects: function(bounds, pagerects) {
+        var fw = bounds[2], fh = bounds[3];
+        var x, y, w, h, box;
+        var outrects = [];
+        for (var i in pagerects) {
+            box = pagerects[i];
+            x = box[0]; y = box[1]; w = box[2]; h = box[3];        
+            outrects.push(
+                new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw));
+        }
+        return outrects;
+    },
 });
 
 

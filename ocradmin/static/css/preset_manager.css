@@ -4,6 +4,18 @@
     background-repeat: no-repeat;
 }
 
+.save_dialog {
+    border-radius: 0px;
+    box-shadow: 2px 2px 3px #AAA;
+    -webkit-box-shadow: 2px 2px 3px #AAA;
+    -moz-box-shadow: 2px 2px 3px #AAA;
+
+}
+
+.save_dialog .form_body {
+    min-height: 0px;
+}
+
 .save_dialog .ui-dialog-titlebar {
     display: none;
 }
@@ -55,3 +67,5 @@ a.preset_control:hover {
 .pm_preset_select {
     width: 10em;
 }
+
+

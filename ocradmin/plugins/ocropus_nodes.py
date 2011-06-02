@@ -4,42 +4,94 @@ Ocropus OCR processing nodes.
 
 import os
 import sys
+import json
 
-import plugins
-import node
-import manager
-import stages
-#reload(node)
+from ocradmin import plugins
+from nodetree import node, manager
 
 import ocrolib
+from ocradmin.ocrmodels.models import OcrModel
 
-class UnknownOcropusNodeType(StandardError):
+from ocradmin.plugins import stages, generic_nodes
+
+NAME = "Ocropus"
+
+class UnknownOcropusNodeType(Exception):
     pass
 
 
+class OcropusNodeError(node.NodeError):
+    pass
 
-class OcropusFileInNode(node.Node):
+
+def makesafe(val):
+    if isinstance(val, unicode):
+        return val.encode()
+    return val
+
+
+class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
+            generic_nodes.FileNode):
     """
     A node that takes a file and returns a numpy object.
     """
-    name = "FileIn"
+    name = "Ocropus::FileIn"
     description = "File Input Node"
-    arity = 0
     stage = stages.INPUT
-    _parameters = [dict(name="path", value="")]
-        
-
-    def validate(self):
-        super(OcropusFileInNode, self).validate()
-        if not self._params.get("path"):
-            raise node.UnsetParameterError("path")
+    _parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
-        ba = ocrolib.iulib.bytearray()
-        ocrolib.iulib.read_image_binary(ba, self._params.get("path"))
-        return ocrolib.narray2numpy(ba)
+        if not os.path.exists(self._params.get("path", "")):
+            return self.null_data()
+        packed = ocrolib.iulib.intarray()
+        ocrolib.iulib.read_image_packed(
+                packed, makesafe(self._params.get("path")))
+        return ocrolib.narray2numpy(packed)
         
-    
+
+class OcropusFileOutNode(node.Node):
+    """
+    A node that writes a file to disk.
+    """
+    name = "Ocropus::FileOut"
+    description = "File Output Node"
+    arity = 1
+    stage = stages.OUTPUT
+    _parameters = [dict(name="path", value="", type="filepath")]
+
+    def _validate(self):
+        """
+        Check params are OK.
+        """
+        if self._params.get("path") is None:
+            raise node.ValidationError(self, "'path' not set")
+
+
+    def null_data(self):
+        """
+        Return the input.
+        """
+        next = self.first_active()
+        if next is not None:
+            return next.eval()
+
+    def _eval(self):
+        """
+        Write the input to the given path.
+        """
+        input = self.eval_input(0)
+        if input is None:
+            return
+
+        path = self._params.get("path")
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path), 0777)
+        if isinstance(input, ocrolib.numpy.ndarray):
+            ocrolib.write_image_gray(path, input)
+        else: 
+            with open(path, "w") as f:
+                json.dump(input, f)
+
 
 class OcropusBase(node.Node):
     """
@@ -58,7 +110,15 @@ class OcropusBase(node.Node):
         """
         Set a component param.
         """
-        self._comp.pset(p, v)
+        self._comp.pset(makesafe(p), makesafe(v))
+
+    def __getstate__(self):
+        """
+        Used when pickled.  Here we simply ignore the
+        internal component, which itself contains an
+        unpickleable C++ type.
+        """
+        return super(OcropusBase, self).__dict__
 
     @classmethod
     def parameters(cls):
@@ -89,8 +149,15 @@ class OcropusBinarizeBase(OcropusBase):
         input: a grayscale image.
         return: a binary image.
         """
-        input = self.eval_input(0)
-        return self._comp.binarize(input)[0]
+        # NB. The Ocropus binarize function
+        # returns a tuple: (binary, gray)
+        # we ignore the latter.
+        input = self.get_input_data(0)
+        try:
+            out = self._comp.binarize(input)[0]
+        except (IndexError, TypeError, ValueError), err:
+            raise OcropusNodeError(self, err.message)
+        return out
 
 
 class OcropusSegmentPageBase(OcropusBase):
@@ -99,6 +166,12 @@ class OcropusSegmentPageBase(OcropusBase):
     """
     arity = 1
     stage = stages.PAGE_SEGMENT
+
+    def null_data(self):
+        """
+        Return an empty list when ignored.
+        """
+        return dict(columns=[], lines=[], paragraphs=[])
 
     def _eval(self):
         """
@@ -111,10 +184,13 @@ class OcropusSegmentPageBase(OcropusBase):
             columns
             images
         """
-        input = self.eval_input(0)
-        page_seg = self._comp.segment(input)
-        regions = ocrolib.RegionExtractor()
+        input = self.get_input_data(0)
         out = dict(columns=[], lines=[], paragraphs=[])
+        try:
+            page_seg = self._comp.segment(input)
+        except (IndexError, TypeError, ValueError), err:
+            raise OcropusNodeError(self, err.message)
+        regions = ocrolib.RegionExtractor()
         exfuncs = dict(lines=regions.setPageLines,
                 paragraphs=regions.setPageParagraphs)
         for box, func in exfuncs.iteritems():
@@ -124,6 +200,7 @@ class OcropusSegmentPageBase(OcropusBase):
                     regions.y0(i) + (regions.y1(i) - regions.y0(i)),
                     regions.x1(i) - regions.x0(i),
                     regions.y1(i) - regions.y0(i)])
+        out["box"] = [0, 0, input.shape[1], input.shape[0]]        
         return out
 
 
@@ -135,8 +212,13 @@ class OcropusGrayscaleFilterBase(OcropusBase):
     stage = stages.FILTER_GRAY
 
     def _eval(self):
-        input = self.eval_input(0)
-        return self._comp.cleanup_gray(input)
+        input = self.get_input_data(0)
+        try:
+            out = self._comp.cleanup_gray(input)
+        except (IndexError, TypeError, ValueError), err:
+            raise OcropusNodeError(self, err.message)
+        return out
+
 
 
 class OcropusBinaryFilterBase(OcropusBase):
@@ -147,50 +229,44 @@ class OcropusBinaryFilterBase(OcropusBase):
     stage = stages.FILTER_BINARY
 
     def _eval(self):
-        input = self.eval_input(0)
-        return self._comp.cleanup(input)
+        input = self.get_input_data(0)
+        try:
+            out = self._comp.cleanup(input)
+        except (IndexError, TypeError, ValueError), err:
+            raise OcropusNodeError(self, err.message)
+        return out
 
 
-class OcropusRecognizerNode(node.Node):
+class OcropusRecognizerNode(generic_nodes.LineRecognizerNode):
     """
     Recognize an image using Ocropus.
     """
-    name = "OcropusNativeRecognizer"
+    name = "Ocropus::OcropusRecognizer"
     description = "Ocropus Native Text Recognizer"
-    stage = stages.RECOGNIZE
-    arity = 2
-
-    def __init__(self, **kwargs):
-        super(OcropusRecognizerNode, self).__init__(**kwargs)
-        self._params = kwargs        
-
-    def _eval(self):
-        """
-        Recognize page text.
-
-        input: tuple of binary, input boxes
-        return: page data
-        """
-        binary = self.eval_input(0)
-        boxes = self.eval_input(1)
-        pageheight, pagewidth = binary.shape
-        iulibbin = ocrolib.numpy2narray(binary)
-        out = dict(
-                lines=[],
-                box=[0, 0, pagewidth, pageheight],
+    _parameters = [
+        dict(
+            name="character_model",
+            value="Ocropus Default Char",
+            choices=[m.name for m in \
+                    OcrModel.objects.filter(app="ocropus", type="char")],
+        ), dict(
+            name="language_model",
+            value="Ocropus Default Lang",
+            choices=[m.name for m in \
+                    OcrModel.objects.filter(app="ocropus", type="lang")],
         )
-        for i in range(len(boxes.get("lines", []))):
-            coords = boxes.get("lines")[i]
-            iulibcoords = (
-                coords[0], pageheight - coords[1], coords[0] + coords[2],
-                pageheight - (coords[1] - coords[3]))
-            lineimage = ocrolib.iulib.bytearray()
-            ocrolib.iulib.extract_subimage(lineimage, iulibbin, *iulibcoords)
-            out["lines"].append(dict(
-                    box=coords,
-                    text=self.get_transcript(ocrolib.narray2numpy(lineimage)),
-            ))
-        return out
+    ]
+
+    def _validate(self):
+        """
+        Check we're in a good state.
+        """
+        super(OcropusRecognizerNode, self)._validate()
+        if self._params.get("character_model", "").strip() == "":
+            raise node.ValidationError(self, "no character model given.")
+        if self._params.get("language_model", "").strip() == "":
+            raise node.ValidationError(self, "no language model given: %s" % self._params)
+
 
     def init_converter(self):
         """
@@ -199,11 +275,11 @@ class OcropusRecognizerNode(node.Node):
         try:
             self._linerec = ocrolib.RecognizeLine()
             cmodpath = plugins.lookup_model_file(self._params["character_model"])
-            self.logger.info("Loading file: %s" % cmodpath)
+            self.logger.debug("Loading char mod file: %s" % cmodpath)
             self._linerec.load_native(cmodpath)
             self._lmodel = ocrolib.OcroFST()
             lmodpath = plugins.lookup_model_file(self._params["language_model"])
-            self.logger.info("Loading file: %s" % lmodpath)
+            self.logger.debug("Loading lang mod file: %s" % lmodpath)
             self._lmodel.load(lmodpath)
         except (StandardError, RuntimeError):
             raise
@@ -261,10 +337,19 @@ class Manager(manager.StandardManager):
         """
         Get a node class for the given name.
         """
-        if name == "NativeRecognizer":
+        # if we get a qualified name like
+        # Ocropus::Recognizer, remove the
+        # path, since we ASSume that we're
+        # looking in the right module
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+
+        if name == "OcropusRecognizer":
             return OcropusRecognizerNode
         elif name == "FileIn":
             return OcropusFileInNode
+        elif name == "FileOut":
+            return OcropusFileOutNode
         # FIXME: This clearly sucks
         comp = None
         if comps is not None:
@@ -287,14 +372,14 @@ class Manager(manager.StandardManager):
         elif comp.interface() == "ICleanupBinary":
             base = OcropusBinaryFilterBase
         else:
-            raise UnknownOcropusNodeType(name, comp.interface())
+            raise UnknownOcropusNodeType("%s: '%s'" % (name, comp.interface()))
         # this is a bit weird
         # create a new class with the name '<OcropusComponentName>Node'
         # and the component as the inner _comp attribute
         return type("%sNode" % comp.__class__.__name__,
                     (base,), 
                     dict(_comp=comp, description=comp.description(),
-                        name=comp.__class__.__name__))
+                        name="Ocropus::%s" % comp.__class__.__name__))
 
     @classmethod
     def get_nodes(cls, *oftypes, **kwargs):

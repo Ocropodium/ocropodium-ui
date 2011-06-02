@@ -2,11 +2,9 @@
 Cuneiform Recogniser
 """
 
-import plugins
-import manager
-import node
-import stages
-import generic_nodes
+from nodetree import node, manager
+from ocradmin import plugins
+from ocradmin.plugins import stages, generic_nodes
 import types
 
 import os
@@ -14,12 +12,13 @@ import shutil
 import tempfile
 import subprocess as sp
 
+NAME = "Cuneiform"
 
 class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     Recognize an image using Cuneiform.
     """
-    name = "CuneiformNativeRecognizer"
+    name = "Cuneiform::CuneiformRecognizer"
     description = "Cuneiform Native Text Recognizer"
     binary = "cuneiform"
     stage = stages.RECOGNIZE
@@ -31,12 +30,12 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         """
         return [self.binary, "-o", outfile, image] 
 
-    def eval(self):
+    def _eval(self):
         """
         Convert a full page.
         """
         from ocradmin.core.utils import HocrParser
-        binary = self.eval_input(0)
+        binary = self.get_input_data(0)
         json = None
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.close()
@@ -44,7 +43,7 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                 btmp.close()
                 self.write_binary(btmp.name, binary)
                 args = [self.binary, "-f", "hocr", "-o", tmp.name, btmp.name]
-                self.logger.info(args)
+                self.logger.debug("Running: '%s'", " ".join(args))
                 proc = sp.Popen(args, stderr=sp.PIPE)
                 err = proc.stderr.read()
                 if proc.wait() != 0:
@@ -52,7 +51,6 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                             os.path.basename(self.binary).upper(),
                             proc.returncode, err)
                 json = HocrParser().parsefile(tmp.name)
-                self.logger.info("%s" % json)
             os.unlink(tmp.name)
             os.unlink(btmp.name)
         plugins.set_progress(self.logger, self.progress_func, 100, 100)
@@ -65,7 +63,9 @@ class Manager(manager.StandardManager):
     """
     @classmethod
     def get_node(self, name, **kwargs):
-        if name == "NativeRecognizer":
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+        if name == "CuneiformRecognizer":
             return CuneiformRecognizerNode(**kwargs)
 
     @classmethod

@@ -1,0 +1,68 @@
+[
+    {
+        "type": "Ocropus::FileIn", 
+        "params": [
+            [
+                "path", 
+                "etc/simple.png"
+            ]
+        ], 
+        "name": "filein", 
+        "inputs": []
+    }, 
+    {
+        "type": "Ocropus::DeskewPageByRAST", 
+        "params": [
+            [
+                "max_n", 
+                10000
+            ]
+        ], 
+        "name": "DeskewPageByRAST", 
+        "inputs": [
+            "BinarizeBySauvola"
+        ]
+    }, 
+    {
+        "type": "Ocropus::RmHalftone", 
+        "params": [
+            [
+                "factor", 
+                3
+            ], 
+            [
+                "threshold", 
+                4
+            ]
+        ], 
+        "name": "RmHalftone", 
+        "inputs": [
+            "DeskewPageByRAST"
+        ]
+    }, 
+    {
+        "type": "Ocropus::BinarizeBySauvola", 
+        "params": [
+            [
+                "k", 
+                0.29999999999999999
+            ], 
+            [
+                "w", 
+                40
+            ]
+        ], 
+        "name": "BinarizeBySauvola", 
+        "inputs": [
+            "filein"
+        ]
+    }, 
+    {
+        "params": [], 
+        "type": "Cuneiform::CuneiformRecognizer", 
+        "name": "NativeRecognizer", 
+        "inputs": [
+            "RmHalftone"
+        ]
+    }
+]

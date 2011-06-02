@@ -1,9 +1,9 @@
 
-import node
-import manager
-import stages
+from nodetree import node, manager
+from ocradmin.plugins import stages
 import numpy
 
+NAME = "Numpy"
 
 class Rotate90Node(node.Node):
     """
@@ -11,19 +11,33 @@ class Rotate90Node(node.Node):
     """
     arity = 1
     stage = stages.FILTER_BINARY
-
-    def validate(self):
-        super(RotateNode, self).validate()
+    name = "Numpy::Rotate90"
+    description = "Rotate image num*90 degrees counter-clockwise"
+    _parameters = [{
+        "name": "num",
+        "value": 1,
+    }]
+                    
+    def _validate(self):
+        super(Rotate90Node, self)._validate()
         if not self._params.get("num"):
-            raise node.UnsetParameterError("num")
+            raise node.ValidationError(self, "'num' is not set")
         try:
             num = int(self._params.get("num"))
-        except TypeError:
-            raise node.InvalidParameterError("'num' must be an integer")
+        except ValueError:
+            raise node.ValidationError(self, "'num' must be an integer")
 
     def _eval(self):
-        image = self.eval_input(0)
+        image = self.get_input_data(0)
         return numpy.rot90(image, int(self._params.get("num", 1)))
+
+
+class Rotate90GrayNode(Rotate90Node):
+    """
+    Grayscale version of above.
+    """
+    stage = stages.FILTER_GRAY
+    name = "Numpy::Rotate90Gray"
 
 
 class Manager(manager.StandardManager):
@@ -32,8 +46,12 @@ class Manager(manager.StandardManager):
     """
     @classmethod
     def get_node(self, name, **kwargs):
-        if name == "NativeRecognizer":
-            return TesseractRecognizerNode(**kwargs)
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+        if name == "Rotate90":
+            return Rotate90Node(**kwargs)
+        elif name == "Rotate90Gray":
+            return Rotate90Node(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):
