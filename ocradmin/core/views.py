@@ -55,7 +55,7 @@ def convert(request):
     Save a posted image to the DFS and convert it with Celery.
     """
     template = "ocr/convert.html"
-    context = dict(presets=OcrPreset.objects.all())
+    context = dict(presets=OcrPreset.objects.all().order_by("name"))
     if not request.method == "POST":
         return render(request, template, context)
     return _ocr_task(request, "ocr/convert.html", "convert.page")

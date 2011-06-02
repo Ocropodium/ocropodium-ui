@@ -7,7 +7,7 @@ import sys
 import json
 
 from ocradmin import plugins
-from nodetree import node, manager
+from nodetree import node, writable_node, manager
 
 import ocrolib
 from ocradmin.ocrmodels.models import OcrModel
@@ -49,7 +49,7 @@ class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
         return ocrolib.narray2numpy(packed)
         
 
-class OcropusFileOutNode(node.Node):
+class OcropusFileOutNode(node.Node, generic_nodes.GrayPngWriterMixin):
     """
     A node that writes a file to disk.
     """
@@ -82,15 +82,8 @@ class OcropusFileOutNode(node.Node):
         input = self.eval_input(0)
         if input is None:
             return
-
         path = self._params.get("path")
-        if not os.path.exists(os.path.dirname(path)):
-            os.makedirs(os.path.dirname(path), 0777)
-        if isinstance(input, ocrolib.numpy.ndarray):
-            ocrolib.write_image_gray(path, input)
-        else: 
-            with open(path, "w") as f:
-                json.dump(input, f)
+        self._inputs[0].writer(path, input)
 
 
 class OcropusBase(node.Node):
@@ -135,7 +128,7 @@ class OcropusBase(node.Node):
         return p            
 
 
-class OcropusBinarizeBase(OcropusBase):
+class OcropusBinarizeBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
     """
     Binarize an image with an Ocropus component.
     """
@@ -160,7 +153,7 @@ class OcropusBinarizeBase(OcropusBase):
         return out
 
 
-class OcropusSegmentPageBase(OcropusBase):
+class OcropusSegmentPageBase(OcropusBase, generic_nodes.JSONWriterMixin):
     """
     Segment an image using Ocropus.
     """
@@ -204,7 +197,7 @@ class OcropusSegmentPageBase(OcropusBase):
         return out
 
 
-class OcropusGrayscaleFilterBase(OcropusBase):
+class OcropusGrayscaleFilterBase(OcropusBase, generic_nodes.GrayPngWriterMixin):
     """
     Filter a binary image.
     """
@@ -221,7 +214,7 @@ class OcropusGrayscaleFilterBase(OcropusBase):
 
 
 
-class OcropusBinaryFilterBase(OcropusBase):
+class OcropusBinaryFilterBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
     """
     Filter a binary image.
     """
