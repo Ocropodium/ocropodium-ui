@@ -119,6 +119,14 @@ class Node(object):
         """
         return bool(len(self._parents))
 
+    def input(self, num):
+        """
+        Get an input.
+        """
+        if num > len(self._inputs) - 1:
+            raise InputOutOfRange(self, "Input '%d'" % num)
+        return self._inputs[num]
+
     def set_input(self, num, n):
         """
         Set an input.

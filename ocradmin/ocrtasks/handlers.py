@@ -30,7 +30,7 @@ def on_task_postrun(**kwargs):
     transcript entry with the retval of the task.
     """
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
-    retval = kwargs.get("retval", "")
+    retval = kwargs.get("retval")
     if not isinstance(retval, ExceptionInfo):
         result = Transcript(task=task, data=retval)
         result.save()

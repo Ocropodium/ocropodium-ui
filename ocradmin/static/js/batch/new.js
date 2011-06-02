@@ -74,8 +74,9 @@ $(function() {
         $("#tabs").tabs(gotname ? "enable" : "disable", 1);
 
         var gotfiles = $("#batch_file_list").children().length > 0;
-        $("#submit_batch, #tabs_3_next").attr("disabled", !(gotfiles && gotname));
-        $("#tabs").tabs((gotname && gotfiles) ? "enable" : "disable", 2);
+        var gotscript = $("#id_preset").val() != 0 || $.trim($("#id_script").val()
+                 != "");
+        $("#submit_batch").attr("disabled", !(gotfiles && gotscript && gotname));
     };
 
     function stripeFileList() {
@@ -162,8 +163,8 @@ $(function() {
     // load state stored from last time
     loadState();
 
-    pbuilder = new OCRJS.ParameterBuilder(
-            document.getElementById("options"));
-    pbuilder.init();
+    //pbuilder = new OCRJS.ParameterBuilder(
+    //        document.getElementById("options"));
+    //pbuilder.init();
 });
 

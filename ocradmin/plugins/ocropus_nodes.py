@@ -84,6 +84,7 @@ class OcropusFileOutNode(node.Node, generic_nodes.GrayPngWriterMixin):
             return
         path = self._params.get("path")
         self._inputs[0].writer(path, input)
+        return input
 
 
 class OcropusBase(node.Node):

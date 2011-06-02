@@ -28,6 +28,7 @@ from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.core.views import _handle_request, AppException
 from ocradmin.plugins.manager import PluginManager
+from ocradmin.ocrpresets.models import OcrPreset
 
 
 PER_PAGE = 25
@@ -67,7 +68,10 @@ class OcrBatchForm(forms.ModelForm):
 
     class Meta:
         model = OcrBatch
-        exclude = ["user", "created_on", "project", "task_type"]
+        exclude = ["created_on", "project", "task_type"]
+        widgets = dict(
+                user=forms.HiddenInput(),
+        )
 
 
 @login_required
@@ -140,12 +144,22 @@ def create(request):
     """
     Create a batch from pre-saved images convert them asyncronously.
     """
-    taskname = "convert.page"
+    taskname = "run.batchitem"
 
     # get the subject file paths from comma seperated POST data
     paths = _get_batch_file_paths(request)
+    script = request.POST.get("script")
+    if not script and request.POST.get("preset") is not None:
+        try:
+            script = OcrPreset.objects.get(pk=request.POST.get("preset")).data
+        except OcrPreset.DoesNotExist:
+            print "PRESET %d not found" % request.POST.get("preset")
+            pass
+
     form = OcrBatchForm(request.POST)
-    if not request.method == "POST" or not form.is_valid() or not paths:
+    print request.POST
+    print "FORM VALID: %s" % form.is_valid()
+    if not request.method == "POST" or not form.is_valid() or not paths or not script:
         return render_to_response("batch/new.html",
             _new_batch_context(request),
             context_instance=RequestContext(request))
@@ -163,15 +177,13 @@ def create(request):
     )
     batch.save()
 
-    # wrangle the params - this needs improving
-    _, config, params = _handle_request(request, request.output_path)
+    params = {}
+    config = {}
 
-    # preserve intermediate binary & segmentation results            
-    params["write_intermediate_results"] = True
     ocrtasks = []
     for path in paths:
         tid = OcrTask.get_new_task_id()
-        args = (path.encode(), request.output_path.encode(), params, config)
+        args = (path, script, request.output_path)
         kwargs = dict(task_id=tid, loglevel=60, retries=2)
         ocrtask = OcrTask(
             task_id=tid,
@@ -496,10 +508,12 @@ def _new_batch_context(request):
     project = request.session["project"]
     batchname = "%s - Batch %d" % (project.name,
             project.ocrbatch_set.count() + 1)
-    form = OcrBatchForm(initial={"name": batchname})
+    form = OcrBatchForm(initial=dict(name=batchname, user=request.user))
+    presets = OcrPreset.objects.all().order_by("name")
     return dict(
         prefix="",
         form=form,
+        presets=presets,
     )
 
 
