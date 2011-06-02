@@ -1,11 +1,12 @@
 
-from nodetree import node, manager
-from ocradmin.plugins import stages
+from nodetree import node, writable_node, manager
+from ocradmin.plugins import stages, generic_nodes
 import numpy
 
 NAME = "Numpy"
 
-class Rotate90Node(node.Node):
+
+class Rotate90Node(node.Node, generic_nodes.GrayPngWriterMixin):
     """
     Rotate a Numpy image by num*90 degrees.
     """

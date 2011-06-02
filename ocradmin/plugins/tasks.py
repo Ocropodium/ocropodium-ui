@@ -42,50 +42,23 @@ class PersistantFileCacher(cache.BasicCacher):
         self._key = key
         self._path = path
 
-    def _read_node_data(self, path):
+    def _read_node_data(self, node, path):
         """
         Get the file data under path and return it.
         """
+        self.logger.debug("Reading binary cache: %s", path)
+        return node.reader(path)
 
-        fname = [f for f in os.listdir(path) if f.endswith(("png", "json"))][0]
-        filepath = os.path.join(path, fname)
-        if fname.endswith("bin.png"):
-            self.logger.debug("Reading binary cache: %s", filepath)
-            return ocrolib.read_image_gray(filepath)
-        elif fname.endswith(".png"):
-            self.logger.debug("Reading colour cache: %s", filepath)
-            packed = ocrolib.iulib.intarray()
-            ocrolib.iulib.read_image_packed(packed, filepath)
-            return ocrolib.narray2numpy(packed)
-        elif fname.endswith(".json"):
-            self.logger.debug("Reading JSON cache: %s", filepath)
-            with open(filepath) as f:
-                return json.load(f)
-        else:
-            raise UnsupportedCacheTypeError(filepath)
-
-    def _write_node_data(self, path, data):
+    def _write_node_data(self, node, path, data):
         if not os.path.exists(path):
             os.makedirs(path, 0777)
-        if isinstance(data, numpy.ndarray):
-            pngpath = os.path.join(path, "cache.png")
-            if data.ndim == 2:
-                #pngpath = os.path.join(path, "cache.png")
-                ocrolib.write_image_gray(pngpath, data)
-            else:
-                packed = ocrolib.numpy2narray(data)
-                ocrolib.iulib.write_image_packed(
-                        pngpath, ocrolib.pseg2narray(data))
-            self.logger.debug("Wrote cache: %s", pngpath)
+        path = node.writer(path, data)
+        self.logger.info("Wrote cache: %s" % path)
+        if path.endswith(".png"):
             creator = deepzoom.ImageCreator(tile_size=512,
                     tile_overlap=2, tile_format="png",
                     image_quality=1, resize_filter="nearest")
-            creator.create(pngpath, "%s.dzi" % os.path.splitext(pngpath)[0])
-        else:
-            jsonpath = os.path.join(path, "cache.json")
-            with open(jsonpath, "w") as f:
-                json.dump(data, f)
-            self.logger.debug("Wrote cache: %s", jsonpath)
+            creator.create(path, "%s.dzi" % os.path.splitext(path)[0])
 
     def get_path(self, n):
         hash = hashlib.md5(bencode.bencode(n.hash_value())).hexdigest()
@@ -95,10 +68,10 @@ class PersistantFileCacher(cache.BasicCacher):
     def get_cache(self, n):
         path = self.get_path(n)
         if os.path.exists(path):
-            return self._read_node_data(path)
+            return self._read_node_data(n, path)
         
     def set_cache(self, n, data):
-        self._write_node_data(self.get_path(n), data)
+        self._write_node_data(n, self.get_path(n), data)
 
     def has_cache(self, n):
         return os.path.exists(self.get_path(n))
@@ -133,17 +106,21 @@ class UnhandledRunScriptTask(AbortableTask):
             logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.msg)
 
+        path = cacher.get_path(term.first_active())
+        filename = term.first_active().get_file_name()
         if isinstance(result, numpy.ndarray):
-            path = cacher.get_path(term.first_active())
+            dzi = "%s.dzi" % os.path.splitext(filename)[0]
             return dict(
                 type="image",
-                path=utils.media_path_to_url(os.path.join(path, "cache.png")),
-                dzi=utils.media_path_to_url(os.path.join(path, "cache.dzi"))
+                path=utils.media_path_to_url(os.path.join(path, filename)),
+                dzi=utils.media_path_to_url(os.path.join(path, dzi))
             )
         elif isinstance(result, dict) and result.get("columns") is not None:
             path = cacher.get_path(term._inputs[0].first_active())
-            dzi=utils.media_path_to_url(os.path.join(path, "cache.dzi"))
-            return dict(type="pseg", data=result, dzi=dzi)
+            filename = term._inputs[0].first_active().get_file_name()
+            dzi = "%s.dzi" % os.path.splitext(filename)[0]
+            dzipath=utils.media_path_to_url(os.path.join(path, dzi))
+            return dict(type="pseg", data=result, dzi=dzipath)
         else:
             return dict(type="text", data=result)
 

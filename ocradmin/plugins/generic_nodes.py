@@ -3,17 +3,93 @@ Generic base classes for other nodes.
 """
 
 import os
+import json
 from ocradmin import plugins
 from ocradmin.plugins import stages
-from nodetree import node
+from nodetree import node, writable_node
 import ocrolib
 
 class ExternalToolError(StandardError):
     pass
 
 
+class JSONWriterMixin(writable_node.WritableNodeMixin):
+    """
+    Functions for reading and writing a node's data in JSON format.
+    """
+    extension = ".json"
 
-class LineRecognizerNode(node.Node):
+    @classmethod
+    def reader(cls, dirpath):
+        """Read a cache from a given dir."""
+        fpath = os.path.join(dirpath, cls.get_file_name())
+        if os.path.exists(fpath):
+            with open(fpath, "r") as fh:
+                return json.load(fh)
+
+    @classmethod
+    def writer(cls, dirpath, data):
+        """Write a cache from a given dir."""
+        fpath = os.path.join(dirpath, cls.get_file_name())
+        with open(fpath, "w") as fh:
+            print "DUMPING DATA: %s" % data
+            json.dump(data, fh)
+        return fpath            
+
+
+class PngWriterMixin(writable_node.WritableNodeMixin):
+    """
+    Object which writes/reads a PNG.
+    """
+    extension = ".png"
+
+
+class BinaryPngWriterMixin(PngWriterMixin):
+    """
+    Functions for reading and writing a node's data in binary PNG.
+    """
+    @classmethod
+    def reader(cls, dirpath):
+        pngpath = os.path.join(dirpath, cls.get_file_name())
+        if os.path.exists(pngpath):
+            return ocrolib.read_image_gray(pngpath)
+
+    @classmethod
+    def writer(cls, dirpath, data):
+        pngpath = os.path.join(dirpath, cls.get_file_name())
+        ocrolib.write_image_gray(pngpath, data)
+        return pngpath
+
+
+class ColorPngWriterMixin(PngWriterMixin):
+    """
+    Functions for reading and writing a node's data in binary PNG.
+    """
+    @classmethod
+    def reader(cls, dirpath):
+        pngpath = os.path.join(dirpath, cls.get_file_name())
+        if os.path.exists(pngpath):
+            packed = ocrolib.iulib.intarray()
+            ocrolib.iulib.read_image_packed(packed, pngpath)
+            return ocrolib.narray2numpy(packed)
+
+    @classmethod
+    def writer(cls, dirpath, data):
+        pngpath = os.path.join(dirpath, cls.get_file_name())
+        packed = ocrolib.numpy2narray(data)
+        ocrolib.iulib.write_image_packed(
+                pngpath, ocrolib.pseg2narray(data))
+        return pngpath
+
+
+class GrayPngWriterMixin(BinaryPngWriterMixin):
+    """
+    Functions for reading and writing a node's data in binary PNG.
+    """
+    pass
+
+
+class LineRecognizerNode(node.Node, JSONWriterMixin):
     """
     Node which takes a binary and a segmentation and
     recognises text one line at a time.
@@ -154,7 +230,7 @@ class ImageGeneratorNode(node.Node):
         return ocrolib.numpy.zeros((640,480,3), dtype=ocrolib.numpy.uint8)
 
 
-class FileNode(node.Node):
+class FileNode(node.Node, GrayPngWriterMixin):
     """
     Node which reads or writes to a file path.
     """
