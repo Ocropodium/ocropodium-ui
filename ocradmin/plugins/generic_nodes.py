@@ -20,21 +20,18 @@ class JSONWriterMixin(writable_node.WritableNodeMixin):
     extension = ".json"
 
     @classmethod
-    def reader(cls, dirpath):
+    def reader(cls, path):
         """Read a cache from a given dir."""
-        fpath = os.path.join(dirpath, cls.get_file_name())
-        if os.path.exists(fpath):
-            with open(fpath, "r") as fh:
+        if os.path.exists(path):
+            with open(path, "r") as fh:
                 return json.load(fh)
 
     @classmethod
-    def writer(cls, dirpath, data):
+    def writer(cls, path, data):
         """Write a cache from a given dir."""
-        fpath = os.path.join(dirpath, cls.get_file_name())
-        with open(fpath, "w") as fh:
-            print "DUMPING DATA: %s" % data
+        with open(path, "w") as fh:
             json.dump(data, fh)
-        return fpath            
+        return path            
 
 
 class PngWriterMixin(writable_node.WritableNodeMixin):
@@ -49,16 +46,14 @@ class BinaryPngWriterMixin(PngWriterMixin):
     Functions for reading and writing a node's data in binary PNG.
     """
     @classmethod
-    def reader(cls, dirpath):
-        pngpath = os.path.join(dirpath, cls.get_file_name())
-        if os.path.exists(pngpath):
-            return ocrolib.read_image_gray(pngpath)
+    def reader(cls, path):
+        if os.path.exists(path):
+            return ocrolib.read_image_gray(path)
 
     @classmethod
-    def writer(cls, dirpath, data):
-        pngpath = os.path.join(dirpath, cls.get_file_name())
-        ocrolib.write_image_gray(pngpath, data)
-        return pngpath
+    def writer(cls, path, data):
+        ocrolib.write_image_gray(path, data)
+        return path
 
 
 class ColorPngWriterMixin(PngWriterMixin):
@@ -66,20 +61,18 @@ class ColorPngWriterMixin(PngWriterMixin):
     Functions for reading and writing a node's data in binary PNG.
     """
     @classmethod
-    def reader(cls, dirpath):
-        pngpath = os.path.join(dirpath, cls.get_file_name())
-        if os.path.exists(pngpath):
+    def reader(cls, path):
+        if os.path.exists(path):
             packed = ocrolib.iulib.intarray()
-            ocrolib.iulib.read_image_packed(packed, pngpath)
+            ocrolib.iulib.read_image_packed(packed, path)
             return ocrolib.narray2numpy(packed)
 
     @classmethod
-    def writer(cls, dirpath, data):
-        pngpath = os.path.join(dirpath, cls.get_file_name())
+    def writer(cls, path, data):
         packed = ocrolib.numpy2narray(data)
         ocrolib.iulib.write_image_packed(
-                pngpath, ocrolib.pseg2narray(data))
-        return pngpath
+                path, ocrolib.pseg2narray(data))
+        return path
 
 
 class GrayPngWriterMixin(BinaryPngWriterMixin):

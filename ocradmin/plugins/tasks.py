@@ -46,19 +46,20 @@ class PersistantFileCacher(cache.BasicCacher):
         """
         Get the file data under path and return it.
         """
-        self.logger.debug("Reading binary cache: %s", path)
-        return node.reader(path)
+        readpath = os.path.join(path, node.get_file_name())
+        self.logger.debug("Reading binary cache: %s", readpath)
+        return node.reader(readpath)
 
     def _write_node_data(self, node, path, data):
         if not os.path.exists(path):
             os.makedirs(path, 0777)
-        path = node.writer(path, data)
-        self.logger.info("Wrote cache: %s" % path)
-        if path.endswith(".png"):
+        outpath = node.writer(os.path.join(path, node.get_file_name()), data)
+        self.logger.info("Wrote cache: %s" % outpath)
+        if outpath.endswith(".png"):
             creator = deepzoom.ImageCreator(tile_size=512,
                     tile_overlap=2, tile_format="png",
                     image_quality=1, resize_filter="nearest")
-            creator.create(path, "%s.dzi" % os.path.splitext(path)[0])
+            creator.create(outpath, "%s.dzi" % os.path.splitext(outpath)[0])
 
     def get_path(self, n):
         hash = hashlib.md5(bencode.bencode(n.hash_value())).hexdigest()
