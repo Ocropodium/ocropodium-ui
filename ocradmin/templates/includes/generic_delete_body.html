@@ -1,4 +1,4 @@
-<form id="delete_object_form" method="POST">
+<form id="delete_object_form" action="{{model.get_delete_url}}" method="POST">
     <h4>Are you sure you want to delete {{object}}?</h4>
     <div class="object_detail_footer form_footer">
         <input type="submit" value="Submit" id="submit_delete_form" />

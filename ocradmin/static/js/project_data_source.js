@@ -28,7 +28,8 @@ var ProjectDataSource = AbstractDataSource.extend({
 
     params: function() {
         return {
-            order_by: this._desc 
+            format: "json",
+            order: this._desc 
                 ? "-" + this._sortby 
                 : this._sortby,
         };

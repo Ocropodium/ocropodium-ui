@@ -72,9 +72,11 @@ class GenericListView(HybridListView):
         return self.model.objects.all().order_by(order)    
 
     def get_template_names(self):
-        name = "generic_list.html" if not self.request.is_ajax() \
-                else "includes/generic_object_list.html"
-        return (name,)                
+        names = [self.template_name] if self.template_name is not None \
+                else []
+        names.append("generic_list.html" if not self.request.is_ajax() \
+                else "includes/generic_list_body.html")
+        return tuple(names)                
 
     def get_context_data(self, **kwargs):
         context = super(GenericListView, self).get_context_data(**kwargs)
@@ -96,9 +98,11 @@ class GenericDetailView(HybridDetailView, generic.detail.BaseDetailView):
     fields=["id"]
 
     def get_template_names(self):
-        name = "generic_detail.html" if not self.request.is_ajax() \
-                else "includes/generic_object_detail.html"
-        return (name,)                
+        names = [self.template_name] if self.template_name is not None \
+                else []
+        names.append("generic_detail.html" if not self.request.is_ajax() \
+                else "includes/generic_detail_body.html")
+        return tuple(names)                
 
     def get_context_data(self, **kwargs):
         context = super(GenericDetailView, self).get_context_data(**kwargs)
@@ -115,9 +119,11 @@ class GenericCreateView(generic.CreateView):
     enctype = "application/x-www-form-urlencoded"
 
     def get_template_names(self):
-        name = "generic_create.html" if not self.request.is_ajax() \
-                else "includes/generic_object_create.html"
-        return (name,)                
+        names = [self.template_name] if self.template_name is not None \
+                else []
+        names.append("generic_create.html" if not self.request.is_ajax() \
+                else "includes/generic_create_body.html")
+        return tuple(names)                
 
     def get_initial(self, *args, **kwargs):
         initial = super(GenericCreateView, self).get_initial(*args, **kwargs)
@@ -144,9 +150,11 @@ class GenericEditView(generic.UpdateView):
     enctype = "application/x-www-form-urlencoded"
 
     def get_template_names(self):
-        name = "generic_edit.html" if not self.request.is_ajax() \
-                else "includes/generic_object_edit.html"
-        return (name,)                
+        names = [self.template_name] if self.template_name is not None \
+                else []
+        names.append("generic_edit.html" if not self.request.is_ajax() \
+                else "includes/generic_edit_body.html")
+        return tuple(names)                
 
     def get_initial(self, *args, **kwargs):
         initial = super(GenericEditView, self).get_initial(*args, **kwargs)
@@ -168,9 +176,11 @@ class GenericDeleteView(generic.DeleteView):
     page_name="Delete Object"
 
     def get_template_names(self):
-        name = "generic_delete.html" if not self.request.is_ajax() \
-                else "includes/generic_object_delete.html"
-        return (name,)                
+        names = [self.template_name] if self.template_name is not None \
+                else []
+        names.append("generic_delete.html" if not self.request.is_ajax() \
+                else "includes/generic_delete_body.html")
+        return tuple(names)                
 
     def get_context_data(self, **kwargs):
         context = super(GenericDeleteView, self).get_context_data(**kwargs)
