@@ -4,6 +4,49 @@
     </div>
 </script>
 
+<script id="nodeListTmpl" type="application/x-jquery-tmpl">
+    <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${name}" title="${description}">
+        <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
+    </li>
+</script>
+
+<script id="nodeTreeTmpl" type="application/x-jquery-tmpl">
+    <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${type}" title="${description}">
+        <span class="viewingbutton" title="Focus Viewer"></span>
+        <div class="nodename">${name}</div>
+        <span class="ignorebutton" title="Ignore Node"></span>
+    </li>
+</script>
+
+<script id="paramTmpl" type="application/x-jquery-tmpl">
+    <h4>${nodename}</h4>
+    {% templatetag openvariable %}each(i,param) params{% templatetag closevariable %}    
+        <div class="node_parameter">
+            <label for="${nodename}${param.name}">${param.name}</label>
+            {% templatetag openvariable %}if param.choices{% templatetag closevariable %}
+            <select id="${nodename}${param.name}"> 
+            {% templatetag openvariable %}each(i,choice) param.choices{% templatetag closevariable %}    
+                <option value="${choice}"
+                {% templatetag openvariable %}if choice == param.value{% templatetag closevariable %}
+                    selected="selected"            
+                {% templatetag openvariable %}/if{% templatetag closevariable %}    
+                >${choice}</option> 
+            {% templatetag openvariable %}/each{% templatetag closevariable %}    
+            </select>
+            {% templatetag openvariable %}else{% templatetag closevariable %}    
+                {% templatetag openvariable %}if param.type == "filepath"{% templatetag closevariable %}
+                    <div id="dropzone">
+                        <input class="nodefilein proxy" type="file" value="" />
+                        <input type="hidden" id="${nodename}${param.name}" value="${param.value}" />
+                    </div>
+                {% templatetag openvariable %}else{% templatetag closevariable %}    
+                    <input type="text" id="${nodename}${param.name}" value="${param.value}" />
+                {% templatetag openvariable %}/if{% templatetag closevariable %}    
+            {% templatetag openvariable %}/if{% templatetag closevariable %}    
+        </div>
+    {% templatetag openvariable %}/each{% templatetag closevariable %}    
+</script>
+
 <script id="nodeMenuTmpl" type="application/x-jquery-tmpl">
     <div class="nodemenu" id="nodemenu">
         <h4>OCR Nodes</h4>

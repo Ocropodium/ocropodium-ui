@@ -2,27 +2,81 @@
 Generic base classes for other nodes.
 """
 
-import plugins
-import node
+import os
+from ocradmin import plugins
+from ocradmin.plugins import stages
+from nodetree import node
 import ocrolib
-import ocropus_nodes
 
 class ExternalToolError(StandardError):
     pass
 
 
-class CommandLineRecognizerNode(ocropus_nodes.OcropusRecognizerNode):
+
+class LineRecognizerNode(node.Node):
+    """
+    Node which takes a binary and a segmentation and
+    recognises text one line at a time.
+    """
+    stage = stages.RECOGNIZE
+    arity = 2
+    passthrough = 1
+
+    def init_converter(self):
+        raise NotImplementedError
+
+    def get_transcript(self):
+        raise NotImplementedError
+
+    def _validate(self):
+        """
+        Check state of the inputs.
+        """
+        self.logger.debug("%s: validating...", self)
+        super(LineRecognizerNode, self)._validate()
+        for i in range(len(self._inputs)):
+            if self._inputs[i] is None:
+                raise node.ValidationError(self, "missing input '%d'" % i)
+
+    def _eval(self):
+        """
+        Recognize page text.
+
+        input: tuple of binary, input boxes
+        return: page data
+        """
+        binary = self.get_input_data(0)
+        boxes = self.get_input_data(1)
+        pageheight, pagewidth = binary.shape
+        iulibbin = ocrolib.numpy2narray(binary)
+        out = dict(
+                lines=[],
+                box=[0, 0, pagewidth, pageheight],
+        )
+        for i in range(len(boxes.get("lines", []))):
+            coords = boxes.get("lines")[i]
+            iulibcoords = (
+                coords[0], pageheight - coords[1], coords[0] + coords[2],
+                pageheight - (coords[1] - coords[3]))
+            lineimage = ocrolib.iulib.bytearray()
+            ocrolib.iulib.extract_subimage(lineimage, iulibbin, *iulibcoords)
+            out["lines"].append(dict(
+                    box=coords,
+                    text=self.get_transcript(ocrolib.narray2numpy(lineimage)),
+            ))
+        return out
+
+    
+
+
+class CommandLineRecognizerNode(LineRecognizerNode):
     """
     Generic recogniser based on a command line tool.
     """
     binary = "unimplemented"
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialise.
-        """
-        super(CommandLineRecognizerNode, self).__init__(*args, **kwargs)
-
+    def _validate(self):
+        super(CommandLineRecognizerNode, self)._validate()
 
     def get_command(self, *args, **kwargs):
         """
@@ -84,4 +138,31 @@ class CommandLineRecognizerNode(ocropus_nodes.OcropusRecognizerNode):
                 if lines and lines[-1] == "":
                     lines = lines[:-1]
                 os.unlink(txt.name)
-        return " ".join(lines)        
+        return " ".join(lines)
+
+
+class ImageGeneratorNode(node.Node):
+    """
+    Node which takes no input and returns an image.
+    """
+    arity = 0
+
+    def null_data(self):
+        """
+        Return an empty numpy image.
+        """
+        return ocrolib.numpy.zeros((640,480,3), dtype=ocrolib.numpy.uint8)
+
+
+class FileNode(node.Node):
+    """
+    Node which reads or writes to a file path.
+    """
+    def _validate(self):
+        super(FileNode, self)._validate()
+        if self._params.get("path") is None:
+            raise node.ValidationError(self, "'path' not set")
+        if not os.path.exists(self._params.get("path", "")):
+            raise node.ValidationError(self, "'path': file not found")
+
+

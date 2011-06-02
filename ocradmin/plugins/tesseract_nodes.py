@@ -2,26 +2,44 @@
 Tesseract Recogniser
 """
 
-import plugins
-import node
-import manager
-import stages
-import generic_nodes
+from nodetree import node, manager
+from ocradmin import plugins
+from ocradmin.plugins import stages, generic_nodes
 
 import os
 import shutil
 import tempfile
 import subprocess as sp
 
+from ocradmin.ocrmodels.models import OcrModel
+
+
+NAME = "Tesseract"
 
 class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     """
     Recognize an image using Tesseract.
     """
-    name = "TesseractNativeRecognizer"
+    name = "Tesseract::TesseractRecognizer"
     description = "Tesseract Native Text Recognizer"
     stage = stages.RECOGNIZE
     binary = "tesseract"
+    _parameters = [
+        dict(
+            name="language_model",
+            value="Tesseract Default Lang",
+            choices=[m.name for m in \
+                    OcrModel.objects.filter(app="tesseract", type="lang")],
+        )
+    ]
+
+    def _validate(self):
+        """
+        Check we're in a good state.
+        """
+        super(TesseractRecognizerNode, self)._validate()
+        if self._params.get("language_model", "").strip() == "":
+            raise node.ValidationError(self, "no language model given: %s" % self._params)
 
     def init_converter(self):
         """
@@ -32,7 +50,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
             modpath = plugins.lookup_model_file(self._params["language_model"])
             self.unpack_tessdata(modpath)
         self._tesseract = plugins.get_binary("tesseract")
-        self.logger.info("Using Tesseract: %s" % self._tesseract)
+        self.logger.debug("Using Tesseract: %s" % self._tesseract)
 
     @plugins.check_aborted
     def get_transcript(self, line):
@@ -58,7 +76,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         var to point at it.
         """
         # might as well make this even less efficient!
-        self.logger.info("Unpacking tessdata: %s" % lmodelpath)
+        self.logger.debug("Unpacking tessdata: %s" % lmodelpath)
         import tarfile
         self._tessdata = tempfile.mkdtemp() + "/"
         datapath = os.path.join(self._tessdata, "tessdata")
@@ -110,7 +128,7 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         """
         if hasattr(self, "_tessdata") and os.path.exists(self._tessdata):
             try:
-                self.logger.info(
+                self.logger.debug(
                     "Cleaning up temp tessdata folder: %s" % self._tessdata)
                 shutil.rmtree(self._tessdata)
             except OSError, (errno, strerr):
@@ -124,7 +142,9 @@ class Manager(manager.StandardManager):
     """
     @classmethod
     def get_node(self, name, **kwargs):
-        if name == "NativeRecognizer":
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+        if name == "TesseractRecognizer":
             return TesseractRecognizerNode(**kwargs)
 
     @classmethod

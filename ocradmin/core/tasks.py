@@ -105,7 +105,6 @@ def make_deepzoom_proxies(logger, inpath, outpath, params):
     return srcdzipath, dstdzipath
 
 
-@register_handlers
 class UnhandledConvertPageTask(AbortableTask):
     """
     Convert an image of text into some JSON.  This is done using

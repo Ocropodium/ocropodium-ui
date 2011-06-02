@@ -60,14 +60,6 @@ class DublinCoreForm(forms.Form):
 
 
 
-class DeleteProjectForm(forms.Form):
-    """
-    Form to ensure the user really, really wants to
-    delete an entire project.
-    """
-    confirm = forms.CharField()
-
-
 class OcrProjectForm(forms.ModelForm):
     """
         New project form.
@@ -81,7 +73,10 @@ class OcrProjectForm(forms.ModelForm):
 
     class Meta:
         model = OcrProject
-        exclude = ["user", "slug", "created_on"]
+        exclude = ["slug", "created_on"]
+        widgets = dict(
+                user=forms.HiddenInput(),
+        )
 
 
 def project_query(user, order, **params):
@@ -110,136 +105,6 @@ def project_query(user, order, **params):
             tag).order_by(*order)
     else:
         return OcrProject.objects.filter(query).order_by(*order)
-
-
-@login_required
-def index(request):
-    """
-    Redirect to the project list.
-    """
-    return list(request)
-
-
-@login_required
-def list(request):
-    """
-    List available projects.
-    """
-    tag = request.GET.get("tag")
-    order = request.GET.get("order", "name")
-    fields = ["name", "created_on", "user__pk"]
-    # add a 'invert token' if we're ordering by the
-    # same field again
-    fields = ["-%s" % x if x == order else x for x in fields]
-    context = dict(
-        projects=project_query(request.user, [order, "created_on"], tag=tag),
-        fields=fields,
-        order=order
-    )
-    template = "projects/list.html" if not request.is_ajax() \
-            else "projects/includes/project_list.html"
-
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@login_required
-def new(request):
-    """
-    Show a form for a new project.
-    """
-    form = OcrProjectForm()
-    context = {"form": form}
-    template = "projects/new.html" if not request.is_ajax() \
-            else "projects/includes/project_form.html"
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@transaction.autocommit
-@login_required
-def create(request):
-    """
-    Create a new project.
-    """
-    form = OcrProjectForm(request.POST)
-    if not request.method == "POST" or not form.is_valid():
-        # if we get here there's an error
-        context = {"form": form}
-        template = "projects/new.html"
-        return render_to_response(template, context,
-                context_instance=RequestContext(request))
-
-    project = form.instance
-    project.slug = slugify(project.name)
-    project.user = request.user
-    project.full_clean()
-    project.save()
-    return HttpResponseRedirect("/projects/load/%s/" % project.pk)
-
-
-@login_required
-def edit(request, project_pk):
-    """
-    Show a form for editing the project.
-    """
-    project = get_object_or_404(OcrProject, pk=project_pk)
-    form = OcrProjectForm(instance=project)
-    context = {"project": project, "form": form,}
-    template = "projects/edit.html"
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@transaction.autocommit
-@login_required
-def update(request, project_pk):
-    """
-    Update a project.
-    """
-    project = get_object_or_404(OcrProject, pk=project_pk)
-    form = OcrProjectForm(request.POST, instance=project)
-
-    if request.method == "POST":
-        if not form.is_valid():
-            # if we get here there's an error
-            context = {"project": project, "form": form,}
-            template = "projects/edit.html"
-            return render_to_response(template, context,
-                    context_instance=RequestContext(request))
-        project = form.instance
-        project.slug = slugify(project.name)
-        project.full_clean()
-        project.save()
-    return HttpResponseRedirect("/projects/list")
-
-
-@login_required
-def show(request, project_pk):
-    """
-    Show request details.
-    """
-    project = get_object_or_404(OcrProject, pk=project_pk)
-    form = OcrProjectForm(instance=project)
-    context = {"project": project, "form": form,}
-    template = "projects/show.html"
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@login_required
-def open(request):
-    """
-    List available projects.
-    """
-    order = request.GET.getlist("order_by")
-    params = request.GET.copy()
-    projects = project_query(request.user, order, **params)
-    serializer = serializers.get_serializer("json")()
-    json = serializer.serialize(
-        projects,
-    )
-    return HttpResponse(json, mimetype="application/json")
 
 
 @login_required
@@ -336,37 +201,6 @@ def ingest(request, project_pk):
     # launch all the tasks
     OcrTask.run_celery_task_multiple(taskname, ingesttasks)
     return HttpResponseRedirect("/batch/show/%d/" % batch.pk)
-
-
-@login_required
-def confirm_delete_project(request, project_pk):
-    """
-    Confirm deletion of the current project.
-    """
-    project = get_object_or_404(OcrProject, pk=project_pk)
-    form = DeleteProjectForm()
-    template = "projects/delete.html" if not request.is_ajax() \
-            else "projects/includes/delete_form.html"
-    context = {"project": project, "form": form}
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@login_required
-def delete_project(request, project_pk):
-    """
-    Delete a project.
-    """
-    project = get_object_or_404(OcrProject, pk=project_pk)
-    form = DeleteProjectForm(request.POST)
-
-    if not request.method == "POST" or not form.is_valid() \
-            or not form.cleaned_data["confirm"] == "yes":
-        messages.info(request, "Project '%s' was NOT deleted." % project.name)
-    else:
-        project.delete()
-        messages.success(request, "Project '%s' deleted." % project.name)
-    return HttpResponseRedirect("/projects/list")
 
 
 def _get_default_export_forms(request, project):

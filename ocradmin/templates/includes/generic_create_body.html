@@ -1,0 +1,24 @@
+
+<form id="create_object_form" action="{{model.get_create_url}}" enctype="{{enctype}}" method="POST">
+    <div class="form_body">
+        <fieldset>
+            <legend>{{page_name}}</legend>
+            {% for field in form.visible_fields %}
+                <div class="field_wrapper">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors}}
+                </div>
+            {% endfor %}
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
+        </fieldset>
+    </div>        
+
+    <div class="object_detail_footer form_footer">
+        <input type="submit" value="Submit" id="submit_create_form" />
+        <a href="{{model.get_list_url}}">Back to List</a>
+    </div>        
+</form>
+
