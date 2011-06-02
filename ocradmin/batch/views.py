@@ -68,7 +68,7 @@ class OcrBatchForm(forms.ModelForm):
 
     class Meta:
         model = OcrBatch
-        exclude = ["created_on", "project", "task_type"]
+        exclude = ["user", "created_on", "project", "task_type"]
         widgets = dict(
                 user=forms.HiddenInput(),
         )
@@ -157,8 +157,6 @@ def create(request):
             pass
 
     form = OcrBatchForm(request.POST)
-    print request.POST
-    print "FORM VALID: %s" % form.is_valid()
     if not request.method == "POST" or not form.is_valid() or not paths or not script:
         return render_to_response("batch/new.html",
             _new_batch_context(request),

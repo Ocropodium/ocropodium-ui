@@ -14,8 +14,11 @@ from ocradmin.batch.models import OcrBatch
 from ocradmin.core.tests import testutils
 
 from ocradmin.plugins import parameters
+from django.utils import simplejson as json
 
 TESTFILE = "etc/simple.png"
+SCRIPT1 = "plugins/fixtures/scripts/tesseract.json"
+SCRIPT2 = "plugins/fixtures/scripts/ocropus.json"
 
 
 
@@ -28,6 +31,10 @@ class OcrBatchTest(TestCase):
         """
             Setup OCR tests.  Creates a test user.
         """
+        with open(SCRIPT1, "r") as s1:
+            self.script1 = s1.read()
+        with open(SCRIPT2, "r") as s2:
+            self.script2 = s2.read()
         testutils.symlink_model_fixtures()
         try:
             os.makedirs("media/files/test_user/test")
@@ -124,9 +131,13 @@ class OcrBatchTest(TestCase):
         Testing actually OCRing a file.
         """
         if params is None:
-            params = dict(name="Test Batch",
-                    files=os.path.join("test/%s" % os.path.basename(TESTFILE)))
-            params.update(parameters.TESTPOST)
+            params = dict(
+                    name="Test Batch",
+                    user=self.testuser.pk,
+                    #files=os.path.basename(TESTFILE),
+                    files="test-project/simple.png",
+                    script=self.script1
+            )
         r = self._get_batch_response(params, headers)
         # check the POST redirected as it should
         self.assertEqual(r.redirect_chain[0][1], 302)
