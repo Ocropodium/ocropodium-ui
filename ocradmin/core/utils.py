@@ -244,6 +244,13 @@ def make_png(inpath, outdir=None):
         sp.call(["convert", inpath, outpath]) 
     return outpath
 
+def get_dzi_path(filepath):
+    """
+    Get a path for the DZI relative to a rendered output file.
+    """
+    return "%s/dzi/%s.dzi" % (os.path.dirname(filepath),
+                os.path.splitext(os.path.basename(filepath))[0])
+
 
 def media_url_to_path(url):
     """

@@ -279,6 +279,28 @@ class SegmentPageTask(UnhandledSegmentPageTask):
     name = "segment.page"
 
 
+class UnhandledCreateDzi(AbortableTask):
+    name = "_create.dzi"
+
+    def run(self, filepath, path, **kwargs):
+        """
+        Create a DZI of the given file, as <path>/dzi/<basename>.
+        """
+        logger = self.get_logger()
+        # find the deepzoom path
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
+        if not os.path.exists(path):
+            creator = deepzoom.ImageCreator(tile_size=512,
+                    tile_overlap=2, tile_format="png",
+                    image_quality=1, resize_filter="nearest")
+            logger.debug("Creating DZI path: %s", path)
+            creator.create(filepath, path)
+        return dict(out=utils.media_path_to_url(filepath), 
+                dst=utils.media_path_to_url(path))
+
+
+
 class CleanupTempTask(PeriodicTask):
     """
     Periodically cleanup images in the settings.MEDIA_ROOT/temp
