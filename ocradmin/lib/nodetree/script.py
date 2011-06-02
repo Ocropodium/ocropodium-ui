@@ -44,6 +44,16 @@ class Script(object):
         """
         return self._tree.get(name)
 
+    def get_nodes_by_attr(self, name, value):
+        """
+        Find a node by attibute value.
+        """
+        nodes = []
+        for node in self._tree.itervalues():
+            if hasattr(node, name) and getattr(node, name) == value:
+                nodes.append(node)
+        return nodes
+
     def get_terminals(self):
         """
         Get nodes that end a branch.

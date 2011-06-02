@@ -122,7 +122,9 @@ class LineRecognizerNode(node.Node, JSONWriterMixin):
                 lines=[],
                 box=[0, 0, pagewidth, pageheight],
         )
-        for i in range(len(boxes.get("lines", []))):
+        numlines = len(boxes.get("lines", []))
+        for i in range(numlines):
+            set_progress(self.logger, self.progress_func, i, numlines)
             coords = boxes.get("lines")[i]
             iulibcoords = (
                 coords[0], pageheight - coords[1], coords[0] + coords[2],
@@ -133,9 +135,23 @@ class LineRecognizerNode(node.Node, JSONWriterMixin):
                     box=coords,
                     text=self.get_transcript(ocrolib.narray2numpy(lineimage)),
             ))
+        set_progress(self.logger, self.progress_func, numlines, numlines)
         return out
 
-    
+def set_progress(logger, progress_func, step, end, granularity=5):
+    """
+    Call a progress function, if supplied.  Only call
+    every 5 steps.  Also set the total todo, i.e. the
+    number of lines to process.
+    """
+    if progress_func is None:
+        return
+    if not (step and end):
+        return
+    if step != end and step % granularity != 0:
+        return
+    perc = min(100.0, round(float(step) / float(end), 2) * 100)
+    progress_func(perc, end)    
 
 
 class CommandLineRecognizerNode(LineRecognizerNode):

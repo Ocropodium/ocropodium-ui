@@ -26,7 +26,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this._queue = [];
         this._params = [];
 
-        if (self.target)
+        if (this.target)
             this.setTarget()
 
     },
