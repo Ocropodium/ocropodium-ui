@@ -1,6 +1,7 @@
-
+"""
+URLConf for OCR presets.
+"""
 from django.conf.urls.defaults import *
-#from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from ocradmin.ocrpresets import views
 from ocradmin.ocrpresets.models import OcrPreset
