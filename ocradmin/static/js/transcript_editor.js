@@ -317,15 +317,12 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         $.each(data.fields.results.lines, function(linenum, line) {
             var type = line.type ? line.type : "span";
             var lspan = $("<" + type + "></" + type + ">")
-                .attr("id", "line_" + line.line)
-                .addClass("ocr_line");
-            lspan
-                .data("bbox", line.box);
-            lspan
-                .data("num", line.line);
-            lspan.text(line.text);
+                .attr("id", "line_" + linenum)
+                .addClass("ocr_line")
+                .data("bbox", line.box)
+                .data("num", linenum)
+                .text(line.text);
             self._pagediv.append(lspan);
-            console.log("appending ", lspan); 
         });
         //self.insertBreaks();
         this._textbuffer = this._pagediv.text();
