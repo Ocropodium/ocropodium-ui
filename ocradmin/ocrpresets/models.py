@@ -18,6 +18,11 @@ class OcrPreset(models.Model):
         """URL to view the object list"""
         return "/ocrpresets/list/"
 
+    @classmethod
+    def get_create_url(cls):
+        """URL to create a new object"""
+        return "/ocrpresets/create/"
+
     def get_absolute_url(self):
         """URL to view an object detail"""
         return "/ocrpresets/show/%i/" % self.id

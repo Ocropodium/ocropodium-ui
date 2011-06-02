@@ -18,6 +18,9 @@ class OcrPresetForm(forms.ModelForm):
         model = OcrPreset
         fields = ["name", "tags", "description", "public", "user", "data"]
         exclude = ["created_on", "updated_on"]
+        widgets = dict(
+                user=forms.HiddenInput()
+        )
 
 
 def data(request, pk):

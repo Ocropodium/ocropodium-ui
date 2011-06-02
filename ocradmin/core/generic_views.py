@@ -81,6 +81,7 @@ class GenericListView(HybridListView):
         context.update(
             page_name=self.page_name,
             fields=self.fields,
+            model=self.model,
             order=self.request.GET.get("order", self.fields[0])
         )
         return context
@@ -111,6 +112,7 @@ class GenericCreateView(generic.CreateView):
     both 'model' and 'form_class'.
     """
     page_name="New Object"
+    enctype = "application/x-www-form-urlencoded"
 
     def get_template_names(self):
         name = "generic_create.html" if not self.request.is_ajax() \
@@ -122,9 +124,14 @@ class GenericCreateView(generic.CreateView):
         initial.update(user=self.request.user)
         return initial
 
+    def get_form_kwargs(self, *args, **kwargs):
+        form_kwargs = super(GenericCreateView, self).get_form_kwargs(*args, **kwargs)
+        return form_kwargs
+
     def get_context_data(self, **kwargs):
         context = super(GenericCreateView, self).get_context_data(**kwargs)
-        context.update(page_name=self.page_name)
+        context.update(page_name=self.page_name, model=self.model, 
+                enctype=self.enctype)
         return context
 
 
@@ -134,6 +141,7 @@ class GenericEditView(generic.UpdateView):
     both 'model' and 'form_class'.
     """
     page_name="Edit Object"
+    enctype = "application/x-www-form-urlencoded"
 
     def get_template_names(self):
         name = "generic_edit.html" if not self.request.is_ajax() \
@@ -147,7 +155,8 @@ class GenericEditView(generic.UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(GenericEditView, self).get_context_data(**kwargs)
-        context.update(page_name=self.page_name)
+        context.update(page_name=self.page_name, model=self.model, 
+                enctype=self.enctype)
         return context
 
 
