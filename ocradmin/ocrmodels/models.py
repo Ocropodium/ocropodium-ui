@@ -29,4 +29,26 @@ class OcrModel(models.Model):
         """
         return self.name
 
+    @classmethod
+    def get_list_url(cls):
+        """URL to view the object list"""
+        return "/ocrmodels/list/"
+
+    @classmethod
+    def get_create_url(cls):
+        """URL to create a new object"""
+        return "/ocrmodels/create/"
+
+    def get_absolute_url(self):
+        """URL to view an object detail"""
+        return "/ocrmodels/show/%i/" % self.id
+
+    def get_update_url(self):
+        """url to update an object detail"""
+        return "/ocrmodels/edit/%i/" % self.id
+
+    def get_delete_url(self):
+        """url to update an object detail"""
+        return "/ocrmodels/delete/%i/" % self.id
+
 

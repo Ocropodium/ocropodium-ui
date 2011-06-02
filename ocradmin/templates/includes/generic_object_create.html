@@ -5,9 +5,13 @@
             <legend>{{page_name}}</legend>
             {% for field in form %}
                 <div class="field_wrapper">
-                    {{ field.label_tag }}
+                    {% if not field.is_hidden %}
+                        {{ field.label_tag }}
+                    {% endif %}
                     {{ field }}
-                    {{ field.errors}}
+                    {% if not field.is_hidden %}
+                        {{ field.errors}}
+                    {% endif %}
                 </div>
             {% endfor %}
         </fieldset>
