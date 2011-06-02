@@ -43,12 +43,25 @@
 
 .pagination {
     padding: 5px;
-    font-size: 1.2em;
     float: right;
 }
 
 .pagination a {
     text-decoration: none;
+    font-size: 1.2em;
     margin-left: 5px;
 }
+
+.object_detail_footer, .object_list_footer {
+    padding: 5px;
+}
+
+.object_detail_footer a, .object_list_footer a {
+    text-decoration: none;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 5px;
+}
+
+
 

@@ -24,13 +24,13 @@
                     <td>{{object|getattribute:field|truncatewords:5}}</td>
                 {% endfor %}
                 <td><a href="{{object.get_absolute_url}}" class="view_url">View</a></td>
-                <td><a href="{{object.get_edit_url}}" class="view_url">Edit</a></td>
+                <td><a href="{{object.get_update_url}}" class="view_url">Edit</a></td>
                 <td><a href="{{object.get_delete_url}}" class="view_url">Delete</a></td>
             </tr>        
             {% endfor %}
         </tbody>
     </table>
-    <div class="pagination">
+    <div class="pagination object_list_footer">
         <span class="step-links">
             {% if page_obj.has_previous %}
                 <a href="?order={{ order }}&page=1">First</a>
@@ -47,6 +47,9 @@
             {% endif %}
         </span>
     </div>    
+    <div class="object_list_footer">
+        <a href="/ocrpresets/create/">New Preset</a>        
+    </div>
     
 {% else %}
     No {{template_object_name}}s found.
