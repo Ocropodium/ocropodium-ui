@@ -295,6 +295,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                self.setWaiting(false); 
             },
             success: function(data) {
+                console.log("DATA: ", data);
                 if (data == null) {
                     alert("Unable to retrieve page data.");
                 } else if (data.error) {
@@ -315,13 +316,16 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._pagediv.data("bbox", data.fields.results.box);
         $.each(data.fields.results.lines, function(linenum, line) {
             var type = line.type ? line.type : "span";
-            lspan = $("<" + type + "></" + type + ">")
-                .text(line.text)
+            var lspan = $("<" + type + "></" + type + ">")
                 .attr("id", "line_" + line.line)
-                .addClass("ocr_line")
-                .data("bbox", line.box)
+                .addClass("ocr_line");
+            lspan
+                .data("bbox", line.box);
+            lspan
                 .data("num", line.line);
-            self._pagediv.append(lspan);                        
+            lspan.text(line.text);
+            self._pagediv.append(lspan);
+            console.log("appending ", lspan); 
         });
         //self.insertBreaks();
         this._textbuffer = this._pagediv.text();
