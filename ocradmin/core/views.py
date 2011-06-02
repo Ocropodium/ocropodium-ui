@@ -219,12 +219,11 @@ def submit_viewer_binarization(request, task_pk):
     Trigger a re-binarization of the image for viewing purposes.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
-    taskname = "binarize.page"
-    # hack!  add an allowcache to the params dict to indicate
-    # that we don't want to remake an existing binary
-    args = task.args
-    args[2]["allowcache"] = True
-    async = OcrTask.run_celery_task(taskname, *args, untracked=True,
+    taskname = "create.dzi"
+    binpath = "%s.bin.png" % os.path.splitext(task.args[0])[0]
+    dzipath = ocrutils.get_dzi_path(binpath)
+    assert os.path.exists(binpath), "Binary path does not exist: %s" % binpath
+    async = OcrTask.run_celery_task(taskname, binpath, dzipath, untracked=True,
             queue="interactive")
     out = dict(task_id=async.task_id, status=async.status,
         results=async.result)
