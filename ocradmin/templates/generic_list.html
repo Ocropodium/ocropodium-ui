@@ -4,9 +4,6 @@
 
 {% block headerscript %}
     <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
-    <!--
-    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
-    <script type="application/javascript" src="/static/js/ocrmodels/list.js"></script>-->
 {% endblock %}
 
 {% block content %}
@@ -15,7 +12,7 @@
     <div class="widget_header">{{page_name}}</div>
     <div class="widget_content">
         {% include "includes/messages.html" %}
-        <div id="modellist">
+        <div id="object_list">
             {% include "includes/generic_object_list.html" %}
         </div>
     </div>
