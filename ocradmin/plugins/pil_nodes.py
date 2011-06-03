@@ -30,7 +30,7 @@ def array2image(a):
     return Image.fromstring(mode, (a.shape[1], a.shape[0]), a.tostring())
 
 
-class PilFileInNode(generic_nodes.ImageGeneratorNode):
+class PilFileInNode(generic_nodes.ImageGeneratorNode, generic_nodes.BinaryPngWriterMixin):
     """Read a file with PIL."""
     stage = stages.INPUT
     name = "Pil::FileIn"
@@ -43,6 +43,30 @@ class PilFileInNode(generic_nodes.ImageGeneratorNode):
             return self.null_data()
         return numpy.asarray(Image.open(path))
 
+    @classmethod
+    def reader(cls, path):
+        return numpy.asarray(Image.open(path))
+
+    @classmethod
+    def writer(cls, path, data):
+        pil = Image.fromarray(data)
+        pil.save(path, "PNG")
+        return path
+
+
+class PilColorToGrayscaleNode(node.Node, generic_nodes.GrayPngWriterMixin):    
+    """
+    Convert (roughly) between a color image and BW.
+    """
+    stage = stages.FILTER_GRAY
+    name = "Pil::RGB2Gray"
+    description = "Convert an image from color to grayscale"
+    _parameters = []
+
+    def _eval(self):
+        ni = self.eval_input(0)
+        pil = Image.fromarray(ni)        
+        return numpy.asarray(pil.convert("L"))
 
 
 class PilTestNode(node.Node):
@@ -73,6 +97,8 @@ class Manager(manager.StandardManager):
             name = name.split("::")[-1]
         if name == "FileIn":            
             return PilFileInNode(**kwargs)
+        elif name == "RGB2Gray":
+            return PilColorToGrayscaleNode(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):
