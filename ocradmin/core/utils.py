@@ -14,6 +14,7 @@ from django.utils import simplejson
 from django.conf import settings
 
 from HTMLParser import HTMLParser
+from xml.parsers import expat
 
 
 class HocrParser(HTMLParser):    
@@ -69,7 +70,59 @@ class HocrParser(HTMLParser):
             self.data["lines"].append(self.currline.copy())
             self.currline = None
 
+class FinereaderXmlParser():
+    """
+    Quicky parser for Finereader XML.  Schema:
+    http://www.abbyy.com/FineReader_xml/FineReader8-schema-v2.xml
+    """
+    def __init__(self):
+        self.data = dict(lines=[], columns=[])
+        self.linecnt = 0
+        self.currline = None
+        self.gotpage = False
+        self.parser = expat.ParserCreate()
+        self.parser.StartElementHandler = self.handle_starttag
+        self.parser.EndElementHandler = self.handle_endtag
+        self.parser.CharacterDataHandler = self.handle_data
 
+    def parsefile(self, filename):
+        with open(filename, "r") as fh:
+            self.parser.ParseFile(fh)
+        return self.data            
+                    
+    def _attrs_to_box(self, attrs):
+        return [int(attrs["l"]), int(attrs["t"]), 
+                int(attrs["r"]) - int(attrs["l"]),
+                int(attrs["b"]) - int(attrs["t"])]
+
+    def handle_starttag(self, tag, attrs):
+        """Handle each new element"""
+        if tag == "page" and not self.gotpage:
+            self.gotpage = True
+            self.data["box"] = [0, 0, attrs.get("width", 0), attrs.get("height", 0)]
+        elif tag == "block" and attrs.get("blockType") == "Text":
+            self.data["columns"].append(self._attrs_to_box(attrs))
+        elif tag == "line":
+            if self.currline is None:
+                self.currline = {}
+            self.currline["box"] = self._attrs_to_box(attrs)
+            self.currline["line"] = self.linecnt
+
+    def handle_data(self, data):
+        """Handle tag data"""
+        if self.currline is not None:
+            self.currline["text"] = data
+
+    def handle_endtag(self, tag):
+        """Handle tag end"""        
+        if tag == "line" and self.currline is not None \
+                and self.currline.get("text"):
+            self.linecnt += 1
+            self.data["lines"].append(self.currline.copy())
+            self.currline = None
+
+        
+   
 
 
 class AppException(StandardError):
