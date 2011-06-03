@@ -23,10 +23,9 @@ class OcrPresetForm(forms.ModelForm):
         )
 
 
-def data(request, pk):
+def data(request, slug):
     import json
     """Return the data for a given preset in JSON format"""
-    preset = get_object_or_404(OcrPreset, pk=pk)
+    preset = get_object_or_404(OcrPreset, slug=slug)
     return HttpResponse(json.dumps(preset.data), mimetype="application/json")
-
 

@@ -37,8 +37,9 @@ presetdelete = gv.GenericDeleteView.as_view(
 urlpatterns = patterns('',
     (r'^list/?$', presetlist),
     (r'^create/?$', login_required(presetcreate)),
-    (r'^show/(?P<pk>\d+)/?$', presetdetail),
-    (r'^edit/(?P<pk>\d+)/?$', login_required(presetedit)),
-    (r'^delete/(?P<pk>\d+)/?$', login_required(presetdelete)),
-    (r'^data/(?P<pk>\d+)/?$', views.data),
+    (r'^show/(?P<slug>[-\w]+)/?$', presetdetail),
+    (r'^edit/(?P<slug>[-\w]+)/?$', login_required(presetedit)),
+    (r'^delete/(?P<slug>[-\w]+)/?$', login_required(presetdelete)),
+    (r'^(?P<slug>[-\w]+)/data/?$', views.data),
+    (r'^(?P<slug>[-\w]+)/?$', presetdetail),
 )
