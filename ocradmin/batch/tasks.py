@@ -18,6 +18,7 @@ manager = ModuleManager()
 manager.register_module("ocradmin.plugins.ocropus_nodes")
 manager.register_module("ocradmin.plugins.tesseract_nodes")
 manager.register_module("ocradmin.plugins.cuneiform_nodes")
+manager.register_module("ocradmin.plugins.abbyy_nodes")
 manager.register_module("ocradmin.plugins.numpy_nodes")
 manager.register_module("ocradmin.plugins.pil_nodes")
 
@@ -64,4 +65,7 @@ class BatchScriptTask(AbortableTask):
         except ocropus_nodes.OcropusNodeError, err:
             logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.msg)
+        except Exception, err:
+            logger.error("Unhandled exception: %s", err)
+            return dict(error=err.message)
             
