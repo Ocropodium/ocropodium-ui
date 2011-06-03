@@ -63,7 +63,7 @@
                         <select id="select_script" name="script">
                             <option value="0">---</option>
                             {% for preset in presets %}
-                                <option value="{{preset.pk}}">{{preset.name}}</option>
+                                <option value="{{preset.slug}}">{{preset.name}}</option>
                             {% endfor %}
                         </select>
                         <span class="buttons_right">

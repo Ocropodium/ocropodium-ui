@@ -37,6 +37,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             self._dialog.load("/ocrpresets/create/", function() {
                 self._dialog.find("#id_data")
                     .val(JSON.stringify(pbuilder.buildScript()));
+//console.log("Set form data:". self._dialog.find("#id_data").val());
                 self.handleForm();                    
                 self._dialog.dialog({
                     dialogClass: "save_dialog",
@@ -104,12 +105,12 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         $.getJSON("/ocrpresets/list/", {format: "json"}, function(data) {
             select.children().slice(1).remove();
             $.each(data, function(i, preset) {
-                var opt = $("<option></option>")
-                    .attr("value", preset.pk)
-                opt.text(preset.fields.name);
-                opt.attr("title", preset.fields.description);
+                var opt = $("<option></option>");
+                    opt.attr("value", preset.slug);
+                    opt.text(preset.fields.name);
+                    opt.attr("title", preset.fields.description);
                 if (preset.fields.name == current)
-                    opt.attr("selected", "selected");                    
+                    opt.prop("selected", "selected");                    
                 opt.appendTo(select)
             });
         });
