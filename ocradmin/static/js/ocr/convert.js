@@ -178,7 +178,7 @@ $(function() {
             pbuilder.clearScript();
         } else {
             $.ajax({
-                url: "/ocrpresets/data/" + $(this).val(),
+                url: "/ocrpresets/" + $(this).val() + "/data/",
                 error: OCRJS.ajaxErrorHandler,
                 success: function(data) {
                     pbuilder.clearScript();

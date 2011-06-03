@@ -10,7 +10,6 @@ OCRJS.Nodetree = OCRJS.Nodetree || {};
 OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
     constructor: function(name, classdata) {
         this.base();
-        console.log("Initialising node with: ", name, classdata);
         this.name = name;
         this.type = classdata.name;
         this.arity = classdata.arity;

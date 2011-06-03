@@ -142,7 +142,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                         return helper.get(0);                                        
                     },
                     stop: function() {
-                        console.log("drag stopped");
                         $(this).addClass("ui-draggable");
                     },
                     //connectToSortable: ".nodelist.used ul",
@@ -189,7 +188,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             },
             toggleFocussed: function(foc) {
                 $.each(self._usednames, function(name, other) {
-                    console.log("Looking at other node: ", name);
                     if (node.name != name)
                         other.setFocussed(false);
                 });
@@ -420,7 +418,6 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         $.each(script, function(i, nodedata) {
             var typedata = self._nodetypes[nodedata.type];
             var node = new OCRJS.Nodetree.Node(nodedata.name, typedata);
-            console.log("Creating node", nodedata.name, "Setting ignored", nodedata.ignored);
             node.setIgnored(nodedata.ignored);
             self._usednames[nodedata.name] = node;
             $.each(nodedata.params, function(i, p) {
@@ -448,15 +445,22 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     },                  
 
     saveState: function() {
+        $.cookie("preset", $("#select_script").val());                   
         $.cookie("script", JSON.stringify(this.buildScript()));
     },
 
     loadState: function() {
-        var self = this;                   
-        var scriptjson = $.cookie("script");
-        if (scriptjson) {
-            var script = JSON.parse(scriptjson);        
-            self.loadScript(script);
+        var self = this;
+        var preset = $.cookie("preset");
+        if (preset) {
+            $("#select_script").val(preset);
+            $("#select_script").change();
+        } else {
+            var scriptjson = $.cookie("script");
+            if (scriptjson) {
+                var script = JSON.parse(scriptjson);        
+                self.loadScript(script);
+            }
         }
         this._sessionid = $.cookie("sessionid") 
             || new Date().getTime(); 
