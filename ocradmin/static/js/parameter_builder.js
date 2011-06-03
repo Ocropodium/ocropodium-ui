@@ -105,6 +105,12 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             event.preventDefault();
         });
 
+        $("#optionsform").submit(function(event) {
+            self.runScript();
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
         // HACK: see:
         // http://stackoverflow.com/questions/5020695/jquery-draggable-element-no-longer-draggable-after-drop
         $.ui.draggable.prototype.destroy = function (ul, item) { };
