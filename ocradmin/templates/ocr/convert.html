@@ -54,72 +54,7 @@
         <div class="widget_header">Options</div>
         <div class="widget_content">
             <div id="options" class="option_box">
-                <form id="optionsform">
-                    <div id="script_toolbar">
-                        <span class="buttons_left">
-                            <button id="abort">Abort</button>                                                    
-                            <button id="rerun_script">Rerun</button>
-                        </span>
-                        <select id="select_script" name="script">
-                            <option value="0">---</option>
-                            {% for preset in presets %}
-                                <option value="{{preset.slug}}">{{preset.name}}</option>
-                            {% endfor %}
-                        </select>
-                        <span class="buttons_right">
-                            <button id="open_script">Load Preset</button>
-                            <button id="save_script">Store Preset</button>
-                            <button id="download_script">Download Preset</button>
-                        </span>
-                        <div id="dialog"></div>
-                    </div>
-                    <div id="node_canvas">
-                        <div class="nodelist used">
-                            <h4>Input File</h4>
-                            <ul class="input" data-stage="input">
-                            </ul>
-                            <h4>Grayscale Filters</h4>
-                            <ul class="filter_gray multiple" data-stage="filter_gray">
-                            </ul>                    
-                            <h4>Binarizer</h4>
-                            <ul class="binarize" data-stage="binarize">
-                            </ul>                    
-                            <h4>Binary Filters</h4>
-                            <ul class="filter_binary multiple" data-stage="filter_binary">
-                            </ul>                    
-                            <h4>Page Segmenter</h4>
-                            <ul class="page_segment" data-stage="page_segment">
-                            </ul>                    
-                            <h4>Recogniser</h4>
-                            <ul class="recognize" data-stage="recognize">
-                            </ul>                    
-                        </div>
-                        <div class="nodelist available">
-                            <h4>File Input</h4>
-                            <ul class="input multiple" data-stage="input">
-                            </ul>                    
-                            <h4>Grayscale Filers</h4>
-                            <ul class="filter_gray" data-stage="filter_gray">
-                            </ul>                    
-                            <h4>Binarizers</h4>
-                            <ul class="binarize" data-stage="binarize">
-                            </ul>                    
-                            <h4>Binary Filters</h4>
-                            <ul class="filter_binary" data-stage="filter_binary">
-                            </ul>                    
-                            </ul>                    
-                            <h4>Page Segmenters</h4>
-                            <ul class="page_segment" data-stage="page_segment">
-                            </ul>                    
-                            <h4>Recognisers</h4>
-                            <ul class="recognize" data-stage="recognize">
-                            </ul>                    
-                        </div>
-                        <div id="parameters" class="node_parameters">
-                            <h4>No node selected</h4>
-                        </div>
-                    </div>
-                </form>                    
+                {% include "includes/parameter_builder_body.html" %}
             </div>
         </div>
     </div>

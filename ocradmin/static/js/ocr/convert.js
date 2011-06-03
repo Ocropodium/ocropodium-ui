@@ -173,12 +173,20 @@ $(function() {
     //    },
     //});
     
+    $("#download_script").click(function(event) {
+        var json = JSON.stringify(pbuilder.buildScript(), false, '\t');
+        $("#fetch_script_data").val(json);
+        $("#fetch_script").submit();
+        event.stopPropagation();
+        event.preventDefault();    
+    });
+    
     $("#select_script").change(function(event) {
         if ($(this).val() < 1) {
             pbuilder.clearScript();
         } else {
             $.ajax({
-                url: "/ocrpresets/" + $(this).val() + "/data/",
+                url: "/ocrpresets/data/" + $(this).val(),
                 error: OCRJS.ajaxErrorHandler,
                 success: function(data) {
                     pbuilder.clearScript();
