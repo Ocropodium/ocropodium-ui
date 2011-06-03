@@ -21,6 +21,9 @@ from ocradmin.core import utils as ocrutils
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.batch.models import OcrBatch
 from ocradmin.projects.models import OcrProject
+from ocradmin.core import generic_views as gv
+
+
 from fedora.adaptor import fcobject
 from ordereddict import OrderedDict
 PER_PAGE = 10
@@ -77,6 +80,37 @@ class OcrProjectForm(forms.ModelForm):
         widgets = dict(
                 user=forms.HiddenInput(),
         )
+
+
+projectlist = gv.GenericListView.as_view(
+        model=OcrProject,
+        page_name="OCR Projects",
+        fields=["name", "description", "user", "created_on"],)
+
+projectcreate = gv.GenericCreateView.as_view(
+        model=OcrProject,
+        form_class=OcrProjectForm,
+        page_name="New OCR Project",
+        success_url="/projects/load/%(id)s/",)
+
+projectdetail = gv.GenericDetailView.as_view(
+        model=OcrProject,
+        template_name="projects/show.html",
+        page_name="OCR Project",
+        fields=["name", "description", "user", "tags", "created_on",
+            "updated_on",])
+
+projectedit = gv.GenericEditView.as_view(
+        model=OcrProject,
+        form_class=OcrProjectForm,
+        page_name="Edit OCR Project",
+        success_url="/projects/load/%(id)s/",)
+
+projectdelete = gv.GenericDeleteView.as_view(
+        model=OcrProject,
+        page_name="Delete OCR Project",
+        success_url="/projects/list/",)
+
 
 
 def project_query(user, order, **params):
