@@ -104,7 +104,7 @@ def upload_file(request):
     tmpfile.close()
 
     return HttpResponse(simplejson.dumps(dict(
-        file=fpath,
+        file=os.path.relpath(fpath),
     )), mimetype="application/json")
 
 

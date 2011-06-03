@@ -1,6 +1,7 @@
 from django import forms
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
+from django.utils import simplejson as json
 from ocradmin.ocrpresets.models import OcrPreset
 from ocradmin.core import generic_views as gv
 
@@ -51,8 +52,21 @@ presetdelete = gv.GenericDeleteView.as_view(
         success_url="/ocrpresets/list/",)
 
 def data(request, slug):
-    import json
     """Return the data for a given preset in JSON format"""
     preset = get_object_or_404(OcrPreset, slug=slug)
     return HttpResponse(json.dumps(preset.data), mimetype="application/json")
+
+def download(request, slug):
+    """Return the data for a preset as an attachment"""
+    preset = get_object_or_404(OcrPreset, slug=slug)
+    response = HttpResponse(preset.data, mimetype="application/json")
+    response['Content-Disposition'] = "attachment; filename=%s.json" % slug
+    return response
+
+def fetch(request):
+    """Hacky method of forcing downloading of an in-progress script via JS"""
+    script = request.POST.get("script")
+    response = HttpResponse(script, mimetype="application/json")
+    response['Content-Disposition'] = "attachment; filename=script.json"
+    return response
 
