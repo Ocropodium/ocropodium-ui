@@ -134,8 +134,7 @@ class OcrBatchTest(TestCase):
             params = dict(
                     name="Test Batch",
                     user=self.testuser.pk,
-                    #files=os.path.basename(TESTFILE),
-                    files="test-project/simple.png",
+                    files=os.path.join("test-project-2", os.path.basename(TESTFILE)),
                     script=self.script1
             )
         r = self._get_batch_response(params, headers)
@@ -149,12 +148,12 @@ class OcrBatchTest(TestCase):
         """
         Test uploading files to the server.
         """
-        fh = file(TESTFILE, "rb")
-        params = {}
-        params["file1"] = fh
-        headers = {}
-        r = self.client.post("/batch/upload_files/", params, **headers)
-        fh.close()
+        with file(TESTFILE, "rb") as fh:
+            params = {}
+            params["file1"] = fh
+            headers = {}
+            r = self.client.post("/batch/upload_files/", params, **headers)
+        #fh.close()
         content = simplejson.loads(r.content)
         self.assertEqual(content, [os.path.join("test-project-2",
             os.path.basename(TESTFILE))])

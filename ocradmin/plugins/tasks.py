@@ -25,6 +25,7 @@ manager = ModuleManager()
 manager.register_module("ocradmin.plugins.ocropus_nodes")
 manager.register_module("ocradmin.plugins.tesseract_nodes")
 manager.register_module("ocradmin.plugins.cuneiform_nodes")
+manager.register_module("ocradmin.plugins.abbyy_nodes")
 manager.register_module("ocradmin.plugins.numpy_nodes")
 manager.register_module("ocradmin.plugins.pil_nodes")
 
