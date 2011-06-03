@@ -14,6 +14,7 @@ from tagging.models import TaggedItem
 
 from ocradmin.ocrmodels import utils as ocrutils
 from ocradmin.ocrmodels.models import OcrModel
+from ocradmin.core import generic_views as gv
 
 
 class OcrModelForm(forms.ModelForm):
@@ -68,8 +69,35 @@ class OcrModelEditForm(OcrModelForm):
         exclude = ["user", "updated_on", "derived_from"]
 
 
-def index(request):
-    return list(request)
+modellist = gv.GenericListView.as_view(
+        model=OcrModel,
+        page_name="OCR Models",
+        fields=["name", "description", "user", "created_on"],)
+
+modelcreate = gv.GenericCreateView.as_view(
+        model=OcrModel,
+        enctype="multipart/form-data",
+        form_class=OcrModelForm,
+        page_name="New OCR Model",)
+
+modeldetail = gv.GenericDetailView.as_view(
+        model=OcrModel,
+        page_name="OCR Model",
+        fields=["name", "description", "type", "app", "user", "public", 
+            "file", "derived_from", "tags", "created_on",
+            "updated_on",])
+
+modeledit = gv.GenericEditView.as_view(
+        model=OcrModel,
+        enctype="multipart/form-data",
+        form_class=OcrModelEditForm,
+        page_name="Edit OCR Model",)
+
+modeldelete = gv.GenericDeleteView.as_view(
+        model=OcrModel,
+        page_name="Delete OCR Model",
+        success_url="/ocrmodels/list/",)
+
 
 
 def model_query(user, order, **params):
