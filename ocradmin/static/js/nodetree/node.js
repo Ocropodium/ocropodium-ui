@@ -79,6 +79,7 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             stroke: "#BBB",
             strokeWidth: 0.5,
         });         
+        console.log("got here", self.name);
         // add the labels
         self._textlabel = svg.text(g, x + nodewidth / 2,
             y + nodeheight / 2, self.name, {
@@ -164,12 +165,9 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             x: event.pageX,
             y: event.pageY,
         };
-        var nds = self.norm(dragstart, element);
         var trans = self.getTranslate(element);
-        //var scale = self.getScale(element.parentNode);
-        var scale = {x: 1, y: 1};
+        var scale = self.getScale(element.parentNode);
         $(document).bind("mousemove.dragelem", function(moveevent) {
-            console.log("moving at scale", scale.x, scale.y, "Trans:", trans.x, trans.y);
             self.updateTranslate(element, 
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
                 trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
