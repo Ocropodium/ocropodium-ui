@@ -68,6 +68,11 @@ OCRJS.Nodetree.Plug = OCRJS.Nodetree.Base.extend({
         this.svg.change(this._rect, {fill: this._gradient});
     },                         
 
+    setDraggingState: function() {
+        this._dragging = true;                          
+        this.svg.change(this._rect, {fill: "url(#PlugDragging)"});
+    },                         
+
     setupEvents: function() {
         var self = this;
 

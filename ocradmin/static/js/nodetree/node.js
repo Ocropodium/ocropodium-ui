@@ -147,7 +147,6 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
 
     setViewing: function(viewing, emit) {
         this._viewing = viewing || false;
-        console.log("click viewing!");
         var gradient = this._viewing ? "url(#ViewingGradient)" : "transparent";
         this.svg.change(this._viewbutton, {fill: gradient});        
         if (emit) 

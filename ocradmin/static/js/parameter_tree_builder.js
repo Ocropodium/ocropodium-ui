@@ -155,6 +155,7 @@ OCRJS.NodeTree = NT.Base.extend({
 
     removeDragCable: function() {
         if (this._dragcable) {
+            this._dragcable.plug.setDefaultState();
             this._dragcable.remove();
             this._dragcable = null;
         }
@@ -190,12 +191,10 @@ OCRJS.NodeTree = NT.Base.extend({
         var point = self.denorm(plug.centre(), plug.group(), self.group());
         cable.draw(self.svg, self._cablegroup, point, point);
         self._dragcable = cable;
+        plug.setDraggingState();
         $(document).bind("mousemove.dragcable", function(event) {
             var npoint = self.denorm(plug.centre(), plug.group(), self.group());
             var nmp = self.norm(self.mouseCoord(event), cable.group(), null);
-            
-            //var smp = self.divPoints(nmp, self.getScale(self.group()));
-            //console.log(nmp.x, nmp.y, smp.x, smp.y);
             cable.update(npoint, self.divPoints(nmp, self.getScale(self.group())));
         }); 
         $(self.group()).bind("click.dropcable", function(event) {
@@ -306,6 +305,8 @@ OCRJS.NodeTree = NT.Base.extend({
             [["0%", "#dbf0ca"], ["100%", "#d3e7c3"]], "0%", "0%", "0%", "100%");
         svg.linearGradient(defs, "PlugReject", 
             [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
+        svg.linearGradient(defs, "PlugDragging", 
+            [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
 
         var rects = [],
             offx = 20,
