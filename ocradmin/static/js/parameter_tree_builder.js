@@ -146,7 +146,10 @@ OCRJS.NodeTree = NT.Base.extend({
             outputAttached: function(plug) {
                 console.log("Attached output to", node.name, plug.name);
                 self.handlePlug(plug);
-            },                               
+            },
+            plugHoverIn: function(plug) {
+                self.handlePlugHover(plug);
+            },            
         });
     },
 
@@ -166,6 +169,20 @@ OCRJS.NodeTree = NT.Base.extend({
             self.connectPlugs(plug);
         }            
     },
+
+    handlePlugHover: function(plug) {
+        var self = this;
+        if (self._dragcable) {
+            var other = self._dragcable.plug;
+            if (plug.wouldAccept(other)) {
+                plug.setAcceptingState();
+            } else {
+                plug.setRejectingState();
+            }
+        } else {
+            plug.setAcceptingState();
+        }            
+    },                         
 
     startCableDrag: function(plug) {
         var self = this;                        
@@ -189,13 +206,7 @@ OCRJS.NodeTree = NT.Base.extend({
     connectPlugs: function(plug) {
         var self = this;                        
         var other = self._dragcable.plug;
-        if (other == plug) {
-            console.log("Start and end are the same!");
-            self.removeDragCable();
-            return;
-        }
-        if (other.type == plug.type) {
-            console.log("Connecting", plug.type, "to other", plug.type);
+        if (!other.wouldAccept(plug)) {
             self.removeDragCable();
             return;
         }
@@ -287,6 +298,14 @@ OCRJS.NodeTree = NT.Base.extend({
             [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
         svg.linearGradient(defs, "IgnoreGradient", 
             [["0%", "#ffffcf"], ["100%", "#ffffad"]], "0%", "0%", "0%", "100%");
+        svg.linearGradient(defs, "InPlugGradient", 
+            [["0%", "#d8d8d8"], ["100%", "#dbdbdb"]], "0%", "0%", "0%", "100%");
+        svg.linearGradient(defs, "OutPlugGradient", 
+            [["0%", "#dbdbdb"], ["100%", "#d8d8d8"]], "0%", "0%", "0%", "100%");
+        svg.linearGradient(defs, "PlugAccept", 
+            [["0%", "#dbf0ca"], ["100%", "#d3e7c3"]], "0%", "0%", "0%", "100%");
+        svg.linearGradient(defs, "PlugReject", 
+            [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
 
         var rects = [],
             offx = 20,
