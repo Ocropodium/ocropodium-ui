@@ -176,9 +176,10 @@ OCRJS.NodeTree = NT.Base.extend({
         $(document).bind("mousemove.dragcable", function(event) {
             var npoint = self.denorm(plug.centre(), plug.group(), self.group());
             var nmp = self.norm(self.mouseCoord(event), cable.group(), null);
+            
             //var smp = self.divPoints(nmp, self.getScale(self.group()));
             //console.log(nmp.x, nmp.y, smp.x, smp.y);
-            cable.update(npoint, nmp);
+            cable.update(npoint, self.divPoints(nmp, self.getScale(self.group())));
         }); 
         $(self.group()).bind("click.dropcable", function(event) {
             self.removeDragCable();
@@ -329,10 +330,11 @@ OCRJS.NodeTree = NT.Base.extend({
         };
         var self = this;
         var trans = self.getTranslate(element);
+        var scale = self.getScale(element);
         $(document).bind("mousemove.dragelem", function(moveevent) {
             self.updateTranslate(element, 
-                trans.x + (moveevent.pageX - dragstart.x),
-                trans.y + (moveevent.pageY - dragstart.y));
+                trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
+                trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
         });
         $(document).bind("mouseup.unloaddrag", function() {
             $(this).unbind("mousemove.dragelem");
