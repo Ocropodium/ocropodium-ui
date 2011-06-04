@@ -30,6 +30,8 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             inputAttached: [],
             outputAttached: [],
             moved: [],
+            plugHoverIn: [],
+            plugHoverOut: [],
         };
         
     }, 
@@ -54,6 +56,9 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             plug.addListener("attachCable", function(p) {
                 self.callListeners("inputAttached", p);
             });
+            plug.addListener("hoverIn", function() {
+                self.callListeners("plugHoverIn", plug);
+            });
         }
         
         // draw the bottom plug            
@@ -61,6 +66,9 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
         self._outplug.draw(svg, g, x  + (nodewidth / 2), y + nodeheight + 1);
         self._outplug.addListener("attachCable", function(p) {
             self.callListeners("outputAttached", p);
+        });
+        self._outplug.addListener("hoverIn", function() {
+            self.callListeners("plugHoverIn", self._outplug);
         });
 
         // draw the rects themselves...
