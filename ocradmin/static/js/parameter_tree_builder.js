@@ -75,8 +75,9 @@ var TESTTREE = [
 
 
 var OCRJS = OCRJS || {}
+var NT = OCRJS.Nodetree;
 
-OCRJS.NodeTree = OCRJS.OcrBase.extend({
+OCRJS.NodeTree = NT.Base.extend({
     constructor: function(parent, options) {
         this.base(parent, options);
 
@@ -84,9 +85,6 @@ OCRJS.NodeTree = OCRJS.OcrBase.extend({
         
         this._dragcable = null;
         this.svg = null;
-        this._parsetranslate = new RegExp('translate\\((-?\\d+)\\s*,\\s*(-?\\d+)\\)');
-        this._translatere = /translate\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/;
-        this._scalere = /scale\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/;
 
         // we need to dynamically bind and unbind this event handler,
         // so keep a reference on 'self'
@@ -97,6 +95,11 @@ OCRJS.NodeTree = OCRJS.OcrBase.extend({
             event.stopPropagation();
         };
 
+        this._usednames = {};
+        this._nodedata = {};
+        this._nodetypes = {};
+
+
     },
 
 
@@ -104,19 +107,154 @@ OCRJS.NodeTree = OCRJS.OcrBase.extend({
         var self = this;
         console.log("Initialised...");
 
+        self.queryOptions();
         
-        $(this.parent).svg({
-            onLoad: function(svg) {
-                self.svg = svg;
-                self.drawTree(TESTTREE);
-            },
-        });
-
         $(self.parent).keydown(function(event) {
             console.log("keydown", event.which);
         });
     },
 
+    setupNodeListeners: function(node) {
+        var self = this;                            
+        node.addListeners({
+            toggleIgnored: function(ig) {
+                self.scriptChange();
+            },
+            toggleFocussed: function(foc) {
+                $.each(self._usednames, function(name, other) {
+                    if (node.name != name)
+                        other.setFocussed(false);
+                });
+                self.buildParams(node.name, node.parameters);
+                self.scriptChange();
+            },
+            toggleViewing: function(view) {
+                $.each(self._usednames, function(name, other) {
+                    if (node.name != other.name)
+                        other.setViewing(false);
+                });
+                self.scriptChange();
+            },
+            deleted: function() {
+                console.log("Deleted node: ", node.name);
+                self.scriptChange();
+            },
+            inputAttached: function(plug) {
+                console.log("Attached input to", node.name, plug.name);
+                self.handlePlug(plug);
+            },                               
+            outputAttached: function(plug) {
+                console.log("Attached output to", node.name, plug.name);
+                self.handlePlug(plug);
+            },                               
+        });
+    },
+
+    removeDragCable: function() {
+        if (this._dragcable) {
+            this._dragcable.remove();
+            this._dragcable = null;
+        }
+        $(document).unbind(".dragcable").unbind(".dropcable");
+    },                        
+
+    handlePlug: function(plug) {
+        var self = this;                    
+        if (!self._dragcable) {
+            self.startCableDrag(plug);
+        } else {
+            self.connectPlugs(plug);
+        }            
+    },
+
+    startCableDrag: function(plug) {
+        var self = this;                        
+        var cable = new NT.DragCable(plug);
+        var point = self.denorm(plug.centre(), plug.group(), self.group());
+        cable.draw(self.svg, self._cablegroup, point, point);
+        self._dragcable = cable;
+        $(document).bind("mousemove.dragcable", function(event) {
+            var npoint = self.denorm(plug.centre(), plug.group(), self.group());
+            var nmp = self.norm(self.mouseCoord(event), cable.group(), null);
+            //var smp = self.divPoints(nmp, self.getScale(self.group()));
+            //console.log(nmp.x, nmp.y, smp.x, smp.y);
+            cable.update(npoint, nmp);
+        }); 
+        $(self.group()).bind("click.dropcable", function(event) {
+            self.removeDragCable();
+        });
+    },
+
+    connectPlugs: function(plug) {
+        var self = this;                        
+        var other = self._dragcable.plug;
+        if (other == plug) {
+            console.log("Start and end are the same!");
+            self.removeDragCable();
+            return;
+        }
+        if (other.type == plug.type) {
+            console.log("Connecting", plug.type, "to other", plug.type);
+            self.removeDragCable();
+            return;
+        }
+        var cable = new NT.Cable(other, plug);
+        var p1 = self.denorm(other.centre(), other.group(), self.group());
+        var p2 = self.denorm(plug.centre(), plug.group(), self.group());
+        other.addListener("moved", function() {
+            var m1 = self.denorm(other.centre(), other.group(), self.group());
+            var m2 = self.denorm(plug.centre(), plug.group(), self.group());
+            cable.update(m1, m2);
+        });
+        plug.addListener("moved", function() {
+            var m1 = self.denorm(other.centre(), other.group(), self.group());
+            var m2 = self.denorm(plug.centre(), plug.group(), self.group());
+            cable.update(m1, m2);
+        });
+        cable.draw(self.svg, self._cablegroup, p1, p2);
+        self.removeDragCable();    
+    },                      
+
+    setNodeErrored: function(nodename, error) {
+        if (!this._usednames[nodename])
+            throw "Unknown node name: " + nodename;
+        this._usednames[nodename].setErrored(true, error);
+    },                        
+
+    scriptChange: function() {
+        //this.runScript();
+        //
+        console.log("Script change");
+    },
+
+    buildParams: function(node) {
+        console.log("Building params for ", node);
+    },    
+
+    queryOptions: function() {
+        var self = this;
+        var url = "/plugins/query/";
+        $.ajax({
+            url: url,
+            type: "GET",
+            error: OCRJS.ajaxErrorHandler,
+            success: function(data) {
+                $.each(data, function(i, nodeinfo) {
+                    if (!self._nodedata[nodeinfo.stage])
+                        self._nodedata[nodeinfo.stage] = [];
+                    self._nodedata[nodeinfo.stage].push(nodeinfo);
+                    self._nodetypes[nodeinfo.name] = nodeinfo;
+                });
+
+                $(self.parent).svg({                    
+                    onLoad: function(svg) {
+                        self.svg = svg;
+                        self.drawTree(TESTTREE);
+                    },
+                });
+            },
+        });
+    },
 
     drawTree: function(treenodes) {
         var self = this,
@@ -124,101 +262,46 @@ OCRJS.NodeTree = OCRJS.OcrBase.extend({
 
         var startx = 20,
             starty = 20;
-        var nodewidth = 150,
-            nodeheight = 30,
-            buttonwidth = 15;
-        
-        var topgroup = svg.group();
-        self._topgroup = topgroup;
+        var topgroup = svg.group(null, "canvas");
+        self._cablegroup = svg.group(topgroup, "cables");
+        self._group = topgroup;
         var container = svg.rect(topgroup, 0, 0, svg._svg.clientWidth, svg._svg.clientHeight, {
             fill: "transparent",
             stroke: "transparent",    
         });
         $(topgroup).bind("mousedown", function(event) {
             if (event.button == 0) {
-                self.setElementDragging(event, topgroup, container);
+                self.panContainer(event, this);
             }
-        });
-
-        $(topgroup).bind("keydown", function(event) {
-            console.log("event", event.which);
         });
 
         var defs = svg.defs(topgroup);
         svg.linearGradient(defs, "NodeGradient", 
             [["0%", "#f8f8f8"], ["100%", "#ebebeb"]], "0%", "0%", "0%", "100%");
+        svg.linearGradient(defs, "FocusGradient", 
+            [["0%", "#f9fcf7"], ["100%", "#f5f9f0"]], "0%", "0%", "0%", "100%");
+        svg.linearGradient(defs, "ErrorGradient", 
+            [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
         svg.linearGradient(defs, "ViewingGradient", 
             [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
         svg.linearGradient(defs, "IgnoreGradient", 
             [["0%", "#ffffcf"], ["100%", "#ffffad"]], "0%", "0%", "0%", "100%");
 
         var rects = [],
-            viewbuttons = [],
-            ignorebuttons = [],
-            offy = starty,
-            arity = 1;
+            offx = 20,
+            offy = starty;
 
         $.each(treenodes, function(i, node) {
-            var g = svg.group(topgroup, "rect" + i);
-            var x = startx, y = offy;
-            // draw the plugs on each node.
-            var plugx = nodewidth / (arity + 1);
-            for (var p = 1; p <= arity; p++)
-                svg.circle(g, x + (p*plugx), y - 1, 4, {
-                        fill: "#999",
-                        strokeWidth: 0.5,
-                        id: "node" + i + "_input" + (p-1), 
-                    }
-                );
-
-            // draw the bottom plug            
-            svg.circle(g, x + nodewidth / 2,
-                y + nodeheight + 1, 4, {
-                    fill: "#999",
-                    strokeWidth: 0.5,
-                    id: "node" + i + "_output",
-                }
-            );
-
-            // draw the rects themselves...
-            svg.rect(g, x, y, nodewidth, nodeheight, 0, 0, {
-                fill: "url(#NodeGradient)",
-                stroke: "#BBB",
-                strokeWidth: 1,
-            });
-            viewbuttons.push(svg.rect(g, x, y, buttonwidth, nodeheight, 0, 0, {
-                fill: "transparent",
-                stroke: "#BBB",
-                strokeWidth: 0.5,
-            }));         
-            ignorebuttons.push(svg.rect(g, x + nodewidth - buttonwidth, y, buttonwidth, nodeheight, 0, 0, {
-                fill: "transparent",
-                stroke: "#BBB",
-                strokeWidth: 0.5,
-            }));         
-            // add the labels
-            svg.text(g, x + nodewidth / 2,
-                y + nodeheight / 2, node.name, {
-                    textAnchor: "middle",
-                    alignmentBaseline: "middle",
-                }
-            );
-
-            rects.push(g);   
-            offy += nodeheight + 50;
+            var typedata = self._nodetypes[node.type];            
+            var nodeobj = new NT.Node(node.name, typedata, i);
+            self._usednames[node.name] = nodeobj;
+            self.setupNodeListeners(nodeobj);
+            rects.push(nodeobj.buildElem(svg, topgroup, offx, offy));
+            offy += 30 + 50;
         });
 
-        $(rects).find("circle")
-            .bind("click.attachcable", self._cableattachfunc)
-            .hover(function(event) {
-            self.svg.change(this, {fill: "#99F"});    
-        }, function(event) {
-            self.svg.change(this, {fill: "#999"});    
-            
-        });
-
-        $(rects).mousedown(function(event) {
-            self.setElementDragging(event, this);
+        $(topgroup).mousedown(function(event) {
+            self.panContainer(event, this);
             event.preventDefault();
             event.stopPropagation();
         });
@@ -237,195 +320,9 @@ OCRJS.NodeTree = OCRJS.OcrBase.extend({
                 cx /= 2, cy /= 2;
             self.updateScale(this, cx, cy);
         });
-
-        $(viewbuttons).click(function(event) {
-            if ($(this).attr("fill") == "transparent")
-                self.svg.change(this, {fill: "url(#ViewingGradient)"});
-            else
-                self.svg.change(this, {fill: "transparent"});
-        });
-
-        $(ignorebuttons).click(function(event) {
-            if ($(this).attr("fill") == "transparent")
-                self.svg.change(this, {fill: "url(#IgnoreGradient)"});
-            else
-                self.svg.change(this, {fill: "transparent"});
-        });
     },
 
-
-    updateScale: function(element, cx, cy) {
-        var sstr = " scale("  + cx + "," + cy + ")";
-        var sattr = $(element).attr("transform");
-        if (sattr && sattr.match(this._scalere)) 
-            $(element).attr("transform", $.trim(sattr.replace(this._scalere, sstr)));
-        else if (sattr)
-            $(element).attr("transform", $.trim(sattr + sstr));
-        else
-            $(element).attr("transform", $.trim(sstr)); 
-    },
-
-    updateTranslate: function(element, x, y) {
-        var sstr = " translate("  + x + "," + y + ")";
-        var sattr = $(element).attr("transform");
-        if (sattr && sattr.match(this._translatere))
-            $(element).attr("transform", $.trim(sattr.replace(this._translatere, sstr)));
-        else if (sattr)
-            $(element).attr("transform", $.trim(sattr + sstr));
-        else
-            $(element).attr("transform", $.trim(sstr)); 
-    },
-
-    mouseCoord: function(event) {
-        var off = $(this.parent).offset();
-        return {
-            x: event.pageX - off.left,
-            y: event.pageY - off.top,
-        };
-    },
-
-    centrePointOfCircle: function(e) {
-        return {
-            x: parseInt($(e).attr("cx")),
-            y: parseInt($(e).attr("cy")),
-        };
-    },
-
-    createCablePathString: function(p1, p2) {
-        return "M" + p1.x + " " + p1.y + " L" + p2.x + " " + p2.y + " Z";
-    },
-
-    getTranslate: function(element) {
-        var trans = {x: 0, y: 0},
-            tattr = $(element).attr("transform"),
-            parse = tattr ? tattr.match(this._parsetranslate) : null;
-        if (parse) {
-            trans = {x: parseInt(RegExp.$1), y: parseInt(RegExp.$2)};
-        }
-        return trans;
-    },
-
-    getCablePath: function(sp, ep) {
-        // get the cable arc between two points...                      
-        var path = this.svg.createPath();
-        var mp = {
-            x: sp.x > ep.x ? sp.x + ((ep.x - sp.x) / 2) : ep.x + ((sp.x - ep.x) / 2),
-            y: sp.y > ep.y ? sp.y + ((ep.y - sp.y) / 2) : ep.y + ((sp.y - ep.y) / 2),},
-            radx = Math.abs(sp.x - ep.x),
-            rady = Math.abs(sp.y - ep.y);
-        return path.move(sp.x, sp.y)
-                .arc(radx, rady, 0, false, sp.x > ep.x, mp.x, mp.y)
-                .arc(radx, rady, 0, false, sp.x < ep.x, ep.x, ep.y);
-    },
-
-    norm: function(abs, element) {
-        // get the position of the mouse relative to a 
-        // transformed element.  FIXME: This is HORRIBLY
-        // inefficient and stupid. 
-        var parent = element.parentNode;
-        var trans;
-        while (parent.nodeName == "g") {
-            trans = this.getTranslate(parent);
-            abs.x -= trans.x;
-            abs.y -= trans.y;
-            parent = parent.parentNode;
-        }
-        return abs;
-    },
-
-    denorm: function(abs, element) {
-        // get the position of the mouse relative to a 
-        // transformed element.  FIXME: This is HORRIBLY
-        // inefficient and stupid. 
-        var parent = element.parentNode;
-        var trans;
-        while (parent.nodeName == "g") {
-            trans = this.getTranslate(parent);
-            abs.x += trans.x;
-            abs.y += trans.y;
-            parent = parent.parentNode;
-        }
-        return abs;
-    },
-
-    createCable: function(origin, element) {
-        var self = this;             
-        if ($(element).data("in"))
-            self.svg.remove($(element).data("in"));        
-        var sp = self.centrePointOfCircle(origin),                             
-            ep = self.denorm(self.norm(self.centrePointOfCircle(element), origin), element);
-        var cable = self.svg.path(origin.parentNode, self.getCablePath(sp, ep), {
-            fill: "transparent", stroke: "#666", strokeWidth: 1,
-        });
-
-        var outs = $(origin).data("outs");
-        if (!outs)
-            outs = [cable];
-        else
-            outs.push(cable);
-        $(origin).data("outs", outs);
-        $(element).data("in", cable);
-        $(cable).data({
-            in: origin,
-            out: element
-        });
-    },
-
-    removeDragCable: function() {
-        if (this._dragcable)                         
-            this.svg.remove(this._dragcable);
-        this._dragcable = null;
-        $(document).unbind(".dragcable").unbind(".dropcable");
-    },
-
-    setPlugSelect: function(event, element) {                       
-        var self = this;
-
-        var sp = self.centrePointOfCircle(element),
-            ep = self.norm(self.mouseCoord(event), element),
-            finish = false;
-
-        // if we've already got a dragging cable...
-        if (self._dragcable) {
-            if ($(self._dragcable).data("start") == element) {
-                return;
-            }
-            var origin = $(self._dragcable).data("start");
-            self.createCable(origin, element);
-            self.removeDragCable();
-            return;
-        }
-
-
-        self._dragcable = self.svg.path(element.parentNode, self.getCablePath(sp, ep),
-            { fill: "transparent", stroke: "black", strokeWidth: 1,
-                strokeDashArray: "2,2",
-            });
-        $(self._dragcable).data("start", element);
-
-        $(document).bind("mousemove.dragcable", function(moveevent) {
-            var np = self.norm(self.mouseCoord(moveevent), element);
-            var path = self.getCablePath(sp, np);
-            $(self._dragcable).attr("d", path.path());
-            $(document).bind("click.dropcable", function() {
-                self.removeDragCable();
-            });
-        });
-    },
-
-    updateCable: function(cable) {                     
-        // update the cable position... N.B. The cable is
-        // parented to it's input
-        var self = this;
-        var origin = $(cable).data("in"),
-            element = $(cable).data("out");
-        var sp = self.centrePointOfCircle(origin),                             
-            ep = self.denorm(self.norm(self.centrePointOfCircle(element), origin), element);
-        var path = self.getCablePath(sp, ep);
-        $(cable).attr("d", path.path());
-    },
-
-    setElementDragging: function(event, element, enlarge) {
+    panContainer: function(event, element, enlarge) {
         var dragstart = {
             x: event.pageX,
             y: event.pageY,
@@ -436,36 +333,22 @@ OCRJS.NodeTree = OCRJS.OcrBase.extend({
             self.updateTranslate(element, 
                 trans.x + (moveevent.pageX - dragstart.x),
                 trans.y + (moveevent.pageY - dragstart.y));
-            $(element).children("circle").each(function(i, elem) {
-                var outs = $(elem).data("outs");
-                if (outs) {
-                    $.each(outs, function(num, out) {
-                        self.updateCable(out);    
-                    });
-                }
-                var input = $(elem).data("in");
-                if (input) {
-                    self.updateCable(input);    
-                }
-            });
-
         });
         $(document).bind("mouseup.unloaddrag", function() {
             $(this).unbind("mousemove.dragelem");
             $(this).unbind("mouseup.unloaddrag");
-            if (enlarge) {
-                var trans = self.getTranslate(element);
-                if (trans.x > 0) {
-                    $(enlarge).attr("x", parseInt($(enlarge).attr("x")) - trans.x);
-                    $(enlarge).attr("width", parseInt($(enlarge).attr("width")) + trans.x);
-                } else
-                    $(enlarge).attr("width", parseInt($(enlarge).attr("width")) - trans.x);
-                if (trans.y > 0) {
-                    $(enlarge).attr("y", parseInt($(enlarge).attr("y")) - trans.y);
-                    $(enlarge).attr("height", parseInt($(enlarge).attr("height")) + trans.y);
-                } else
-                    $(enlarge).attr("height", parseInt($(enlarge).attr("height")) - trans.y);
-            }
+            var enlarge = $(element).children("rect");
+            var trans = self.getTranslate(element);
+            if (trans.x > 0) {
+                enlarge.attr("x", parseInt(enlarge.attr("x")) - trans.x);
+                enlarge.attr("width", parseInt(enlarge.attr("width")) + trans.x);
+            } else
+                enlarge.attr("width", parseInt(enlarge.attr("width")) - trans.x);
+            if (trans.y > 0) {
+                enlarge.attr("y", parseInt(enlarge.attr("y")) - trans.y);
+                enlarge.attr("height", parseInt(enlarge.attr("height")) + trans.y);
+            } else
+                enlarge.attr("height", parseInt(enlarge.attr("height")) - trans.y);
         });
     },
 });
