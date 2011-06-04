@@ -1,5 +1,7 @@
 div#options {
     height: 300px;
+    background-color: #EBEBEB;
+    border: 1px solid #E0E0E0;
 }
 
 #options .buttons_left {
