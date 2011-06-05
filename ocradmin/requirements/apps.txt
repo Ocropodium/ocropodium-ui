@@ -6,4 +6,4 @@
 -e hg+https://bitbucket.org/neithere/django-autoslug#egg=autoslug
 django-picklefield
 bencode 
-#ete2a1
+pydot
