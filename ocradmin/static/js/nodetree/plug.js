@@ -2,14 +2,12 @@
 // Class representing a plug on a node
 //
 
-OCRJS.Nodetree.Plug = OCRJS.Nodetree.Base.extend({
-    constructor: function(node, name, type) {
+OCRJS.Nodetree.BasePlug = OCRJS.Nodetree.Base.extend({
+    constructor: function(node, name) {
         this.base();
 
         this.node = node;
         this.name = name;
-        this.type = type; // input / output
-
         this._pw = 30;
         this._ph = 20;
 
@@ -20,29 +18,22 @@ OCRJS.Nodetree.Plug = OCRJS.Nodetree.Base.extend({
             hoverIn: [],
             hoverOut: [],
         };
-
-        this._gradient = this.type == "input"
-            ? "url(#InPlugGradient)"
-            : "url(#OutPlugGradient)";
     },
+
+    toString: function() {
+        return "<Plug: " + this.name + ">";
+    },                  
 
     draw: function(svg, parent, x, y) {
         var self = this;
         self.svg = svg;
         self._group = svg.group(parent, self.name);                
-        //self._circle = svg.circle(self._group, x, y, 10, {
-        //        fill: "#999",
-        //        strokeWidth: 0.5,
-        //    }
-        //);
-
         self._rect = svg.rect(parent, 
                 x - (this._pw / 2), y - (this._ph / 2), this._pw, this._ph, 5, 5, {
             fill: this._gradient,
             stroke: "#BBB",
             strokeWidth: 1,
         });                        
-
         this.setupEvents();
     },
 
@@ -81,10 +72,10 @@ OCRJS.Nodetree.Plug = OCRJS.Nodetree.Base.extend({
             event.stopPropagation();
             event.preventDefault();
         }).hover(function(event) {
-            self.callListeners("hoverIn");
+            self.callListeners("hoverIn", self);
             //self.setAcceptingState(); 
         }, function(event) {
-            self.callListeners("hoverOut");
+            self.callListeners("hoverOut", self);
             self.setDefaultState();    
         });
     },
@@ -98,4 +89,62 @@ OCRJS.Nodetree.Plug = OCRJS.Nodetree.Base.extend({
     },    
 });
 
+
+OCRJS.Nodetree.InPlug = OCRJS.Nodetree.BasePlug.extend({
+    constructor: function(node, name) {
+        this.base(node, name);
+        this.type = "input";
+        this._gradient = "url(#InPlugGradient)";
+        this._cable = null;
+    },
+
+    attach: function(cable) {
+        if (this._cable)
+            this._cable.remove();
+        this._cable = cable;
+    },
+
+    detach: function() {
+        this._cable.remove();
+        this._cable = null;
+    },                
+    
+    cable: function() {
+        return this._cable;
+    },
+    
+    isAttached: function() {
+        return Boolean(this._cable);
+    },        
+});
+
+OCRJS.Nodetree.OutPlug = OCRJS.Nodetree.BasePlug.extend({
+    constructor: function(node, name) {
+        this.base(node, name);
+        this.type = "output";
+        this._gradient = "url(#OutPlugGradient)";
+        this._cables = [];
+    },
+
+    attach: function(cable) {
+        var self = this;                
+        $.each(this._cables, function(i, existing) {
+            if (cable == existing)
+                console.error("Reattaching cable to node: ", self, cable);
+        });
+        this._cables.push(cable);
+        cable.addListener("cableRemoved", function(self) {
+            var n = [];
+            for (var i in self._cables) {
+                if (self._cables[i] != cable)
+                    n.push(self._cables[i]);
+            }
+            self._cables = n;
+        });
+    },
+
+    isAttached: function() {
+        return Boolean(this._cables.length);
+    },        
+});
 

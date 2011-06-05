@@ -9,7 +9,7 @@ OCRJS.Nodetree = OCRJS.Nodetree || {};
 
 
 OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
-    constructor: function(name, classdata) {
+    constructor: function(name, classdata, id) {
         this.base();
         this.name = name;
         this.type = classdata.name;
@@ -17,9 +17,13 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
         this.desc = classdata.description;
         this.stage = classdata.stage;
         this.parameters = $.extend(true, [], classdata.parameters);
+        this._id = id;
         this._ignored = false;
         this._focussed = false;
         this._viewing = false;
+
+        this._inplugs = [];
+        this._outplug = null;
 
         this._listeners = {
             toggleIgnored: [],
@@ -34,41 +38,52 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             plugHoverOut: [],
         };
         
-    }, 
+    },
 
-    buildElem: function(svg, parent, x, y, id) {
+    toString: function() {
+        return "<Node: " + this.name + ">";
+    },
+
+    input: function(i) {
+        return this._inplugs[i];
+    },
+
+    output: function() {
+        return this._outplug;
+    },                
+
+    draw: function(svg, parent, x, y) {
         var self = this;
         self.svg = svg;
         var nodewidth = 150,
             nodeheight = 30,
             buttonwidth = 15;
 
-        var g = svg.group(parent, "rect" + id);
+        var g = svg.group(parent, "rect" + self._id);
         self._group = g;
         // draw the plugs on each node.
         var plugx = nodewidth / (self.arity + 1);
 
-        self._inplugs = [];
         for (var p = 1; p <= self.arity; p++) {
-            var plug = new OCRJS.Nodetree.Plug(self, self.name + "_input" + (p-1), "input");
+            var plug = new OCRJS.Nodetree.InPlug(self, self.name + "_input" + (p-1));
             plug.draw(svg, g, x + (p*plugx), y - 1);
-            self._inplugs.push(plug);
-            plug.addListener("attachCable", function(p) {
-                self.callListeners("inputAttached", p);
+            this._inplugs.push(plug);
+            plug.addListener("attachCable", function(pl) {
+                self.callListeners("inputAttached", pl);
             });
-            plug.addListener("hoverIn", function() {
-                self.callListeners("plugHoverIn", plug);
+            plug.addListener("hoverIn", function(pl) {
+                self.callListeners("plugHoverIn", pl);
             });
         }
         
         // draw the bottom plug            
-        self._outplug = new OCRJS.Nodetree.Plug(self, self.name + "_output", "output");
+        self._outplug = new OCRJS.Nodetree.OutPlug(self, self.name + "_output");
         self._outplug.draw(svg, g, x  + (nodewidth / 2), y + nodeheight + 1);
-        self._outplug.addListener("attachCable", function(p) {
-            self.callListeners("outputAttached", p);
+        self._outplug.addListener("attachCable", function(pl) {
+            self.callListeners("outputAttached", pl);
         });
-        self._outplug.addListener("hoverIn", function() {
-            self.callListeners("plugHoverIn", self._outplug);
+        self._outplug.addListener("hoverIn", function(pl) {
+            self.callListeners("plugHoverIn", pl);
         });
 
         // draw the rects themselves...
@@ -87,7 +102,6 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             stroke: "#BBB",
             strokeWidth: 0.5,
         });         
-        console.log("got here", self.name);
         // add the labels
         self._textlabel = svg.text(g, x + nodewidth / 2,
             y + nodeheight / 2, self.name, {
@@ -175,18 +189,24 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
         var trans = self.getTranslate(element);
         var scale = self.getScale(element.parentNode);
         $(document).bind("mousemove.dragelem", function(moveevent) {
-            self.updateTranslate(element, 
+            self.moveTo(
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
                 trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
-            self.callListeners("moved");
-            $.each(self._inplugs, function(i, plug) {
-                plug.callListeners("moved");                
-            });
-            self._outplug.callListeners("moved");
         });
         $(document).bind("mouseup.unloaddrag", function(event) {
             $(this).unbind("mousemove.dragelem");
             $(document).unbind(event);
         });
     },
+
+    moveTo: function(x, y) {
+        var self = this;
+        console.log(self.name, "moving to", x, y);        
+        self.updateTranslate(self.group(), x, y);
+        self.callListeners("moved");
+        $.each(self._inplugs, function(i, plug) {
+            plug.callListeners("moved");                
+        });
+        self._outplug.callListeners("moved");
+    },                
 });
