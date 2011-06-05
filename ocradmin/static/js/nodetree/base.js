@@ -9,10 +9,8 @@ OCRJS.Nodetree = OCRJS.Nodetree || {};
 OCRJS.Nodetree.Base = OCRJS.OcrBase.extend({
     constructor: function() {
                      
-        this._parsetranslate = new RegExp('translate\\((-?\\d+)\\s*,\\s*(-?\\d+)\\)');
         this._translatere = /translate\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/;
         this._scalere = /scale\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/;
-
         this._group = null;
     },
 

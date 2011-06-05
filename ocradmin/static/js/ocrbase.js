@@ -54,7 +54,16 @@ OCRJS.OcrBase = Base.extend({
                 func.callee, args.concat(Array.prototype.slice.call(arguments)));
         });
     },
-                   
+
+    removeListener: function(key, func) {
+        if (this._listeners[key] == undefined)
+            throw "Unknow callback: '" + key + "'";
+        var i = this._listeners[key].indexOf(func);
+        if (i != -1)
+            this._listeners.splice(i, 1);
+        else
+            console.error("Attempted to remove unknown listener callback");
+    },                                           
 });
 
 

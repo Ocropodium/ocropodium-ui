@@ -5,31 +5,30 @@
 
 var TESTTREE = [
     {
-        "type": "Ocropus::FileIn", 
         "params": [
             [
                 "path", 
                 "etc/simple.png"
             ]
         ], 
+        "type": "Ocropus::FileIn", 
         "name": "filein", 
         "inputs": []
     }, 
     {
-        "type": "Ocropus::DeskewPageByRAST", 
         "params": [
             [
                 "max_n", 
                 10000
             ]
         ], 
+        "type": "Ocropus::DeskewPageByRAST", 
         "name": "DeskewPageByRAST", 
         "inputs": [
             "BinarizeBySauvola"
         ]
     }, 
     {
-        "type": "Ocropus::RmHalftone", 
         "params": [
             [
                 "factor", 
@@ -40,13 +39,13 @@ var TESTTREE = [
                 4
             ]
         ], 
+        "type": "Ocropus::RmHalftone", 
         "name": "RmHalftone", 
         "inputs": [
             "DeskewPageByRAST"
         ]
     }, 
     {
-        "type": "Ocropus::BinarizeBySauvola", 
         "params": [
             [
                 "k", 
@@ -57,17 +56,45 @@ var TESTTREE = [
                 40
             ]
         ], 
+        "type": "Ocropus::BinarizeBySauvola", 
         "name": "BinarizeBySauvola", 
         "inputs": [
             "filein"
         ]
     }, 
     {
-        "params": [], 
-        "type": "Cuneiform::CuneiformRecognizer", 
-        "name": "NativeRecognizer", 
+        "params": [
+            [
+                "all_pixels", 
+                0
+            ], 
+            [
+                "gap_factor", 
+                10
+            ]
+        ], 
+        "type": "Ocropus::SegmentPageByRAST", 
+        "name": "SegmentPageByRAST", 
         "inputs": [
             "RmHalftone"
+        ]
+    }, 
+    {
+        "params": [
+            [
+                "character_model", 
+                "Ocropus Default Char"
+            ], 
+            [
+                "language_model", 
+                "Ocropus Default Lang"
+            ]
+        ], 
+        "type": "Ocropus::OcropusRecognizer", 
+        "name": "NativeRecognizer", 
+        "inputs": [
+            "RmHalftone", 
+            "SegmentPageByRAST"
         ]
     }
 ]
@@ -99,7 +126,7 @@ OCRJS.NodeTree = NT.Base.extend({
         this._nodedata = {};
         this._nodetypes = {};
 
-
+        this.tree = TESTTREE;
     },
 
 
@@ -155,7 +182,7 @@ OCRJS.NodeTree = NT.Base.extend({
 
     removeDragCable: function() {
         if (this._dragcable) {
-            this._dragcable.plug.setDefaultState();
+            this._dragcable.start.setDefaultState();
             this._dragcable.remove();
             this._dragcable = null;
         }
@@ -163,18 +190,26 @@ OCRJS.NodeTree = NT.Base.extend({
     },                        
 
     handlePlug: function(plug) {
-        var self = this;                    
-        if (!self._dragcable) {
+        var self = this;
+        if (!self._dragcable && plug.type == "input" && plug.isAttached()) {
+            plug.detach();
+            self.startCableDrag(plug);
+        } else if (!self._dragcable) {
             self.startCableDrag(plug);
         } else {
-            self.connectPlugs(plug);
+            if (self._dragcable.start.wouldAccept(plug)) {
+                if (plug.type == "input" && plug.isAttached())
+                    plug.detach();
+                self.connectPlugs(self._dragcable.start, plug);
+            }
+            self.removeDragCable();    
         }            
     },
 
     handlePlugHover: function(plug) {
         var self = this;
         if (self._dragcable) {
-            var other = self._dragcable.plug;
+            var other = self._dragcable.start;
             if (plug.wouldAccept(other)) {
                 plug.setAcceptingState();
             } else {
@@ -202,28 +237,23 @@ OCRJS.NodeTree = NT.Base.extend({
         });
     },
 
-    connectPlugs: function(plug) {
+    connectPlugs: function(a, b) {
+        console.log("Connecting plugs", a.name, b.name);                      
         var self = this;                        
-        var other = self._dragcable.plug;
-        if (!other.wouldAccept(plug)) {
-            self.removeDragCable();
-            return;
-        }
-        var cable = new NT.Cable(other, plug);
-        var p1 = self.denorm(other.centre(), other.group(), self.group());
-        var p2 = self.denorm(plug.centre(), plug.group(), self.group());
-        other.addListener("moved", function() {
-            var m1 = self.denorm(other.centre(), other.group(), self.group());
-            var m2 = self.denorm(plug.centre(), plug.group(), self.group());
-            cable.update(m1, m2);
+        var cable = new NT.Cable(a, b);
+        var p1 = this.denorm(a.centre(), a.group(), this.group());
+        var p2 = this.denorm(b.centre(), b.group(), this.group());
+        a.addListener("moved", function() {
+            var m1 = self.denorm(a.centre(), a.group(), self.group());
+            var m2 = self.denorm(b.centre(), b.group(), self.group());
+            cable.update(m1, m2);            
         });
-        plug.addListener("moved", function() {
-            var m1 = self.denorm(other.centre(), other.group(), self.group());
-            var m2 = self.denorm(plug.centre(), plug.group(), self.group());
-            cable.update(m1, m2);
+        b.addListener("moved", function() {
+            var m1 = self.denorm(a.centre(), a.group(), self.group());
+            var m2 = self.denorm(b.centre(), b.group(), self.group());
+            cable.update(m1, m2);            
         });
         cable.draw(self.svg, self._cablegroup, p1, p2);
-        self.removeDragCable();    
     },                      
 
     setNodeErrored: function(nodename, error) {
@@ -261,6 +291,8 @@ OCRJS.NodeTree = NT.Base.extend({
                     onLoad: function(svg) {
                         self.svg = svg;
                         self.drawTree(TESTTREE);
+                        self.connectNodes(TESTTREE);
+                        self.layoutNodes(TESTTREE);
                     },
                 });
             },
@@ -271,63 +303,35 @@ OCRJS.NodeTree = NT.Base.extend({
         var self = this,
             svg = this.svg;
 
-        var startx = 20,
-            starty = 20;
-        var topgroup = svg.group(null, "canvas");
-        self._cablegroup = svg.group(topgroup, "cables");
-        self._group = topgroup;
-        var container = svg.rect(topgroup, 0, 0, svg._svg.clientWidth, svg._svg.clientHeight, {
+        this._group = svg.group(null, "canvas");
+        this.defineGradients();
+        self._cablegroup = svg.group(this._group, "cables");
+        var container = svg.rect(this._group, 0, 0, svg._width(), svg._height(), {
             fill: "transparent",
+            fillOpacity: 0,
             stroke: "transparent",    
         });
-        $(topgroup).bind("mousedown", function(event) {
+        $(this._group).bind("mousedown", function(event) {
             if (event.button == 0) {
                 self.panContainer(event, this);
             }
         });
 
-        var defs = svg.defs(topgroup);
-        svg.linearGradient(defs, "NodeGradient", 
-            [["0%", "#f8f8f8"], ["100%", "#ebebeb"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "FocusGradient", 
-            [["0%", "#f9fcf7"], ["100%", "#f5f9f0"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "ErrorGradient", 
-            [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "ViewingGradient", 
-            [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "IgnoreGradient", 
-            [["0%", "#ffffcf"], ["100%", "#ffffad"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "InPlugGradient", 
-            [["0%", "#d8d8d8"], ["100%", "#dbdbdb"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "OutPlugGradient", 
-            [["0%", "#dbdbdb"], ["100%", "#d8d8d8"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "PlugAccept", 
-            [["0%", "#dbf0ca"], ["100%", "#d3e7c3"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "PlugReject", 
-            [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
-        svg.linearGradient(defs, "PlugDragging", 
-            [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
-
-        var rects = [],
-            offx = 20,
-            offy = starty;
-
         $.each(treenodes, function(i, node) {
             var typedata = self._nodetypes[node.type];            
             var nodeobj = new NT.Node(node.name, typedata, i);
-            self._usednames[node.name] = nodeobj;
             self.setupNodeListeners(nodeobj);
-            rects.push(nodeobj.buildElem(svg, topgroup, offx, offy));
-            offy += 30 + 50;
+            nodeobj.draw(svg, self._group, 0, 0);
+            self._usednames[node.name] = nodeobj;
         });
 
-        $(topgroup).mousedown(function(event) {
+        $(this._group).mousedown(function(event) {
             self.panContainer(event, this);
             event.preventDefault();
             event.stopPropagation();
         });
 
-        $(topgroup).dblclick(function(event) {
+        $(this._group).dblclick(function(event) {
             var sattr = $(this).attr("transform");
             var cx = 1.0, cy = 1.0;
             var match = false;
@@ -340,8 +344,37 @@ OCRJS.NodeTree = NT.Base.extend({
             else
                 cx /= 2, cy /= 2;
             self.updateScale(this, cx, cy);
-        });
+       });
+
     },
+
+    connectNodes: function(treenodes) {
+        var self = this;                      
+        $.each(treenodes, function(ni, node) {
+            $.each(node.inputs, function(i, input) {
+                var n1 = self._usednames[node.name];
+                var n2 = self._usednames[input];
+                self.connectPlugs(n2.output(), n1.input(i));
+            });
+        });    
+    },                      
+
+    layoutNodes: function(script) {
+        var self = this;                
+        $.ajax({            
+            url: "/plugins/layout_graph",
+            type: "POST",
+            data: {script: JSON.stringify(script)},
+            success: function(data) {
+                $.each(data, function(node, value) {
+                    console.log(node, value);
+                    self._usednames[node].moveTo(value[0], 
+                            (self.svg._height() - value[1]) - 100);
+                });
+            },
+            error: OCRJS.ajaxErrorHandler,
+        });
+    },                
 
     panContainer: function(event, element, enlarge) {
         var dragstart = {
@@ -372,5 +405,29 @@ OCRJS.NodeTree = NT.Base.extend({
             } else
                 enlarge.attr("height", parseInt(enlarge.attr("height")) - trans.y);
         });
+    },
+
+    defineGradients: function() {                         
+        var defs = this.svg.defs(this._group);
+        this.svg.linearGradient(defs, "NodeGradient", 
+            [["0%", "#f8f8f8"], ["100%", "#ebebeb"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "FocusGradient", 
+            [["0%", "#f9fcf7"], ["100%", "#f5f9f0"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "ErrorGradient", 
+            [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "ViewingGradient", 
+            [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "IgnoreGradient", 
+            [["0%", "#ffffcf"], ["100%", "#ffffad"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "InPlugGradient", 
+            [["0%", "#d8d8d8"], ["100%", "#dbdbdb"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "OutPlugGradient", 
+            [["0%", "#dbdbdb"], ["100%", "#d8d8d8"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "PlugAccept", 
+            [["0%", "#dbf0ca"], ["100%", "#d3e7c3"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "PlugReject", 
+            [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
+        this.svg.linearGradient(defs, "PlugDragging", 
+            [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
     },
 });
