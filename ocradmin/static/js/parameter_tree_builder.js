@@ -381,17 +381,22 @@ OCRJS.NodeTree = NT.Base.extend({
         return (tname + space + count).replace(/^[^:]+::/, "");
     },
 
+    addNode: function(name, typedata) {
+        var id = $.map(this._usednames, function(){return true;}).length;
+        var node = new NT.Node(name, typedata, id);
+        this.setupNodeListeners(node);
+        this._usednames[name] = node;
+        this._nodes.push(node);
+        node.draw(this.svg, self._group, 0, 0);
+        return node;
+    },                 
+
     createNode: function(type, atpoint) {
         var self = this;                    
         var name = self.newNodeName(type);
-        var id = $.map(self._usednames, function(){return true;}).length;
         var typedata = self._nodetypes[type];
-        var nodeobj = new NT.Node(name, typedata, id);
-        nodeobj.draw(this.svg, self._group, 0, 0);
-        nodeobj.moveTo(atpoint.x - 75, atpoint.y - 15);
-        self.setupNodeListeners(nodeobj);
-        self._usednames[name] = nodeobj;
-        self._nodes.push(nodeobj);
+        var nodeobj = self.addNode(name, typedata);
+        nodeobj.moveTo(atpoint.x - 75, atpoint.y - 25);
         $(self._group).bind("keydown.dropnode", function(event) {
             console.log(event.which);
         });
@@ -429,12 +434,8 @@ OCRJS.NodeTree = NT.Base.extend({
         });
 
         $.each(treenodes, function(i, node) {
-            var typedata = self._nodetypes[node.type];            
-            var nodeobj = new NT.Node(node.name, typedata, i);
-            self.setupNodeListeners(nodeobj);
-            nodeobj.draw(svg, self._group, 0, 0);
-            self._usednames[node.name] = nodeobj;
-            self._nodes.push(nodeobj);
+            var typedata = self._nodetypes[node.type];
+            self.addNode(node.name, typedata);
         });
 
         $(this._group).mousedown(function(event) {
