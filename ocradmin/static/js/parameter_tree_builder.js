@@ -109,38 +109,18 @@ OCRJS.NodeTree = NT.Base.extend({
         this.base(parent, options);
 
         this.parent = parent;
-        
-        this._dragcable = null;
         this.svg = null;
-
-        // we need to dynamically bind and unbind this event handler,
-        // so keep a reference on 'self'
-        var self = this;
-        this._cableattachfunc = function(event) {
-            self.setPlugSelect(event, event.target);
-            event.preventDefault();
-            event.stopPropagation();
-        };
+        this._dragcable = null;
         this._nodes = [];
         this._usednames = {};
         this._nodedata = {};
         this._nodetypes = {};
-
         this._menutemplate = $.template($("#nodeMenuTmpl"));
-
-        this.tree = TESTTREE;
     },
 
 
     init: function() {
-        var self = this;
-        console.log("Initialised...");
-
-        self.queryOptions();
-        
-        $(self.parent).keydown(function(event) {
-            console.log("keydown", event.which);
-        });
+        this.queryNodeTypes();
     },
 
     setupNodeListeners: function(node) {
@@ -343,7 +323,7 @@ OCRJS.NodeTree = NT.Base.extend({
         self.setupMenuEvents();
     },    
 
-    queryOptions: function() {
+    queryNodeTypes: function() {
         var self = this;
         var url = "/plugins/query/";
         $.ajax({
@@ -402,9 +382,10 @@ OCRJS.NodeTree = NT.Base.extend({
         });
         $(self._group).bind("mousemove.dropnode", function(event) {
             var point = self.mouseCoord(event);
-            nodeobj.moveTo(point.x - 75, point.y - 15);
-            $(this).bind("click.dropnode", function(e) {
-                $(this).unbind(".dropnode");
+            nodeobj.moveTo(point.x - 75, point.y - 25);
+            $(document).bind("click.dropnode", function(e) {
+                $(self._group).unbind(".dropnode");
+                $(document).unbind(".dropnode");
             });
         });            
     },
