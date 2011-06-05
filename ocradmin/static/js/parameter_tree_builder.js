@@ -367,7 +367,7 @@ OCRJS.NodeTree = NT.Base.extend({
         this.setupNodeListeners(node);
         this._usednames[name] = node;
         this._nodes.push(node);
-        node.draw(this.svg, self._group, 0, 0);
+        node.draw(this.svg, this._group, 0, 0);
         return node;
     },                 
 
@@ -376,16 +376,17 @@ OCRJS.NodeTree = NT.Base.extend({
         var name = self.newNodeName(type);
         var typedata = self._nodetypes[type];
         var nodeobj = self.addNode(name, typedata);
+        var point = self.norm(atpoint, self.group());
         nodeobj.moveTo(atpoint.x - 75, atpoint.y - 25);
         $(self._group).bind("keydown.dropnode", function(event) {
             console.log(event.which);
         });
         $(self._group).bind("mousemove.dropnode", function(event) {
-            var point = self.mouseCoord(event);
+            var point = self.norm(self.mouseCoord(event), self.group());
             nodeobj.moveTo(point.x - 75, point.y - 25);
-            $(document).bind("click.dropnode", function(e) {
+            $(document, nodeobj.group()).bind("click.dropnode", function(e) {
                 $(self._group).unbind(".dropnode");
-                $(document).unbind(".dropnode");
+                $(document, nodeobj.group()).unbind(".dropnode");
             });
         });            
     },

@@ -30,6 +30,30 @@ def makesafe(val):
     return val
 
 
+class SwitchNode(node.Node):
+    """
+    Node which passes through its selected input.
+    """
+    name = "Ocropus::Switch"
+    description = "Switch between multiple inputs"
+    stage = stages.INPUT
+    arity = 2
+    _parameters = [dict(name="input", value=0, type="select")]
+
+    def __init__(self, *args, **kwargs):
+        super(Switch, self).__init(*args, **kwargs)
+        self.arity = kwargs.get(arity, 2)
+
+    def _eval(self):
+        """
+        Pass through the selected input.
+        """
+        input = int(self._params.get("input", 0))
+        return self.eval_input(input)
+
+
+
+
 class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
             generic_nodes.FileNode):
     """
@@ -344,6 +368,8 @@ class Manager(manager.StandardManager):
             return OcropusFileInNode
         elif name == "FileOut":
             return OcropusFileOutNode
+        elif name == "Switch":
+            return SwitchNode
         # FIXME: This clearly sucks
         comp = None
         if comps is not None:
