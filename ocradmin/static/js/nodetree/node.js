@@ -142,6 +142,38 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
         });
     },
 
+    serialize: function() {
+        var self = this;
+        var inputs = [];
+        $.each(self._inplugs, function(i, plug) {
+            if (plug.isAttached()) {
+                var cable = plug.cable();
+                console.assert(cable);
+                var node = cable.start.node;
+                console.assert(node);
+                inputs.push(node.name);
+            }
+        });
+        var params = [];
+        $.each(self.parameters, function(i, p) {
+            params.push([p.name, p.value]);
+        });
+
+        var out = {
+            name: self.name,
+            type: self.type,
+            stage: self.stage,
+            inputs: inputs,                    
+            params: params,
+        };
+        if (self.isIgnored()) {
+            out["ignored"] = true;
+        }
+        var pos = self.getTranslate(self.group());
+        out["__meta"] = pos;        
+        return out;
+    },                   
+
     removeNode: function() {
         this.elem.remove();
         this.callListeners("deleted", this);
@@ -201,7 +233,6 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
 
     moveTo: function(x, y) {
         var self = this;
-        console.log(self.name, "moving to", x, y);        
         self.updateTranslate(self.group(), x, y);
         self.callListeners("moved");
         $.each(self._inplugs, function(i, plug) {

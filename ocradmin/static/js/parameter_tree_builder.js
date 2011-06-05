@@ -121,10 +121,12 @@ OCRJS.NodeTree = NT.Base.extend({
             event.preventDefault();
             event.stopPropagation();
         };
-
+        this._nodes = [];
         this._usednames = {};
         this._nodedata = {};
         this._nodetypes = {};
+
+        this._menutemplate = $.template($("#nodeMenuTmpl"));
 
         this.tree = TESTTREE;
     },
@@ -270,6 +272,75 @@ OCRJS.NodeTree = NT.Base.extend({
 
     buildParams: function(node) {
         console.log("Building params for ", node);
+    },
+
+    setupEvents: function() {
+        var self = this;                     
+        $(self._group).noContext().rightClick(function(event) {
+            self._menu.show();
+            var maxx = $(self.parent).offset().left + $(self.parent).width();
+            var left = event.clientX;
+            if (event.clientX + self._menu.outerWidth() > maxx)
+                left = maxx - (self._menu.outerWidth() + 20);
+            self._menu.css({
+                top: event.clientY,
+                left: left,    
+            });
+        });
+        $(self._group).click(function(event) {
+           self._menu.hide();
+        });
+
+
+        $(".node.floating").live("click", function(event) {
+            $(this).removeClass("floating");
+            $(document).unbind("mousemove.dropnode");
+        });
+    },         
+
+    setupMenuEvents: function() {
+        var self = this;                         
+        console.log("setup menu");         
+
+
+        self._menu.find("li").hover(function(event) {
+            $(this).addClass("selected");
+        }, function(event) {
+            $(this).removeClass("selected");
+        });
+
+        self._menu.find("li.topmenu").hover(function(event) {
+            var pos = $(this).position();
+            var left = pos.left + $(this).outerWidth() - 5;
+            var sub = $(this).find("ul");
+            sub.show();
+            sub.css({left: left, top: $(this).position().top})
+            var span = $(this).offset().left + $(this).outerWidth() + sub.outerWidth();
+            var outer = $(self.parent).offset().left + $(self.parent).width();
+            console.log("span", span, "doc", outer);
+            if (span > outer) {
+                console.log("moving left");
+                sub.css("left", pos.left - sub.outerWidth());
+            }
+        }, function(event) {
+            $(this).find("ul").delay(1000).hide();            
+        });
+
+        self._menu.find(".topmenu").find("li").click(function(event) {
+            self.createNode($(this).data("name"), self.mouseCoord(event));
+            self._menu.hide();
+            event.stopPropagation();
+            event.preventDefault();
+        });
+    },
+
+    buildNodeMenu: function() {
+        var self = this;
+        self._menu = $.tmpl(this._menutemplate, {
+            stages: self._nodedata,
+        }).hide();
+        $(self.parent).append(self._menu);
+        self.setupMenuEvents();
     },    
 
     queryOptions: function() {
@@ -293,11 +364,51 @@ OCRJS.NodeTree = NT.Base.extend({
                         self.drawTree(TESTTREE);
                         self.connectNodes(TESTTREE);
                         self.layoutNodes(TESTTREE);
+                        self.setupEvents();
+                        self.buildNodeMenu();
                     },
                 });
             },
         });
     },
+
+    newNodeName: function(type) {
+        var count = 1;
+        var tname = $.trim(type);
+        var space = type.match(/\d$/) ? "_" : "";
+        while (this._usednames[tname + space + count])
+            count += 1;
+        return (tname + space + count).replace(/^[^:]+::/, "");
+    },
+
+    createNode: function(type, atpoint) {
+        var self = this;                    
+        var name = self.newNodeName(type);
+        var id = $.map(self._usednames, function(){return true;}).length;
+        var typedata = self._nodetypes[type];
+        var nodeobj = new NT.Node(name, typedata, id);
+        nodeobj.draw(this.svg, self._group, 0, 0);
+        nodeobj.moveTo(atpoint.x - 75, atpoint.y - 15);
+        self.setupNodeListeners(nodeobj);
+        self._usednames[name] = nodeobj;
+        self._nodes.push(nodeobj);
+        $(self._group).bind("keydown.dropnode", function(event) {
+            console.log(event.which);
+        });
+        $(self._group).bind("mousemove.dropnode", function(event) {
+            var point = self.mouseCoord(event);
+            nodeobj.moveTo(point.x - 75, point.y - 15);
+            $(this).bind("click.dropnode", function(e) {
+                $(this).unbind(".dropnode");
+            });
+        });            
+    },
+
+    buildScript: function() {
+        return $.map(this._nodes, function(n) {
+            return n.serialize();
+        });
+    },                     
 
     drawTree: function(treenodes) {
         var self = this,
@@ -323,12 +434,15 @@ OCRJS.NodeTree = NT.Base.extend({
             self.setupNodeListeners(nodeobj);
             nodeobj.draw(svg, self._group, 0, 0);
             self._usednames[node.name] = nodeobj;
+            self._nodes.push(nodeobj);
         });
 
         $(this._group).mousedown(function(event) {
-            self.panContainer(event, this);
-            event.preventDefault();
-            event.stopPropagation();
+            if (event.button == 0) {
+                self.panContainer(event, this);
+                event.preventDefault();
+                event.stopPropagation();
+            }
         });
 
         $(this._group).dblclick(function(event) {

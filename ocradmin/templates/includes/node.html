@@ -56,7 +56,7 @@
                 ${stage}
                 <ul class="nodemenu submenu hidden">
                 {% templatetag openvariable %}each(i,node) stagenodes{% templatetag closevariable %}    
-                    <li>${node.name}</li>
+                    <li data-name="${node.name}">${node.name.replace(/^[^:]+::/, "")}</li>
                 {% templatetag openvariable %}/each{% templatetag closevariable %}    
                 </ul>
             </li>
