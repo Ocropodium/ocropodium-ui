@@ -108,4 +108,14 @@ def upload_file(request):
     )), mimetype="application/json")
 
 
-
+def layout_graph(request):
+    """
+    Get GraphViz positions for nodes in a list.
+    """
+    from ocradmin.plugins import graph
+    jsonscript = request.POST.get("script")
+    print "SCRIPT: ", jsonscript
+    nodes = simplejson.loads(jsonscript)
+    return HttpResponse(
+            simplejson.dumps(graph.get_node_positions(nodes)),
+                mimetype="application/json")
