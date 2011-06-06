@@ -406,9 +406,9 @@ OCRJS.NodeTree = NT.Base.extend({
         $(self._group).bind("mousemove.dropnode", function(event) {
             var point = self.norm(self.mouseCoord(event), self.group());
             nodeobj.moveTo(point.x - 75, point.y - 25);
-            $(document, nodeobj.group()).bind("click.dropnode", function(e) {
+            $(document).add($(nodeobj.group()).find("*")).bind("click.dropnode", function(e) {
                 $(self._group).unbind(".dropnode");
-                $(document, nodeobj.group()).unbind(".dropnode");
+                $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
             });
         });            
     },
