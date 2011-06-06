@@ -48,11 +48,11 @@ class BinaryPngWriterMixin(PngWriterMixin):
     @classmethod
     def reader(cls, path):
         if os.path.exists(path):
-            return ocrolib.read_image_gray(path)
+            return ocrolib.read_image_gray(path.encode())
 
     @classmethod
     def writer(cls, path, data):
-        ocrolib.write_image_gray(path, data)
+        ocrolib.write_image_gray(path.encode(), data)
         return path
 
 
@@ -71,7 +71,7 @@ class ColorPngWriterMixin(PngWriterMixin):
     def writer(cls, path, data):
         packed = ocrolib.numpy2narray(data)
         ocrolib.iulib.write_image_packed(
-                path, ocrolib.pseg2narray(data))
+                path.encode(), ocrolib.pseg2narray(data))
         return path
 
 
@@ -174,14 +174,14 @@ class CommandLineRecognizerNode(LineRecognizerNode):
         """
         Write a binary image.
         """
-        ocrolib.iulib.write_image_binary(path, ocrolib.numpy2narray(data))
+        ocrolib.iulib.write_image_binary(path.encode(), ocrolib.numpy2narray(data))
 
     @classmethod
     def write_packed(cls, path, data):
         """
         Write a packed image.
         """
-        ocrolib.iulib.write_image_packed(path, ocrolib.pseg2narray(data))
+        ocrolib.iulib.write_image_packed(path.encode(), ocrolib.pseg2narray(data))
 
     @plugins.check_aborted
     def get_transcript(self, line):

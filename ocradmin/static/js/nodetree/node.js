@@ -156,6 +156,10 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         return this._inplugs[i];
     },
 
+    inputs: function(i) {
+        return this._inputs;
+    },        
+
     output: function() {
         return this._outplug;
     },                
@@ -277,8 +281,9 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         if (this.isIgnored()) {
             out["ignored"] = true;
         }
-        var pos = SvgHelper.getTranslate(this.group());
-        out["__meta"] = pos;        
+        out.__meta = SvgHelper.getTranslate(this.group());
+        out.__meta.focussed = self.isFocussed();
+        out.__meta.viewing = self.isViewing();
         return out;
     },                   
 
