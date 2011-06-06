@@ -22,7 +22,11 @@ def get_node_positions(nodelist):
         for i in n["inputs"]:
             try:
                 src = g.get_node(i)
+                if isinstance(src, list):
+                    src = src[0]
                 dst = g.get_node(n["name"])
+                if isinstance(dst, list):
+                    dst = dst[0]
                 g.add_edge(pydot.Edge(src, dst))
             except IndexError:
                 print "Input %s not found" % i
@@ -35,6 +39,8 @@ def get_node_positions(nodelist):
     out = {}
     for n in nodelist:
         gn = g.get_node(n["name"])
+        if isinstance(gn, list):
+            gn = gn[0]
         out[n["name"]] = [int(d) \
                 for d in gn.get_pos().replace('"', "").split(",")]
     return out

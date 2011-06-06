@@ -6,23 +6,18 @@ var OCRJS = OCRJS || {};
 OCRJS.Nodetree = OCRJS.Nodetree || {};
 
 
-OCRJS.Nodetree.Base = OCRJS.OcrBase.extend({
+OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
     constructor: function() {
-                     
-        this._translatere = /translate\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/;
-        this._scalere = /scale\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/;
-        this._group = null;
+        this.base();                 
     },
-
-    group: function() {
-        return this._group;
-    },        
+    translatere: /translate\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/,
+    scalere: /scale\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/,
 
     updateScale: function(element, cx, cy) {
         var sstr = " scale("  + cx + "," + cy + ")";
         var sattr = $(element).attr("transform");
-        if (sattr && sattr.match(this._scalere)) 
-            $(element).attr("transform", $.trim(sattr.replace(this._scalere, sstr)));
+        if (sattr && sattr.match(this.scalere)) 
+            $(element).attr("transform", $.trim(sattr.replace(this.scalere, sstr)));
         else if (sattr)
             $(element).attr("transform", $.trim(sattr + sstr));
         else
@@ -32,8 +27,8 @@ OCRJS.Nodetree.Base = OCRJS.OcrBase.extend({
     updateTranslate: function(element, x, y) {
         var sstr = " translate("  + x + "," + y + ")";
         var sattr = $(element).attr("transform");
-        if (sattr && sattr.match(this._translatere))
-            $(element).attr("transform", $.trim(sattr.replace(this._translatere, sstr)));
+        if (sattr && sattr.match(this.translatere))
+            $(element).attr("transform", $.trim(sattr.replace(this.translatere, sstr)));
         else if (sattr)
             $(element).attr("transform", $.trim(sattr + sstr));
         else
@@ -43,7 +38,7 @@ OCRJS.Nodetree.Base = OCRJS.OcrBase.extend({
     getTranslate: function(element) {
         var trans = {x: 0, y: 0},
             tattr = $(element).attr("transform"),
-            tparse = tattr ? tattr.match(this._translatere) : null;
+            tparse = tattr ? tattr.match(this.translatere) : null;
         if (tparse) {
             trans = {x: parseInt(RegExp.$1), y: parseInt(RegExp.$2)};
         }
@@ -53,7 +48,7 @@ OCRJS.Nodetree.Base = OCRJS.OcrBase.extend({
     getScale: function(element) {
         var trans = {x: 1, y: 1},
             tattr = $(element).attr("transform"),
-            tparse = tattr ? tattr.match(this._scalere) : null;
+            tparse = tattr ? tattr.match(this.scalere) : null;
         if (tparse) {
             trans = {x: parseFloat(RegExp.$1), y: parseFloat(RegExp.$2)};
         }
@@ -68,8 +63,8 @@ OCRJS.Nodetree.Base = OCRJS.OcrBase.extend({
         return { x: p1.x / p2.x, y: p1.y / p2.y};
     },              
 
-    mouseCoord: function(event) {
-        var off = $(this.parent).offset();
+    mouseCoord: function(parent, event) {
+        var off = $(parent).offset();
         return {
             x: event.pageX - off.left,
             y: event.pageY - off.top,

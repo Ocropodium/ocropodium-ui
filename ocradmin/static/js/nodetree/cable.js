@@ -2,12 +2,16 @@
 // Class representing a cable between two nodes
 //
 
-OCRJS.Nodetree.BaseCable = OCRJS.Nodetree.Base.extend({
+OCRJS.Nodetree.BaseCable = OCRJS.OcrBase.extend({
     constructor: function() {
         this.base();
         this._listeners = {
             cableRemoved: [],
         };
+    },
+
+    group: function() {
+        return this._group;
     },
 
     update: function(p1, p2) {                     

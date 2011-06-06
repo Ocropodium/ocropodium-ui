@@ -2,7 +2,7 @@
 // Class representing a plug on a node
 //
 
-OCRJS.Nodetree.BasePlug = OCRJS.Nodetree.Base.extend({
+OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
     constructor: function(node, name) {
         this.base();
 
@@ -17,8 +17,12 @@ OCRJS.Nodetree.BasePlug = OCRJS.Nodetree.Base.extend({
             moved: [],
             hoverIn: [],
             hoverOut: [],
-        };
+        };        
     },
+
+    group: function() {
+        return this._group;
+    },        
 
     toString: function() {
         return "<Plug: " + this.name + ">";

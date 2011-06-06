@@ -1,66 +1,23 @@
+// 
+// Basic parameter builder...
+//
 
-RegExp.escape = function(text) {
-  if (!arguments.callee.sRE) {
-    var specials = [
-      '/', '.', '*', '+', '?', '|',
-      '(', ')', '[', ']', '{', '}', '\\'
-    ];
-    arguments.callee.sRE = new RegExp(
-      '(\\' + specials.join('|\\') + ')', 'g'
-    );
-  }
-  return text.replace(arguments.callee.sRE, '\\$1');
-}
-
-function toCamelCase(str) {
-    return str.replace(/_/g, " ").replace(/\w\S*/g, function(txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-}
-
-
-function defined(x) {
-    return typeof(x) !== "undefined";
-}
-
-function isnull(x) {
-    return x === null;
-}
-
-
-OCRJS = OCRJS || {};
-OCRJS.countProperties = function(obj) {
-    var count = 0;
-    for (var k in obj) {
-        if (obj.hasOwnProperty(k)) {
-            ++count;
-        }
-    }
-    return count;
-};
-
-
-OCRJS._ajaxCache = {};
-
-OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
+OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     constructor: function(parent, valuedata) {
         this.base(parent);
         this.parent = parent;
 
         this._listeners = {
-            onReadyState: [],
             onUpdateStarted: [],
             resultPending: [],
             registerUploader: [],
         };
-        this._valuedata = valuedata || null;
-        this._cache = null;
-        this._temp = null;
-        this._waiting = {};
-        this._initialised = false;
         this._nodelisttmpl = $.template($("#nodeListTmpl"));
         this._nodetreetmpl = $.template($("#nodeTreeTmpl"));
         this._paramtmpl = $.template($("#paramTmpl"));
+        this._nodeslottmpl = $.template($("#nodeSlots"));
+
+        this._nodes = [];
         this._nodedata = {};
         this._nodetypes = {};
         this._usednames = {};
@@ -68,23 +25,22 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
     },
 
     init: function() {
-        var self = this;
-        if (!self._initialised) {            
-            //self.setupEvents();
-            self._initialised = true;
-        }
-        self.queryOptions(null, null);
+        this.queryNodeTypes();
     },
 
-    setDisabled: function(disabled) {        
-    },          
+    setNodeErrored: function(nodename, error) {
+        if (!this._usednames[nodename])
+            throw "Unknown node name: " + nodename;
+        this._usednames[nodename].setErrored(true, error);
+    },                        
 
     newNodeName: function(type) {
         var count = 1;
         var tname = $.trim(type);
-        while (this._usednames[tname + count])
+        var space = type.match(/\d$/) ? "_" : "";
+        while (this._usednames[tname + space + count])
             count += 1;
-        return tname + count;
+        return (tname + space + count).replace(/^[^:]+::/, "");
     },
 
     removeNode: function(elem) {
@@ -161,16 +117,13 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 },
                 drop: function(event, ui) {
                     if (ui.draggable.hasClass("available")) {
-                        var nodename = ui.helper.text();
-                        var node = new OCRJS.Nodetree.Node(nodename, 
+                        var node = self.addNode(ui.helper.text(), 
                                 ui.draggable.data("nodedata"));
                         if ($(this).hasClass("multiple"))
                             node.elem.appendTo(this);
                         else
                             $(this).children().remove().end()
                                 .append(node.elem);
-                        self._usednames[nodename] = node;
-                        self.setupNodeListeners(node);
                         node.elem.click();                        
                     }
                 }, 
@@ -179,6 +132,17 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
             });
         });
     },
+
+    addNode: function(name, typedata) {
+        var id = $.map(this._usednames, function(){return true;}).length;
+        var node = new NT.Node(name, typedata, id);
+        node.buildElem();
+        this.setupNodeListeners(node);
+        this._usednames[name] = node;
+        this._nodes.push(node);
+        return node;
+
+    },                 
 
     setupNodeListeners: function(node) {
         var self = this;                            
@@ -239,16 +203,14 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 params[i].value = $(this).val();
             });
             $("input[type='file'].proxy").each(function(i, elem) {
-                self.callListeners("registerUploader", elem);
+                self.callListeners("registerUploader", name, elem);
             });
         });        
     },                 
 
-    queryOptions: function(parent) {
+    queryNodeTypes: function() {
         var self = this;
-        var parent = parent || self.parent;
         var url = "/plugins/query/";
-        self._waiting[parent.id] = true;
         self.callListeners("onUpdateStarted"); 
         $.ajax({
             url: url,
@@ -262,11 +224,19 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                     self._nodedata[nodeinfo.stage].push(nodeinfo);
                     self._nodetypes[nodeinfo.name] = nodeinfo;
                 });
-                self.populateAvailableList();                
-                self._queryDone(parent.id);
+                self.populateCanvas();                
             },
         });
     },
+
+    populateCanvas: function() {
+        $(this.parent).html("");
+        $(this.parent).append($.tmpl(this._nodeslottmpl));
+        this.populateAvailableList();
+
+        this.setupEvents();
+        this.loadState();
+    },                        
 
     populateAvailableList: function() {
         var self = this;
@@ -282,23 +252,23 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         $(".available ul").filter(function() {
             return $(this).children().length > 0;
         }).first().show();
-
-        self.setupEvents();
-        self.loadState();
-
     },
 
     getEvalNode: function() {
-        var node = $(".viewingbutton.active").first().parent();
-        if (node.length == 0)
-            node = $(".used ul li.current").first();
-            if (node.length == 0)
-                node = $(".used li.recognize").first();
-                if (node.length == 0)
-                    node = $(".used li.recognize").first();
-                    if (node.length == 0)
-                        node = $(".used ul li").last();
-        return $.trim(node.data("nodedata").name);
+        for (var i in this._nodes) {
+            if (this._nodes[i].isViewing())
+                return this._nodes[i].name;
+        }    
+        for (var i in this._nodes) {
+            if (this._nodes[i].isFocussed())
+                return this._nodes[i].name;
+        }    
+        for (var i in this._nodes) {
+            if (this._nodes[i].stage == "recognize")
+                return this._nodes[i].name;
+        }    
+        // fall back on the last node in the list
+        return this._nodes[this._nodes.length - 1].name;
     },                     
 
     runScript: function() {
@@ -317,8 +287,8 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
                 if (data.status == "VALIDATION") {
                     self._usednames[data.node].setErrored(true, data.error);
                 } else {
-                    $(".node.validation_error").each(function(i, elem) {
-                        $(elem).data("nodedata").setErrored(false);
+                    $.map(self._nodes, function(n) {
+                        n.setErrored(false);
                     });
                     self.callListeners("resultPending", nodename, data);
                 }
@@ -326,16 +296,19 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         });
     },
 
-    setFileInPath: function(path) {
-        var node = $(".used ul.input li").first();
-        if (node.length == 1) {
-            var params = node.data("nodedata").parameters;
-            for (var i in params) {
-                if (params[i].name == "path")
-                    params[i].value = path;
-                break;
-            }
-        }
+    setFileInPath: function(name, path) {
+        console.log("Setting filein path", name, path);                       
+        for (var n in this._nodes) {
+            if (this._nodes[n].name == name) {
+                var params = this._nodes[n].parameters;
+                for (var i in params) {
+                    console.log("Setting", params[i].name, path)
+                    if (params[i].name == "path")
+                        params[i].value = path;
+                    break;
+                }                
+            }                
+        }            
         this.scriptChange();
     },               
 
@@ -417,28 +390,25 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         var self = this;                    
         $.each(script, function(i, nodedata) {
             var typedata = self._nodetypes[nodedata.type];
-            var node = new OCRJS.Nodetree.Node(nodedata.name, typedata);
+            var node = self.addNode(nodedata.name, typedata);
             node.setIgnored(nodedata.ignored);
-            self._usednames[nodedata.name] = node;
             $.each(nodedata.params, function(i, p) {
                 node.parameters[i].value = p[1];
             });
             $(".used ul." + typedata.stage)
                 .append(node.elem);
-            self.setupNodeListeners(node);
         });
         self.selectLastNode();
     },
 
     clearScript: function() {
         var self = this;
-        self._usednames = {};
-        $(".used li.node").remove();
+        $.each(this._nodes, function(i, n) {
+            n.removeNode();
+        });
+        self._usednames = {};        
+        self._nodes = [];
     },               
-
-    isReady: function() {
-        return OCRJS.countProperties(this._waiting) > 0 ? false : true;
-    },
 
     buildSection: function(parent, data) {
         var self = this;
@@ -465,13 +435,5 @@ OCRJS.ParameterBuilder = OCRJS.OcrBase.extend({
         this._sessionid = $.cookie("sessionid") 
             || new Date().getTime(); 
     },               
-
-    _queryDone: function(key) {
-        delete this._waiting[key];                    
-        if (this.isReady()) {
-            $(this.parent).append(this._temp);
-            this.callListeners("onReadyState"); 
-        }
-    },
 });
 

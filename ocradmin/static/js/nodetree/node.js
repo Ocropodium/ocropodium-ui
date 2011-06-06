@@ -7,23 +7,21 @@
 var OCRJS = OCRJS || {};
 OCRJS.Nodetree = OCRJS.Nodetree || {};
 
+var SvgHelper = SvgHelper || new OCRJS.Nodetree.SvgHelper;
 
-OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
-    constructor: function(name, classdata, id) {
+OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
+    constructor: function(name, classdata) {
         this.base();
+        console.log("Initialising node with: ", name, classdata);
         this.name = name;
         this.type = classdata.name;
         this.arity = classdata.arity;
         this.desc = classdata.description;
         this.stage = classdata.stage;
         this.parameters = $.extend(true, [], classdata.parameters);
-        this._id = id;
         this._ignored = false;
         this._focussed = false;
         this._viewing = false;
-
-        this._inplugs = [];
-        this._outplug = null;
 
         this._listeners = {
             toggleIgnored: [],
@@ -31,17 +29,127 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             toggleViewing: [],
             deleted: [],
             created: [],
-            inputAttached: [],
-            outputAttached: [],
-            moved: [],
-            plugHoverIn: [],
-            plugHoverOut: [],
-        };
-        
+        };    
+    },
+
+    group: function() {
+        return this._group;
+    },        
+
+    buildElem: function() {
+        var tmpl = $.template($("#nodeTreeTmpl"));
+        this.elem = $.tmpl(tmpl, this);
+        this.elem.data("nodedata", this);
+        this.setupEvents();
+    },
+
+    setupEvents: function() {
+        var self = this;                     
+        this.elem.find(".ignorebutton").click(function(event) {
+            self.setIgnored(!self._ignored, true);
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this.elem.find(".viewingbutton").click(function(event) {
+            console.log("viewing button clicked");
+            self.setViewing(!self._viewing, true);
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this.elem.click(function(event) {
+            if (!self._focussed)
+                self.setFocussed(true, true);
+            event.stopPropagation();
+            event.preventDefault();
+        });
     },
 
     toString: function() {
         return "<Node: " + this.name + ">";
+    },
+
+    removeNode: function() {
+        this.elem.remove();
+        this.callListeners("deleted", this);
+    },
+
+    isIgnored: function() {
+        return this._ignored;
+    },
+
+    isFocussed: function() {
+        return this._focussed;
+    },                    
+
+    isViewing: function() {
+        return this._viewing;
+    },                    
+
+    setIgnored: function(ignored, emit) {
+        this._ignored = Boolean(ignored);
+        this._toggleIgnored(this._ignored);
+        if (emit) 
+            this.callListeners("toggleIgnored", this, this._ignored);
+    },
+
+    setViewing: function(viewing, emit) {
+        console.log(this.name, "viewing:", viewing);
+        this._viewing = Boolean(viewing);
+        this._toggleViewing(this._viewing);
+        if (emit) 
+            this.callListeners("toggleViewing", this, this._viewing);
+    },
+
+    setFocussed: function(focus, emit) {
+        this._focussed = Boolean(focus);
+        this._toggleFocussed(this._focussed);
+        if (emit) 
+            this.callListeners("toggleFocussed", this, this._focussed);
+    },
+
+    setErrored: function(errored, msg) {
+        this._toggleErrored(errored, msg);
+    },
+
+    _toggleIgnored: function(bool) {
+        this.elem.find(".ignorebutton").toggleClass("active", bool);
+    },
+
+    _toggleViewing: function(bool) {
+        this.elem.find(".viewingbutton").toggleClass("active", bool);
+    },                        
+
+    _toggleFocussed: function(bool) {
+        this.elem.toggleClass("current", bool);
+    },
+
+    _toggleErrored: function(bool, msg) {
+        this.elem.toggleClass("validation_error", bool);                    
+        this.elem.attr("title", bool ? msg : this.description);    
+    },                       
+});
+
+
+
+OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
+    constructor: function(name, classdata, id) {
+        this.base(name, classdata, id);
+        this._inplugs = [];
+        this._outplug = null;
+
+        var self = this;
+        $.each([
+            "inputAttached",
+            "outputAttached",
+            "moved",
+            "plugHoverIn",
+            "plugHoverOut",
+            ], function(i, ename) {
+            self.registerListener(ename);    
+        });
+        
     },
 
     input: function(i) {
@@ -54,18 +162,19 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
 
     draw: function(svg, parent, x, y) {
         var self = this;
-        self.svg = svg;
+        this.svg = svg;
+
         var nodewidth = 150,
             nodeheight = 30,
             buttonwidth = 15;
 
-        var g = svg.group(parent, "rect" + self._id);
-        self._group = g;
+        var g = svg.group(parent, "rect" + this._id);
+        this._group = g;
         // draw the plugs on each node.
-        var plugx = nodewidth / (self.arity + 1);
+        var plugx = nodewidth / (this.arity + 1);
 
-        for (var p = 1; p <= self.arity; p++) {
-            var plug = new OCRJS.Nodetree.InPlug(self, self.name + "_input" + (p-1));
+        for (var p = 1; p <= this.arity; p++) {
+            var plug = new OCRJS.Nodetree.InPlug(this, this.name + "_input" + (p-1));
             plug.draw(svg, g, x + (p*plugx), y - 1);
             this._inplugs.push(plug);
             plug.addListener("attachCable", function(pl) {
@@ -77,63 +186,62 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
         }
         
         // draw the bottom plug            
-        self._outplug = new OCRJS.Nodetree.OutPlug(self, self.name + "_output");
-        self._outplug.draw(svg, g, x  + (nodewidth / 2), y + nodeheight + 1);
-        self._outplug.addListener("attachCable", function(pl) {
+        this._outplug = new OCRJS.Nodetree.OutPlug(this, this.name + "_output");
+        this._outplug.draw(svg, g, x  + (nodewidth / 2), y + nodeheight + 1);
+        this._outplug.addListener("attachCable", function(pl) {
             self.callListeners("outputAttached", pl);
         });
-        self._outplug.addListener("hoverIn", function(pl) {
+        this._outplug.addListener("hoverIn", function(pl) {
             self.callListeners("plugHoverIn", pl);
         });
 
         // draw the rects themselves...
-        self._rect = svg.rect(g, x, y, nodewidth, nodeheight, 2, 2, {
+        this._rect = svg.rect(g, x, y, nodewidth, nodeheight, 2, 2, {
             fill: "url(#NodeGradient)",
             stroke: "#BBB",
             strokeWidth: 1,
         });
-        self._viewbutton = svg.rect(g, x, y, buttonwidth, nodeheight, 0, 0, {
+        this._viewbutton = svg.rect(g, x, y, buttonwidth, nodeheight, 0, 0, {
             fill: "transparent",
             stroke: "#BBB",
             strokeWidth: 0.5,
         });         
-        self._ignorebutton = svg.rect(g, x + nodewidth - buttonwidth, y, buttonwidth, nodeheight, 0, 0, {
+        this._ignorebutton = svg.rect(g, x + nodewidth - buttonwidth, y, buttonwidth, nodeheight, 0, 0, {
             fill: "transparent",
             stroke: "#BBB",
             strokeWidth: 0.5,
         });         
         // add the labels
-        self._textlabel = svg.text(g, x + nodewidth / 2,
-            y + nodeheight / 2, self.name, {
+        this._textlabel = svg.text(g, x + nodewidth / 2,
+            y + nodeheight / 2, this.name, {
                 textAnchor: "middle",
                 alignmentBaseline: "middle",
             }
         );
-        self.setupEvents();
-        return g;        
+        this.setupEvents();
     },
 
     setupEvents: function() {
         var self = this;                     
-        $(self._ignorebutton).click(function(event) {
+        $(this._ignorebutton).click(function(event) {
             self.setIgnored(!self._ignored, true);
             event.stopPropagation();
             event.preventDefault();
         });
 
-        $(self._viewbutton).click(function(event) {
+        $(this._viewbutton).click(function(event) {
             self.setViewing(!self._viewing, true);
             event.stopPropagation();
             event.preventDefault();
         });
 
-        $(self._rect).click(function(event) {
+        $(this._rect).click(function(event) {
             if (!self._focussed)
                 self.setFocussed(true, true);
             event.stopPropagation();
             event.preventDefault();
         });
-        $(self._group).bind("mousedown", function(event) {
+        $(this._group).bind("mousedown", function(event) {
             if (event.button == 0) {
                 self.move(event, this);
             }
@@ -145,7 +253,7 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
     serialize: function() {
         var self = this;
         var inputs = [];
-        $.each(self._inplugs, function(i, plug) {
+        $.each(this._inplugs, function(i, plug) {
             if (plug.isAttached()) {
                 var cable = plug.cable();
                 console.assert(cable);
@@ -155,61 +263,49 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             }
         });
         var params = [];
-        $.each(self.parameters, function(i, p) {
+        $.each(this.parameters, function(i, p) {
             params.push([p.name, p.value]);
         });
 
         var out = {
-            name: self.name,
-            type: self.type,
-            stage: self.stage,
+            name: this.name,
+            type: this.type,
+            stage: this.stage,
             inputs: inputs,                    
             params: params,
         };
-        if (self.isIgnored()) {
+        if (this.isIgnored()) {
             out["ignored"] = true;
         }
-        var pos = self.getTranslate(self.group());
+        var pos = SvgHelper.getTranslate(this.group());
         out["__meta"] = pos;        
         return out;
     },                   
 
     removeNode: function() {
-        this.elem.remove();
+        this.svg.remove(this.group());
         this.callListeners("deleted", this);
     },
 
-    isIgnored: function() {
-        return this._ignored;
-    },
-
-    setIgnored: function(ignored, emit) {
-        this._ignored = typeof(ignored) === "undefined" ?  false : ignored;
-        var gradient = this._ignored ? "url(#IgnoreGradient)" : "transparent";
+    _toggleIgnored: function(bool) {
+        var gradient = bool ? "url(#IgnoreGradient)" : "transparent";
         this.svg.change(this._ignorebutton, {fill: gradient});        
-        if (emit) 
-            this.callListeners("toggleIgnored", this, this._ignored);
     },
 
-    setViewing: function(viewing, emit) {
-        this._viewing = viewing || false;
-        var gradient = this._viewing ? "url(#ViewingGradient)" : "transparent";
+    _toggleViewing: function(bool) {
+        var gradient = bool ? "url(#ViewingGradient)" : "transparent";
         this.svg.change(this._viewbutton, {fill: gradient});        
-        if (emit) 
-            this.callListeners("toggleViewing", this, this._viewing);
     },
 
-    setFocussed: function(focus, emit) {
-        this._focussed = focus || false;
-        var gradient = this._focussed ? "url(#FocusGradient)" : "url(#NodeGradient)";
+    _toggleFocussed: function(bool) {
+        var gradient = bool ? "url(#FocusGradient)" : "url(#NodeGradient)";
         this.svg.change(this._rect, {fill: gradient});        
-        if (emit) 
-            this.callListeners("toggleFocussed", this, this._focussed);
     },
 
-    setErrored: function(errored, msg) {
-        this.elem.toggleClass("validation_error", errored);                    
-        this.elem.attr("title", errored ? msg : this.description);    
+    _toggleErrored: function(bool, msg) {
+        var gradient = bool ? "url(#ErrorGradient)" : "url(#NodeGradient)";
+        this.svg.change(this._rect, {fill: gradient});        
+        //this.elem.attr("title", errored ? msg : this.description);    
     },    
 
     move: function(event, element) {
@@ -218,8 +314,8 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
             x: event.pageX,
             y: event.pageY,
         };
-        var trans = self.getTranslate(element);
-        var scale = self.getScale(element.parentNode);
+        var trans = SvgHelper.getTranslate(element);
+        var scale = SvgHelper.getScale(element.parentNode);
         $(document).bind("mousemove.dragelem", function(moveevent) {
             self.moveTo(
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
@@ -233,7 +329,7 @@ OCRJS.Nodetree.Node = OCRJS.Nodetree.Base.extend({
 
     moveTo: function(x, y) {
         var self = this;
-        self.updateTranslate(self.group(), x, y);
+        SvgHelper.updateTranslate(self.group(), x, y);
         self.callListeners("moved");
         $.each(self._inplugs, function(i, plug) {
             plug.callListeners("moved");                
