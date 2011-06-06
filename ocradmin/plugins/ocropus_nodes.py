@@ -30,7 +30,7 @@ def makesafe(val):
     return val
 
 
-class SwitchNode(node.Node):
+class SwitchNode(node.Node, writable_node.WritableNodeMixin):
     """
     Node which passes through its selected input.
     """
@@ -41,8 +41,8 @@ class SwitchNode(node.Node):
     _parameters = [dict(name="input", value=0, type="select")]
 
     def __init__(self, *args, **kwargs):
-        super(Switch, self).__init(*args, **kwargs)
-        self.arity = kwargs.get(arity, 2)
+        super(SwitchNode, self).__init__(*args, **kwargs)
+        self.arity = kwargs.get("arity", 2)
 
     def _eval(self):
         """
@@ -50,6 +50,30 @@ class SwitchNode(node.Node):
         """
         input = int(self._params.get("input", 0))
         return self.eval_input(input)
+
+    def get_file_name(self):
+        input = int(self._params.get("input", 0))
+        if self.input(input):
+            return "%s%s" % (self.input(input), self.input(input).extension)
+        else:
+            return "%s%s" % (self.input(input), self.extension)
+
+    def writer(self, path, data):
+        """
+        Pass through the writer function from the selected node.
+        """
+        input = int(self._params.get("input", 0))
+        if self.input(input):
+            return self.input(input).writer(path, data)
+        
+    def reader(self, path):
+        """
+        Pass through the writer function from the selected node.
+        """
+        input = int(self._params.get("input", 0))
+        if self.input(input):
+            return self.input(input).reader(path, data)
+        
 
 
 

@@ -124,11 +124,6 @@ $(function() {
         "/plugins/upload/", 
         { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
     );
-    // FIXME: No error handling
-    uploader.addListener("onXHRLoad", function(data) {
-        pbuilder.setFileInPath(JSON.parse(data.target.response).file);
-    });
-
     // load state stored from last time
     loadState();
     
@@ -204,13 +199,21 @@ $(function() {
     textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
-    pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
+    pbuilder = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
     pbuilder.addListener("resultPending", function(node, pendingdata) {
         reshandler.watchNode(node, pendingdata);
     });
-    pbuilder.addListener("registerUploader", function(elem) {
-        console.log("Registering uploader: ", elem);
+    pbuilder.addListener("registerUploader", function(name, elem) {
+
+        // FIXME: This will result in an accumulation of error
+        // handlers, until we have some way of unbinding them
+        console.log("Registering uploader: ", name, elem);
         uploader.setTarget(elem);
+        // FIXME: No error handling
+        uploader.addListener("onXHRLoad", function(data) {
+            console.log("CALLED HANDLER", name, data);
+            pbuilder.setFileInPath(name, JSON.parse(data.target.response).file);
+        });
     });
     reshandler.addListener("resultDone", function(node, data) {
         if (data.result.type == "error") {

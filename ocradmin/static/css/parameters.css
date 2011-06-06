@@ -1,7 +1,11 @@
 div#options {
-    height: 500px;
+    /*height: 500px;*/
+}
+
+div#node_canvas {
     background-color: #E4E4E4;
-    border: 1px solid #B0B0B0;
+    overflow: auto;
+    height: 500px;
 }
 
 #options .buttons_left {
@@ -168,8 +172,8 @@ div#options {
 }
 
 .node_parameters {
-    float: left;
-    width: 150px;
+/*    float: left;
+    width: 150px;*/
     min-height: 60px;
     border-top: 1px solid #999;
     border-left: 1px solid #999;
@@ -192,10 +196,8 @@ div#options {
 }
 
 .node_parameters input {
-    float: left;
     border: 1px solid #999;
     background-color: #FFFFDD;
-    width: 50%;
 }
 
 .node_parameter label {
