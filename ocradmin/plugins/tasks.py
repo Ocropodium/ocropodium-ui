@@ -64,7 +64,7 @@ class PersistantFileCacher(cache.BasicCacher):
 
     def get_path(self, n):
         hash = hashlib.md5(bencode.bencode(n.hash_value())).hexdigest()
-        return os.path.join(self._path, self._key, n.name, hash)
+        return os.path.join(self._path, self._key, n.label, hash)
 
     
     def get_cache(self, n):

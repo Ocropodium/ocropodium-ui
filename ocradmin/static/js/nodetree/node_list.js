@@ -36,11 +36,11 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
 
     newNodeName: function(type) {
         var count = 1;
-        var tname = $.trim(type);
+        var tname = $.trim(type.replace(/^[^:]+::/, ""));
         var space = type.match(/\d$/) ? "_" : "";
         while (this._usednames[tname + space + count])
             count += 1;
-        return (tname + space + count).replace(/^[^:]+::/, "");
+        return tname + space + count;
     },
 
     removeNode: function(elem) {
@@ -155,7 +155,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                     if (node.name != name)
                         other.setFocussed(false);
                 });
-                self.buildParams(node.name, node.parameters);
+                self.buildParams(node);
                 self.scriptChange();
             },
             toggleViewing: function(view) {
@@ -182,29 +182,42 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         this.runScript();
     },                 
 
-    buildParams: function(name, params) {
+    buildParams: function(node) {
         var self = this;
+        console.log("Setting parameter listeners for", node.name, node.parameters);
         $("input").unbind("keyup.paramval");
         $("#parameters").html("");
-        $("#parameters").append(
-            $.tmpl(self._paramtmpl, {
-                nodename: name,
-                params: params,
-            })
-        );
+        var inputs = [];
+        for (var i = 0; i < node.arity; i++)
+            inputs.push(i);
+        $("#parameters").append($.tmpl(self._paramtmpl, {
+            nodename: node.name,
+            node: node,
+            parameters: node.parameters,
+            inputs: inputs, 
+        }));
+        console.log(inputs);
         // bind each param to its actual value
-        $.each(params, function(i, param) {
-            $("input#" + name + param.name).not(".proxy").bind("keyup.paramval", function(event) {
+        $.each(node.parameters, function(i, param) {
+            $("input#" + node.name + param.name).not(".proxy").bind("keyup.paramval", function(event) {
                 console.log("updating val", param.name);
-                params[i].value = $(this).val();
+                node.parameters[i].value = $(this).val();
             });
-            $("select#" + name + param.name + " input[type='hidden']")
+            $("select#" + node.name + param.name + " input[type='hidden']")
                     .bind("change.paramval", function(event) {
-                params[i].value = $(this).val();
+                node.parameters[i].value = $(this).val();
             });
-            $("input[type='file'].proxy").each(function(i, elem) {
-                self.callListeners("registerUploader", name, elem);
+            $("input[type='file'].proxy").each(function(ii, elem) {
+                self.callListeners("registerUploader", node.name, elem);
             });
+            if ($("#switch").length) {
+                $("#switch", "#parameters").buttonset();
+                $("input[type='radio']").change(function(event) {
+                    node.parameters[i].value = parseInt(
+                        $("input[name='" + node.name + "input']:checked").val());
+                    self.scriptChange();
+                });
+            }
         });        
     },                 
 
@@ -415,6 +428,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     },                  
 
     saveState: function() {
+        console.log("Saving state", this.buildScript());                   
         $.cookie("preset", $("#select_script").val());                   
         $.cookie("script", JSON.stringify(this.buildScript()));
     },
@@ -422,13 +436,14 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     loadState: function() {
         var self = this;
         var preset = $.cookie("preset");
-        if (preset) {
+        if (preset && parseInt(preset) > 0) {
             $("#select_script").val(preset);
             $("#select_script").change();
         } else {
             var scriptjson = $.cookie("script");
             if (scriptjson) {
-                var script = JSON.parse(scriptjson);        
+                var script = JSON.parse(scriptjson);
+                console.log("Loading script:", script);        
                 self.loadScript(script);
             }
         }

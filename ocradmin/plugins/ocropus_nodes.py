@@ -38,7 +38,7 @@ class SwitchNode(node.Node, writable_node.WritableNodeMixin):
     description = "Switch between multiple inputs"
     stage = stages.INPUT
     arity = 2
-    _parameters = [dict(name="input", value=0, type="select")]
+    _parameters = [dict(name="input", value=0, type="switch")]
 
     def __init__(self, *args, **kwargs):
         super(SwitchNode, self).__init__(*args, **kwargs)
@@ -72,7 +72,7 @@ class SwitchNode(node.Node, writable_node.WritableNodeMixin):
         """
         input = int(self._params.get("input", 0))
         if self.input(input):
-            return self.input(input).reader(path, data)
+            return self.input(input).reader(path)
         
 
 
@@ -161,6 +161,16 @@ class OcropusBase(node.Node):
         unpickleable C++ type.
         """
         return super(OcropusBase, self).__dict__
+
+    def _validate(self):
+        """
+        Check state of the inputs.
+        """
+        self.logger.debug("%s: validating...", self)
+        super(OcropusBase, self)._validate()
+        for i in range(len(self._inputs)):
+            if self._inputs[i] is None:
+                raise node.ValidationError(self, "missing input '%d'" % i)
 
     @classmethod
     def parameters(cls):

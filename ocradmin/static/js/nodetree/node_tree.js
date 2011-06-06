@@ -40,7 +40,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                     if (node.name != name)
                         other.setFocussed(false);
                 });
-                self.buildParams(node.name, node.parameters);
+                self.buildParams(node);
                 self.scriptChange();
             },
             toggleViewing: function(view) {
@@ -146,23 +146,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         cable.draw(self.svg, self._cablegroup, p1, p2);
     },
 
-    getEvalNode: function() {
-        for (var i in this._nodes) {
-            if (this._nodes[i].isViewing())
-                return this._nodes[i].name;
-        }    
-        for (var i in this._nodes) {
-            if (this._nodes[i].isFocussed())
-                return this._nodes[i].name;
-        }    
-        for (var i in this._nodes) {
-            if (this._nodes[i].stage == "recognize")
-                return this._nodes[i].name;
-        }    
-        // fall back on the last node in the list
-        return this._nodes[this._nodes.length - 1].name;
-    },                     
-
     setupEvents: function() {
         var self = this;                     
         $(self._group).noContext().rightClick(function(event) {
@@ -180,6 +163,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
            self._menu.hide();
         });
 
+        $("#optionsform").submit(function(event) {
+            self.runScript();
+            event.preventDefault();
+            event.stopPropagation();
+        });
 
         $(".node.floating").live("click", function(event) {
             $(this).removeClass("floating");
@@ -265,18 +253,32 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 self.drawTree();
                 self.setupEvents();
                 self.buildNodeMenu();
+                self.loadState();
             },
         });
     },
 
     loadScript: function(script) {
         var self = this;
+        var havemeta = false;
         $.each(script, function(i, node) {
             var typedata = self._nodetypes[node.type];
-            self.addNode(node.name, typedata);
+            var newnode = self.addNode(node.name, typedata);
+            newnode.setIgnored(node.ignored);  
+            $.each(node.params, function(i, p) {
+                newnode.parameters[i].value = p[1];
+            });
+            if (node.__meta) {
+                havemeta = true;
+                newnode.moveTo(node.__meta.x, node.__meta.y);
+                newnode.setViewing(node.__meta.viewing);
+                newnode.setFocussed(node.__meta.focussed);
+            }
         });
         this.connectNodes(script);
-        this.layoutNodes(script);
+        if (!havemeta)
+            this.layoutNodes(script);
+        this.scriptChange();
     },                    
 
     addNode: function(name, typedata) {

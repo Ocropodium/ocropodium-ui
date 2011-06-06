@@ -119,7 +119,7 @@ $(function() {
     });
 
     // initialise the uploader...
-    var uploader  = new OCRJS.AjaxUploader(
+    uploader  = new OCRJS.AjaxUploader(
         null,
         "/plugins/upload/", 
         { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
@@ -205,13 +205,10 @@ $(function() {
     });
     pbuilder.addListener("registerUploader", function(name, elem) {
 
-        // FIXME: This will result in an accumulation of error
-        // handlers, until we have some way of unbinding them
-        console.log("Registering uploader: ", name, elem);
+        uploader.removeListeners("onXHRLoad.setfilepath");
         uploader.setTarget(elem);
         // FIXME: No error handling
-        uploader.addListener("onXHRLoad", function(data) {
-            console.log("CALLED HANDLER", name, data);
+        uploader.addListener("onXHRLoad.setfilepath", function(data) {
             pbuilder.setFileInPath(name, JSON.parse(data.target.response).file);
         });
     });
