@@ -276,6 +276,28 @@ OCRJS.NodeTree = NT.Base.extend({
             $(this).removeClass("floating");
             $(document).unbind("mousemove.dropnode");
         });
+
+        function nodeCmd(event) {
+            if (event.which == 61 || event.which == 45) {                    
+                var scale = self.getScale(self.group());
+                var cx = scale.x, cy = scale.y;
+                if (event.which == 61)
+                    cx *= 1.5, cy *= 1.5;
+                else
+                    cx /= 1.5, cy /= 1.5;
+                self.updateScale(self.group(), cx, cy);
+            }
+        }
+
+        $(document).bind("keypress.nodecmd", nodeCmd);
+        $(self.parent).bind("mouseenter", function(mvevent) {
+            $(document).bind("keypress.nodecmd", function(event) {
+                nodeCmd(event);
+            });
+        });
+        $(self.parent).bind("mouseleave", function(mvevent) {
+            $(document).unbind("keypress.nodecmd");
+        });
     },         
 
     setupMenuEvents: function() {
@@ -427,22 +449,6 @@ OCRJS.NodeTree = NT.Base.extend({
                 event.stopPropagation();
             }
         });
-
-        $(this._group).dblclick(function(event) {
-            var sattr = $(this).attr("transform");
-            var cx = 1.0, cy = 1.0;
-            var match = false;
-            if (sattr && sattr.match(self._scalere)) {
-                cx = parseFloat(RegExp.$1);
-                cy = parseFloat(RegExp.$2);
-            }
-            if (!event.shiftKey)
-                cx *= 2, cy *= 2;
-            else
-                cx /= 2, cy /= 2;
-            self.updateScale(this, cx, cy);
-       });
-
     },
 
     connectNodes: function(treenodes) {
