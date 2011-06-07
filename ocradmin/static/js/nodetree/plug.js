@@ -17,6 +17,7 @@ OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
             moved: [],
             hoverIn: [],
             hoverOut: [],
+            rightClicked: [],
         };        
     },
 
@@ -66,6 +67,10 @@ OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
 
     setupEvents: function() {
         var self = this;
+
+        $(self._rect).noContext().rightClick(function(event) {
+            self.callListeners("rightClicked", event);
+        });            
 
         $(self._rect).bind("click.attachcable", function(event) {
             self.callListeners("attachCable", self);

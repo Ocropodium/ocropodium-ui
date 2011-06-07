@@ -19,6 +19,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._nodetypes = {};
         this._multiselect = false;
         this._dragging = false;
+        this._menu = null;
+        this._menucontext = null;
         this._menutemplate = $.template($("#nodeMenuTmpl"));
     },
 
@@ -57,6 +59,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 console.log("Deleted node:", node.name);
                 self.scriptChange();
             },
+            rightClicked: function(event) {
+                self._menucontext = node;
+                self.showContextMenu(event);
+            },
             inputAttached: function(plug) {
                 console.log("Attached input to", node.name, plug.name);
                 self.handlePlug(plug);
@@ -67,7 +73,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             },
             plugHoverIn: function(plug) {
                 self.handlePlugHover(plug);
-            },            
+            },
+            plugRightClicked: function(plug, event) {
+                self._menucontext = plug;
+                self.showContextMenu(event);
+            },                                  
         });
     },
 
@@ -186,18 +196,15 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     setupEvents: function() {
         var self = this;                     
         $(self._group).noContext().rightClick(function(event) {
-            self._menu.show();
-            var maxx = $(self.parent).offset().left + $(self.parent).width();
-            var left = event.clientX;
-            if (event.clientX + self._menu.outerWidth() > maxx)
-                left = maxx - (self._menu.outerWidth() + 20);
-            self._menu.css({
-                top: event.clientY,
-                left: left,    
+            self._menucontext = null;
+            self.showContextMenu(event);
+            $(self._group).bind("click.menuhide", function(event) {
+               self._menu.hide();
+               self._menucontext = null;
+               $(self._group).unbind("click.menuhide");
+               event.stopPropagation();
+               event.preventDefault();
             });
-        });
-        $(self._group).click(function(event) {
-           self._menu.hide();
         });
 
         $("#optionsform").submit(function(event) {
@@ -273,16 +280,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         });
         self._menu.find("li.topmenu").hoverIntent(
             function(event) {
-                var pos = $(this).position();
-                var left = pos.left + $(this).outerWidth() - 5;
-                var sub = $(this).find("ul");
-                sub.show();
-                sub.css({left: left, top: $(this).position().top})
-                var span = $(this).offset().left + $(this).outerWidth() + sub.outerWidth();
-                var outer = $(self.parent).offset().left + $(self.parent).width();
-                if (span > outer) {
-                    sub.css("left", pos.left - sub.outerWidth());
-                }
+                self.showSubContextMenu(this, event);
             },
             function(event) {
                 $(this).find("ul").delay(1000).hide();            
@@ -291,12 +289,38 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
         self._menu.find(".topmenu").find("li").click(function(event) {
             self.createNode($(this).data("name"), 
-                    SvgHelper.mouseCoord(self.parent, event));
+                    SvgHelper.mouseCoord(self.parent, event), self._menucontext);
             self._menu.hide();
+            self._menucontext = null;
             event.stopPropagation();
             event.preventDefault();
         });
     },
+
+    showContextMenu: function(event) {
+        this._menu.show();
+        var maxx = $(this.parent).offset().left + $(this.parent).width();
+        var left = event.clientX;
+        if (event.clientX + this._menu.outerWidth() > maxx)
+            left = maxx - (this._menu.outerWidth() + 20);
+        this._menu.css({
+            top: event.clientY,
+            left: left,    
+        });
+    },                         
+
+    showSubContextMenu: function(menu, event) {
+        var pos = $(menu).position();
+        var left = pos.left + $(menu).outerWidth() - 5;
+        var sub = $(menu).find("ul");
+        sub.show();
+        sub.css({left: left, top: $(menu).position().top})
+        var span = $(menu).offset().left + $(menu).outerWidth() + sub.outerWidth();
+        var outer = $(this.parent).offset().left + $(this.parent).width();
+        if (span > outer) {
+            sub.css("left", pos.left - sub.outerWidth());
+        }
+    },                         
 
     buildNodeMenu: function() {
         var self = this;
@@ -438,20 +462,51 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     relativePoint: function(point, to) {
         var mp = SvgHelper.norm(point, to, null);
         return SvgHelper.divPoints(mp, SvgHelper.getScale(this.group()));
-    },                       
+    },
 
-    createNode: function(type, atpoint, attachedplug) {
-        var self = this;                    
+    replaceNode: function(src, dst) {
+        var outs = [];
+        for (var i in src.inputs())
+            if (src.input(i).isAttached())
+                outs.push(src.input(i).cable().start);
+        var ins = this.attachedInputs(src.output());
+        for (var i in src.inputs())
+            src.input(i).detach();
+        for (var i in ins)
+            ins[i].detach();
+        // src node is now  fully detached, hopefully
+        for (var i in outs)
+            if (dst.input(i))
+                this.connectPlugs(outs[i], dst.input(i));
+        for (var i in ins)
+            this.connectPlugs(dst.output(), ins[i]);
+        this.deleteNode(src, false);
+    },                     
+
+    createNode: function(type, atpoint, context) {
+        var self = this;                   
         var name = self.newNodeName(type);
         var typedata = self._nodetypes[type];
         var nodeobj = self.addNode(name, typedata);
-
-        if (attachedplug) {
+        var dragnode = true;
+        // N.B. This uses a nasty hack to determine weather the context is
+        // a node (to replace) or a plug (to wire).
+        if (context && context.toString().search(/^<(In|Out)Plug/) > -1) {
+            var attachedplug = context;
             if (attachedplug.isOutput() && nodeobj.arity > 0)
                 self.connectPlugs(attachedplug, nodeobj.input(0));
             else
                 self.connectPlugs(nodeobj.output(), attachedplug);
-        }            
+        } else if (context && context.toString().search(/^<Node/) > -1) {
+            self.replaceNode(context, nodeobj);
+            var pos = SvgHelper.getTranslate(context.group());
+            nodeobj.moveTo(pos.x, pos.y);
+            nodeobj.setFocussed(true);
+            dragnode = false;
+        }           
+
+        if (!dragnode)
+            return;
 
         var point = self.relativePoint(atpoint, nodeobj.group());
         nodeobj.moveTo(point.x - 75, point.y - 25);
