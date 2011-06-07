@@ -84,7 +84,7 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
         // inefficient and stupid. 
         var parent = element.parentNode;
         var trans;
-        while (parent != stop && parent.nodeName == "g") {
+        while (parent && parent != stop && parent.nodeName == "g") {
             trans = this.getTranslate(parent);
             scale = this.getScale(parent);
             abs.x -= (trans.x * scale.x);
@@ -100,7 +100,7 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
         // inefficient and stupid. 
         var parent = element.parentNode;
         var trans;
-        while (parent != stop && parent.nodeName == "g") {
+        while (parent && parent != stop && parent.nodeName == "g") {
             trans = this.getTranslate(parent);
             scale = this.getScale(parent);
             abs.x += (trans.x / scale.x);

@@ -50,8 +50,26 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 });
                 self.scriptChange();
             },
+            deleteInitiated: function() {
+                // when we're about to delete a node, clean
+                // up its cables
+                // check if we've got an input                
+                console.log("Delete initiated:", node.name);
+                var outplug = node.output();
+                var referencees = self.attachedInputs(outplug);
+                for (var i in referencees)
+                    referencees[i].detach();                
+                var input = node.input(0);
+                if (!(input && input.isAttached()))
+                    return;
+                var srcplug = input.cable().start;
+                for (var i in referencees) {
+                    self.connectPlugs(srcplug, referencees[i]);
+
+                }
+            },                                 
             deleted: function() {
-                console.log("Deleted node: ", node.name);
+                console.log("Deleted node:", node.name);
                 self.scriptChange();
             },
             inputAttached: function(plug) {
@@ -79,16 +97,19 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     handlePlug: function(plug) {
         var self = this;
-        if (!self._dragcable && plug.type == "input" && plug.isAttached()) {
+        if (!self._dragcable && plug.isInput() && plug.isAttached()) {
             plug.detach();
             self.startCableDrag(plug);
         } else if (!self._dragcable) {
             self.startCableDrag(plug);
         } else {
             if (self._dragcable.start.wouldAccept(plug)) {
-                if (plug.type == "input" && plug.isAttached())
+                if (plug.isInput() && plug.isAttached())
                     plug.detach();
-                self.connectPlugs(self._dragcable.start, plug);
+                if (self._dragcable.start.isInput())
+                    self.connectPlugs(plug, self._dragcable.start);
+                else
+                    self.connectPlugs(self._dragcable.start, plug);
             }
             self.removeDragCable();    
         }            
@@ -127,24 +148,37 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         });
     },
 
-    connectPlugs: function(a, b) {
-        console.log("Connecting plugs", a.name, b.name);                      
+    connectPlugs: function(src, dst) {
         var self = this;                        
-        var cable = new NT.Cable(a, b);
-        var p1 = SvgHelper.denorm(a.centre(), a.group(), this.group());
-        var p2 = SvgHelper.denorm(b.centre(), b.group(), this.group());
-        a.addListener("moved", function() {
-            var m1 = SvgHelper.denorm(a.centre(), a.group(), self.group());
-            var m2 = SvgHelper.denorm(b.centre(), b.group(), self.group());
+        var cable = new NT.Cable(src, dst);
+        var p1 = SvgHelper.denorm(src.centre(), src.group(), this.group());
+        var p2 = SvgHelper.denorm(dst.centre(), dst.group(), this.group());
+        src.addListener("moved", function() {
+            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
+            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
             cable.update(m1, m2);            
         });
-        b.addListener("moved", function() {
-            var m1 = SvgHelper.denorm(a.centre(), a.group(), self.group());
-            var m2 = SvgHelper.denorm(b.centre(), b.group(), self.group());
+        dst.addListener("moved", function() {
+            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
+            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
             cable.update(m1, m2);            
         });
         cable.draw(self.svg, self._cablegroup, p1, p2);
     },
+
+    attachedInputs: function(outplug) {
+        // since output plugs have no knowledge of what's
+        // attached to them we have to search all the nodes
+        // to find any that reference a given output.                        
+        var inplugs = [];
+        $.each(this._nodes, function(ni, node) {
+            $.each(node.inputs(), function(i, input) {
+                if (input.isAttached() && input.cable().start == outplug)
+                    inplugs.push(input);
+            });                
+        });            
+        return inplugs;
+    },                        
 
     setupEvents: function() {
         var self = this;                     
@@ -175,7 +209,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         });
 
         function nodeCmd(event) {
-            console.log("node cmd", event.which);
             if (event.which == 61 || event.which == 45) {                    
                 if (event.which == 61)
                     self.scaleContainer(1.5);                
@@ -189,8 +222,20 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             else
                 self.scaleContainer(1.1);
         });
+        $(this._group).bind("mousedown", function(event) {
+            if (event.button == 1 || event.button == 0 && event.shiftKey) {
+                self.panContainer(event, this);
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
 
-        $(document).bind("keypress.nodecmd", nodeCmd);
+        $(document).bind("keydown.nodecmd", function(event) {
+            //nodeCmd(event);
+            if (event.which == KC_DELETE)
+                self.deleteSelected();
+        });
+        //$(document).bind("keypress.nodecmd", nodeCmd);
         $(self.parent).bind("mouseenter", function(mvevent) {
             $(document).bind("keypress.nodecmd", function(event) {
                 nodeCmd(event);
@@ -251,15 +296,17 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             onLoad: function(svg) {
                 self.svg = svg;
                 self.drawTree();
+                self.loadState();
                 self.setupEvents();
                 self.buildNodeMenu();
-                self.loadState();
             },
         });
     },
 
     loadScript: function(script) {
         var self = this;
+        if (script.length < 1)
+            return;
         var havemeta = false;
         $.each(script, function(i, node) {
             var typedata = self._nodetypes[node.type];
@@ -276,8 +323,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             }
         });
         this.connectNodes(script);
-        if (!havemeta)
-            this.layoutNodes(script);
+        if (script.length > 0)
+            if (!havemeta)
+                this.layoutNodes(script);
         this.scriptChange();
     },                    
 
@@ -298,8 +346,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var nodeobj = self.addNode(name, typedata);
         var point = SvgHelper.norm(atpoint, self.group());
         nodeobj.moveTo(atpoint.x - 75, atpoint.y - 25);
-        $(self._group).bind("keydown.dropnode", function(event) {
-            console.log(event.which);
+        $(document).bind("keydown.dropnode", function(event) {
+            if (event.which == KC_ESCAPE)
+                nodeobj.remove();
         });
         $(self._group).bind("mousemove.dropnode", function(event) {
             var point = SvgHelper.norm(SvgHelper.mouseCoord(self.parent, event), self.group());
@@ -310,6 +359,22 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             });
         });            
     },
+
+    deleteNode: function(node) {
+        var i = this._nodes.indexOf(node);
+        console.assert(i > -1, "Node", node.name, "not found in self._nodes");
+        delete this._usednames[node.name];
+        this._nodes.splice(i, 1);
+        node.removeNode();
+    },                    
+
+    deleteSelected: function() {
+        for (var i in this._nodes) {
+            if (this._nodes[i].isFocussed()) {
+                this.deleteNode(this._nodes[i]);
+            }                
+        }            
+    },                        
 
     buildScript: function() {
         return $.map(this._nodes, function(n) {
@@ -329,22 +394,15 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             fillOpacity: 0,
             stroke: "transparent",    
         });
-        $(this._group).bind("mousedown", function(event) {
-            if (event.button == 1 || event.button == 0 && event.shiftKey) {
-                self.panContainer(event, this);
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        });
     },
 
     connectNodes: function(treenodes) {
         var self = this;                      
         $.each(treenodes, function(ni, node) {
             $.each(node.inputs, function(i, input) {
-                var n1 = self._usednames[node.name];
-                var n2 = self._usednames[input];
-                self.connectPlugs(n2.output(), n1.input(i));
+                var n1 = self._usednames[input];
+                var n2 = self._usednames[node.name];
+                self.connectPlugs(n1.output(), n2.input(i));
             });
         });    
     },                      
@@ -357,7 +415,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             data: {script: JSON.stringify(script)},
             success: function(data) {
                 $.each(data, function(node, value) {
-                    console.log(node, value);
                     self._usednames[node].moveTo(value[0], 
                             (self.svg._height() - value[1]) - 100);
                 });
