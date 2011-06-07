@@ -31,7 +31,8 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     setNodeErrored: function(nodename, error) {
         if (!this._usednames[nodename])
             throw "Unknown node name: " + nodename;
-        this._usednames[nodename].setErrored(true, error);
+        if (this._usednames[nodename])
+            this._usednames[nodename].setErrored(true, error);
     },                        
 
     newNodeName: function(type) {

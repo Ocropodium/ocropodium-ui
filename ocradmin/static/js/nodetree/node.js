@@ -53,7 +53,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         });
 
         this.elem.find(".viewingbutton").click(function(event) {
-            console.log("viewing button clicked");
+            //console.log("viewing button clicked");
             self.setViewing(!self._viewing, true);
             event.stopPropagation();
             event.preventDefault();
@@ -96,7 +96,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
     },
 
     setViewing: function(viewing, emit) {
-        console.log(this.name, "viewing:", viewing);
+        //console.log(this.name, "viewing:", viewing);
         this._viewing = Boolean(viewing);
         this._toggleViewing(this._viewing);
         if (emit) 
@@ -107,7 +107,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this._focussed = Boolean(focus);
         this._toggleFocussed(this._focussed);
         if (emit) 
-            this.callListeners("toggleFocussed", this, this._focussed);
+            this.callListeners("toggleFocussed");
     },
 
     setErrored: function(errored, msg) {
