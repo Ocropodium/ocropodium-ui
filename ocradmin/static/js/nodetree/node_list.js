@@ -44,6 +44,18 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         return tname + space + count;
     },
 
+    isValidNodeName: function(name) {
+        if (name == "" || ~name.search(/\s/))
+            return false;            
+        return !Boolean(this._usednames[name]);
+    },
+
+    renameNode: function(node, name) {
+        this._usednames[name] = this._usednames[node.name];
+        delete this._usednames[node.name];
+        node.setName(name);        
+    },                    
+
     removeNode: function(elem) {
         delete this._usednames[$(elem).attr("name")];
         $(elem).remove();
@@ -186,7 +198,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     buildParams: function(node) {
         var self = this;
         console.log("Setting parameter listeners for", node.name, node.parameters);
-        $("input").unbind("keyup.paramval");
         $("#parameters").html("");
         var inputs = [];
         for (var i = 0; i < node.arity; i++)
@@ -197,7 +208,16 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
             parameters: node.parameters,
             inputs: inputs, 
         }));
-        console.log(inputs);
+        $("input").unbind("keyup.paramval");
+        $("input.nameedit").bind("keyup.paramval", function(event) {
+            var val = $.trim($(this).val());
+            if (self.isValidNodeName(val)) {
+                $(this).removeClass("invalid");
+                self.renameNode(node, val); 
+            } else {
+                $(this).addClass("invalid");
+            }
+        });
         // bind each param to its actual value
         $.each(node.parameters, function(i, param) {
             $("input#" + node.name + param.name).not(".proxy").bind("keyup.paramval", function(event) {
@@ -282,7 +302,9 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 return this._nodes[i].name;
         }    
         // fall back on the last node in the list
-        return this._nodes[this._nodes.length - 1].name;
+        var last = this._nodes[this._nodes.length - 1];
+        if (last)
+            return last.name;
     },                     
 
     runScript: function() {

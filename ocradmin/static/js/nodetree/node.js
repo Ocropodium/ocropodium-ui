@@ -35,7 +35,12 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
 
     group: function() {
         return this._group;
-    },        
+    },
+
+    setName: function(name) {
+        this.name = name;
+        this.elem.find(".nodename").text(name);
+    },                 
 
     buildElem: function() {
         var tmpl = $.template($("#nodeTreeTmpl"));
@@ -226,6 +231,12 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         this.setupEvents();
     },
 
+    setName: function(name) {
+        console.log("Setting name of", this.name, "to", name); 
+        this.name = name;
+        $(this._textlabel).text(name);
+    },                 
+
     setupEvents: function() {
         var self = this;                     
         $(this._ignorebutton).click(function(event) {
@@ -241,8 +252,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         });
 
         $(this._rect).click(function(event) {
-            if (!self._focussed)
-                self.setFocussed(true, true);
+            self.setFocussed(true, true);
             event.stopPropagation();
             event.preventDefault();
         });
@@ -289,11 +299,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
     },                   
 
     removeNode: function(skipcleanup) {
-        if (!skipcleanup)                    
-            this.callListeners("deleteInitiated", this);
         for (var i in this._inplugs)
             this._inplugs[i].detach();
-        console.log("Removing", this.group(), "Parent", this.group().parentNode);
         this.svg.remove(this.group());
         if (!skipcleanup)
             this.callListeners("deleted", this);
@@ -336,6 +343,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         $(document).bind("mouseup.unloaddrag", function(event) {
             $(this).unbind("mousemove.dragelem");
             $(document).unbind(event);
+            event.stopPropagation();
+            event.preventDefault();
         });
     },
 

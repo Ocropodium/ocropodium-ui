@@ -19,7 +19,7 @@
 </script>
 
 <script id="paramTmpl" type="application/x-jquery-tmpl">
-    <h4>${nodename}</h4>
+    <input type="text" class="nameedit" id="${nodename}_rename" value="${nodename}" />
     {% templatetag openvariable %}each(i,param) parameters{% templatetag closevariable %}    
         <div class="node_parameter">
             {% templatetag openvariable %}if param.choices{% templatetag closevariable %}

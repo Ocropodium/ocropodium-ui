@@ -189,7 +189,7 @@ div#node_canvas {
     -webkit-box-shadow: 1px 2px 2px #919598;
     -moz-box-shadow: 1px 2px 2px #919598;
     margin-top: 10px;
-    padding: 2px;
+    padding: 10px;
 
     background: #f8f8f8;
     background: -moz-linear-gradient(top, #f8f8f8 0%, #ebebeb 100%);
@@ -206,6 +206,21 @@ div#node_canvas {
     background-color: #FFFFDD;
 }
 
+.node_parameters input.nameedit {
+    font-size: 1.3em;
+    background-color: transparent;
+    float: none;
+    padding: 2px;
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+    border: 1px dotted #999; 
+}
+
+.node_parameters input.nameedit.invalid {
+    background: #fdedef;
+}
+
 .node_parameter label {
     padding-top: 6px;
     padding-right: 5px;
@@ -213,7 +228,7 @@ div#node_canvas {
     width: 40%;
 }
 
-.node_parameter label {
+.node_parameter label.radio {
     padding-top: 0px;
     padding-right: 0px;
     float: none;
