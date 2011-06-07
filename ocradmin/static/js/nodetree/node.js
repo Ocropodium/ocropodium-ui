@@ -150,8 +150,10 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             "inputAttached",
             "outputAttached",
             "moved",
+            "rightClicked",
             "plugHoverIn",
             "plugHoverOut",
+            "plugRightClicked",
             ], function(i, ename) {
             self.registerListener(ename);    
         });
@@ -187,22 +189,32 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             var plug = new OCRJS.Nodetree.InPlug(this, this.name + "_input" + (p-1));
             plug.draw(svg, g, x + (p*plugx), y - 1);
             this._inplugs.push(plug);
-            plug.addListener("attachCable", function(pl) {
-                self.callListeners("inputAttached", pl);
-            });
-            plug.addListener("hoverIn", function(pl) {
-                self.callListeners("plugHoverIn", pl);
+            plug.addListeners({
+                attachCable: function(pl) {
+                    self.callListeners("inputAttached", pl);
+                },
+                hoverIn: function(pl) {
+                    self.callListeners("plugHoverIn", pl);
+                },
+                rightClicked: function(event) {
+                    self.callListeners("plugRightClicked", plug, event);
+                },
             });
         }
         
         // draw the bottom plug            
         this._outplug = new OCRJS.Nodetree.OutPlug(this, this.name + "_output");
         this._outplug.draw(svg, g, x  + (nodewidth / 2), y + nodeheight + 1);
-        this._outplug.addListener("attachCable", function(pl) {
-            self.callListeners("outputAttached", pl);
-        });
-        this._outplug.addListener("hoverIn", function(pl) {
-            self.callListeners("plugHoverIn", pl);
+        this._outplug.addListeners({
+            attachCable: function(pl) {
+                self.callListeners("inputAttached", pl);
+            },
+            hoverIn: function(pl) {
+                self.callListeners("plugHoverIn", pl);
+            },
+            rightClicked: function(event) {
+                self.callListeners("plugRightClicked", self._outplug, event);
+            },
         });
 
         // draw the rects themselves...
@@ -250,6 +262,10 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             event.stopPropagation();
             event.preventDefault();
         });
+
+        $(this._rect).noContext().rightClick(function(event) {
+            self.callListeners("rightClicked", event);
+        });            
 
         $(this._rect).click(function(event) {
             self.setFocussed(true, true);
