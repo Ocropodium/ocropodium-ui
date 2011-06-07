@@ -67,6 +67,8 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this.elem.click(function(event) {
             if (!self._focussed)
                 self.setFocussed(true, true);
+            else if (event.shiftKey)
+                self.setFocussed(false, true);
             event.stopPropagation();
             event.preventDefault();
         });
@@ -271,7 +273,10 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         });            
 
         $(this._rect).click(function(event) {
-            self.setFocussed(true, true);
+            if (event.shiftKey)
+                self.setFocussed(!self.isFocussed(), true);
+            else
+                self.setFocussed(true, true);
             event.stopPropagation();
             event.preventDefault();
         });
