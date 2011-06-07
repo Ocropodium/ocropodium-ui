@@ -27,6 +27,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             toggleIgnored: [],
             toggleFocussed: [],
             toggleViewing: [],
+            deleteInitiated: [],
             deleted: [],
             created: [],
         };    
@@ -157,7 +158,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
     },
 
     inputs: function(i) {
-        return this._inputs;
+        return this._inplugs;
     },        
 
     output: function() {
@@ -287,9 +288,15 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         return out;
     },                   
 
-    removeNode: function() {
+    removeNode: function(skipcleanup) {
+        if (!skipcleanup)                    
+            this.callListeners("deleteInitiated", this);
+        for (var i in this._inplugs)
+            this._inplugs[i].detach();
+        console.log("Removing", this.group(), "Parent", this.group().parentNode);
         this.svg.remove(this.group());
-        this.callListeners("deleted", this);
+        if (!skipcleanup)
+            this.callListeners("deleted", this);
     },
 
     _toggleIgnored: function(bool) {
