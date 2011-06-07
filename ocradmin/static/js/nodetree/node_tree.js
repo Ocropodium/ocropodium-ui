@@ -18,6 +18,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._nodedata = {};
         this._nodetypes = {};
         this._multiselect = false;
+        this._dragging = false;
         this._menutemplate = $.template($("#nodeMenuTmpl"));
     },
 
@@ -37,13 +38,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 self.scriptChange();
             },
             toggleFocussed: function() {
-                console.log("toggle focus");                                
                 if (!self._multiselect) {
                     $.each(self._nodes, function(i, other) {
-                        if (node != other) {
-                            console.log("Toggling off: ", other.name);
+                        if (node != other)
                             other.setFocussed(false);
-                        }
                     });
                     self.buildParams(node);
                 }
@@ -55,24 +53,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 });
                 self.scriptChange();
             },
-            deleteInitiated: function() {
-                // when we're about to delete a node, clean
-                // up its cables
-                // check if we've got an input                
-                console.log("Delete initiated:", node.name);
-                var outplug = node.output();
-                var referencees = self.attachedInputs(outplug);
-                for (var i in referencees)
-                    referencees[i].detach();                
-                var input = node.input(0);
-                if (!(input && input.isAttached()))
-                    return;
-                var srcplug = input.cable().start;
-                for (var i in referencees) {
-                    self.connectPlugs(srcplug, referencees[i]);
-
-                }
-            },                                 
             deleted: function() {
                 console.log("Deleted node:", node.name);
                 self.scriptChange();
@@ -169,6 +149,26 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         cable.draw(self.svg, self._cablegroup, p1, p2);
     },
 
+    disconnectNode: function(node) {
+        // when we're about to delete a node, clean
+        // up its cables
+        // check if we've got an input                
+        var self = this;                        
+        console.log("Delete initiated:", node.name);
+        var outplug = node.output();
+        var referencees = self.attachedInputs(outplug);
+        for (var i in referencees)
+            referencees[i].detach();                
+        var input = node.input(0);
+        if (!(input && input.isAttached()))
+            return;
+        var srcplug = input.cable().start;
+        for (var i in referencees) {
+            self.connectPlugs(srcplug, referencees[i]);
+
+        }
+    },
+
     attachedInputs: function(outplug) {
         // since output plugs have no knowledge of what's
         // attached to them we have to search all the nodes
@@ -226,13 +226,16 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 self.scaleContainer(1.1);
         });
         $(this._group).bind("mousedown", function(event) {
-            if (event.button == 1 || event.button == 0 && event.shiftKey) {
+            if (event.button == 1 || event.button == 0 && event.shiftKey && event.ctrlKey) {
                 self.panContainer(event, this);
-                event.preventDefault();
-                event.stopPropagation();
             } else if (event.button == 0) {
                 self.lassoSelect(event);    
             }                
+        });
+
+        $(this._group).click(function(event) {
+            if (!self._dragging)
+                self.unfocusAllNodes();    
         });
 
         //$(document).bind("keypress.nodecmd", nodeCmd);
@@ -370,6 +373,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 SvgHelper.mouseCoord(self.parent, event), self._cablegroup);
         var lasso = null;
         $(document).bind("mousemove.lasso", function(mevent) {
+            self._dragging = true;
             var end = self.relativePoint(
                     SvgHelper.mouseCoord(self.parent, mevent), self._cablegroup);
             var rect = SvgHelper.rectFromPoints(start, end);
@@ -392,14 +396,21 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             }
         });
         $(document).bind("mouseup.lasso", function(uevent) {
+            self._dragging = false;
             if (lasso) {
                 var got = self.lassoNodes($(lasso));
-                $.each(got, function(i, n) {
-                    n.setFocussed(true);
-                });
+                if (self._multiselect)
+                    $.map(got, function(n) { n.setFocussed(true); });
+                else {
+                    $.each(self._nodes, function(i, n) {
+                        n.setFocussed(Boolean(~$.inArray(n, got)));
+                    });
+                }
                 self.svg.remove(lasso);
             }
             $(document).unbind(".lasso");
+            event.stopPropagation();
+            event.preventDefault();
         });        
     },
 
@@ -418,7 +429,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             })) nodes.push(node);
         });
         return nodes;        
-    },    
+    },
+
+    unfocusAllNodes: function() {
+        $.map(this._nodes, function(n) { n.setFocussed(false); });
+    },                         
 
     relativePoint: function(point, to) {
         var mp = SvgHelper.norm(point, to, null);
@@ -455,20 +470,32 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         });        
     },
 
-    deleteNode: function(node) {
+    deleteNode: function(node, alert) {
         var i = this._nodes.indexOf(node);
         console.assert(i > -1, "Node", node.name, "not found in self._nodes");
         delete this._usednames[node.name];
         this._nodes.splice(i, 1);
-        node.removeNode();
+        this.disconnectNode(node);
+        node.removeNode(alert);
     },                    
 
     deleteSelected: function() {
+        var self = this;                        
+        $.each(this._nodes, function(i, node) {
+            if (node.isFocussed())
+                console.log("    ", node.name);    
+        });
+        // have to watch out we don't barf the _nodes index
+        var togo = [];
         for (var i in this._nodes) {
-            if (this._nodes[i].isFocussed()) {
-                this.deleteNode(this._nodes[i]);
-            }                
-        }            
+            if (this._nodes[i].isFocussed())
+                togo.push(this._nodes[i]);
+        }
+        var togo = $.map(this._nodes, function(n) {
+            if (n.isFocussed()) return n;
+        });
+        $.map(togo, function(n) {self.deleteNode(n);});
+        this.scriptChange();        
     },                        
 
     buildScript: function() {
@@ -527,6 +554,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var trans = SvgHelper.getTranslate(element);
         var scale = SvgHelper.getScale(element);
         $(document).bind("mousemove.dragelem", function(moveevent) {
+            self._dragging = true;
             SvgHelper.updateTranslate(element, 
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
                 trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
@@ -534,6 +562,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $(document).bind("mouseup.unloaddrag", function() {
             $(this).unbind("mousemove.dragelem");
             $(this).unbind("mouseup.unloaddrag");
+            self._dragging = false;
             var enlarge = $(element).children("rect");
             var trans = SvgHelper.getTranslate(element);
             if (trans.x > 0) {
@@ -546,6 +575,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 enlarge.attr("height", parseInt(enlarge.attr("height")) + trans.y);
             } else
                 enlarge.attr("height", parseInt(enlarge.attr("height")) - trans.y);
+            event.stopPropagation();
+            event.preventDefault();
         });
     },
 
