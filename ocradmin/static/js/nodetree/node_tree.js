@@ -236,6 +236,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             event.stopPropagation();
         });
 
+        $(self._group).click(function(event) {
+            if (!event.shiftKey)
+                self.deselectAll();
+        });
+
         function nodeCmd(event) {
             if (event.which == 61 || event.which == 45) {                    
                 if (event.which == 61)
@@ -282,7 +287,19 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             $(document).unbind("mousewheel.zoomcanvas");
             $(document).unbind("mousemove.debug");
         });
-    },         
+    },
+
+    deselectAll: function() {
+        $.map(this._nodes, function(n) {
+            n.setFocussed(false);
+        });
+    },
+
+    selectAll: function() {
+        $.map(this._nodes, function(n) {
+            n.setFocussed(true);
+        });
+    },    
 
     setupMenuEvents: function() {
         var self = this;                         
