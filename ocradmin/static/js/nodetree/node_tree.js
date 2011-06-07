@@ -138,10 +138,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         plug.setDraggingState();
         $(document).bind("mousemove.dragcable", function(event) {
             var npoint = SvgHelper.denorm(plug.centre(), plug.group(), self.group());
-            var nmp = SvgHelper.norm(
-                SvgHelper.mouseCoord(self.parent, event), cable.group(), null);
-            cable.update(npoint, SvgHelper.divPoints(nmp, 
-                    SvgHelper.getScale(self.group())));
+            var nmp = SvgHelper.mouseCoord(self.parent, event);
+            cable.update(npoint, self.relativePoint(nmp, cable.group()));
         }); 
         $(self.group()).bind("click.dropcable", function(event) {
             self.removeDragCable();
@@ -227,7 +225,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 self.panContainer(event, this);
                 event.preventDefault();
                 event.stopPropagation();
-            }
+            } else if (event.button == 0) {
+                
+            }                
         });
 
         $(document).bind("keydown.nodecmd", function(event) {
@@ -240,10 +240,16 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             $(document).bind("keypress.nodecmd", function(event) {
                 nodeCmd(event);
             });
+            $(document).bind("mousemove.debug", function(event) {
+                self.debugMouseMove(event);
+            });
+
+
         });        
         $(self.parent).bind("mouseleave", function(mvevent) {
             $(document).unbind("keypress.nodecmd");
             $(document).unbind("mousewheel.zoomcanvas");
+            $(document).unbind("mousemove.debug");
         });
     },         
 
@@ -337,27 +343,51 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._nodes.push(node);
         node.draw(this.svg, this._group, 0, 0);
         return node;
-    },                 
+    },
 
-    createNode: function(type, atpoint) {
+    debugMouseMove: function(event) {
+        var self = this;                        
+        var pos = SvgHelper.mouseCoord(self.parent, event);
+        var scale = SvgHelper.getScale(self.group());
+        console.log("Raw pos:", pos.x, pos.y, "Scale:", scale.x, scale.y);
+        var mult = SvgHelper.multPoints(pos, scale);
+        var div = SvgHelper.divPoints(pos, scale);
+        console.log("Mult:", mult.x, mult.y, "Div:", div.x, div.y);
+    },
+
+    relativePoint: function(point, to) {
+        var mp = SvgHelper.norm(point, to, null);
+        return SvgHelper.divPoints(mp, SvgHelper.getScale(this.group()));
+    },                       
+
+    createNode: function(type, atpoint, attachedplug) {
         var self = this;                    
         var name = self.newNodeName(type);
         var typedata = self._nodetypes[type];
         var nodeobj = self.addNode(name, typedata);
-        var point = SvgHelper.norm(atpoint, self.group());
-        nodeobj.moveTo(atpoint.x - 75, atpoint.y - 25);
+
+        if (attachedplug) {
+            if (attachedplug.isOutput() && nodeobj.arity > 0)
+                self.connectPlugs(attachedplug, nodeobj.input(0));
+            else
+                self.connectPlugs(nodeobj.output(), attachedplug);
+        }            
+
+        var point = self.relativePoint(atpoint, nodeobj.group());
+        nodeobj.moveTo(point.x - 75, point.y - 25);
         $(document).bind("keydown.dropnode", function(event) {
             if (event.which == KC_ESCAPE)
                 nodeobj.remove();
         });
         $(self._group).bind("mousemove.dropnode", function(event) {
-            var point = SvgHelper.norm(SvgHelper.mouseCoord(self.parent, event), self.group());
-            nodeobj.moveTo(point.x - 75, point.y - 25);
+            var nmp = SvgHelper.mouseCoord(self.parent, event);
+            var npoint = self.relativePoint(nmp, nodeobj.group());
+            nodeobj.moveTo(npoint.x - 75, npoint.y - 25);
             $(document).add($(nodeobj.group()).find("*")).bind("click.dropnode", function(e) {
                 $(self._group).unbind(".dropnode");
                 $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
             });
-        });            
+        });        
     },
 
     deleteNode: function(node) {
