@@ -42,7 +42,7 @@ OCRJS.Nodetree.Cable = OCRJS.Nodetree.BaseCable.extend({
         this.base();
         this.start = startplug;
         this.end = endplug;
-        this.start.attach(this);
+        // the input (end of cable) owns the cable
         this.end.attach(this);
     },
 
