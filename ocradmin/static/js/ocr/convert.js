@@ -148,7 +148,6 @@ $(function() {
             sdviewer.setBufferPath(sdviewer.activeBuffer(),
                 sdviewer.activeBufferPath());
             setTimeout(function() {
-                console.log(sdviewer._rects);
                 sdviewer.drawBufferOverlays();
             }, 100);
         },

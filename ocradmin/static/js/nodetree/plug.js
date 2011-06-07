@@ -24,10 +24,6 @@ OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
         return this._group;
     },        
 
-    toString: function() {
-        return "<Plug: " + this.name + ">";
-    },                  
-
     draw: function(svg, parent, x, y) {
         var self = this;
         self.svg = svg;
@@ -90,7 +86,15 @@ OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
             x: parseInt($(this._rect).attr("x")) + this._pw / 2,
             y: parseInt($(this._rect).attr("y")) + this._ph / 2,
         };
-    },    
+    },
+
+    isOutput: function() {
+        return this.type == "output";
+    },
+
+    isInput: function() {
+        return this.type == "input";
+    },        
 });
 
 
@@ -102,6 +106,10 @@ OCRJS.Nodetree.InPlug = OCRJS.Nodetree.BasePlug.extend({
         this._cable = null;
     },
 
+    toString: function() {
+        return "<InPlug: " + this.name + ">";
+    },                  
+
     attach: function(cable) {
         if (this._cable)
             this._cable.remove();
@@ -109,7 +117,8 @@ OCRJS.Nodetree.InPlug = OCRJS.Nodetree.BasePlug.extend({
     },
 
     detach: function() {
-        this._cable.remove();
+        if (this._cable)
+            this._cable.remove();
         this._cable = null;
     },                
     
@@ -127,28 +136,10 @@ OCRJS.Nodetree.OutPlug = OCRJS.Nodetree.BasePlug.extend({
         this.base(node, name);
         this.type = "output";
         this._gradient = "url(#OutPlugGradient)";
-        this._cables = [];
     },
 
-    attach: function(cable) {
-        var self = this;                
-        $.each(this._cables, function(i, existing) {
-            if (cable == existing)
-                console.error("Reattaching cable to node: ", self, cable);
-        });
-        this._cables.push(cable);
-        cable.addListener("cableRemoved", function(self) {
-            var n = [];
-            for (var i in self._cables) {
-                if (self._cables[i] != cable)
-                    n.push(self._cables[i]);
-            }
-            self._cables = n;
-        });
-    },
-
-    isAttached: function() {
-        return Boolean(this._cables.length);
-    },        
+    toString: function() {
+        return "<OutPlug: " + this.name + ">";
+    },                  
 });
 

@@ -8,6 +8,10 @@ div#node_canvas {
     background-color: #E4E4E4;
     overflow: auto;
     height: 500px;
+    border-top: 1px solid #999;
+    border-left: 1px solid #999;
+    border-right: 1px solid #BBB;
+    border-bottom: 1px solid #BBB;
 }
 
 #options .buttons_left {

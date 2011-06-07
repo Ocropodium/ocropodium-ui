@@ -417,7 +417,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     clearScript: function() {
         var self = this;
         $.each(this._nodes, function(i, n) {
-            n.removeNode();
+            n.removeNode(true);
         });
         self._usednames = {};        
         self._nodes = [];
