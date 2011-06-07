@@ -17,6 +17,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._usednames = {};
         this._nodedata = {};
         this._nodetypes = {};
+        this._multiselect = false;
         this._menutemplate = $.template($("#nodeMenuTmpl"));
     },
 
@@ -35,13 +36,17 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             toggleIgnored: function(ig) {
                 self.scriptChange();
             },
-            toggleFocussed: function(foc) {
-                $.each(self._usednames, function(name, other) {
-                    if (node.name != name)
-                        other.setFocussed(false);
-                });
-                self.buildParams(node);
-                self.scriptChange();
+            toggleFocussed: function() {
+                console.log("toggle focus");                                
+                if (!self._multiselect) {
+                    $.each(self._nodes, function(i, other) {
+                        if (node != other) {
+                            console.log("Toggling off: ", other.name);
+                            other.setFocussed(false);
+                        }
+                    });
+                    self.buildParams(node);
+                }
             },
             toggleViewing: function(view) {
                 $.each(self._usednames, function(name, other) {
@@ -226,28 +231,31 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 event.preventDefault();
                 event.stopPropagation();
             } else if (event.button == 0) {
-                
+                self.lassoSelect(event);    
             }                
         });
 
-        $(document).bind("keydown.nodecmd", function(event) {
-            //nodeCmd(event);
-            if (event.which == KC_DELETE)
-                self.deleteSelected();
-        });
         //$(document).bind("keypress.nodecmd", nodeCmd);
         $(self.parent).bind("mouseenter", function(mvevent) {
             $(document).bind("keypress.nodecmd", function(event) {
                 nodeCmd(event);
             });
-            $(document).bind("mousemove.debug", function(event) {
-                self.debugMouseMove(event);
+            //$(document).bind("mousemove.debug", function(event) {
+            //    self.debugMouseMove(event);
+            //});
+            $(document).bind("keydown.nodecmd", function(event) {
+                if (event.which == KC_DELETE)
+                    self.deleteSelected();
+                else if (event.which == KC_SHIFT)
+                   self._multiselect = true; 
             });
-
-
+            $(document).bind("keyup.nodecmd", function(event) {
+                if (event.which == KC_SHIFT)
+                   self._multiselect = false;
+            });
         });        
         $(self.parent).bind("mouseleave", function(mvevent) {
-            $(document).unbind("keypress.nodecmd");
+            $(document).unbind(".nodecmd");
             $(document).unbind("mousewheel.zoomcanvas");
             $(document).unbind("mousemove.debug");
         });
@@ -354,6 +362,63 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var div = SvgHelper.divPoints(pos, scale);
         console.log("Mult:", mult.x, mult.y, "Div:", div.x, div.y);
     },
+
+    lassoSelect: function(event) {                             
+        var self = this;
+        var scale = SvgHelper.getScale(self.group());        
+        var start = self.relativePoint(
+                SvgHelper.mouseCoord(self.parent, event), self._cablegroup);
+        var lasso = null;
+        $(document).bind("mousemove.lasso", function(mevent) {
+            var end = self.relativePoint(
+                    SvgHelper.mouseCoord(self.parent, mevent), self._cablegroup);
+            var rect = SvgHelper.rectFromPoints(start, end);
+            if (!lasso && Math.sqrt(rect.width^2 + rect.height^2) > 5) {
+                lasso = self.svg.rect(self.group(), rect.x, rect.y, 
+                            rect.width, rect.height, 0, 0, {
+                        fill: "transparent",
+                        stroke: "#000",
+                        strokeWidth: 1 / scale.x, 
+                        strokeDashArray: 2 / scale.x + "," + 2 / scale.x,
+                });
+            }
+            if (lasso) {
+                self.svg.change(lasso, {
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                });
+            }
+        });
+        $(document).bind("mouseup.lasso", function(uevent) {
+            if (lasso) {
+                var got = self.lassoNodes($(lasso));
+                $.each(got, function(i, n) {
+                    n.setFocussed(true);
+                });
+                self.svg.remove(lasso);
+            }
+            $(document).unbind(".lasso");
+        });        
+    },
+
+    lassoNodes: function(lasso) {
+        // lasso nodes overlapping the lasso box
+        // FIXME: Hard-coded node width/height;                    
+        var rect = {};
+        $.each(["x", "y", "width", "height"], function(i, v) {
+            rect[v] = parseInt($(lasso).attr(v));
+        });
+        var trans, nodes = [];
+        $.each(this._nodes, function(i, node) {
+            trans = SvgHelper.getTranslate(node.group());
+            if (SvgHelper.rectsOverlap(rect, {
+                x: trans.x, y: trans.y, width: 150, height: 45,
+            })) nodes.push(node);
+        });
+        return nodes;        
+    },    
 
     relativePoint: function(point, to) {
         var mp = SvgHelper.norm(point, to, null);

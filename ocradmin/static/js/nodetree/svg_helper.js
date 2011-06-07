@@ -110,5 +110,26 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
         return abs;
     },
 
+    rectFromPoints: function(p1, p2) {
+        // get a normalised rect from two points                        
+        var x, y, width, height;                        
+        if (p1.x < p2.x) {
+            x = p1.x, width = p2.x - p1.x;    
+        } else {
+            x = p2.x, width = p1.x - p2.x;
+        }
+        if (p1.y < p2.y) {
+            y = p1.y, height = p2.y - p1.y;
+        } else {
+            y = p2.y, height = p1.y - p2.y;
+        }
+        return { x: x, y: y, width: width, height: height};
+    },
 
+    rectsOverlap: function(r1, r2) {
+        // does rect 2 overlap rect 1
+        
+        return ov =  r1.x < (r2.x + r2.width) && (r1.x + r1.width) > r2.x 
+            && r1.y < (r2.y + r2.height) && (r1.y + r1.height) > r2.y;
+    },                      
 });
