@@ -55,6 +55,29 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 });
                 self.scriptChange();
             },
+            moving: function() {
+                // when the node is being dragged, also move any others
+                // that are selected
+                // FIXME: This seems an awfully inefficient way of doing
+                // things but it's much less complicated than doing funky
+                // things with adding/removing transformation groups                        
+                if (!node.isFocussed())
+                    return;
+                var trans = SvgHelper.getTranslate(node.group());
+                node.addListener("moved.dragmulti", function() {
+                    var newtrans = SvgHelper.getTranslate(node.group());
+                    $.each(self._nodes, function(i, other) {
+                        if (other != node && other.isFocussed()) {
+                            other.moveBy(
+                                newtrans.x - trans.x, newtrans.y - trans.y);
+                        }
+                    });
+                    trans = newtrans;                    
+                });
+            },
+            dropped: function() {
+                node.removeListeners("moved.dragmulti");
+            },
             deleted: function() {
                 console.log("Deleted node:", node.name);
                 self.scriptChange();
@@ -213,11 +236,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             event.stopPropagation();
         });
 
-        $(".node.floating").live("click", function(event) {
-            $(this).removeClass("floating");
-            $(document).unbind("mousemove.dropnode");
-        });
-
         function nodeCmd(event) {
             if (event.which == 61 || event.which == 45) {                    
                 if (event.which == 61)
@@ -238,11 +256,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             } else if (event.button == 0) {
                 self.lassoSelect(event);    
             }                
-        });
-
-        $(this._group).click(function(event) {
-            if (!self._dragging)
-                self.unfocusAllNodes();    
         });
 
         //$(document).bind("keypress.nodecmd", nodeCmd);
@@ -480,7 +493,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 this.connectPlugs(outs[i], dst.input(i));
         for (var i in ins)
             this.connectPlugs(dst.output(), ins[i]);
+        dst.setViewing(src.isViewing());
         this.deleteNode(src, false);
+        this.scriptChange();
     },                     
 
     createNode: function(type, atpoint, context) {
@@ -608,15 +623,14 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var self = this;
         var trans = SvgHelper.getTranslate(element);
         var scale = SvgHelper.getScale(element);
-        $(document).bind("mousemove.dragelem", function(moveevent) {
+        $(document).bind("mousemove.pancanvas", function(moveevent) {
             self._dragging = true;
             SvgHelper.updateTranslate(element, 
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
                 trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
         });
-        $(document).bind("mouseup.unloaddrag", function() {
-            $(this).unbind("mousemove.dragelem");
-            $(this).unbind("mouseup.unloaddrag");
+        $(document).bind("mouseup.pancanvas", function() {
+            $(this).unbind(".pancanvas");
             self._dragging = false;
             var enlarge = $(element).children("rect");
             var trans = SvgHelper.getTranslate(element);

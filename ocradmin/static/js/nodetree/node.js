@@ -149,6 +149,9 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         $.each([
             "inputAttached",
             "outputAttached",
+            "aboutToMove",
+            "dropped",
+            "moving",
             "moved",
             "rightClicked",
             "plugHoverIn",
@@ -349,6 +352,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             x: event.pageX,
             y: event.pageY,
         };
+        self.callListeners("moving");
         var trans = SvgHelper.getTranslate(element);
         var scale = SvgHelper.getScale(element.parentNode);
         $(document).bind("mousemove.dragelem", function(moveevent) {
@@ -361,16 +365,26 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             $(document).unbind(event);
             event.stopPropagation();
             event.preventDefault();
+            self.callListeners("dropped");
         });
     },
 
+    moveBy: function(x, y) {
+        var trans = SvgHelper.getTranslate(this.group());
+        SvgHelper.updateTranslate(this.group(), trans.x + x, trans.y + y);
+        this._notifyMove();
+    },                
+
     moveTo: function(x, y) {
-        var self = this;
-        SvgHelper.updateTranslate(self.group(), x, y);
-        self.callListeners("moved");
-        $.each(self._inplugs, function(i, plug) {
+        SvgHelper.updateTranslate(this.group(), x, y);
+        this._notifyMove();
+    },
+
+    _notifyMove: function() {
+        this.callListeners("moved");
+        $.each(this._inplugs, function(i, plug) {
             plug.callListeners("moved");                
         });
-        self._outplug.callListeners("moved");
-    },                
+        this._outplug.callListeners("moved");
+    }                     
 });
