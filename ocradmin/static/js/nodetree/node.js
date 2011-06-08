@@ -10,7 +10,7 @@ OCRJS.Nodetree = OCRJS.Nodetree || {};
 var SvgHelper = SvgHelper || new OCRJS.Nodetree.SvgHelper;
 
 OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
-    constructor: function(name, classdata) {
+    constructor: function(name, classdata, id) {
         this.base();
         console.log("Initialising node with: ", name, classdata);
         this.name = name;
@@ -22,6 +22,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this._ignored = false;
         this._focussed = false;
         this._viewing = false;
+        this._id = id;
 
         this._listeners = {
             toggleIgnored: [],
@@ -156,6 +157,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             "dropped",
             "moving",
             "moved",
+            "clicked",
             "rightClicked",
             "plugHoverIn",
             "plugHoverOut",
@@ -165,6 +167,10 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         });
         
     },
+
+    // class-level dimension attributes
+    width: 150,
+    height: 30,
 
     input: function(i) {
         return this._inplugs[i];
@@ -176,72 +182,65 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
 
     output: function() {
         return this._outplug;
-    },                
+    },
+
+    setupPlugListeners: function(plug) {
+        var self = this;                            
+        plug.addListeners({
+            attachCable: function() {
+                self.callListeners(plug.type + "Attached", plug);
+            },
+            hoverIn: function() {
+                self.callListeners("plugHoverIn", plug);
+            },
+            rightClicked: function(event) {
+                self.callListeners("plugRightClicked", plug, event);
+            },
+        });
+    },                            
 
     draw: function(svg, parent, x, y) {
         var self = this;
         this.svg = svg;
 
-        var nodewidth = 150,
-            nodeheight = 30,
-            buttonwidth = 15;
+        var buttonwidth = this.height / 2;
 
         var g = svg.group(parent, "rect" + this._id);
         this._group = g;
         // draw the plugs on each node.
-        var plugx = nodewidth / (this.arity + 1);
+        var plugx = this.width / (this.arity + 1);
 
         for (var p = 1; p <= this.arity; p++) {
             var plug = new OCRJS.Nodetree.InPlug(this, this.name + "_input" + (p-1));
             plug.draw(svg, g, x + (p*plugx), y - 1);
             this._inplugs.push(plug);
-            plug.addListeners({
-                attachCable: function(pl) {
-                    self.callListeners("inputAttached", pl);
-                },
-                hoverIn: function(pl) {
-                    self.callListeners("plugHoverIn", pl);
-                },
-                rightClicked: function(event) {
-                    self.callListeners("plugRightClicked", plug, event);
-                },
-            });
+            this.setupPlugListeners(plug);
         }
         
         // draw the bottom plug            
         this._outplug = new OCRJS.Nodetree.OutPlug(this, this.name + "_output");
-        this._outplug.draw(svg, g, x  + (nodewidth / 2), y + nodeheight + 1);
-        this._outplug.addListeners({
-            attachCable: function(pl) {
-                self.callListeners("inputAttached", pl);
-            },
-            hoverIn: function(pl) {
-                self.callListeners("plugHoverIn", pl);
-            },
-            rightClicked: function(event) {
-                self.callListeners("plugRightClicked", self._outplug, event);
-            },
-        });
+        this._outplug.draw(svg, g, x  + (this.width / 2), y + this.height + 1);
+        this.setupPlugListeners(this._outplug);
 
         // draw the rects themselves...
-        this._rect = svg.rect(g, x, y, nodewidth, nodeheight, 2, 2, {
+        this._rect = svg.rect(g, x, y, this.width, this.height, 2, 2, {
             fill: "url(#NodeGradient)",
             stroke: "#BBB",
             strokeWidth: 1,
         });
-        this._viewbutton = svg.rect(g, x, y, buttonwidth, nodeheight, 0, 0, {
+        this._viewbutton = svg.rect(g, x, y, buttonwidth, this.height, 0, 0, {
             fill: "transparent",
             stroke: "#BBB",
             strokeWidth: 0.5,
         });         
-        this._ignorebutton = svg.rect(g, x + nodewidth - buttonwidth, y, buttonwidth, nodeheight, 0, 0, {
+        this._ignorebutton = svg.rect(g, x + this.width - buttonwidth, y, buttonwidth, this.height, 0, 0, {
             fill: "transparent",
             stroke: "#BBB",
             strokeWidth: 0.5,
         });         
         // add the labels
-        this._textlabel = svg.text(g, x + nodewidth / 2,
-            y + nodeheight / 2, this.name, {
+        this._textlabel = svg.text(g, x + this.width / 2,
+            y + this.height / 2, this.name, {
                 textAnchor: "middle",
                 alignmentBaseline: "middle",
             }
@@ -258,32 +257,39 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
     setupEvents: function() {
         var self = this;                     
         $(this._ignorebutton).click(function(event) {
+            if (self._dragging) {
+                self._dragging = false;
+                return false;
+            }
             self.setIgnored(!self._ignored, true);
             event.stopPropagation();
             event.preventDefault();
         });
 
         $(this._viewbutton).click(function(event) {
+            if (self._dragging) {
+                self._dragging = false;
+                return false;
+            }
             self.setViewing(!self._viewing, true);
             event.stopPropagation();
             event.preventDefault();
         });
 
-        $(this._rect).noContext().rightClick(function(event) {
+        $([this._rect, this._textlabel]).noContext().rightClick(function(event) {
             self.callListeners("rightClicked", event);
         });            
 
-        $(this._rect).click(function(event) {
+        $([this._rect, this._textlabel]).click(function(event) {
             event.stopPropagation();
             if (self._dragging) {
                 self._dragging = false;
                 return false;
             }
-            if (event.shiftKey)
-                self.setFocussed(!self.isFocussed(), true);
-            else
-                self.setFocussed(true, true);
+            self.callListeners("clicked", event);
         });
+
+        $(this._textlabel).css({cursor: "default"});
         $(this._group).bind("mousedown", function(event) {
             if (event.button == 0) {
                 self.move(event, this);
@@ -352,7 +358,6 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
     _toggleErrored: function(bool, msg) {
         var gradient = bool ? "url(#ErrorGradient)" : "url(#NodeGradient)";
         this.svg.change(this._rect, {fill: gradient});        
-        //this.elem.attr("title", errored ? msg : this.description);    
     },    
 
     move: function(event, element) {
