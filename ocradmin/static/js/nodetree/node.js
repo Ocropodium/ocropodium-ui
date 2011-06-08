@@ -157,6 +157,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             "dropped",
             "moving",
             "moved",
+            "clicked",
             "rightClicked",
             "plugHoverIn",
             "plugHoverOut",
@@ -285,11 +286,9 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 self._dragging = false;
                 return false;
             }
-            if (event.shiftKey)
-                self.setFocussed(!self.isFocussed(), true);
-            else
-                self.setFocussed(true, true);
+            self.callListeners("clicked", event);
         });
+
         $(this._textlabel).css({cursor: "default"});
         $(this._group).bind("mousedown", function(event) {
             if (event.button == 0) {

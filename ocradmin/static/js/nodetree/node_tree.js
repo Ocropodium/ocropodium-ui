@@ -39,7 +39,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 self.scriptChange();
             },
             toggleFocussed: function() {
-                self.hideContextMenu();                                
                 if (!self._multiselect) {
                     $.each(self._nodes, function(i, other) {
                         if (node != other)
@@ -81,6 +80,14 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             deleted: function() {
                 console.log("Deleted node:", node.name);
                 self.scriptChange();
+            },
+            clicked: function(event) {
+                if (self._menucontext)
+                    return self.hideContextMenu();                    
+                if (event.shiftKey)
+                    node.setFocussed(!node.isFocussed(), true);
+                else
+                    node.setFocussed(true, true);
             },
             rightClicked: function(event) {
                 self._menucontext = node;
