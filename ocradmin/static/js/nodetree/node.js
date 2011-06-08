@@ -188,7 +188,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         var self = this;                            
         plug.addListeners({
             attachCable: function() {
-                self.callListeners("inputAttached", plug);
+                self.callListeners(plug.type + "Attached", plug);
             },
             hoverIn: function() {
                 self.callListeners("plugHoverIn", plug);
