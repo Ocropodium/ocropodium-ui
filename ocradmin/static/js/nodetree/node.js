@@ -240,12 +240,24 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             strokeWidth: 0.5,
         });         
         // add the labels
-        this._textlabel = svg.text(g, x + nodewidth / 2,
-            y + nodeheight / 2, this.name, {
-                textAnchor: "middle",
-                alignmentBaseline: "middle",
-            }
-        );
+        //this._textlabel = svg.text(g, x + nodewidth / 2,
+        //    y + nodeheight / 2, this.name, {
+        //        textAnchor: "middle",
+        //        alignmentBaseline: "middle",
+        //    }
+        //);
+        
+        //var tp = svg.createText(this.name + "_label");
+        //this._textlabel = svg.textpath(g, "#" + this.name + "_label", tp.string(this.name));
+
+        var defs = this.svg.defs(g);
+        var path = svg.createPath();
+        var textpath = svg.path(defs, path.move(20, 15).line(130, 15), {
+            fill: "#000", stroke: "#000", strokeWidth: 3, id: this.name + "_path",
+        });
+        var texts = svg.createText();
+        this._textlabel = svg.textpath(g, "#" + this.name + "_path", texts.string(this.name));
+
         this.setupEvents();
     },
 
