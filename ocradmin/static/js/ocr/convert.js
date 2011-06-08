@@ -28,51 +28,15 @@ function loadState() {
 
 $(function() {
 
-    // style toolbar
-    $(".tbbutton").button({
-        disabled: true,
-    });
-    $("#clear").button({
-        icons: {
-            primary: "ui-icon-closethick",
+    $("body").layout({
+        applyDefaultStyles: true,
+        north: {
+            size: "auto",
+            spacing_open: 0,
+            closable: false,
+            resizable: false,
         }
-    });
-    $("#format").buttonset();
-    $("#clear").click(function(event) {
-        alert("I don't do anything!");
-    });
-    $("#zoomin").click(function(event) {
-        $("#font_size").val(parseInt($("#font_size").val()) + 2);
-        $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
-        $("#zoomout").button({"disabled": $("#font_size").val() <= MINFONTSIZE});
-        $(".ocr_page").css("font-size", $("#font_size").val() + "px");
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-zoomin",
-        }
-    });
-    $("#zoomout").click(function(event) {
-        $("#font_size").val(parseInt($("#font_size").val()) - 2);
-        $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
-        $("#zoomout").button({"disabled": $("#font_size").val() <= MINFONTSIZE});
-        $(".ocr_page").css("font-size", $("#font_size").val() + "px");
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-zoomout",
-        }
-    });
-    $("#format_block").click(function(event) {
-        formatter.blockLayout($(".ocr_page"));
-    });
-    $("#format_line").click(function(event) {
-        formatter.lineLayout($(".ocr_page"));
-    });
-    $("#format_column").click(function(event) {
-        $(".ocr_page").each(function(pos, elem) {
-            formatter.columnLayout($(elem));
-        });
+
     });
 
     // script builder buttons

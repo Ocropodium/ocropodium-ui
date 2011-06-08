@@ -38,18 +38,12 @@
     <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
 	{% block headerscript %}{% endblock %}
 	
-    <link rel="stylesheet" href="/static/css/standard.css" type="text/css" media="screen" />
-	<script type='application/javascript' src='/static/js/loadall.js'></script>
+    <link rel="stylesheet" href="/static/css/clean.css" type="text/css" media="screen" />
+    <!--<script type='application/javascript' src='/static/js/loadall.js'></script>-->
 </head>
 <body>
-    <div id="app_container">
-        <div id="workspace">
-            {% include "includes/appmenu.html" %}
             {% block subtoolbar %}{% endblock %}
                     {% block content %}{% endblock %}
             
-        </div>
-        <div id="dialog_box"></div>
-    </div>
 </body>
 </html>

@@ -1,0 +1,227 @@
+html {
+    height: 100%;
+}
+
+body {
+    font-family: "Dejavu Sans", "Arial", "Helvetica", "sans-serif";
+    font-size: 11px;
+    background-color: #A1A5A8;
+    margin: 0px;
+    height: 100%;
+}
+
+/* never allow selection! */
+* {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* except on inputs! */
+input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
+
+div.clear {
+    clear: both;
+}
+
+#vsplitter {
+    height: 500px;
+    overflow: auto;
+}
+
+#login_info {
+    margin-top: 8px;
+    margin-right: 5px;
+    color: #999;
+    float: right;
+    font-size: 0.9em;
+}
+
+#login_info a {
+    margin-left: 5px;
+    display: inline;
+    text-decoration: underline;
+}
+
+#login_info a:hover {
+    background-color: #FFFFDD;
+}
+
+.sub_toolbar {
+    font-size: 0.9em;
+    overflow: auto;
+    padding: 5px;
+    background-color: #87B4FF;
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.35, rgb(75,120,195)),
+        color-stop(0.48, rgb(83,124,195))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(83,124,195) 48%,
+        rgb(75,120,195) 35%
+    );
+}
+
+#workspace, #app_container {
+    height: 100%;
+    min-height: 100%;
+}
+
+/*#sideviewer {
+    float: right;
+    width: 40%;
+}
+
+#viewerwindow {
+    float: right;
+    width: 600px;
+    height: 450px;
+}*/
+
+#document_window {
+    padding: 10px 0px 10px 10px;
+    min-width: 500px;
+    margin-right: 320px;
+}
+
+
+a.button {
+    background: #E6E6E6 url(/static/gradient_grey.png) repeat-x 50% 50%;
+    border: 1px solid #D2D2D2;
+    border-radius: 2px 2px;
+    font-size: 0.8em;
+    margin: 0px 0px 0px 5px;
+    padding: 1px 2px;
+    cursor: pointer;   
+    text-decoration: none;
+    color: #999; 
+}
+
+a.button:hover {
+    border: 1px solid #B2B2B2;
+    
+}
+
+.viewer_highlight.lines {
+    background-color: #FF2222;
+    opacity: 0.2;
+}
+
+.viewer_highlight.paragraphs {
+    border: 5px solid #2222FF;
+    opacity: 0.5;
+    border-radius: 3px;
+}
+
+.viewer_highlight.columns {
+    background-color: #FFFF22;
+    opacity: 0.2;
+}
+
+
+.reference_set_list {
+    min-height: 400px;
+    overflow: auto;
+    background-color: #FFF;
+}
+
+.reference_page {
+    float: left;
+    margin:10px;
+    border-top: 1px solid #F6F6F6;
+    border-left: 1px solid #F6F6F6;
+    box-shadow: 2px 2px 3px #AAA;
+    -webkit-box-shadow: 2px 2px 3px #AAA;
+    -moz-box-shadow: 2px 2px 3px #AAA;
+    padding: 10px;
+    background-color: #FAFAFE;
+    background: -webkit-gradient(
+        linear,
+        right bottom,
+        left top,
+        color-stop(0.50, rgb(245,245,245)),
+        color-stop(0.35, rgb(240,240,240))
+    );
+    background: -moz-linear-gradient(
+        center bottom,
+        rgb(240,240,240) 35%,
+        rgb(245,245,245) 50%
+    );
+    border-radius: 3px;
+}
+
+.reference_page a {
+}
+
+.reference_page_center {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.reference_page_image {
+    margin-top: 10px;
+}
+
+.reference_page_info {
+    font-size: 0.9em;    
+}
+
+.reference_page_info .key {
+    font-weight: bolder;    
+}
+
+.reference_page_image img {
+    border: 1px solid #D6D6D6;
+}
+
+
+.literal {
+}
+
+.literal .ocr_line {
+    float: left;
+    clear: left;
+    position: relative;
+}
+
+.selected {
+    background: -webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        color-stop(0.95, rgb(132,170,216)),
+        color-stop(0.25, rgb(161,192,231))
+    );
+    background: -moz-linear-gradient(
+        left bottom,
+        rgb(132,170,216) 25%,
+        rgb(161,192,231) 95%
+    );
+}
+
+#logwin {
+    opacity: 0.5;
+    background-color: #000;
+    font-size: 2em;
+    border-radius: 4px;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    float: left;
+    color: #FFF;
+}
+
+.debugwindow {
+    border: none;
+    width: 100%;
+    height: 100%;
+}
