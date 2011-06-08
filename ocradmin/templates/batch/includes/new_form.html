@@ -1,0 +1,55 @@
+{% include "includes/form_errors.html" %}
+
+<form name="batchform" method="POST" action="/batch/create/" id="batchform">
+    <div id="tabs">
+        <ul>
+            <li><a id="tabs_1_link" href="#tabs_1">Naming &amp; Tags</a></li>
+            <li><a id="tabs_2_link" href="#tabs_2">OCR Settings</a></li>
+        </ul>
+        <div id="tabs_1">
+            <div class="form_body">
+                <fieldset>
+                    <legend class="collapsed">Information</legend>
+                    {% for field in form.visible_fields %}
+                        <div class="field_wrapper">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {{ field.errors}}
+                        </div>
+                    {% endfor %}
+                    {% for field in form.hidden_fields %}
+                        {{ field }}
+                    {% endfor %}
+                </fieldset>
+            </div>
+            <div class="form_footer">
+                <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Files" />
+            </div>
+        </div>
+        <div id="tabs_2">
+            <div class="form_body">
+                <h3>Select Preset</h3>
+                <select id="id_preset" name="preset">
+                    <option value="0">---</option>
+                    {% for preset in presets %}
+                        <option value="{{preset.pk}}">{{preset.name}}</option>
+                    {% endfor %}
+                </select>
+                ...or create a <a href="/ocr/convert/">New Script</a>
+                <input type="hidden" id="id_script" name="script" />
+                <h3>Select Files</h3>
+                <input type="hidden" id="id_files" name="files" />
+                <div class="form_field">
+                    <div id="batch_file_list">
+
+                    </div>
+                    <input type="button" value="Browse Server" id="browse" />
+                </div>
+            </div>
+            <div class="form_footer">
+                <input type="submit" disabled="disabled" id="submit_batch" value="Submit Batch" />
+            </div>
+        </div>
+    </div>
+</form>
+

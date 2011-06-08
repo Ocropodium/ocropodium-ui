@@ -1,0 +1,99 @@
+<div id="menu">
+    {% if request.user.username %}
+        <span id="login_info">
+            Logged in as {{request.user.username}}. <a href="/accounts/logout" alt="Logout">Logout</a>
+            <a alt="Account Admin" href="/admin/">Admin</a>
+        </span>
+
+    {% endif %}
+    <ul class="top">
+        <li>
+        <h3>Project</h3>                
+        <ul>
+            <li>
+                <a id="new_project" href="/projects/new/">New Project</a>
+            </li>
+            <li>
+                <a id="open_project" href="/projects/open/">Open Project</a>
+            </li>
+            {% if request.session.project %}
+                <li><a href="/projects/show/{{request.session.project.pk}}/">Information</a></li>
+                <li><a href="/projects/export/{{request.session.project.pk}}/">Export</a></li>
+                <li><a href="/projects/close/">Close</a></li>
+            {% else %}
+                <li class="disabled_option">Close</li>
+            {% endif %}
+        </ul>
+        </li>
+    </ul>
+    {% if request.session.project %}
+    <ul class="top">
+        <li> 
+            <h3>Batch</h3>
+            <ul>
+                <li>
+                    <a id="new_batch" href="/batch/new/">New Batch</a>
+                </li>
+                <li>
+                    <a id="latest_batch" href="/batch/latest/">Latest Batch</a>
+                </li>
+                <li>
+                    <a id="list_batch" href="/batch/list/">Show Batches</a>
+                </li>
+                <li>
+                    <a href="/ocrtasks/">Show Tasks</a>
+                </li>
+            </ul>
+        </li> 
+    </ul>
+    <ul class="top">
+        <li> 
+            <h3>Training</h3>
+            <ul>
+                <li>
+                    <a id="new_training" href="/training/new/">Submit Training Job</a>
+                </li>
+                <li>
+                    <a id="new_comparison" href="/training/compare/">Run Comparison</a>
+                </li>
+                <li>
+                    <a id="comparison_list" href="/training/comparisons/">Previous Comparisons</a>
+                </li>
+            </ul>
+        </li> 
+    </ul>
+    {% endif %}
+    <ul class="top">
+        <li>
+            <h3>Models</h3>
+            <ul>
+                <li>
+                    <a id="new_model" href="/ocrmodels/create/">New Model</a>
+                </li>
+                <li>
+                    <a id="list_models" href="/ocrmodels/list/">Show Models</a>
+                </li>
+            </ul>
+        </li> 
+    </ul>
+    <ul class="top">
+        <li>
+        <h3>Tools</h3>
+            <ul>
+                <li>
+                    <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}
+                        href="/ocr/convert/">Convert</a>
+                </li> 
+                <li>
+                <a {% ifequal request.path "/ocr/binarize/" %}class="current"{% endifequal %}
+                    href="/ocr/binarize/">Binarize</a>
+                </li> 
+                <li>
+                <a {% ifequal request.path "/ocr/segment/" %}class="current"{% endifequal %}
+                    href="/ocr/segment/">Segment</a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+

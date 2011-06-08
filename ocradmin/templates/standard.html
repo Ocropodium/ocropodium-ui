@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>
+        {% if request.session.project %}
+            {{ request.session.project }} -
+        {% endif %}
+        {% block title %} OCRopodium - Test Server {% endblock %}
+    </title>
+
+	<script type='application/javascript' src='/static/js/jquery/jquery-1.6.js'></script>
+    <script type='application/javascript' src='/static/js/jquery/jquery-ui-1.8.4.custom.min.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.cookie.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.globalstylesheet.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.text-overflow.min.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.titlecase.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.tmpl.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.rightClick.js'></script>
+	<script type='application/javascript' src='/static/js/utils/json2.js'></script>
+	<script type='application/javascript' src='/static/js/utils/base.js'></script>
+	<script type='application/javascript' src='/static/js/ocrbase.js'></script>
+	<script type='application/javascript' src='/static/js/helpers.js'></script>
+	<script type='application/javascript' src='/static/js/constants.js'></script>
+    <script type='application/javascript' src='/static/js/widget_layout.js'></script>
+
+    <script type='application/javascript' src='/static/js/abstract_data_source.js'></script>    
+	<script type='application/javascript' src='/static/js/project_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/abstract_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/project_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/projectbrowser.js'></script>
+
+    <link rel="stylesheet" href="/static/css/custom-theme/jquery-ui-1.8.4.custom.css" />
+    <link rel="stylesheet" href="/static/css/mainmenu.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/forms.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/messages.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/projectbrowser.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
+	{% block headerscript %}{% endblock %}
+	
+    <link rel="stylesheet" href="/static/css/standard.css" type="text/css" media="screen" />
+	<script type='application/javascript' src='/static/js/loadall.js'></script>
+</head>
+<body>
+    <div id="app_container">
+        <div id="workspace">
+            {% include "includes/appmenu.html" %}
+            {% block subtoolbar %}{% endblock %}
+                    {% block content %}{% endblock %}
+            
+        </div>
+        <div id="dialog_box"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+#preset_container.waiting {
+    background-image: url("/static/ajax-loader-hz2.gif");
+    background-position: right bottom;
+    background-repeat: no-repeat;
+}
+
+.save_dialog {
+    border-radius: 0px;
+    box-shadow: 2px 2px 3px #AAA;
+    -webkit-box-shadow: 2px 2px 3px #AAA;
+    -moz-box-shadow: 2px 2px 3px #AAA;
+
+}
+
+.save_dialog .form_body {
+    min-height: 0px;
+}
+
+.save_dialog .ui-dialog-titlebar {
+    display: none;
+}
+
+a.preset_control {
+    text-decoration: none;
+    font-weight: bold;
+    padding: 2px;
+    margin-left: 5px;
+}
+
+a.preset_control:hover {
+    color: #1B4765;
+}
+
+.pm_preset_list {
+    padding: 5px;
+    margin-bottom: 5px;
+    height: 100px;
+    overflow: auto;
+    list-style-type: square;
+    border: 1px solid #999999;
+}
+
+.pm_preset_item {
+    cursor: pointer;
+    background-image: url("/static/icons/preset.png");
+    background-repeat: no-repeat;
+    background-position: left;
+    padding-left: 18px;
+
+}
+
+.pm_preset_list li.odd {
+    background-color: #FBFBFB;
+}
+
+.pm_preset_details {
+    margin-bottom: 5px;
+    padding: 5px;
+    height:40px;
+    overflow: auto;
+}
+
+.pm_preset_button {
+    float: right;
+}
+
+.pm_preset_select {
+    width: 10em;
+}
+
+

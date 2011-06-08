@@ -1,0 +1,19 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/training.css" type="text/css" media="screen" />
+    <script type='application/javascript' src='/static/js/training/comparison.js'></script>
+{% endblock %}
+
+{% block content %}
+
+    <div id="document_window">
+        <div class="widget">
+            <div class="widget_header">OCR Model Comparison</div>
+            <div class="widget_content">
+                {% include "training/includes/comparison_details.html" %}
+            </div>
+    </div>
+{% endblock %}
+

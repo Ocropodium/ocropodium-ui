@@ -1,0 +1,101 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - {{batch.name}} Transcript {% endblock %}
+
+{% block headerscript %}
+    <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
+	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
+	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
+	<script type='application/javascript' src='/static/js/ocr/transcript.js'></script>
+	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
+	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
+	<script type='application/javascript' src='/static/js/undo/command.js'></script>
+	<script type='application/javascript' src='/static/js/undo/stack.js'></script>
+	<script type='application/javascript' src='/static/js/line_editor.js'></script>
+	<script type='application/javascript' src='/static/js/spellcheck/suggestion_list.js'></script>
+	<script type='application/javascript' src='/static/js/spellcheck/spellchecker.js'></script>
+	<script type='application/javascript' src='/static/js/spellcheck.js'></script>
+	<script type='application/javascript' src='/static/js/transcript_editor.js'></script>
+
+    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/transcript_editor.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/line_editor.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/spellcheck.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block subtoolbar %}
+    <div class="sub_toolbar" id="transcript_toolbar">
+        <div id="tsnavform" >
+            <input type="checkbox" id="centre" checked="checked" />
+            <label for="centre">Centre viewer on current line</label>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <span id="vlink">
+                <input type="radio" id="vlink_off" name="vlink" value="off"  />
+                <label for="vlink_off">Off</label>
+                <input type="radio" id="vlink_click" name="vlink" value="click" checked="checked" />
+                <label for="vlink_click">click</label>  
+                <input type="radio" id="vlink_hover" name="vlink" value="hover"  />
+                <label for="vlink_hover">Hover</label>  
+            </span>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <span id="format">
+                <input type="radio" id="format_block" name="format" checked="checked" />
+                <label for="format_block">Block</label>
+                <input type="radio" id="format_line" name="format" />
+                <label for="format_line">Line</label>
+                <input type="radio" id="format_column" name="format" />
+                <label for="format_column">Column</label>
+            </span>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <input type="checkbox" id="spellcheck" />
+            <label for="spellcheck">Spellcheck</label>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <span id="reocr">
+                <input type="checkbox" id="reconvert" />
+                <label for="reconvert">Re-OCR</label>
+                <input type="checkbox" id="reocr_options" />
+                <label for="reocr_options">Re-OCR Options</label>
+            </span>
+
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <input type="checkbox" id="heading" />
+            <label for="heading">H</label>
+
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <div id="page_slider"></div>
+            <button id="prev_page">Previous</button>
+            <button id="next_page">Next</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <button id="save_data">Save Text</button>
+            <button id="save_training_data">Save Training Page</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            
+            <input type="hidden" name="batchoffset" value="{{batchoffset|default_if_none:0}}" id="batchoffset" />
+            <input type="hidden" name="batchsize" value="{{batchsize|default_if_none:0}}" id="batchsize" />
+            <input type="hidden" name="task_pk" value="{{task.pk|default_if_none:0}}" id="task_pk" />
+
+        </div>        
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    <div class="widget" id="sideviewer">
+        <div class="widget_header">Image Binary</div>
+        <div class="widget_content">
+            <div id="viewer"></div>
+        </div> 
+    </div>
+
+    <div class="widget" id="transcriptcontainer">
+        <div class="widget_header">Transcript</div>
+        <div class="widget_content">
+            <div id="transcript"></div>
+        </div> 
+    </div>
+    <div id="dialog"></div>
+
+
+{% endblock %}

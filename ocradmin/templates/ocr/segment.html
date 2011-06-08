@@ -1,0 +1,45 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - Segment {% endblock %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/preset_manager.js'></script>
+    <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
+	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
+	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
+	<script type='application/javascript' src='/static/js/image_viewer_canvas.js'></script>
+	<script type='application/javascript' src='/static/js/ocr/viewing_common.js'></script>
+	<script type='application/javascript' src='/static/js/ocr/segment.js'></script>
+	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/preset_manager.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block subtoolbar %}
+    <div class="sub_toolbar" id="viewing_toolbar">
+        {% include "ocr/includes/viewing_toolbar.html" %}
+
+        <span>&nbsp;&nbsp;&nbsp;</span>
+        <input type="checkbox" class="tbbutton" id="hl_lines" checked="checked" />
+        <label for="hl_lines">Lines</label>
+        <input type="checkbox" class="tbbutton" id="hl_paragraphs" checked="checked">
+        <label for="hl_paragraphs">Paragraphs</label>
+        <input type="checkbox" class="tbbutton" id="hl_columns" checked="checked">
+        <label for="hl_columns">Columns</label>
+    </div>
+{% endblock %}
+
+{% block content %}
+    {% include "ocr/includes/viewing_sidebar.html" %}
+    
+    <div class="widget" id="viewercontainer">
+        <div class="widget_header">Segmenation Viewer</div>
+        <div class="widget_content">
+            <div id="viewer"></div>
+        </div> 
+    </div>
+    
+{% endblock %}
+

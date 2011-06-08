@@ -1,0 +1,12 @@
+{% if form.errors %}
+        <ul class="messages">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <li class="error">
+                    <span class="error_field">{{field}}</span>: <span class="error_value">{{error}}</span>
+                </li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+{% endif %}
+
