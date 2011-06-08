@@ -39,6 +39,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 self.scriptChange();
             },
             toggleFocussed: function() {
+                self.hideContextMenu();                                
                 if (!self._multiselect) {
                     $.each(self._nodes, function(i, other) {
                         if (node != other)
@@ -197,7 +198,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var srcplug = input.cable().start;
         for (var i in referencees) {
             self.connectPlugs(srcplug, referencees[i]);
-
         }
     },
 
@@ -312,8 +312,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         self._menu.find(".topmenu").find("li").click(function(event) {
             self.createNode($(this).data("name"), 
                     SvgHelper.mouseCoord(self.parent, event), self._menucontext);
-            self._menu.hide();
-            self._menucontext = null;
+            self.hideContextMenu();
             event.stopPropagation();
             event.preventDefault();
         });
@@ -331,11 +330,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             left: left,    
         });
         $(this._group).bind("click.menuhide", function(event) {
-           self._menu.hide();
-           self._menucontext = null;
-           $(self._group).unbind("click.menuhide");
-           event.stopPropagation();
-           event.preventDefault();
+            self.hideContextMenu();            
+            $(self._group).unbind("click.menuhide");
+            event.stopPropagation();
+            event.preventDefault();
         });
     },                         
 
@@ -350,6 +348,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         if (span > outer) {
             sub.css("left", pos.left - sub.outerWidth());
         }
+    },
+
+    hideContextMenu: function(event) {
+        this._menu.hide();
+        this._menucontext = null;
     },                         
 
     buildNodeMenu: function() {
@@ -477,7 +480,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $.each(this._nodes, function(i, node) {
             trans = SvgHelper.getTranslate(node.group());
             if (SvgHelper.rectsOverlap(rect, {
-                x: trans.x, y: trans.y, width: 150, height: 45,
+                x: trans.x, y: trans.y, width: node.width, height: node.height,
             })) nodes.push(node);
         });
         return nodes;        
@@ -539,7 +542,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             return;
 
         var point = self.relativePoint(atpoint, nodeobj.group());
-        nodeobj.moveTo(point.x - 75, point.y - 25);
+        nodeobj.moveTo(point.x - (nodeobj.width / 2), point.y - (nodeobj.height / 2));
         $(document).bind("keydown.dropnode", function(event) {
             if (event.which == KC_ESCAPE)
                 nodeobj.remove();
@@ -547,7 +550,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $(self._group).bind("mousemove.dropnode", function(event) {
             var nmp = SvgHelper.mouseCoord(self.parent, event);
             var npoint = self.relativePoint(nmp, nodeobj.group());
-            nodeobj.moveTo(npoint.x - 75, npoint.y - 25);
+            nodeobj.moveTo(npoint.x - (nodeobj.width / 2), npoint.y - (nodeobj.height / 2));
             $(document).add($(nodeobj.group()).find("*")).bind("click.dropnode", function(e) {
                 $(self._group).unbind(".dropnode");
                 $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
