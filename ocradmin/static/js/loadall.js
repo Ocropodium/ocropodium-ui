@@ -3,13 +3,13 @@
 
 $(function() {
     $(window).resize(function(event) {
-        layoutWidgets();
+     //   layoutWidgets();
     });
-    layoutWidgets();
-    $(window).trigger("resize");
+    //layoutWidgets();
+    //$(window).trigger("resize");
 
     $("#workspace").invalidateLayout = function(event) {
-        layoutWidgets();            
+      //  layoutWidgets();            
     }
 
     function deactivateMenu(menu) {

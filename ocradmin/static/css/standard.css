@@ -92,7 +92,7 @@ input, textarea {
     -webkit-box-shadow: 2px 3px 3px #919598;
     -moz-box-shadow: 2px 3px 3px #919598;
     padding-bottom: 20px;
-    float: right;
+ /*   float: right;*/
     width: 600px;
     margin: 10px 10px 0px 10px;
 }
@@ -138,11 +138,27 @@ input, textarea {
 }
 
 #sidebar {
-    width: 380px;
-    float: right;
+    /*width: 380px;*/
+/*    float: right; */
     /* need this because the document_window
      * somehow shifts the sidebar down... 
      */
+}
+
+#splitter {
+    width: 100%;
+    min-height: 400px;
+}
+
+#splitter div {
+    overflow: auto;
+    padding: 5px;
+
+}
+
+.vsplitbar {
+    width: 5px;
+    background-color: #000;
 }
 
 #sidebar .widget_content {
