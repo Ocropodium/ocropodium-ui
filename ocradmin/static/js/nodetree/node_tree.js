@@ -18,7 +18,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._nodedata = {};
         this._nodetypes = {};
         this._multiselect = false;
-        this._dragging = false;
         this._menu = null;
         this._menucontext = null;
         this._menutemplate = $.template($("#nodeMenuTmpl"));
@@ -221,13 +220,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $(self._group).noContext().rightClick(function(event) {
             self._menucontext = null;
             self.showContextMenu(event);
-            $(self._group).bind("click.menuhide", function(event) {
-               self._menu.hide();
-               self._menucontext = null;
-               $(self._group).unbind("click.menuhide");
-               event.stopPropagation();
-               event.preventDefault();
-            });
         });
 
         $("#optionsform").submit(function(event) {
@@ -328,6 +320,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     },
 
     showContextMenu: function(event) {
+        var self = this;                         
         this._menu.show();
         var maxx = $(this.parent).offset().left + $(this.parent).width();
         var left = event.clientX;
@@ -336,6 +329,13 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._menu.css({
             top: event.clientY,
             left: left,    
+        });
+        $(this._group).bind("click.menuhide", function(event) {
+           self._menu.hide();
+           self._menucontext = null;
+           $(self._group).unbind("click.menuhide");
+           event.stopPropagation();
+           event.preventDefault();
         });
     },                         
 
@@ -427,7 +427,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 SvgHelper.mouseCoord(self.parent, event), self._cablegroup);
         var lasso = null;
         $(document).bind("mousemove.lasso", function(mevent) {
-            self._dragging = true;
             var end = self.relativePoint(
                     SvgHelper.mouseCoord(self.parent, mevent), self._cablegroup);
             var rect = SvgHelper.rectFromPoints(start, end);
@@ -450,7 +449,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             }
         });
         $(document).bind("mouseup.lasso", function(uevent) {
-            self._dragging = false;
             if (lasso) {
                 var got = self.lassoNodes($(lasso));
                 if (self._multiselect)
@@ -641,14 +639,12 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var trans = SvgHelper.getTranslate(element);
         var scale = SvgHelper.getScale(element);
         $(document).bind("mousemove.pancanvas", function(moveevent) {
-            self._dragging = true;
             SvgHelper.updateTranslate(element, 
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
                 trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
         });
         $(document).bind("mouseup.pancanvas", function() {
             $(this).unbind(".pancanvas");
-            self._dragging = false;
             var enlarge = $(element).children("rect");
             var trans = SvgHelper.getTranslate(element);
             if (trans.x > 0) {
