@@ -146,6 +146,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         this.base(name, classdata, id);
         this._inplugs = [];
         this._outplug = null;
+        this._dragging = false;
 
         var self = this;
         $.each([
@@ -273,12 +274,15 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         });            
 
         $(this._rect).click(function(event) {
+            event.stopPropagation();
+            if (self._dragging) {
+                self._dragging = false;
+                return false;
+            }
             if (event.shiftKey)
                 self.setFocussed(!self.isFocussed(), true);
             else
                 self.setFocussed(true, true);
-            event.stopPropagation();
-            event.preventDefault();
         });
         $(this._group).bind("mousedown", function(event) {
             if (event.button == 0) {
@@ -360,13 +364,17 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         self.callListeners("moving");
         var trans = SvgHelper.getTranslate(element);
         var scale = SvgHelper.getScale(element.parentNode);
+        var moved = false;
         $(document).bind("mousemove.dragelem", function(moveevent) {
+            moved = true;
             self.moveTo(
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
                 trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
         });
-        $(document).bind("mouseup.unloaddrag", function(event) {
-            $(this).unbind("mousemove.dragelem");
+        $(document).bind("mouseup.dragelem", function(event) {
+            if (moved)
+                self._dragging = true;
+            $(this).unbind(".dragelem");
             $(document).unbind(event);
             event.stopPropagation();
             event.preventDefault();
