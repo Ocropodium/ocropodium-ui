@@ -153,6 +153,8 @@ $(function() {
         },
     });
 
+    $("#splitter").splitter();
+
     //presetmanager = new OCRJS.PresetManager("#script_toolbar");
     //presetmanager.getPresetData = function() {
     //    return JSON.stringify(pbuilder.buildScript(), false, '\t');
