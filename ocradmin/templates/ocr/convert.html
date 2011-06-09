@@ -39,27 +39,55 @@
 {% block content %}
 
     {% include "includes/node.html" %}
-    {% include "includes/appmenu.html" %}
-    <div id="vsplitter">
-        <div class="ui-layout-center" id="viewertabs">
-            <ul id="viewertabs">
+
+    <div id="vsplitter" class="ui-layout-center">
+        <div class="ui-layout-north">
+            {% include "includes/appmenu.html" %}
+            <div class="clear"></div>
+        </div>
+        <div  id="viewertabs" class="ui-layout-center">
+            <ul>
                 <li><a href="#imageviewer-1">Image Viewer</a></li>
                 <li><a href="#textviewer-1">Text Viewer</a></li>
             </ul>
             <div class="ui-layout-content">            
-                <div id="imageviewer-1" class="imageviewer">
-                    Loading Image Viewer...
-                </div>
-                <div id="textviewer-1" class="textviewer">
-                    Loading Image Viewer...
-                </div>
+                <div id="imageviewer-1" class="imageviewer"></div>
+                <div id="textviewer-1" class="textviewer"></div>
             </div>
         </div>
-        <div id="options" class="ui-layout-east">
-            {% include "includes/parameter_builder_body.html" %}
-        </div>
-        <div id="footer" class="ui-layout-south"></div>
+        <div id="sidebar" class="ui-layout-east">
+            <form id="optionsform">
+                <div id="script_toolbar" class="ui-layout-north">
+                    <span class="buttons_left">
+                        <button id="abort">Abort</button>                                                    
+                        <button id="rerun_script">Rerun</button>
+                    </span>
+                    <select id="select_script" name="script">
+                        <option value="0">---</option>
+                        {% for preset in presets %}
+                            <option value="{{preset.slug}}">{{preset.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="buttons_right">
+                        <button id="open_script">Load Preset</button>
+                        <button id="save_script">Store Preset</button>
+                        <button id="download_script">Download Preset</button>
+                    </span>
+                    <div id="dialog"></div>
+                </div>
+                <div id="node_canvas" class="ui-layout-center">
 
+                </div>
+                <div id="parameters" class="ui-layout-south">
+                    <h1>Parameters</h1>
+                </div>
+            </form>
+            <!-- form for downloading scripts... this is a bit of a hack. -->
+            <form id="fetch_script" method="POST" action="/ocrpresets/fetch/" >
+                <input name="script" type="hidden" id="fetch_script_data" />
+            </form>
+        </div>
     </div>
+
 {% endblock %}
 
