@@ -239,6 +239,16 @@ $(function() {
         },
         south: {
             size: 200,
+            onresize_end: function() {
+                setTimeout(function() {
+                    pbuilder.resetSize();
+                });
+            },
+            onclose_end: function() {
+                setTimeout(function() {
+                    pbuilder.resetSize();
+                });
+            },
         },                   
 
 
