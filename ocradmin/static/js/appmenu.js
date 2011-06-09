@@ -1,6 +1,8 @@
 // ready() functions executed after everything else.
 // Mainly for widget layout
 
+var vplit, bsplit;
+
 $(function() {
     function deactivateMenu(menu) {
         $(menu).removeClass("selected")
@@ -60,14 +62,14 @@ $(function() {
     });
     
     
-    var bsplit = $("body").layout({
+    bsplit = $("body").layout({
         //applyDefaultStyles: true,
         center: {
             resizable: false,
             closable: false, 
         },
     });
-    var vsplit = $("#vsplitter").layout({
+    vsplit = $("#vsplitter").layout({
         applyDefaultStyles: true,
         north: {
             resizable: false,
@@ -77,11 +79,6 @@ $(function() {
         },
         east: {
             size: 400,
-            onresize_end: function() {
-                setTimeout(function() {
-                    pbuilder.resetSize();
-                });
-            },
         }        
     });
 

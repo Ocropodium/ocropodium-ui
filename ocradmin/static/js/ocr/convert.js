@@ -228,5 +228,11 @@ $(function() {
 
     });
 
+    vsplit.options.east.onresize_end = function() {
+        setTimeout(function() {
+            pbuilder.resetSize();
+        });
+    };
+
 });
 
