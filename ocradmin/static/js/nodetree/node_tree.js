@@ -28,6 +28,13 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this.queryNodeTypes();
     },
 
+    resetSize: function() {
+        console.log("Resetting size", $(this.parent).find("svg"), $(this.parent).width(), $(this.parent).height());                   
+        $(this.parent).find("svg")
+            .attr("width", $(this.parent).width())
+            .attr("height", $(this.parent).height());
+    },                   
+
     group: function() {
         return this._group;
     },        

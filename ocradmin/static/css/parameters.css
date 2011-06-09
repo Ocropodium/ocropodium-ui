@@ -7,12 +7,10 @@ div#options {
 }
 
 div#node_canvas {
-    /*margin-top: 5px;*/
-    width: 100%;
+    margin: 5px;
     border: 1px solid #E0E0E0;
     background-color: #E4E4E4;
     overflow: hidden;
-    height: 500px;
     border-top: 1px solid #999;
     border-left: 1px solid #999;
     border-right: 1px solid #BBB;
@@ -183,27 +181,9 @@ div#node_canvas {
 }
 
 .node_parameters {
-/*    float: left;
-    width: 150px;*/
-    min-height: 60px;
-    border-top: 1px solid #999;
-    border-left: 1px solid #999;
-    border-right: 1px solid #BBB;
-    border-bottom: 1px solid #BBB;
-    box-shadow: 1px 2px 2px #919598;
-    -webkit-box-shadow: 1px 2px 2px #919598;
-    -moz-box-shadow: 1px 2px 2px #919598;
     margin-top: 10px;
     padding: 10px;
-
-    background: #f8f8f8;
-    background: -moz-linear-gradient(top, #f8f8f8 0%, #ebebeb 100%);
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#ebebeb));
-    background: -webkit-linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
-    background: -o-linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
-    background: -ms-linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f8f8f8', endColorstr='#ebebeb',GradientType=0 );
-    background: linear-gradient(top, #f8f8f8 0%,#ebebeb 100%);
+    overflow: auto;
 }
 
 .node_parameters input {

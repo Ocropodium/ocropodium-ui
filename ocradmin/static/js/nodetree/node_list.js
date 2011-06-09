@@ -28,6 +28,10 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         this.queryNodeTypes();
     },
 
+    resetSize: function() {
+
+    },                   
+
     setNodeErrored: function(nodename, error) {
         if (!this._usednames[nodename])
             throw "Unknown node name: " + nodename;
