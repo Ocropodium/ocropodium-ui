@@ -33,6 +33,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         svg
             .attr("width", Math.max($(this.parent).width(), svg.attr("width")))
             .attr("height", Math.max($(this.parent).height(), svg.attr("height")));
+        this.syncDragTarget();
     },                   
 
     group: function() {
@@ -263,7 +264,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         });
         $(this._group).bind("mousedown", function(event) {
             if (event.button == 1 || event.button == 0 && event.shiftKey && event.ctrlKey) {
-                self.panContainer(event, this);
+                self.panContainer(event);
             } else if (event.button == 0) {
                 self.lassoSelect(event);    
             }                
@@ -336,12 +337,14 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var self = this;                         
         this._menu.show();
         var maxx = $(this.parent).offset().left + $(this.parent).width();
-        var left = event.clientX;
-        if (event.clientX + this._menu.outerWidth() > maxx)
+        console.log("Max X", maxx);
+        var left = event.pageX;
+        if (event.pageX + this._menu.outerWidth() > maxx)
             left = maxx - (this._menu.outerWidth() + 20);
         this._menu.css({
-            top: event.clientY,
-            left: left,    
+            zIndex: 2000,
+            top: event.pageY - $(this.parent).offset().top,
+            left: left - $(this.parent).offset().left,    
         });
         $(this._group).bind("click.menuhide", function(event) {
             self.hideContextMenu();            
@@ -349,6 +352,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             event.stopPropagation();
             event.preventDefault();
         });
+        console.log("showing context menu", event.pageX, event.pageY, left, event.pageY);
+        console.log("event x", event);
     },                         
 
     showSubContextMenu: function(menu, event) {
@@ -611,13 +616,13 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             svg = this.svg;
 
         this._group = svg.group(null, "canvas");
-        this.defineGradients();
-        self._cablegroup = svg.group(this._group, "cables");
-        var container = svg.rect(this._group, 0, 0, svg._width(), svg._height(), {
+        this._cablegroup = svg.group(this._group, "cables");
+        this._dragtarget = svg.rect(this._group, 0, 0, svg._width(), svg._height(), {
             fill: "transparent",
             fillOpacity: 0,
             stroke: "transparent",    
         });
+        this.defineGradients();
     },
 
     connectNodes: function(treenodes) {
@@ -647,35 +652,24 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         });
     },                
 
-    panContainer: function(event, element) {
+    panContainer: function(event) {
         var dragstart = {
             x: event.pageX,
             y: event.pageY,
         };
         var self = this;
-        var trans = SvgHelper.getTranslate(element);
-        var scale = SvgHelper.getScale(element);
+        var trans = SvgHelper.getTranslate(this.group());
+        var scale = SvgHelper.getScale(this.group());
         $(document).bind("mousemove.pancanvas", function(moveevent) {
-            SvgHelper.updateTranslate(element, 
+            SvgHelper.updateTranslate(self.group(), 
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
                 trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
         });
         $(document).bind("mouseup.pancanvas", function() {
             $(this).unbind(".pancanvas");
-            var enlarge = $(element).children("rect");
-            var trans = SvgHelper.getTranslate(element);
-            if (trans.x > 0) {
-                enlarge.attr("x", parseInt(enlarge.attr("x")) - trans.x);
-                enlarge.attr("width", parseInt(enlarge.attr("width")) + trans.x);
-            } else
-                enlarge.attr("width", parseInt(enlarge.attr("width")) - trans.x);
-            if (trans.y > 0) {
-                enlarge.attr("y", parseInt(enlarge.attr("y")) - trans.y);
-                enlarge.attr("height", parseInt(enlarge.attr("height")) + trans.y);
-            } else
-                enlarge.attr("height", parseInt(enlarge.attr("height")) - trans.y);
             event.stopPropagation();
             event.preventDefault();
+            self.syncDragTarget();
         });
     },
 
@@ -684,7 +678,19 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var cx = scale.x, cy = scale.y;
         cx *= by, cy *= by;
         SvgHelper.updateScale(this.group(), cx, cy);
+        this.syncDragTarget();
     },
+
+    syncDragTarget: function() {
+        var scale = SvgHelper.getScale(this.group());
+        var trans = SvgHelper.getTranslate(this.group());
+        var tx = $(this.parent).width(), ty = $(this.parent).height();
+        $(this._dragtarget)
+            .attr("width", tx / scale.x)
+            .attr("height", ty / scale.y)
+            .attr("x", -trans.x / scale.x)
+            .attr("y", -trans.y / scale.y);
+    },                        
 
     defineGradients: function() {                         
         var defs = this.svg.defs(this._group);
