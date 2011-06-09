@@ -7,7 +7,6 @@
 	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
 	<script type='application/javascript' src='/static/js/jquery/jquery.svg.js'></script>
 	<script type='application/javascript' src='/static/js/jquery/jquery.svgdom.min.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.layout-latest.js'></script>
 	<script type='application/javascript' src='/static/js/nodetree/svg_helper.js'></script>
 	<script type='application/javascript' src='/static/js/nodetree/cable.js'></script>
 	<script type='application/javascript' src='/static/js/nodetree/plug.js'></script>
@@ -30,67 +29,54 @@
     <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/text_viewer.css" type="text/css" media="screen" />
 
-    <link rel="stylesheet" href="/static/css/layout-default.css" type="text/css" media="screen" />
 
 {% endblock %}
-
-
 
 {% block content %}
-
     {% include "includes/node.html" %}
-
-    <div id="vsplitter" class="ui-layout-center">
-        <div  id="viewertabs" class="ui-layout-center">
-            <ul>
-                <li><a href="#imageviewer-1">Image Viewer</a></li>
-                <li><a href="#textviewer-1">Text Viewer</a></li>
-            </ul>
-            <div class="ui-layout-content">            
-                <div id="imageviewer-1" class="imageviewer"></div>
-                <div id="textviewer-1" class="textviewer"></div>
-            </div>
-        </div>
-        <div id="sidebar" class="ui-widget ui-corner-top ui-widget-content ui-tabs ui-layout-east">
-            <form id="optionsform">
-                <div id="script_toolbar" class="ui-tabs-nav ui-layout-north ui-widget-header ui-corner-top">
-                    <span class="buttons_left">
-                        <button id="abort">Abort</button>                                                    
-                        <button id="rerun_script">Rerun</button>
-                    </span>
-                    <select id="select_script" name="script">
-                        <option value="0">---</option>
-                        {% for preset in presets %}
-                            <option value="{{preset.slug}}">{{preset.name}}</option>
-                        {% endfor %}
-                    </select>
-                    <span class="buttons_right">
-                        <button id="open_script">Load Preset</button>
-                        <button id="save_script">Store Preset</button>
-                        <button id="download_script">Download Preset</button>
-                    </span>
-                    <div id="dialog"></div>
-                </div>
-                <div class="ui-layout-south ui-widget">
-                    <div id="parameters" class="node_parameters">
-                        <h1>No Node Selected</h1>
-                    </div>
-                </div>
-                <!-- NB. This is lower down in the DOM than the parameters, despite
-                 being positioned above.  It is so the menu overlaps the params
-                 where necessary -->
-                <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
-            </form>
-            <!-- form for downloading scripts... this is a bit of a hack. -->
-            <form id="fetch_script" method="POST" action="/ocrpresets/fetch/" >
-                <input name="script" type="hidden" id="fetch_script_data" />
-            </form>
-        </div>
-        <div id="menucontainer" class="ui-layout-north">
-            {% include "includes/appmenu.html" %}
-            <div class="clear"></div>
+    <div  id="viewertabs">
+        <ul>
+            <li><a href="#imageviewer-1">Image Viewer</a></li>
+            <li><a href="#textviewer-1">Text Viewer</a></li>
+        </ul>
+        <div class="ui-layout-content">            
+            <div id="imageviewer-1" class="imageviewer"></div>
+            <div id="textviewer-1" class="textviewer"></div>
         </div>
     </div>
-
 {% endblock %}
-
+{% block sidebar %}
+    <form id="optionsform">
+        <div id="script_toolbar" class="ui-tabs-nav ui-layout-north ui-widget-header ui-corner-top">
+            <span class="buttons_left">
+                <button id="abort">Abort</button>                                                    
+                <button id="rerun_script">Rerun</button>
+            </span>
+            <select id="select_script" name="script">
+                <option value="0">---</option>
+                {% for preset in presets %}
+                    <option value="{{preset.slug}}">{{preset.name}}</option>
+                {% endfor %}
+            </select>
+            <span class="buttons_right">
+                <button id="open_script">Load Preset</button>
+                <button id="save_script">Store Preset</button>
+                <button id="download_script">Download Preset</button>
+            </span>
+            <div id="dialog"></div>
+        </div>
+        <div class="ui-layout-south ui-widget">
+            <div id="parameters" class="node_parameters">
+                <h1>No Node Selected</h1>
+            </div>
+        </div>
+        <!-- NB. This is lower down in the DOM than the parameters, despite
+         being positioned above.  It is so the menu overlaps the params
+         where necessary -->
+        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
+    </form>
+    <!-- form for downloading scripts... this is a bit of a hack. -->
+    <form id="fetch_script" method="POST" action="/ocrpresets/fetch/" >
+        <input name="script" type="hidden" id="fetch_script_data" />
+    </form>
+{% endblock %}

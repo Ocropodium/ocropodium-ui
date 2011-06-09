@@ -58,5 +58,33 @@ $(function() {
     $("div#menu ul.top").bind("click.menuopen", function(e1) {
         activateMenu(this);
     });
+    
+    
+    var bsplit = $("body").layout({
+        //applyDefaultStyles: true,
+        center: {
+            resizable: false,
+            closable: false, 
+        },
+    });
+    var vsplit = $("#vsplitter").layout({
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0, 
+        },
+        east: {
+            size: 400,
+            onresize_end: function() {
+                setTimeout(function() {
+                    pbuilder.resetSize();
+                });
+            },
+        }        
+    });
+
+    $(window).resize();
 });
 
