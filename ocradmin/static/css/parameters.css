@@ -176,23 +176,26 @@ div#node_canvas {
 }
 
 .node_parameters {
-    margin-top: 10px;
-    padding: 10px;
     overflow: auto;
+    margin-top: 3px;
+}
+
+.node_param_header {
+    font-size: 1.3em;
+    padding-left: 5px;
+    background-color: #E2E2E2;
 }
 
 .node_parameters input {
     border: 1px solid #999;
     background-color: #FFFFDD;
+    width: 100%;
 }
 
 .node_parameters input.nameedit {
-    font-size: 1.3em;
-    background-color: transparent;
-    float: none;
+    background-color: #FDFDFD;
+    width: auto;
     padding: 2px;
-    display: block;
-    width: 100%;
     margin-bottom: 5px;
     border: 1px dotted #999; 
 }
@@ -213,6 +216,17 @@ div#node_canvas {
     padding-right: 0px;
     float: none;
     width: auto;
+}
+
+.node_param_table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.node_param_table td {
+    width: 50%;
+    border-bottom: 1px solid #CCC;
+    padding: 2px;
 }
 
 .nodename {

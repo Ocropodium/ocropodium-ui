@@ -208,6 +208,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
             inputs.push(i);
         $("#parameters").append($.tmpl(self._paramtmpl, {
             nodename: node.name,
+            nodetype: node.type.replace(/^[^:]+::/, ""),
             node: node,
             parameters: node.parameters,
             inputs: inputs, 
