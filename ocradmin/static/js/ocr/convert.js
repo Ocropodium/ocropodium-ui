@@ -28,17 +28,6 @@ function loadState() {
 
 $(function() {
 
-    $("body").layout({
-        applyDefaultStyles: true,
-        north: {
-            size: "auto",
-            spacing_open: 0,
-            closable: false,
-            resizable: false,
-        }
-
-    });
-
     // script builder buttons
     $("#abort").button({
         text: false,
@@ -213,5 +202,50 @@ $(function() {
         }
     }); 
     pbuilder.init();
+
+    function setHeights() {
+        var docheight = $(document).height();
+        var menuheight = $("#menu").outerHeight();
+        var height = docheight - menuheight;
+        console.log("Setting vsplitter height", docheight, " - ", menuheight, " = ", height);
+        $("#vsplitter").height(height - 5);
+    }
+    function initOptions() {
+        var tbheight = $("#script_toolbar").outerHeight();
+        var hsheight = ($("#options").height() - tbheight);
+        $("#hsplitter").height(hsheight);
+        var ncheight =  hsheight * 2/3;
+        var paramheight = hsheight - ncheight;
+        $("#node_canvas").height(ncheight);
+        $("#parameters").height(paramheight);
+        $("#hsplitter").width($("#options").width());
+        $("#node_canvas").width($("#hsplitter").width());
+        console.log("HS Width: ", $("#hsplitter").outerWidth(), $("#hsplitter").css("paddingLeft"));
+
+    }        
+
+//    setTimeout(function() {
+//        setHeights();
+//        console.log("vsplitter height", $("#vsplitter").height());
+//        var vsplit = $("#vsplitter").layout({
+//            applyDefaultStyles: true,
+//            east__size: 420,
+//            east__minSize: 200,
+//        });
+//        var hsplit = $("#hsplitter").layout({
+//            applyDefaultStyles: true,
+//        });
+//
+//        initOptions();
+//
+//
+//
+//        console.log("Menu height", $("#menu").height());
+//        $(window).resize(function(event) {
+//            setHeights();
+//            initOptions();
+//        });
+//
+//    });
 });
 
