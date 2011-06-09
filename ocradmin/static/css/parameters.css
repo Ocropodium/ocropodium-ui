@@ -2,11 +2,16 @@ div#options {
     /*height: 500px;*/
 }
 
+#script_toolbar {
+    padding: 5px;
+}
+
 div#node_canvas {
-    margin-top: 5px;
+    /*margin-top: 5px;*/
+    width: 100%;
     border: 1px solid #E0E0E0;
     background-color: #E4E4E4;
-    overflow: auto;
+    overflow: hidden;
     height: 500px;
     border-top: 1px solid #999;
     border-left: 1px solid #999;

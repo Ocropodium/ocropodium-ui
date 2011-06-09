@@ -16,7 +16,6 @@
 	<script type='application/javascript' src='/static/js/nodetree/node_tree.js'></script>
 	<script type='application/javascript' src='/static/js/preset_manager.js'></script>
 	<script type='application/javascript' src='/static/js/result_handler.js'></script>
-	<script type='application/javascript' src='/static/js/page_widget.js'></script>
 	<script type='application/javascript' src='/static/js/ocr/convert.js'></script>
 	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
@@ -40,24 +39,27 @@
 {% block content %}
 
     {% include "includes/node.html" %}
-    <div class="ui-layout-north">
-        {% include "includes/appmenu.html" %}
-    </div>
-    <div class="clear"></div>
-    <!--    <div id="vsplitter">-->
+    {% include "includes/appmenu.html" %}
+    <div id="vsplitter">
         <div class="ui-layout-center" id="viewertabs">
             <ul id="viewertabs">
                 <li><a href="#imageviewer-1">Image Viewer</a></li>
                 <li><a href="#textviewer-1">Text Viewer</a></li>
             </ul>
             <div class="ui-layout-content">            
-                <div id="imageviewer-1" class="imageviewer"></div>
-                <div id="textviewer-1" class="textviewer"></div>
+                <div id="imageviewer-1" class="imageviewer">
+                    Loading Image Viewer...
+                </div>
+                <div id="textviewer-1" class="textviewer">
+                    Loading Image Viewer...
+                </div>
             </div>
         </div>
         <div id="options" class="ui-layout-east">
             {% include "includes/parameter_builder_body.html" %}
         </div>
-        <!--    </div>-->
+        <div id="footer" class="ui-layout-south"></div>
+
+    </div>
 {% endblock %}
 

@@ -4,30 +4,37 @@
 
 {% block headerscript %}
     <style type="text/css">@import "/static/css/jquery.svg.css";</style> 
-	<script type='application/javascript' src='/static/js/jquery/jquery.svg.min.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.svgdom.min.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.layout-latest.js'></script>
 	<script type='application/javascript' src='/static/js/ocr/testparams.js'></script>
-	<script type='application/javascript' src='/static/js/nodetree/base.js'></script>
-	<script type='application/javascript' src='/static/js/nodetree/cable.js'></script>
-	<script type='application/javascript' src='/static/js/nodetree/plug.js'></script>
-	<script type='application/javascript' src='/static/js/nodetree/node.js'></script>
-	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
-	<script type='application/javascript' src='/static/js/parameter_tree_builder.js'></script>
+    <link rel="stylesheet" href="/static/css/layout-default.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
 {% endblock %}
 
 {% block content %}
 {% include "includes/node.html" %}
-<div id="sidebar" class="widget">
-    <div class="widget_header">Options</div>
-    <div class="widget_content">
-        <form id="optionsform" name="options" action="/ocr/convert2/" method="POST">
-            <div id="options">
-            
+    <div id="vsplitter" class="ui-layout-center">
+        <div class="ui-layout-north">
+            {% include "includes/appmenu.html" %}
+            <div class="clear"></div>
+        </div>
+        <div id="content" class="ui-layout-center">
+            <h1>Welcome to the test page</h1>
+        </div>
+        <div id="sidebar" class="ui-layout-east">
+            <div id="script_toolbar" class="ui-layout-north">
+                <button>Button 1 </button>
+                <button>Button 2 </button>
+                <button>Button 3 </button>
             </div>
-        </form>
+            <div id="node_canvas" class="ui-layout-center">
+
+            </div>
+            <div id="parameters" class="ui-layout-south">
+                <h1>Parameters</h1>
+
+            </div>
+        </div>
     </div>
-</div>
 
 {% endblock %}
 
