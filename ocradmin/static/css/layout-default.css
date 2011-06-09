@@ -32,7 +32,6 @@ p {
 *	PANES
 */
 .ui-layout-pane { /* all 'panes' */
-	background:	#FFF; 
  /*   border:		1px solid #BBB;*/
 	overflow:	auto;
 }
