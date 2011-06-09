@@ -27,6 +27,7 @@
         rgb(250,250,250) 75%
     );
     clear: both;
+    z-index:400;
 }
 
 #menu ul {
