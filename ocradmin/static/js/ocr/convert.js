@@ -222,7 +222,9 @@ $(function() {
         east: {
             size: 400,
             onresize_end: function() {
-                pbuilder.resetSize();
+                setTimeout(function() {
+                    pbuilder.resetSize();
+                });
             },
         }        
     });
