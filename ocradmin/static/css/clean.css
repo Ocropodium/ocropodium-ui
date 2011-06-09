@@ -59,12 +59,7 @@ html, body {
 } 
 
 #vsplitter { 
-    margin: 0 27px; 
     height: 100%; 
-    /* optional settings */ 
-    max-width: 1200px; 
-    min-width: 800px; 
-    _width: 800px; /* IE6 min-width */ 
 }
 
 #node_canvas {
