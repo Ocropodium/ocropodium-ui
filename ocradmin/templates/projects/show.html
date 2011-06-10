@@ -9,14 +9,7 @@
 
 {% block content %}
 
-<div class="widget">
-    <div class="widget_header">
-        {{object.name}}
-    </div>
-    <div class="widget_content">
-        {% include "projects/includes/project_info.html" %}
-    </div>
-</div>
+{% include "projects/includes/project_info.html" %}
 
 
 {% endblock %}
