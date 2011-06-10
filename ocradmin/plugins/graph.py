@@ -13,9 +13,9 @@ def get_node_positions(nodelist):
     """
     Build the pydot graph.
     """
-    g = pydot.Dot(margin="0.1")
+    g = pydot.Dot(margin="0.1", ranksep="0.7", nodesep="1.5")
     for n in nodelist:
-        node = pydot.Node(n["name"], width="1", fixedsize="1")
+        node = pydot.Node(n["name"], width="0.5", fixedsize="0.5")
         g.add_node(node)
 
     for n in nodelist:
