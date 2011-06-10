@@ -23,6 +23,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this._focussed = false;
         this._viewing = false;
         this._id = id;
+        this._error = null;
 
         this._listeners = {
             toggleIgnored: [],
@@ -49,6 +50,16 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this.elem.data("nodedata", this);
         this.setupEvents();
     },
+
+    getToolTip: function() {
+        var tip = this.name + "\n\n"
+            + this.type;
+        if (this.description && this.description != "")
+            tip += "\n\n" + this.description + "\n\n";
+        if (this._error && this._error != "")
+            tip += "\n\nError: " + this._error;
+        return tip;
+    },                    
 
     setupEvents: function() {
         var self = this;                     
@@ -120,6 +131,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
 
     setErrored: function(errored, msg) {
         this._toggleErrored(errored, msg);
+        this._error = errored ? msg : null;
     },
 
     _toggleIgnored: function(bool) {
@@ -134,9 +146,9 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this.elem.toggleClass("current", bool);
     },
 
-    _toggleErrored: function(bool, msg) {
+    _toggleErrored: function(bool) {
         this.elem.toggleClass("validation_error", bool);                    
-        this.elem.attr("title", bool ? msg : this.description);    
+        this.elem.attr("title", this.getToolTip());    
     },                       
 });
 
@@ -228,6 +240,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             stroke: "#BBB",
             strokeWidth: 1,
         });
+
+        this._tooltip = svg.title(g, this.getToolTip());        
         this._viewbutton = svg.rect(g, x, y, buttonwidth, this.height, 0, 0, {
             fill: "transparent",
             stroke: "#BBB",
@@ -340,6 +354,10 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             this.callListeners("deleted", this);
     },
 
+    getDefaultColour: function() {
+
+    },                          
+
     _toggleIgnored: function(bool) {
         var gradient = bool ? "url(#IgnoreGradient)" : "transparent";
         this.svg.change(this._ignorebutton, {fill: gradient});        
@@ -355,9 +373,10 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         this.svg.change(this._rect, {fill: gradient});        
     },
 
-    _toggleErrored: function(bool, msg) {
+    _toggleErrored: function(bool) {
         var gradient = bool ? "url(#ErrorGradient)" : "url(#NodeGradient)";
-        this.svg.change(this._rect, {fill: gradient});        
+        this.svg.change(this._rect, {fill: gradient});
+        $(this._tooltip).text(this.getToolTip());            
     },    
 
     move: function(event, element) {
