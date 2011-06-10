@@ -41,8 +41,8 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             .width($(this.target).outerWidth())
             .height($(this.target).outerHeight())
             .css({
-                position: "absolute",
-                opacity: 0.0,                
+                position: "fixed",
+                opacity: 0,                
                 top: $(this.target).offset().top + "px",
                 left: $(this.target).offset().left + "px",
             }).insertAfter(this.target);
