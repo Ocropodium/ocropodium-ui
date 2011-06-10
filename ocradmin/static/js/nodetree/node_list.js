@@ -30,7 +30,11 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
 
     resetSize: function() {
 
-    },                   
+    },
+
+    setDisabled: function(bool) {
+
+    },                     
 
     setNodeErrored: function(nodename, error) {
         if (!this._usednames[nodename])
@@ -48,9 +52,11 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         return tname + space + count;
     },
 
-    isValidNodeName: function(name) {
+    isValidNodeName: function(name, original) {
+        if (name == original)
+            return true;        
         if (name == "" || ~name.search(/\s/))
-            return false;            
+            return false;
         return !Boolean(this._usednames[name]);
     },
 
@@ -465,7 +471,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     },                  
 
     saveState: function() {
-        console.log("Saving state", this.buildScript());                   
         $.cookie("preset", $("#select_script").val());                   
         $.cookie("script", JSON.stringify(this.buildScript()));
     },
@@ -473,7 +478,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     loadState: function() {
         var self = this;
         var preset = $.cookie("preset");
-        if (preset && parseInt(preset) > 0) {
+        if (preset != "0") {
             $("#select_script").val(preset);
             $("#select_script").change();
         } else {
