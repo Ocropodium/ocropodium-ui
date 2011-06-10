@@ -37,21 +37,8 @@
 </div>
 </script>
 
-<div class="widget" id="sidebar">
-    <div class="widget_header">Recent Batches</div>
-    <div class="widget_content">
-        <div id="sidebar_content">
 
-        </div>
-    </div>
-</div>
-
-<div class="widget" id="batchcontainer">
-    <div class="widget_header">Batch</div>
-    <div class="widget_content">
-        {% include "batch/includes/show_batch.html" %}
-    </div> 
-</div>
+{% include "batch/includes/show_batch.html" %}
 
 
 {% if batch %}
@@ -61,4 +48,8 @@
     </form>
 {% endif %}
 
+{% endblock %}
+
+{% block sidebar %}
+    <div id="sidebar_content" class="ui-widget"></div>
 {% endblock %}

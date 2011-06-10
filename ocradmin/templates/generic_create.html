@@ -1,24 +1,19 @@
 {% extends "standard.html" %}
 
+{% block title %} {{page_name}} {% endblock %}
 {% block headerscript %}
     <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
-
 {% endblock %}
 
-
 {% block content %}
-
-<div class="widget">
-    <div class="widget_header">{{page_name}}</div>
-    <div class="widget_content">
+<div class="ui-widget ui-widget-content ui-helper-reset ui-helper-clearfix ui-tabs ui-tabs-nav">
+    <div class="ui-widget-header ui-corner-top">{{page_name}}</div>
+    <div class="ui-widget-content">
         {% include "includes/messages.html" %}
         <div id="object_form">
             {% include "includes/generic_create_body.html" %}
         </div>
     </div>
 </div>
-
-
-
 {% endblock %}
 
