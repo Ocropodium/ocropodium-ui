@@ -52,7 +52,12 @@ def runscript(request):
         pl = script.Script(nodes, manager=manager)
         term = pl.get_node(evalnode)
         if term is None:
-            term = pl.get_terminals()[0]
+            terms = pl.get_terminals()
+            if not terms:
+                return HttpResponse(simplejson.dumps(dict(
+                    status="NOSCRIPT",
+                )), mimetype="application/json")
+            term = terms[0]                
         result = term.validate()
     except node.ValidationError, err:
         return HttpResponse(simplejson.dumps(dict(
