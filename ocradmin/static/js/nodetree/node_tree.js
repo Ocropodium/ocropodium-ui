@@ -44,7 +44,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var self = this;                            
         node.addListeners({
             toggleIgnored: function(ig) {
-                self.scriptChange();
+                self.scriptChanged();
             },
             toggleFocussed: function() {
                 if (!self._multiselect) {
@@ -60,7 +60,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                     if (node.name != other.name)
                         other.setViewing(false);
                 });
-                self.scriptChange();
+                self.scriptChanged();
             },
             moving: function() {
                 // when the node is being dragged, also move any others
@@ -87,7 +87,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             },
             deleted: function() {
                 console.log("Deleted node:", node.name);
-                self.scriptChange();
+                self.scriptChanged();
             },
             clicked: function(event) {
                 if (self._menucontext)
@@ -235,12 +235,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $(self._group).noContext().rightClick(function(event) {
             self._menucontext = null;
             self.showContextMenu(event);
-        });
-
-        $("#optionsform").submit(function(event) {
-            self.runScript();
-            event.preventDefault();
-            event.stopPropagation();
         });
 
         $(self._group).click(function(event) {
@@ -473,7 +467,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         if (script.length > 0)
             if (!havemeta)
                 this.layoutNodes(script);
-        this.scriptChange();
+        this.scriptChanged();
     },                    
 
     addNode: function(name, typedata) {
@@ -586,7 +580,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             this.connectPlugs(dst.output(), ins[i]);
         dst.setViewing(src.isViewing());
         this.deleteNode(src, false);
-        this.scriptChange();
+        this.scriptChanged();
     },                     
 
     createNode: function(type, atpoint, context) {
@@ -656,7 +650,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             if (n.isFocussed()) return n;
         });
         $.map(togo, function(n) {self.deleteNode(n);});
-        this.scriptChange();        
+        this.scriptChanged();        
     },                        
 
     buildScript: function() {

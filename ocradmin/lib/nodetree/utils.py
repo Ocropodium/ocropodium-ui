@@ -22,6 +22,7 @@ class NodeEncoder(json.JSONEncoder):
                 description=n.description,
                 arity=n.arity,
                 stage=n.stage,
+                passthrough=n.passthrough,
                 parameters=n.parameters(),
             )
         return super(NodeEncoder, self).default(n)            

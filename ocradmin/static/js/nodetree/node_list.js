@@ -9,8 +9,8 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
 
         this._listeners = {
             onUpdateStarted: [],
-            resultPending: [],
             registerUploader: [],
+            scriptChanged: [],
         };
         this._nodelisttmpl = $.template($("#nodeListTmpl"));
         this._nodetreetmpl = $.template($("#nodeTreeTmpl"));
@@ -34,6 +34,12 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
 
     setDisabled: function(bool) {
 
+    },                     
+
+    clearErrors: function() {
+        $.map(this._nodes, function(n) {
+            n.setErrored(false);
+        });            
     },                     
 
     setNodeErrored: function(nodename, error) {
@@ -69,7 +75,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     removeNode: function(elem) {
         delete this._usednames[$(elem).attr("name")];
         $(elem).remove();
-        this.scriptChange();        
+        this.scriptChanged();        
     },
 
     selectLastNode: function() {
@@ -79,13 +85,8 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     setupEvents: function() {
         var self = this;
 
-        $("#run_script").click(function(event) {
-            self.runScript();
-            event.preventDefault();
-        });
-
         $("#optionsform").submit(function(event) {
-            self.runScript();
+            self.callListeners("scriptChanged");
             event.preventDefault();
             event.stopPropagation();
         });
@@ -170,7 +171,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         var self = this;                            
         node.addListeners({
             toggleIgnored: function(ig) {
-                self.scriptChange();
+                self.scriptChanged();
             },
             toggleFocussed: function(foc) {
                 $.each(self._usednames, function(name, other) {
@@ -178,18 +179,18 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                         other.setFocussed(false);
                 });
                 self.buildParams(node);
-                self.scriptChange();
+                self.scriptChanged();
             },
             toggleViewing: function(view) {
                 $.each(self._usednames, function(name, other) {
                     if (node.name != other.name)
                         other.setViewing(false);
                 });
-                self.scriptChange();
+                self.scriptChanged();
             },
             deleted: function() {
                 console.log("Deleted node: ", node.name);
-                self.scriptChange();
+                self.scriptChanged();
             },
         });
     },
@@ -200,10 +201,10 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         this._usednames[nodename].setErrored(true, error);
     },                        
 
-    scriptChange: function() {
+    scriptChanged: function() {
         console.log("running script");                      
-        this.runScript();
-    },                 
+        this.callListeners("scriptChanged");
+    },
 
     buildParams: function(node) {
         var self = this;
@@ -247,7 +248,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 $("input[type='radio']").change(function(event) {
                     node.parameters[i].value = parseInt(
                         $("input[name='" + node.name + "input']:checked").val());
-                    self.scriptChange();
+                    self.scriptChanged();
                 });
             }
         });        
@@ -321,35 +322,11 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         var last = this._nodes[this._nodes.length - 1];
         if (last)
             return last.name;
-    },                     
-
-    runScript: function() {
-        var self = this;                   
-        var script = self.buildScript();
-        var nodename = self.getEvalNode();
-        $.ajax({
-            url: "/plugins/run",
-            type: "POST",
-            data: {
-                script: JSON.stringify(script),
-                node: nodename,
-            },
-            error: OCRJS.ajaxErrorHandler,            
-            success: function(data) {
-                if (data.status == "NOSCRIPT")
-                    console.log("Server said 'Nothing to do'")
-                else if (data.status == "VALIDATION") {
-                    console.log("Setting error state on", data.node);
-                    self._usednames[data.node].setErrored(true, data.error);
-                } else {
-                    $.map(self._nodes, function(n) {
-                        n.setErrored(false);
-                    });
-                    self.callListeners("resultPending", nodename, data);
-                }
-            },
-        });
     },
+
+    getNode: function(nodename) {
+        return this._usednames[nodename];
+    },                 
 
     setFileInPath: function(name, path) {
         console.log("Setting filein path", name, path);                       
@@ -364,7 +341,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 }                
             }                
         }            
-        this.scriptChange();
+        this.scriptChanged();
     },               
 
     // turn our GUI into an acceptable

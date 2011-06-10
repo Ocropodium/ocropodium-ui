@@ -18,6 +18,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this.arity = classdata.arity;
         this.desc = classdata.description;
         this.stage = classdata.stage;
+        this.passthough = classdata.passthrough;
         this.parameters = $.extend(true, [], classdata.parameters);
         this._ignored = false;
         this._focussed = false;
@@ -196,6 +197,24 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         return this._outplug;
     },
 
+    hashValue: function() {
+        var inputs = this.getInputNodes();                   
+        if (this.arity > 0 && this.isIgnored()) {
+            if (inputs[this.passthrough])                
+                return inputs[this.passthrough].hash_value()
+            else
+                return null;
+        }
+        return {
+            name: this.name,
+            params: this.parameters,
+            children: $.map(inputs, function(n) {
+                if (n)
+                    return n.hashValue();
+            }),
+        };
+    },                   
+
     setupPlugListeners: function(plug) {
         var self = this;                            
         plug.addListeners({
@@ -313,17 +332,28 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         });
     },
 
-    serialize: function() {
-        var self = this;
-        var inputs = [];
+    getInputNodes: function() {
+        var inputs = [];                       
         $.each(this._inplugs, function(i, plug) {
-            if (plug.isAttached()) {
+            if (!plug.isAttached()) {
+                inputs.push(null);
+            } else {
                 var cable = plug.cable();
                 console.assert(cable);
                 var node = cable.start.node;
                 console.assert(node);
-                inputs.push(node.name);
+                inputs.push(node);
             }
+        });
+        return inputs;
+    },                       
+
+    serialize: function() {
+        var self = this;
+        var inputs = [];
+        $.each(this.getInputNodes(), function(i, node) {
+            if (node)
+                inputs.push(node.name);
         });
         var params = [];
         $.each(this.parameters, function(i, p) {

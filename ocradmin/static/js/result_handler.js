@@ -12,10 +12,14 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         this._timer = null;
 
         this._listeners = {
+            validationError: [],
+            resultPending: [],
             resultDone: [],
             haveErrorForNode: [],
         };
         
+        this._cache = {};
+
         this._nodetasks = {};
         this._tasknodes = {};
         this._nodedata = {};
@@ -32,6 +36,30 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
 
         
 
+    },
+
+    runScript: function(nodename, script) {
+        var self = this;                   
+        $.ajax({
+            url: "/plugins/run",
+            type: "POST",
+            data: {
+                script: JSON.stringify(script),
+                node: nodename,
+            },
+            error: OCRJS.ajaxErrorHandler,            
+            success: function(data) {
+                if (data.status == "NOSCRIPT")
+                    console.log("Server said 'Nothing to do'")
+                else if (data.status == "VALIDATION") {
+                    console.log("Setting error state on", data.node);
+                    self.callListeners("validationError", data.node, data.error);
+                } else {
+                    self.callListeners("resultPending");
+                    self.watchNode(nodename, data);
+                }
+            },
+        });
     },
 
     pollForResults: function() {
