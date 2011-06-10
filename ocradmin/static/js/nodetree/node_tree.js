@@ -300,6 +300,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $.map(this._nodes, function(n) {
             n.setFocussed(false);
         });
+        this.clearParams();
     },
 
     selectAll: function() {
@@ -609,7 +610,20 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         return $.map(this._nodes, function(n) {
             return n.serialize();
         });
-    },                     
+    },
+
+    saveState: function() {
+        this.base();
+        var transform = $(this.group()).attr("transform");
+        $.cookie("canvaspos", transform);
+    },                   
+
+    loadState: function() {
+        this.base();
+        var transform = $.cookie("canvaspos");
+        if (transform)
+            $(this.group()).attr("transform", transform);
+    },
 
     drawTree: function() {
         var self = this,
@@ -661,9 +675,12 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var trans = SvgHelper.getTranslate(this.group());
         var scale = SvgHelper.getScale(this.group());
         $(document).bind("mousemove.pancanvas", function(moveevent) {
-            SvgHelper.updateTranslate(self.group(), 
+            SvgHelper.updateTransform(self.group(), 
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
-                trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
+                trans.y + ((moveevent.pageY - dragstart.y) / scale.y),
+                scale.x,
+                scale.y
+            );
         });
         $(document).bind("mouseup.pancanvas", function() {
             $(this).unbind(".pancanvas");

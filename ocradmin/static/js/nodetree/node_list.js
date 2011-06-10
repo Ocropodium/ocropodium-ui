@@ -158,7 +158,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         this._usednames[name] = node;
         this._nodes.push(node);
         return node;
-
     },                 
 
     setupNodeListeners: function(node) {
@@ -196,6 +195,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     },                        
 
     scriptChange: function() {
+        console.log("running script");                      
         this.runScript();
     },                 
 
@@ -245,7 +245,12 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 });
             }
         });        
-    },                 
+    },
+
+    clearParams: function() {
+        $("input, select", $("#parameters")).unbind(".paramval");
+        $("#parameters").html("<h1>No Node Selected</h1>");
+    },                     
 
     queryNodeTypes: function() {
         var self = this;
@@ -323,9 +328,12 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 script: JSON.stringify(script),
                 node: nodename,
             },
-            error: OCRJS.ajaxErrorHandler,
+            error: OCRJS.ajaxErrorHandler,            
             success: function(data) {
-                if (data.status == "VALIDATION") {
+                if (data.status == "NOSCRIPT")
+                    console.log("Server said 'Nothing to do'")
+                else if (data.status == "VALIDATION") {
+                    console.log("Setting error state on", data.node);
                     self._usednames[data.node].setErrored(true, data.error);
                 } else {
                     $.map(self._nodes, function(n) {
@@ -431,6 +439,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         var self = this;                    
         $.each(script, function(i, nodedata) {
             var typedata = self._nodetypes[nodedata.type];
+            console.log("Creating node", nodedata.name);
             var node = self.addNode(nodedata.name, typedata);
             node.setIgnored(nodedata.ignored);
             $.each(nodedata.params, function(i, p) {

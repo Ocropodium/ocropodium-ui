@@ -372,9 +372,14 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         var moved = false;
         $(document).bind("mousemove.dragelem", function(moveevent) {
             moved = true;
-            self.moveTo(
+            SvgHelper.updateTransform(
+                self.group(),
                 trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
-                trans.y + ((moveevent.pageY - dragstart.y) / scale.y));
+                trans.y + ((moveevent.pageY - dragstart.y) / scale.y),
+                1,
+                1 
+            );
+            self._notifyMove();
         });
         $(document).bind("mouseup.dragelem", function(event) {
             if (moved)

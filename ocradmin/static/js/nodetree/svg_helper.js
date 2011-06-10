@@ -25,7 +25,7 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
     },
 
     updateTranslate: function(element, x, y) {
-        var sstr = " translate("  + x + "," + y + ")";
+        var sstr = " translate("  + (x).toFixed(2) + "," + (y).toFixed(2) + ")";
         var sattr = $(element).attr("transform");
         if (sattr && sattr.match(this.translatere))
             $(element).attr("transform", $.trim(sattr.replace(this.translatere, sstr)));
@@ -34,6 +34,16 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
         else
             $(element).attr("transform", $.trim(sstr)); 
     },
+
+    updateTransform: function(element, tx, ty, sx, sy) {
+        // slightly more efficent method where we can just set the 
+        // scale and transform outright without parsing for
+        // existing values.
+        // Assumes there's no rotation!
+        var str = "translate(" + tx + "," + ty + ") scale(" + sx + "," + sy + ")";
+        $(element).attr("transform", str);
+        
+    },                         
 
     getTranslate: function(element) {
         var trans = {x: 0, y: 0},
