@@ -282,7 +282,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 if (event.which == KC_DELETE)
                     self.deleteSelected();
                 else if (event.which == KC_SHIFT)
-                   self._multiselect = true; 
+                   self._multiselect = true;
+                else if (event.which == KC_HOME)
+                    self.centreTree();
+                else if (event.ctrlKey && event.which == 76) // 'L' key
+                    self.layoutNodes(self.buildScript()); 
             });
             $(document).bind("keyup.nodecmd", function(event) {
                 if (event.which == KC_SHIFT)
@@ -295,6 +299,54 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             $(document).unbind("mousemove.debug");
         });
     },
+
+    getTreeBounds: function() {
+        var l, t, r, b;
+        $.each(this._nodes, function(i, node) {
+            var trans = SvgHelper.getTranslate(node.group());
+            if (i == 0) {
+                l = trans.x;
+                t = trans.y;
+                r = trans.x + node.width;
+                b = trans.y + node.height;    
+            } else {
+                l = Math.min(l, trans.x);
+                t = Math.min(t, trans.y);
+                r = Math.max(r, trans.x + node.width);
+                b = Math.max(b, trans.y + node.height);        
+            }                
+        });
+        return {l: l, t: t, r: r, b: b};
+    },                       
+
+    centreTree: function() {
+        // centre the tree in the viewport
+        if (this._nodes.length == 0)
+            return;
+
+        var border = 25;
+        var tw = $(this.parent).width() - (2 * border),
+            th = $(this.parent).height() - (2 * border);
+
+        var ctrans = SvgHelper.getTranslate(this.group());
+        var bounds = this.getTreeBounds();
+
+        // now determine what zoom/translate we need to 
+        // centre l, t, r & b
+        var w = (bounds.r - bounds.l), h = (bounds.b - bounds.t);
+        var tscalex = tw / w, tscaley = th / h;
+        var usedscale = Math.min(1, (Math.min(tscalex, tscaley))).toFixed(2);
+
+        // now determine where to translate the canvas to centre the tree
+        var xrealpos = (tw - w * usedscale) / 2;
+        var yrealpos = (th - h * usedscale) / 2;            
+        transx = border + (xrealpos - (bounds.l * usedscale));
+        transy = border + (yrealpos - (bounds.t * usedscale));
+
+        SvgHelper.updateScale(this.group(), usedscale, usedscale);
+        SvgHelper.updateTranslate(this.group(), transx, transy);
+        this.syncDragTarget();
+    },                    
 
     deselectAll: function() {
         $.map(this._nodes, function(n) {
@@ -661,6 +713,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                     self._usednames[node].moveTo(value[0], 
                             (self.svg._height() - value[1]) - 100);
                 });
+                self.centreTree();
             },
             error: OCRJS.ajaxErrorHandler,
         });
