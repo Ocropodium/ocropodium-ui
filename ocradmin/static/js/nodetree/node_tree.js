@@ -399,9 +399,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             top: event.pageY - $(this.parent).offset().top,
             left: left - $(this.parent).offset().left,    
         });
-        $(this._group).bind("click.menuhide", function(event) {
+        $(document).bind("click.menuhide", function(event) {
             self.hideContextMenu();            
-            $(self._group).unbind("click.menuhide");
+            $(document).unbind("click.menuhide");
             event.stopPropagation();
             event.preventDefault();
         });
@@ -453,6 +453,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var self = this;
         if (script.length < 1)
             return;
+        this.resetCanvas();
         var havemeta = false;
         $.each(script, function(i, node) {
             var typedata = self._nodetypes[node.type];
@@ -717,7 +718,12 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             },
             error: OCRJS.ajaxErrorHandler,
         });
-    },                
+    },
+
+    resetCanvas: function() {
+        SvgHelper.updateTransform(this.group(), 0, 0, 1, 1);
+        this.syncDragTarget();
+    },                     
 
     panContainer: function(event) {
         var dragstart = {
