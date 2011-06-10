@@ -133,7 +133,7 @@ $(function() {
             pbuilder.clearScript();
         } else {
             $.ajax({
-                url: "/ocrpresets/data/" + $(this).val(),
+                url: "/presets/data/" + $(this).val(),
                 error: OCRJS.ajaxErrorHandler,
                 success: function(data) {
                     pbuilder.clearScript();
