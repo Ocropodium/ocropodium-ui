@@ -145,30 +145,25 @@ $(function() {
         event.preventDefault();    
     });
 
-    sdviewer = new OCRJS.ImageViewer($(".imageviewer").get(0), {
-        numBuffers: 2,        
-    });
-    textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
-    reshandler = new OCRJS.ResultHandler();
-    formatter = new OCRJS.LineFormatter();
-    pbuilder = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
-    pbuilder.addListener("resultPending", function(node, pendingdata) {
-        reshandler.watchNode(node, pendingdata);
-    });
-    pbuilder.addListener("registerUploader", function(name, elem) {
+    $("#optionsform").submit(function() {
+        pbuilder.scriptChanged();
+        event.stopPropagation();
+        event.preventDefault();
+    });        
 
-        uploader.removeListeners("onXHRLoad.setfilepath");
-        uploader.setTarget(elem);
-        // FIXME: No error handling
-        uploader.addListener("onXHRLoad.setfilepath", function(data) {
-            pbuilder.setFileInPath(name, JSON.parse(data.target.response).file);
-        });
-    });
-    reshandler.addListener("resultDone", function(node, data) {
+    var resultcache = {};
+    function handleResult(nodename, data, cached) {
         if (data.result.type == "error") {
             console.log("NODE ERROR: ", data.result.node, data.result.error);
             pbuilder.setNodeErrored(data.result.node, data.result.error);
             return;
+        }
+
+        // otherwise cache the result and handle it
+        if (!cached) {
+            var node = pbuilder.getNode(nodename);
+            var hash = hex_md5(bencode(node.hashValue()));
+            resultcache[hash] = data;
         }
 
         if (data.result.type == "image" || data.result.type == "pseg") {
@@ -200,6 +195,44 @@ $(function() {
             formatter.blockLayout($(".textcontainer"));
             $("#viewertabs").tabs("select", 1);
         }
+    }        
+
+    sdviewer = new OCRJS.ImageViewer($(".imageviewer").get(0), {
+        numBuffers: 2,        
+    });
+    textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
+    reshandler = new OCRJS.ResultHandler();
+    formatter = new OCRJS.LineFormatter();
+    pbuilder = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
+
+    pbuilder.addListener("scriptChanged", function() {
+        var nodename = pbuilder.getEvalNode();
+        var node = pbuilder.getNode(nodename);
+        var hash = hex_md5(bencode(node.hashValue()));
+        if (resultcache[hash]) {
+            console.log("Found cached result for:", nodename);
+            handleResult(nodename, resultcache[hash], true);
+        } else
+            reshandler.runScript(nodename, pbuilder.buildScript());
+    });
+    pbuilder.addListener("registerUploader", function(name, elem) {
+
+        uploader.removeListeners("onXHRLoad.setfilepath");
+        uploader.setTarget(elem);
+        // FIXME: No error handling
+        uploader.addListener("onXHRLoad.setfilepath", function(data) {
+            pbuilder.setFileInPath(name, JSON.parse(data.target.response).file);
+        });
+    });
+
+    reshandler.addListener("resultPending", function() {
+        pbuilder.clearErrors();
+    });        
+    reshandler.addListener("validationError", function(node, data) {
+        pbuilder.setNodeErrored(node, error);
+    });        
+    reshandler.addListener("resultDone", function(node, data) {
+        handleResult(node, data, false);
     }); 
     pbuilder.init();
 
@@ -233,6 +266,5 @@ $(function() {
             pbuilder.resetSize();
         });
     };
-
 });
 
