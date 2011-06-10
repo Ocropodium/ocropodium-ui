@@ -5,13 +5,13 @@
 </script>
 
 <script id="nodeListTmpl" type="application/x-jquery-tmpl">
-    <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${name}" title="${description}">
+    <li class="node ${stage} arity${arity} ui-medium-flat" data-stage="${stage}" data-type="${name}" title="${description}">
         <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
     </li>
 </script>
 
 <script id="nodeTreeTmpl" type="application/x-jquery-tmpl">
-    <li class="node ${stage} arity${arity}" data-stage="${stage}" data-type="${type}" title="${description}">
+    <li class="node ${stage} arity${arity} ui-medium-flat" data-stage="${stage}" data-type="${type}" title="${description}">
         <span class="viewingbutton" title="Focus Viewer"></span>
         <div class="nodename">${name}</div>
         <span class="ignorebutton" title="Ignore Node"></span>
@@ -75,13 +75,13 @@
 </script>
 
 <script id="nodeMenuTmpl" type="application/x-jquery-tmpl">
-    <div class="nodemenu" id="nodemenu">
+    <div class="nodemenu ui-medium-flat" id="nodemenu">
         <h4>OCR Nodes</h4>
         <ul>
         {% templatetag openvariable %}each(stage,stagenodes) stages{% templatetag closevariable %}    
             <li class="topmenu">
                 ${stage}
-                <ul class="nodemenu submenu hidden">
+                <ul class="nodemenu ui-medium-flat submenu hidden">
                 {% templatetag openvariable %}each(i,node) stagenodes{% templatetag closevariable %}    
                     <li data-name="${node.name}">${node.name.replace(/^[^:]+::/, "")}</li>
                 {% templatetag openvariable %}/each{% templatetag closevariable %}    
