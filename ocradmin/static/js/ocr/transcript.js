@@ -1,6 +1,5 @@
 var transcript = null;
 var sdviewer = null;
-var pbuilder = null;
 var formatter = null;
 var polltimeout = -1;
 
@@ -403,11 +402,5 @@ $(function() {
     updateNavButtons();
     window.addEventListener("hashchange", updateTask);
 
-
-    // maximise the height of the transcript page
-    maximiseWidgets(transcript, sdviewer);
-    $(window).resize(function(event) {
-        maximiseWidgets(transcript, sdviewer);
-    });
 });        
 
