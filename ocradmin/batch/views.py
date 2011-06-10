@@ -28,7 +28,7 @@ from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
 from ocradmin.core.views import _handle_request, AppException
 from ocradmin.plugins.manager import PluginManager
-from ocradmin.ocrpresets.models import OcrPreset
+from ocradmin.presets.models import Preset
 
 
 PER_PAGE = 25
@@ -151,8 +151,8 @@ def create(request):
     script = request.POST.get("script")
     if not script and request.POST.get("preset") is not None:
         try:
-            script = OcrPreset.objects.get(pk=request.POST.get("preset")).data
-        except OcrPreset.DoesNotExist:
+            script = Preset.objects.get(pk=request.POST.get("preset")).data
+        except Preset.DoesNotExist:
             print "PRESET %d not found" % request.POST.get("preset")
             pass
 
@@ -507,7 +507,7 @@ def _new_batch_context(request):
     batchname = "%s - Batch %d" % (project.name,
             project.ocrbatch_set.count() + 1)
     form = OcrBatchForm(initial=dict(name=batchname, user=request.user))
-    presets = OcrPreset.objects.all().order_by("name")
+    presets = Preset.objects.all().order_by("name")
     return dict(
         prefix="",
         form=form,

@@ -191,7 +191,7 @@ INSTALLED_APPS = (
     'batch',
     'core',
     'ocrmodels',
-    'ocrpresets',
+    'presets',
     'plugins',
     'ocrtasks',
     'reference_pages',

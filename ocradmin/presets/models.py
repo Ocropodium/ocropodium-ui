@@ -4,7 +4,7 @@ from tagging.fields import TagField
 import tagging
 import autoslug
 
-class OcrPreset(models.Model):
+class Preset(models.Model):
     user = models.ForeignKey(User)
     tags = tagging.fields.TagField()
     name = models.CharField(max_length=100, unique=True)
@@ -18,24 +18,24 @@ class OcrPreset(models.Model):
     @classmethod
     def get_list_url(cls):
         """URL to view the object list"""
-        return "/ocrpresets/list/"
+        return "/presets/list/"
 
     @classmethod
     def get_create_url(cls):
         """URL to create a new object"""
-        return "/ocrpresets/create/"
+        return "/presets/create/"
 
     def get_absolute_url(self):
         """URL to view an object detail"""
-        return "/ocrpresets/show/%s/" % self.slug
+        return "/presets/show/%s/" % self.slug
 
     def get_update_url(self):
         """url to update an object detail"""
-        return "/ocrpresets/edit/%s/" % self.slug
+        return "/presets/edit/%s/" % self.slug
 
     def get_delete_url(self):
         """url to update an object detail"""
-        return "/ocrpresets/delete/%s/" % self.slug
+        return "/presets/delete/%s/" % self.slug
 
     def __unicode__(self):
         """

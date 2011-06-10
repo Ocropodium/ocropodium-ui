@@ -34,7 +34,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
             var tb = $(self.parent);        
             var pos = [tb.offset().left, tb.offset().top + tb.height()];
-            self._dialog.load("/ocrpresets/create/", function() {
+            self._dialog.load("/presets/create/", function() {
                 self._dialog.find("#id_data")
                     .val(JSON.stringify(pbuilder.buildScript()));
 //console.log("Set form data:". self._dialog.find("#id_data").val());
@@ -79,7 +79,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
         submit.click(function(sevent) {
             $.ajax({
-                url: "/ocrpresets/create/",
+                url: "/presets/create/",
                 type: "POST",
                 data: self._dialog.find("form").serialize(),
                 error: OCRJS.ajaxErrorHandler,
@@ -102,7 +102,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
     rebuildPresetList: function(current) {
         var select = $("#select_script", this.parent);
-        $.getJSON("/ocrpresets/list/", {format: "json"}, function(data) {
+        $.getJSON("/presets/list/", {format: "json"}, function(data) {
             select.children().slice(1).remove();
             $.each(data, function(i, preset) {
                 var opt = $("<option></option>");

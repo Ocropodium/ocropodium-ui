@@ -18,7 +18,7 @@ from ocradmin.core import tasks
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask, Transcript
-from ocradmin.ocrpresets.models import OcrPreset
+from ocradmin.presets.models import Preset
 from ocradmin.plugins.manager import PluginManager
 
 from ocradmin.plugins import parameters
@@ -55,7 +55,7 @@ def convert(request):
     Save a posted image to the DFS and convert it with Celery.
     """
     template = "ocr/convert.html"
-    context = dict(presets=OcrPreset.objects.all().order_by("name"))
+    context = dict(presets=Preset.objects.all().order_by("name"))
     if not request.method == "POST":
         return render(request, template, context)
     return _ocr_task(request, "ocr/convert.html", "convert.page")
