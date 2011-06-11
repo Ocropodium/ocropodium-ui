@@ -1,5 +1,10 @@
-[
-    {
+{
+    "__meta": {
+        "name": "OcropusBasic",
+        "description": "Basic Ocropus script",
+        "tags": "basic ocropus recognize" 
+    },
+    "filein1": {
         "params": [
             [
                 "path", 
@@ -7,10 +12,9 @@
             ]
         ], 
         "type": "Ocropus::FileIn", 
-        "name": "filein", 
         "inputs": []
     }, 
-    {
+    "DeskewPageByRAST1": {
         "params": [
             [
                 "max_n", 
@@ -18,12 +22,11 @@
             ]
         ], 
         "type": "Ocropus::DeskewPageByRAST", 
-        "name": "DeskewPageByRAST", 
         "inputs": [
-            "BinarizeBySauvola"
+            "BinarizeBySauvola1"
         ]
     }, 
-    {
+    "RmHalftone1": {
         "params": [
             [
                 "factor", 
@@ -35,12 +38,11 @@
             ]
         ], 
         "type": "Ocropus::RmHalftone", 
-        "name": "RmHalftone", 
         "inputs": [
-            "DeskewPageByRAST"
+            "DeskewPageByRAST1"
         ]
     }, 
-    {
+    "BinarizeBySauvola1": {
         "params": [
             [
                 "k", 
@@ -52,12 +54,11 @@
             ]
         ], 
         "type": "Ocropus::BinarizeBySauvola", 
-        "name": "BinarizeBySauvola", 
         "inputs": [
-            "filein"
+            "filein1"
         ]
     }, 
-    {
+    "SegmentPageByRAST1": {
         "params": [
             [
                 "all_pixels", 
@@ -69,12 +70,11 @@
             ]
         ], 
         "type": "Ocropus::SegmentPageByRAST", 
-        "name": "SegmentPageByRAST", 
         "inputs": [
-            "RmHalftone"
+            "RmHalftone1"
         ]
     }, 
-    {
+    "OcropusRecognizer1": {
         "params": [
             [
                 "character_model", 
@@ -86,10 +86,9 @@
             ]
         ], 
         "type": "Ocropus::OcropusRecognizer", 
-        "name": "NativeRecognizer", 
         "inputs": [
-            "RmHalftone", 
-            "SegmentPageByRAST"
+            "RmHalftone1", 
+            "SegmentPageByRAST1"
         ]
     }
-]
+}

@@ -26,16 +26,16 @@ class Script(object):
         """
         Wire up the nodes in tree order.
         """
-        lookup = {}
-        for n in self._script:
-            if self._tree.get(n["name"]):
-                raise ValueError("Duplicate node in tree: %s" % n["name"])
-            lookup[n["name"]] = n
-            self._tree[n["name"]] = self._manager.get_new_node(
-                    n["type"], n["name"], n["params"], **self._nodekwargs)
-            self._tree[n["name"]].ignored = n.get("ignored", False)
-        for name, n in lookup.iteritems():
-            for i in range(len(n["inputs"])):            
+        for name, n in self._script.iteritems():
+            if name.startswith("__"):
+                continue
+            self._tree[name] = self._manager.get_new_node(
+                    n["type"], name, n["params"], **self._nodekwargs)
+            self._tree[name].ignored = n.get("ignored", False)
+        for name, n in self._script.iteritems():
+            if name.startswith("__"):
+                continue
+            for i in range(len(n["inputs"])):
                 self._tree[name].set_input(i, self._tree.get(n["inputs"][i]))
 
     def get_node(self, name):

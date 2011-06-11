@@ -348,7 +348,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     // script... hopefully...                           
     buildScript: function() {
         var self = this;
-        var script = [];
+        var script = {};
         
         function scriptNode(node) {
             var arity = parseInt(node.arity);
@@ -358,7 +358,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 params.push([p.name, p.value]);
             });
             var out = {
-                name: node.name,
                 type: node.type,
                 stage: node.stage,
                 params: params,
@@ -380,56 +379,57 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 .filter(".input")
             .children().each(function(i, elem) {
                 node = $(elem).data("nodedata");
-                script.push(scriptNode(node, last));
+                script[node.name] = scriptNode(node, last);
                 last = node.name;
             }).end().end()
                 .filter(".filter_gray")
             .children().each(function(i, elem) {
                 node = $(elem).data("nodedata");
-                script.push(scriptNode(node, last));
+                script[node.name] = scriptNode(node, last);
                 last = node.name;
             }).end().end()
                 .filter(".binarize")
             .children().each(function(i, elem) {
                 node = $(elem).data("nodedata");
-                script.push(scriptNode(node, last));
+                script[node.name] = scriptNode(node, last);
                 last = node.name;
             }).end().end()
                 .filter(".filter_binary")
             .children().each(function(i, elem) {
                 node = $(elem).data("nodedata");
-                script.push(scriptNode(node, last));
+                script[node.name] = scriptNode(node, last);
                 last = node.name;
                 lastbinarizer = node.name;
             }).end().end()
                 .filter(".page_segment")
             .children().each(function(i, elem) {
                 node = $(elem).data("nodedata");
-                script.push(scriptNode(node, last));
+                script[node.name] = scriptNode(node, last);
                 segmenter = node.name;
                 last = node.name;
             }).end().end()
                 .filter(".recognize")
             .children().each(function(i, elem) {
                 node = $(elem).data("nodedata");
-                script.push(
-                    scriptNode(node, lastbinarizer, segmenter));
+                script[node.name] = scriptNode(node, lastbinarizer, segmenter);
             });
         return script;
     },
 
     loadScript: function(script) {
         var self = this;                    
-        $.each(script, function(i, nodedata) {
-            var typedata = self._nodetypes[nodedata.type];
-            console.log("Creating node", nodedata.name);
-            var node = self.addNode(nodedata.name, typedata);
-            node.setIgnored(nodedata.ignored);
-            $.each(nodedata.params, function(i, p) {
-                node.parameters[i].value = p[1];
-            });
-            $(".used ul." + typedata.stage)
-                .append(node.elem);
+        $.each(script, function(name, nodedata) {
+            if (name != "__meta") {
+                var typedata = self._nodetypes[nodedata.type];
+                console.log("Creating node", name);
+                var node = self.addNode(name, typedata);
+                node.setIgnored(nodedata.ignored);
+                $.each(nodedata.params, function(i, p) {
+                    node.parameters[i].value = p[1];
+                });
+                $(".used ul." + typedata.stage)
+                    .append(node.elem);
+            }
         });
         self.selectLastNode();
     },

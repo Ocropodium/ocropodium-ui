@@ -445,13 +445,15 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     loadScript: function(script) {
         var self = this;
-        if (script.length < 1)
-            return;
         this.resetCanvas();
         var havemeta = false;
-        $.each(script, function(i, node) {
+        this._scriptmeta = script.__meta;
+        delete script["__meta"];
+        console.log("Loading", script);
+        $.each(script, function(name, node) {
+            console.log("Making", name, node);
             var typedata = self._nodetypes[node.type];
-            var newnode = self.addNode(node.name, typedata);
+            var newnode = self.addNode(name, typedata);
             newnode.setIgnored(node.ignored);  
             $.each(node.params, function(i, p) {
                 newnode.parameters[i].value = p[1];
@@ -464,9 +466,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             }
         });
         this.connectNodes(script);
-        if (script.length > 0)
-            if (!havemeta)
-                this.layoutNodes(script);
+        if (!havemeta)
+            this.layoutNodes(script);
         this.scriptChanged();
     },                    
 
@@ -654,9 +655,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     },                        
 
     buildScript: function() {
-        return $.map(this._nodes, function(n) {
-            return n.serialize();
+        var script = {};                     
+        $.each(this._nodes, function(i, n) {
+            script[n.name] = n.serialize();
         });
+        return script;
     },
 
     saveState: function() {
@@ -688,10 +691,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     connectNodes: function(treenodes) {
         var self = this;                      
-        $.each(treenodes, function(ni, node) {
+        $.each(treenodes, function(name, node) {
             $.each(node.inputs, function(i, input) {
+                console.log("Connecting:", input, name);
                 var n1 = self._usednames[input];
-                var n2 = self._usednames[node.name];
+                var n2 = self._usednames[name];
                 self.connectPlugs(n1.output(), n2.input(i));
             });
         });    
