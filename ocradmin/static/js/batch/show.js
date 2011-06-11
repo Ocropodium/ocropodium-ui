@@ -1,4 +1,5 @@
 var batch = null;
+var hsplitL, hsplitR;
 $(function() {
 
     var sideparams = null;
@@ -116,16 +117,12 @@ $(function() {
     if ($("#batch_id").length) {
         batch = new OCRJS.BatchWidget(
                 document.getElementById("batchcontainer"),
-                $("#ocr_batch").data("index"));
+                $("#batch").data("index"));
         batch.addListeners({
             onTaskSelected: loadTaskDetails,
             onTaskDeselected: loadBatchList,
             onUpdate: hashNavigate,                                
         }).init();
-
-        window.addEventListener("hashchange", function() {
-            //hashNavigate();
-        });
 
         $(".submit_update").live("click", function(event) {
             var button = $(this);
@@ -157,10 +154,43 @@ $(function() {
         }
     }
 
-    $(window).resize(function(event) {
-        maximiseWidgets(batch);
+    hsplitL = $("#maincontent").layout({
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0, 
+        },
     });
-    maximiseWidgets(batch);
+
+    hsplitR = $("#sidebar").layout({
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0, 
+        },
+    });
+
+    hsplitL.options.center.onresize_end = function() {
+        setTimeout(function() {
+            batch.resetSize();
+        });
+    };
+    hsplitR.options.center.onresize_end = function() {
+        setTimeout(function() {
+        });
+    };
+
+    vsplit.options.east.onresize_end = function() {
+        setTimeout(function() {
+        });
+    };
+
+    $(window).resize();
+
 });        
 
 

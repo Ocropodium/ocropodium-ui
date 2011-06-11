@@ -302,6 +302,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         var self = this;
         this._pagediv.children().remove();
         this._pagediv.data("bbox", data.fields.results.box);
+        console.log(data);
         $.each(data.fields.results.lines, function(linenum, line) {
             var type = line.type ? line.type : "span";
             var lspan = $("<" + type + "></" + type + ">")

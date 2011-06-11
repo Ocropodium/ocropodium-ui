@@ -9,7 +9,7 @@
 	<script type='application/javascript' src='/static/js/batch_widget.js'></script>
     <!--<script type='application/javascript' src='/static/js/export_widget.js'></script>-->
     <!--<script type='application/javascript' src='/static/js/comparison_widget.js'></script>-->
-	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
+    <!--<script type='application/javascript' src='/static/js/parameter_builder.js'></script>-->
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
@@ -20,20 +20,22 @@
 {% block content %}
 
 <script id="row_template" type="text/x-jquery-tmpl">
-    <div class="batch_task" style="" data-index="${index}" href="#">
+<div class="batch_task" style="" data-index="${index}" href="#">
     <span class="page_name">Loading...</span>                
-    <div class="progressbar_container">
-        <span class="progressbar success">
-            <span class="progress" style="width: 0%; " title="0%"></span>
-        </span>
+    <div class="batch_controls_right">
+        <div class="progressbar_container">
+            <span class="progressbar success">
+                <span class="progress" style="width: 0%; " title="0%"></span>
+            </span>
+        </div>
+        <a href="#"
+                class="ui-state-default ui-corner-all button_link ui-icon ui-icon-circle-close abort_task"
+                title="Abort Task"></a>
+        <a href="#"
+                class="ui-state-default ui-corner-all button_link ui-icon ui-icon-refresh retry_task"
+                title="Retry Task"></a>
+        <span class="page_info">Lines: </span>
     </div>
-    <a href="#"
-            class="ui-state-default ui-corner-all button_link ui-icon ui-icon-circle-close abort_task"
-            title="Abort Task"></a>
-    <a href="#"
-            class="ui-state-default ui-corner-all button_link ui-icon ui-icon-refresh retry_task"
-            title="Retry Task"></a>
-    <span class="page_info">Lines: </span>
 </div>
 </script>
 
@@ -51,5 +53,6 @@
 {% endblock %}
 
 {% block sidebar %}
-    <div id="sidebar_content" class="ui-widget"></div>
+    <div class="ui-layout-north ui-widget-header ui-corner-top">Transcript</div>
+    <div id="sidebar_content" class="ui-widget-content ui-layout-center"></div> 
 {% endblock %}
