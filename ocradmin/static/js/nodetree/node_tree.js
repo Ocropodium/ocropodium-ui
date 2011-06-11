@@ -384,14 +384,13 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var self = this;                         
         this._menu.show();
         var maxx = $(this.parent).offset().left + $(this.parent).width();
-        console.log("Max X", maxx);
         var left = event.pageX;
         if (event.pageX + this._menu.outerWidth() > maxx)
             left = maxx - (this._menu.outerWidth() + 20);
         this._menu.css({
-            zIndex: 2000,
-            top: event.pageY - $(this.parent).offset().top,
-            left: left - $(this.parent).offset().left,    
+            position: "fixed",
+            top: event.pageY,
+            left: left,    
         });
         $(document).bind("click.menuhide", function(event) {
             self.hideContextMenu();            
@@ -399,8 +398,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             event.stopPropagation();
             event.preventDefault();
         });
-        console.log("showing context menu", event.pageX, event.pageY, left, event.pageY);
-        console.log("event x", event);
     },                         
 
     showSubContextMenu: function(menu, event) {
@@ -426,7 +423,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         self._menu = $.tmpl(this._menutemplate, {
             stages: self._nodedata,
         }).hide();
-        $(self.parent).append(self._menu);
+        $("body").append(self._menu);
         self.setupMenuEvents();
     },    
 
@@ -449,9 +446,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var havemeta = false;
         this._scriptmeta = script.__meta;
         delete script["__meta"];
-        console.log("Loading", script);
         $.each(script, function(name, node) {
-            console.log("Making", name, node);
             var typedata = self._nodetypes[node.type];
             var newnode = self.addNode(name, typedata);
             newnode.setIgnored(node.ignored);  
@@ -485,15 +480,14 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var self = this;                        
         var pos = SvgHelper.mouseCoord(self.parent, event);
         var scale = SvgHelper.getScale(self.group());
-        console.log("Raw pos:", pos.x, pos.y, "Scale:", scale.x, scale.y);
         var mult = SvgHelper.multPoints(pos, scale);
         var div = SvgHelper.divPoints(pos, scale);
-        console.log("Mult:", mult.x, mult.y, "Div:", div.x, div.y);
     },
 
     lassoSelect: function(event) {                             
         var self = this;
         var trans = SvgHelper.getTranslate(self.group());
+        var scale = SvgHelper.getScale(self.group());
         var start = self.relativePoint(
                 SvgHelper.mouseCoord(self.parent, event));
         var lasso = null;
@@ -638,10 +632,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     deleteSelected: function() {
         var self = this;                        
-        $.each(this._nodes, function(i, node) {
-            if (node.isFocussed())
-                console.log("    ", node.name);    
-        });
         // have to watch out we don't barf the _nodes index
         var togo = [];
         for (var i in this._nodes) {
