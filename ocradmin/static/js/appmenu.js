@@ -81,7 +81,5 @@ $(function() {
             size: 400,
         }        
     });
-
-    $(window).resize();
 });
 
