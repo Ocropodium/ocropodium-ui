@@ -3,6 +3,10 @@
 
 }
 
+#transcriptcontainer {
+    min-height: 400px;
+}
+
 .waiting {
     background-image: url(/static/ajax-loader-large.gif);
     background-position: center;
@@ -53,7 +57,7 @@ h1.ocr_line {
     -moz-user-select: text;
 }
 
-#scroll_container {
+#innerscroll {
     height: 320px;
     overflow: auto;
     background-color: #FFF;

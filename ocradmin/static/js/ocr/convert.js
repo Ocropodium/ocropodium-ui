@@ -266,5 +266,7 @@ $(function() {
             pbuilder.resetSize();
         });
     };
+
+    $(window).resize();
 });
 

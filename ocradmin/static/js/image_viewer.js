@@ -85,11 +85,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this.setMasterBuffer();
     },
 
-
-    container: function() {
-        return this.containerWidget();
-    },
-
     setDashboardVisible: function(show) {
         this.options.dashboard = show;
         this.refreshDashboard(show);
@@ -111,8 +106,9 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         }
     },               
 
-    updateSize: function(width, height) {
-        this._logger(width + "   " + height);
+    resetSize: function() {
+        var width = $(this.parent).width(),
+            height = $(this.parent).height();        
         this._viewport
             .height(height)
             .width(width);
@@ -128,14 +124,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this.options.width = width;
         this.refreshBuffers();        
     },
-
-    setWidth: function(width) {
-        this.updateSize(width, this.options.height);
-    },                
-
-    setHeight: function(height) {
-        this.updateSize(this.options.width, height);
-    },                
 
     isReady: function() {
         for (var i in this._buffers) {
