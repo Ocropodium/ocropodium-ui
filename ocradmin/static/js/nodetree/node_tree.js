@@ -686,6 +686,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             fillOpacity: 0,
             stroke: "transparent",    
         });
+        this.syncDragTarget();
         this.defineGradients();
     },
 

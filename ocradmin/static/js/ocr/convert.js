@@ -120,6 +120,11 @@ $(function() {
     //    },
     //});
     
+    $("#save_script").click(function(event) {
+        presetmanager.showNewPresetDialog(
+                JSON.stringify(pbuilder.buildScript(), null, "\t"));
+    });        
+    
     $("#download_script").click(function(event) {
         var json = JSON.stringify(pbuilder.buildScript(), false, '\t');
         $("#fetch_script_data").val(json);
@@ -229,7 +234,7 @@ $(function() {
         pbuilder.clearErrors();
     });        
     reshandler.addListener("validationError", function(node, data) {
-        pbuilder.setNodeErrored(node, error);
+        pbuilder.setNodeErrored(node, data.error);
     });        
     reshandler.addListener("resultDone", function(node, data) {
         handleResult(node, data, false);
