@@ -361,7 +361,6 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         });
 
         var out = {
-            name: this.name,
             type: this.type,
             stage: this.stage,
             inputs: inputs,                    

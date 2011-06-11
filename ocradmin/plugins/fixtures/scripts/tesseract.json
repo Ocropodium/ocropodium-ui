@@ -1,5 +1,10 @@
-[
-    {
+{
+    "__meta": {
+        "name": "TesseractBasic",
+        "description": "Basic Tesseract script",
+        "tags": "basic tesseract recognize" 
+    },
+    "filein1": {
         "params": [
             [
                 "path", 
@@ -7,10 +12,9 @@
             ]
         ], 
         "type": "Ocropus::FileIn", 
-        "name": "filein", 
         "inputs": []
     }, 
-    {
+    "DeskewPageByRAST1": {
         "params": [
             [
                 "max_n", 
@@ -18,12 +22,11 @@
             ]
         ], 
         "type": "Ocropus::DeskewPageByRAST", 
-        "name": "DeskewPageByRAST", 
         "inputs": [
-            "BinarizeBySauvola"
+            "BinarizeBySauvola1"
         ]
     }, 
-    {
+    "RmHalftone1": {
         "params": [
             [
                 "factor", 
@@ -35,12 +38,11 @@
             ]
         ], 
         "type": "Ocropus::RmHalftone", 
-        "name": "RmHalftone", 
         "inputs": [
-            "DeskewPageByRAST"
+            "DeskewPageByRAST1"
         ]
     }, 
-    {
+    "BinarizeBySauvola1": {
         "params": [
             [
                 "k", 
@@ -52,20 +54,18 @@
             ]
         ], 
         "type": "Ocropus::BinarizeBySauvola", 
-        "name": "BinarizeBySauvola", 
         "inputs": [
-            "filein"
+            "filein1"
         ]
     }, 
-    {
+    "SegmentPageBy1CP1": {
         "params": [], 
         "type": "Ocropus::SegmentPageBy1CP", 
-        "name": "SegmentPageBy1CP", 
         "inputs": [
-            "RmHalftone"
+            "RmHalftone1"
         ]
     }, 
-    {
+    "TesseractRecognizer1": {
         "params": [
             [
                 "language_model", 
@@ -73,10 +73,9 @@
             ]
         ], 
         "type": "Tesseract::TesseractRecognizer", 
-        "name": "NativeRecognizer", 
         "inputs": [
-            "RmHalftone", 
-            "SegmentPageBy1CP"
+            "RmHalftone1", 
+            "SegmentPageBy1CP1"
         ]
     }
-]
+}

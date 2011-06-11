@@ -50,7 +50,6 @@ class Command(BaseCommand):
 
         if not args:
             raise CommandError("Scripts to import must be given as arguments.")
-
         for f in args:
             if not os.path.exists(f):
                 raise CommandError("Script file does not exist: %s" % f)
@@ -60,17 +59,23 @@ class Command(BaseCommand):
             if name.strip() == "":
                 raise CommandError("Script must have a valid name")
             tags = " ".join([t.strip() for t in options.get("tags", "").split(",")])
+            description = options.get("description")
             with open(f) as fh:
                 data = fh.read()
                 try:
-                    text = json.loads(data)
+                    script = json.loads(data)
+                    meta = script.get("__meta")
+                    if meta is not None:
+                        name = meta.get("name", name)
+                        description = meta.get("description", options.get("description"))
+                        tags = meta.get("tags", tags)
                 except json.JSONDecodeError, err:
                     raise CommandError("Invalid script: JSON data could not be decoded.") 
                 p = Preset(
                         name=name,
                         user=adminuser,
                         tags=tags,
-                        description=options.get("description"),
+                        description=description,
                         data=data,
                 )
                 p.save()

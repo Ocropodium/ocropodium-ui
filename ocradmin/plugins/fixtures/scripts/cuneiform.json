@@ -1,5 +1,10 @@
-[
-    {
+{
+    "__meta": {
+        "name": "CuneiformBasic",
+        "description": "Basic Cuneiform script",
+        "tags": "basic cuneiform recognize" 
+    },
+    "filein1": {
         "type": "Ocropus::FileIn", 
         "params": [
             [
@@ -7,10 +12,9 @@
                 "etc/simple.png"
             ]
         ], 
-        "name": "filein", 
         "inputs": []
     }, 
-    {
+    "DeskewPageByRAST1": {
         "type": "Ocropus::DeskewPageByRAST", 
         "params": [
             [
@@ -18,12 +22,11 @@
                 10000
             ]
         ], 
-        "name": "DeskewPageByRAST", 
         "inputs": [
-            "BinarizeBySauvola"
+            "BinarizeBySauvola1"
         ]
     }, 
-    {
+    "RmHalftone1": {
         "type": "Ocropus::RmHalftone", 
         "params": [
             [
@@ -35,12 +38,11 @@
                 4
             ]
         ], 
-        "name": "RmHalftone", 
         "inputs": [
-            "DeskewPageByRAST"
+            "DeskewPageByRAST1"
         ]
     }, 
-    {
+    "BinarizeBySauvola1": {
         "type": "Ocropus::BinarizeBySauvola", 
         "params": [
             [
@@ -52,17 +54,15 @@
                 40
             ]
         ], 
-        "name": "BinarizeBySauvola", 
         "inputs": [
-            "filein"
+            "filein1"
         ]
     }, 
-    {
+    "CuneiformRecognizer1": {
         "params": [], 
         "type": "Cuneiform::CuneiformRecognizer", 
-        "name": "NativeRecognizer", 
         "inputs": [
-            "RmHalftone"
+            "RmHalftone1"
         ]
     }
-]
+}

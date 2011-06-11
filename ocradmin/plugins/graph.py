@@ -9,22 +9,22 @@ import json
 import tempfile
 
 
-def get_node_positions(nodelist):
+def get_node_positions(nodedict):
     """
     Build the pydot graph.
     """
     g = pydot.Dot(margin="0.1", ranksep="0.7", nodesep="1.5")
-    for n in nodelist:
-        node = pydot.Node(n["name"], width="0.5", fixedsize="0.5")
-        g.add_node(node)
+    for name, node in nodedict.iteritems():
+        n = pydot.Node(name, width="0.5", fixedsize="0.5")
+        g.add_node(n)
 
-    for n in nodelist:
-        for i in n["inputs"]:
+    for name, node in nodedict.iteritems():
+        for i in node["inputs"]:
             try:
                 src = g.get_node(i)
                 if isinstance(src, list):
                     src = src[0]
-                dst = g.get_node(n["name"])
+                dst = g.get_node(name)
                 if isinstance(dst, list):
                     dst = dst[0]
                 g.add_edge(pydot.Edge(src, dst))
@@ -37,16 +37,16 @@ def get_node_positions(nodelist):
     os.unlink(t.name)                    
 
     out = {}
-    for n in nodelist:
-        gn = g.get_node(n["name"])
+    for name, node in nodedict.iteritems():
+        gn = g.get_node(name)
         if isinstance(gn, list):
             gn = gn[0]
-        out[n["name"]] = [int(d) \
+        out[name] = [int(d) \
                 for d in gn.get_pos().replace('"', "").split(",")]
     return out
    
 if __name__ == "__main__":
-    nodes = []
+    nodes = {}
     with open(sys.argv[1], "r") as f:
         nodes = json.load(f)
     print get_node_positions(nodes)

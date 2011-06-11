@@ -1,31 +1,31 @@
-[
-    {
-        "type": "Ocropus::FileIn", 
+{
+    "__meta": {
+        "name": "OcropusBasic",
+        "description": "Basic Ocropus script"
+    },
+    "filein1": {
         "params": [
             [
                 "path", 
-                "/foobar/doesnotexists.hello"
+                "/foo/bar/doesnotexist.png"
             ]
-        ],
-        "ignored": true, 
-        "name": "filein", 
+        ], 
+        "type": "Ocropus::FileIn", 
         "inputs": []
     }, 
-    {
-        "type": "Ocropus::DeskewPageByRAST", 
+    "DeskewPageByRAST1": {
         "params": [
             [
                 "max_n", 
                 10000
             ]
         ], 
-        "name": "DeskewPageByRAST", 
+        "type": "Ocropus::DeskewPageByRAST", 
         "inputs": [
-            "BinarizeBySauvola"
+            "BinarizeBySauvola1"
         ]
     }, 
-    {
-        "type": "Ocropus::RmHalftone", 
+    "RmHalftone1": {
         "params": [
             [
                 "factor", 
@@ -36,27 +36,12 @@
                 4
             ]
         ], 
-        "name": "RmHalftone",
-        "ignored": true, 
+        "type": "Ocropus::RmHalftone", 
         "inputs": [
-            "DeskewPageByRAST"
+            "DeskewPageByRAST1"
         ]
     }, 
-    {
-        "type": "Numpy::Rotate90", 
-        "params": [
-            [
-                "num", 
-                4
-            ] 
-        ], 
-        "name": "Rotate360", 
-        "inputs": [
-            "RmHalftone"
-        ]
-    }, 
-    {
-        "type": "Ocropus::BinarizeBySauvola", 
+    "BinarizeBySauvola1": {
         "params": [
             [
                 "k", 
@@ -67,9 +52,43 @@
                 40
             ]
         ], 
-        "name": "BinarizeBySauvola", 
+        "type": "Ocropus::BinarizeBySauvola", 
         "inputs": [
-            "filein"
+            "filein1"
+        ]
+    }, 
+    "SegmentPageByRAST1": {
+        "params": [
+            [
+                "all_pixels", 
+                0
+            ], 
+            [
+                "gap_factor", 
+                10
+            ]
+        ], 
+        "type": "Ocropus::SegmentPageByRAST", 
+        "inputs": [
+            "RmHalftone1"
+        ]
+    }, 
+    "OcropusRecognizer1": {
+        "params": [
+            [
+                "character_model", 
+                "Ocropus Default Char"
+            ], 
+            [
+                "language_model", 
+                "Ocropus Default Lang"
+            ]
+        ], 
+        "type": "Ocropus::OcropusRecognizer", 
+        "inputs": [
+            "RmHalftone1", 
+            "SegmentPageByRAST1"
         ]
     }
-]
+}
+

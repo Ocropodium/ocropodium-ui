@@ -1,5 +1,9 @@
-[
-    {
+{
+    "__meta": {
+        "name": "BinarizeExample",
+        "description": "Example binarization script"
+    },
+    "filein1": {
         "type": "Ocropus::FileIn", 
         "params": [
             [
@@ -7,10 +11,9 @@
                 "etc/simple.png"
             ]
         ],
-        "name": "filein", 
         "inputs": []
     }, 
-    {
+    "DeskewPageByRAST1": {
         "type": "Ocropus::DeskewPageByRAST", 
         "params": [
             [
@@ -18,12 +21,11 @@
                 10000
             ]
         ], 
-        "name": "DeskewPageByRAST", 
         "inputs": [
-            "BinarizeBySauvola"
+            "BinarizeBySauvola1"
         ]
     }, 
-    {
+    "RmHalftone1": {
         "type": "Ocropus::RmHalftone", 
         "params": [
             [
@@ -35,13 +37,12 @@
                 4
             ]
         ], 
-        "name": "RmHalftone",
         "ignored": true, 
         "inputs": [
-            "DeskewPageByRAST"
+            "DeskewPageByRAST1"
         ]
     }, 
-    {
+    "Rotate360_1": {
         "type": "Numpy::Rotate90", 
         "params": [
             [
@@ -49,12 +50,11 @@
                 4
             ] 
         ], 
-        "name": "Rotate360", 
         "inputs": [
-            "RmHalftone"
+            "RmHalftone1"
         ]
     }, 
-    {
+    "BinarizeBySauvola1": {
         "type": "Ocropus::BinarizeBySauvola", 
         "params": [
             [
@@ -66,9 +66,8 @@
                 40
             ]
         ], 
-        "name": "BinarizeBySauvola", 
         "inputs": [
-            "filein"
+            "filein1"
         ]
     }
-]
+}
