@@ -558,7 +558,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $.map(this._nodes, function(n) { n.setFocussed(false); });
     },                         
 
-    relativePoint: function(point, to) {
+    relativePoint: function(point) {
         var scale = SvgHelper.getScale(this.group());
         var trans = SvgHelper.getTranslate(this.group());
         return {x: (point.x - trans.x) / scale.x, y: (point.y - trans.y) / scale.y};
