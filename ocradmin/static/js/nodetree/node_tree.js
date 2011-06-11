@@ -172,7 +172,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $(document).bind("mousemove.dragcable", function(event) {
             var npoint = SvgHelper.denorm(plug.centre(), plug.group(), self.group());
             var nmp = SvgHelper.mouseCoord(self.parent, event);
-            cable.update(npoint, self.relativePoint(nmp, cable.group()));
+            cable.update(npoint, self.relativePoint(nmp));
         }); 
         $(self.group()).bind("click.dropcable", function(event) {
             self.removeDragCable();
@@ -493,13 +493,13 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     lassoSelect: function(event) {                             
         var self = this;
-        var scale = SvgHelper.getScale(self.group());        
+        var trans = SvgHelper.getTranslate(self.group());
         var start = self.relativePoint(
-                SvgHelper.mouseCoord(self.parent, event), self._cablegroup);
+                SvgHelper.mouseCoord(self.parent, event));
         var lasso = null;
         $(document).bind("mousemove.lasso", function(mevent) {
             var end = self.relativePoint(
-                    SvgHelper.mouseCoord(self.parent, mevent), self._cablegroup);
+                    SvgHelper.mouseCoord(self.parent, mevent));
             var rect = SvgHelper.rectFromPoints(start, end);
             if (!lasso && Math.sqrt(rect.width^2 + rect.height^2) > 5) {
                 lasso = self.svg.rect(self.group(), rect.x, rect.y, 
@@ -559,8 +559,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     },                         
 
     relativePoint: function(point, to) {
-        var mp = SvgHelper.norm(point, to, null);
-        return SvgHelper.divPoints(mp, SvgHelper.getScale(this.group()));
+        var scale = SvgHelper.getScale(this.group());
+        var trans = SvgHelper.getTranslate(this.group());
+        return {x: (point.x - trans.x) / scale.x, y: (point.y - trans.y) / scale.y};
     },
 
     replaceNode: function(src, dst) {
@@ -609,7 +610,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         if (!dragnode)
             return;
 
-        var point = self.relativePoint(atpoint, nodeobj.group());
+        var point = self.relativePoint(atpoint);
         nodeobj.moveTo(point.x - (nodeobj.width / 2), point.y - (nodeobj.height / 2));
         $(document).bind("keydown.dropnode", function(event) {
             if (event.which == KC_ESCAPE)
@@ -617,7 +618,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         });
         $(self._group).bind("mousemove.dropnode", function(event) {
             var nmp = SvgHelper.mouseCoord(self.parent, event);
-            var npoint = self.relativePoint(nmp, nodeobj.group());
+            var npoint = self.relativePoint(nmp);
             nodeobj.moveTo(npoint.x - (nodeobj.width / 2), npoint.y - (nodeobj.height / 2));
             $(document).add($(nodeobj.group()).find("*")).bind("click.dropnode", function(e) {
                 $(self._group).unbind(".dropnode");
@@ -731,13 +732,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         };
         var self = this;
         var trans = SvgHelper.getTranslate(this.group());
-        var scale = SvgHelper.getScale(this.group());
         $(document).bind("mousemove.pancanvas", function(moveevent) {
-            SvgHelper.updateTransform(self.group(), 
-                trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
-                trans.y + ((moveevent.pageY - dragstart.y) / scale.y),
-                scale.x,
-                scale.y
+            SvgHelper.updateTranslate(self.group(), 
+                trans.x + (moveevent.pageX - dragstart.x),
+                trans.y + (moveevent.pageY - dragstart.y)
             );
         });
         $(document).bind("mouseup.pancanvas", function() {
