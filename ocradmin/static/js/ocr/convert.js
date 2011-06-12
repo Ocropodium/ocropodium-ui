@@ -13,6 +13,7 @@ var pbuilder = null;
 var sdviewer = null;
 var reshandler = null;
 var presetmanager = null;
+var guimanager = null;
 
 function saveState() {
     pbuilder.saveState();
@@ -205,6 +206,8 @@ $(function() {
     sdviewer = new OCRJS.ImageViewer($(".imageviewer").get(0), {
         numBuffers: 2,        
     });
+    guimanager = new OCRJS.GuiManager(sdviewer);    
+
     textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
@@ -228,6 +231,12 @@ $(function() {
         uploader.addListener("onXHRLoad.setfilepath", function(data) {
             pbuilder.setFileInPath(name, JSON.parse(data.target.response).file);
         });
+    });
+    pbuilder.addListener("nodeViewing", function(node) {
+        if (!node)
+            guimanager.tearDownGui();
+        else
+            guimanager.setupGui(node);
     });
 
     reshandler.addListener("resultPending", function() {
