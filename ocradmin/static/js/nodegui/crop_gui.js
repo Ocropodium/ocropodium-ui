@@ -9,7 +9,27 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     constructor: function(node, viewer) {
         this.base(node, viewer, "cropgui");
 
+        this._coords = [];
         this._color = "#FFBBBB";
+        this.registerListener("onCanvasChanged");
+    },
+
+    getData: function() {
+        if (this._coords.length < 4)
+            return { x0: -1, y0: -1,x1: -1,y1: -1 };    
+        return {
+            x0: this._coords[0],
+            y0: this._coords[1],
+            x1: this._coords[2],
+            y1: this._coords[3],
+        };
+    },
+
+    handles: function() {
+        return: ["x0", "y0", "x1", "y1"];
+    },                 
+
+    setup: function() {
         this._rect = document.createElement("div");
         $(this._rect).css({
             borderColor: this._color,
@@ -19,8 +39,11 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
 
         var sdrect = null; // TODO: Get rect of document!
         this._viewer.activeViewer().drawer.addOverlay(this._rect, sdrect);
-        this.registerListener("onCanvasChanged");
     },
+
+    tearDown: function() {
+        $(this._rect).remove();        
+    },                  
 
     setupEvents: function() {
         this.base();
