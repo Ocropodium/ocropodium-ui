@@ -29,7 +29,8 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
         this._listeners = {
             onBufferRefresh: [],
-
+            resized: [],
+            closed: [],
         };
 
         this._cbuf = 0;
