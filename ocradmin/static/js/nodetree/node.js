@@ -31,6 +31,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             toggleFocussed: [],
             toggleViewing: [],
             deleteInitiated: [],
+            parameterSet: [],
             deleted: [],
             created: [],
         };    
@@ -43,7 +44,23 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
     setName: function(name) {
         this.name = name;
         this.elem.find(".nodename").text(name);
-    },                 
+    },
+
+    setParameter: function(name, value, emit) {
+        var set = false;                      
+        for(var i in this.parameters) {
+            if (this.parameters[i].name == name) {
+                this.parameters[i].value = value;
+                set = true;
+                if (emit)
+                    this.callListeners("parameterSet");
+                break;                
+            }
+        }            
+        if (!set)
+            throw "Attempt to set non-existent parameter on " 
+                + node.name + ": '" + name "' = '" + value + "'"; 
+    },                      
 
     buildElem: function() {
         var tmpl = $.template($("#nodeTreeTmpl"));
