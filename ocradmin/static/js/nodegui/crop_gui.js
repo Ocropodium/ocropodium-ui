@@ -6,12 +6,15 @@ var OCRJS = OCRJS || {};
 OCRJS.NodeGui = OCRJS.NodeGui || {}
 
 OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
-    constructor: function(node, viewer) {
-        this.base(node, viewer, "cropgui");
+    constructor: function(viewer) {
+        this.base(viewer, "cropgui");
 
+        this.nodeclass = "Ocropus::Crop";
         this._coords = [];
         this._color = "#FFBBBB";
         this.registerListener("onCanvasChanged");
+        this._handles = {x0: -1, y0: -1, x1: -1, y1: -1};
+        this._node = null;
     },
 
     getData: function() {
@@ -25,12 +28,9 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         };
     },
 
-    handles: function() {
-        return: ["x0", "y0", "x1", "y1"];
-    },                 
-
-    setup: function() {
+    setup: function(node) {
         this._rect = document.createElement("div");
+        this._node = node;
         $(this._rect).css({
             borderColor: this._color,
         });
@@ -42,7 +42,9 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     },
 
     tearDown: function() {
-        $(this._rect).remove();        
+        this._viewer.drawer.removeOverlay(this._rect);                  
+        $(this._rect).remove();
+        this._node = null;        
     },                  
 
     setupEvents: function() {
@@ -105,7 +107,44 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
                 sdrect = self._normalisedRect(x0, y0, x1, y1);
             self._viewer.activeViewer().drawer.updateOverlay(tracker.target, sdrect);
         } 
-    },                     
+    },
+
+    getTranslatedRect: function() {
+        var bufelem = this._viewer.activeViewer().elmt;
+        var bufpos = Seadragon.Utils.getElementPosition(bufelem);
+        var bufsize = Seadragon.Utils.getElementSize(bufelem);
+        var bufrect = new Seadragon.Rect(0, 0, bufsize.x, bufsize.y);
+        var srcsize = this._viewer.activeViewer().source.dimensions;
+
+        var vp = this._viewer.activeViewer().viewport;
+        var zoom = vp.getZoom();
+        var adjust = bufsize.x / srcsize.x;
+        var factor = zoom * adjust;
+
+        var centre = vp.getCenter();
+        var aspect = srcsize.x / srcsize.y;
+        var zoomsize = srcsize.times(zoom * adjust);
+        var zoomrect = new Seadragon.Rect(0, 0, zoomsize.x, zoomsize.y);
+        var pointonzoomrectatcentre = new Seadragon.Point(
+                zoomsize.x * centre.x, zoomsize.y * (centre.y * aspect));
+        var bufcentre = bufrect.getCenter();
+        var absrect = new Seadragon.Rect(bufcentre.x - pointonzoomrectatcentre.x,
+                bufcentre.y - pointonzoomrectatcentre.y, zoomsize.x, zoomsize.y);
+        var pos = $(this._rect).position();
+        var x = Math.max(0, (pos.left - absrect.x) / factor),
+            y = Math.max(0, (absrect.height - $(this._rect).height() - (pos.top - absrect.y)) / factor);
+        var w = Math.min(srcsize.x, x + ($(this._rect).width() / factor)),
+            h = Math.min(srcsize.y, y + ($(this._rect).height() / factor));
+        return [x, y, x + w, y + h];
+    },                  
+
+
+    updateNodeParameters: function() {                                     
+        console.assert(this._node, "No node found for GUI");
+
+        var translatedrect = this.getTranslatedRect();
+        // TODO:
+    },                             
 
     dragDone: function() {
         this._hndl.setTracking(true);
@@ -117,5 +156,26 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     _initialiseNewDrag: function() {                
         var self = this;
 
+    },
+
+    _makeTransformable: function(elem) {
+        // add jQuery dragging/resize ability to
+        // an overlay rectangle                            
+        var self = this;
+        $(elem)
+            .addClass("nodegui_rect")
+            .resizable({
+                handles: "all",
+                stop: function() {
+                    self.updateNodeParameters();
+                    self.callListeners("onCanvasChanged");
+                },
+            })
+            .draggable({
+                stop: function() {
+                    self.updateNodeParameters();
+                    self.callListeners("onCanvasChanged");
+                },
+            });
     },
 });
