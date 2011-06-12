@@ -19,11 +19,11 @@ var OCRJS = OCRJS || {};
 OCRJS.NodeGui = OCRJS.NodeGui || {}
 
 OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
-    constructor: function(node, viewer) {
+    constructor: function(viewer) {
         this.base();
-
+        
+        this.nodeclass = null;
         this._idgui = id;
-        this._node = node;
         this._viewer = viewer;
         this._shapes = [];
         this._canvas = $("<div></div>")
@@ -45,6 +45,14 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
         this._canvas.height(this._viewer.height());
         this._canvas.width(this._viewer.width());
     },
+
+    setup: function(node) {
+
+    },
+
+    tearDown: function() {
+
+    },                  
 
     _normalisedRect: function(x0, y0, x1, y1) {
         var sdx0 = this._viewer.activeViewer().viewport.pointFromPixel(
