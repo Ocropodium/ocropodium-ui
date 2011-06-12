@@ -126,6 +126,14 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this.refreshBuffers();        
     },
 
+    height: function() {
+        return $(this.parent).height();
+    },                
+
+    width: function() {
+        return $(this.parent).width();
+    },        
+
     isReady: function() {
         for (var i in this._buffers) {
             if (!this._buffers[i].viewport) {
