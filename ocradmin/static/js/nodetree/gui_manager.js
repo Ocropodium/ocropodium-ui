@@ -26,15 +26,20 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
             throw "No gui container namespace found."
 
         $.each(OCRJS.NodeGui, function(name, klass) {
-            if (klass.nodeclass)
-                self._types[klass.nodeclass] = new klass(self._viewer);
+            var obj = new klass(self._viewer);
+            if (obj.nodeclass) {
+                console.log("Registering", obj.nodeclass);
+                self._types[obj.nodeclass] = obj;
+            } else {
+                obj = null;
+            }
         });
     },
 
     setupGui: function(node) {
         this._current = this._types[node.type];
         if (this._current) {
-            this._current.setup();
+            this._current.setup(node);
             this.callListeners("setupGui");
         }        
     },                  

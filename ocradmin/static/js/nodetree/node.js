@@ -59,7 +59,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         }            
         if (!set)
             throw "Attempt to set non-existent parameter on " 
-                + node.name + ": '" + name "' = '" + value + "'"; 
+                + node.name + ": '" + name + "' = '" + value + "'"; 
     },                      
 
     buildElem: function() {

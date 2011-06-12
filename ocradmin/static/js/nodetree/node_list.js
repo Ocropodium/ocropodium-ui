@@ -252,7 +252,9 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                     self.scriptChanged();
                 });
             }
-        });        
+        });
+
+        this.callListeners("nodeViewing", node);        
     },
 
     clearParams: function() {

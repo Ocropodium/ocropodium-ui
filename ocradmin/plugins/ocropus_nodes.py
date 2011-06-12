@@ -135,6 +135,61 @@ class OcropusFileOutNode(node.Node, generic_nodes.GrayPngWriterMixin):
         return input
 
 
+class OcropusCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
+    """
+    Crop a PNG input.
+    """
+    arity = 1
+    description = "Crop a binary image."
+    name = "Ocropus::Crop"
+    stage = stages.FILTER_BINARY
+    _parameters = [
+        dict(name="x0", value=-1),
+        dict(name="y0", value=-1),
+        dict(name="x1", value=-1),
+        dict(name="y1", value=-1),
+    ]
+
+    def _validate(self):
+        """
+        Check inputs are connected.
+        """
+        for i in range(len(self._inputs)):
+            if self._inputs[i] is None:
+                raise node.ValidationError(self, "missing input '%d'" % i)
+
+    def _eval(self):
+        """
+        Crop an image, using IULIB.  If any of
+        the parameters are -1 or less, use the
+        outer dimensions.
+        """
+        input = self.get_input_data(0)
+        x0, y0 = 0, 0
+        y1, x1 = input.shape
+        try:
+            x0 = int(self._params.get("x0", -1))
+            if x0 < 0: x0 = 0
+        except TypeError: pass
+        try:
+            y0 = int(self._params.get("y0", -1))
+            if y0 < 0: y0 = 0
+        except TypeError: pass
+        try:
+            x1 = int(self._params.get("x1", -1))
+            if x1 < 0: x1 = input.shape[1]
+        except TypeError: pass
+        try:
+            y1 = int(self._params.get("y1", -1))
+            if y1 < 0: y1 = input.shape[0]
+        except TypeError: pass
+
+        iulibbin = ocrolib.numpy2narray(input)
+        out = ocrolib.iulib.bytearray()
+        ocrolib.iulib.extract_subimage(out, iulibbin, x0, y0, x1, y1)
+        return ocrolib.narray2numpy(out)            
+
+
 class OcropusBase(node.Node):
     """
     Wrapper around Ocropus component interface.
@@ -404,6 +459,8 @@ class Manager(manager.StandardManager):
             return OcropusFileOutNode
         elif name == "Switch":
             return SwitchNode
+        elif name == "Crop":
+            return OcropusCropNode
         # FIXME: This clearly sucks
         comp = None
         if comps is not None:

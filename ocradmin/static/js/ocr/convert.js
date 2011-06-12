@@ -206,7 +206,7 @@ $(function() {
     sdviewer = new OCRJS.ImageViewer($(".imageviewer").get(0), {
         numBuffers: 2,        
     });
-    guimanager = new OCRJS.GuiManager(sdviewer);    
+    guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
 
     textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
     reshandler = new OCRJS.ResultHandler();
