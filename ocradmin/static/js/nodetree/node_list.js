@@ -11,6 +11,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
             onUpdateStarted: [],
             registerUploader: [],
             scriptChanged: [],
+            nodeViewing: [],
         };
         this._nodelisttmpl = $.template($("#nodeListTmpl"));
         this._nodetreetmpl = $.template($("#nodeTreeTmpl"));
