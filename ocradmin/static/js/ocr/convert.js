@@ -168,8 +168,10 @@ $(function() {
         // otherwise cache the result and handle it
         if (!cached) {
             var node = pbuilder.getNode(nodename);
-            var hash = hex_md5(bencode(node.hashValue()));
-            resultcache[hash] = data;
+            if (node) {
+                var hash = hex_md5(bencode(node.hashValue()));
+                resultcache[hash] = data;
+            }
         }
 
         if (data.result.type == "image" || data.result.type == "pseg") {
@@ -216,12 +218,14 @@ $(function() {
     pbuilder.addListener("scriptChanged", function() {
         var nodename = pbuilder.getEvalNode();
         var node = pbuilder.getNode(nodename);
-        var hash = hex_md5(bencode(node.hashValue()));
-        if (resultcache[hash]) {
-            console.log("Found cached result for:", nodename);
-            handleResult(nodename, resultcache[hash], true);
-        } else
-            reshandler.runScript(nodename, pbuilder.buildScript());
+        if (node) {
+            var hash = hex_md5(bencode(node.hashValue()));
+            if (resultcache[hash]) {
+                console.log("Found cached result for:", nodename);
+                handleResult(nodename, resultcache[hash], true);
+            } else
+                reshandler.runScript(nodename, pbuilder.buildScript());
+        }
     });
     pbuilder.addListener("registerUploader", function(name, elem) {
 

@@ -420,8 +420,24 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     buildNodeMenu: function() {
         var self = this;
+        // do some munging of the node data so we sort the menu
+        // in alphabetical stage order;
+        var stages = $.map(this._nodedata, function(nodes, stage) {
+            return {
+                name: stage,
+                nodes: nodes,
+            };
+        });
+        stages.sort(function(a, b) {
+            return a.name > b.name;
+        });
+        $.each(stages, function(i, s) {
+            s.nodes.sort(function(a, b) {
+                return a.name > b.name;
+            });
+        });
         self._menu = $.tmpl(this._menutemplate, {
-            stages: self._nodedata,
+            stages: stages,
         }).hide();
         $("body").append(self._menu);
         self.setupMenuEvents();
