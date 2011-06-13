@@ -78,11 +78,11 @@
     <div class="nodemenu ui-medium-flat" id="nodemenu">
         <h4>OCR Nodes</h4>
         <ul>
-        {% templatetag openvariable %}each(stage,stagenodes) stages{% templatetag closevariable %}    
+        {% templatetag openvariable %}each(i,stage) stages{% templatetag closevariable %}    
             <li class="topmenu">
-                ${stage}
+                ${stage.name}
                 <ul class="nodemenu ui-medium-flat submenu hidden">
-                {% templatetag openvariable %}each(i,node) stagenodes{% templatetag closevariable %}    
+                {% templatetag openvariable %}each(ii,node) stage.nodes{% templatetag closevariable %}    
                     <li data-name="${node.name}">${node.name.replace(/^[^:]+::/, "")}</li>
                 {% templatetag openvariable %}/each{% templatetag closevariable %}    
                 </ul>

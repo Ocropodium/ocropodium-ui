@@ -45,7 +45,7 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
     },
 
     resetPosition: function() {
-        $(this._canvas).css({
+        this._canvas.css({
             top: $(this._viewer.parent).offset().top,
             left: $(this._viewer.parent).offset().left,
         });
@@ -59,14 +59,15 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
 
     },
 
-    _sourceRectToScreen: function(src) {
+    sourceRectToScreen: function(src) {
         // convert a raster coordinate source rectangle
         // to a screen one
         var screen = Seadragon.Utils.getElementSize(
                 this._viewer.activeViewer().elmt);
         var srcsize = this._viewer.activeViewer().source.dimensions;
-        var xs = (screen.x / srcsize.x),
-            ys = (screen.y / srcsize.y);
+        var zoom = this._viewer.activeViewer().viewport.getZoom(true);
+        var xs = ((zoom * screen.x) / srcsize.x),
+            ys = ((zoom * screen.y) / srcsize.y);
         return {
             x0: src.x0 * xs,
             y0: (srcsize.y - src.y0) * ys,
@@ -75,23 +76,24 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
         };
     },        
 
-    _screenRectToSource: function(scr) {
+    screenRectToSource: function(scr) {
         // convert a raster coordinate source rectangle
         // to a screen one
         var screen = Seadragon.Utils.getElementSize(
                 this._viewer.activeViewer().elmt);
         var srcsize = this._viewer.activeViewer().source.dimensions;
-        var xs = (srcsize.x / screen.x),
-            ys = (srcsize.y / screen.y);
+        var zoom = this._viewer.activeViewer().viewport.getZoom(true);
+        var xs = (srcsize.x / (zoom * screen.x)),
+            ys = (srcsize.y / (zoom * screen.y));
         return {
-            x0: src.x0 * xs,
-            y0: (srcsize.y - src.y0) * ys,
-            x1: src.x1 * xs,
-            y1: (srcsize.y - src.y1) * ys,
+            x0: scr.x0 * xs,
+            y0: srcsize.y - (scr.y0 * ys),
+            x1: scr.x1 * xs,
+            y1: srcsize.y - (scr.y1 * ys),
         };
     },        
 
-    _normalisedRect: function(x0, y0, x1, y1) {
+    normalisedRect: function(x0, y0, x1, y1) {
         var sdx0 = this._viewer.activeViewer().viewport.pointFromPixel(
             new Seadragon.Point(x0 < x1 ? x0 : x1, y0 < y1 ? y0 : y1));
         var sdx1 = this._viewer.activeViewer().viewport.pointFromPixel(
@@ -100,7 +102,7 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
                 sdx1.x - sdx0.x, sdx1.y - sdx0.y);
     },
 
-    _normalisedRectArea: function(x0, y0, x1, y1) {
+    normalisedRectArea: function(x0, y0, x1, y1) {
         return Math.abs(x1 - x0) * Math.abs(y1 - y0);    
     }                
 });
