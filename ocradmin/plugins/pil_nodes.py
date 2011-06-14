@@ -54,6 +54,59 @@ class PilFileInNode(generic_nodes.ImageGeneratorNode, generic_nodes.BinaryPngWri
         return path
 
 
+class PilCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
+    """Crop an image with PIL."""
+    stage = stages.FILTER_GRAY
+    name = "Pil::PilCrop"
+    description = "PIL Crop image node"
+    _parameters = [
+        dict(name="x0", value=-1),
+        dict(name="y0", value=-1),
+        dict(name="x1", value=-1),
+        dict(name="y1", value=-1),
+    ]
+
+    def _validate(self):
+        """
+        Check inputs are connected.
+        """
+        for i in range(len(self._inputs)):
+            if self._inputs[i] is None:
+                raise node.ValidationError(self, "missing input '%d'" % i)
+
+    def _eval(self):
+        """
+        Crop an image, using IULIB.  If any of
+        the parameters are -1 or less, use the
+        outer dimensions.
+        """
+        input = self.get_input_data(0)
+        x0, y0 = 0, 0
+        y1, x1 = input.shape
+        try:
+            x0 = int(self._params.get("x0", -1))
+            if x0 < 0: x0 = 0
+        except TypeError: pass
+        try:
+            y0 = int(self._params.get("y0", -1))
+            if y0 < 0: y0 = 0
+        except TypeError: pass
+        try:
+            x1 = int(self._params.get("x1", -1))
+            if x1 < 0: x1 = input.shape[1]
+        except TypeError: pass
+        try:
+            y1 = int(self._params.get("y1", -1))
+            if y1 < 0: y1 = input.shape[0]
+        except TypeError: pass
+        pil = Image.fromarray(input)
+        p2 = pil.crop((x0, input.shape[0] - y1, x1, input.shape[0] - y0))
+        self.logger.debug("Pil crop: %s", p2)
+        n = numpy.asarray(p2.convert("L"))
+        self.logger.debug("Numpy: %s", n)
+        return n
+
+
 class PilColorToGrayscaleNode(node.Node, generic_nodes.GrayPngWriterMixin):    
     """
     Convert (roughly) between a color image and BW.
@@ -97,6 +150,8 @@ class Manager(manager.StandardManager):
             name = name.split("::")[-1]
         if name == "FileIn":            
             return PilFileInNode(**kwargs)
+        if name == "PilCrop":            
+            return PilCropNode(**kwargs)
         elif name == "RGB2Gray":
             return PilColorToGrayscaleNode(**kwargs)
 
