@@ -254,6 +254,24 @@ $(function() {
     }); 
     pbuilder.init();
 
+    var csplit = $("#viewertabs_").layout({
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0, 
+        },
+        south: {
+            size: 200,
+            onresize_end: function() {
+                setTimeout(function() {
+                    sdviewer.resetSize();
+                });
+            },
+        },                   
+    });
+
     var hsplit = $("#sidebar").layout({
         applyDefaultStyles: true,
         north: {

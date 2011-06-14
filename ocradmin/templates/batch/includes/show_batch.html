@@ -2,14 +2,15 @@
 <div class="batch ui-widget ui-tabs ui-corner-top ui-layout-north" id="batch" data-index="{{batch.pk}}">
     <div class=" ui-dialog-titlebar ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-top">
         Batch Viewer
-    </div>
+    </div>    
     <div class="batch_info ui-medium-flat">
-        <div class="batch_name {{batch.task_type|cut:"."}}">
-            {{batch.name}}
-        </div>
-        <div class="batch_controls">
-            <a href="{{batch.inspection_url}}" class="transcript_link button_link toggle_button ui-state-default ui-corner-all" title="Inspect Batch">Inspect Batch</a>
-            <a href="/batch/export_options/{{batch.pk}}/" class="export_link button_link toggle_button ui-state-default ui-corner-all" title="Export Batch Transcripts">Export</a>
+        <div class="batch_controls_left {{batch.task_type|cut:"."}}">
+            <span class="batch_name">{{batch.name}}</span>
+            <div class="clear"></div>
+            <div class="batch_controls_inner">
+                <a href="{{batch.inspection_url}}" class="transcript_link button_link toggle_button ui-state-default ui-corner-all" title="Inspect Batch">Inspect Batch</a>
+                <a href="/batch/export_options/{{batch.pk}}/" class="export_link button_link toggle_button ui-state-default ui-corner-all" title="Export Batch Transcripts">Export</a>
+            </div>
         </div>
         <div class="batch_controls_right">
             <div class="progressbar_container">
