@@ -210,6 +210,12 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     buildParams: function(node) {
         var self = this;
         console.log("Setting parameter listeners for", node.name, node.parameters);
+        // if we've already got a node, unbind the update
+        // handlers
+        if ($("#parameters").data("node")) {
+            $("#parameters").data("node").removeListeners(".paramobserve");
+            $("#parameters").data("node", node);
+        }
         $("#parameters").html("");
         var inputs = [];
         for (var i = 0; i < node.arity; i++)
@@ -233,9 +239,12 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         });
         // bind each param to its actual value
         $.each(node.parameters, function(i, param) {
-            $("input#" + node.name + param.name).not(".proxy").bind("keyup.paramval", function(event) {
-                console.log("updating val", param.name);
+            var input = $("input#" + node.name + param.name).not(".proxy");
+            input.bind("keyup.paramval", function(event) {
                 node.parameters[i].value = $(this).val();
+            });
+            node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
+                input.val(value);
             });
             $("select#" + node.name + param.name + " input[type='hidden']")
                     .bind("change.paramval", function(event) {
@@ -259,6 +268,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
 
     clearParams: function() {
         $("input, select", $("#parameters")).unbind(".paramval");
+        $("#parameters").data("node", null);
         $("#parameters").html("<h1>No Node Selected</h1>");
     },                     
 

@@ -34,7 +34,13 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             parameterSet: [],
             deleted: [],
             created: [],
-        };    
+        };
+
+        // dynamically set up callbacks for when this node's parameters are 
+        // updates via a third party
+        for (var i in this.parameters) {
+            this.registerListener("parameterUpdated_" + this.parameters[i].name);
+        }    
     },
 
     group: function() {
@@ -53,7 +59,8 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
                 this.parameters[i].value = value;
                 set = true;
                 if (emit)
-                    this.callListeners("parameterSet");
+                    this.callListeners("parameterUpdated_"
+                            + this.parameters[i].name, value);
                 break;                
             }
         }            
