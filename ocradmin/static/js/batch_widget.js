@@ -187,7 +187,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
     updateBatchData: function() {
         this.setProgressStatus(
-                $("#batch" + this._batch_id), 
+                $("#batch"), 
                 this._batchdata.extras.estimate_progress);        
     },                      
 

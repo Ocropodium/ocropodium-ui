@@ -105,32 +105,36 @@
     font-weight: bold;
     font-size: 1.3em;
     #color: 333;
+    padding: 0px 10px 5px 5px;
+    padding-bottom: 10px;
+}
+
+.batch_controls_left {
     float: left;
-    padding-right: 10px;
-    padding-left: 36px;
     height: 32px;
+    padding-left: 36px;
     background-position: center left;
     background-repeat: no-repeat;
     background-image: url(/static/icons/transcript.png);
 }
 
-
-.batch_name.runbatchitem {
+.batch_controls_left.runbatchitem {
     background-image: url(/static/icons/transcript.png);
 }
 
 
-.batch_name.fedoraingest {
+.batch_controls_left.fedoraingest {
     background-image: url(/static/icons/fedora.png);
 }
 
 
-.batch_name.comparegroundtruth {
+.batch_controls_left.comparegroundtruth {
     background-image: url(/static/icons/compare.png);
 }
 
-.batch_controls {
+.batch_controls_inner {
     float: left;
+    padding-top:3px;
 }
 
 .batch_controls_right {
