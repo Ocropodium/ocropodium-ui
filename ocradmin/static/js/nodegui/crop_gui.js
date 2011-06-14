@@ -9,7 +9,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     constructor: function(viewer) {
         this.base(viewer, "cropgui");
 
-        this.nodeclass = "Ocropus::Crop";
+        this.nodeclass = "Pil::PilCrop";
         this._coords = {
             x0: -1,
             y0: -1,
@@ -22,36 +22,32 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     },
 
     readNodeData: function(node) {
-        var self = this;                      
+        var coords = this._coords;                      
         $.each(node.parameters, function(i, param) {
-            if (self._coords[param.name])
-                self._coords[param.name] = parseInt(param.value);            
+            if (coords[param.name])
+                coords[param.name] = parseInt(param.value);            
         });
+        return coords;
     },                      
 
-    sanitiseCoords: function() {
-        var safe = {};
-        var fulldoc = this._viewer.activeViewer().source.dimensions
-        if (this._coords.x0 < 0)
-            safe.x0 = 0;
-        else
-            safe.x0 = Math.min(fulldoc.x, this._coords.x0);
+    sanitiseInputCoords: function(coords) {
+        var fulldoc = this._viewer.activeViewer().source.dimensions;
+        return {
+            x0: Math.max(0, Math.min(fulldoc.x, coords.x0)),
+            y0: Math.max(0, Math.min(fulldoc.y, coords.y0)),
+            x1: (coords.x1 < 0 ? fulldoc.x : Math.min(fulldoc.x, coords.x1)),
+            y1: (coords.y1 < 0 ? fulldoc.y : Math.min(fulldoc.y, coords.y1)),
+        }
+    },
 
-        if (this._coords.y0 < 0)
-            safe.y0 = 0;
-        else
-            safe.y0 = Math.min(fulldoc.y, this._coords.y0);
-
-        if (this._coords.x1 < 0)
-            safe.x1 = fulldoc.x
-        else
-            safe.x1 = Math.min(fulldoc.x, this._coords.x1);
-
-        if (this._coords.y1 < 0)
-            safe.y1 = fulldoc.y;
-        else
-            safe.y1 = Math.min(fulldoc.y, this._coords.y1);
-        return safe;
+    sanitiseOutputCoords: function(coords) {
+        var fulldoc = this._viewer.activeViewer().source.dimensions;
+        return {
+            x0: Math.max(-1, Math.min(coords.x0, fulldoc.x)),
+            y0: Math.max(-1, Math.min(coords.y0, fulldoc.y)),
+            x1: Math.max(-1, Math.min(coords.x1, fulldoc.x)),
+            y1: Math.max(-1, Math.min(coords.y1, fulldoc.y)),
+        }
     },
 
     setup: function(node) {
@@ -66,26 +62,30 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         this._rect = $("<div></div>")
                 .addClass("nodegui_rect").appendTo("body").css({
             borderColor: "red",
-            borderWidth: 3,
+            borderWidth: 0,
             borderStyle: "solid",                    
             zIndex: 201,
             backgroundColor: this._color,
             opacity: 0.3,
         });
-
-        this.readNodeData(node);
         this._canvas.css({marginTop: 1000}).appendTo(this._viewer.parent);
-        this._makeRectTransformable(); 
-        var coords = this.sanitiseCoords();
-        console.log("Coords points", coords.x0, coords.y0, coords.x1, coords.y1);
+        this.makeRectTransformable(); 
+
+        var coords = this.sanitiseInputCoords(this.readNodeData(node));
         var screen = this.getScreenRect(coords.x0, coords.y0, coords.x1, coords.y1);
-        console.log("Screen points", screen.x0, screen.y0, screen.x1, screen.y1);
-        var vp = this.getViewportFromScreen(screen.x0, screen.y0, screen.x1, screen.y1); 
-        var sdrect = this.normalisedRect(vp.x0, vp.y0, vp.x1, vp.y1);
+        var vp = this.getViewportFromScreen(screen);
+        var sdrect = this.sdRect(vp);
         setTimeout(function() {
             self._viewer.activeViewer().drawer.addOverlay(self._rect.get(0), sdrect);
         }, 200);
         this.setupEvents();
+    },
+
+    sdRect: function(pixelrect) {
+        var sdx0 = this._viewer.activeViewer().viewport.pointFromPixel(pixelrect.getTopLeft());
+        var sdx1 = this._viewer.activeViewer().viewport.pointFromPixel(pixelrect.getBottomRight());
+        return new Seadragon.Rect(sdx0.x, sdx0.y, 
+                sdx1.x - sdx0.x, sdx1.y - sdx0.y);
     },
 
     tearDown: function() {
@@ -129,12 +129,10 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     bindCanvasDrag: function() {
         var self = this;                        
         this._canvas.bind("mousedown.drawcanvas", function(event) {
-            console.log("Dragging canvas");
             var dragstart = {x: event.pageX, y: event.pageY };
             // initialise drawing
             var droprect = null;           
             self._canvas.bind("mousemove.drawcanvas", function(event) {
-                console.log("Drawing canvas");
                 var create = false;
                 if (self.normalisedRectArea(dragstart.x, dragstart.y,
                         event.pageX, event.pageY) > 300) {
@@ -182,10 +180,10 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         var midvp = new Seadragon.Rect(
                 (vpelement.width() / 2) + vpelement.offset().left,
                 (vpelement.height() / 2) + vpelement.offset().top);
-        var fullsize = srcdims.times(zoom);
+        var fullsize = srcdims.times(zoom * factor);
         return new Seadragon.Rect(
-            midvp.x - (fullsize.x * centre.x * factor),
-            midvp.y - (fullsize.y * (centre.y * factor * (srcdims.x / srcdims.y))),
+            midvp.x - (fullsize.x * centre.x),
+            midvp.y - (fullsize.y * (centre.y * (srcdims.x / srcdims.y))),
             fullsize.x,
             fullsize.y        
         );
@@ -195,11 +193,15 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         // get coords from the screen and translate 
         // them to the source image                       
         var fsrect = this.getExpandedRect();
+        var zoom  = this._viewer.activeViewer().viewport.getZoom();
+        var srcdims = this._viewer.activeViewer().source.dimensions;
+        var vpelement = $(this._viewer.activeViewer().drawer.elmt);
+        var factor = vpelement.width() / srcdims.x;
         return {
-            x0: x0 - fsrect.x,
-            y0: (fsrect.y + fsrect.height) - y0,
-            x1: x1 - fsrect.x,
-            y1: (fsrect.y + fsrect.height) - y1
+            x0: (x0 - fsrect.x) / (zoom * factor),
+            y0: ((fsrect.y + fsrect.height) - y0)  / (zoom * factor),
+            x1: (x1 - fsrect.x)  / (zoom * factor),
+            y1: ((fsrect.y + fsrect.height) - y1)  / (zoom * factor)
         }; 
     },
 
@@ -211,46 +213,58 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         var srcdims = this._viewer.activeViewer().source.dimensions;
         var vpelement = $(this._viewer.activeViewer().drawer.elmt);
         var factor = vpelement.width() / srcdims.x;
-        return {
-            x0: fsrect.x + (x0 * zoom * factor),
-            y0: fsrect.y + (y0 * zoom * factor),
-            x1: fsrect.x + (x1 * zoom * factor),
-            y1: fsrect.y + (y1 * zoom * factor),
-        }; 
+        var bottom = fsrect.y + fsrect.height;
+        return new Seadragon.Rect(
+            fsrect.x + (x0 * zoom * factor),
+            bottom - (y1 * zoom * factor),
+            (x1 - x0) * zoom * factor,
+            (y1 - y0) * zoom * factor
+        );
     },
 
-    getViewportFromScreen: function(x0, y0, x1, y1) {
-        var vpoffset = $(this._viewer.activeViewer().drawer.elmt).offset();
+    getViewportFromScreen: function(screen) {
+        var vpoffset = $(this._viewer.activeViewer().drawer.elmt).offset();        
+        return new Seadragon.Rect(
+            screen.x - vpoffset.left,
+            screen.y - vpoffset.top,
+            screen.width,
+            screen.height
+        );
+    },
+
+    translateCoords: function(x0, y0, x1, y1) {
+        var zoom  = this._viewer.activeViewer().viewport.getZoom();
+        var srcdims = this._viewer.activeViewer().source.dimensions;
+        var vpelement = $(this._viewer.activeViewer().drawer.elmt);
+        var factor = vpelement.width() / srcdims.x;
+        var srcheight = srcdims.y * zoom * factor;
         return {
-            x0: x0 - vpoffset.left,
-            y0: y0 - vpoffset.top,
-            x1: x1 - vpoffset.left,
-            y1: y1 - vpoffset.top,            
-        };
-    },                               
+            x0: x0,
+            y0: srcheight - y1,
+            x1: x1,
+            y1: srcheight - y0,
+        }
+    },                         
 
     updateNodeParameters: function() {                                     
-        //console.assert(this._node, "No node found for GUI");
-        console.log("Screen", this._rect.offset().left,
-                this._rect.offset().top,
-                this._rect.width() - this._rect.offset().left,
-                this._rect.height() - this._rect.offset().top);
+        var self = this;
         var pos = this._rect.offset();
         var src = this.getSourceRect(pos.left, pos.top + this._rect.height(), 
                 pos.left + this._rect.width(), pos.top);
-
-
-        console.log("Src", src.x0, src.y0, src.x1, src.y1);
+        $.each(this.sanitiseOutputCoords(src), function(name, value) {
+            self._node.setParameter(name, Math.round(value), true);
+        });
     },                             
 
     dragDone: function() {
         $(document).unbind("mouseup.drawcanvas");
         this._canvas.unbind("mousemove.drawcanvas");
         this._canvas.unbind("mouseup.drawcanvas");
+        this.updateNodeParameters();
         this.callListeners("onCanvasChanged");
     },              
 
-    _makeRectTransformable: function() {
+    makeRectTransformable: function() {
         // add jQuery dragging/resize ability to
         // an overlay rectangle                            
         var self = this;
@@ -267,6 +281,9 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             stop: function() {
                 self.updateNodeParameters();
                 self.callListeners("onCanvasChanged");
+            },
+            drag: function() {
+                self.updateNodeParameters();
             },
         });
     },

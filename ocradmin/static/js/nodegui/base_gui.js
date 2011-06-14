@@ -59,40 +59,6 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
 
     },
 
-    sourceRectToScreen: function(src) {
-        // convert a raster coordinate source rectangle
-        // to a screen one
-        var screen = Seadragon.Utils.getElementSize(
-                this._viewer.activeViewer().elmt);
-        var srcsize = this._viewer.activeViewer().source.dimensions;
-        var zoom = this._viewer.activeViewer().viewport.getZoom(true);
-        var xs = ((zoom * screen.x) / srcsize.x),
-            ys = ((zoom * screen.y) / srcsize.y);
-        return {
-            x0: src.x0 * xs,
-            y0: (srcsize.y - src.y0) * ys,
-            x1: src.x1 * xs,
-            y1: (srcsize.y - src.y1) * ys,
-        };
-    },        
-
-    screenRectToSource: function(scr) {
-        // convert a raster coordinate source rectangle
-        // to a screen one
-        var screen = Seadragon.Utils.getElementSize(
-                this._viewer.activeViewer().elmt);
-        var srcsize = this._viewer.activeViewer().source.dimensions;
-        var zoom = this._viewer.activeViewer().viewport.getZoom(true);
-        var xs = (srcsize.x / (zoom * screen.x)),
-            ys = (srcsize.y / (zoom * screen.y));
-        return {
-            x0: scr.x0 * xs,
-            y0: srcsize.y - (scr.y0 * ys),
-            x1: scr.x1 * xs,
-            y1: srcsize.y - (scr.y1 * ys),
-        };
-    },        
-
     normalisedRect: function(x0, y0, x1, y1) {
         var sdx0 = this._viewer.activeViewer().viewport.pointFromPixel(
             new Seadragon.Point(x0 < x1 ? x0 : x1, y0 < y1 ? y0 : y1));
