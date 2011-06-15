@@ -26,7 +26,7 @@ from ocradmin.batch import utils as batchutils
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
-from ocradmin.core.views import _handle_request, AppException
+from ocradmin.core.views import AppException
 from ocradmin.presets.models import Preset
 
 
@@ -294,7 +294,7 @@ def upload_files(request):
             else "text/html"
     relpath = request.session["project"].slug
     try:
-        paths = _handle_request(request, request.output_path)[0]
+        paths = _handle_upload(request, request.output_path)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -524,3 +524,41 @@ def _get_batch_file_paths(request):
     ))
     filenames = request.POST.get("files", "").split(",")
     return [os.path.join(dirpath, f) for f in sorted(filenames)]
+
+
+def _handle_upload(request, outdir):
+    """
+    Save files and extract parameters.  How this happens
+    depends on how the file was send - either multipart
+    of as the whole POST body.
+    """
+
+    if request.GET.get("inlinefile"):
+        return _handle_streaming_upload(request, outdir)
+    return _handle_multipart_upload(request, outdir)
+
+
+def _handle_streaming_upload(request, outdir):
+    """
+    Handle an upload where the params are in GET and
+    the whole of the POST body consists of the file.
+    """
+    fpath = os.path.join(outdir, request.GET.get("inlinefile"))
+    if not os.path.exists(outdir):
+        os.makedirs(outdir, 0777)
+    tmpfile = file(fpath, "wb")
+    tmpfile.write(request.raw_post_data)
+    tmpfile.close()
+    return [fpath]
+
+
+def _handle_multipart_upload(request, outdir):
+    """
+    Handle an upload where the file data is multipart
+    encoded in the POST body, along with the params.
+    """
+    if request.POST.get("png"):
+        paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
+    else:
+        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
+    return paths
