@@ -40,8 +40,13 @@ def runscript(request):
     """
     evalnode = request.POST.get("node", "")
     jsondata = request.POST.get("script")
-    nodes = json.loads(jsondata)
-    tree = script.Script(nodes, manager=MANAGER)
+    # perform substitutions on the script with the
+    # relevant other POST parameters...
+    for sub in ["file"]:
+        jsondata = jsondata.replace("%%%s%%" % sub.upper(),
+                request.POST.get(sub, ""))
+    # instantiate the tree and check for errors
+    tree = script.Script(json.loads(jsondata), manager=MANAGER)
     errors = tree.validate()
     if errors:
         return HttpResponse(json.dumps(dict(
