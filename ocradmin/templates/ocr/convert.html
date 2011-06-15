@@ -54,22 +54,26 @@
 {% endblock %}
 {% block sidebar %}
     <form id="optionsform">
-        <div id="script_toolbar" class="ui-tabs-nav ui-layout-north ui-widget-header ui-corner-top">
-            <span class="buttons_left">
-                <button id="abort">Abort</button>                                                    
-                <button id="rerun_script">Rerun</button>
-            </span>
-            <select id="select_script" name="script">
-                <option value="0">---</option>
-                {% for preset in presets %}
-                    <option value="{{preset.slug}}">{{preset.name}}</option>
-                {% endfor %}
-            </select>
-            <span class="buttons_right">
-                <button id="open_script">Load Preset</button>
-                <button id="save_script">Store Preset</button>
-                <button id="download_script">Download Preset</button>
-            </span>
+        <div class="ui-layout-north">
+            <div id="script_toolbar" class="ui-tabs-nav ui-widget-header ui-corner-top">
+                <span class="buttons_left">
+                    <button id="abort">Abort</button>                                                    
+                    <button id="rerun_script">Rerun</button>
+                </span>
+                <select id="select_script" name="script">
+                    <option value="0">---</option>
+                    {% for preset in presets %}
+                        <option value="{{preset.slug}}">{{preset.name}}</option>
+                    {% endfor %}
+                </select>
+                <span class="buttons_right">
+                    <button id="open_script">Load Preset</button>
+                    <button id="save_script">Store Preset</button>
+                    <button id="download_script">Download Preset</button>
+                </span>
+            </div>
+            <ul id="test_file_container" class="test_files"></ul>
+            <input type="hidden" id="test_file" value="" name="file" />
             <div id="dialog"></div>
         </div>
         <div class="ui-layout-south ui-widget">

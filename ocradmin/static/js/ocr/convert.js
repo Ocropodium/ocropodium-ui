@@ -72,12 +72,6 @@ $(function() {
         },
     });
 
-    // initialise the uploader...
-    uploader  = new OCRJS.AjaxUploader(
-        null,
-        "/plugins/upload/", 
-        { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
-    );
     // load state stored from last time
     loadState();
     
@@ -150,6 +144,28 @@ $(function() {
         event.stopPropagation();
         event.preventDefault();    
     });
+
+    $("#test_file_container").selectable({
+
+    });        
+    // initialise the uploader...
+    uploader  = new OCRJS.AjaxUploader(
+        null,
+        "/plugins/upload/", 
+        { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
+    );
+    uploader.addListener("onXHRLoad", function(data) {
+        var filepath = JSON.parse(data.target.response).file;
+        var filename = filepath.split("/").splice(-1, 1)[0];
+        var elem = $("<li></li>");
+        console.log("filename", filename);
+        elem
+            .text(filename);
+        $("#test_file_container").append(elem).selectable("refresh");
+    });
+    setTimeout(function() {
+        uploader.setTarget($("#test_file_container").get(0));
+    }, 100);
 
     $("#optionsform").submit(function() {
         nodetree.scriptChanged();
@@ -227,15 +243,15 @@ $(function() {
                 reshandler.runScript(nodename, nodetree.buildScript());
         }
     });
-    nodetree.addListener("registerUploader", function(name, elem) {
+    //nodetree.addListener("registerUploader", function(name, elem) {
 
-        uploader.removeListeners("onXHRLoad.setfilepath");
-        uploader.setTarget(elem);
-        // FIXME: No error handling
-        uploader.addListener("onXHRLoad.setfilepath", function(data) {
-            nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
-        });
-    });
+    //    uploader.removeListeners("onXHRLoad.setfilepath");
+    //    uploader.setTarget(elem);
+    //    // FIXME: No error handling
+    //    uploader.addListener("onXHRLoad.setfilepath", function(data) {
+    //        nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
+    //    });
+    //});
     nodetree.addListener("nodeViewing", function(node) {
         if (!node)
             guimanager.tearDownGui();
