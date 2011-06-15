@@ -181,11 +181,11 @@ class Node(object):
             return self._inputdata[num]
         return self._inputdata[num]
 
-    def validate(self):
+    def validate(self, skipinputs=False):
         """
         Check params are present and correct.
         """
-        if self.arity > 0:
+        if self.arity > 0 and not skipinputs:
             for n in self._inputs:
                 if n is not None:
                     n.validate()
