@@ -160,6 +160,7 @@ $(function() {
         var elem = $("<li></li>");
         console.log("filename", filename);
         elem
+            .data(filepath)
             .text(filename);
         $("#test_file_container").append(elem).selectable("refresh");
     });
