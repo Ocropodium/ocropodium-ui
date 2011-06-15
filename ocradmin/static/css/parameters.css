@@ -288,6 +288,7 @@ ul.test_file_list {
 }
 
 ul.test_file_list li {
+    z-index: 100;
     list-style: none;
     display: inline;
     float: left;
