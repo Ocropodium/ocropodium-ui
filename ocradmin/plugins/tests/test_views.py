@@ -10,10 +10,12 @@ from django.contrib.auth.models import User
 
 from nodetree import script, node
 import numpy
+from mock import patch
 
 SCRIPTDIR = "plugins/fixtures/scripts"
 
 from ocradmin.plugins.tests.base import OcrScriptTest
+from ocradmin.plugins import cache
 
 
 class ViewsTest(OcrScriptTest):
@@ -32,7 +34,14 @@ class ViewsTest(OcrScriptTest):
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
+        #self.old_cacher = cache.PersistantFileCacher
+        #cache.PersistantFileCacher = cache.TestMockCacher
 
+    def tearDown(self):
+        """
+        Revert any changes.
+        """
+        #cache.PersistantFileCacher = self.old_cacher
 
     def test_binarise_script(self):
         """
@@ -81,7 +90,7 @@ class ViewsTest(OcrScriptTest):
                 content["status"], "Status field is not '%s'" % expectedstatus)
         self.assertIn("filein1", content["errors"], "'filein1' not in errors field" )
 
-            
+    @patch("ocradmin.plugins.cache.PersistantFileCacher", cache.TestMockCacher)
     def _run_script(self, scriptname, expectedstatus, expectedtype, expecteddatafields):
         """
         Run a script and assert the results resemble what we expect.

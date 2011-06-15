@@ -9,7 +9,7 @@ from django.utils import simplejson as json
 
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.plugins import graph
+from ocradmin.plugins import graph, cache
 
 from nodetree import script, node
 from nodetree.manager import ModuleManager
@@ -96,7 +96,6 @@ def upload_file(request):
     tmpfile = file(fpath, "wb")
     tmpfile.write(request.raw_post_data)
     tmpfile.close()
-
     return HttpResponse(json.dumps(dict(
         file=os.path.relpath(fpath),
     )), mimetype="application/json")
