@@ -25,7 +25,7 @@ def saves_files(func):
     require a project to be open in the session.
     """
     def wrapper(request, *args, **kwargs):
-        temp = request.path.startswith(("/ocr/", "/plugins/"))
+        temp = request.path.startswith(("/plugins/"))
         project = request.session.get("project")
         output_path = None
         if project is None:

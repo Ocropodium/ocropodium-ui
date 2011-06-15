@@ -20,6 +20,7 @@ from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask, Transcript
 from ocradmin.presets.models import Preset
 from ocradmin.plugins.manager import PluginManager
+from ocradmin.core.decorators import project_required
 
 from ocradmin.plugins import parameters
 
@@ -213,14 +214,17 @@ def task_config(request, task_pk):
             mimetype="application/json")            
    
 
+@project_required
 @login_required
+@saves_files
 def submit_viewer_binarization(request, task_pk):
     """
     Trigger a re-binarization of the image for viewing purposes.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
     taskname = "create.dzi"
-    binpath = "%s.bin.png" % os.path.splitext(task.args[0])[0]
+    binname = "%s.bin.png" % os.path.splitext(os.path.basename(task.args[0]))[0]
+    binpath = os.path.join(request.output_path, binname)
     dzipath = ocrutils.get_dzi_path(binpath)
     assert os.path.exists(binpath), "Binary path does not exist: %s" % binpath
     async = OcrTask.run_celery_task(taskname, binpath, dzipath, untracked=True,
