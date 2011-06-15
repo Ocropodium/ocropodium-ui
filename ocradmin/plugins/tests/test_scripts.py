@@ -2,35 +2,27 @@
     Test the scripts.
 """
 import os
-from django.test import TestCase
 from django.utils import simplejson
 from django.conf import settings
 
 from nodetree import script, node
-from nodetree.manager import ModuleManager
 import numpy
 
 SCRIPTDIR = "plugins/fixtures/scripts"
 
-# nodetree bits
-from nodetree import manager
+
+from ocradmin.plugins.tests.base import OcrScriptTest
 
 
-
-class ScriptsTest(TestCase):
+class ScriptsTest(OcrScriptTest):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json"]
 
     def setUp(self):
         """
-            Setup OCR tests.  Creates a test user.
+            Setup OCR tests.
         """
+        super(ScriptsTest, self).setUp()
         self.scripts = {}
-        self.manager = manager.ModuleManager()
-        self.manager.register_module("ocradmin.plugins.ocropus_nodes")
-        self.manager.register_module("ocradmin.plugins.tesseract_nodes")
-        self.manager.register_module("ocradmin.plugins.cuneiform_nodes")
-        self.manager.register_module("ocradmin.plugins.numpy_nodes")
-        self.manager.register_module("ocradmin.plugins.pil_nodes")
         for fname in os.listdir(SCRIPTDIR):
             if fname.endswith("json"):
                 with open(os.path.join(SCRIPTDIR, fname), "r") as f:
