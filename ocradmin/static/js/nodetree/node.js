@@ -82,7 +82,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         if (this.description && this.description != "")
             tip += "\n\n" + this.description + "\n\n";
         if (this._error && this._error != "")
-            tip += "\n\nError: " + this._error;
+            tip += "\n\nError: " + this._error;        
         return tip;
     },                    
 
@@ -155,8 +155,8 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
     },
 
     setErrored: function(errored, msg) {
-        this._toggleErrored(errored, msg);
         this._error = errored ? msg : null;
+        this._toggleErrored(errored, msg);
     },
 
     _toggleIgnored: function(bool) {
@@ -278,24 +278,50 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         this.setupPlugListeners(this._outplug);
 
         // draw the rects themselves...
+        var strokewidth = 1;
         this._rect = svg.rect(g, x, y, this.width, this.height, 2, 2, {
             fill: "url(#NodeGradient)",
             stroke: "#BBB",
             strokeWidth: 1,
         });
-
         this._tooltip = svg.title(g, this.getToolTip());        
-        this._viewbutton = svg.rect(g, x, y, buttonwidth, this.height, 0, 0, {
+        this._viewbutton = svg.rect(
+                g,
+                x + strokewidth,
+                y + strokewidth,
+                buttonwidth, this.height - (2*strokewidth), 1, 1, {
             fill: "transparent",
-            stroke: "#BBB",
-            strokeWidth: 0.5,
-        });         
-        this._ignorebutton = svg.rect(g, x + this.width - buttonwidth, y, buttonwidth, this.height, 0, 0, {
+            stroke: "transparent",
+            strokeWidth: 0,
+        });
+
+        this._ignorebutton = svg.rect(
+                g,
+                x + this.width - (buttonwidth + strokewidth),
+                y + strokewidth,
+                buttonwidth, this.height - (2*strokewidth), 1, 1, {
             fill: "transparent",
-            stroke: "#BBB",
-            strokeWidth: 0.5,
+            stroke: "transparent",
+            strokeWidth: 0,            
         });         
-        // add the labels
+        // add the dividers between button and body
+        svg.line(g,
+                x + buttonwidth + 1,
+                y + 1,
+                x + buttonwidth + 1,
+                y + (this.height - 1), {
+            stroke: "#BBB",
+            strokeWidth: 1,
+        });
+        svg.line(g,
+                (x + this.width) - (buttonwidth + 1),
+                y + 1,
+                (x + this.width) - (buttonwidth + 1),
+                y + (this.height - 1), {
+            stroke: "#BBB",
+            strokeWidth: 1,
+        });
+        // add the text labels
         this._textlabel = svg.text(g, x + this.width / 2,
             y + this.height / 2, this.name, {
                 textAnchor: "middle",
@@ -427,8 +453,10 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
     },
 
     _toggleErrored: function(bool) {
-        var gradient = bool ? "url(#ErrorGradient)" : "url(#NodeGradient)";
-        this.svg.change(this._rect, {fill: gradient});
+        var stroke = bool ? "#F99" : "#BBB";
+        this.svg.change(this._rect, {stroke: stroke});
+        this.svg.change(this._centre, {stroke: stroke});
+        console.log("Changing tooltip", this.getToolTip());
         $(this._tooltip).text(this.getToolTip());            
     },    
 
