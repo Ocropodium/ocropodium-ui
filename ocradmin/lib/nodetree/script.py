@@ -71,7 +71,7 @@ class Script(object):
             try:
                 n.validate(skipinputs=True)
             except node.ValidationError, err:
-                errors[name] = err.message
+                errors[name] = err.msg
         return errors                
 
 

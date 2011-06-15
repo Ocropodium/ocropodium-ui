@@ -98,11 +98,11 @@ class UnhandledRunScriptTask(AbortableTask):
                 key="sessionkey", logger=logger)
 
         try:
-            pl = script.Script(nodelist, manager=manager, 
+            tree = script.Script(nodelist, manager=manager, 
                     nodekwargs=dict(logger=logger, cacher=cacher))
-            term = pl.get_node(evalnode)
+            term = tree.get_node(evalnode)
             if term is None:
-                term = pl.get_terminals()[0]
+                term = tree.get_terminals()[0]
             result = term.eval()
         except ocropus_nodes.OcropusNodeError, err:
             logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
