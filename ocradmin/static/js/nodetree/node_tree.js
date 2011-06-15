@@ -251,10 +251,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             }
         }
         $(self.parent).bind("mousewheel.zoomcanvas", function(event) {
-            if (event.wheelDelta < 0)
-                self.scaleContainer(0.9);
-            else
-                self.scaleContainer(1.1);
+            self.mouseZoom(event);
         });
         $(this._group).bind("mousedown", function(event) {
             if (event.button == 1 || event.button == 0 && event.shiftKey && event.ctrlKey) {
@@ -751,6 +748,31 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             self.syncDragTarget();
         });
     },
+
+    mouseZoom: function(event) {
+        // ensure the point under the mouse stays under
+        // the mouse when zooming.  FIXME: This is a bit
+        // skew-whiff....
+        var self = this;         
+        var scale = SvgHelper.getScale(this.group());
+        var trans = SvgHelper.getTranslate(this.group());
+        var point = SvgHelper.mouseCoord(this.parent, event);
+        var cp = {
+            x: (point.x - trans.x) * scale.x,
+            y: (point.y - trans.y) * scale.y,
+        };
+        if (event.wheelDelta < 0)
+            self.scaleContainer(0.8);
+        else
+            self.scaleContainer(1.25);
+        var scaleb = SvgHelper.getScale(this.group());
+        var cp2 = {
+            x: (point.x - trans.x) * scaleb.x,
+            y: (point.y - trans.y) * scaleb.y,
+        };
+        SvgHelper.updateTranslate(this.group(), trans.x + (cp.x - cp2.x),
+                trans.y + (cp.y - cp2.y));
+    },                   
 
     scaleContainer: function(by) {
         var scale = SvgHelper.getScale(this.group());
