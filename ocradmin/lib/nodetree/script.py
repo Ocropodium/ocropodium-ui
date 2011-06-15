@@ -2,6 +2,7 @@
 Object representation of a Node script.
 """
 
+import node
 import manager as stdmanager
 
 
@@ -60,5 +61,17 @@ class Script(object):
         """
         return [n for n in self._tree.itervalues() \
                 if not n.has_parents()]
+
+    def validate(self):
+        """
+        Call 'validate' on all nodes.
+        """
+        errors = {}
+        for name, n in self._tree.iteritems():
+            try:
+                n.validate(skipinputs=True)
+            except node.ValidationError, err:
+                errors[name] = err.message
+        return errors                
 
 
