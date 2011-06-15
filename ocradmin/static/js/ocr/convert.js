@@ -9,14 +9,14 @@ const MAXFONTSIZE = 40;
 // only in global scope for dubugging purposes
 var uploader = null;
 var formatter = null;
-var pbuilder = null;
+var nodetree = null;
 var sdviewer = null;
 var reshandler = null;
 var presetmanager = null;
 var guimanager = null;
 
 function saveState() {
-    pbuilder.saveState();
+    nodetree.saveState();
 }
 
 
@@ -65,10 +65,10 @@ $(function() {
             document.getElementById("script_toolbar"));
     presetmanager.addListeners({
         saveDialogOpen: function() {
-            pbuilder.setDisabled(true);
+            nodetree.setDisabled(true);
         },
         saveDialogClose: function() {
-            pbuilder.setDisabled(false);
+            nodetree.setDisabled(false);
         },
     });
 
@@ -109,25 +109,25 @@ $(function() {
 
     //presetmanager = new OCRJS.PresetManager("#script_toolbar");
     //presetmanager.getPresetData = function() {
-    //    return JSON.stringify(pbuilder.buildScript(), false, '\t');
+    //    return JSON.stringify(nodetree.buildScript(), false, '\t');
     //};
     //presetmanager.addListeners({
     //    onPresetLoadData: function(data) {
-    //        pbuilder.clearScript();
-    //        pbuilder.loadScript(JSON.parse(data));
+    //        nodetree.clearScript();
+    //        nodetree.loadScript(JSON.parse(data));
     //    },
     //    onPresetClear: function(data) {
-    //        pbuilder.clearScript();
+    //        nodetree.clearScript();
     //    },
     //});
     
     $("#save_script").click(function(event) {
         presetmanager.showNewPresetDialog(
-                JSON.stringify(pbuilder.buildScript(), null, "\t"));
+                JSON.stringify(nodetree.buildScript(), null, "\t"));
     });        
     
     $("#download_script").click(function(event) {
-        var json = JSON.stringify(pbuilder.buildScript(), false, '\t');
+        var json = JSON.stringify(nodetree.buildScript(), false, '\t');
         $("#fetch_script_data").val(json);
         $("#fetch_script").submit();
         event.stopPropagation();
@@ -136,14 +136,14 @@ $(function() {
     
     $("#select_script").change(function(event) {
         if ($(this).val() < 1) {
-            pbuilder.clearScript();
+            nodetree.clearScript();
         } else {
             $.ajax({
                 url: "/presets/data/" + $(this).val(),
                 error: OCRJS.ajaxErrorHandler,
                 success: function(data) {
-                    pbuilder.clearScript();
-                    pbuilder.loadScript(JSON.parse(data));
+                    nodetree.clearScript();
+                    nodetree.loadScript(JSON.parse(data));
                 },
             });
         }
@@ -152,7 +152,7 @@ $(function() {
     });
 
     $("#optionsform").submit(function() {
-        pbuilder.scriptChanged();
+        nodetree.scriptChanged();
         event.stopPropagation();
         event.preventDefault();
     });        
@@ -161,13 +161,13 @@ $(function() {
     function handleResult(nodename, data, cached) {
         if (data.result.type == "error") {
             console.log("NODE ERROR: ", data.result.node, data.result.error);
-            pbuilder.setNodeErrored(data.result.node, data.result.error);
+            nodetree.setNodeErrored(data.result.node, data.result.error);
             return;
         }
 
         // otherwise cache the result and handle it
         if (!cached) {
-            var node = pbuilder.getNode(nodename);
+            var node = nodetree.getNode(nodename);
             if (node) {
                 var hash = hex_md5(bencode(node.hashValue()));
                 resultcache[hash] = data;
@@ -213,30 +213,30 @@ $(function() {
     textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
-    pbuilder = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
+    nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
 
-    pbuilder.addListener("scriptChanged", function() {
-        var nodename = pbuilder.getEvalNode();
-        var node = pbuilder.getNode(nodename);
+    nodetree.addListener("scriptChanged", function() {
+        var nodename = nodetree.getEvalNode();
+        var node = nodetree.getNode(nodename);
         if (node) {
             var hash = hex_md5(bencode(node.hashValue()));
             if (resultcache[hash]) {
                 console.log("Found cached result for:", nodename);
                 handleResult(nodename, resultcache[hash], true);
             } else
-                reshandler.runScript(nodename, pbuilder.buildScript());
+                reshandler.runScript(nodename, nodetree.buildScript());
         }
     });
-    pbuilder.addListener("registerUploader", function(name, elem) {
+    nodetree.addListener("registerUploader", function(name, elem) {
 
         uploader.removeListeners("onXHRLoad.setfilepath");
         uploader.setTarget(elem);
         // FIXME: No error handling
         uploader.addListener("onXHRLoad.setfilepath", function(data) {
-            pbuilder.setFileInPath(name, JSON.parse(data.target.response).file);
+            nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
         });
     });
-    pbuilder.addListener("nodeViewing", function(node) {
+    nodetree.addListener("nodeViewing", function(node) {
         if (!node)
             guimanager.tearDownGui();
         else
@@ -244,33 +244,15 @@ $(function() {
     });
 
     reshandler.addListener("resultPending", function() {
-        pbuilder.clearErrors();
+        nodetree.clearErrors();
     });        
-    reshandler.addListener("validationError", function(node, data) {
-        pbuilder.setNodeErrored(node, data.error);
+    reshandler.addListener("validationError", function(node, error) {
+        nodetree.setNodeErrored(node, error);
     });        
     reshandler.addListener("resultDone", function(node, data) {
         handleResult(node, data, false);
     }); 
-    pbuilder.init();
-
-    var csplit = $("#viewertabs_").layout({
-        applyDefaultStyles: true,
-        north: {
-            resizable: false,
-            closable: false,
-            slidable: false,
-            spacing_open: 0, 
-        },
-        south: {
-            size: 200,
-            onresize_end: function() {
-                setTimeout(function() {
-                    sdviewer.resetSize();
-                });
-            },
-        },                   
-    });
+    nodetree.init();
 
     var hsplit = $("#sidebar").layout({
         applyDefaultStyles: true,
@@ -284,12 +266,12 @@ $(function() {
             size: 200,
             onresize_end: function() {
                 setTimeout(function() {
-                    pbuilder.resetSize();
+                    nodetree.resetSize();
                 });
             },
             onclose_end: function() {
                 setTimeout(function() {
-                    pbuilder.resetSize();
+                    nodetree.resetSize();
                 });
             },
         },                   
@@ -299,7 +281,7 @@ $(function() {
 
     vsplit.options.east.onresize_end = function() {
         setTimeout(function() {
-            pbuilder.resetSize();
+            nodetree.resetSize();
         });
     };
 
