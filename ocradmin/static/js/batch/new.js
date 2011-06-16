@@ -62,7 +62,7 @@ $(function() {
 
     // toggle selection of files
     $(".file_item").live("click", function(event) {
-        $(this).toggleClass("selected");
+        $(this).toggleClass("ui-selected");
     });
 
     // enable the submit button if appropriate
@@ -89,7 +89,7 @@ $(function() {
     }
 
     function removeSelectedBatchFiles() {
-        $(".file_item.selected").remove();
+        $(".file_item.ui-selected").remove();
         stripeFileList();
     }
 

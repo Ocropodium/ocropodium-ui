@@ -357,9 +357,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     setupMenuEvents: function() {
         var self = this;                         
         self._menu.find("li").hover(function(event) {
-            $(this).addClass("selected");
+            $(this).addClass("ui-selected");
         }, function(event) {
-            $(this).removeClass("selected");
+            $(this).removeClass("ui-selected");
         });
         self._menu.find("li.topmenu").hoverIntent(
             function(event) {

@@ -101,9 +101,9 @@ OCRJS.TreeBuilder = OCRJS.OcrBase.extend({
         console.log("setup menu");         
 
         self._menu.find("li").hover(function(event) {
-            $(this).addClass("selected");
+            $(this).addClass("ui-selected");
         }, function(event) {
-            $(this).removeClass("selected");
+            $(this).removeClass("ui-selected");
         });
 
         self._menu.find("li.topmenu").hover(function(event) {

@@ -196,6 +196,10 @@ $(function() {
                 JSON.stringify(nodetree.buildScript(), null, "\t"));
     });        
     
+    $("#open_script").click(function(event) {
+        presetmanager.showOpenPresetDialog();
+    });        
+    
     $("#download_script").click(function(event) {
         var json = JSON.stringify(nodetree.buildScript(), false, '\t');
         $("#fetch_script_data").val(json);
