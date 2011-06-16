@@ -167,6 +167,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         this.setupNodeListeners(node);
         this._usednames[name] = node;
         this._nodes.push(node);
+        this.scriptChanged();
         return node;
     },                 
 
