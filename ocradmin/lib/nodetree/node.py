@@ -55,6 +55,8 @@ class Node(object):
     arity = 1       # number of inputs
     passthrough = 0 # input to pass through if node ignored
     stage = "general"
+    intypes = [object]
+    outtype = object
     _parameters = [
 
     ]
@@ -192,7 +194,17 @@ class Node(object):
         self._validate()                    
 
     def _validate(self):
-        pass
+        """
+        Check inputs are present and of the correct type.
+        """
+        for i in range(len(self._inputs)):
+            if self._inputs[i] is None:
+                raise ValidationError(self, "missing input '%d'" % i)
+            if not issubclass(self._inputs[i].outtype, self.intypes[i]):
+                raise ValidationError(self,
+                        "incorrect input type '%s' for input '%d': should be '%s'" % (
+                            self._inputs[i].outtype.__name__, i, self.intypes[i].__name__))
+
 
     def hash_value(self):
         """
