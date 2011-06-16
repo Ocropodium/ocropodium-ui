@@ -32,6 +32,8 @@ def lookup_model_file(modelname):
     """
     from ocradmin.ocrmodels.models import OcrModel
     mod = OcrModel.objects.get(name=modelname)
+    assert os.path.exists(mod.file.path), \
+            "Model file does not exist: %s" % mod.file.path
     return mod.file.path.encode()
 
 
