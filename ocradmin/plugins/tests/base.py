@@ -7,6 +7,8 @@ from django.test import TestCase
 # nodetree bits
 from nodetree import manager
 
+from ocradmin.core.tests import testutils
+
 class OcrScriptTest(TestCase):
     """
     Base class that sets of the manager with our
@@ -22,6 +24,10 @@ class OcrScriptTest(TestCase):
         self.manager.register_module("ocradmin.plugins.cuneiform_nodes")
         self.manager.register_module("ocradmin.plugins.numpy_nodes")
         self.manager.register_module("ocradmin.plugins.pil_nodes")
+        testutils.symlink_model_fixtures()
+
+    def tearDown(self):
+        pass
 
 
 

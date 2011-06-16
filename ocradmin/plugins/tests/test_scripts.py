@@ -19,7 +19,7 @@ class ScriptsTest(OcrScriptTest):
 
     def setUp(self):
         """
-            Setup OCR tests.
+            Setup OCR tests.  These run directly, not via views.
         """
         super(ScriptsTest, self).setUp()
         self.scripts = {}
