@@ -12,7 +12,6 @@ var SvgHelper = SvgHelper || new OCRJS.Nodetree.SvgHelper;
 OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
     constructor: function(name, classdata, id) {
         this.base();
-        console.log("Initialising node with: ", name, classdata);
         this.name = name;
         this.type = classdata.name;
         this.arity = classdata.arity;
@@ -42,6 +41,12 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             this.registerListener("parameterUpdated_" + this.parameters[i].name);
         }    
     },
+
+    hashValue: function() {
+        // Not implemented on the tree view so
+        // return a semi-pseudo-random number
+        return (new Date()).getTime();
+    },                   
 
     group: function() {
         return this._group;
@@ -95,7 +100,6 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         });
 
         this.elem.find(".viewingbutton").click(function(event) {
-            //console.log("viewing button clicked");
             self.setViewing(!self._viewing, true);
             event.stopPropagation();
             event.preventDefault();
@@ -140,7 +144,6 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
     },
 
     setViewing: function(viewing, emit) {
-        //console.log(this.name, "viewing:", viewing);
         this._viewing = Boolean(viewing);
         this._toggleViewing(this._viewing);
         if (emit) 
@@ -227,11 +230,12 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             if (inputs[this.passthrough])                
                 return inputs[this.passthrough].hash_value()
             else
-                return null;
+                return "";
         }
         return {
             name: this.name,
             params: this.parameters,
+            ignored: this.isIgnored(),
             children: $.map(inputs, function(n) {
                 if (n)
                     return n.hashValue();
@@ -332,7 +336,6 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
     },
 
     setName: function(name) {
-        console.log("Setting name of", this.name, "to", name); 
         this.name = name;
         $(this._textlabel).text(name);
     },                 
@@ -456,7 +459,6 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         var stroke = bool ? "#F99" : "#BBB";
         this.svg.change(this._rect, {stroke: stroke});
         this.svg.change(this._centre, {stroke: stroke});
-        console.log("Changing tooltip", this.getToolTip());
         $(this._tooltip).text(this.getToolTip());            
     },    
 

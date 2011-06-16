@@ -11,6 +11,8 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
             onUpdateStarted: [],
             registerUploader: [],
             scriptChanged: [],
+            scriptLoaded: [],
+            scriptCleared: [],
             nodeViewing: [],
         };
         this._nodelisttmpl = $.template($("#nodeListTmpl"));
@@ -180,7 +182,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                         other.setFocussed(false);
                 });
                 self.buildParams(node);
-                self.scriptChanged();
+                self.callListeners("nodeViewing", node);        
             },
             toggleViewing: function(view) {
                 $.each(self._usednames, function(name, other) {
@@ -262,8 +264,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 });
             }
         });
-
-        this.callListeners("nodeViewing", node);        
     },
 
     clearParams: function() {
@@ -452,8 +452,10 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         $.each(this._nodes, function(i, n) {
             n.removeNode(true);
         });
-        self._usednames = {};        
-        self._nodes = [];
+        this._usednames = {};        
+        this._nodes = [];
+        this.callListeners("scriptCleared");
+        
     },               
 
     buildSection: function(parent, data) {
