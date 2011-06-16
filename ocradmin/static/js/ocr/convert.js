@@ -11,6 +11,7 @@ var uploader = null;
 var formatter = null;
 var nodetree = null;
 var sdviewer = null;
+var textviewer = null;
 var reshandler = null;
 var presetmanager = null;
 var guimanager = null;
@@ -60,6 +61,82 @@ $(function() {
             primary: "ui-icon-document",
         }        
     });
+
+    // viewer toolsbar
+    // style toolbar
+    $(".tbbutton").button({
+        disabled: false,
+    });
+    $("#format").buttonset();
+    $("#text_zoomin").click(function(event) {
+        textviewer.increaseFontSize();
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomin",
+        }
+    });
+    $("#text_zoomout").click(function(event) {
+        textviewer.reduceFontSize();
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomout",
+        }
+    });
+    $("#format_block").click(function(event) {
+        formatter.blockLayout(textviewer.container());
+    });
+    $("#format_line").click(function(event) {
+        formatter.lineLayout(textviewer.container());
+    });
+    $("#format_column").click(function(event) {
+        formatter.columnLayout(textviewer.container());
+    });
+
+    $("#image_zoomin").click(function(event) {
+        sdviewer.zoomBy(2);        
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomin",
+        }
+    });
+    $("#image_zoomout").click(function(event) {
+        sdviewer.zoomBy(0.5);    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomout",
+        }
+    });
+    $("#centre").click(function(event) {
+        sdviewer.goHome();    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-home",
+        }
+    });
+    $("#fullscreen").click(function(event) {
+        sdviewer.setFullPage(true);    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-arrow-4-diag",
+        }
+    });
+
+    $("#refresh").click(function(event) {
+        var active = sdviewer.activeBuffer();
+        sdviewer.setBufferPath(active, sdviewer.bufferPath(active));    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-refresh",
+        }
+    });
+
 
     presetmanager = new OCRJS.PresetManager(
             document.getElementById("script_toolbar"));
@@ -204,12 +281,13 @@ $(function() {
         }
     }        
 
-    sdviewer = new OCRJS.ImageViewer($(".imageviewer").get(0), {
-        numBuffers: 2,        
+    sdviewer = new OCRJS.ImageViewer($("#imageviewer_1").get(0), {
+        numBuffers: 2,
+        dashboard: false,
     });
     guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
 
-    textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
+    textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
     nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
