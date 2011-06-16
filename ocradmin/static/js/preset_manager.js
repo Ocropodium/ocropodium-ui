@@ -13,25 +13,86 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this.parent = parent;
 
         this._dialog = $("#dialog", this.parent);
+        this._opentmpl = $.template($("#openDialog"));
+        this._opentmplitem = $.template($("#openDialogItem"));
         this._updatetmpl = $.template($("#updateDialog"));
         this._createtmpl = $.template($("#createDialog"));
 
         this._listeners = {
             saveDialogOpen: [],
             saveDialogClose: [],
+            openDialogOpen: [],
+            openDialogClose: [],
+            openScript: [],
         };
     },
+
+    showOpenPresetDialog: function() {
+        var self = this;                              
+        var tb = $(this.parent);        
+        var pos = [tb.offset().left, tb.offset().top + tb.height()];
+        this._dialog.html($.tmpl(this._opentmpl, {}));
+        
+        this._dialog.dialog({
+            dialogClass: "preset_manager_dialog",
+            position: pos,
+            width: tb.width(),
+            close: function(e, ui) {
+                self._dialog.children().remove();
+                self.callListeners("openDialogClose");    
+            },
+        });
+        $.getJSON("/presets/list/", {format: "json"}, function(data) {
+            $.each(data, function(i, preset) {
+                $("#open_preset_list", self._dialog).append(
+                    $.tmpl(self._opentmplitem, preset)
+                );
+            });
+            $("#open_preset_list").selectable({
+                selected: function(event, ui) {
+                    self.validateOpenSelection();
+                },    
+            });
+        });            
+        this._dialog.find("input[type='submit']").click(function(event) {
+            var item =  self._dialog.find(".preset_item.ui-selected").first();
+            var slug = item.data("slug");
+            $.getJSON("/presets/data/" + slug, {format: "json"}, function(data) {
+                self._dialog.dialog("close");
+                self.callListeners("openScript", item.text(), JSON.parse(data));
+            });
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    },
+
+    validateOpenSelection: function() {
+        var selection = this._dialog.find(".preset_item.ui-selected");
+        var submit = this._dialog.find("#open_preset");
+        submit.attr("disabled", selection.length != 1);
+    },                               
+
+    showSavePresetDialog: function() {
+        var self = this;        
+        var tb = $(this.parent);        
+        var pos = [tb.offset().left, tb.offset().top + tb.height()];
+        this._dialog.html($.tmpl(this._updatetmpl, {}));
+
+        this._dialog.dialog({
+            dialogClass: "preset_manager_dialog",
+            position: pos,
+            width: tb.width(),
+            close: function(e, ui) {
+                self._dialog.children().remove();
+                self.callListeners("saveDialogClose");    
+            },
+        });
+
+    },                              
 
     showNewPresetDialog: function(scriptdata) {
 
         var self = this;        
-        if (this._dialog.dialog("isOpen") === true) {
-            this._dialog.dialog("close");
-
-            event.stopPropagation();
-            return;
-        }
-
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.html($.tmpl(this._createtmpl, {}));
@@ -61,7 +122,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this._dialog.find("#id_data").val(scriptdata);
 
         this._dialog.dialog({
-            dialogClass: "save_dialog",
+            dialogClass: "preset_manager_dialog",
             position: pos,
             width: tb.width(),
             close: function(e, ui) {
@@ -75,7 +136,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     },
 
     validateNewForm: function() {
-        console.log("validating");                         
         var namefield = this._dialog.find("#id_name");
         var submit = this._dialog.find("#create_new");
         submit.attr("disabled", $.trim(namefield.val()) == "");
