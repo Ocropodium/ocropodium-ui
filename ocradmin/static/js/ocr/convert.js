@@ -37,9 +37,10 @@ $(function() {
         }        
     });
     $("#open_script").button({
-        text: false,
+        text: true,
         icons: {
             primary: "ui-icon-folder-open",
+            secondary: "ui-icon-carat-1-s",
         }
     });
     $("#save_script").button({
@@ -140,6 +141,11 @@ $(function() {
         saveDialogClose: function() {
             nodetree.setDisabled(false);
         },
+        openScript: function(name, data) {
+            nodetree.loadScript(data);
+            var elem = $("#open_script").find(".ui-button-text");
+            elem.text(name);
+        },
     });
 
     // initialise the uploader...
@@ -177,20 +183,6 @@ $(function() {
         },
     });
 
-    //presetmanager = new OCRJS.PresetManager("#script_toolbar");
-    //presetmanager.getPresetData = function() {
-    //    return JSON.stringify(nodetree.buildScript(), false, '\t');
-    //};
-    //presetmanager.addListeners({
-    //    onPresetLoadData: function(data) {
-    //        nodetree.clearScript();
-    //        nodetree.loadScript(JSON.parse(data));
-    //    },
-    //    onPresetClear: function(data) {
-    //        nodetree.clearScript();
-    //    },
-    //});
-    
     $("#save_script").click(function(event) {
         presetmanager.showNewPresetDialog(
                 JSON.stringify(nodetree.buildScript(), null, "\t"));
@@ -208,22 +200,6 @@ $(function() {
         event.preventDefault();    
     });
     
-    $("#select_script").change(function(event) {
-        if ($(this).val() < 1) {
-            nodetree.clearScript();
-        } else {
-            $.ajax({
-                url: "/presets/data/" + $(this).val(),
-                error: OCRJS.ajaxErrorHandler,
-                success: function(data) {
-                    nodetree.clearScript();
-                    nodetree.loadScript(JSON.parse(data));
-                },
-            });
-        }
-        event.stopPropagation();
-        event.preventDefault();    
-    });
 
     $("#optionsform").submit(function() {
         nodetree.scriptChanged();
@@ -290,11 +266,10 @@ $(function() {
     nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
 
     nodetree.addListener("scriptChanged", function() {
-        $("#select_script").find("option:selected").each(function(i, elem) {
-            if (!$(elem).text().match(/\*$/)) {
-                $(elem).text($(elem).text() + "*");
-            }
-        });
+        var elem = $("#open_script").find(".ui-button-text");
+        if (!$(elem).text().match(/\*$/)) {
+            $(elem).text($(elem).text() + "*");
+        }
     });        
 
     nodetree.addListener("scriptChanged", function() {
