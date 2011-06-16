@@ -46,7 +46,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this.init();
     },
 
-
     init: function() {
         this._viewport = $("<div><div>")
             .addClass("imageviewer_viewport")
@@ -98,7 +97,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         }
     },
 
-
     close: function() {
         for (var i in this._buffers) {
             if (this._buffers[i].isOpen()) {
@@ -143,7 +141,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         return true;
     },                
 
-
     setWaiting: function(wait) {
         this._overlay.css({
             top: this._viewport.position().top,
@@ -152,7 +149,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             height: this._viewport.height(),
         }).toggle(wait);
     },
-
 
     // set the path to a viewer and wire it to switch back
     // to the original position and zoom...
@@ -231,7 +227,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         }
     },                           
 
-
     drawBufferOverlays: function() {
         for (var i in this._buffers) {
             var portal = this._portals[i];
@@ -254,7 +249,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         } 
     },
 
-
     nextBuffer: function() {
         if (this._cbuf < this.options.numBuffers - 1) {
             this._cbuf++;    
@@ -264,13 +258,11 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this.refreshBuffers();
     },
 
-
     refreshBuffers: function() {
         this._portalholder.css("margin-top", "-" 
                 + (this._cbuf * this.options.height) + "px");
         this.setMasterBuffer();        
     },
-
                     
     // Sync background buffers to the foreground one
     syncToActiveBuffer: function() {
@@ -283,7 +275,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             }
         }
     },
-
                         
     // sync movement of inactive viewers to the
     // active one                    
@@ -294,7 +285,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this._logger("Setting sync to: " + this._cbuf);
         this._buffers[this._cbuf].addEventListener("animation", this._syncfunc);
     },
-
 
     // wrappers for viewport functions
     zoomBy: function(zoom, immediately) {
