@@ -7,12 +7,35 @@ var OCRJS = OCRJS || {};
 OCRJS.TextViewer = OCRJS.OcrBase.extend({
     constructor: function(parent, options) {
         this.base(parent, options);
-
         this._div = $("<div></div>")
             .addClass("textcontainer")
             .css("height", "500px")
             .appendTo(parent);
+        this._fontsize = parseInt(this._div.css("fontSize").replace(/px$/, ""));
     },
+
+    MIN_FONT_SIZE: 6,
+    MAX_FONT_SIZE: 40,
+
+    setFontSize: function(size) {
+        size = Math.min(size, this.MAX_FONT_SIZE);
+        this._fontsize = Math.max(size, this.MIN_FONT_SIZE);
+        this._div.css("fontSize", this._fontsize);
+    },
+
+    increaseFontSize: function() {
+        this._fontsize = Math.max(this._fontsize + 2, this.MIN_FONT_SIZE);
+        this._div.css("fontSize", this._fontsize);
+    },
+
+    reduceFontSize: function() {
+        this._fontsize = Math.min(this._fontsize - 2, this.MAX_FONT_SIZE);
+        this._div.css("fontSize", this._fontsize);
+    },
+
+    container: function() {
+        return this._div;
+    },        
 
     clearData: function() {
         var self = this;
@@ -23,7 +46,6 @@ OCRJS.TextViewer = OCRJS.OcrBase.extend({
     setData: function(results) {
         var self = this;
         self.clearData();
-        console.log("TEXT VIEWER DATA: ", results);
         self._div.data("bbox", results.box);
         var lspan = $("<span></span>")
             .addClass("ocr_line");
