@@ -277,4 +277,20 @@ a.button:hover {
 }    
 
 .viewer_toolbar {
+    padding: 0.4em;
 }
+
+.textviewer, .imageviewer {
+    padding: 0.4em;
+}
+
+/* jquery UI override */
+.ui-tabs-panel {
+    padding: 0em !important;
+}
+
+.ui-tabs-nav {
+    
+}
+
+
