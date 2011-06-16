@@ -185,18 +185,17 @@ $(function() {
                 sdviewer.setActiveBuffer(active^1);
             }, 200);
             
+            var overlays = {};
             if (data.result.type == "pseg") {
                 var overlays = {};
                 $.each(["lines", "paragraphs", "columns"], function(i, class) {
                     if (data.result.data[class]) {
                         overlays[class] = sdviewer.getViewerCoordinateRects(
                             data.result.data.box, data.result.data[class]);
-                        console.log("Adding overlay: " + class);
                     }
                 });
-                sdviewer.setBufferOverlays(sdviewer.bufferOverlays(0), 1);
-                sdviewer.setBufferOverlays(overlays, 0);
             }
+            sdviewer.setBufferOverlays(overlays, 0);
             $("#viewertabs").tabs("select", 0);
         } else if (data.result.type == "text") {
             textviewer.setData(data.result.data);
