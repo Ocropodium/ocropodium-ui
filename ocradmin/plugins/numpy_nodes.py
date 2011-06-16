@@ -14,6 +14,8 @@ class Rotate90Node(node.Node, generic_nodes.GrayPngWriterMixin):
     stage = stages.FILTER_BINARY
     name = "Numpy::Rotate90"
     description = "Rotate image num*90 degrees counter-clockwise"
+    intypes = [numpy.ndarray]
+    outtype = numpy.ndarray
     _parameters = [{
         "name": "num",
         "value": 1,
