@@ -55,8 +55,8 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
 
 
     selectSuggestion: function(sel) {
-        $(".selected", this._container).removeClass("selected");
-        sel.addClass("selected");
+        $(".ui-selected", this._container).removeClass("ui-selected");
+        sel.addClass("ui-selected");
         if (sel.length) {
             if(sel.get(0))
                 sel.get(0).scrollIntoView(false);
@@ -66,7 +66,7 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
 
 
     clearSelection: function() {
-        $(".selected", this._container).removeClass("selected");
+        $(".ui-selected", this._container).removeClass("ui-selected");
     },
 
 
@@ -78,21 +78,21 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
     keyEvent: function(event) {
         switch (event.keyCode) {
             case KC_DOWN:
-                var sel = $(".selected", this._container).next();
+                var sel = $(".ui-selected", this._container).next();
                 if (sel.length == 0) {
                     sel = $(".sp_suggestion", this._container).first();
                 }
                 this.selectSuggestion(sel);
                 break;
             case KC_UP:                                      
-                var sel = $(".selected", this._container).prev();
+                var sel = $(".ui-selected", this._container).prev();
                 if (sel.length == 0) {
                     this.looseFocus();
                 }
                 this.selectSuggestion(sel);
                 break;
             case KC_RETURN:
-                var sel = $(".selected", this._container).first();
+                var sel = $(".ui-selected", this._container).first();
                 this.suggestionChosen(sel.text());
                 break;
             case KC_ESCAPE:
@@ -117,7 +117,7 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
 
     looseFocus: function() {
         this._focus = false;
-        $(".selected", this._container).removeClass("selected");         
+        $(".ui-selected", this._container).removeClass("ui-selected");         
         this._container.removeClass("focus");
         this.focusLost();
     },
@@ -129,7 +129,7 @@ OCRJS.SuggestionList = OCRJS.OcrBase.extend({
 
 
     currentSelection: function() {
-        return $(".selected", this.parent).text();
+        return $(".ui-selected", this.parent).text();
     },
 
     disable: function() {

@@ -5,7 +5,7 @@ var vplit, bsplit;
 
 $(function() {
     function deactivateMenu(menu) {
-        $(menu).removeClass("selected")
+        $(menu).removeClass("ui-selected")
             .unbind("click.menuclose")
             .find("ul").hide();
         $("div#menu ul.top").unbind("mouseenter.menuover");
@@ -23,7 +23,7 @@ $(function() {
             activateMenu(this);
         });
         $(menu)
-            .addClass("selected")
+            .addClass("ui-selected")
             .unbind("click.menuopen")
             .bind("click.menuclose", function(event) {
                 deactivateMenu(menu);
