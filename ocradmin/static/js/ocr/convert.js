@@ -2,10 +2,6 @@
 // Handle drag and drop page conversions
 //
 
-// should probably be moved to app-global scope
-const MINFONTSIZE = 6;
-const MAXFONTSIZE = 40;
-
 // only in global scope for dubugging purposes
 var uploader = null;
 var formatter = null;
@@ -24,9 +20,6 @@ function saveState() {
 function loadState() {
 
 }
-
-
-
 
 $(function() {
 
@@ -293,10 +286,19 @@ $(function() {
     nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
 
     nodetree.addListener("scriptChanged", function() {
+        $("#select_script").find("option:selected").each(function(i, elem) {
+            if (!$(elem).text().match(/\*$/)) {
+                $(elem).text($(elem).text() + "*");
+            }
+        });
+    });        
+
+    nodetree.addListener("scriptChanged", function() {
         var nodename = nodetree.getEvalNode();
         var node = nodetree.getNode(nodename);
         if (node) {
             var hash = hex_md5(bencode(node.hashValue()));
+            console.log("Hash for node", node.name, hash);
             if (resultcache[hash]) {
                 console.log("Found cached result for:", nodename);
                 handleResult(nodename, resultcache[hash], true);
@@ -325,6 +327,8 @@ $(function() {
     });        
     reshandler.addListener("validationError", function(node, error) {
         nodetree.setNodeErrored(node, error);
+        // clear the client-size cache
+        resultcache = {};
     });        
     reshandler.addListener("resultDone", function(node, data) {
         handleResult(node, data, false);

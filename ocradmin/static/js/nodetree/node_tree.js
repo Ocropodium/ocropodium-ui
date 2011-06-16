@@ -53,6 +53,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                             other.setFocussed(false);
                     });
                     self.buildParams(node);
+                    self.callListeners("nodeViewing", node);        
                 }
             },
             toggleViewing: function(view) {
@@ -143,6 +144,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                     self.connectPlugs(plug, self._dragcable.start);
                 else
                     self.connectPlugs(self._dragcable.start, plug);
+                self.scriptChanged();
             }
             self.removeDragCable();    
         }            
@@ -476,7 +478,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this.connectNodes(script);
         if (!havemeta)
             this.layoutNodes(script);
-        this.scriptChanged();
+        this.callListeners("scriptLoaded");
     },                    
 
     addNode: function(name, typedata) {
