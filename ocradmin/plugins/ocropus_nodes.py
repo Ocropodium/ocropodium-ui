@@ -86,6 +86,7 @@ class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
     name = "Ocropus::FileIn"
     description = "File Input Node"
     stage = stages.INPUT
+    outtype = ocrolib.numpy.ndarray
     _parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
@@ -143,20 +144,14 @@ class OcropusCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
     description = "Crop a binary image."
     name = "Ocropus::Crop"
     stage = stages.FILTER_BINARY
+    intypes = [ocrolib.numpy.ndarray]
+    outtype = ocrolib.numpy.ndarray
     _parameters = [
         dict(name="x0", value=-1),
         dict(name="y0", value=-1),
         dict(name="x1", value=-1),
         dict(name="y1", value=-1),
     ]
-
-    def _validate(self):
-        """
-        Check inputs are connected.
-        """
-        for i in range(len(self._inputs)):
-            if self._inputs[i] is None:
-                raise node.ValidationError(self, "missing input '%d'" % i)
 
     def _eval(self):
         """
@@ -248,6 +243,8 @@ class OcropusBinarizeBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
     """
     arity = 1
     stage = stages.BINARIZE
+    intypes = [ocrolib.numpy.ndarray]
+    outtype = ocrolib.numpy.ndarray
 
     def _eval(self):
         """
@@ -273,6 +270,8 @@ class OcropusSegmentPageBase(OcropusBase, generic_nodes.JSONWriterMixin):
     """
     arity = 1
     stage = stages.PAGE_SEGMENT
+    intypes = [ocrolib.numpy.ndarray]
+    outtype = dict
 
     def null_data(self):
         """
@@ -317,6 +316,8 @@ class OcropusGrayscaleFilterBase(OcropusBase, generic_nodes.GrayPngWriterMixin):
     """
     arity = 1
     stage = stages.FILTER_GRAY
+    intypes = [ocrolib.numpy.ndarray]
+    outtype = ocrolib.numpy.ndarray
 
     def _eval(self):
         input = self.get_input_data(0)
@@ -334,6 +335,8 @@ class OcropusBinaryFilterBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
     """
     arity = 1
     stage = stages.FILTER_BINARY
+    intypes = [ocrolib.numpy.ndarray]
+    outtype = ocrolib.numpy.ndarray
 
     def _eval(self):
         input = self.get_input_data(0)

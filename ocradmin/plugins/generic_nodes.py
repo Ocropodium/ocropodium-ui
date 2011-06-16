@@ -89,6 +89,8 @@ class LineRecognizerNode(node.Node, JSONWriterMixin):
     """
     stage = stages.RECOGNIZE
     arity = 2
+    intypes = [ocrolib.numpy.ndarray, dict]
+    outtype = object
     passthrough = 1
 
     def init_converter(self):
@@ -96,16 +98,6 @@ class LineRecognizerNode(node.Node, JSONWriterMixin):
 
     def get_transcript(self):
         raise NotImplementedError
-
-    def _validate(self):
-        """
-        Check state of the inputs.
-        """
-        self.logger.debug("%s: validating...", self)
-        super(LineRecognizerNode, self)._validate()
-        for i in range(len(self._inputs)):
-            if self._inputs[i] is None:
-                raise node.ValidationError(self, "missing input '%d'" % i)
 
     def _eval(self):
         """
