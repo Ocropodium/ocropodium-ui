@@ -35,6 +35,8 @@ class PilFileInNode(generic_nodes.ImageGeneratorNode, generic_nodes.BinaryPngWri
     stage = stages.INPUT
     name = "Pil::FileIn"
     description = "PIL File Input node"
+    intypes = [numpy.ndarray]
+    outtype = numpy.ndarray
     _parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
@@ -59,6 +61,8 @@ class PilCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
     stage = stages.FILTER_GRAY
     name = "Pil::PilCrop"
     description = "PIL Crop image node"
+    intypes = [numpy.ndarray]
+    outtype = numpy.ndarray
     _parameters = [
         dict(name="x0", value=-1),
         dict(name="y0", value=-1),
