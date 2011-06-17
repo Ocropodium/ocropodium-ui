@@ -10,4 +10,4 @@ FILTER_GRAY = "filter_gray"
 BINARIZE = "binarize"
 PAGE_SEGMENT = "page_segment"
 RECOGNIZE = "recognize"
-
+UTILS = "utils"
