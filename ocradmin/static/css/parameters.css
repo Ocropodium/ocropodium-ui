@@ -53,6 +53,7 @@ div#node_canvas {
 }
 
 .nodemenu li {
+    color: #000;
     display: block;
     padding: 2px;
     padding-right: 15px;
