@@ -82,15 +82,10 @@
             <ul>
                 <li>
                     <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}
-                        href="/ocr/convert/">Convert</a>
+                        href="/ocr/convert/">Preset Editor</a>
                 </li> 
                 <li>
-                <a {% ifequal request.path "/ocr/binarize/" %}class="current"{% endifequal %}
-                    href="/ocr/binarize/">Binarize</a>
-                </li> 
-                <li>
-                <a {% ifequal request.path "/ocr/segment/" %}class="current"{% endifequal %}
-                    href="/ocr/segment/">Segment</a>
+                    <a id="list_presets" href="/presets/list/">Show Presets</a>
                 </li>
             </ul>
         </li>
