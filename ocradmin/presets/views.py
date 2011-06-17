@@ -56,6 +56,15 @@ def data(request, slug):
     preset = get_object_or_404(Preset, slug=slug)
     return HttpResponse(json.dumps(preset.data), mimetype="application/json")
 
+def update_data(request, slug):
+    """Update script data for a given script."""
+    preset = get_object_or_404(Preset, slug=slug)
+    scriptdata = request.POST.get("data", "")
+    # TODO: Validate script data
+    preset.data = scriptdata
+    preset.save()
+    return HttpResponse(json.dumps(preset.data), mimetype="application/json")
+
 def download(request, slug):
     """Return the data for a preset as an attachment"""
     preset = get_object_or_404(Preset, slug=slug)
