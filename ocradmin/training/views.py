@@ -20,10 +20,7 @@ from ocradmin.training.models import OcrComparison, ParameterScore
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
-from ocradmin.plugins.manager import PluginManager
-
-from ocradmin.plugins import parameters
-
+from ocradmin.presets.models import Preset
 
 class ReferenceSetForm(forms.Form):
     """
@@ -374,7 +371,7 @@ def _get_comparison_context(request):
     """
     return dict(
         form=ComparisonForm(initial={"name": "Parameter Comparison"}),
-        prefixes=["p0_", "p1_"],
+        presets=Preset.objects.all().order_by("name"),
         project=request.session["project"],
         tsets=request.session["project"].reference_sets.all(),
     )
