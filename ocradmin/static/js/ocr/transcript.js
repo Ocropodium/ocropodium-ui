@@ -1,9 +1,8 @@
 var transcript = null;
 var sdviewer = null;
-var pbuilder = null;
 var formatter = null;
 var polltimeout = -1;
-
+var hsplitL, hsplitR;
 
 function onBinaryFetchResult(data) {
 
@@ -107,7 +106,7 @@ function updateNavButtons() {
 
 $(function() {
     // setup toolbar
-    $("#centre").button({
+    $("#link_viewers").button({
         text: false,
         icons: {
             primary: "ui-icon-link",
@@ -145,12 +144,48 @@ $(function() {
         disabled: true,
         text: true,
     });
-    $("#reocr").buttonset();
-    $("#reocr_options").button({
+
+    $("#image_zoomin").click(function(event) {
+        sdviewer.zoomBy(2);        
+    }).button({
         text: false,
         icons: {
-            primary: "ui-icon-wrench",
-        }        
+            primary: "ui-icon-zoomin",
+        }
+    });
+    $("#image_zoomout").click(function(event) {
+        sdviewer.zoomBy(0.5);    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomout",
+        }
+    });
+    $("#centre").click(function(event) {
+        sdviewer.goHome();    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-home",
+        }
+    });
+    $("#fullscreen").click(function(event) {
+        sdviewer.setFullPage(true);    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-arrow-4-diag",
+        }
+    });
+
+    $("#refresh").click(function(event) {
+        var active = sdviewer.activeBuffer();
+        sdviewer.setBufferPath(active, sdviewer.bufferPath(active));    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-refresh",
+        }
     });
 
 
@@ -216,30 +251,6 @@ $(function() {
         }
     });
 
-    $("#reocr, #reocr_options").change(function(event) {
-        if ($("#options", $("#dialog")).length == 0) {
-            $("#dialog").dialog({
-                autoOpen: false,
-                width: 350,
-                close: function(event) {
-                    $(elem).prop("checked", false).button("refresh");
-                }
-            }).append($("<div></div>").attr("id", "options"));
-            pbuilder = new OCRJS.ParameterBuilder(
-                    document.getElementById("options"));
-            pbuilder.init();
-        }
-    });
-
-    $("#reocr_options").change(function(event) {
-        var elem = this;
-        if ($(this).prop("checked")) {
-            $("#dialog").dialog("open");
-        } else {
-            $("#dialog").dialog("close");
-        }
-    });
-
     $("#heading").change(function() {
         transcript.setCurrentLineType($(this).prop("checked") ? "h1" : "span");        
     });
@@ -249,12 +260,6 @@ $(function() {
     // This is likely to be horribly inefficient, at least
     // at first...
     transcript.addListener("onTaskLoad", function() {
-        //var ismax = $("#page_slider").slider("option", "value") 
-        //        == $("#batchsize").val() - 1;
-        //var ismin = $("#page_slider").slider("option", "value") == 0; 
-        //$("#next_page").button({disabled: ismax});         
-        //$("#prev_page").button({disabled: ismin});
-        //$("#heading").button({disabled: true});
         // get should-be-hidden implementation details
         // i.e. the task id that process the page.  We
         // want to rebinarize with the same params
@@ -300,7 +305,7 @@ $(function() {
         sdviewer.setBufferOverlays({
             "current": [rect],
         });
-        if ($("#centre").prop("checked")) {
+        if ($("#link_viewers").prop("checked")) {
             sdviewer.fitBounds(rect, true); 
         }
     }
@@ -403,11 +408,43 @@ $(function() {
     updateNavButtons();
     window.addEventListener("hashchange", updateTask);
 
-
-    // maximise the height of the transcript page
-    maximiseWidgets(transcript, sdviewer);
-    $(window).resize(function(event) {
-        maximiseWidgets(transcript, sdviewer);
+    hsplitL = $("#maincontent").layout({
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0, 
+        },
     });
+
+    hsplitR = $("#sidebar").layout({
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0, 
+        },
+    });
+
+    hsplitL.options.center.onresize_end = function() {
+        setTimeout(function() {
+            transcript.resetSize();
+        });
+    };
+    hsplitR.options.center.onresize_end = function() {
+        setTimeout(function() {
+            sdviewer.resetSize();
+        });
+    };
+
+    vsplit.options.east.onresize_end = function() {
+        setTimeout(function() {
+            sdviewer.resetSize();
+        });
+    };
+
+    $(window).resize();
 });        
 

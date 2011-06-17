@@ -5,67 +5,107 @@
 {% block headerscript %}
 	<script type='application/javascript' src='/static/js/jquery/jquery.hoverIntent.min.js'></script>
 	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
-	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
-	<script type='application/javascript' src='/static/js/page_widget.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.svg.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.svgdom.min.js'></script>
+    <script type='application/javascript' src='/static/js/nodetree/svg_helper.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/cable.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/plug.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/node.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/node_list.js'></script>
+    <script type='application/javascript' src='/static/js/nodetree/node_tree.js'></script>
+    <script type='application/javascript' src='/static/js/nodetree/gui_manager.js'></script>
+	<script type='application/javascript' src='/static/js/nodegui/base_gui.js'></script>
+	<script type='application/javascript' src='/static/js/nodegui/crop_gui.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/cable.js'></script>
+	<script type='application/javascript' src='/static/js/preset_manager.js'></script>
+	<script type='application/javascript' src='/static/js/result_handler.js'></script>
 	<script type='application/javascript' src='/static/js/ocr/convert.js'></script>
 	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+    <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
+	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
+    <script type='application/javascript' src='/static/js/text_viewer.js'></script>
+    <script type='application/javascript' src='/static/js/crypto/bencode.js'></script>
+    <script type='application/javascript' src='/static/js/crypto/md5.js'></script>
+
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/page_widget.css" type="text/css" media="screen" />
-{% endblock %}
+    <link rel="stylesheet" href="/static/css/preset_manager.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/viewer.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/text_viewer.css" type="text/css" media="screen" />
 
-{% block subtoolbar %}
-    <div class="sub_toolbar" id="convert_toolbar">
-        <button class="tbbutton" id="clear">Clear</button>
-        <span>&nbsp;&nbsp;&nbsp;</span>
-        <span id="format">
-            <input type="radio" class="tbbutton" id="format_block" name="format" checked="checked" />
-            <label for="format_block">Block</label>
-            <input type="radio" class="tbbutton" id="format_line" name="format" />
-            <label for="format_line">Line</label>
-            <input type="radio" class="tbbutton" id="format_column" name="format" />
-            <label for="format_column">Column</label>
-        </span>
-        <span>&nbsp;&nbsp;&nbsp;</span>
-        <button class="tbbutton" id="zoomin">Zoom In</button>
-        <button class="tbbutton" id="zoomout">Zoom Out</button>
-        <span>&nbsp;&nbsp;&nbsp;</span>
-        <input type="hidden" id="font_size" value="16" />
-    </div>
-{% endblock %}
 
+{% endblock %}
 
 {% block content %}
-
-<div id="sidebar" class="widget">
-    <div class="widget_header">Options</div>
-    <div class="widget_content">
-        {% if not task %}
-        <form id="uploadform" name="convertoptions" action="{{request.path}}" method="POST" enctype="multipart/form-data">
-            <div id="dragdrop">
-                <div id="dropzone">
-                    Drop images here...
+    {% include "includes/node.html" %}
+    {% include "includes/preset_manager.html" %}
+    <div  id="viewertabs">
+        <ul class="ui-layout-north">
+            <li><a href="#imageviewer_1_container">Image Viewer</a></li>
+            <li><a href="#textviewer_1_container">Text Viewer</a></li>
+        </ul>
+        <div class="ui-layout-center">            
+            <div id="imageviewer_1_container">
+                <div id="imageviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
+                    <button class="tbbutton" id="image_zoomin">Zoom In</button>
+                    <button class="tbbutton" id="image_zoomout">Zoom Out</button>
+                    <button class="tbbutton" id="centre">Centre</button>
+                    <button class="tbbutton" id="fullscreen">Full Screen</button>
+                    <span>&nbsp;&nbsp;&nbsp;</span>
+                    <button class="tbbutton" id="refresh">Refresh</button>
                 </div>
+                <div id="imageviewer_1" class="imageviewer"></div>
             </div>
-        </form>
-        {% endif %}
-        <form id="optionsform" name="options" action="/ocr/update_task/{{task.pk}}/" method="POST">
-            <h4>Options:</h4>
-            
-            <div id="options" class="option_box">
-            
+            <div id="textviewer_1_container">
+                <div id="textviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
+                    <button class="tbbutton" id="text_zoomin">Zoom In</button>
+                    <button class="tbbutton" id="text_zoomout">Zoom Out</button>
+                    <span>&nbsp;&nbsp;&nbsp;</span>
+                    <span id="format">
+                        <input type="radio" class="tbbutton" id="format_block" name="format" checked="checked" />
+                        <label for="format_block">Block</label>
+                        <input type="radio" class="tbbutton" id="format_line" name="format" />
+                        <label for="format_line">Line</label>
+                        <input type="radio" class="tbbutton" id="format_column" name="format" />
+                        <label for="format_column">Column</label>
+                    </span>
+                </div>
+                <div id="textviewer_1" class="textviewer"></div>
             </div>
-             
-            {% if task %}
-                <input type="hidden" name="preload_task_id" value="{{preload_task_id}}" />
-                <input type="hidden" name="preload_params" value="{{preload_params}}" />
-                <input type="hidden" name="preload_page_name" value="{{task.page_name}}" />
-                <input type="submit" value="Update" id="submit_update_task" />
-            {% endif %}
-        </form>
+        </div>
     </div>
-</div>
-
 {% endblock %}
-
+{% block sidebar %}
+    <form id="optionsform">
+        <div class="ui-layout-north">
+            <div class="ui-widget-header ui-corner-all ui-layout-header">Script Editor</div>        
+            <div id="script_toolbar" class="viewer_toolbar ui-medium-flat">
+                <span class="buttons_left">
+                    <button id="abort">Abort</button>                                                    
+                    <button id="rerun_script">Rerun</button>
+                </span>
+                <span class="buttons_right">
+                    <button id="open_script">---</button>
+                    <button id="save_script">Store Preset</button>
+                    <button id="download_script">Download Preset</button>
+                </span>
+                <div id="dialog"></div>
+            </div>                
+        </div>
+        <div class="ui-layout-south ui-widget">
+            <div id="parameters" class="node_parameters ui-medium-flat">
+                <h1>No Node Selected</h1>
+            </div>
+        </div>
+        <!-- NB. This is lower down in the DOM than the parameters, despite
+         being positioned above.  It is so the menu overlaps the params
+         where necessary -->
+        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
+    </form>
+    <!-- form for downloading scripts... this is a bit of a hack. -->
+    <form id="fetch_script" method="POST" action="/presets/fetch/" >
+        <input name="script" type="hidden" id="fetch_script_data" />
+    </form>
+{% endblock %}

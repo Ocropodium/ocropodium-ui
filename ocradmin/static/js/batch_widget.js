@@ -114,8 +114,12 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             event.stopPropagation();    
         });
 
-        $(".toggle_button", this.parent).click(function(event) {
-            $(".list_popup").toggle();
+        $("#status_filter", this.parent).click(function(event) {
+            $(".list_popup").css({
+                position: "fixed",
+                left: $(this).offset().left,
+                top: $(this).offset().top + $(this).outerHeight(),
+            }).toggle();
         });
 
 
@@ -143,11 +147,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         });
     },
 
-    container: function() {
-        return this.containerWidget();
-    },
-
-    refreshSize: function() {
+    resetSize: function() {
         // FIXME: Need to determine correct
         // css margin.  For the moment, assume
         // top and bottom margin are each 10px,
@@ -155,15 +155,8 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
         this._container
             .css(
                 "height", 
-                this._container.height() - 
-                    ($(".batch", this.parent).height() + 20)            
+                this._container.height()
             );
-    },
-
-    setHeight: function(newheight) {
-        this._container.height(newheight);
-        this.refreshSize();
-        this.triggerRefresh();
     },
 
     isFiltered: function() {
@@ -194,7 +187,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
 
     updateBatchData: function() {
         this.setProgressStatus(
-                $("#batch" + this._batch_id), 
+                $("#batch"), 
                 this._batchdata.extras.estimate_progress);        
     },                      
 

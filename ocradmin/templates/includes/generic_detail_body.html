@@ -1,0 +1,25 @@
+{% load getattribute %}
+
+<table class="object_detail object_list">
+        <thead>
+            <tr class="object_detail_header object_list_header">
+                <th>Property</th>
+                <th>Value</th>
+            </tr>
+        </thead>            
+        <tbody>
+            {% for field in fields %}
+            <tr class="{% cycle '' 'odd' %}">
+                <td>{{field}}</td>
+                <td>{{object|getattribute:field}}</td>
+            </tr>        
+            {% endfor %}
+        </tbody>
+    </table>
+</table>
+
+<div class="object_detail_footer">
+    <a class="list_link" href="{{object.get_list_url}}">Back to List</a>
+    <a class="edit_link" href="{{object.get_update_url}}">Edit</a>
+    <a class="delete_link" href="{{object.get_delete_url}}">Delete</a>
+</div>

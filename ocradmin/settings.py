@@ -16,8 +16,9 @@ SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(SITE_ROOT, "lib"))
 
 # add plugin path to pythonpath
-sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools"))
-sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools/components"))
+#sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools"))
+
+#sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools/components"))
 
 # flag whether we're on a server.  Really need a better way of doing this.
 # ocr1 is the db master
@@ -144,7 +145,8 @@ SECRET_KEY = 'vg@k)$%0#dn=xdelu613c6)y%yhxs)6himtf0l(i)dcpq_9jzp'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
+#    'django.template.loaders.filesystem.load_template_source',
+    'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.load_template_source',
 #     'django.template.loaders.eggs.load_template_source',
 )
@@ -183,12 +185,13 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
+    'autoslug',
     'djcelery',
     'filebrowser',
     'batch',
     'core',
     'ocrmodels',
-    'ocrpresets',
+    'presets',
     'plugins',
     'ocrtasks',
     'reference_pages',

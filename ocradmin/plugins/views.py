@@ -1,79 +1,113 @@
 """
 RESTful interface to interacting with OCR plugins.
 """
-import re
-import copy
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render_to_response
-from django.utils import simplejson
-from django.core.urlresolvers import reverse
 
-import pprint
+import os
 
-from ocradmin.plugins.manager import PluginManager 
-from ocradmin.plugins import parameters
+from django.http import HttpResponse
+from django.utils import simplejson as json
 
+from ocradmin.core.decorators import saves_files
+from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.plugins import graph, cache
 
-def index(request):
-    """
-    List available plugins.
-    """
-    return HttpResponse(simplejson.dumps(PluginManager.get_provider()),
-            mimetype="application/json")
+from nodetree import script, node
+from nodetree.manager import ModuleManager
 
+MANAGER = ModuleManager()
+MANAGER.register_module("ocradmin.plugins.ocropus_nodes")
+MANAGER.register_module("ocradmin.plugins.tesseract_nodes")
+MANAGER.register_module("ocradmin.plugins.cuneiform_nodes")
+MANAGER.register_module("ocradmin.plugins.abbyy_nodes")
+MANAGER.register_module("ocradmin.plugins.numpy_nodes")
+MANAGER.register_module("ocradmin.plugins.pil_nodes")
 
-def info(request, name):
-    """
-    Generic info about a plugin.
-    """
-    return HttpResponse(simplejson.dumps(PluginManager.get_info(name)),
-            mimetype="application/json")
-
-
-def run_get_method(request, name, method):
-    """
-    Run a method named get_<SOMETHING>.
-    """
-    try:
-        func = getattr(PluginManager, "get_%s" % method)
-    except AttributeError:
-        raise Http404("No method 'get_%s' enabled via plugin manager." % method)
-    return HttpResponse(simplejson.dumps(func(name, **request.GET)),
-            mimetype="application/json")
-
-
-def query(request, args=None):
+def query(request):
     """
     Query plugin info.  This returns a list
     of available OCR engines and an URL that
     can be queries when one of them is selected.
     """
-    parts = []
-    data = None
-    if args:
-        parts = re.sub("(^/|/$)", "", args).split("/")
-    if not parts:        
-        data = dict(
-            choices=PluginManager.get_plugins(),
-            type="list",
-            name="engine",
-            description="Available OCR plugins",
-        )
-    else:
-        data = PluginManager.get_parameters(parts[0], *parts[1:])
-    return HttpResponse(simplejson.dumps(data),
-            mimetype="application/json")
-    
+    stages = request.GET.getlist("stage")
+    return HttpResponse(
+            MANAGER.get_json(*stages), mimetype="application/json")
 
-def parse(request):
+
+@saves_files
+def runscript(request):
     """
-    Parse the options.
+    Execute a script (sent as JSON).
     """
-    pp = pprint.PrettyPrinter(indent=2)
-    if request.method == "POST":
-        c = parameters.OcrParameters.from_post_data(request.POST)
-        pp.pprint(c)
-    return HttpResponseRedirect("/ocr/testparams/")        
+    evalnode = request.POST.get("node", "")
+    jsondata = request.POST.get("script")
+    nodes = json.loads(jsondata)
+    tree = script.Script(nodes, manager=MANAGER)
+    errors = tree.validate()
+    if errors:
+        return HttpResponse(json.dumps(dict(
+            status="VALIDATION",
+            errors=errors,
+        )), mimetype="application/json")
+
+    term = tree.get_node(evalnode)
+    if term is None:
+        terms = tree.get_terminals()
+        if not terms:
+            return HttpResponse(json.dumps(dict(
+                status="NOSCRIPT",
+            )), mimetype="application/json")
+        term = terms[0]
+    async = OcrTask.run_celery_task("run.script", evalnode, nodes,
+            request.output_path, untracked=True,
+            asyncronous=True, queue="interactive")
+    out = dict(
+        node=evalnode,
+        task_id=async.task_id,
+        status=async.status,
+        results=async.result
+    )
+    return HttpResponse(json.dumps(out), mimetype="application/json")
 
 
+def results(request, task_ids):
+    """
+    Fetch the results of several Celery task ids.
+    """
+    out = []
+    for task_id in task_ids.split(","):
+        async = OcrTask.get_celery_result(task_id)
+        out.append(dict(
+            result=async.result,
+            task_id=task_id,
+            status=async.status,
+        ))
+    return HttpResponse(json.dumps(out), mimetype="application/json")
+
+
+@saves_files
+def upload_file(request):
+    """
+    Upload a temp file.
+    """
+    fpath = os.path.join(request.output_path,
+            request.GET.get("inlinefile"))
+    if not os.path.exists(request.output_path):
+        os.makedirs(request.output_path, 0777)
+    tmpfile = file(fpath, "wb")
+    tmpfile.write(request.raw_post_data)
+    tmpfile.close()
+    return HttpResponse(json.dumps(dict(
+        file=os.path.relpath(fpath),
+    )), mimetype="application/json")
+
+
+def layout_graph(request):
+    """
+    Get GraphViz positions for nodes in a list.
+    """
+    jsonscript = request.POST.get("script")
+    nodes = json.loads(jsonscript)
+    return HttpResponse(
+            json.dumps(graph.get_node_positions(nodes)),
+                mimetype="application/json")
 

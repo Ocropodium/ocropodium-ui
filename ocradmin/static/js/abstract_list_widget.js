@@ -112,7 +112,7 @@ var AbstractListWidget = OCRJS.OcrBase.extend({
         $(".entry", self.parent).live("click.entryselect", function(event) {
             // if ctrl is down TOGGLE selection, else select item
             self.selectEntry(this, event.ctrlKey 
-                ? !$(this).hasClass("selected") 
+                ? !$(this).hasClass("ui-selected") 
                 : true
             );
 
@@ -120,7 +120,7 @@ var AbstractListWidget = OCRJS.OcrBase.extend({
             // recipient and the 'current' (last selected) item.
             if (event.shiftKey && self.options.multiselect) {
                 // deselect everything
-                $(".selected", self.parent).not($(this)).not(self._current).removeClass("selected");
+                $(".ui-selected", self.parent).not($(this)).not(self._current).removeClass("ui-selected");
                 // if there's a current element and it's not the
                 // one we've just clicked on, select everything in between
                 if (self._current && self._current != this) {
@@ -135,7 +135,7 @@ var AbstractListWidget = OCRJS.OcrBase.extend({
             // if ctrl is down, don't clear the last selection 
             } else if (!self.options.multiselect || !event.ctrlKey) {
                 var id = this.id;
-                $(".selected", self.parent).each(function(i, entry) {
+                $(".ui-selected", self.parent).each(function(i, entry) {
                     if (entry.id != id) {
                         self.selectEntry(entry, false);
                     }
@@ -198,7 +198,7 @@ var AbstractListWidget = OCRJS.OcrBase.extend({
     // set a task in the list selected and store it's id
     // so the selection can be preserved after refresh
     selectEntry: function(entry, select) {
-        $(entry).toggleClass("selected", select);
+        $(entry).toggleClass("ui-selected", select);
         var key = $(entry).data("key");
         if (key) {
             if (select) {
@@ -248,7 +248,7 @@ var AbstractListWidget = OCRJS.OcrBase.extend({
             // if the data source defines a usable key, re-select
             // those elements that might've been selected before
             if (key && this._selected[key]) {
-                entry.addClass("selected");
+                entry.addClass("ui-selected");
             }
         };
 
@@ -258,7 +258,7 @@ var AbstractListWidget = OCRJS.OcrBase.extend({
 
     clearSelection: function() {
         this._selected = {};
-        $(".entrylist", this.parent).find(".entry.selected").removeClass("selected");        
+        $(".entrylist", this.parent).find(".entry.ui-selected").removeClass("ui-selected");        
     },
 
     // sync the header table's columns with the file list's widths

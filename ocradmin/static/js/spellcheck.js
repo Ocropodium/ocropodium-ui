@@ -38,8 +38,8 @@ function SuggestionList() {
     }
 
     var selectSuggestion = function(sel) {
-        m_container.find(".selected").removeClass("selected");
-        sel.addClass("selected");
+        m_container.find(".ui-selected").removeClass("ui-selected");
+        sel.addClass("ui-selected");
         if (sel.length) {
             if(sel.get(0))
                 sel.get(0).scrollIntoView(false);
@@ -49,7 +49,7 @@ function SuggestionList() {
 
 
     this.clearSelection = function() {
-        m_container.find(".selected").removeClass("selected");
+        m_container.find(".ui-selected").removeClass("ui-selected");
     }
 
     this.clear = function() {
@@ -59,19 +59,19 @@ function SuggestionList() {
     this.keyEvent = function(event) {
         if (event.type != "keydown")
         if (event.keyCode == KC_DOWN) {
-            var sel = m_container.find(".selected").next();
+            var sel = m_container.find(".ui-selected").next();
             if (sel.length == 0) {
                 sel = m_container.find(".sp_suggestion").first();
             }
             selectSuggestion(sel);
         } else if (event.keyCode == KC_UP) {
-            var sel = m_container.find(".selected").prev();
+            var sel = m_container.find(".ui-selected").prev();
             if (sel.length == 0) {
                 self.looseFocus();
             }
             selectSuggestion(sel);
         } else if (event.keyCode == KC_ENTER) {
-            var sel = m_container.find(".selected").first();
+            var sel = m_container.find(".ui-selected").first();
             self.suggestionChosen(sel.text());
         } else if (event.keyCode == KC_ESCAPE) {
             self.looseFocus();
@@ -93,7 +93,7 @@ function SuggestionList() {
 
     this.looseFocus = function() {
         m_focus = false;
-        m_container.find(".selected").removeClass("selected");         
+        m_container.find(".ui-selected").removeClass("ui-selected");         
         m_container.removeClass("focus");
         $(window).unbind("keydown.sl keyup.sl keypress.sl");
         self.focusLost();
@@ -104,7 +104,7 @@ function SuggestionList() {
     }
 
     this.currentSelection = function() {
-        return m_container.find(".selected").text();
+        return m_container.find(".ui-selected").text();
     }
 
     this.suggestionChosen = function(word) {

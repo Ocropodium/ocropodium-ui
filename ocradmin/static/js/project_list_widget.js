@@ -6,7 +6,7 @@ var ProjectListWidget = AbstractListWidget.extend({
     },
 
     project: function() {
-        return $(".selected", this.parent).first().data("pk");
+        return $(".ui-selected", this.parent).first().data("pk");
     },
 
     setupEvents: function() {
@@ -71,7 +71,7 @@ var ProjectListWidget = AbstractListWidget.extend({
     rowClicked: function(event, row) {
         this.base();
         $("#fbopenbutton").attr(
-                "disabled", $(".selected", this.parent).length == 0);
+                "disabled", $(".ui-selected", this.parent).length == 0);
     },
 
     open: function(event) {

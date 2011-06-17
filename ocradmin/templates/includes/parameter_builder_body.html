@@ -1,0 +1,34 @@
+<form id="optionsform">
+    <div id="script_toolbar">
+        <span class="buttons_left">
+            <button id="abort">Abort</button>                                                    
+            <button id="rerun_script">Rerun</button>
+        </span>
+        <select id="select_script" name="script">
+            <option value="0">---</option>
+            {% for preset in presets %}
+                <option value="{{preset.slug}}">{{preset.name}}</option>
+            {% endfor %}
+        </select>
+        <span class="buttons_right">
+            <button id="open_script">Load Preset</button>
+            <button id="save_script">Store Preset</button>
+            <button id="download_script">Download Preset</button>
+        </span>
+        <div id="dialog"></div>
+    </div>
+    <div id="hsplitter">
+        <div class="ui-layout-center">
+            <div id="node_canvas" class="ui-layout-content">
+            </div>
+        </div>
+        <div id="parameters" class="node_parameters ui-layout-south">
+            <h4>No node selected</h4>
+        </div>
+    </div>
+</form>
+<!-- form for downloading scripts... this is a bit of a hack. -->
+<form id="fetch_script" method="POST" action="/presets/fetch/" >
+    <input name="script" type="hidden" id="fetch_script_data" />
+</form>
+

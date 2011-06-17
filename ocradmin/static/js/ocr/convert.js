@@ -2,206 +2,76 @@
 // Handle drag and drop page conversions
 //
 
-var PAGES = [];     // list of current pages in view
-var PENDING = {};   // hash of jobnames -> pending pages
-var POLLTIMER = -1; // id of current results-polling timer
-
-// should probably be moved to app-global scope
-const MINFONTSIZE = 6;
-const MAXFONTSIZE = 40;
-
 // only in global scope for dubugging purposes
 var uploader = null;
 var formatter = null;
-var pbuilder = null;
-
+var nodetree = null;
+var sdviewer = null;
+var textviewer = null;
+var reshandler = null;
+var presetmanager = null;
+var guimanager = null;
 
 function saveState() {
-    pbuilder.saveState();
-
-    // save the job names of the current pages...
-    var jobnames = $.map(PAGES, function(page, i) {
-        return page.pageName() + ":" + page.id();
-    }).join(",");
-    $.cookie("jobnames", jobnames, {expires: 7});
+    nodetree.saveState();
 }
 
 
 function loadState() {
 
-    var jobnames = $.cookie("jobnames");
-    var tid = $("input[name='preload_task_id']").val();
-    var pname = $("input[name='preload_page_name']").val();
-    var pagename, jobname;
-    if (tid) {
-        jobnames = tid
-    }
-    if (jobnames) {
-        $.each(jobnames.split(","), function(index, pagejob) {
-            if (pagejob.search(":") != -1) {
-                pagename = pagejob.split(":")[0], jobname = pagejob.split(":")[1];
-            } else {
-                pagename = pname, jobname = pagejob;
-            }
-            addPageToWorkspace(pagename, jobname);
-        });
-    }
-
-    pollForResults();
-    layoutWidgets();
-    updateUiState();
 }
-
-
-function addPageToWorkspace(page_name, task_id, linedata) {
-    var workspace = document.getElementById("workspace");
-    var page = new OCRJS.PageWidget(workspace, page_name, task_id);
-    PAGES.push(page);
-    $(workspace).append(page.init());
-    page.onLinesReady = function() {
-        // trigger a reformat
-        $("input[name=format]:checked").click();
-    }
-    page.onClose = function() {
-        delete PENDING[page.id()];
-        var temp = [];
-        for (var i in PAGES) {
-            if (page != PAGES[i])
-                temp.push(PAGES[i])
-        }
-        PAGES = temp;
-        updateUiState();
-    }
-    if (linedata)
-        page.setResults(linedata)
-    else
-        PENDING[task_id] = page;
-}
-
-
-function setResults(data) {
-    for (var i in data) {
-        var job = data[i];
-        if (job.status == "PENDING")
-            continue;
-        var page = PENDING[job.task_id];
-        if (!page) 
-            continue;
-
-        if (job.error || job.trace || job.status == "FAILURE") {
-            page.setError(job.error, job.trace);
-        } else if (job.status == "SUCCESS") {
-            page.setResults(job.results);    
-        }    
-        delete PENDING[job.task_id];        
-    };
-
-    var count = 0;
-    for (k in PENDING) if (PENDING.hasOwnProperty(k)) count++;
-    if (count) {
-        POLLTIMER = setTimeout(function() {
-            pollForResults();
-        }, 100);
-    } else {
-        POLLTIMER = -1;
-    }
-}
-
-function pollForResults() {
-    var tidstr = [];
-    $.each(PENDING, function(tid, obj) {
-        tidstr.push("job=" + tid);
-    });
-    if (!tidstr.length)
-        return;
-    $.ajax({
-        url: "/ocr/results/",
-        data: tidstr.join("&"),
-        type: "GET",
-        error: OCRJS.ajaxErrorHandler,
-        success: setResults,
-    });
-}
-
-
-
-function onXHRLoad(event) {
-    var xhr = event.target;
-    if (!xhr.responseText) {
-        return;
-    }                
-    if (xhr.status != 200) {
-        return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
-    } 
-    var data = $.parseJSON(xhr.responseText);
-    if (data.error) {
-        alert("Error: " + data.error + "\n\n" + data.trace);
-        $("#dropzone").text("Drop images here...").removeClass("waiting");
-        return;
-    }
-    $.each(data, function(pagenum, data) {
-        addPageToWorkspace(data.page_name, data.task_id, data.results);
-    }); 
-    if (POLLTIMER == -1)
-        pollForResults();
-    layoutWidgets();
-    updateUiState();
-};
-
-
-function relayoutPages(maxheight) {
-    var top = $(".ocr_page_container").first();
-    var start = top.position().top + top.outerHeight(true);
-    top.nextAll().each(function(i, elem) {
-        $(elem).css("top", start + "px");
-        start = start + $(elem).outerHeight(true);
-    });
-}
-
-function updateUiState() {
-    var pcount = PAGES.length;
-    $(".tbbutton").button({disabled: pcount < 1});
-    $(".ocr_page").css("font-size", $("#font_size").val() + "px");
-}
-
-
 
 $(function() {
 
-    // style toolbar
-    $(".tbbutton").button({
-        disabled: true,
-    });
-    $("#clear").button({
+    // script builder buttons
+    $("#abort").button({
+        text: false,
         icons: {
-            primary: "ui-icon-closethick",
+            primary: "ui-icon-cancel",
+        }        
+    });
+    $("#rerun_script").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-refresh",
+        }        
+    });
+    $("#open_script").button({
+        text: true,
+        icons: {
+            primary: "ui-icon-folder-open",
+            secondary: "ui-icon-carat-1-s",
         }
     });
-    $("#format").buttonset();
-    $("#clear").click(function(event) {
-        PAGES = [];
-        $(".ocr_page_container").remove();
-        $.cookie("jobnames", null);
-        updateUiState();
+    $("#save_script").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-disk",
+        }
     });
-    $("#zoomin").click(function(event) {
-        $("#font_size").val(parseInt($("#font_size").val()) + 2);
-        $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
-        $("#zoomout").button({"disabled": $("#font_size").val() <= MINFONTSIZE});
-        $(".ocr_page").css("font-size", $("#font_size").val() + "px");
-        relayoutPages();
+    $("#download_script").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-document",
+        }        
+    });
+
+    // viewer toolsbar
+    // style toolbar
+    $(".tbbutton").button({
+        disabled: false,
+    });
+    $("#format").buttonset();
+    $("#text_zoomin").click(function(event) {
+        textviewer.increaseFontSize();
     }).button({
         text: false,
         icons: {
             primary: "ui-icon-zoomin",
         }
     });
-    $("#zoomout").click(function(event) {
-        $("#font_size").val(parseInt($("#font_size").val()) - 2);
-        $("#zoomin").button({"disabled": $("#font_size").val() >= MAXFONTSIZE});
-        $("#zoomout").button({"disabled": $("#font_size").val() <= MINFONTSIZE});
-        $(".ocr_page").css("font-size", $("#font_size").val() + "px");
-        relayoutPages();
+    $("#text_zoomout").click(function(event) {
+        textviewer.reduceFontSize();
     }).button({
         text: false,
         icons: {
@@ -209,39 +79,82 @@ $(function() {
         }
     });
     $("#format_block").click(function(event) {
-        formatter.blockLayout($(".ocr_page"));
-        relayoutPages();
+        formatter.blockLayout(textviewer.container());
     });
     $("#format_line").click(function(event) {
-        formatter.lineLayout($(".ocr_page"));
-        relayoutPages();
+        formatter.lineLayout(textviewer.container());
     });
     $("#format_column").click(function(event) {
-        $(".ocr_page").each(function(pos, elem) {
-            formatter.columnLayout($(elem));
-        });
-        relayoutPages();
+        formatter.columnLayout(textviewer.container());
+    });
+
+    $("#image_zoomin").click(function(event) {
+        sdviewer.zoomBy(2);        
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomin",
+        }
+    });
+    $("#image_zoomout").click(function(event) {
+        sdviewer.zoomBy(0.5);    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomout",
+        }
+    });
+    $("#centre").click(function(event) {
+        sdviewer.goHome();    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-home",
+        }
+    });
+    $("#fullscreen").click(function(event) {
+        sdviewer.setFullPage(true);    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-arrow-4-diag",
+        }
+    });
+
+    $("#refresh").click(function(event) {
+        var active = sdviewer.activeBuffer();
+        sdviewer.setBufferPath(active, sdviewer.bufferPath(active));    
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-refresh",
+        }
     });
 
 
-    // initialise the uploader...
-    if ($("#uploadform").length) {
-        uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/ocr/convert");
-        uploader.addListeners({
-            onXHRLoad: onXHRLoad,
-            onUploadsStarted: function(event) {
-                uploader.clearParameters();
-                $("#dropzone").text("Please wait...").addClass("waiting");
-                $("#optionsform input, #optionsform select").each(function(i, elem) {
-                    uploader.registerTextParameter(elem);
-                });
-            },
-            onUploadsFinished: function(e) {
-                $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-            },
-        });
-    }
+    presetmanager = new OCRJS.PresetManager(
+            document.getElementById("script_toolbar"));
+    presetmanager.addListeners({
+        saveDialogOpen: function() {
+            nodetree.setDisabled(true);
+        },
+        saveDialogClose: function() {
+            nodetree.setDisabled(false);
+        },
+        openScript: function(name, data) {
+            nodetree.clearScript();                        
+            nodetree.loadScript(data);
+            var elem = $("#open_script").find(".ui-button-text");
+            elem.text(name);
+        },
+    });
 
+    // initialise the uploader...
+    uploader  = new OCRJS.AjaxUploader(
+        null,
+        "/plugins/upload/", 
+        { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
+    );
     // load state stored from last time
     loadState();
     
@@ -254,9 +167,190 @@ $(function() {
         }
     }
 
-    // line formatter object
+    $(".nodefilein").live("change", function(event) {
+        console.log("Change:", $(this).val());
+    });
+
+    $("#viewertabs").tabs({
+        select: function(event, ui) {
+            // ensure we refresh the buffer when switching
+            // back to an image tab, otherwise the viewer
+            // loses its images...
+            sdviewer.setBufferPath(sdviewer.activeBuffer(),
+                sdviewer.activeBufferPath());
+            setTimeout(function() {
+                sdviewer.drawBufferOverlays();
+            }, 100);
+        },
+    });
+
+    $("#save_script").click(function(event) {
+        presetmanager.showNewPresetDialog(
+                JSON.stringify(nodetree.buildScript(), null, "\t"));
+        event.stopPropagation();
+        event.preventDefault();    
+    });        
+    
+    $("#open_script").click(function(event) {
+        presetmanager.showOpenPresetDialog();
+        event.stopPropagation();
+        event.preventDefault();    
+    });        
+    
+    $("#download_script").click(function(event) {
+        var json = JSON.stringify(nodetree.buildScript(), false, '\t');
+        $("#fetch_script_data").val(json);
+        $("#fetch_script").submit();
+        event.stopPropagation();
+        event.preventDefault();    
+    });
+    
+
+    $("#optionsform").submit(function() {
+        nodetree.scriptChanged();
+        event.stopPropagation();
+        event.preventDefault();
+    });        
+
+    var resultcache = {};
+    function handleResult(nodename, data, cached) {
+        if (data.result.type == "error") {
+            console.log("NODE ERROR: ", data.result.node, data.result.error);
+            nodetree.setNodeErrored(data.result.node, data.result.error);
+            return;
+        }
+
+        // otherwise cache the result and handle it
+        if (!cached) {
+            var node = nodetree.getNode(nodename);
+            if (node) {
+                var hash = hex_md5(bencode(node.hashValue()));
+                resultcache[hash] = data;
+            }
+        }
+
+        if (data.result.type == "image" || data.result.type == "pseg") {
+            // this magic hides the buffer loading transition by putting the
+            // new data in the back buffer and switching them after a delay
+            // TODO: Find if we can subscript to an event to tell us exactly
+            // when it's safe to switch.  ATM just using a 200ms delay.
+            var active = sdviewer.activeBuffer();
+            sdviewer.setBufferPath(active^1, data.result.dzi);
+            setTimeout(function() {
+                sdviewer.setActiveBuffer(active^1);
+            }, 200);
+            
+            var overlays = {};
+            if (data.result.type == "pseg") {
+                var overlays = {};
+                $.each(["lines", "paragraphs", "columns"], function(i, class) {
+                    if (data.result.data[class]) {
+                        overlays[class] = sdviewer.getViewerCoordinateRects(
+                            data.result.data.box, data.result.data[class]);
+                    }
+                });
+            }
+            sdviewer.setBufferOverlays(overlays, 0);
+            $("#viewertabs").tabs("select", 0);
+        } else if (data.result.type == "text") {
+            textviewer.setData(data.result.data);
+            formatter.blockLayout($(".textcontainer"));
+            $("#viewertabs").tabs("select", 1);
+        }
+    }        
+
+    sdviewer = new OCRJS.ImageViewer($("#imageviewer_1").get(0), {
+        numBuffers: 2,
+        dashboard: false,
+    });
+    guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
+
+    textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
+    reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
-    pbuilder = new OCRJS.ParameterBuilder(document.getElementById("options"));
-    pbuilder.init();
+    nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
+
+    nodetree.addListener("scriptChanged", function() {
+        var elem = $("#open_script").find(".ui-button-text");
+        if (!$(elem).text().match(/\*$/)) {
+            $(elem).text($(elem).text() + "*");
+        }
+        presetmanager.setCurrentScript(nodetree.buildScript());
+    });        
+
+    nodetree.addListener("scriptChanged", function() {
+        var nodename = nodetree.getEvalNode();
+        var node = nodetree.getNode(nodename);
+        if (node) {
+            var hash = hex_md5(bencode(node.hashValue()));
+            console.log("Hash for node", node.name, hash);
+            if (resultcache[hash]) {
+                console.log("Found cached result for:", nodename);
+                handleResult(nodename, resultcache[hash], true);
+            } else
+                reshandler.runScript(nodename, nodetree.buildScript());
+        }
+    });
+    nodetree.addListener("registerUploader", function(name, elem) {
+
+        uploader.removeListeners("onXHRLoad.setfilepath");
+        uploader.setTarget(elem);
+        // FIXME: No error handling
+        uploader.addListener("onXHRLoad.setfilepath", function(data) {
+            nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
+        });
+    });
+    nodetree.addListener("nodeViewing", function(node) {
+        if (!node)
+            guimanager.tearDownGui();
+        else
+            guimanager.setupGui(node);
+    });
+
+    reshandler.addListener("resultPending", function() {
+        nodetree.clearErrors();
+    });        
+    reshandler.addListener("validationError", function(node, error) {
+        nodetree.setNodeErrored(node, error);
+        // clear the client-size cache
+        resultcache = {};
+    });        
+    reshandler.addListener("resultDone", function(node, data) {
+        handleResult(node, data, false);
+    }); 
+    nodetree.init();
+
+    var hsplit = $("#sidebar").layout({
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0, 
+        },
+        south: {
+            size: 200,
+            onresize_end: function() {
+                setTimeout(function() {
+                    nodetree.resetSize();
+                });
+            },
+            onclose_end: function() {
+                setTimeout(function() {
+                    nodetree.resetSize();
+                });
+            },
+        },                   
+
+
+    });
+
+    vsplit.options.east.onresize_end = function() {
+        setTimeout(function() {
+            nodetree.resetSize();
+        });
+    };
+
+    $(window).resize();
 });
 

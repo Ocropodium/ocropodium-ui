@@ -19,10 +19,28 @@
 
 {% block content %}
 
+<div class="ui-widget ui-corner-top">
+    <div class="ui-widget-header ui-corner-top">Batches</div>
+    <div class="ui-widget-content">
+        {% include "includes/messages.html" %}
+        <div class="list_controls">
+            <div class="list_controls_right">            
+                <form name="controls" class="list_controls_form" action="/batch/list/" method="GET">
+                    Auto-Refresh:
+                    <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
+                    <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
+                </form>
+            </div>
+        </div>
+        <div id="batch_list"></div>
+    </div>        
+</div>
 
-<div id="sidebar" class="widget">
-    <div class="widget_header" id="filter_head">Filter Batches:</div>
-    <div class="widget_content">
+{% endblock %}
+
+{% block sidebar %}
+<div id="sidebar" class="ui-widget ui-widget-content ui-helper-reset ui-helper-clearfix ui-tabs ui-tabs-nav">
+    <div class="ui-widget-content">
         <form name="filter" id="task_filter_form" method="GET" action="/batch/list">
             <input type="hidden" class="filter_item" name="page" value="{{params.page}}" />
             <input type="hidden" class="filter_item" name="order_by" value="{{params.order_by}}" />
@@ -48,28 +66,7 @@
                 </select>
             </div>
         </form>
-    </div>
+    </div>        
 </div>
-
-<div class="widget" id="batch_list_widget">
-    <div class="widget_header">Project Batches:</div>
-    <div class="widget_content">
-        {% include "includes/messages.html" %}
-        <div class="list_controls">
-            <div class="list_controls_right">            
-                <form name="controls" class="list_controls_form" action="/batch/list/" method="GET">
-                    Auto-Refresh:
-                    <input type="checkbox" id="autorefresh" name="autorefresh" checked="checked" />
-                    <input type="text" id="autorefresh_time" name="autorefresh_time" value="2" />
-                </form>
-            </div>
-        </div>
-        <div id="batch_list">
-        </div>
-    </div> 
-</div>
-
 
 {% endblock %}
-
-
