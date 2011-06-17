@@ -8,20 +8,12 @@
 
 
 {% block content %}
-
-<div class="widget">
-    <div class="widget_header">
+<div class="batch ui-corner-top ui-layout-north" id="batch" data-index="{{batch.pk}}">
+    <div class="ui-widget-header ui-corner-top ui-layout-header">
         {{project.name}}
-    </div>
-    <div class="widget_content">
-        <div id="tabs">
-            <ul>
-                <li><a href="#tab_1">Export Project</a></li>
-            </ul>
-            <div class="contain_float" id="tab_1">
-                {% include "projects/includes/export_form.html" %}
-            </div>
-        </div>
+    </div>    
+    <div class="ui-widget-content">
+        {% include "projects/includes/export_form.html" %}
     </div>
 </div>
 
