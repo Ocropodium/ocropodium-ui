@@ -34,7 +34,7 @@ if os.environ.get("OCR_SERVER") and SITE_ROOT.find("/dev/") == -1:
     SERVER = True
 
 # don't run in debug mode on the servers
-DEBUG = TEMPLATE_DEBUG = not SERVER
+DEBUG = TEMPLATE_DEBUG = False #not SERVER
 
 # get architecture for the system we're running
 # on - this is mainly for choosing the correct
@@ -232,7 +232,30 @@ COMPRESS_CSS = {
         "extra_context": {
             "media": "screen",
         }
-    }
+    },
+    "nodetree": {
+        "source_filenames": (
+            "css/nodetree.css",
+            "css/preset_manager.css",
+        ),
+        "output_filename": "css/nodetree_compress.css",
+        "extra_context": {
+            "media": "screen",
+        }
+
+    },
+    "viewers": {
+        "source_filenames": (
+            "css/viewer.css",
+            "css/image_viewer.css",
+            "css/text_viewer.css",
+        ),
+        "output_filename": "css/viewers_compress.css",
+        "extra_context": {
+            "media": "screen",
+        }
+
+    },
 }
 
 COMPRESS_JS = {
@@ -255,7 +278,6 @@ COMPRESS_JS = {
         "source_filenames": (
             "js/utils/json2.js",
             "js/utils/base.js",
-	        "js/utils/stats.js",
         ),
         "output_filename": "js/utils_compress.js",
     },
@@ -294,12 +316,15 @@ COMPRESS_JS = {
         ),
         "output_filename": "js/nodetree_compress.js",
     },
-    "imageviewer": {
+    "viewers": {
         "source_filenames": (
             "js/seadragon/seadragon-min.js",
             "js/image_viewer.js",
+            "js/text_viewer.js",
+	        "js/utils/stats.js",
+            "js/line_formatter.js",
         ),
-        "output_filename": "js/imageviewer_compress.js",        
+        "output_filename": "js/viewers_compress.js",        
     },
 }
 

@@ -6,21 +6,13 @@
 
     {% load compressed %}
     {% compressed_js 'nodetree' %}
-    {% compressed_js 'imageviewer' %}
+    {% compressed_js 'viewers' %}
 
 	<script type='application/javascript' src='/static/js/ocr/convert.js'></script>
-	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
-    <script type='application/javascript' src='/static/js/text_viewer.js'></script>
 
-
-    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/preset_manager.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/viewer.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/text_viewer.css" type="text/css" media="screen" />
-
+    {% compressed_css 'nodetree' %}
+    {% compressed_css 'viewers' %}
 
 {% endblock %}
 
