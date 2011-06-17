@@ -142,6 +142,7 @@ $(function() {
             nodetree.setDisabled(false);
         },
         openScript: function(name, data) {
+            nodetree.clearScript();                        
             nodetree.loadScript(data);
             var elem = $("#open_script").find(".ui-button-text");
             elem.text(name);
@@ -186,10 +187,14 @@ $(function() {
     $("#save_script").click(function(event) {
         presetmanager.showNewPresetDialog(
                 JSON.stringify(nodetree.buildScript(), null, "\t"));
+        event.stopPropagation();
+        event.preventDefault();    
     });        
     
     $("#open_script").click(function(event) {
         presetmanager.showOpenPresetDialog();
+        event.stopPropagation();
+        event.preventDefault();    
     });        
     
     $("#download_script").click(function(event) {
@@ -270,6 +275,7 @@ $(function() {
         if (!$(elem).text().match(/\*$/)) {
             $(elem).text($(elem).text() + "*");
         }
+        presetmanager.setCurrentScript(nodetree.buildScript());
     });        
 
     nodetree.addListener("scriptChanged", function() {

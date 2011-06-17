@@ -1,9 +1,7 @@
-// Preset manager class.  A popup window which handles
-// showing and selecting from a list of presets of a
-// given type, i.e. "binarize", "segment"
-
-// Note: showing/editing preset description/tags is not
-// yet implemented
+//
+// Preset manager class.  Holds a reference to the current
+// preset and manages saving, updating, or clearing it.
+//
 
 var OCRJS = OCRJS || {};
 
@@ -25,10 +23,37 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             openDialogClose: [],
             openScript: [],
         };
+
+        this._opened = null;
+        this._openeddata = null;
+        this._current = null;
+
+        // flag telling us we should continue to
+        // offer the open dialog after the current
+        // save dialog
+        this._continuewithopen = false;
     },
 
+    setCurrentScript: function(script) {
+        console.log("Set current script");                          
+        this._current = script;
+    },        
+
     showOpenPresetDialog: function() {
-        var self = this;                              
+        var self = this;
+
+        if (this._opened && this._current) {
+            if (bencode(this._openeddata) != bencode(this._current)) {
+                this._continuewithopen = true;
+                this.showSavePresetDialog();
+                return;
+            }
+        } else if (this._current) {
+            this.showNewPresetDialog();
+            this._continuewithopen = true;
+            return;
+        }           
+
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.html($.tmpl(this._opentmpl, {}));
@@ -58,25 +83,47 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             var item =  self._dialog.find(".preset_item.ui-selected").first();
             var slug = item.data("slug");
             $.getJSON("/presets/data/" + slug, {format: "json"}, function(data) {
+                self._opened = slug;
+                self._openeddata = JSON.parse(data);
                 self._dialog.dialog("close");
-                self.callListeners("openScript", item.text(), JSON.parse(data));
+                self._continuewithopen = false;
+                self.callListeners("openScript", item.text(), self._openeddata);
             });
             event.preventDefault();
             event.stopPropagation();
         });
     },
 
-    validateOpenSelection: function() {
-        var selection = this._dialog.find(".preset_item.ui-selected");
-        var submit = this._dialog.find("#open_preset");
-        submit.attr("disabled", selection.length != 1);
-    },                               
-
     showSavePresetDialog: function() {
         var self = this;        
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.html($.tmpl(this._updatetmpl, {}));
+
+        console.assert(this._opened);
+        this._dialog.find("#save_script").click(function(event) {
+            $.ajax({
+                url: "/presets/updata_data/" + this._opened,
+                data: {data: JSON.stringify(this._current, null, '\t')},
+                error: OCRJS.ajaxErrorHandler,
+                success: function(data) {
+                    self._dialog.dialog("close");
+                    self._openeddata = JSON.parse(data);
+                    if (self._continuewithopen)
+                        self.showOpenPresetDialog();
+                },
+            });                
+        });
+        this._dialog.find("#save_script_as").click(function(event) {
+            self.showNewPresetDialog();
+        });
+        this._dialog.find("#close_without_saving").click(function(event) {
+            console.log("Abandoned changes!");
+            self._opened = self._openeddata = self._current = null;            
+            self._dialog.dialog("close");
+            if (self._continuewithopen)
+                self.showOpenPresetDialog();
+        });
 
         this._dialog.dialog({
             dialogClass: "preset_manager_dialog",
@@ -90,12 +137,12 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
     },                              
 
-    showNewPresetDialog: function(scriptdata) {
-
+    showNewPresetDialog: function() {
         var self = this;        
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.html($.tmpl(this._createtmpl, {}));
+        this._dialog.find("#id_data").val(JSON.stringify(this._current, null, '\t'));
         this._dialog.find("input[type='text']").keyup(function(event) {
             self.validateNewForm();
         });
@@ -112,14 +159,14 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                         // it fails we'll get another form, but it's fiddly
                         // to distinguish from the redirect response
                         self._dialog.dialog("close");
-                        self.rebuildPresetList(name);
+                        if (self._continuewithopen)
+                            self.showOpenPresetDialog();
                     },        
                 }
             });
             event.preventDefault();
             event.stopPropagation();
         });
-        this._dialog.find("#id_data").val(scriptdata);
 
         this._dialog.dialog({
             dialogClass: "preset_manager_dialog",
@@ -135,25 +182,15 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         event.preventDefault();    
     },
 
+    validateOpenSelection: function() {
+        var selection = this._dialog.find(".preset_item.ui-selected");
+        var submit = this._dialog.find("#open_preset");
+        submit.attr("disabled", selection.length != 1);
+    },                               
+
     validateNewForm: function() {
         var namefield = this._dialog.find("#id_name");
         var submit = this._dialog.find("#create_new");
         submit.attr("disabled", $.trim(namefield.val()) == "");
     },                 
-
-    rebuildPresetList: function(current) {
-        var select = $("#select_script", this.parent);
-        $.getJSON("/presets/list/", {format: "json"}, function(data) {
-            select.children().slice(1).remove();
-            $.each(data, function(i, preset) {
-                var opt = $("<option></option>");
-                    opt.attr("value", preset.fields.slug);
-                    opt.text(preset.fields.name);
-                    opt.attr("title", preset.fields.description);
-                if (preset.fields.name == current)
-                    opt.prop("selected", "selected");                    
-                opt.appendTo(select)
-            });
-        });
-    },
 });

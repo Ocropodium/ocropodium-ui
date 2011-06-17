@@ -6,4 +6,5 @@
 #-e hg+https://bitbucket.org/neithere/django-autoslug#egg=autoslug
 #django-picklefield
 #bencode 
-pydot
+#pydot
+mock

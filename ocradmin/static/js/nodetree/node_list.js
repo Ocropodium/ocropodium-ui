@@ -151,7 +151,8 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                         else
                             $(this).children().remove().end()
                                 .append(node.elem);
-                        node.elem.click();                        
+                        node.elem.click();
+                        self.callListeners("scriptChanged");                        
                     }
                 }, 
             }).sortable({
@@ -167,7 +168,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         this.setupNodeListeners(node);
         this._usednames[name] = node;
         this._nodes.push(node);
-        this.scriptChanged();
         return node;
     },                 
 
@@ -445,7 +445,8 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                     .append(node.elem);
             }
         });
-        self.selectLastNode();
+        this.selectLastNode();
+        this.callListeners("scriptLoaded");
     },
 
     clearScript: function() {

@@ -488,7 +488,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._usednames[name] = node;
         this._nodes.push(node);
         node.draw(this.svg, this._group, 0, 0);
-        this.scriptChanged();
         return node;
     },
 
@@ -633,6 +632,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             $(document).add($(nodeobj.group()).find("*")).bind("click.dropnode", function(e) {
                 $(self._group).unbind(".dropnode");
                 $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
+                self.scriptChanged();
             });
         });        
     },
