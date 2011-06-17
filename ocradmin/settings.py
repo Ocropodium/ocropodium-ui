@@ -220,13 +220,13 @@ COMPRESS_CSS_FILTERS = None
 COMPRESS_CSS = {
     "standard": {
         "source_filenames": (
-            "css/clean.css",
             "css/mainmenu.css",
             "css/layout-default.css",
             "css/forms.css",
-            "css/messages.css",
             "css/projectbrowser.css",
             "css/list_widget.css",
+            "css/messages.css",
+            "css/clean.css",
         ),
         "output_filename": "css/standard_compress.css",
         "extra_context": {
