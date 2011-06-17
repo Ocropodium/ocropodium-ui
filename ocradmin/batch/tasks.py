@@ -39,20 +39,20 @@ class BatchScriptTask(AbortableTask):
         if not os.path.exists(writepath):
             os.makedirs(writepath, 0777)
 
-        pl = script.Script(json.loads(scriptjson), manager=manager, 
+        tree = script.Script(json.loads(scriptjson), manager=manager, 
                 nodekwargs=dict(
                     logger=logger,
                     abort_func=abort_handler, 
                     progress_func=progress_handler))
         # get the input node and replace it with out path
-        inputs = pl.get_nodes_by_attr("stage", stages.INPUT)
+        inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
         if not inputs:
             raise IndexError("No input stages found in script")
         input = inputs[0]
         input.set_param("path", filepath)
         # attach a fileout node to the binary input of the recognizer and
         # save it as a binary file
-        term = pl.get_terminals()[0]
+        term = tree.get_terminals()[0]
         outpath = os.path.join(
                 writepath, os.path.basename("%s.bin%s" % os.path.splitext(filepath)))
         outbin = manager.get_new_node("Ocropus::FileOut", label="OutputBinary",
