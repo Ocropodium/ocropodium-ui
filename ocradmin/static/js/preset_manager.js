@@ -43,7 +43,9 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         var self = this;
 
         if (this._opened && this._current) {
+            console.log("Comparing", this._openeddata, this._current);
             if (bencode(this._openeddata) != bencode(this._current)) {
+                console.log("Current doesn't equal opened");
                 this._continuewithopen = true;
                 this.showSavePresetDialog();
                 return;
@@ -103,8 +105,9 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         console.assert(this._opened);
         this._dialog.find("#save_script").click(function(event) {
             $.ajax({
-                url: "/presets/updata_data/" + this._opened,
-                data: {data: JSON.stringify(this._current, null, '\t')},
+                url: "/presets/update_data/" + self._opened,
+                data: {data: JSON.stringify(self._current, null, '\t')},
+                type: "POST",
                 error: OCRJS.ajaxErrorHandler,
                 success: function(data) {
                     self._dialog.dialog("close");
