@@ -9,7 +9,7 @@
     <ul class="top">
         <li>
         <h3>Project</h3>                
-        <ul>
+        <ul style="display: none;">
             <li>
                 <a id="new_project" href="/projects/new/">New Project</a>
             </li>
@@ -30,7 +30,7 @@
     <ul class="top">
         <li> 
             <h3>Batch</h3>
-            <ul>
+            <ul style="display: none;">
                 <li>
                     <a id="new_batch" href="/batch/new/">New Batch</a>
                 </li>
@@ -49,7 +49,7 @@
     <ul class="top">
         <li> 
             <h3>Training</h3>
-            <ul>
+            <ul style="display: none;">
                 <li>
                     <a id="new_training" href="/training/new/">Submit Training Job</a>
                 </li>
@@ -66,7 +66,7 @@
     <ul class="top">
         <li>
             <h3>Models</h3>
-            <ul>
+            <ul style="display: none;">
                 <li>
                     <a id="new_model" href="/ocrmodels/create/">New Model</a>
                 </li>
@@ -79,7 +79,7 @@
     <ul class="top">
         <li>
         <h3>Tools</h3>
-            <ul>
+            <ul style="display: none;">
                 <li>
                     <a {% ifequal request.path "/ocr/convert/" %}class="current"{% endifequal %}
                         href="/ocr/convert/">Preset Editor</a>
