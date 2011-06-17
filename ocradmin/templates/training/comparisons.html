@@ -20,17 +20,13 @@
 {% endblock %}
 
 {% block content %}
-
-<div class="widget">
-    <div class="widget_header">
-        Model Comparisons
-    </div>
-    <div class="widget_content" id="comparisonlist">
-        {% include "includes/messages.html" %}
+<div class="batch ui-corner-top ui-layout-north" id="batch" data-index="{{batch.pk}}">
+    <div class="ui-widget-header ui-corner-top ui-layout-header">
+        Run Comparison
+    </div>    
+    <div class="ui-widget-content" id="comparisonlist">
         {% include "training/includes/comparison_list.html" %}
     </div>
 </div>
-
-<div id="dialog_box"></div>
 
 {% endblock %}

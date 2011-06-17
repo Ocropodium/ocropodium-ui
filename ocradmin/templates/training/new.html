@@ -7,14 +7,14 @@
 {% endblock %}
 
 {% block content %}
-
-    <div id="document_window">
-        <div class="widget">
-            <div class="widget_header">New Training Job</div>
-            <div class="widget_content">
-                <form action="/training/create" method="POST">
-                    {% include "training/includes/training_form.html" %}
-                </form>
-            </div>
+<div class="batch ui-corner-top ui-layout-north" id="batch" data-index="{{batch.pk}}">
+    <div class="ui-widget-header ui-corner-top ui-layout-header">
+        Train Model
+    </div>    
+    <div class="ui-widget-content">
+        <form action="/training/create" method="POST">
+            {% include "training/includes/training_form.html" %}
+        </form>
     </div>
+</div>
 {% endblock %}
