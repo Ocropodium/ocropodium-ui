@@ -34,7 +34,7 @@ if os.environ.get("OCR_SERVER") and SITE_ROOT.find("/dev/") == -1:
     SERVER = True
 
 # don't run in debug mode on the servers
-DEBUG = TEMPLATE_DEBUG = False #not SERVER
+DEBUG = TEMPLATE_DEBUG = not SERVER
 
 # get architecture for the system we're running
 # on - this is mainly for choosing the correct
