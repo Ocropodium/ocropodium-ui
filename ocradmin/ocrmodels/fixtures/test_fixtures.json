@@ -22,7 +22,7 @@
         "model": "ocrmodels.ocrmodel", 
         "fields": {
             "file": "test/tesseract_default_lang.tgz", 
-            "name": "Default Tesseract English", 
+            "name": "Tesseract Default Lang", 
             "tags": "default tesseract english", 
             "app": "tesseract", 
             "created_on": "2010-06-02", 

@@ -10,6 +10,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this.options = {
             log: true,      // whether to, uh, log
             multi: true,    // whether to accept multiple files
+            errorhandler: function() {alert("arse");},
         };
         $.extend(this.options, options);
 
@@ -25,6 +26,13 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this._queue = [];
         this._params = [];
 
+        if (this.target)
+            this.setTarget()
+
+    },
+
+    setTarget: function(elem) {
+        this.target = elem || this.target;
         $(this.target).wrap($("<div></div>"));
         this._fakeinput = $("<input></input>")
             .attr("type", "file")
@@ -33,14 +41,15 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             .width($(this.target).outerWidth())
             .height($(this.target).outerHeight())
             .css({
-                position: "absolute",
-                opacity: 0.0,                
+                position: "fixed",
+                opacity: 0,                
                 top: $(this.target).offset().top + "px",
                 left: $(this.target).offset().left + "px",
             }).insertAfter(this.target);
         this._cnt = $(this.target).parent().get(0);
         
         this.setupEvents();
+
     },
 
     setupEvents: function() {
@@ -147,6 +156,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             self.postNextItem();
             self.callListeners("onXHRLoad", event);        
         };
+        xhr.onerror = this.options.errorhandler;
 
         var params = this.parameters();
         params["inlinefile"] = file.fileName;

@@ -7,7 +7,6 @@
 	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
 	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
 	<script type='application/javascript' src='/static/js/ocr/transcript.js'></script>
-	<script type='application/javascript' src='/static/js/parameter_builder.js'></script>
 	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/undo/command.js'></script>
 	<script type='application/javascript' src='/static/js/undo/stack.js'></script>
@@ -22,18 +21,17 @@
     <link rel="stylesheet" href="/static/css/transcript_editor.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/line_editor.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/spellcheck.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
 {% endblock %}
 
-{% block subtoolbar %}
-    <div class="sub_toolbar" id="transcript_toolbar">
-        <div id="tsnavform" >
-            <input type="checkbox" id="centre" checked="checked" />
-            <label for="centre">Centre viewer on current line</label>
-            <span>&nbsp;&nbsp;&nbsp;</span>
+
+{% block content %}
+
+    <div class="ui-layout-north ui-widget ui-corner-top">
+        <div class="ui-widget-header ui-corner-top ui-layout-header">Transcript</div>
+        <div id="transcript_toolbar" class="viewer_toolbar ui-medium-flat">
+            <input type="checkbox" id="link_viewers" checked="checked" />
+            <label for="link_viewers">Centre viewer on current line</label>
             <span id="vlink">
-                <input type="radio" id="vlink_off" name="vlink" value="off"  />
-                <label for="vlink_off">Off</label>
                 <input type="radio" id="vlink_click" name="vlink" value="click" checked="checked" />
                 <label for="vlink_click">click</label>  
                 <input type="radio" id="vlink_hover" name="vlink" value="hover"  />
@@ -51,17 +49,6 @@
             <span>&nbsp;&nbsp;&nbsp;</span>
             <input type="checkbox" id="spellcheck" />
             <label for="spellcheck">Spellcheck</label>
-            <span>&nbsp;&nbsp;&nbsp;</span>
-            <span id="reocr">
-                <input type="checkbox" id="reconvert" />
-                <label for="reconvert">Re-OCR</label>
-                <input type="checkbox" id="reocr_options" />
-                <label for="reocr_options">Re-OCR Options</label>
-            </span>
-
-            <span>&nbsp;&nbsp;&nbsp;</span>
-            <input type="checkbox" id="heading" />
-            <label for="heading">H</label>
 
             <span>&nbsp;&nbsp;&nbsp;</span>
             <div id="page_slider"></div>
@@ -75,27 +62,25 @@
             <input type="hidden" name="batchoffset" value="{{batchoffset|default_if_none:0}}" id="batchoffset" />
             <input type="hidden" name="batchsize" value="{{batchsize|default_if_none:0}}" id="batchsize" />
             <input type="hidden" name="task_pk" value="{{task.pk|default_if_none:0}}" id="task_pk" />
-
-        </div>        
+        </div>
     </div>
+    <div id="transcript" class="ui-layout-center"></div>
+
 {% endblock %}
 
-{% block content %}
+{% block sidebar %}
 
-    <div class="widget" id="sideviewer">
-        <div class="widget_header">Image Binary</div>
-        <div class="widget_content">
-            <div id="viewer"></div>
-        </div> 
-    </div>
-
-    <div class="widget" id="transcriptcontainer">
-        <div class="widget_header">Transcript</div>
-        <div class="widget_content">
-            <div id="transcript"></div>
-        </div> 
-    </div>
-    <div id="dialog"></div>
-
+    <div class="ui-layout-north ui-widget ui-corner-top">
+        <div class="ui-widget-header ui-corner-top ui-layout-header">Viewer</div>
+        <div id="viewer_toolbar" class="viewer_toolbar ui-medium-flat">
+            <button class="tbbutton" id="image_zoomin">Zoom In</button>
+            <button class="tbbutton" id="image_zoomout">Zoom Out</button>
+            <button class="tbbutton" id="centre">Centre</button>
+            <button class="tbbutton" id="fullscreen">Full Screen</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <button class="tbbutton" id="refresh">Refresh</button>
+        </div>
+    </div>        
+    <div id="viewer" class="ui-layout-center"></div>
 
 {% endblock %}

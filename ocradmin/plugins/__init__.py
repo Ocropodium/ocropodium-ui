@@ -7,6 +7,36 @@ import subprocess as sp
 import tempfile
 
 
+class NoSuchNodeException(StandardError):
+    pass
+
+
+class ExternalToolError(StandardError):
+    """
+    Errors with external command-line tools etc.
+    """
+    pass
+
+
+class AbortedAction(StandardError):
+    """
+    Exception to raise when execution is aborted.
+    """
+    pass
+
+
+def lookup_model_file(modelname):
+    """
+    Lookup the filename of a model from its
+    database name.
+    """
+    from ocradmin.ocrmodels.models import OcrModel
+    mod = OcrModel.objects.get(name=modelname)
+    assert os.path.exists(mod.file.path), \
+            "Model file does not exist: %s" % mod.file.path
+    return mod.file.path.encode()
+
+
 def get_binary(binname):
     """
     Try and find where Tesseract is installed.
@@ -24,13 +54,6 @@ def get_binary(binname):
     return binname
 
 
-class ExternalToolError(StandardError):
-    """
-    Errors with external command-line tools etc.
-    """
-    pass
-
-
 def set_progress(logger, progress_func, step, end, granularity=5):
     """
     Call a progress function, if supplied.  Only call
@@ -45,13 +68,6 @@ def set_progress(logger, progress_func, step, end, granularity=5):
         return
     perc = min(100.0, round(float(step) / float(end), 2) * 100)
     progress_func(perc, end)
-
-
-class AbortedAction(StandardError):
-    """
-    Exception to raise when execution is aborted.
-    """
-    pass
 
 
 def check_aborted(method):

@@ -29,6 +29,12 @@ OCRJS.OcrBase = Base.extend({
     },
 
     addListener: function(key, func) {
+        var namespace = null;                     
+        if (key.match(/^(.+)\.([^\.]+)$/))
+            key = RegExp.$1, namespace = RegExp.$2;
+        if (namespace) {
+            func.__namespace = namespace;
+        }
         if (this._listeners[key] == undefined)
             throw "Unknown callback: '" + key + "'";
         this._listeners[key].push(func);
@@ -54,7 +60,32 @@ OCRJS.OcrBase = Base.extend({
                 func.callee, args.concat(Array.prototype.slice.call(arguments)));
         });
     },
-                   
+
+    removeListeners: function(key, func) {
+        var namespace = null;                     
+        if (key.match(/^(.*)\.([^\.]+)$/))
+            key = RegExp.$1, namespace = RegExp.$2;
+        if (this._listeners[key] == undefined)
+            throw "Unknow callback: '" + key + "'";
+        if (func) {
+            var i = this._listeners[key].indexOf(func);
+            if (i != -1)
+                this._listeners.splice(i, 1);
+            else
+                console.error("Attempted to remove unknown listener callback");
+        } else {
+            var self = this;
+            $.each(self._listeners, function(k, funcs) {
+                if (k == "" || k == key) {
+                    $.each(funcs, function(i, f) {
+                        if (f.__namespace && f.__namespace == namespace) {
+                            funcs.splice(i, 1);
+                        }    
+                    });   
+                }
+            });
+        }            
+    },
 });
 
 

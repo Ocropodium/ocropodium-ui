@@ -26,8 +26,8 @@ from ocradmin.batch import utils as batchutils
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, OcrBatch
-from ocradmin.core.views import _handle_request, AppException
-from ocradmin.plugins.manager import PluginManager
+from ocradmin.core.views import AppException
+from ocradmin.presets.models import Preset
 
 
 PER_PAGE = 25
@@ -68,6 +68,9 @@ class OcrBatchForm(forms.ModelForm):
     class Meta:
         model = OcrBatch
         exclude = ["user", "created_on", "project", "task_type"]
+        widgets = dict(
+                user=forms.HiddenInput(),
+        )
 
 
 @login_required
@@ -140,12 +143,20 @@ def create(request):
     """
     Create a batch from pre-saved images convert them asyncronously.
     """
-    taskname = "convert.page"
+    taskname = "run.batchitem"
 
     # get the subject file paths from comma seperated POST data
     paths = _get_batch_file_paths(request)
+    script = request.POST.get("script")
+    if not script and request.POST.get("preset") is not None:
+        try:
+            script = Preset.objects.get(pk=request.POST.get("preset")).data
+        except Preset.DoesNotExist:
+            print "PRESET %d not found" % request.POST.get("preset")
+            pass
+
     form = OcrBatchForm(request.POST)
-    if not request.method == "POST" or not form.is_valid() or not paths:
+    if not request.method == "POST" or not form.is_valid() or not paths or not script:
         return render_to_response("batch/new.html",
             _new_batch_context(request),
             context_instance=RequestContext(request))
@@ -163,15 +174,13 @@ def create(request):
     )
     batch.save()
 
-    # wrangle the params - this needs improving
-    _, config, params = _handle_request(request, request.output_path)
+    params = {}
+    config = {}
 
-    # preserve intermediate binary & segmentation results            
-    params["write_intermediate_results"] = True
     ocrtasks = []
     for path in paths:
         tid = OcrTask.get_new_task_id()
-        args = (path.encode(), request.output_path.encode(), params, config)
+        args = (path, script, request.output_path)
         kwargs = dict(task_id=tid, loglevel=60, retries=2)
         ocrtask = OcrTask(
             task_id=tid,
@@ -285,7 +294,7 @@ def upload_files(request):
             else "text/html"
     relpath = request.session["project"].slug
     try:
-        paths = _handle_request(request, request.output_path)[0]
+        paths = _handle_upload(request, request.output_path)
     except AppException, err:
         return HttpResponse(simplejson.dumps({"error": err.message}),
             mimetype="application/json")
@@ -496,10 +505,12 @@ def _new_batch_context(request):
     project = request.session["project"]
     batchname = "%s - Batch %d" % (project.name,
             project.ocrbatch_set.count() + 1)
-    form = OcrBatchForm(initial={"name": batchname})
+    form = OcrBatchForm(initial=dict(name=batchname, user=request.user))
+    presets = Preset.objects.all().order_by("name")
     return dict(
         prefix="",
         form=form,
+        presets=presets,
     )
 
 
@@ -513,3 +524,41 @@ def _get_batch_file_paths(request):
     ))
     filenames = request.POST.get("files", "").split(",")
     return [os.path.join(dirpath, f) for f in sorted(filenames)]
+
+
+def _handle_upload(request, outdir):
+    """
+    Save files and extract parameters.  How this happens
+    depends on how the file was send - either multipart
+    of as the whole POST body.
+    """
+
+    if request.GET.get("inlinefile"):
+        return _handle_streaming_upload(request, outdir)
+    return _handle_multipart_upload(request, outdir)
+
+
+def _handle_streaming_upload(request, outdir):
+    """
+    Handle an upload where the params are in GET and
+    the whole of the POST body consists of the file.
+    """
+    fpath = os.path.join(outdir, request.GET.get("inlinefile"))
+    if not os.path.exists(outdir):
+        os.makedirs(outdir, 0777)
+    tmpfile = file(fpath, "wb")
+    tmpfile.write(request.raw_post_data)
+    tmpfile.close()
+    return [fpath]
+
+
+def _handle_multipart_upload(request, outdir):
+    """
+    Handle an upload where the file data is multipart
+    encoded in the POST body, along with the params.
+    """
+    if request.POST.get("png"):
+        paths = [ocrutils.media_url_to_path(request.POST.get("png"))]
+    else:
+        paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
+    return paths

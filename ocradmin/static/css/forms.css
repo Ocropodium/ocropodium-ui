@@ -60,7 +60,7 @@ fieldset .field_wrapper select {
     overflow: auto;
 }
 
-.form_footer input {
+.form_footer * {
     float: right;
 }
 

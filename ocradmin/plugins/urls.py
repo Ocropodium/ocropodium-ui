@@ -1,10 +1,9 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
-    (r'^/?$', 'ocradmin.plugins.views.index'),
     (r'^query/?$', 'ocradmin.plugins.views.query'),
-    (r'^query/(?P<args>.+)/?$', 'ocradmin.plugins.views.query'),
-    (r'^parse/?$', 'ocradmin.plugins.views.parse'),
-	(r'^(?P<name>[^/]+)/?$', 'ocradmin.plugins.views.info'),
-	(r'^(?P<name>\w+)/(?P<method>\w+)/?$', 'ocradmin.plugins.views.run_get_method'),
+    (r'^run/?$', 'ocradmin.plugins.views.runscript'),
+    (r'^results/(?P<task_ids>[^\/]+)/?$', 'ocradmin.plugins.views.results'),
+    (r'^upload/?$', 'ocradmin.plugins.views.upload_file'),
+    (r'^layout_graph/?$', 'ocradmin.plugins.views.layout_graph'),
 )

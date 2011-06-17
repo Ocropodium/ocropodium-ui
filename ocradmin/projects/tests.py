@@ -47,7 +47,7 @@ class OcrProjectsTest(TestCase):
         """
         Test requesting a new upload form via Ajax works.
         """
-        r = self.client.get("/projects/new", {}, **AJAX_HEADERS)
+        r = self.client.get("/projects/create/", {}, **AJAX_HEADERS)
         self.assertEqual(r.status_code, 200)
         # make sure there's a form in the results
         self.assertTrue(r.content.find("<form") != -1)
@@ -92,7 +92,7 @@ class OcrProjectsTest(TestCase):
         """
         r = self._create_test_project()
         project = OcrProject.objects.get(pk=1)
-        r = self.client.get("/projects/confirm_delete_project/1/")
+        r = self.client.get("/projects/delete/1/")
         self.assertEqual(r.status_code, 200)
 
     def test_delete_project(self):
@@ -101,21 +101,10 @@ class OcrProjectsTest(TestCase):
         """
         r = self._create_test_project()
         before = OcrProject.objects.count()
-        r = self.client.post("/projects/delete_project/1/", {"confirm": "yes"})
+        r = self.client.post("/projects/delete/1/")
         self.assertEqual(r.status_code, 302)
         after = OcrProject.objects.count()
         self.assertEqual(before, after + 1)
-
-    def test_delete_project_without_confirm(self):
-        """
-        Test actually deleting a project.
-        """
-        r = self._create_test_project()
-        before = OcrProject.objects.count()
-        r = self.client.post("/projects/delete_project/1/", {"confirm": "no"})
-        self.assertEqual(r.status_code, 302)
-        after = OcrProject.objects.count()
-        self.assertEqual(before, after)
 
     def _create_test_project(self):
         """
@@ -126,6 +115,7 @@ class OcrProjectsTest(TestCase):
             dict(
                 tags="test blah",
                 name="Test Project",
+                user=self.testuser.id,
                 description="Testing project creation",
             ),
         )
@@ -135,10 +125,10 @@ class OcrProjectsTest(TestCase):
         Update the fixture project.
         """
         return self.client.post(
-            "/projects/update/1/",
+            "/projects/edit/1/",
             dict(
                 name="Test Update Project",
-                slug="test-update-project",
+                user=self.testuser.id,
                 tags="test project update",
                 description="",
             ),

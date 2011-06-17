@@ -159,7 +159,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         this._left = $(elem).children().first().offset().left;
 
         $(elem)
-            .addClass("selected")
+            .addClass("ui-selected")
             .addClass("editing")
             .allowSelection(false);
 
@@ -173,7 +173,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
     finishEditing: function(withtext) {
         var endtext = $(this._e).text();
         $(this._e)
-            .removeClass("selected")
+            .removeClass("ui-selected")
             .removeClass("editing")
             .allowSelection(true)
             .html(this._inittext);        

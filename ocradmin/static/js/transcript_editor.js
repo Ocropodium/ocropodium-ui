@@ -23,7 +23,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             log: false,
         },
         $.extend(this.options, options);
-
+        this.parent = parent;
         this._listeners = {
             onLinesReady: [],
             onTextChanged: [],
@@ -52,25 +52,22 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this.setupMouseEvents();
         this.setupKeyEvents();
         this.setupCallbacks();        
-        this.refreshSize();
+        this.resetSize();
     },
 
 
     init: function() {
         // UI bits it's useful to keep a reference to:
-        this._container = $("<div></div>")
-            .addClass("transcript_editor");
         this._scrollcontainer = $("<div></div>")
-            .attr("id", "scroll_container");
+            .attr("id", "innerscroll");
         this._pagediv = $("<div></div>")
             .addClass("waiting")
             .addClass("transcript_lines")
             .attr("id", "transcript_lines");
-        this._container
+        $(this.parent)
             .append(this._scrollcontainer.append(
                 this._pagediv))
-            .append(this._speller.init().hide())
-            .appendTo(this.parent);
+            .append(this._speller.init().hide());
     },
 
     setupMouseEvents: function() {
@@ -202,34 +199,25 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });        
     },                 
 
-    container: function() {
-        return this.containerWidget();
-    },
-
-    refreshSize: function() {
+    resetSize: function() {
         this._scrollcontainer
             .css(
                 "height", 
-                this._container.height() 
+                $(this.parent).height() 
                 - this._speller.widgetHeight()
             );
     },
 
-    setHeight: function(newheight) {
-        this._container.height(newheight);
-        this.refreshSize();
-    },
-
     startSpellcheck: function() {
         this._speller.show();
-        this.refreshSize();
+        this.resetSize();
         this._speller.spellcheck($(".ocr_line"));
         this._spellchecking = true;
     },
 
     endSpellcheck: function() {
         this._speller.hide();
-        this.refreshSize();
+        this.resetSize();
         $(".badspell").each(function(i, elem) {
             $(elem).replaceWith($(elem).text());
         });
@@ -295,6 +283,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                self.setWaiting(false); 
             },
             success: function(data) {
+                console.log("DATA: ", data);
                 if (data == null) {
                     alert("Unable to retrieve page data.");
                 } else if (data.error) {
@@ -313,15 +302,16 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         var self = this;
         this._pagediv.children().remove();
         this._pagediv.data("bbox", data.fields.results.box);
+        console.log(data);
         $.each(data.fields.results.lines, function(linenum, line) {
             var type = line.type ? line.type : "span";
-            lspan = $("<" + type + "></" + type + ">")
-                .text(line.text)
-                .attr("id", "line_" + line.line)
+            var lspan = $("<" + type + "></" + type + ">")
+                .attr("id", "line_" + linenum)
                 .addClass("ocr_line")
                 .data("bbox", line.box)
-                .data("num", line.line);
-            self._pagediv.append(lspan);                        
+                .data("num", linenum)
+                .text(line.text);
+            self._pagediv.append(lspan);
         });
         //self.insertBreaks();
         this._textbuffer = this._pagediv.text();
