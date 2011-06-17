@@ -127,7 +127,7 @@ class OcrTask(models.Model):
 
 
     @classmethod
-    def run_celery_task(cls, taskname, *args, **kwargs):
+    def run_celery_task(cls, taskname, args, taskkwargs={}, **kwargs):
         """
         Run an arbitary Celery task.
         """
@@ -136,7 +136,7 @@ class OcrTask(models.Model):
         task = celery.registry.tasks[taskname]
         func = task.apply_async if kwargs.get("asyncronous", False) \
                 else task.apply
-        return func(args=args, **kwargs)
+        return func(args=args, **taskkwargs)
 
     @classmethod
     def run_celery_task_multiple(cls, taskname, tasks, **kwargs):
