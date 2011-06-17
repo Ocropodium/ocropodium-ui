@@ -8,6 +8,8 @@ syntax: glob
 *.swo
 *.pyc
 
+*_compress.css
+*_compress.js
 ^OLD
 syntax: regexp
 ^release

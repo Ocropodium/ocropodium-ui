@@ -263,12 +263,12 @@ a.button:hover {
 }
 
 .ui-medium-flat {
-    background: #f7f7f7;
-    background: -moz-linear-gradient(top, #f7f7f7 0%, #ebebeb 100%);
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f7f7f7), color-stop(100%,#ebebeb));
-    background: -webkit-linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
-    background: -o-linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
-    background: -ms-linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
+    background-color: #f7f7f7;
+    background-color: -moz-linear-gradient(top, #f7f7f7 0%, #ebebeb 100%);
+    background-color: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f7f7f7), color-stop(100%,#ebebeb));
+    background-color: -webkit-linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
+    background-color: -o-linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
+    background-color: -ms-linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f7f7f7', endColorstr='#ebebeb',GradientType=0 );
     background: linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
 }    
