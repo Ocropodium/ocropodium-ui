@@ -20,7 +20,7 @@
 {% block content %}
 
 <div class="ui-widget ui-corner-top">
-    <div class="ui-widget-header ui-corner-top">Batches</div>
+    <div class="ui-widget-header ui-corner-top ui-layout-header">Batches</div>
     <div class="ui-widget-content">
         {% include "includes/messages.html" %}
         <div class="list_controls">
@@ -39,34 +39,32 @@
 {% endblock %}
 
 {% block sidebar %}
-<div id="sidebar" class="ui-widget ui-widget-content ui-helper-reset ui-helper-clearfix ui-tabs ui-tabs-nav">
-    <div class="ui-widget-content">
-        <form name="filter" id="task_filter_form" method="GET" action="/batch/list">
-            <input type="hidden" class="filter_item" name="page" value="{{params.page}}" />
-            <input type="hidden" class="filter_item" name="order_by" value="{{params.order_by}}" />
+<div class="ui-widget-content">
+    <form name="filter" id="task_filter_form" method="GET" action="/batch/list">
+        <input type="hidden" class="filter_item" name="page" value="{{params.page}}" />
+        <input type="hidden" class="filter_item" name="order_by" value="{{params.order_by}}" />
 
-            <div class="field_wrapper">
-                <label for="view_status_all">All:</label>            
-                <input type="checkbox" name="status" class="filter_item" id="view_status_all" value="ALL"
-                    checked="checked" />
+        <div class="field_wrapper">
+            <label for="view_status_all">All:</label>            
+            <input type="checkbox" name="status" class="filter_item" id="view_status_all" value="ALL"
+                checked="checked" />
+            <br />
+            {% for status, name in statuses %}
+                <label for="view_status_{{status}}">{{name}}:</label>
+                <input type="checkbox" name="status" class="filter_item" id="view_status_{{status}}" 
+                {% if status in selected %} checked="Checked" {% endif %} value="{{status}}" />
                 <br />
-                {% for status, name in statuses %}
-                    <label for="view_status_{{status}}">{{name}}:</label>
-                    <input type="checkbox" name="status" class="filter_item" id="view_status_{{status}}" 
-                    {% if status in selected %} checked="Checked" {% endif %} value="{{status}}" />
-                    <br />
-                {% endfor %}
-            </div>
-            <div class="field_wrapper">
-                <label for="filter_user">User:</label>
-                <select class="filter_item" id="filter_user" name="user__pk">
-                    <option value="" {% ifequal params.user_id "" %}selected="selected"{% endifequal %}>All</option>
-                    <option value="{{request.user.pk}}" {% ifequal params.user_id request.user.pk %}selected="selected"
-                    {% endifequal %}>{{user.username}}</option>
-                </select>
-            </div>
-        </form>
-    </div>        
-</div>
+            {% endfor %}
+        </div>
+        <div class="field_wrapper">
+            <label for="filter_user">User:</label>
+            <select class="filter_item" id="filter_user" name="user__pk">
+                <option value="" {% ifequal params.user_id "" %}selected="selected"{% endifequal %}>All</option>
+                <option value="{{request.user.pk}}" {% ifequal params.user_id request.user.pk %}selected="selected"
+                {% endifequal %}>{{user.username}}</option>
+            </select>
+        </div>
+    </form>
+</div>        
 
 {% endblock %}
