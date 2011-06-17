@@ -1,3 +1,5 @@
+{% load compressed %}
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -8,40 +10,17 @@
         {% endif %}
         {% block title %} OCRopodium - Test Server {% endblock %}
     </title>
+    {% compressed_js "jquery" %}
+    {% compressed_js "utils" %}
+    {% compressed_js "global" %}
 
-	<script type='application/javascript' src='/static/js/jquery/jquery-1.6.js'></script>
-    <script type='application/javascript' src='/static/js/jquery/jquery-ui-1.8.4.custom.min.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.cookie.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.globalstylesheet.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.text-overflow.min.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.titlecase.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.tmpl.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.rightClick.js'></script>
-	<script type='application/javascript' src='/static/js/jquery/jquery.layout-latest.js'></script>
-	<script type='application/javascript' src='/static/js/utils/json2.js'></script>
-	<script type='application/javascript' src='/static/js/utils/base.js'></script>
-	<script type='application/javascript' src='/static/js/ocrbase.js'></script>
-	<script type='application/javascript' src='/static/js/helpers.js'></script>
-	<script type='application/javascript' src='/static/js/constants.js'></script>
 
-    <script type='application/javascript' src='/static/js/abstract_data_source.js'></script>    
-	<script type='application/javascript' src='/static/js/project_data_source.js'></script>
-	<script type='application/javascript' src='/static/js/abstract_list_widget.js'></script>
-	<script type='application/javascript' src='/static/js/project_list_widget.js'></script>
-	<script type='application/javascript' src='/static/js/projectbrowser.js'></script>
-	<script type='application/javascript' src='/static/js/appmenu.js'></script>
-
-    <link rel="stylesheet" href="/static/css/custom-theme/jquery-ui-1.8.4.custom.css" />
-    <link rel="stylesheet" href="/static/css/layout-default.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/mainmenu.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/forms.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/messages.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/projectbrowser.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
 	{% block headerscript %}{% endblock %}
-	
-    <link rel="stylesheet" href="/static/css/clean.css" type="text/css" media="screen" />
-    <!--<script type='application/javascript' src='/static/js/loadall.js'></script>-->
+
+    <link rel="stylesheet" href="/static/css/custom-theme/jquery-ui-1.8.4.custom.css" type="text/css" media="screen" />
+    {% compressed_css "standard" %}
+<!--    <link rel="stylesheet" href="/static/css/mainmenu.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="/static/css/clean.css" type="text/css" media="screen" /> -->
 </head>
 <body>
     <div id="vsplitter" class="ui-layout-center">

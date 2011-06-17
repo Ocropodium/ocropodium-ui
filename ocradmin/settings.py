@@ -6,6 +6,9 @@ import sys
 import socket
 import subprocess as sp
 
+# import django-compress settings so they don't clutter up this file
+from compress import *
+
 # Ensure celery/lazy loading Django models play nice 
 import djcelery
 djcelery.setup_loader()
@@ -48,8 +51,8 @@ ADMINS = (
 MANAGERS = ADMINS
 
 DATABASE_HOST = "localhost" if not SERVER else MASTERNAME
-DATABASE_NAME = "ocr_testing" if DEBUG else "ocr_production"
-DATABASE_USER = "ocr_testing" if DEBUG else "ocr_production"
+DATABASE_NAME = "ocr_testing" # if DEBUG else "ocr_production"
+DATABASE_USER = "ocr_testing" # if DEBUG else "ocr_production"
 DATABASES = {
     'default' : {
         'ENGINE'    : 'django.db.backends.mysql',
@@ -198,6 +201,7 @@ INSTALLED_APPS = (
     'training',
     'projects',
     'tagging',
+    'compress',
 )
 
 SERIALIZATION_MODULES = {
@@ -205,4 +209,97 @@ SERIALIZATION_MODULES = {
     'json' : 'wadofstuff.django.serializers.json'
 }
 
+COMPRESS_ROOT = STATIC_ROOT
+COMPRESS_URL = "/static/"
+COMPRESS_AUTO = True
+# total hack around csstidy not working with CSS3 gradients, but us
+# still wanting to use file concatenation
+CSSTIDY_BINARY = "cp"
+CSSTIDY_ARGUMENTS = ""
+COMPRESS_CSS_FILTERS = None
+COMPRESS_CSS = {
+    "standard": {
+        "source_filenames": (
+            "css/clean.css",
+            "css/mainmenu.css",
+            "css/layout-default.css",
+            "css/forms.css",
+            "css/messages.css",
+            "css/projectbrowser.css",
+            "css/list_widget.css",
+        ),
+        "output_filename": "css/standard_compress.css",
+        "extra_context": {
+            "media": "screen",
+        }
+    }
+}
+
+COMPRESS_JS = {
+    "jquery": {
+        "source_filenames": (
+            "js/jquery/jquery-1.6.js",
+            "js/jquery/jquery-ui-1.8.4.custom.min.js",
+            "js/jquery/jquery.cookie.js",
+            "js/jquery/jquery.globalstylesheet.js",
+            "js/jquery/jquery.text-overflow.min.js",
+            "js/jquery/jquery.titlecase.js",
+            "js/jquery/jquery.tmpl.js",
+            "js/jquery/jquery.rightClick.js",
+            "js/jquery/jquery.layout-latest.js",
+        	"js/jquery/jquery.hoverIntent.min.js",
+        ),
+        "output_filename": "js/jquery_compress.js",
+    },
+    "utils" : {
+        "source_filenames": (
+            "js/utils/json2.js",
+            "js/utils/base.js",
+	        "js/utils/stats.js",
+        ),
+        "output_filename": "js/utils_compress.js",
+    },
+    "global": {
+        "source_filenames": (
+            "js/ocrbase.js",
+            "js/helpers.js",
+            "js/constants.js",
+            "js/abstract_data_source.js",    
+            "js/project_data_source.js",
+            "js/abstract_list_widget.js",
+            "js/project_list_widget.js",
+            "js/projectbrowser.js",
+            "js/appmenu.js",
+        ),
+        "output_filename": "js/global_compress.js",
+    },
+    "nodetree": {
+        "source_filenames": (
+	        "js/jquery/jquery.svg.js",
+            "js/jquery/jquery.svgdom.min.js",
+            "js/nodetree/svg_helper.js",
+            "js/nodetree/cable.js",
+            "js/nodetree/plug.js",
+            "js/nodetree/node.js",
+            "js/nodetree/node_list.js",
+            "js/nodetree/node_tree.js",
+            "js/nodetree/gui_manager.js",
+            "js/nodegui/base_gui.js",
+            "js/nodegui/crop_gui.js",
+            "js/nodetree/cable.js",
+            "js/preset_manager.js",
+            "js/result_handler.js",
+            "js/crypto/bencode.js",
+            "js/crypto/md5.js",
+        ),
+        "output_filename": "js/nodetree_compress.js",
+    },
+    "imageviewer": {
+        "source_filenames": (
+            "js/seadragon/seadragon-min.js",
+            "js/image_viewer.js",
+        ),
+        "output_filename": "js/imageviewer_compress.js",        
+    },
+}
 
