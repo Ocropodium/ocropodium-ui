@@ -5,6 +5,7 @@ Celery tasks for Batch operations.
 import os
 
 from celery.contrib.abortable import AbortableTask
+from celery.task.sets import subtask
 from ocradmin.ocrtasks.decorators import register_handlers
 from ocradmin.ocrtasks.utils import get_progress_callback, get_abort_callback
 from django.utils import simplejson as json
@@ -27,7 +28,7 @@ manager.register_module("ocradmin.plugins.pil_nodes")
 class BatchScriptTask(AbortableTask):
     name = "run.batchitem"
 
-    def run(self, filepath, scriptjson, writepath, **kwargs):
+    def run(self, filepath, scriptjson, writepath, callback=None, **kwargs):
         """
         Runs the convert action.
         """
@@ -61,7 +62,10 @@ class BatchScriptTask(AbortableTask):
         try:
             # write out the binary... this should cache it's input
             outbin.eval()
-            return term.eval()
+            result = term.eval()
+            if callback is not None:
+                subtask(callback).delay(result)
+            return result
         except ocropus_nodes.OcropusNodeError, err:
             logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.msg)
