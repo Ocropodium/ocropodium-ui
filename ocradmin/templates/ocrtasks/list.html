@@ -18,7 +18,7 @@
 {% block content %}
 
 
-<div id="task_list_widget" class="ui-widget ui-widget-content ui-helper-reset ui-helper-clearfix ui-tabs ui-tabs-nav">
+<div id="task_list_widget" class="ui-widget ui-corner-top">
     <div class="ui-widget-header ui-corner-top">OCR Tasks</div>    
     <div class="ui-widget-content">
         {% include "includes/messages.html" %}
@@ -82,7 +82,7 @@
 
 {% block sidebar %}
 
-<div id="sidebar" class="ui-widget ui-widget-content ui-helper-reset ui-helper-clearfix ui-tabs ui-tabs-nav">
+<div id="sidebar" class="ui-widget ui-corner-top">
     <div class="ui-widget-header ui-corner-top">Filter Tasks</div>
     <div class="ui-widget-content">
         <form name="filter" id="task_filter_form" method="GET" action="/ocrtasks/list">
