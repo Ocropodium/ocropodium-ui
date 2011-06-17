@@ -275,6 +275,11 @@ a.button:hover {
 
 .viewer_toolbar {
     padding: 0.4em;
+    overflow: auto;
+}
+
+.viewer_toolbar * {
+    float: left;
 }
 
 .textviewer, .imageviewer {
