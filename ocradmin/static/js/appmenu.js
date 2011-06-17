@@ -27,7 +27,12 @@ $(function() {
             .unbind("click.menuopen")
             .bind("click.menuclose", function(event) {
                 deactivateMenu(menu);
-            }).find("ul").show();
+            }).find("ul").show()
+            .find("li").bind("mouseenter", function(event) {
+                $(this).addClass("ui-selected");    
+            }).bind("mouseleave", function(event) {
+                $(this).removeClass("ui-selected");    
+            });
         $(window)
             .bind("keydown.menuclose", function(event) {
                 if (event.keyCode == KC_ESCAPE) {
@@ -81,5 +86,7 @@ $(function() {
             size: 400,
         }        
     });
+
+    $(window).resize();
 });
 

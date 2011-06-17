@@ -69,7 +69,7 @@
     border: 1px solid transparent;
 }
 
-#menu ul.selected {
+#menu ul.ui-selected {
     color: #FFF;
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
@@ -78,10 +78,6 @@
     border-top: 1px solid #4B6E99;
     border-right: 1px solid #4B6E99;
     border-left: 1px solid #4B6E99;
-}
-
-#menu.selected * {
-    color: #FFF;
 }
 
 #menu h3.right {
@@ -96,10 +92,6 @@
 
 #menu ul a, #menu a:visited {
     color: #060606;
-}
-
-#menu ul a:hover {
-    color: #FFF;
 }
 
 #menu a:active {
@@ -136,22 +128,12 @@
     border: 1px solid transparent;
 }
 
-#menu ul ul li:hover {
-    color: #FFF;
-    background-color: #F8F8F8;
+#menu ul ul li.ui-selected {
     border: 1px solid #4B6E99;
-    background: -webkit-gradient(
-        linear,
-        left top,
-        left bottom,
-        color-stop(0.95, rgb(132,170,216)),
-        color-stop(0.25, rgb(161,192,231))
-    );
-    background: -moz-linear-gradient(
-        left bottom,
-        rgb(132,170,216) 25%,
-        rgb(161,192,231) 95%
-    );
+}
+
+#menu ul ul li.ui-selected a {
+    color: #FFF;
 }
 
 .disabled_option {
