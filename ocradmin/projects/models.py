@@ -1,4 +1,8 @@
-import os
+"""
+Object representing an OCR project, used to group files, batches, 
+and presets.
+"""
+
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
