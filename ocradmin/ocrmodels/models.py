@@ -1,9 +1,12 @@
+"""
+Object representing a helper file for an OCR app.
+"""
+
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from tagging.fields import TagField
 import tagging
-# OCR model, erm, model
 
 
 class OcrModel(models.Model):

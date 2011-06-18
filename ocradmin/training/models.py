@@ -9,7 +9,6 @@ from picklefield import fields
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.batch.models import Batch
-from ocradmin.core import utils as ocrutils
 
 
 

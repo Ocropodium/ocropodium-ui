@@ -13,8 +13,6 @@ from ocradmin.projects.models import Project
 from ocradmin.core import utils as ocrutils
 
 
-
-
 class ReferencePage(models.Model):
     """
     Single page of reference data, i.e: text lines

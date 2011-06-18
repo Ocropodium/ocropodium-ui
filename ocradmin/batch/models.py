@@ -1,3 +1,8 @@
+"""
+Object representing a batch operation, consisting of
+one or more OcrTasks.
+"""
+
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
