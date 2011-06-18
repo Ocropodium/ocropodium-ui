@@ -11,13 +11,13 @@ from django.conf import settings
 from django.utils import simplejson
 
 from ocradmin.core.tests import testutils
-from ocradmin.plugins import parameters
 
 TESTFILE = "simple.png"
 
 
 class TrainingTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json",
+            "presets/fixtures/test_fixtures.json",
             "projects/fixtures/test_fixtures.json",
             "reference_pages/fixtures/test_fixtures.json"]
 
@@ -60,23 +60,17 @@ class TrainingTest(TestCase):
         """
         params = {
             "name": "Test comparison",
-            "p0_paramset_name": "Test Ocropus",
-            "p1_paramset_name": "Test Tesseract",
+            "script1": 1,
+            "script2": 2,
             "tset": 1,
         }
-        for key, value in parameters.TESTPOST.iteritems():
-            pkey = re.sub("^(?P<prefix>.)options", "\g<prefix>p0_options", key)
-            params[pkey] = value
-        for key, value in parameters.TESTPOST_OCROPUS.iteritems():
-            pkey = re.sub("^(?P<prefix>.)options", "\g<prefix>p1_options", key)
-            params[pkey] = value
-
         r = self.client.post("/training/score_models", params, follow=True)
         # check we were redirected to the batch page
         self.assertRedirects(r, "/batch/show/1/")
 
         # check we can view the comparison results
         r = self.client.get("/training/comparison/1")
+        print r.content
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Aggregate")
 

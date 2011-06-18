@@ -89,30 +89,13 @@ class ComparisonTask(AbortableTask):
     name = "compare.groundtruth"
     max_retries = None
 
-    def run(self, gt_id, outdir, params, config, **kwargs):
+    def run(self, outdata, gt_id, **kwargs):
         """
         Runs the model comparison action.
         """
         groundtruth = ReferencePage.objects.get(pk=gt_id)
-        config = parameters.OcrParameters(config)
-
-        # function for the converted to call periodically to check whether 
-        # to end execution early
         logger = self.get_logger(**kwargs)
         task = OcrTask.objects.get(task_id=self.request.id)
-
-        # ground truth is already a binary, so tell the converter not
-        # to redo it...
-        converter = PluginManager.get_converter(
-                config.name, 
-                logger=logger, abort_func=get_abort_callback(self.request.id),
-                config=config)
-        # init progress to zero (for when retrying tasks)
-        progress_func = get_progress_callback(self.request.id)
-        progress_func(0)
-
-        outdata = converter.convert(groundtruth.source_image.path.encode(),
-                progress_func=progress_func, **params)        
         accuracy, details = utils.isri_accuracy(
                 logger, 
                 ocrutils.output_to_text(groundtruth.data),
