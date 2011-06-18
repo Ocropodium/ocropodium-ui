@@ -15,14 +15,20 @@ class Batch(models.Model):
     """
     OCR Batch object.
     """
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name="batches")
     name = models.CharField(max_length=255)
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(Project, related_name="batches")
     task_type = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
     tags = TagField()
     created_on = models.DateTimeField(editable=False)
     updated_on = models.DateTimeField(blank=True, null=True, editable=False)
+
+    def __unicode__(self):
+        """
+        Unicode representation.
+        """
+        return self.name
 
     def save(self):
         if not self.id:
@@ -101,10 +107,4 @@ class Batch(models.Model):
             return "#"
         else:
             return "/batch/transcript/%d/" % self.pk
-
-    def __unicode__(self):
-        """
-        Unicode representation.
-        """
-        return self.name
 

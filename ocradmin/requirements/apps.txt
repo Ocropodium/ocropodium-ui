@@ -5,6 +5,7 @@
 #-e git+https://github.com/ask/django-celery.git@v2.2.3#egg=django-celery
 #-e hg+https://bitbucket.org/neithere/django-autoslug#egg=autoslug
 -e git+https://github.com/joymax/django-compress.git#egg=django-compress
+-e git+https://github.com/lamby/django-lint.git#egg=django-lint
 #django-picklefield
 #bencode 
 #pydot

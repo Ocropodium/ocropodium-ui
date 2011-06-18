@@ -21,9 +21,9 @@ class Score(models.Model):
             related_name="parameter_scores")
     name = models.CharField(max_length=255)
     task  = models.OneToOneField(OcrTask, related_name="parameter_score") 
-    ground_truth = models.ForeignKey(ReferencePage)
+    ground_truth = models.ForeignKey(ReferencePage, related_name="parameter_scores")
     score = models.FloatField(null=True, blank=True)
-    score_internals = models.TextField(null=True, blank=True)
+    score_internals = models.TextField(blank=True)
     created_on = models.DateTimeField(editable=False)
     updated_on = models.DateTimeField(blank=True, null=True, editable=False)
     error = fields.PickledObjectField(blank=True, null=True)
@@ -42,7 +42,7 @@ class Comparison(models.Model):
     """
     name = models.CharField(max_length=255)
     batch = models.OneToOneField(Batch)
-    notes = models.TextField(null=True, blank=True)
+    notes = models.TextField(blank=True)
     created_on = models.DateTimeField(editable=False)
     updated_on = models.DateTimeField(blank=True, null=True, editable=False)
 
