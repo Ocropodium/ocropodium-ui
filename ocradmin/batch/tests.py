@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
-from ocradmin.batch.models import OcrBatch
+from ocradmin.batch.models import Batch
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.tests import testutils
@@ -23,7 +23,7 @@ SCRIPT2 = "plugins/fixtures/scripts/ocropus.json"
 
 
 
-class OcrBatchTest(TestCase):
+class BatchTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json",
             "projects/fixtures/test_fixtures.json",
             "batch/fixtures/test_batch.json"]
@@ -122,10 +122,10 @@ class OcrBatchTest(TestCase):
         """
         Test viewing batch details.
         """
-        before = OcrBatch.objects.count()
+        before = Batch.objects.count()
         r = self.client.get("/batch/delete/1/")
         self.assertRedirects(r, "/batch/list/")
-        self.assertEqual(before, OcrBatch.objects.count() + 1)
+        self.assertEqual(before, Batch.objects.count() + 1)
 
     def test_create_refpath_from_task(self):
         """

@@ -3,12 +3,13 @@ Class for Asyncronous OCR jobs.  Wraps tasks that run on the Celery
 queue with more metadata and persistance.
 """
 
+import datetime
 import uuid
 from django.db import models
 from picklefield import fields
 
-from ocradmin.batch.models import OcrBatch
-from ocradmin.projects.models import OcrProject
+from ocradmin.batch.models import Batch
+from ocradmin.projects.models import Project
 
 from django.contrib.auth.models import User
 import celery
@@ -29,9 +30,9 @@ class OcrTask(models.Model):
     )
 
     user = models.ForeignKey(User)
-    batch = models.ForeignKey(OcrBatch,
+    batch = models.ForeignKey(Batch,
             related_name="tasks", blank=True, null=True)
-    project = models.ForeignKey(OcrProject,
+    project = models.ForeignKey(Project,
             related_name="tasks", blank=True, null=True)
     task_id = models.CharField(max_length=100)
     task_name = models.CharField(max_length=100)
@@ -43,10 +44,15 @@ class OcrTask(models.Model):
     kwargs = fields.PickledObjectField(blank=True, null=True)
     error = fields.PickledObjectField(blank=True, null=True)
     traceback = models.TextField(blank=True, null=True)
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
-    updated_on = models.DateTimeField(
-            auto_now_add=True, auto_now=True, editable=False)
+    created_on = models.DateTimeField(editable=False)
+    updated_on = models.DateTimeField(blank=True, null=True, editable=False)
 
+    def save(self):
+        if not self.id:
+            self.created_on = datetime.datetime.now()
+        else:
+            self.updated_on = datetime.datetime.now()
+        super(OcrTask, self).save()
 
     def abort(self):
         """
@@ -186,13 +192,18 @@ class Transcript(models.Model):
     data = fields.PickledObjectField()
     is_retry = models.BooleanField(default=False, editable=False)
     is_final = models.BooleanField(default=False)
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    created_on = models.DateTimeField(editable=False)
+    updated_on = models.DateTimeField(blank=True, null=True, editable=False)
 
 
     def save(self, force_insert=False, force_update=False):
         """
         Override save method to create the version number automatically.
         """
+        if not self.id:
+            self.created_on = datetime.datetime.now()
+        else:
+            self.updated_on = datetime.datetime.now()
         if self.version == 0:
             # increment version number
             try:

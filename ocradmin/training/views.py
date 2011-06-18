@@ -15,8 +15,8 @@ from django.utils import simplejson
 from django import forms
 from ocradmin.core import utils as ocrutils
 from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch
-from ocradmin.training.models import OcrComparison, ParameterScore
+from ocradmin.ocrtasks.models import OcrTask, Batch
+from ocradmin.training.models import Comparison, Score
 from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
@@ -63,7 +63,7 @@ def comparison_query(order, **params):
         query = query & Q(**ld)
 
     # if there's a tag present search by tagged item
-    return OcrComparison.objects\
+    return Comparison.objects\
             .filter(query)\
             .order_by(*order)\
             .annotate(groundtruths=Count("parameter_scores__ground_truth"))
@@ -186,7 +186,7 @@ def score_models(request):
                 slug=request.POST.get("script%d" % scriptnum)))
         scriptnum += 1
     
-    batch = OcrBatch(
+    batch = Batch(
         user=request.user,
         name="Model Scoring %s" % datetime.now(),
         description="",
@@ -194,7 +194,7 @@ def score_models(request):
         project=request.session["project"]
     )
     batch.save()
-    comparison = OcrComparison(
+    comparison = Comparison(
         name=form.cleaned_data["name"],
         notes=form.cleaned_data["notes"],
         batch=batch,
@@ -225,7 +225,7 @@ def score_models(request):
             ocrtasks.append(ocrtask)
 
             # create a score record for this task
-            score = ParameterScore(
+            score = Score(
                 name=script.name,
                 task=ocrtask,
                 comparison=comparison,
@@ -248,10 +248,10 @@ def comparison_from_batch(request):
     """
     View details of a model comparison.
     """
-    batch = get_object_or_404(OcrBatch, pk=request.GET.get("batch", 0))
+    batch = get_object_or_404(Batch, pk=request.GET.get("batch", 0))
     try:
-        cpk = batch.ocrcomparison.pk
-    except OcrComparison.DoesNotExist:
+        cpk = batch.comparison.pk
+    except Comparison.DoesNotExist:
         cpk = 0
     return comparison(request, cpk)
 
@@ -262,7 +262,7 @@ def comparison(request, comparison_pk):
     """
     View details of a model comparison.
     """
-    comparison = get_object_or_404(OcrComparison, pk=comparison_pk)
+    comparison = get_object_or_404(Comparison, pk=comparison_pk)
     scores = comparison.parameter_scores.order_by("pk", "name", "ground_truth")
 
     # this is really dodgy - total the scores for each model
@@ -298,7 +298,7 @@ def show_paramscore(request, paramscore_pk):
     """
     Display the accuracy internals of a model score.
     """
-    score = get_object_or_404(ParameterScore, pk=paramscore_pk)
+    score = get_object_or_404(Score, pk=paramscore_pk)
     result = score.task.latest_transcript()
     context = dict(
         modelscore=score,

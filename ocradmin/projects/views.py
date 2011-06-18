@@ -19,8 +19,8 @@ from django.template.defaultfilters import slugify
 from tagging.models import TaggedItem
 from ocradmin.core import utils as ocrutils
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.batch.models import OcrBatch
-from ocradmin.projects.models import OcrProject
+from ocradmin.batch.models import Batch
+from ocradmin.projects.models import Project
 from ocradmin.core import generic_views as gv
 
 
@@ -63,7 +63,7 @@ class DublinCoreForm(forms.Form):
 
 
 
-class OcrProjectForm(forms.ModelForm):
+class ProjectForm(forms.ModelForm):
     """
         New project form.
     """
@@ -75,7 +75,7 @@ class OcrProjectForm(forms.ModelForm):
         self.fields['description'].widget.attrs["cols"] = 40
 
     class Meta:
-        model = OcrProject
+        model = Project
         exclude = ["slug", "created_on"]
         widgets = dict(
                 user=forms.HiddenInput(),
@@ -83,31 +83,31 @@ class OcrProjectForm(forms.ModelForm):
 
 
 projectlist = gv.GenericListView.as_view(
-        model=OcrProject,
+        model=Project,
         page_name="OCR Projects",
         fields=["name", "description", "user", "created_on"],)
 
 projectcreate = gv.GenericCreateView.as_view(
-        model=OcrProject,
-        form_class=OcrProjectForm,
+        model=Project,
+        form_class=ProjectForm,
         page_name="New OCR Project",
         success_url="/projects/load/%(id)s/",)
 
 projectdetail = gv.GenericDetailView.as_view(
-        model=OcrProject,
+        model=Project,
         template_name="projects/show.html",
         page_name="OCR Project",
         fields=["name", "description", "user", "tags", "created_on",
             "updated_on",])
 
 projectedit = gv.GenericEditView.as_view(
-        model=OcrProject,
-        form_class=OcrProjectForm,
+        model=Project,
+        form_class=ProjectForm,
         page_name="Edit OCR Project",
         success_url="/projects/load/%(id)s/",)
 
 projectdelete = gv.GenericDeleteView.as_view(
-        model=OcrProject,
+        model=Project,
         page_name="Delete OCR Project",
         success_url="/projects/list/",)
 
@@ -127,7 +127,7 @@ def project_query(user, order, **params):
     query = Q()
     for key, val in params.items():
         if key.find("__") == -1 and \
-                not key in OcrProject._meta.get_all_field_names():
+                not key in Project._meta.get_all_field_names():
             continue
         ldata = {key: val}
         query = query & Q(**ldata)
@@ -135,10 +135,10 @@ def project_query(user, order, **params):
     # if there's a tag present search by tagged item
     if tag:
         return TaggedItem.objects.get_by_model(
-            OcrProject.objects.filter(query),
+            Project.objects.filter(query),
             tag).order_by(*order)
     else:
-        return OcrProject.objects.filter(query).order_by(*order)
+        return Project.objects.filter(query).order_by(*order)
 
 
 @login_required
@@ -146,7 +146,7 @@ def load(request, project_pk):
     """
     Open a project (load it in the session).
     """
-    project = get_object_or_404(OcrProject, pk=project_pk)
+    project = get_object_or_404(Project, pk=project_pk)
     request.session["project"] = project
     return HttpResponseRedirect("/projects/show/%s/" % project_pk)
 
@@ -167,7 +167,7 @@ def export(request, project_pk):
     """
     Export a project.
     """
-    project = get_object_or_404(OcrProject, pk=project_pk)
+    project = get_object_or_404(Project, pk=project_pk)
     template = "projects/export.html" if not request.is_ajax() \
             else "projects/includes/export_form.html"
 
@@ -188,7 +188,7 @@ def ingest(request, project_pk):
     Ingest project training data into fedora.
     """
     taskname = "fedora.ingest"
-    project = get_object_or_404(OcrProject, pk=project_pk)
+    project = get_object_or_404(Project, pk=project_pk)
     template = "projects/export.html" if not request.is_ajax() \
             else "projects/includes/export_form.html"
     exportform = ExportForm(request.POST)
@@ -204,7 +204,7 @@ def ingest(request, project_pk):
     dc = dict([(k, str(v)) for k, v in dcform.cleaned_data.iteritems()])
 
     # create a batch db job
-    batch = OcrBatch(
+    batch = Batch(
         user=request.user,
         name="Fedora Ingest: %s" % exportform.cleaned_data.get("namespace"),
         description="",
