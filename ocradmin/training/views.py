@@ -162,6 +162,7 @@ def score_models(request):
     Run a comparison between two sets of OCR parameters.
     """
 
+    taskname = "run.batchitem"
     form = ComparisonForm(request.POST)
     project = request.session["project"]
 
@@ -175,8 +176,17 @@ def score_models(request):
         return render_to_response(template, _get_comparison_context(request),
                 context_instance=RequestContext(request))
 
-    asyncparams = []
     # create a batch db job
+    scripts = []
+    scriptnum = 0
+    while True:
+        data = request.POST.get("script%d" % scriptnum)
+        if data is None:
+            break
+        scripts.append(Preset.objects.get(
+                pk=request.POST.get("script%d" % scriptnum)).data)
+        scriptnum += 1
+    
     batch = OcrBatch(
         user=request.user,
         name="Model Scoring %s" % datetime.now(),
@@ -193,32 +203,27 @@ def score_models(request):
     )
     comparison.save()
 
-    # get parameter sets
-    psetnames = _get_paramset_names(request.POST)
-    configsets = _get_config_list(request.POST)
-    assert(len(psetnames) == len(configsets))
-
-    for gtruth in tsets:
-        path = gtruth.source_image.path
-        for i in range(len(configsets)):
-            config = configsets[i]
-            params = {}
+    ocrtasks = []
+    for script in scripts:
+        for gtruth in tsets:
+            path = gtruth.source_image.path
             tid = OcrTask.get_new_task_id()
-            args = (gtruth.pk, request.output_path.encode(), params, config)
-            kwargs = dict(task_id=tid, loglevel=60, retries=2)
-            task = OcrTask(
+            callback = ComparisonTask.subtask(gtruth.pk)
+            args = (path, script, request.output_path)
+            kwargs = dict(callback=callback, task_id=tid, loglevel=60, retries=2)
+            ocrtask = OcrTask(
                 task_id=tid,
                 user=request.user,
                 batch=batch,
                 project=request.session["project"],
-                page_name="%s" % os.path.basename(os.path.splitext(path)[0]),
+                page_name=os.path.basename(path),
                 task_name=ComparisonTask.name,
                 status="INIT",
                 args=args,
                 kwargs=kwargs,
             )
-            task.save()
-            asyncparams.append((args, kwargs))
+            ocrtask.save()
+            ocrtasks.append(ocrtask)
 
             # create a score record for this task
             score = ParameterScore(
@@ -228,15 +233,13 @@ def score_models(request):
                 ground_truth=gtruth
             )
             score.save()
-    # launch all the tasks (as comparisons, not converts)
-    publisher = ComparisonTask.get_publisher(connect_timeout=5)
     try:
-        for args, kwargs in asyncparams:
-            ComparisonTask.apply_async(
-                    args=args, publisher=publisher, **kwargs)
-    finally:
-        publisher.close()
-        publisher.connection.close()
+        # ignoring the result for now
+        OcrTask.run_celery_task_multiple(taskname, ocrtasks)
+    except StandardError:
+        transaction.rollback()
+        raise
+    transaction.commit()
     return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
 
 
@@ -331,38 +334,6 @@ def comparisons(request):
     return render_to_response(template, context,
             context_instance=RequestContext(request))
 
-
-def _get_config_list(postdict):
-    """
-    Parse sets of distinct params from the POST data.
-    They all have a prefix p0_ .. pN_
-    """
-    configsets = []
-    pinit = 0
-    while True:
-        config = parameters.parse_post_data(
-                postdict, prefix="p%d_options" % pinit)
-        if len(config) == 0:
-            break
-        configsets.append(config)
-        pinit += 1
-    return configsets
-
-
-def _get_paramset_names(postdict):
-    """
-    Extract names for each of the paramsets from the POST data.
-    Again, they have the prefix p0_ .. pN_
-    """
-    paramnames = []
-    pinit = 0
-    while True:
-        name = postdict.get("p%d_paramset_name" % pinit)
-        if not name:
-            break
-        paramnames.append(name)
-        pinit += 1
-    return paramnames
 
 
 def _get_comparison_context(request):
