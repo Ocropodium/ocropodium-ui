@@ -10,15 +10,21 @@ import tagging
 import autoslug
 
 class Preset(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name="presets")
     tags = tagging.fields.TagField()
     name = models.CharField(max_length=100, unique=True)
     slug = autoslug.AutoSlugField(populate_from="name", unique=True)
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(blank=True)
     public = models.BooleanField(default=True)
     created_on = models.DateField(editable=False)
     updated_on = models.DateField(editable=False, null=True, blank=True)
     data = models.TextField()
+
+    def __unicode__(self):
+        """
+        String representation.
+        """
+        return self.name
 
     def save(self):
         if not self.id:
@@ -26,16 +32,6 @@ class Preset(models.Model):
         else:
             self.updated_on = datetime.datetime.now()
         super(Preset, self).save()
-
-    @classmethod
-    def get_list_url(cls):
-        """URL to view the object list"""
-        return "/presets/list/"
-
-    @classmethod
-    def get_create_url(cls):
-        """URL to create a new object"""
-        return "/presets/create/"
 
     def get_absolute_url(self):
         """URL to view an object detail"""
@@ -49,8 +45,14 @@ class Preset(models.Model):
         """url to update an object detail"""
         return "/presets/delete/%s/" % self.slug
 
-    def __unicode__(self):
-        """
-        String representation.
-        """
-        return self.name
+    @classmethod
+    def get_list_url(cls):
+        """URL to view the object list"""
+        return "/presets/list/"
+
+    @classmethod
+    def get_create_url(cls):
+        """URL to create a new object"""
+        return "/presets/create/"
+
+

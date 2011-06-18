@@ -502,7 +502,7 @@ def _new_batch_context(request):
     # many other batches there are in the projects
     project = request.session["project"]
     batchname = "%s - Batch %d" % (project.name,
-            project.batch_set.count() + 1)
+            project.batches.count() + 1)
     form = BatchForm(initial=dict(name=batchname, user=request.user))
     presets = Preset.objects.all().order_by("name")
     return dict(
