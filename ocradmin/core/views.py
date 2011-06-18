@@ -17,7 +17,6 @@ from ocradmin.ocrtasks.models import OcrTask, Transcript
 from ocradmin.presets.models import Preset
 from ocradmin.core.decorators import project_required
 
-from ocradmin.plugins import parameters
 
 class AppException(StandardError):
     """
@@ -110,11 +109,7 @@ def task_config(request, task_pk):
     """
     Get a task config as a set of key/value strings.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    configdict = task.args[3]
-    return HttpResponse(json.dumps(
-            parameters.OcrParameters(configdict).to_post_data()),
-            mimetype="application/json")            
+    raise NotImplementedError
    
 
 @project_required
