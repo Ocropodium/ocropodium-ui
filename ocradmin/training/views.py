@@ -175,17 +175,19 @@ def score_models(request):
         template = "training/compare.html"
         return render_to_response(template, _get_comparison_context(request),
                 context_instance=RequestContext(request))
-
     # create a batch db job
     scripts = []
-    scriptnum = 0
+    scriptnum = 1
     while True:
         data = request.POST.get("script%d" % scriptnum)
         if data is None:
             break
         scripts.append(Preset.objects.get(
-                pk=request.POST.get("script%d" % scriptnum)).data)
+                slug=request.POST.get("script%d" % scriptnum)))
         scriptnum += 1
+    print request.POST
+    print tsets
+    print scripts
     
     batch = OcrBatch(
         user=request.user,
@@ -208,8 +210,8 @@ def score_models(request):
         for gtruth in tsets:
             path = gtruth.source_image.path
             tid = OcrTask.get_new_task_id()
-            callback = ComparisonTask.subtask(gtruth.pk)
-            args = (path, script, request.output_path)
+            callback = ComparisonTask.subtask(args=(gtruth.pk,))
+            args = (path, script.data, request.output_path)
             kwargs = dict(callback=callback, task_id=tid, loglevel=60, retries=2)
             ocrtask = OcrTask(
                 task_id=tid,
@@ -217,7 +219,7 @@ def score_models(request):
                 batch=batch,
                 project=request.session["project"],
                 page_name=os.path.basename(path),
-                task_name=ComparisonTask.name,
+                task_name=taskname,
                 status="INIT",
                 args=args,
                 kwargs=kwargs,
@@ -227,8 +229,8 @@ def score_models(request):
 
             # create a score record for this task
             score = ParameterScore(
-                name=psetnames[i],
-                task=task,
+                name=script.name,
+                task=ocrtask,
                 comparison=comparison,
                 ground_truth=gtruth
             )
