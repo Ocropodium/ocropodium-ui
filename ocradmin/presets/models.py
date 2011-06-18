@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from tagging.fields import TagField
@@ -11,9 +12,16 @@ class Preset(models.Model):
     slug = autoslug.AutoSlugField(populate_from="name", unique=True)
     description = models.TextField(null=True, blank=True)
     public = models.BooleanField(default=True)
-    created_on = models.DateField(auto_now_add=True)
-    updated_on = models.DateField(null=True, blank=True, auto_now=True)
+    created_on = models.DateField(editable=False)
+    updated_on = models.DateField(editable=False, null=True, blank=True)
     data = models.TextField()
+
+    def save(self):
+        if not self.id:
+            self.created_on = datetime.datetime.now()
+        else:
+            self.updated_on = datetime.datetime.now()
+        super(Preset, self).save()
 
     @classmethod
     def get_list_url(cls):

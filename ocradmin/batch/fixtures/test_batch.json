@@ -1,7 +1,7 @@
 [
     {
         "pk": 1, 
-        "model": "batch.ocrbatch", 
+        "model": "batch.batch", 
         "fields": {
             "created_on": "2010-06-22 11:23:36",
             "name": "Test Task", 

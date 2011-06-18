@@ -1,21 +1,30 @@
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from tagging.fields import TagField
 
-from ocradmin.projects.models import OcrProject
+from ocradmin.projects.models import Project
 
 
-class OcrBatch(models.Model):
+class Batch(models.Model):
     """
     OCR Batch object.
     """
     user = models.ForeignKey(User)
     name = models.CharField(max_length=255)
-    project = models.ForeignKey(OcrProject)
+    project = models.ForeignKey(Project)
     task_type = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     tags = TagField()
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    created_on = models.DateTimeField(editable=False)
+    updated_on = models.DateTimeField(blank=True, null=True, editable=False)
+
+    def save(self):
+        if not self.id:
+            self.created_on = datetime.datetime.now()
+        else:
+            self.updated_on = datetime.datetime.now()
+        super(Batch, self).save()
 
     def username(self):
         return self.user.username

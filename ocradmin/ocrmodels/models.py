@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from tagging.fields import TagField
@@ -14,14 +15,21 @@ class OcrModel(models.Model):
     tags = TagField()
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(null=True, blank=True)
-    created_on = models.DateField(auto_now_add=True)
-    updated_on = models.DateField(null=True, blank=True)
+    created_on = models.DateField(editable=False)
+    updated_on = models.DateField(editable=False, null=True, blank=True)
     public = models.BooleanField(default=True)
     file = models.FileField(upload_to="models")
     type = models.CharField(max_length=20,
             choices=[("char", "Character"), ("lang", "Language")])
     app = models.CharField(max_length=20,
             choices=[("ocropus", "Ocropus"), ("tesseract", "Tesseract")])
+
+    def save(self):
+        if not self.id:
+            self.created_on = datetime.datetime.now()
+        else:
+            self.updated_on = datetime.datetime.now()
+        super(OcrModel, self).save()
 
     def __unicode__(self):
         """

@@ -6,14 +6,14 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils import simplejson
 
-from ocradmin.projects.models import OcrProject
+from ocradmin.projects.models import Project
 
 
 AJAX_HEADERS = {
     "HTTP_X_REQUESTED_WITH": "XMLHttpRequest"
 }
 
-class OcrProjectsTest(TestCase):
+class ProjectsTest(TestCase):
     fixtures = ["test_fixtures.json"]
 
     def setUp(self):
@@ -58,10 +58,10 @@ class OcrProjectsTest(TestCase):
         """
         # we shouldn't have any projects in the DB yet.  If
         # successful it'll redirect back to the list.
-        before = OcrProject.objects.count()
+        before = Project.objects.count()
         r = self._create_test_project()
         self.assertEqual(r.status_code, 302)
-        self.assertEqual(before + 1, OcrProject.objects.count())
+        self.assertEqual(before + 1, Project.objects.count())
 
     def test_edit_project_view(self):
         """
@@ -83,7 +83,7 @@ class OcrProjectsTest(TestCase):
         """
         r = self._update_test_project()
         self.assertEqual(r.status_code, 302)
-        project = OcrProject.objects.get(pk=1)
+        project = Project.objects.get(pk=1)
         self.assertEqual(project.description, "")
 
     def test_confirm_delete(self):
@@ -91,7 +91,7 @@ class OcrProjectsTest(TestCase):
         Test checking if the user wants to delete a project.
         """
         r = self._create_test_project()
-        project = OcrProject.objects.get(pk=1)
+        project = Project.objects.get(pk=1)
         r = self.client.get("/projects/delete/1/")
         self.assertEqual(r.status_code, 200)
 
@@ -100,10 +100,10 @@ class OcrProjectsTest(TestCase):
         Test actually deleting a project.
         """
         r = self._create_test_project()
-        before = OcrProject.objects.count()
+        before = Project.objects.count()
         r = self.client.post("/projects/delete/1/")
         self.assertEqual(r.status_code, 302)
-        after = OcrProject.objects.count()
+        after = Project.objects.count()
         self.assertEqual(before, after + 1)
 
     def _create_test_project(self):

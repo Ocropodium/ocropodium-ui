@@ -1,4 +1,5 @@
 import os
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 import tagging
@@ -6,7 +7,7 @@ import autoslug
 from ocradmin.core import utils as ocrutils
 
 
-class OcrProject(models.Model):
+class Project(models.Model):
     """
     OCR Project model.
     """
@@ -15,7 +16,15 @@ class OcrProject(models.Model):
     slug = autoslug.AutoSlugField(populate_from="name", unique=True)
     description = models.TextField(blank=True, null=True)
     tags = tagging.fields.TagField()
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    created_on = models.DateTimeField(editable=False)
+    updated_on = models.DateTimeField(blank=True, null=True, editable=False)
+
+    def save(self):
+        if not self.id:
+            self.created_on = datetime.datetime.now()
+        else:
+            self.updated_on = datetime.datetime.now()
+        super(Project, self).save()
 
     def __unicode__(self):
         """

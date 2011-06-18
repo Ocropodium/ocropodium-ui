@@ -1,5 +1,5 @@
 """
-OcrBatch-related views.
+Batch-related views.
 """
 
 import os
@@ -25,7 +25,7 @@ from django.utils.encoding import smart_str
 from ocradmin.batch import utils as batchutils
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
-from ocradmin.ocrtasks.models import OcrTask, OcrBatch
+from ocradmin.ocrtasks.models import OcrTask, Batch
 from ocradmin.core.views import AppException
 from ocradmin.presets.models import Preset
 
@@ -43,18 +43,18 @@ def batch_query(params):
     query = Q()
     for key, val in params.items():
         if key.find("__") == -1 and \
-                not key in OcrBatch._meta.get_all_field_names():
+                not key in Batch._meta.get_all_field_names():
             continue
         if not val:
             continue
         query = query & Q(**{str(key): str(val)})
-    query = OcrBatch.objects.select_related().filter(query)
+    query = Batch.objects.select_related().filter(query)
     if order and order[0].replace("-", "", 1) == "task_count":
         query = query.annotate(task_count=Count("tasks"))
     return query.order_by(*order)
 
 
-class OcrBatchForm(forms.ModelForm):
+class BatchForm(forms.ModelForm):
     """
         New project form.
     """
@@ -66,7 +66,7 @@ class OcrBatchForm(forms.ModelForm):
         self.fields['description'].widget.attrs["cols"] = 40
 
     class Meta:
-        model = OcrBatch
+        model = Batch
         exclude = ["user", "created_on", "project", "task_type"]
         widgets = dict(
                 user=forms.HiddenInput(),
@@ -155,7 +155,7 @@ def create(request):
             print "PRESET %d not found" % request.POST.get("preset")
             pass
 
-    form = OcrBatchForm(request.POST)
+    form = BatchForm(request.POST)
     if not request.method == "POST" or not form.is_valid() or not paths or not script:
         return render_to_response("batch/new.html",
             _new_batch_context(request),
@@ -164,7 +164,7 @@ def create(request):
     # create a batch db job
     # TODO: catch potential integrity error for a duplicate
     # batch name within the given project
-    batch = OcrBatch(
+    batch = Batch(
         user=request.user,
         name=form.cleaned_data["name"],
         description=form.cleaned_data["description"],
@@ -208,7 +208,7 @@ def results(request, batch_pk):
     """
     Get results for a taskset.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     try:
         start = max(0, int(request.GET.get("start", 0)))
     except ValueError:
@@ -232,10 +232,10 @@ def page_results(request, batch_pk, page_index):
     """
     Get the results for a single page.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     try:
         page = batch.tasks.all().order_by("page_name")[int(page_index)]
-    except OcrBatch.DoesNotExist:
+    except Batch.DoesNotExist:
         raise
 
     pyserializer = serializers.get_serializer("python")()
@@ -257,11 +257,11 @@ def latest(request):
     View the latest batch.
     """
     try:
-        batch = OcrBatch.objects.filter(
+        batch = Batch.objects.filter(
             user=request.user,
             project=request.session["project"]
         ).order_by("-created_on")[0]
-    except (OcrBatch.DoesNotExist, IndexError):
+    except (Batch.DoesNotExist, IndexError):
         batch = None
 
     return _show_batch(request, batch)
@@ -274,7 +274,7 @@ def show(request, batch_pk):
     View a batch.
     """
     batch = get_object_or_404(
-        OcrBatch,
+        Batch,
         pk=batch_pk,
         project=request.session["project"]
     )
@@ -311,7 +311,7 @@ def transcript(request, batch_pk):
     """
     View the transcription of a batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     tid = batch.tasks.all()[0]
     return HttpResponseRedirect("/ocr/transcript/%d/" % tid.pk)
 
@@ -333,7 +333,7 @@ def abort_batch(request, batch_pk):
     """
     Abort an entire batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     for task in batch.tasks.all():
         task.abort()
     transaction.commit()
@@ -350,7 +350,7 @@ def retry(request, batch_pk):
     """
     Retry all tasks in a batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     for task in batch.tasks.all():
         task.retry()
     transaction.commit()
@@ -367,7 +367,7 @@ def retry_errored(request, batch_pk):
     """
     Retry all errored tasks in a batch.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     for task in batch.errored_tasks():
         task.retry()
     transaction.commit()
@@ -391,7 +391,7 @@ def export_options(request, batch_pk):
     """
     Setup export.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     formats = {"text": "Plain Text", "json": "JSON", "hocr": "HOCR HTML"}
     template = "batch/export_options.html" if not request.is_ajax() \
             else "batch/includes/export_form.html"
@@ -408,7 +408,7 @@ def export(request, batch_pk):
     """
     Export a batch as HOCR.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     formats = {"text": "txt", "json": "json", "hocr": "html"}
     reqformats = request.GET.getlist("format")
     if not reqformats:
@@ -455,7 +455,7 @@ def delete(request, batch_pk):
     """
     Delete a batch and all tasks belonging to it.
     """
-    batch = get_object_or_404(OcrBatch, pk=batch_pk)
+    batch = get_object_or_404(Batch, pk=batch_pk)
     if request.user != batch.user:
         messages.warning(request,
                 "Unable to delete batch '%s': Permission denied" % batch.name)
@@ -481,7 +481,7 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):
         extras=("estimate_progress", "is_complete",),
         relations={
             "user": {"fields": ("username")},
-            "ocrcomparison": {"fields": ()},
+            "comparison": {"fields": ()},
         },
     )
     taskssl = pyserializer.serialize(
@@ -502,8 +502,8 @@ def _new_batch_context(request):
     # many other batches there are in the projects
     project = request.session["project"]
     batchname = "%s - Batch %d" % (project.name,
-            project.ocrbatch_set.count() + 1)
-    form = OcrBatchForm(initial=dict(name=batchname, user=request.user))
+            project.batch_set.count() + 1)
+    form = BatchForm(initial=dict(name=batchname, user=request.user))
     presets = Preset.objects.all().order_by("name")
     return dict(
         prefix="",

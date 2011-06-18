@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.utils.encoding import smart_str
 
-from ocradmin.projects.models import OcrProject
+from ocradmin.projects.models import Project
 from ocradmin.reference_pages.models import ReferencePage
 from ocrtasks.models import OcrTask
 from ocrtasks.decorators import register_handlers
