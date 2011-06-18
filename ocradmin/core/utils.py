@@ -32,6 +32,10 @@ class HocrParser(HTMLParser):
                 self.feed(line)
         return self.data                
 
+    def parse(self, string):
+        self.feed(string)
+        return self.data
+
     def handle_starttag(self, tag, attrs):
         if tag == "div" and not self.gotpage:
             for attr in attrs:

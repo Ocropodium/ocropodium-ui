@@ -306,10 +306,12 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     // convert a list of page-coordinate rectangles into
     // a list of seadragon normalized rect objects
     getViewerCoordinateRects: function(bounds, pagerects) {
+        console.log("Bounds", bounds);                                  
         var fw = bounds[2], fh = bounds[3];
         var x, y, w, h, box;
         var outrects = [];
         for (var i in pagerects) {
+            console.log("Box: ", box);
             box = pagerects[i];
             x = box[0]; y = box[1]; w = box[2]; h = box[3];        
             outrects.push(

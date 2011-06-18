@@ -6,6 +6,8 @@ import os
 import json
 from ocradmin import plugins
 from ocradmin.plugins import stages
+from ocradmin.plugins import utils
+from django.utils.safestring import SafeUnicode
 from nodetree import node, writable_node
 import ocrolib
 
@@ -90,7 +92,7 @@ class LineRecognizerNode(node.Node, JSONWriterMixin):
     stage = stages.RECOGNIZE
     arity = 2
     intypes = [ocrolib.numpy.ndarray, dict]
-    outtype = object
+    outtype = SafeUnicode
     passthrough = 1
 
     def init_converter(self):
@@ -110,25 +112,23 @@ class LineRecognizerNode(node.Node, JSONWriterMixin):
         boxes = self.get_input_data(1)
         pageheight, pagewidth = binary.shape
         iulibbin = ocrolib.numpy2narray(binary)
-        out = dict(
-                lines=[],
-                box=[0, 0, pagewidth, pageheight],
-        )
+        out = dict(box=[0, 0, pagewidth, pageheight], lines=[])
         numlines = len(boxes.get("lines", []))
         for i in range(numlines):
             set_progress(self.logger, self.progress_func, i, numlines)
             coords = boxes.get("lines")[i]
             iulibcoords = (
-                coords[0], pageheight - coords[1], coords[0] + coords[2],
-                pageheight - (coords[1] - coords[3]))
+                    coords[0], pageheight - coords[3], coords[2],
+                    pageheight - coords[1])
             lineimage = ocrolib.iulib.bytearray()
             ocrolib.iulib.extract_subimage(lineimage, iulibbin, *iulibcoords)
             out["lines"].append(dict(
-                    box=coords,
+                    index=i+1,
+                    x0=coords[0], y0=coords[1], x1=coords[2], y1=coords[3],
                     text=self.get_transcript(ocrolib.narray2numpy(lineimage)),
             ))
         set_progress(self.logger, self.progress_func, numlines, numlines)
-        return out
+        return utils.hocr_from_data(out)
 
 def set_progress(logger, progress_func, step, end, granularity=5):
     """

@@ -308,7 +308,8 @@ class OcropusSegmentPageBase(OcropusBase, generic_nodes.JSONWriterMixin):
             images
         """
         input = self.get_input_data(0)
-        out = dict(columns=[], lines=[], paragraphs=[])
+        out = dict(x0=0, y0=0, x1=input.shape[1], y1=input.shape[0],
+                columns=[], lines=[], paragraphs=[])
         try:
             page_seg = self._comp.segment(input)
         except (IndexError, TypeError, ValueError), err:
@@ -319,11 +320,8 @@ class OcropusSegmentPageBase(OcropusBase, generic_nodes.JSONWriterMixin):
         for box, func in exfuncs.iteritems():
             func(page_seg)
             for i in range(1, regions.length()):
-                out[box].append([regions.x0(i),
-                    regions.y0(i) + (regions.y1(i) - regions.y0(i)),
-                    regions.x1(i) - regions.x0(i),
-                    regions.y1(i) - regions.y0(i)])
-        out["box"] = [0, 0, input.shape[1], input.shape[0]]        
+                out[box].append((
+                    regions.x0(i), regions.y0(i), regions.x1(i), regions.y1(i)))
         return out
 
 

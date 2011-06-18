@@ -242,6 +242,10 @@ $(function() {
             
             var overlays = {};
             if (data.result.type == "pseg") {
+                console.log("Results:", data.result);
+                // FIXME: hack!  need to change the getViewerCoordinates 
+                var box = [data.result.data.x0, data.result.data.y0,
+                        data.result.data.x1, data.result.data.y1];
                 var overlays = {};
                 $.each(["lines", "paragraphs", "columns"], function(i, class) {
                     if (data.result.data[class]) {

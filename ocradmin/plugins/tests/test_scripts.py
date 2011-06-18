@@ -4,6 +4,7 @@
 import os
 from django.utils import simplejson
 from django.conf import settings
+from django.utils.safestring import SafeUnicode
 
 from nodetree import script, node
 import numpy
@@ -48,7 +49,7 @@ class ScriptsTest(OcrScriptTest):
             # check we get an expected type from evaling the nodes
             for n in terms:
                 out = n.eval()
-                self.assertIn(type(out), (dict, list, numpy.ndarray), 
+                self.assertIn(type(out), (SafeUnicode, dict, list, numpy.ndarray), 
                         msg="Unexpected output type for node %s: %s" % (
                             n.name, type(out)))
 
