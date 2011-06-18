@@ -174,9 +174,6 @@ def create(request):
     )
     batch.save()
 
-    params = {}
-    config = {}
-
     ocrtasks = []
     for path in paths:
         tid = OcrTask.get_new_task_id()
