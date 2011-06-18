@@ -29,7 +29,7 @@ class LineTrainTask(AbortableTask):
     name = "cmodel.training"
     max_retries = None
     
-    def run(self, dataset_ids, cmodel_id, outdir, **kwargs):
+    def run(self, dataset_ids, cmodel_id, outdir):
         """
         Run line train task.
         """
@@ -40,7 +40,7 @@ class LineTrainTask(AbortableTask):
         paramdict = dict(
             cmodel=cmodel.file.path.encode(),
         )
-        logger = self.get_logger(**kwargs)
+        logger = self.get_logger()
         logger.info(paramdict)
 
         # check output dir exists
@@ -79,7 +79,6 @@ class LineTrainTask(AbortableTask):
         return { "new_model_pk": newmodel.pk }
 
 
-@register_handlers
 class ComparisonTask(AbortableTask):
     """
     Run a comparison of a given model on a 
@@ -89,13 +88,13 @@ class ComparisonTask(AbortableTask):
     name = "compare.groundtruth"
     max_retries = None
 
-    def run(self, outdata, gt_id, **kwargs):
+    def run(self, outdata, tid, gtid):
         """
         Runs the model comparison action.
         """
-        groundtruth = ReferencePage.objects.get(pk=gt_id)
-        logger = self.get_logger(**kwargs)
-        task = OcrTask.objects.get(task_id=self.request.id)
+        logger = self.get_logger()
+        groundtruth = ReferencePage.objects.get(pk=gtid)
+        task = OcrTask.objects.get(task_id=tid)
         accuracy, details = utils.isri_accuracy(
                 logger, 
                 ocrutils.output_to_text(groundtruth.data),

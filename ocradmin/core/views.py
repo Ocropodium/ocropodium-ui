@@ -130,7 +130,7 @@ def submit_viewer_binarization(request, task_pk):
     binpath = os.path.join(request.output_path, binname)
     dzipath = ocrutils.get_dzi_path(binpath)
     assert os.path.exists(binpath), "Binary path does not exist: %s" % binpath
-    async = OcrTask.run_celery_task(taskname, (binpath, dzipath), taskkwargs={}, untracked=True,
+    async = OcrTask.run_celery_task(taskname, (binpath, dzipath), untracked=True,
             queue="interactive")
     out = dict(task_id=async.task_id, status=async.status,
         results=async.result)

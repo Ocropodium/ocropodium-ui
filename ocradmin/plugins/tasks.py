@@ -36,7 +36,7 @@ class UnhandledRunScriptTask(AbortableTask):
     name = "_run.script"
     max_retries = None
 
-    def run(self, evalnode, nodelist, writepath, **kwargs):
+    def run(self, evalnode, nodelist, writepath):
         """
         Runs the convert action.
         """

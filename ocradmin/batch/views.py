@@ -175,10 +175,11 @@ def create(request):
     batch.save()
 
     ocrtasks = []
+    options = dict(loglevel=60, retries=2)
     for path in paths:
         tid = OcrTask.get_new_task_id()
         args = (path, script, request.output_path)
-        kwargs = dict(task_id=tid, loglevel=60, retries=2)
+        kwargs = dict()
         ocrtask = OcrTask(
             task_id=tid,
             user=request.user,
@@ -194,7 +195,7 @@ def create(request):
         ocrtasks.append(ocrtask)
     try:
         # ignoring the result for now
-        OcrTask.run_celery_task_multiple(taskname, ocrtasks)
+        OcrTask.run_celery_task_multiple(taskname, ocrtasks, **options)
     except StandardError:
         transaction.rollback()
         raise

@@ -60,8 +60,8 @@ class TrainingTest(TestCase):
         """
         params = {
             "name": "Test comparison",
-            "script1": 1,
-            "script2": 2,
+            "script1": "tesseractbasic",
+            "script2": "ocropusbasic",
             "tset": 1,
         }
         r = self.client.post("/training/score_models", params, follow=True)
@@ -70,7 +70,6 @@ class TrainingTest(TestCase):
 
         # check we can view the comparison results
         r = self.client.get("/training/comparison/1")
-        print r.content
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Aggregate")
 

@@ -185,9 +185,6 @@ def score_models(request):
         scripts.append(Preset.objects.get(
                 slug=request.POST.get("script%d" % scriptnum)))
         scriptnum += 1
-    print request.POST
-    print tsets
-    print scripts
     
     batch = OcrBatch(
         user=request.user,
@@ -197,7 +194,6 @@ def score_models(request):
         project=request.session["project"]
     )
     batch.save()
-
     comparison = OcrComparison(
         name=form.cleaned_data["name"],
         notes=form.cleaned_data["notes"],
@@ -206,13 +202,14 @@ def score_models(request):
     comparison.save()
 
     ocrtasks = []
+    options = dict(retries=2, loglevel=60)
     for script in scripts:
         for gtruth in tsets:
             path = gtruth.source_image.path
             tid = OcrTask.get_new_task_id()
-            callback = ComparisonTask.subtask(args=(gtruth.pk,))
+            callback = ComparisonTask.subtask(args=(tid, gtruth.pk,))
             args = (path, script.data, request.output_path)
-            kwargs = dict(callback=callback, task_id=tid, loglevel=60, retries=2)
+            kwargs = dict(callback=callback)
             ocrtask = OcrTask(
                 task_id=tid,
                 user=request.user,
@@ -237,7 +234,7 @@ def score_models(request):
             score.save()
     try:
         # ignoring the result for now
-        OcrTask.run_celery_task_multiple(taskname, ocrtasks)
+        OcrTask.run_celery_task_multiple(taskname, ocrtasks, **options)
     except StandardError:
         transaction.rollback()
         raise

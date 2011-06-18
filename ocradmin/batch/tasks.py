@@ -28,11 +28,12 @@ manager.register_module("ocradmin.plugins.pil_nodes")
 class BatchScriptTask(AbortableTask):
     name = "run.batchitem"
 
-    def run(self, filepath, scriptjson, writepath, callback=None, **kwargs):
+    def run(self, filepath, scriptjson, writepath, callback=None):
         """
         Runs the convert action.
         """
         logger = self.get_logger()
+        logger.debug("Running Batch with callback: %s", callback)
         progress_handler = get_progress_callback(self.request.id)
         abort_handler = get_abort_callback(self.request.id)
         progress_handler(0)
