@@ -136,7 +136,7 @@ class OcrTask(models.Model):
         task = celery.registry.tasks[taskname]
         func = task.apply_async if kwargs.get("asyncronous", False) \
                 else task.apply
-        return func(args=args, **taskkwargs)
+        return func(args=args, kwargs=taskkwargs, **kwargs)
 
     @classmethod
     def run_celery_task_multiple(cls, taskname, tasks, **kwargs):
@@ -153,8 +153,8 @@ class OcrTask(models.Model):
         results = []
         try:
             for task in tasks:
-                results.append(func(args=task.args,
-                        publisher=publisher, **task.kwargs))
+                results.append(func(args=task.args, kwargs=task.kwargs,
+                        publisher=publisher, task_id=task.task_id, **kwargs))
         finally:
             publisher.close()
             publisher.connection.close()

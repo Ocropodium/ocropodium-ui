@@ -32,12 +32,12 @@ class IngestTask(AbortableTask):
     name = "fedora.ingest"
     max_retries = None
     
-    def run(self, trainingpage_id, options, dublincore, **kwargs):
+    def run(self, trainingpage_id, options, dublincore):
         """
         Ingest an image into fedora.
         """
         logger = self.get_logger()
-        logger.info((trainingpage_id, options, dublincore, kwargs))
+        logger.info((trainingpage_id, options, dublincore))
         task = OcrTask.objects.get(task_id=self.request.id)
         task.progess = 0
         task.save()

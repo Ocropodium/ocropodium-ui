@@ -25,6 +25,6 @@ class MakeThumbnailTask(AbortableTask):
         img.thumbnail(size, Image.ANTIALIAS)
         thumbpath = "%s.thumb.jpg" % base
         img.save(thumbpath, "JPEG")
-        logger.info("Generated thumb: %s" % thumbpath)
+        logger.debug("Generated thumb: %s" % thumbpath)
 
 

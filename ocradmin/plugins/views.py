@@ -58,7 +58,7 @@ def runscript(request):
             )), mimetype="application/json")
         term = terms[0]
     async = OcrTask.run_celery_task("run.script", (evalnode, nodes,
-            request.output_path), taskkwargs={}, untracked=True,
+            request.output_path), untracked=True,
             asyncronous=True, queue="interactive")
     out = dict(
         node=evalnode,
