@@ -189,7 +189,7 @@ class Transcript(models.Model):
     """
     task = models.ForeignKey(OcrTask, related_name="transcripts")
     version = models.IntegerField(default=0, editable=False)
-    data = fields.PickledObjectField()
+    data = models.TextField()
     is_retry = models.BooleanField(default=False, editable=False)
     is_final = models.BooleanField(default=False)
     created_on = models.DateTimeField(editable=False)

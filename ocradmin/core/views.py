@@ -94,11 +94,12 @@ def task_transcript(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     pyserializer = serializers.get_serializer("python")()
     response = HttpResponse(mimetype="application/json")
+    parser = ocrutils.HocrParser() 
     taskssl = pyserializer.serialize(
         [task],
         excludes=("transcripts", "args", "kwargs",),
     )
-    taskssl[0]["fields"]["results"] = task.latest_transcript()
+    taskssl[0]["fields"]["results"] = parser.parse(task.latest_transcript())
     json.dump(taskssl, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response

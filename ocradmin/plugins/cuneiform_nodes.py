@@ -5,6 +5,7 @@ Cuneiform Recogniser
 from nodetree import node, manager
 from ocradmin import plugins
 from ocradmin.plugins import stages, generic_nodes
+from django.utils.safestring import SafeUnicode
 import types
 
 import os
@@ -23,20 +24,27 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     binary = "cuneiform"
     stage = stages.RECOGNIZE
     arity = 1
+    _parameters = [dict(name="single_column", type="bool", value="0")]
 
     def get_command(self, outfile, image):
         """
         Cuneiform command line.  Simplified for now.
         """
-        return [self.binary, "-o", outfile, image] 
+        args = [self.binary, "-o", outfile]
+        try:
+            single = bool(int(self._params.get("single_column", 0)))
+        except TypeError:
+            single = False
+        if single:
+            args.extend(["--singlecolumn"])
+        return args + [image]
 
     def _eval(self):
         """
         Convert a full page.
         """
-        from ocradmin.core.utils import HocrParser
         binary = self.get_input_data(0)
-        json = None
+        hocr = None
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.close()
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as btmp:
@@ -50,11 +58,12 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                     return "!!! %s CONVERSION ERROR %d: %s !!!" % (
                             os.path.basename(self.binary).upper(),
                             proc.returncode, err)
-                json = HocrParser().parsefile(tmp.name)
+                with open(tmp.name, "r") as tread:
+                    hocr = tread.read()
             os.unlink(tmp.name)
             os.unlink(btmp.name)
         plugins.set_progress(self.logger, self.progress_func, 100, 100)
-        return json   
+        return SafeUnicode(hocr)
 
 
 class Manager(manager.StandardManager):
