@@ -52,7 +52,6 @@ class UnhandledRunScriptTask(AbortableTask):
             if term is None:
                 term = tree.get_terminals()[0]
             result = term.eval()
-            print "RESULT: %s" % result
         except ocropus_nodes.OcropusNodeError, err:
             logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.msg)
