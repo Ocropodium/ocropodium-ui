@@ -18,7 +18,11 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
             tearDownGui: [],
         };
         this.registerGuis();
-    },              
+    },
+
+    hasCurrent: function() {
+        return Boolean(this._current);
+    },        
 
     registerGuis: function() {
         var self = this;                      
@@ -36,10 +40,20 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
         });
     },
 
+    refreshGui: function() {
+        if (this._current && this._currentgui)
+            this._currentgui.setup(this._current);
+        else
+            this.tearDownGui();
+    },                    
+
     setupGui: function(node) {
-        this._current = this._types[node.type];
-        if (this._current) {
-            this._current.setup(node);
+        if (this._current && this._current != node)
+            this.tearDownGui();            
+        this._current = node;
+        this._currentgui = this._types[node.type];
+        if (this._currentgui) {
+            this._currentgui.setup(node);
             this.callListeners("setupGui");
         } else {
             console.log("No current node", node.type, this._types);
@@ -47,9 +61,10 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
     },                  
 
     tearDownGui: function() {
-        if (this._current) {
-            this._current.tearDown();
+        if (this._currentgui) {
+            this._currentgui.tearDown();
             this.callListeners("tearDownGui");
+            this._currentgui = null;
             this._current = null;
         }
     },

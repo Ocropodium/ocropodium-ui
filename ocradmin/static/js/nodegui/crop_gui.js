@@ -16,9 +16,19 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             x1: -1,
             y1: -1,
         };
-        this._color = "#FFBBBB";
         this.registerListener("onCanvasChanged");
         this._node = null;
+
+        this._color = "#FFBBBB";
+        this._rect = $("<div></div>")
+                .addClass("nodegui_rect").appendTo("body").css({
+            borderColor: "red",
+            borderWidth: 0,
+            borderStyle: "solid",                    
+            zIndex: 201,
+            backgroundColor: this._color,
+            opacity: 0.3,
+        });
     },
 
     readNodeData: function(node) {
@@ -52,45 +62,25 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
 
     setup: function(node) {
         var self = this;
-
+        console.assert(node, "Attempted GUI setup with null node");
         if (this._node)
             this.tearDown();
 
         this._node = node;
         this.resetSize();        
         this.resetPosition();        
-        this._rect = $("<div></div>")
-                .addClass("nodegui_rect").appendTo("body").css({
-            borderColor: "red",
-            borderWidth: 0,
-            borderStyle: "solid",                    
-            zIndex: 201,
-            backgroundColor: this._color,
-            opacity: 0.3,
-        });
         this._canvas.css({marginTop: 1000}).appendTo(this._viewer.parent);
         this.makeRectTransformable(); 
 
         var coords = this.sanitiseInputCoords(this.readNodeData(node));
-        console.log("Raw coords", coords.x0, coords.y0, coords.x1, coords.y1);
-        var sdrect = this._viewer.sourceRectToSeadragon(this._viewer.activeBuffer(),
-                coords.x0, coords.y0, coords.x1, coords.y1);
-        setTimeout(function() {
-            self._viewer.activeViewer().drawer.addOverlay(self._rect.get(0), sdrect);
-        }, 200);
+        this._viewer.addBufferOverlayElement(this._rect.get(0), 
+                [coords.x0, coords.y0, coords.x1, coords.y1]);
         this.setupEvents();
-    },
-
-    sdRect: function(pixelrect) {
-        var sdx0 = this._viewer.activeViewer().viewport.pointFromPixel(pixelrect.getTopLeft());
-        var sdx1 = this._viewer.activeViewer().viewport.pointFromPixel(pixelrect.getBottomRight());
-        return new Seadragon.Rect(sdx0.x, sdx0.y, 
-                sdx1.x - sdx0.x, sdx1.y - sdx0.y);
     },
 
     tearDown: function() {
         this._viewer.activeViewer().drawer.removeOverlay(this._rect.get(0));                  
-        this._rect.remove();
+        this._rect.detach();
         this._canvas.detach();
         this._node = null;        
     },                  
@@ -158,13 +148,6 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         this._canvas.unbind("mousedown.drawcanvas");
         this._canvas.unbind("mousemove.drawcanvas");        
     },                          
-
-    getFullDocumentRect: function() {
-        var bufelem = this._viewer.activeViewer().elmt;
-        var bufpos = Seadragon.Utils.getElementPosition(bufelem);
-        var bufsize = Seadragon.Utils.getElementSize(bufelem);
-        return new Seadragon.Rect(0, 0, bufsize.x, bufsize.y);
-    },                             
 
     updateNodeParameters: function() {                                     
         var self = this;

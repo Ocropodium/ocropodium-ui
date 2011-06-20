@@ -197,8 +197,12 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
     activeViewer: function() {
         return this._buffers[this._cbuf];
-    },                    
-    
+    },
+
+    addOverlayElement: function(elem, rect, bufnum) {
+
+    },                           
+
     // set overlay elements for a given buffer, or if
     // no nuffer number given, all buffers                     
     setBufferOverlays: function(rects, bufnum) {
@@ -255,6 +259,24 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             });
         } 
     },
+
+    addBufferOverlayElement: function(element, rect) {
+        var fulldoc = this.activeViewer().source.dimensions;
+        var sdrect = new Seadragon.Rect(
+            rect[0] / fulldoc.x,
+            rect[1] / fulldoc.x,
+            (rect[2] - rect[0]) / fulldoc.x,
+            (rect[3] - rect[1]) / fulldoc.x);
+        for (var i in this._buffers) {
+            if (!this._buffers[i].isOpen()) {
+                this._buffers[i].addListener("open", function() {
+                   this._buffers[i].drawer.addOverlay(element, sdrect);         
+                });
+            } else {
+               this._buffers[i].drawer.addOverlay(element, sdrect);         
+            }                
+        }
+    },                          
 
     nextBuffer: function() {
         if (this._cbuf < this.options.numBuffers - 1) {

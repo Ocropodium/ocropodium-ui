@@ -53,7 +53,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                             other.setFocussed(false);
                     });
                     self.buildParams(node);
-                    self.callListeners("nodeViewing", node);        
+                    self.callListeners("nodeFocussed", node);        
                 }
             },
             toggleViewing: function(view) {
@@ -346,6 +346,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             n.setFocussed(false);
         });
         this.clearParams();
+        this.callListeners("nodeFocussed", null);
     },
 
     selectAll: function() {

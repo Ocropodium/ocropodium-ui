@@ -374,6 +374,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 return false;
             }
             self.callListeners("clicked", event);
+            event.stopPropagation();
+            event.preventDefault();
         });
 
         $(this._textlabel).css({cursor: "default"});
