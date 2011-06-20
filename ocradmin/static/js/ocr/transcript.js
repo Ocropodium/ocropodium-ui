@@ -398,6 +398,7 @@ $(function() {
     sdviewer = new OCRJS.ImageViewer($("#viewer").get(0), {
         numBuffers: 1,
         height: 300,
+        dashboard: false,                     
     }); 
     
     updateTask();
