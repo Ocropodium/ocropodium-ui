@@ -21,6 +21,7 @@ MANAGER.register_module("ocradmin.plugins.cuneiform_nodes")
 MANAGER.register_module("ocradmin.plugins.abbyy_nodes")
 MANAGER.register_module("ocradmin.plugins.numpy_nodes")
 MANAGER.register_module("ocradmin.plugins.pil_nodes")
+MANAGER.register_module("ocradmin.plugins.ocrlab_nodes")
 
 def query(request):
     """

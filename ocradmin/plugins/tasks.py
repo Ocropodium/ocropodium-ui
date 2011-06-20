@@ -18,13 +18,14 @@ from django.conf import settings
 from ocradmin.plugins import ocropus_nodes, cache
 
 
-manager = ModuleManager()
-manager.register_module("ocradmin.plugins.ocropus_nodes")
-manager.register_module("ocradmin.plugins.tesseract_nodes")
-manager.register_module("ocradmin.plugins.cuneiform_nodes")
-manager.register_module("ocradmin.plugins.abbyy_nodes")
-manager.register_module("ocradmin.plugins.numpy_nodes")
-manager.register_module("ocradmin.plugins.pil_nodes")
+MANAGER = ModuleManager()
+MANAGER.register_module("ocradmin.plugins.ocropus_nodes")
+MANAGER.register_module("ocradmin.plugins.tesseract_nodes")
+MANAGER.register_module("ocradmin.plugins.cuneiform_nodes")
+MANAGER.register_module("ocradmin.plugins.abbyy_nodes")
+MANAGER.register_module("ocradmin.plugins.numpy_nodes")
+MANAGER.register_module("ocradmin.plugins.pil_nodes")
+MANAGER.register_module("ocradmin.plugins.ocrlab_nodes")
 
 
 
@@ -46,7 +47,7 @@ class UnhandledRunScriptTask(AbortableTask):
                 key="sessionkey", logger=logger)
 
         try:
-            tree = script.Script(nodelist, manager=manager, 
+            tree = script.Script(nodelist, manager=MANAGER, 
                     nodekwargs=dict(logger=logger, cacher=cacher))
             term = tree.get_node(evalnode)
             if term is None:

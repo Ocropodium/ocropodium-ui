@@ -1,17 +1,159 @@
-#!/usr/bin/python
+"""
+Experimental segmentation nodes.
+"""
 
-import os
-import sys
-from optparse import OptionParser
-
-import iulib
-import ocropus
+from nodetree import node, writable_node, manager
+from ocradmin.plugins import stages, generic_nodes
 import ocrolib
+from ocrolib import iulib, numpy
 
-import pylab as P
-import numpy
+NAME = "Ocrlab"
 
-from rect import Rectangle
+class Rectangle(object):
+    """
+    Rectangle class, Iulib-style.
+    """
+    def __init__(self, x0, y0, x1, y1):
+        """
+        Initialise a rectangle.
+        """
+        self.x0 = x0
+        self.y0 = y0
+        self.x1 = x1
+        self.y1 = y1
+
+    def __repr__(self):
+        return "<Rectangle: %d %d %d %d>" % (
+                self.x0,
+                self.y0,
+                self.x1,
+                self.y1
+        )
+
+    def __eq__(self, rect):
+        return self.x0 == rect.x0 and self.y0 == rect.y0 \
+                and self.x1 == rect.x1 and self.y1 == rect.y1
+
+    def __ne__(self, rect):
+        return self.x0 != rect.x0 or self.y0 != rect.y0 \
+                or self.x1 != rect.x1 or self.y1 != rect.y1
+
+    def aspect(self):
+        if self.empty():
+            return 1
+        return float(self.width()) / float(self.height())
+
+    def area(self):
+        if self.empty():
+            return 0
+        return self.width() * self.height()
+
+    def clone(self):
+        return Rectangle(self.x0, self.y0, self.x1, self.y1)
+
+    def empty(self):
+        return self.x0 >= self.x1 and self.y0 >= self.y1
+
+    def pad_by(self, dx, dy):
+        assert(not self.empty())
+        self.x0 -= dx
+        self.y0 -= dy
+        self.x1 += dx
+        self.y0 += dy
+
+    def shift_by(self, dx, dy):
+        assert(not self.empty())
+        self.x0 += dx
+        self.y0 += dy
+        self.x1 += dx
+        self.y0 += dy
+
+    def width(self):
+        return max(0, self.x1 - self.x0)
+
+    def height(self):
+        return max(0, self.y1 - self.y0)
+
+    def include_point(self, x, y):
+        if self.empty():
+            self.x0 = x
+            self.y0 = y
+            self.x1 = x + 1
+            self.y1 = y + 1
+        else:
+            self.x0 = min(x, self.x0)
+            self.y0 = min(y, self.y0)
+            self.x1 = max(x + 1, self.x1)
+            self.y1 = max(y + 1, self.y1)
+
+    def include(self, rect):
+        if self.empty():
+            self.x0 = rect.x0
+            self.y0 = rect.y0
+            self.x1 = rect.x1
+            self.y1 = rect.y1
+        else:
+            self.x0 = min(self.x0, rect.x0)
+            self.y0 = min(self.y0, rect.y0)
+            self.x1 = max(self.x1, rect.x1)
+            self.y1 = max(self.y1, rect.y1)
+
+    def grow(self, dx, dy):
+        return Rectangle(self.x0 - dx, self.y0 - dy, 
+                self.x1 + dx, self.y1 + dy)
+
+    def overlaps(self, rect):
+        return self.x0 <= rect.x1 and self.x1 >= rect.x0 \
+                and self.y0 <= rect.y1 and self.y1 >= rect.y0
+
+    def overlaps_x(self, rect):
+        return self.x0 <= rect.x1 and self.x1 >= rect.x0
+
+    def overlaps_y(self, rect):
+        return self.y0 <= rect.y1 and self.y1 >= rect.y0
+
+    def contains(self, x, y):
+        return x >= self.x0 and x < self.x1 \
+                and y >= self.y0 and y < self.y1
+
+    def points(self):
+        return (self.x0, self.y0, self.x1, self.y1,)
+
+    def intersection(self, rect):
+        if self.empty():
+            return self
+        return Rectangle(
+                max(self.x0, rect.x0),
+                max(self.y0, rect.y0),
+                min(self.x1, rect.x1),
+                min(self.y1, rect.y1)
+        )                
+
+    def inclusion(self, rect):
+        if self.empty():
+            return rect
+        return Rectangle(
+                min(self.x0, rect.x0),
+                min(self.y0, rect.y0),
+                max(self.x1, rect.x1),
+                max(self.y1, rect.y1)
+        ) 
+    
+    def fraction_covered_by(self, rect):
+        isect = self.intersection(rect)
+        if self.area():
+            return isect.area() / float(self.area())
+        else:
+            return -1
+
+    @classmethod
+    def union_of(cls, *args):
+        r = Rectangle(0, 0, 0, 0)
+        for arg in args:
+            r.include(arg)
+        return r            
+
+
 
 
 def r2i(rect):
@@ -223,58 +365,53 @@ def trimmed_mean(numpy_arr, lperc=0, hperc=0):
         
 
 
-def main_class():
-    return SegmentPageByHint
 
-
-
-class SegmentPageByHint(ocropus.ISegmentPage):
+class SegmentPageByHintNode(node.Node, generic_nodes.JSONWriterMixin):
     """
-    Segment with a hint.
+    Segment an image using a hint.
     """
-    def __init__(self):
-        """
-        Initialise a new HintSegmenter
-        """
-        self._params = [
-            ["toplines", "0"],
-            ["columns", "1"],
-        ]
+    name = "Ocrlab::SegmentPageByHint"
+    description = "Segment a page using toplines and column hints"
+    arity = 1
+    stage = stages.PAGE_SEGMENT
+    intypes = [ocrolib.numpy.ndarray]
+    outtype = dict
+    _parameters = [
+        dict(name="toplines", value="0"),
+        dict(name="columns", value="1"),
+    ]
 
-    def name(self):
+    def null_data(self):
         """
-        Short string name.
+        Return an empty list when ignored.
         """
-        return "seghint"
+        return dict(columns=[], lines=[], paragraphs=[])
 
-    def interface(self):
+    def _eval(self):
         """
-        Override interface.
+        Segment a binary image.
+
+        input: a binary image.
+        return: a dictionary of box types:
+            lines
+            paragraphs
+            columns
+            images
         """
-        return "ISegmentPage"
+        input = self.get_input_data(0)
+        self.inarray = ocrolib.numpy2narray(input, type='B')
+        self.init()
 
-    def description(self):
-        """
-        Descriptive string for help etc.
-        """
-        return "Segment Page by Hint."
+        for topline in range(int(self._params.get("toplines", 0))):
+            self.get_header_line()
+        self.columns.append(Rectangle.union_of(*self.textlines))
+        self.find_columns()
+        self.find_lines()
+        return dict(
+                lines=[r.points() for r in self.textlines],
+                columns=[r.points() for r in self.columns]
+        )
 
-    def plength(self):
-        return len(self._params)
-
-    def pset(self, name, value):
-        for i in range(len(self._params)):
-            if self._params[i][0] == name:
-                self._params[i][1] = value
-
-    def pget(self, name):
-        for i in range(len(self._params)):
-            if self._params[i][0] == name:
-                return self._params[i][1]
-
-    def pname(self, idx):
-        return self._params[idx][0]
-                
     def init(self):
         """
         Initialise on receipt of the input.
@@ -316,13 +453,11 @@ class SegmentPageByHint(ocropus.ISegmentPage):
         # remove large or weird boxes from the inverted images
         self.boxes = strip_non_chars(self.inverted, self.boxes, self.avgheight)
 
-
     def get_char_boxes(self, boxes):
         """
         Get character boxes.
         """
         return [b for b in boxes if not not_char(b)] 
-
 
     def get_header_line(self):
         """
@@ -357,25 +492,6 @@ class SegmentPageByHint(ocropus.ISegmentPage):
         # set region of interest to below the top line
         self.topptr = line.y0
 
-
-    def segment(self, page_bin):
-        """
-        Segment an image array.
-        """
-        self.inarray = ocrolib.page2narray(page_bin, type='B')
-        self.init()
-
-        for topline in range(int(self.pget("toplines"))):
-            self.get_header_line()
-        self.columns.append(Rectangle.union_of(*self.textlines))
-        self.find_columns()
-        self.find_lines()
-        page_seg = iulib.intarray()
-        self.encode_lines(page_seg)
-        self.draw_rects(page_seg, self.textlines)
-        return ocrolib.narray2pseg(page_seg)
-
-
     def get_possible_columns(self, projection):
         """
         Extract regions of whiteness.
@@ -396,7 +512,6 @@ class SegmentPageByHint(ocropus.ISegmentPage):
             count += 1
         return regions
 
-
     def filter_columns(self, rects, target):
         """
         Filter a group of regions to match the target
@@ -414,7 +529,6 @@ class SegmentPageByHint(ocropus.ISegmentPage):
                 break
         return best            
 
-
     def find_columns(self):
         """
         Get columns in a section of the image
@@ -425,16 +539,13 @@ class SegmentPageByHint(ocropus.ISegmentPage):
                 self.inverted.dim(0), self.topptr)
         projection = high_pass_median(iulib.numpy(portion).sum(axis=1), 0.20)
         posscols = self.get_possible_columns(projection)
-        bestcols = self.filter_columns(posscols, int(self.pget("columns")))
+        bestcols = self.filter_columns(posscols, int(self._params.get("columns", 1)))
         self.columns.extend(bestcols)
 
     def find_lines(self):
         """
         Get lines in a section of the images.
         """
-        #segout = iulib.intarray()
-        #segout.copy(self.inarray)
-
         for colrect in self.columns:
             newrect = Rectangle(colrect.x0, 0, colrect.x1, self.topptr)
             if newrect.area() < 1:
@@ -448,8 +559,6 @@ class SegmentPageByHint(ocropus.ISegmentPage):
                 if height - self.avgheight < self.avgheight / 2:
                     continue
                 plines.append(Rectangle(colrect.x0, bottom, colrect.x1, top))
-                #self.textlines.extend(plines)
-
 
             cpline = None
             clline = Rectangle(0, 0, 0, 0)
@@ -471,82 +580,134 @@ class SegmentPageByHint(ocropus.ISegmentPage):
                     if char.overlaps(pline):
                         clines[i].include(char)
             self.textlines.extend(clines)
-            
 
 
-    def encode_lines2(self, encoded):
+class SegmentPageManualNode(node.Node, generic_nodes.JSONWriterMixin):
+    """
+    Segment an image using column boxes.
+    """
+    name = "Ocrlab::SegmentPageManual"
+    description = "Segment a page using manual column definitions"
+    arity = 1
+    stage = stages.PAGE_SEGMENT
+    intypes = [ocrolib.numpy.ndarray]
+    outtype = dict
+    _parameters = [
+        dict(name="boxes", value=""),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super(SegmentPageManualNode, self).__init__(*args, **kwargs)
+        self._regions = ocrolib.RegionExtractor()
+        self._segmenter = ocrolib.SegmentPageByRAST1()
+
+    def null_data(self):
         """
-        Encode output file.
+        Return an empty list when ignored.
         """
-        encoded.copy(self.inarray)
-        colcolour = 0x00010000
-        colour = 1
-        #self.textlines.sort(lambda x, y: cmp(x.x0, y.x0))        
+        return dict(columns=[], lines=[], paragraphs=[])
 
-        for rect in self.textlines:
-            for j in range(len(self.columns)):
-                col = self.columns[j]
-                if rect.overlaps(col):
-                    break
-            colcolour = (j + 1) << 16
-            for x in range(rect.x0, rect.x1):
-                for y in range(rect.y0, rect.y1):
-                    if self.inarray.at(x, y) == 0:
-                        encoded.put(x, y, (colour | colcolour))
-            colour += 1
-        return encoded                
-
-
-    def encode_lines(self, encoded):
+    def _eval(self):
         """
-        Encode output.
+        Segment a binary image.
+
+        input: a binary image.
+        return: a dictionary of box types:
+            lines
+            paragraphs
+            columns
+            images
         """
-        colenc = ocropus.ColorEncodeLayout()
-        colenc.inputImage.copy(self.inverted)
-        colenc.textlines.resize(len(self.textlines))
-        for i in range(len(self.textlines)):
-            colenc.textlines.put(i, r2i(self.textlines[i]))
-        colenc.textcolumns.resize(len(self.columns))
-        colenc.paragraphs.resize(len(self.columns))
-        for i in range(len(self.columns)):
-            colenc.textcolumns.put(i, r2i(self.columns[i]))
-            colenc.paragraphs.put(i, r2i(self.columns[i]))
-        colenc.encode()
-        encoded.copy(colenc.outputImage)
-        return encoded
+        page_bin = self.get_input_data(0)
+        coords = self.get_coords();
+        if len(coords) == 0:
+            coords.append(Rectangle(0, 0, 
+                page_bin.shape[1] - 1, page_bin.shape[0] - 1))
+        height = page_bin.shape[1]
+        boxes = {}
+        for rect in coords:
+            points = rect.points()
+            col = ocrolib.iulib.bytearray()
+            ocrolib.iulib.extract_subimage(col, ocrolib.numpy2narray(page_bin), *points)
+            pout = self.segment_portion(col, height, points[0], points[1])
+            for key, rects in pout.iteritems():
+                if boxes.get(key) is not None:
+                    boxes.get(key).extend([r.points() for r in rects])
+                else:
+                    boxes[key] = [r.points() for r in rects]
+        return boxes
 
-
-    def draw_rects(self, image, rects):
+    def segment_portion(self, portion, height, dx, dy):
         """
-        Highlight the end results.
+        Segment a single-column chunk.
         """
-        for rect in rects:
-            self.draw_rect(image, rect)
+        page_seg = self._segmenter.segment(ocrolib.narray2numpy(portion))
+        return self.extract_boxes(self._regions, page_seg, height, dx, dy)
+
+    def get_coords(self):
+        """
+        Return a list of rects from the coords string.
+        """
+        strlist = self._params.get("boxes", "")
+        if strlist is None:
+            return []
+        rstr = strlist.split("~")
+        rects = []
+        for r in rstr:
+            points = r.split(",")
+            if len(points) != 4:
+                continue
+            try:
+                ints = [int(i) for i in points]
+                rects.append(Rectangle(*ints))
+            except ValueError:
+                continue
+        return rects            
+
+    @classmethod
+    def extract_boxes(cls, regions, page_seg, height, dx, dy):
+        """
+        Extract line/paragraph geoocrolib.metry info.
+        """
+        #out = dict(columns=[], lines=[], paragraphs=[])
+        out = dict(lines=[], paragraphs=[])
+        exfuncs = dict(lines=regions.setPageLines,
+                paragraphs=regions.setPageParagraphs,
+                columns=regions.setPageColumns)
+        #page_seg = numpy.flipud(page_seg)
+        for box, func in exfuncs.iteritems():
+            func(page_seg)
+            for i in range(1, regions.length()):
+                out[box].append(Rectangle(regions.x0(i) + dx,
+                    (regions.y0(i)) + dy, regions.x1(i) + dx,
+                    (regions.y1(i)) + dy))
+        return out
 
 
-    def draw_rect(self, image, rect, colour=0x00FF4444):
-        try:
-            for i in range(rect.x0, rect.x1):
-                image.put(i, rect.y0, colour)
-                image.put(i, rect.y1, colour)
-            for i in range(rect.y0, rect.y1):
-                image.put(rect.x0, i, colour)
-                image.put(rect.x1, i, colour)
-        except IndexError:
-            pass
 
+class Manager(manager.StandardManager):
+    """
+    Handle Ocrlab nodes.
+    """
+    @classmethod
+    def get_node(self, name, **kwargs):
+        if name.find("::") != -1:
+            name = name.split("::")[-1]
+        if name == "SegmentPageByHint":
+            return SegmentPageByHintNode(**kwargs)
+        elif name == "SegmentPageManual":
+            return SegmentPageManualNode(**kwargs)
 
+    @classmethod
+    def get_nodes(cls, *oftypes):
+        return super(Manager, cls).get_nodes(
+                *oftypes, globals=globals())
 
 
 if __name__ == "__main__":
-    inf, outf = sys.argv[1:]
-    inarray = iulib.bytearray()
-    iulib.read_image_binary(inarray, inf)
+    for n in Manager.get_nodes():
+        print n
 
-    outarray = iulib.intarray()
-    hs = SegmentPageByHint()
-    hs.pset("toplines", 1)
-    hs.pset("columns", 2)
-    tmp2 = hs.segment(ocrolib.narray2numpy(inarray))
-    ocrolib.write_page_segmentation(outf, tmp2, white=0)
+
+
 
