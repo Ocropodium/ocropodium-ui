@@ -294,7 +294,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 x + strokewidth,
                 y + strokewidth,
                 buttonwidth, this.height - (2*strokewidth), 1, 1, {
-            fill: "transparent",
+            fill: "none",
             stroke: "transparent",
             strokeWidth: 0,
         });
@@ -304,7 +304,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 x + this.width - (buttonwidth + strokewidth),
                 y + strokewidth,
                 buttonwidth, this.height - (2*strokewidth), 1, 1, {
-            fill: "transparent",
+            fill: "none",
             stroke: "transparent",
             strokeWidth: 0,            
         });         
@@ -444,12 +444,12 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
     },                          
 
     _toggleIgnored: function(bool) {
-        var gradient = bool ? "url(#IgnoreGradient)" : "transparent";
+        var gradient = bool ? "url(#IgnoreGradient)" : "none";
         this.svg.change(this._ignorebutton, {fill: gradient});        
     },
 
     _toggleViewing: function(bool) {
-        var gradient = bool ? "url(#ViewingGradient)" : "transparent";
+        var gradient = bool ? "url(#ViewingGradient)" : "none";
         this.svg.change(this._viewbutton, {fill: gradient});        
     },
 
