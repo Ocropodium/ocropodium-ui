@@ -448,9 +448,7 @@ class Manager(manager.StandardManager):
         Get a datastructure contraining all Ocropus components
         (possibly of a given type) and their default parameters.
         """
-        out = cls._get_native_components(oftypes, withnames, exclude=exclude)
-        out.extend(cls._get_python_components(oftypes, withnames, exclude=exclude))
-        return out
+        return cls._get_native_components(oftypes, withnames, exclude=exclude)
     
     
     @classmethod
@@ -561,40 +559,4 @@ class Manager(manager.StandardManager):
                 continue
             out.append(comp)
         return out
-
-    @classmethod
-    def _get_python_components(cls, oftypes=None, withnames=None, exclude=None):
-        """
-        Get native python components.
-        """
-        out = []
-        directory = os.path.join(os.path.dirname(__file__), "tools/components")
-        for fname in os.listdir(directory):
-            if not fname.endswith(".py"):
-                continue
-            if not directory in sys.path:
-                sys.path.insert(0, directory)
-            modname = fname.replace(".py", "", 1)
-            pmod = __import__("%s" % modname, fromlist=["main_class"])
-            if not hasattr(pmod, "main_class"):
-                continue
-            ctype = pmod.main_class()
-            ckind = ctype.__base__.__name__
-            # note: the loading function in ocropy/components.py expects
-            # python components to have a module-qualified name, i.e:
-            # mymodule.MyComponent.
-            cname = ctype.__name__
-            if oftypes and not \
-                    ckind.lower() in [c.lower() for c in oftypes]:
-                continue
-            if withnames and not \
-                    cname.lower() in [n.lower() for n in withnames]:
-                continue
-            if exclude and cname.lower() in [n.lower() for n in exclude]:
-                continue
-            out.append(ctype())
-        return out
-
-
-
 
