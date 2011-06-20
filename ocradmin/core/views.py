@@ -12,6 +12,7 @@ from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson as json
 from ocradmin.core import utils as ocrutils
+from ocradmin.plugins import utils as pluginutils
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask, Transcript
 from ocradmin.presets.models import Preset
@@ -79,7 +80,10 @@ def save_transcript(request, task_pk):
     if not jsondata:
         return HttpResponseServerError("No data passed to 'save' function.")
     data = json.loads(jsondata)
-    result = Transcript(data=data, task=task)
+    # FIXME: This method of saving the data could potentially throw away
+    # metadata from the OCR source.  Ultimately we need to merge it
+    # into the old HOCR document, rather than creating a new one
+    result = Transcript(data=pluginutils.hocr_from_data(data), task=task)
     result.save()
 
     return HttpResponse(json.dumps({"ok": True}),
@@ -94,11 +98,15 @@ def task_transcript(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     pyserializer = serializers.get_serializer("python")()
     response = HttpResponse(mimetype="application/json")
+    parser = ocrutils.HocrParser() 
     taskssl = pyserializer.serialize(
         [task],
         excludes=("transcripts", "args", "kwargs",),
     )
-    taskssl[0]["fields"]["results"] = task.latest_transcript()
+    print "HOCR OUT:", task.latest_transcript()
+    out = parser.parse(task.latest_transcript())
+    print "TRANSCRIPT OUT", out
+    taskssl[0]["fields"]["results"] = out
     json.dump(taskssl, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response

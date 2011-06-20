@@ -238,15 +238,16 @@ $(function() {
             sdviewer.setBufferPath(active^1, data.result.dzi);
             setTimeout(function() {
                 sdviewer.setActiveBuffer(active^1);
+                guimanager.refreshGui();
             }, 200);
             
             var overlays = {};
             if (data.result.type == "pseg") {
+                console.log("Result:", data.result);
                 var overlays = {};
                 $.each(["lines", "paragraphs", "columns"], function(i, class) {
-                    if (data.result.data[class]) {
-                        overlays[class] = sdviewer.getViewerCoordinateRects(
-                            data.result.data.box, data.result.data[class]);
+                    if (data.result[class]) {
+                        overlays[class] = data.result[class];
                     }
                 });
             }
@@ -300,11 +301,14 @@ $(function() {
             nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
         });
     });
-    nodetree.addListener("nodeViewing", function(node) {
+    nodetree.addListener("nodeFocussed", function(node) {
         if (!node)
             guimanager.tearDownGui();
-        else
-            guimanager.setupGui(node);
+        else {
+            console.log("Setting GUI for", node.name);
+            if (sdviewer.isReady())
+                guimanager.setupGui(node);
+        }
     });
 
     reshandler.addListener("resultPending", function() {

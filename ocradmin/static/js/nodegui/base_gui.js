@@ -59,6 +59,45 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
 
     },
 
+    getExpandedRect: function() {
+        /*
+         * FIXME: I'm sure there's a much, much simpler way of doing this!
+         *
+         */
+        var vp = this._viewer.activeViewer().viewport;
+        var zoom = vp.getZoom();
+        var centre = vp.getCenter();
+        var srcdims = this._viewer.activeViewer().source.dimensions;
+        var vpelement = $(this._viewer.activeViewer().drawer.elmt);
+        var factor = vpelement.width() / srcdims.x;
+        var midvp = new Seadragon.Rect(
+                (vpelement.width() / 2) + vpelement.offset().left,
+                (vpelement.height() / 2) + vpelement.offset().top);
+        var fullsize = srcdims.times(zoom * factor);
+        return new Seadragon.Rect(
+            midvp.x - (fullsize.x * centre.x),
+            midvp.y - (fullsize.y * (centre.y * (srcdims.x / srcdims.y))),
+            fullsize.x,
+            fullsize.y        
+        );
+    },                         
+
+    getSourceRect: function(x0, y0, x1, y1) {
+        // get coords from the screen and translate 
+        // them to the source image                       
+        var fsrect = this.getExpandedRect();
+        var zoom  = this._viewer.activeViewer().viewport.getZoom();
+        var srcdims = this._viewer.activeViewer().source.dimensions;
+        var vpelement = $(this._viewer.activeViewer().drawer.elmt);
+        var factor = vpelement.width() / srcdims.x;
+        return {
+            x0: (x0 - fsrect.x) / (zoom * factor),
+            y0: (y0 - fsrect.y)  / (zoom * factor),
+            x1: (x1 - fsrect.x)  / (zoom * factor),
+            y1: (y1 - fsrect.y)  / (zoom * factor)
+        }; 
+    },
+
     normalisedRect: function(x0, y0, x1, y1) {
         var sdx0 = this._viewer.activeViewer().viewport.pointFromPixel(
             new Seadragon.Point(x0 < x1 ? x0 : x1, y0 < y1 ? y0 : y1));

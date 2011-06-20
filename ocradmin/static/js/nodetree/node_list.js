@@ -14,6 +14,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
             scriptLoaded: [],
             scriptCleared: [],
             nodeViewing: [],
+            nodeFocussed: [],
         };
         this._nodelisttmpl = $.template($("#nodeListTmpl"));
         this._nodetreetmpl = $.template($("#nodeTreeTmpl"));
@@ -183,7 +184,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                         other.setFocussed(false);
                 });
                 self.buildParams(node);
-                self.callListeners("nodeViewing", node);        
+                self.callListeners("nodeFocussed", node);        
             },
             toggleViewing: function(view) {
                 $.each(self._usednames, function(name, other) {
@@ -271,6 +272,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         $("input, select", $("#parameters")).unbind(".paramval");
         $("#parameters").data("node", null);
         $("#parameters").html("<h1>No Node Selected</h1>");
+        this.callListeners("nodeFocussed", null);
     },                     
 
     queryNodeTypes: function() {

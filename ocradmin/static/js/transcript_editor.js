@@ -301,15 +301,15 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
     setPageLines: function(data) {
         var self = this;
         this._pagediv.children().remove();
-        this._pagediv.data("bbox", data.fields.results.box);
+        this._pagediv.data("bbox", data.fields.results.bbox);
         console.log(data);
         $.each(data.fields.results.lines, function(linenum, line) {
             var type = line.type ? line.type : "span";
             var lspan = $("<" + type + "></" + type + ">")
-                .attr("id", "line_" + linenum)
+                .attr("id", "line_" + line.index)
                 .addClass("ocr_line")
-                .data("bbox", line.box)
-                .data("num", linenum)
+                .data("bbox", line.bbox)
+                .data("index", line.index)
                 .text(line.text);
             self._pagediv.append(lspan);
         });
@@ -326,8 +326,8 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._pagediv.find(".ocr_line").each(function(i, elem) {
             var line = {
                 text: $(elem).text(),
-                line: $(elem).data("num"),
-                box:  $(elem).data("bbox"),
+                index: $(elem).data("index"),
+                bbox:  $(elem).data("bbox"),
             };
             if (elem.tagName != "SPAN")
                 line["type"] = elem.tagName.toLowerCase();

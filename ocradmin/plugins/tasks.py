@@ -65,14 +65,16 @@ class UnhandledRunScriptTask(AbortableTask):
                 path=utils.media_path_to_url(os.path.join(path, filename)),
                 dzi=utils.media_path_to_url(os.path.join(path, dzi))
             )
-        elif isinstance(result, dict) and result.get("columns") is not None:
+        elif isinstance(result, dict):
             path = cacher.get_path(term._inputs[0].first_active())
             filename = term._inputs[0].first_active().get_file_name()
             dzi = "%s.dzi" % os.path.splitext(filename)[0]
             dzipath=utils.media_path_to_url(os.path.join(path, dzi))
-            return dict(type="pseg", data=result, dzi=dzipath)
+            result.update(type="pseg", dzi=dzipath)
+            return result
         else:
-            return dict(type="text", data=result)
+            parser = utils.HocrParser()
+            return dict(type="text", data=parser.parse(result))
 
 
 @register_handlers

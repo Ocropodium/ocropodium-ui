@@ -298,15 +298,11 @@ $(function() {
 
     var positionViewer = function(position) {
         // ensure the given line is centred in the viewport
-        var bounds = transcript.taskData().fields.results.box;
-        var fw = bounds[2], fh = bounds[3];
-        var x = position[0], y = position[1], w = position[2], h = position[3];        
-        var rect = new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw);
         sdviewer.setBufferOverlays({
-            "current": [rect],
+            "current": [position],
         });
         if ($("#link_viewers").prop("checked")) {
-            sdviewer.fitBounds(rect, true); 
+            sdviewer.fitBounds(position, true); 
         }
     }
 
