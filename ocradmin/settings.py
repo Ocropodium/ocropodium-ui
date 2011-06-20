@@ -6,9 +6,6 @@ import sys
 import socket
 import subprocess as sp
 
-# import django-compress settings so they don't clutter up this file
-from compress import *
-
 # Ensure celery/lazy loading Django models play nice 
 import djcelery
 djcelery.setup_loader()
@@ -174,6 +171,7 @@ ROOT_URLCONF = 'ocradmin.urls'
 
 # Static root media/css/etc
 STATIC_ROOT = "%s/static" % SITE_ROOT
+STATIC_URL = "/static/"
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -210,7 +208,7 @@ SERIALIZATION_MODULES = {
 }
 
 COMPRESS_ROOT = STATIC_ROOT
-COMPRESS_URL = "/static/"
+COMPRESS_URL = STATIC_URL
 COMPRESS_AUTO = True
 # total hack around csstidy not working with CSS3 gradients, but us
 # still wanting to use file concatenation
