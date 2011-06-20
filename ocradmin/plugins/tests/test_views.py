@@ -54,7 +54,7 @@ class ViewsTest(OcrScriptTest):
         """
         Test a script that should return line image geometry.
         """
-        self._run_script("segment.json", "SUCCESS", "pseg", ["dzi", "data"])
+        self._run_script("segment.json", "SUCCESS", "pseg", ["dzi", "lines"])
 
     def test_ocropus_script(self):
         """
