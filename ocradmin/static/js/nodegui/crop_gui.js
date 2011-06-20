@@ -29,6 +29,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             backgroundColor: this._color,
             opacity: 0.3,
         });
+        this.makeRectTransformable(); 
     },
 
     readNodeData: function(node) {
@@ -70,8 +71,6 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         this.resetSize();        
         this.resetPosition();        
         this._canvas.css({marginTop: 1000}).appendTo(this._viewer.parent);
-        this.makeRectTransformable(); 
-
         var coords = this.sanitiseInputCoords(this.readNodeData(node));
         this._viewer.addBufferOverlayElement(this._rect.get(0), 
                 [coords.x0, coords.y0, coords.x1, coords.y1]);
