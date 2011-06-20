@@ -195,10 +195,12 @@ class OcropusCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
             y1 = int(self._params.get("y1", -1))
             if y1 < 0: y1 = input.shape[0]
         except TypeError: pass
-
+        # flip the coord system from HOCR to internal
+        iy0 = input.shape[1] - y1
+        iy1 = input.shape[1] - y0i
         iulibbin = ocrolib.numpy2narray(input)
         out = ocrolib.iulib.bytearray()
-        ocrolib.iulib.extract_subimage(out, iulibbin, x0, y0, x1, y1)
+        ocrolib.iulib.extract_subimage(out, iulibbin, x0, iy0, x1, iy1)
         return ocrolib.narray2numpy(out)            
 
 
@@ -308,7 +310,8 @@ class OcropusSegmentPageBase(OcropusBase, generic_nodes.JSONWriterMixin):
             images
         """
         input = self.get_input_data(0)
-        out = dict(columns=[], lines=[], paragraphs=[])
+        out = dict(bbox=[0, 0, input.shape[1], input.shape[0]],
+                columns=[], lines=[], paragraphs=[])
         try:
             page_seg = self._comp.segment(input)
         except (IndexError, TypeError, ValueError), err:
@@ -316,14 +319,13 @@ class OcropusSegmentPageBase(OcropusBase, generic_nodes.JSONWriterMixin):
         regions = ocrolib.RegionExtractor()
         exfuncs = dict(lines=regions.setPageLines,
                 paragraphs=regions.setPageParagraphs)
+        # NB: These coordinates are relative to the TOP of the page
+        # for some reason
         for box, func in exfuncs.iteritems():
             func(page_seg)
             for i in range(1, regions.length()):
-                out[box].append([regions.x0(i),
-                    regions.y0(i) + (regions.y1(i) - regions.y0(i)),
-                    regions.x1(i) - regions.x0(i),
-                    regions.y1(i) - regions.y0(i)])
-        out["box"] = [0, 0, input.shape[1], input.shape[0]]        
+                out[box].append((
+                    regions.x0(i), regions.y0(i), regions.x1(i), regions.y1(i)))
         return out
 
 

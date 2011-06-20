@@ -197,8 +197,12 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
     activeViewer: function() {
         return this._buffers[this._cbuf];
-    },                    
-    
+    },
+
+    addOverlayElement: function(elem, rect, bufnum) {
+
+    },                           
+
     // set overlay elements for a given buffer, or if
     // no nuffer number given, all buffers                     
     setBufferOverlays: function(rects, bufnum) {
@@ -239,15 +243,40 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
                 viewer.drawer.removeOverlay(elem);
             });
             var overlaydiv;
+            var fulldoc = viewer.source.dimensions;
+
             $.each(overlays, function(class, rects) {
                 for (var r in rects) {
                     overlaydiv = document.createElement("div");
                     $(overlaydiv).addClass("viewer_highlight " + class);
-                    viewer.drawer.addOverlay(overlaydiv, rects[r]);         
+                    var sdrect = new Seadragon.Rect(
+                        rects[r][0] / fulldoc.x,
+                        rects[r][1] / fulldoc.x,
+                        (rects[r][2] - rects[r][0]) / fulldoc.x,
+                        (rects[r][3] - rects[r][1]) / fulldoc.x);
+                    viewer.drawer.addOverlay(overlaydiv, sdrect);         
                 }            
             });
         } 
     },
+
+    addBufferOverlayElement: function(element, rect) {
+        var fulldoc = this.activeViewer().source.dimensions;
+        var sdrect = new Seadragon.Rect(
+            rect[0] / fulldoc.x,
+            rect[1] / fulldoc.x,
+            (rect[2] - rect[0]) / fulldoc.x,
+            (rect[3] - rect[1]) / fulldoc.x);
+        for (var i in this._buffers) {
+            if (!this._buffers[i].isOpen()) {
+                this._buffers[i].addListener("open", function() {
+                   this._buffers[i].drawer.addOverlay(element, sdrect);         
+                });
+            } else {
+               this._buffers[i].drawer.addOverlay(element, sdrect);         
+            }                
+        }
+    },                          
 
     nextBuffer: function() {
         if (this._cbuf < this.options.numBuffers - 1) {
@@ -300,23 +329,19 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     },
 
     fitBounds: function(rect, immediately) {
-        this._buffers[this._cbuf].viewport.fitBounds(rect, immediately);        
+        var sd = this.sourceRectToSeadragon(
+                this._cbuf, rect[0], rect[1], rect[2], rect[3]);
+        this._buffers[this._cbuf].viewport.fitBounds(sd, immediately);        
     },
 
-    // convert a list of page-coordinate rectangles into
-    // a list of seadragon normalized rect objects
-    getViewerCoordinateRects: function(bounds, pagerects) {
-        var fw = bounds[2], fh = bounds[3];
-        var x, y, w, h, box;
-        var outrects = [];
-        for (var i in pagerects) {
-            box = pagerects[i];
-            x = box[0]; y = box[1]; w = box[2]; h = box[3];        
-            outrects.push(
-                new Seadragon.Rect(x / fw, (y - h) / fw, w / fw, h / fw));
-        }
-        return outrects;
-    },
+    sourceRectToSeadragon: function(bufnum, x0, y0, x1, y1) {
+        if (!this._buffers[bufnum])
+            throw "Buffer out of range: " + bufnum;
+        if (!this._buffers[bufnum].source)
+            throw "Buffer " + bufnum + " has no source loaded";        
+        var src = this._buffers[bufnum].source.dimensions;
+        return new Seadragon.Rect(x0 / src.x, y0 / src.x, (x1 - x0) / src.x, (y1 - y0) / src.x);
+    },                         
 });
 
 
