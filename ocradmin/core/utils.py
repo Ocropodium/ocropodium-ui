@@ -24,6 +24,7 @@ class HocrParser(HTMLParser):
         self.linecnt = 0
         self.currline = None
         self.boxre = re.compile(".*?bbox (\d+) (\d+) (\d+) (\d+)")
+        self.idre = re.compile("line_(\d+)")
         self.gotpage = False
 
     def parsefile(self, filename):
@@ -39,7 +40,7 @@ class HocrParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == "div" and not self.gotpage:
             for attr in attrs:
-                if attr[0] == "class" and attr[1] == "ocr_page":
+                if attr[0] == "class" and attr[1].find("ocr_page") != -1:
                     self.gotpage = True
                     self.data["lines"] = []
                     break
@@ -49,20 +50,27 @@ class HocrParser(HTMLParser):
                         boxmatch = self.boxre.match(attr[1])
                         if boxmatch:
                             dims = [int(i) for i in boxmatch.groups()]
-                            self.data["box"] = [
-                                dims[0], dims[3],
-                                dims[2] - dims[0], dims[3] - dims[1]]
+                            self.data.update(bbox=[dims[0], dims[1],                           
+                                    dims[2], dims[3]])
                         namematch = re.match("image \"([^\"]+)", attr[1])
                         if namematch:
                             self.data["page"] = namematch.groups()[0]
         elif tag == "span":
             for attr in attrs:
-                boxmatch = self.boxre.match(attr[1])
-                if boxmatch:
-                    dims = [int(i) for i in boxmatch.groups()]
-                    box = [
-                        dims[0], dims[3], dims[2] - dims[0], dims[3] - dims[1]]
-                    self.currline = dict(line=self.linecnt, box=box)
+                if attr[0] == "class" and attr[1].find("ocr_line") != -1:
+                    self.currline = {}
+            if self.currline is not None:
+                for attr in attrs:
+                    if attr[0] == "title":
+                        boxmatch = self.boxre.match(attr[1])
+                        if boxmatch:
+                            dims = [int(i) for i in boxmatch.groups()]
+                            self.currline.update(bbox=[dims[0], dims[1], dims[2], dims[3]])
+                    if attr[0] == "id":
+                        idmatch = self.idre.match(attr[1])
+                        if idmatch:
+                            self.currline.update(index=int(idmatch.groups()[0]))
+
     def handle_data(self, data):
         if self.currline is not None:
             self.currline["text"] = data
@@ -70,6 +78,8 @@ class HocrParser(HTMLParser):
     def handle_endtag(self, tag):
         if tag == "span" and self.currline is not None \
                 and self.currline.get("text"):
+            if not self.currline.get("index"):
+                self.currline["index"] = self.linecnt
             self.linecnt += 1
             self.data["lines"].append(self.currline.copy())
             self.currline = None

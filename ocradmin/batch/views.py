@@ -439,11 +439,12 @@ def spellcheck(request):
     """
     Spellcheck some POST data.
     """
-    json = request.POST.get("data")
-    if not json:
+    jsondata = request.POST.get("data")
+    print "Spellcheck data: %s" % jsondata
+    if not jsondata:
         return HttpResponseServerError(
                 "No data passed to 'spellcheck' function.")
-    data = simplejson.loads(json)
+    data = simplejson.loads(jsondata)
     aspell = batchutils.Aspell()
     response = HttpResponse(mimetype="application/json")
     simplejson.dump(aspell.spellcheck(data), response, ensure_ascii=False)

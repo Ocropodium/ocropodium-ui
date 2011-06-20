@@ -41,6 +41,8 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
         if (this._current) {
             this._current.setup(node);
             this.callListeners("setupGui");
+        } else {
+            console.log("No current node", node.type, this._types);
         }        
     },                  
 

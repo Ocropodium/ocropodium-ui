@@ -112,7 +112,7 @@ class LineRecognizerNode(node.Node, JSONWriterMixin):
         boxes = self.get_input_data(1)
         pageheight, pagewidth = binary.shape
         iulibbin = ocrolib.numpy2narray(binary)
-        out = dict(box=[0, 0, pagewidth, pageheight], lines=[])
+        out = dict(bbox=[0, 0, pagewidth, pageheight], lines=[])
         numlines = len(boxes.get("lines", []))
         for i in range(numlines):
             set_progress(self.logger, self.progress_func, i, numlines)
@@ -124,7 +124,7 @@ class LineRecognizerNode(node.Node, JSONWriterMixin):
             ocrolib.iulib.extract_subimage(lineimage, iulibbin, *iulibcoords)
             out["lines"].append(dict(
                     index=i+1,
-                    x0=coords[0], y0=coords[1], x1=coords[2], y1=coords[3],
+                    bbox=[coords[0], coords[1], coords[2], coords[3]],
                     text=self.get_transcript(ocrolib.narray2numpy(lineimage)),
             ))
         set_progress(self.logger, self.progress_func, numlines, numlines)

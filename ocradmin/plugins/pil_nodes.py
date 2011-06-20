@@ -104,7 +104,7 @@ class PilCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
             if y1 < 0: y1 = input.shape[0]
         except TypeError: pass
         pil = Image.fromarray(input)
-        p2 = pil.crop((x0, input.shape[0] - y1, x1, input.shape[0] - y0))
+        p2 = pil.crop((x0, y0, x1, y1))
         self.logger.debug("Pil crop: %s", p2)
         n = numpy.asarray(p2.convert("L"))
         self.logger.debug("Numpy: %s", n)

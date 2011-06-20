@@ -72,9 +72,9 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         this.makeRectTransformable(); 
 
         var coords = this.sanitiseInputCoords(this.readNodeData(node));
-        var screen = this.getScreenRect(coords.x0, coords.y0, coords.x1, coords.y1);
-        var vp = this.getViewportFromScreen(screen);
-        var sdrect = this.sdRect(vp);
+        console.log("Raw coords", coords.x0, coords.y0, coords.x1, coords.y1);
+        var sdrect = this._viewer.sourceRectToSeadragon(this._viewer.activeBuffer(),
+                coords.x0, coords.y0, coords.x1, coords.y1);
         setTimeout(function() {
             self._viewer.activeViewer().drawer.addOverlay(self._rect.get(0), sdrect);
         }, 200);
@@ -166,91 +166,11 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         return new Seadragon.Rect(0, 0, bufsize.x, bufsize.y);
     },                             
 
-    getExpandedRect: function() {
-        /*
-         * FIXME: I'm sure there's a much, much simpler way of doing this!
-         *
-         */
-        var vp = this._viewer.activeViewer().viewport;
-        var zoom = vp.getZoom();
-        var centre = vp.getCenter();
-        var srcdims = this._viewer.activeViewer().source.dimensions;
-        var vpelement = $(this._viewer.activeViewer().drawer.elmt);
-        var factor = vpelement.width() / srcdims.x;
-        var midvp = new Seadragon.Rect(
-                (vpelement.width() / 2) + vpelement.offset().left,
-                (vpelement.height() / 2) + vpelement.offset().top);
-        var fullsize = srcdims.times(zoom * factor);
-        return new Seadragon.Rect(
-            midvp.x - (fullsize.x * centre.x),
-            midvp.y - (fullsize.y * (centre.y * (srcdims.x / srcdims.y))),
-            fullsize.x,
-            fullsize.y        
-        );
-    },                         
-
-    getSourceRect: function(x0, y0, x1, y1) {
-        // get coords from the screen and translate 
-        // them to the source image                       
-        var fsrect = this.getExpandedRect();
-        var zoom  = this._viewer.activeViewer().viewport.getZoom();
-        var srcdims = this._viewer.activeViewer().source.dimensions;
-        var vpelement = $(this._viewer.activeViewer().drawer.elmt);
-        var factor = vpelement.width() / srcdims.x;
-        return {
-            x0: (x0 - fsrect.x) / (zoom * factor),
-            y0: ((fsrect.y + fsrect.height) - y0)  / (zoom * factor),
-            x1: (x1 - fsrect.x)  / (zoom * factor),
-            y1: ((fsrect.y + fsrect.height) - y1)  / (zoom * factor)
-        }; 
-    },
-
-    getScreenRect: function(x0, y0, x1, y1) {
-        // get coords from the source image and translate
-        // them to the screen                       
-        var fsrect = this.getExpandedRect();
-        var zoom  = this._viewer.activeViewer().viewport.getZoom();
-        var srcdims = this._viewer.activeViewer().source.dimensions;
-        var vpelement = $(this._viewer.activeViewer().drawer.elmt);
-        var factor = vpelement.width() / srcdims.x;
-        var bottom = fsrect.y + fsrect.height;
-        return new Seadragon.Rect(
-            fsrect.x + (x0 * zoom * factor),
-            bottom - (y1 * zoom * factor),
-            (x1 - x0) * zoom * factor,
-            (y1 - y0) * zoom * factor
-        );
-    },
-
-    getViewportFromScreen: function(screen) {
-        var vpoffset = $(this._viewer.activeViewer().drawer.elmt).offset();        
-        return new Seadragon.Rect(
-            screen.x - vpoffset.left,
-            screen.y - vpoffset.top,
-            screen.width,
-            screen.height
-        );
-    },
-
-    translateCoords: function(x0, y0, x1, y1) {
-        var zoom  = this._viewer.activeViewer().viewport.getZoom();
-        var srcdims = this._viewer.activeViewer().source.dimensions;
-        var vpelement = $(this._viewer.activeViewer().drawer.elmt);
-        var factor = vpelement.width() / srcdims.x;
-        var srcheight = srcdims.y * zoom * factor;
-        return {
-            x0: x0,
-            y0: srcheight - y1,
-            x1: x1,
-            y1: srcheight - y0,
-        }
-    },                         
-
     updateNodeParameters: function() {                                     
         var self = this;
         var pos = this._rect.offset();
-        var src = this.getSourceRect(pos.left, pos.top + this._rect.height(), 
-                pos.left + this._rect.width(), pos.top);
+        var src = this.getSourceRect(pos.left, pos.top, 
+                pos.left + this._rect.width(), pos.top + this._rect.height());
         $.each(this.sanitiseOutputCoords(src), function(name, value) {
             self._node.setParameter(name, Math.round(value), true);
         });

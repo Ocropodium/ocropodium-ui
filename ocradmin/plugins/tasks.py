@@ -70,7 +70,8 @@ class UnhandledRunScriptTask(AbortableTask):
             filename = term._inputs[0].first_active().get_file_name()
             dzi = "%s.dzi" % os.path.splitext(filename)[0]
             dzipath=utils.media_path_to_url(os.path.join(path, dzi))
-            return dict(type="pseg", data=result, dzi=dzipath)
+            result.update(type="pseg", dzi=dzipath)
+            return result
         else:
             parser = utils.HocrParser()
             return dict(type="text", data=parser.parse(result))
