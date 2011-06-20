@@ -268,15 +268,27 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             (rect[2] - rect[0]) / fulldoc.x,
             (rect[3] - rect[1]) / fulldoc.x);
         for (var i in this._buffers) {
-            if (!this._buffers[i].isOpen()) {
-                this._buffers[i].addListener("open", function() {
-                   this._buffers[i].drawer.addOverlay(element, sdrect);         
-                });
-            } else {
-               this._buffers[i].drawer.addOverlay(element, sdrect);         
-            }                
+            this._buffers[i].drawer.addOverlay(element, sdrect);         
         }
-    },                          
+    },
+
+    updateBufferOverlayElement: function(element, rect) {
+        var fulldoc = this.activeViewer().source.dimensions;
+        var sdrect = new Seadragon.Rect(
+            rect[0] / fulldoc.x,
+            rect[1] / fulldoc.x,
+            (rect[2] - rect[0]) / fulldoc.x,
+            (rect[3] - rect[1]) / fulldoc.x);
+        for (var i in this._buffers) {
+           this._buffers[i].drawer.updateOverlay(element, sdrect);         
+        }
+    },                                    
+
+    removeBufferOverlayElement: function(element, rect) {
+        for (var i in this._buffers) {
+            this._buffers[i].drawer.removeOverlay(element);         
+        }
+    },                                    
 
     nextBuffer: function() {
         if (this._cbuf < this.options.numBuffers - 1) {

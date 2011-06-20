@@ -32,7 +32,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             zIndex: 201,
             opacity: 0.3,
         };
-        this._paramre = /^\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*$/;
+        this._paramre = /^\s*([-\d]+)\s*,\s*([-\d]+)\s*,\s*([-\d]+)\s*,\s*([-\d]+)\s*$/;
     },
 
     readNodeData: function(node) {
@@ -42,9 +42,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             if (param.name == "boxes") {
                 var coordarray = param.value.split("~");
                 $.each(coordarray, function(n, coordstr) {
-                    console.log("Looking at coord str", coordstr);
                     var match = coordstr.match(self._paramre);
-                    console.log("MATCH:", match);
                     if (match) {
                         coords.push({
                             x0: parseInt(RegExp.$1),
@@ -53,12 +51,11 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
                             y1: parseInt(RegExp.$4),
                         });
                     } else {
-                        throw "Invalid box string: " + coordstr;
+                        console.error("Invalid box string:",  coordstr);
                     }
                 });
             }
         });
-        console.log("Got node data", coords);
         return coords;
     },                      
 
@@ -87,31 +84,31 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         console.assert(node, "Attempted GUI setup with null node");
         if (this._node)
             this.tearDown();
-        this.removeRects();
 
         this._node = node;
         this.resetSize();        
         this.resetPosition();        
         this._canvas.css({marginTop: 1000}).appendTo(this._viewer.parent);
         $.each(this.readNodeData(node), function(i, box) {
-            console.log("Got box", box);
             var coords = self.sanitiseInputCoords(box);
             var elem = self.newColumnBox();
             self._viewer.addBufferOverlayElement(elem.get(0), 
                     [coords.x0, coords.y0, coords.x1, coords.y1]);
         });
-        this.setupEvents();
+        //this.setupEvents();
     },
 
     tearDown: function() {
         this.removeRects();                  
         this._canvas.detach();
-        this._node = null;        
+        this._node = null;
+        $(document).unbind(".togglecanvas");        
     },
 
     removeRects: function() {
+        console.log("Removing all boxes");                     
         for (var i in this._rects) {
-            this._viewer.activeViewer().drawer.removeOverlay(this._rects[i].get(0));                  
+            this._viewer.removeBufferOverlayElement(this._rects[i].get(0));                  
             this._rects[i].remove();
         }
         this._rects = [];
@@ -131,11 +128,9 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             }
         });
         $(document).bind("keyup.togglecanvas", function(event) {
-            self._canvas.css("marginTop", 0);
             if (event.which == KC_CTRL) {
                 self._canvas.css({marginTop: 1000});
                 self.unbindCanvasDrag(); 
-
                 console.log("UNBinding canvas drag"); 
                 event.stopPropagation();
                 event.preventDefault(); 
@@ -150,19 +145,22 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         });
         rect.bind("mouseup.rectclick", function(event) {
             self._viewer.activeViewer().setMouseNavEnabled(true);
-        //    var x0 = rect.offset().left,
-        //        y0 = rect.offset().top,
-        //        x1 = x0 + rect.width(),                        
-        //        y1 = y0 + rect.height(),
-        //        sdrect = self.normalisedRect(x0, y0, x1, y1);
-        //    self._viewer.activeViewer().drawer.updateOverlay(rect.get(0), sdrect);
+            var roffset = rect.offset();
+            var src = self.getSourceRect(roffset.left, roffset.top,
+                    roffset.left + rect.width(), roffset.top + rect.height());
+            self._viewer.updateBufferOverlayElement(rect.get(0), 
+                [src.x0, src.y0, src.x1, src.y1]);
         }); 
     },                        
 
     bindCanvasDrag: function() {
         var self = this;                        
+        var coffset = this._canvas.offset();
         this._canvas.bind("mousedown.drawcanvas", function(event) {
-            var dragstart = {x: event.pageX, y: event.pageY };
+            var dragstart = {
+                x: event.pageX,
+                y: event.pageY,
+            };
             // initialise drawing
             var droprect = null;
             var create = false;           
@@ -175,10 +173,10 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
                 }
                 if (droprect) {
                     var func = create ? "addOverlay" : "updateOverlay";
-                    var x0 = dragstart.x - self._canvas.offset().left,
-                        y0 = dragstart.y - self._canvas.offset().top,
-                        x1 = event.pageX - self._canvas.offset().left,                        
-                        y1 = event.pageY - self._canvas.offset().top,
+                    var x0 = dragstart.x - coffset.left,
+                        y0 = dragstart.y - coffset.top,
+                        x1 = event.pageX - coffset.left,                        
+                        y1 = event.pageY - coffset.top,
                         sdrect = self.normalisedRect(x0, y0, x1, y1);
                     self._viewer.activeViewer().drawer[func](droprect.get(0), sdrect);
                     create = false;
@@ -205,7 +203,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         this._rects.push(elem);
         this.bindRectEvents(elem);
         this.makeRectTransformable(elem);
-        console.log("Adding box", elem);
+        console.log("Adding new box");
         return elem;
     },                      
 
@@ -228,11 +226,15 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     },                             
 
     dragDone: function() {
+        var self = this;                  
         $(document).unbind("mouseup.drawcanvas");
         this._canvas.unbind("mousemove.drawcanvas");
         this._canvas.unbind("mouseup.drawcanvas");
         this.updateNodeParameters();
         this.callListeners("onCanvasChanged");
+        setTimeout(function() {
+            self._viewer.activeViewer().drawer.update();
+        }, 20);
     },              
 
     makeRectTransformable: function(rect) {
@@ -245,6 +247,9 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             stop: function() {
                 self.updateNodeParameters();
                 self.callListeners("onCanvasChanged");
+                setTimeout(function() {
+                    self._viewer.activeViewer().drawer.update();
+                }, 50);
             },
         })
         .draggable({
@@ -252,6 +257,9 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             stop: function() {
                 self.updateNodeParameters();
                 self.callListeners("onCanvasChanged");
+                setTimeout(function() {
+                    self._viewer.activeViewer().drawer.update();
+                }, 50);
             },
             drag: function() {
                 self.updateNodeParameters();
