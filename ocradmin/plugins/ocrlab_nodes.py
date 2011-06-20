@@ -669,11 +669,11 @@ class SegmentPageManualNode(node.Node, generic_nodes.JSONWriterMixin):
         """
         Extract line/paragraph geoocrolib.metry info.
         """
-        #out = dict(columns=[], lines=[], paragraphs=[])
-        out = dict(lines=[], paragraphs=[])
+        out = dict(columns=[], lines=[], paragraphs=[])
+        #out = dict(lines=[], paragraphs=[])
         exfuncs = dict(lines=regions.setPageLines,
-                paragraphs=regions.setPageParagraphs,
-                columns=regions.setPageColumns)
+                paragraphs=regions.setPageParagraphs)
+                #columns=regions.setPageColumns)
         #page_seg = numpy.flipud(page_seg)
         for box, func in exfuncs.iteritems():
             func(page_seg)
