@@ -514,7 +514,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             if (!lasso && Math.sqrt(rect.width^2 + rect.height^2) > 5) {
                 lasso = self.svg.rect(self.group(), rect.x, rect.y, 
                             rect.width, rect.height, 0, 0, {
-                        fill: "transparent",
+                        fill: "none",
                         stroke: "#000",
                         strokeWidth: 1 / scale.x, 
                         strokeDashArray: 2 / scale.x + "," + 2 / scale.x,
