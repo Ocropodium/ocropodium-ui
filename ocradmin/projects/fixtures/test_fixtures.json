@@ -1,0 +1,16 @@
+[
+    {
+        "pk": 1, 
+        "model": "projects.project", 
+        "fields": {
+            "description": "", 
+            "tags": "", 
+            "created_on": "2010-08-16 12:06:55", 
+            "user": 1, 
+            "name": "Test Project 2",
+            "slug": "test-project-2"
+        }
+    }
+]
+
+
