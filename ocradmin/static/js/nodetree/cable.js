@@ -74,10 +74,10 @@ OCRJS.Nodetree.Cable = OCRJS.Nodetree.BaseCable.extend({
         this.svg = svg;        
         this._group = svg.group(parent, "cable_" + this.start.name + "_" + this.end.name);      
         this._hpath = this.svg.path(this._group, this.getPath(p1, p2), {
-            fill: "transparent", stroke: "#ddd", strokeWidth: 3,
+            fill: "none", stroke: "#ddd", strokeWidth: 3,
         });
         this._path = this.svg.path(this._group, this.getPath(p1, p2), {
-            fill: "transparent", stroke: "#666", strokeWidth: 1,
+            fill: "none", stroke: "#666", strokeWidth: 1,
         });
         this.setupEvents();
     },
