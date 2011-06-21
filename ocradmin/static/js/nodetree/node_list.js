@@ -82,8 +82,9 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
 
     removeNode: function(elem) {
         delete this._usednames[$(elem).attr("name")];
+        var name = $(elem).attr("name");
         $(elem).remove();
-        this.scriptChanged();        
+        this.scriptChanged("Removed node: " + name);        
     },
 
     selectLastNode: function() {
@@ -92,12 +93,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
 
     setupEvents: function() {
         var self = this;
-
-        $("#optionsform").submit(function(event) {
-            self.callListeners("scriptChanged");
-            event.preventDefault();
-            event.stopPropagation();
-        });
 
         // HACK: see:
         // http://stackoverflow.com/questions/5020695/jquery-draggable-element-no-longer-draggable-after-drop
@@ -157,7 +152,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                             $(this).children().remove().end()
                                 .append(node.elem);
                         node.elem.click();
-                        self.callListeners("scriptChanged");                        
+                        self.scriptChanged("Node dropped on list");                        
                     }
                 }, 
             }).sortable({
@@ -180,7 +175,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         var self = this;                            
         node.addListeners({
             toggleIgnored: function(ig) {
-                self.scriptChanged();
+                self.scriptChanged("Toggled ignored: " + node.name);
             },
             toggleFocussed: function(foc) {
                 $.each(self._usednames, function(name, other) {
@@ -195,11 +190,11 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                     if (node.name != other.name)
                         other.setViewing(false);
                 });
-                self.scriptChanged();
+                self.scriptChanged("Toggled viewing:" + node.name);
             },
             deleted: function() {
                 console.log("Deleted node: ", node.name);
-                self.scriptChanged();
+                self.scriptChanged("Deleted node: " + node.name);
             },
         });
     },
@@ -210,9 +205,9 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         this._usednames[nodename].setErrored(true, error);
     },                        
 
-    scriptChanged: function() {
-        console.log("running script");                      
-        this.callListeners("scriptChanged");
+    scriptChanged: function(what) {
+        console.log("running script");      
+        this.callListeners("scriptChanged", what);
     },
 
     buildParams: function(node) {
@@ -361,7 +356,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                 }                
             }                
         }            
-        this.scriptChanged();
+        this.scriptChanged("Set file in path: " + name);
     },               
 
     // turn our GUI into an acceptable

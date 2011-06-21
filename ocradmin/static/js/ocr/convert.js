@@ -146,6 +146,7 @@ $(function() {
             nodetree.loadScript(data);
             var elem = $("#open_script").find(".ui-button-text");
             elem.text(name);
+            runScript();
         },
     });
 
@@ -178,9 +179,6 @@ $(function() {
             // loses its images...
             sdviewer.setBufferPath(sdviewer.activeBuffer(),
                 sdviewer.activeBufferPath());
-            setTimeout(function() {
-                sdviewer.drawBufferOverlays();
-            }, 100);
         },
     });
 
@@ -239,7 +237,7 @@ $(function() {
             setTimeout(function() {
                 sdviewer.setActiveBuffer(active^1);
                 guimanager.refreshGui();
-            }, 200);
+            }, 150);
             
             var overlays = {};
             if (data.result.type == "pseg") {
@@ -258,7 +256,21 @@ $(function() {
             formatter.blockLayout($(".textcontainer"));
             $("#viewertabs").tabs("select", 1);
         }
-    }        
+    }
+
+    function runScript() {
+        var nodename = nodetree.getEvalNode();
+        var node = nodetree.getNode(nodename);
+        if (node) {
+            var hash = hex_md5(bencode(node.hashValue()));
+            console.log("Hash for node", node.name, hash);
+            if (resultcache[hash]) {
+                console.log("Found cached result for:", nodename);
+                handleResult(nodename, resultcache[hash], true);
+            } else
+                reshandler.runScript(nodename, nodetree.buildScript());
+        }
+    }    
 
     sdviewer = new OCRJS.ImageViewer($("#imageviewer_1").get(0), {
         numBuffers: 2,
@@ -271,26 +283,20 @@ $(function() {
     formatter = new OCRJS.LineFormatter();
     nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
 
-    nodetree.addListener("scriptChanged", function() {
-        var elem = $("#open_script").find(".ui-button-text");
-        if (!$(elem).text().match(/\*$/)) {
-            $(elem).text($(elem).text() + "*");
+    nodetree.addListener("scriptChanged", function(what) {
+        console.log("Script changed", what);
+        if (nodetree.hasNodes()) {
+            var elem = $("#open_script").find(".ui-button-text");
+            if (!$(elem).text().match(/\*$/)) {
+                $(elem).text($(elem).text() + "*");
+            }
+            presetmanager.setCurrentScript(nodetree.buildScript());
         }
-        presetmanager.setCurrentScript(nodetree.buildScript());
     });        
 
-    nodetree.addListener("scriptChanged", function() {
-        var nodename = nodetree.getEvalNode();
-        var node = nodetree.getNode(nodename);
-        if (node) {
-            var hash = hex_md5(bencode(node.hashValue()));
-            console.log("Hash for node", node.name, hash);
-            if (resultcache[hash]) {
-                console.log("Found cached result for:", nodename);
-                handleResult(nodename, resultcache[hash], true);
-            } else
-                reshandler.runScript(nodename, nodetree.buildScript());
-        }
+    nodetree.addListener("scriptChanged", function(what) {
+        console.log("Running script because:", what);
+        runScript();
     });
     nodetree.addListener("registerUploader", function(name, elem) {
 
@@ -305,9 +311,10 @@ $(function() {
         if (!node)
             guimanager.tearDownGui();
         else {
-            console.log("Setting GUI for", node.name);
-            if (sdviewer.isReady())
+            if (sdviewer.activeViewer()) {
+                console.log("Setting GUI for", node.name);
                 guimanager.setupGui(node);
+            }
         }
     });
 
@@ -356,5 +363,8 @@ $(function() {
     };
 
     $(window).resize();
+
+    // the run script on first load
+    runScript();    
 });
 
