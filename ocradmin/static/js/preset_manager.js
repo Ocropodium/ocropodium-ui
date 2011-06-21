@@ -104,7 +104,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
         console.assert(this._opened);
         this._dialog.find("#save_script").click(function(event) {
-            self.savePreset(self._opened, self._current, function(data) {
+            self.saveExistingPreset(self._opened, self._current, function(data) {
                 self._dialog.dialog("close");
                 self._openeddata = JSON.parse(data);
                 if (self._continuewithopen)
@@ -191,7 +191,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         submit.attr("disabled", $.trim(namefield.val()) == "");
     },
 
-    savePreset: function(slug, script, successfunc, errorfunc) {
+    saveExistingPreset: function(slug, script, successfunc, errorfunc) {
         $.ajax({
             url: "/presets/update_data/" + slug,
             data: {data: JSON.stringify(script, null, '\t')},
@@ -199,5 +199,44 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             error: errorfunc,
             success: successfunc,
         });                
+    },
+
+    saveNewPreset: function(name, tags, description, private, script, successfunc, errorfunc) {
+        // need to be extra picky about the argument types                       
+        console.assert(typeof(name) == "string", "Name should be a string");                       
+        console.assert(typeof(tags) == "string", "Tags should be a string");                       
+        console.assert(typeof(description) == "string", "Description should be a string");                       
+        console.assert(typeof(private) == "boolean", "Private should be a boolean");                       
+        console.assert(typeof(script) == "object", "Script should be an object");                       
+        console.assert(typeof(successfunc) == "function", "Successfunc should be a function");                       
+        console.assert(typeof(errorfunc) == "function", "Errorfunc should be a function");                       
+
+        $.ajax({
+            url: "/presets/createjson/",
+            type: "POST",
+            data: {
+                name: name,
+                tags: tags,
+                description: description,
+                private: private,
+                data: JSON.stringify(script, null, '\t'),
+            },        
+            error: errorfunc, 
+            statusCode: {
+                200: function(data) {
+                    console.error("200", data);
+                },
+                201: successfunc,
+            },
+        });
+    },
+
+    openPreset: function(slug, successfunc, errorfunc) {
+        $.ajax({
+            url: "/presets/data/" + slug,
+            data: {format: "json"},
+            success: successfunc,
+            error: errorfunc, 
+        });
     },                    
 });
