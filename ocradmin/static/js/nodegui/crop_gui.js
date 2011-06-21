@@ -27,7 +27,8 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             zIndex: 201,
             backgroundColor: this._color,
             opacity: 0.3,
-        };        
+        };
+        this.setCanvasDraggable();        
     },
 
     readNodeData: function(node) {
@@ -59,21 +60,26 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         }
     },
 
-    setup: function(node) {
-        if (this._node)
-            return;
+    draggedRect: function(rect) {
+        this.updateElement(this._rect, rect);
+        this.updateNodeParameters(rect);
+    },                     
 
+    setup: function(node) {                       
+        if (this._node)
+            return;        
+        this.base();
         var self = this;
         this._node = node;        
         console.log("Setting up crop GUI");
         var rect = this.readNodeData(node);
-        console.log("Read node data", rect);
         this._rect = this.addTransformableRect(rect, this._css, function(newpos) {
             self.updateNodeParameters(newpos); 
         });
     },
 
     tearDown: function() {
+        this.base();                  
         console.log("Tearing down crop gui");                  
         this.removeTransformableRect(this._rect);
         this._rect = null;        
