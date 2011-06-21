@@ -51,7 +51,7 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
                             x1: parseInt(RegExp.$3),
                             y1: parseInt(RegExp.$4),
                         });
-                    } else {
+                    } else if ($.trim(coordstr) != "") {
                         console.error("Invalid box string:",  coordstr);
                     }
                 });
@@ -97,10 +97,71 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
             borderColor: this._colors[colorindex][1],
         });
 
-        this._rects.push(this.addTransformableRect(box, css, function(newpos) {
+        var rect = this.addTransformableRect(box, css, function(newpos) {
             self.updateNodeParameters();
-        }));   
-    },                      
+        });
+
+        rect.append(
+            $("<div></div>")
+                .css({fontSize: "1.4em"})
+                .addClass("layout_rect_label")
+                .text(this._rects.length + 1));
+        console.log("RECT:", rect);
+        // bind the key handlers for changing the reading order
+        rect.bind("mouseenter", function(enterevent) {
+            $(window).bind("keydown.mousehandle", function(event) {
+                if (event.keyCode >= KC_ONE && event.keyCode <= KC_NINE)
+                    self.setRectOrder(rect, event.keyCode - KC_ZERO);
+                else if (event.which == KC_DELETE) {
+                    $(window).unbind("keydown.mousehandle");
+                    self.deleteRect(rect);
+                }
+            });
+        }).bind("mouseleave", function(leaveevent) {
+            $(window).unbind("keydown.mousehandle");
+        });
+
+        this._rects.push(rect);
+    },
+
+    sortRectsByOrder: function() {
+        this._rects.sort(function(a, b) {
+            return parseInt($(".layout_rect_label", a).text()) -
+                parseInt($(".layout_rect_label", b).text());
+        });
+    },                   
+
+    setRectOrder: function(elem, num) {
+        console.log("Setting rect order", elem, num);                      
+        if (num > this._rects.length)
+            return;            
+        var curr = parseInt($(elem).text());                       
+        for (var i in this._rects) {
+            if (this._rects[i] !== elem &&
+                    parseInt($(this._rects[i]).text()) == num) {
+                $(".layout_rect_label", this._rects[i]).text(curr);
+            }
+        }
+        $(".layout_rect_label", elem).text(num);
+        this.sortRectsByOrder();
+        this.updateNodeParameters();
+    },
+
+    deleteRect: function(elem) {
+        var pos = $.inArray(elem, this._rects);
+        console.assert(pos > -1, "Attempt to delete untracked rect", elem, this._rects);
+        this._rects.splice(pos, 1);        
+        var next = parseInt($(".layout_rect_label", elem).text());
+        for (var i in this._rects) {
+            if (parseInt($(".layout_rect_label", this._rects[i]).text()) > next) {
+                $(".layout_rect_label", this._rects[i]).text(next);
+                next++;
+            }
+        }            
+        this.removeTransformableRect(elem);
+        this.sortRectsByOrder();
+        this.updateNodeParameters();
+    },                    
 
     setup: function(node) {
         if (this._node)
