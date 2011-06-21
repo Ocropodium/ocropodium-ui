@@ -104,18 +104,12 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
         console.assert(this._opened);
         this._dialog.find("#save_script").click(function(event) {
-            $.ajax({
-                url: "/presets/update_data/" + self._opened,
-                data: {data: JSON.stringify(self._current, null, '\t')},
-                type: "POST",
-                error: OCRJS.ajaxErrorHandler,
-                success: function(data) {
-                    self._dialog.dialog("close");
-                    self._openeddata = JSON.parse(data);
-                    if (self._continuewithopen)
-                        self.showOpenPresetDialog();
-                },
-            });                
+            self.savePreset(self._opened, self._current, function(data) {
+                self._dialog.dialog("close");
+                self._openeddata = JSON.parse(data);
+                if (self._continuewithopen)
+                    self.showOpenPresetDialog();
+            }, OCRJS.ajaxErrorHandler);
         });
         this._dialog.find("#save_script_as").click(function(event) {
             self.showNewPresetDialog();
@@ -138,7 +132,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             },
         });
 
-    },                              
+    },
 
     showNewPresetDialog: function() {
         var self = this;        
@@ -195,5 +189,15 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         var namefield = this._dialog.find("#id_name");
         var submit = this._dialog.find("#create_new");
         submit.attr("disabled", $.trim(namefield.val()) == "");
-    },                 
+    },
+
+    savePreset: function(slug, script, successfunc, errorfunc) {
+        $.ajax({
+            url: "/presets/update_data/" + slug,
+            data: {data: JSON.stringify(script, null, '\t')},
+            type: "POST",
+            error: errorfunc,
+            success: successfunc,
+        });                
+    },                    
 });
