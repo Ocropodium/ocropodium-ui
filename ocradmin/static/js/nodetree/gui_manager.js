@@ -41,13 +41,17 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
     },
 
     refreshGui: function() {
-        if (this._current && this._currentgui)
+        console.log("REFRESHING GUI");                    
+        if (this._current && this._currentgui) {
+            this._currentgui.tearDown();
             this._currentgui.setup(this._current);
-        else
+        } else {
             this.tearDownGui();
+        }
     },                    
 
     setupGui: function(node) {
+        console.log("Set up GUI");
         if (this._current && this._current != node)
             this.tearDownGui();            
         this._current = node;

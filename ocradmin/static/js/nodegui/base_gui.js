@@ -23,11 +23,17 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
         this.base();
         this.idgui = id;
         this._viewer = viewer;
-        this._shapes = [];
-        this._canvas = $("<div></div>")
-            .addClass("imageviewer_canvas")
-            .css("position", "fixed")
-            .attr("id", viewer.options.id + "_canvas");
+        this._trackrects = [];
+        this._canvasdraggable = false;
+
+        this._dragcss = {
+            zIndex: 300,
+            position: "absolute",
+            borderWidth: 1,
+            borderStyle: "dashed",
+            borderColor: "#000",
+        };
+
     },
 
     setupEvents: function() {
@@ -36,28 +42,150 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
             resized: function() {
                 self.resetSize();
             },
-        });            
+        });
+        if (this._canvasdraggable) {
+            $(this._viewer.parent).bind("mousedown.viewdrag", function(event) {
+                if (event.ctrlKey) {                    
+                    self._viewer.activeViewer().setMouseNavEnabled(false);    
+                    $(this).css("cursor", "crosshair");
+
+                    var droprect = null;
+                    var rect;
+                    $(document).bind("mousemove.viewdrag", function(moveevent) {
+                        rect = self.normalisedRect(event.pageX, event.pageY,
+                                moveevent.pageX, moveevent.pageY);
+                        if (!droprect && self.normalisedRectArea(event.pageX, event.pageY,
+                                moveevent.pageX, moveevent.pageY) > 300) {
+                            droprect = $("<div></div>")
+                                .addClass("canvas_lasso")
+                                .css(self._dragcss)
+                                .css({
+                                    left: rect.x0, top: rect.y0,
+                                    width: rect.x1 - rect.x0, height: rect.y1 - rect.y0,
+                                }).appendTo("body");
+                        } 
+                        if (droprect) {
+                            droprect.css({
+                                left: rect.x0, top: rect.y0,
+                                width: rect.x1 - rect.x0, height: rect.y1 - rect.y0,
+                            });
+                        }
+                    });
+                    $(document).bind("mouseup.viewdrag", function(upevent) {
+                        if (droprect) {
+                            var off = droprect.offset();
+                            var src = self.getSourceRect(off.left, off.top,
+                                    off.left + droprect.width(), off.top + droprect.height());
+                            self.draggedRect(src);
+                            droprect.remove();
+                        }
+                        $(this)
+                            .unbind("mousemove.viewdrag")
+                            .unbind("mouseup.viewdrag");
+                        $(self._viewer.parent).css("cursor", "auto");
+                        self._viewer.activeViewer().setMouseNavEnabled(true);    
+                    });
+                }
+            });
+        }            
+    },
+
+    draggedRect: function(rect) {
+        console.log("Dragged rect to position", rect.x0,
+                rect.y0, rect.x1, rect.y1);
     },                     
 
+    tearDownEvents: function() {
+        $(this._viewer.parent).unbind(".viewdrag");
+    },
+
+    setCanvasDraggable: function() {
+        this._canvasdraggable = true;
+    },
+
+    updateElement: function(element, src) {
+        console.assert($.inArray(element, this._trackrects) != -1,
+                        "Updating untracked element");                       
+        this._viewer.updateOverlayElement(element.get(0),
+                [src.x0, src.y0, src.x1, src.y1]);
+    },                       
+
+    addTransformableRect: function(startpos, css, movedfunc) {
+        var self = this;                              
+        var rect = $("<div></div>")
+            .addClass("nodegui_rect")
+            .css(css);
+        rect.bind("mousedown.rectclick", function(event) {
+            self._viewer.activeViewer().setMouseNavEnabled(false);    
+            event.stopPropagation();
+            event.preventDefault();
+
+            rect.bind("mouseup.rectclick", function(event) {
+                self._viewer.activeViewer().setMouseNavEnabled(true);
+                rect.unbind("mouseup.rectclick");
+            });             
+        })
+        
+        .resizable({
+            handles: "all",
+            resize: function(event, ui) {
+                var off = $(this).offset();                      
+                var src = self.getSourceRect(off.left, off.top,
+                        off.left + $(this).width(), off.top + $(this).height());
+                movedfunc.call(self, src);
+            },
+            stop: function(event, ui) {
+                var off = $(this).offset();                      
+                var src = self.getSourceRect(off.left, off.top,
+                        off.left + $(this).width(), off.top + $(this).height());
+                self.updateElement(rect, src);
+            },
+        }).draggable({
+            drag: function(event, ui) {
+                var off = $(this).offset();                      
+                var src = self.getSourceRect(off.left, off.top,
+                        off.left + $(this).width(), off.top + $(this).height());
+                movedfunc.call(self, src);
+            },
+            stop: function(event, ui) {
+                var off = $(this).offset();                      
+                var src = self.getSourceRect(off.left, off.top,
+                        off.left + $(this).width(), off.top + $(this).height());
+                self.updateElement(rect, src);
+            },
+        });
+        this._trackrects.push(rect);
+        this._viewer.addOverlayElement(rect.get(0),
+                [startpos.x0, startpos.y0, startpos.x1, startpos.y1]);
+        return rect;
+    },
+
+    removeTransformableRect: function(element) {
+        for (var i in this._trackrects)
+            if (this._trackrects[i] == element)
+                this._trackrects.splice(i, 1);
+        this._viewer.removeOverlayElement(element.get(0));
+        element.unbind(".rectclick").remove();
+    },                                  
+
     resetSize: function() {
-        this._canvas.height($(this._viewer.parent).outerHeight());
-        this._canvas.width($(this._viewer.parent).outerWidth());
     },
 
     resetPosition: function() {
-        this._canvas.css({
-            top: $(this._viewer.parent).offset().top,
-            left: $(this._viewer.parent).offset().left,
-        });
     },                       
 
     setup: function(node) {
+        this.setupEvents();
 
     },
 
     tearDown: function() {
-
+        this.tearDownEvents();
     },
+
+    sourceDimensions: function() {
+        return this._viewer.activeViewer().source.dimensions;
+    },                          
 
     getExpandedRect: function() {
         /*
@@ -99,12 +227,12 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
     },
 
     normalisedRect: function(x0, y0, x1, y1) {
-        var sdx0 = this._viewer.activeViewer().viewport.pointFromPixel(
-            new Seadragon.Point(x0 < x1 ? x0 : x1, y0 < y1 ? y0 : y1));
-        var sdx1 = this._viewer.activeViewer().viewport.pointFromPixel(
-            new Seadragon.Point(x1 > x0 ? x1 : x0, y1 > y0 ? y1 : y0));
-        return new Seadragon.Rect(sdx0.x, sdx0.y, 
-                sdx1.x - sdx0.x, sdx1.y - sdx0.y);
+        return {
+            x0: Math.min(x0, x1),
+            y0: Math.min(y0, y1),
+            x1: Math.max(x0, x1),
+            y1: Math.max(y0, y1),
+        };
     },
 
     normalisedRectArea: function(x0, y0, x1, y1) {
