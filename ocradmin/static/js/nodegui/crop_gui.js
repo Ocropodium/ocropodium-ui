@@ -72,7 +72,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         this.resetPosition();        
         this._canvas.css({marginTop: 1000}).appendTo(this._viewer.parent);
         var coords = this.sanitiseInputCoords(this.readNodeData(node));
-        this._viewer.addBufferOverlayElement(this._rect.get(0), 
+        this._viewer.addOverlayElement(this._rect.get(0), 
                 [coords.x0, coords.y0, coords.x1, coords.y1]);
         this.setupEvents();
     },

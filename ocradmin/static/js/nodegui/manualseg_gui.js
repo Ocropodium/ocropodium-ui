@@ -92,7 +92,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         $.each(this.readNodeData(node), function(i, box) {
             var coords = self.sanitiseInputCoords(box);
             var elem = self.newColumnBox();
-            self._viewer.addBufferOverlayElement(elem.get(0), 
+            self._viewer.addOverlayElement(elem.get(0), 
                     [coords.x0, coords.y0, coords.x1, coords.y1]);
         });
         //this.setupEvents();
@@ -108,7 +108,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     removeRects: function() {
         console.log("Removing all boxes");                     
         for (var i in this._rects) {
-            this._viewer.removeBufferOverlayElement(this._rects[i].get(0));                  
+            this._viewer.removeOverlayElement(this._rects[i].get(0));                  
             this._rects[i].remove();
         }
         this._rects = [];
@@ -148,7 +148,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
             var roffset = rect.offset();
             var src = self.getSourceRect(roffset.left, roffset.top,
                     roffset.left + rect.width(), roffset.top + rect.height());
-            self._viewer.updateBufferOverlayElement(rect.get(0), 
+            self._viewer.updateOverlayElement(rect.get(0), 
                 [src.x0, src.y0, src.x1, src.y1]);
         }); 
     },                        
