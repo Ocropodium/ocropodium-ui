@@ -232,10 +232,11 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     },                           
 
     drawBufferOverlays: function() {
+        var self = this;                            
         for (var i in this._buffers) {
-            var portal = this._portals[i];
-            var viewer = this._buffers[i];
-            var overlays = this._rects[i];            
+            var portal = this._portals[i],
+                viewer = this._buffers[i],
+                overlays = this._rects[i];            
             if (!viewer || !viewer.drawer || !overlays)
                 continue;
             //viewer.drawer.clearOverlays();
@@ -243,50 +244,43 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
                 viewer.drawer.removeOverlay(elem);
             });
             var overlaydiv;
-            var fulldoc = viewer.source.dimensions;
-
+            var sdrect;
             $.each(overlays, function(class, rects) {
                 for (var r in rects) {
                     overlaydiv = document.createElement("div");
                     $(overlaydiv).addClass("viewer_highlight " + class);
-                    var sdrect = new Seadragon.Rect(
-                        rects[r][0] / fulldoc.x,
-                        rects[r][1] / fulldoc.x,
-                        (rects[r][2] - rects[r][0]) / fulldoc.x,
-                        (rects[r][3] - rects[r][1]) / fulldoc.x);
+                    sdrect = self.sourceRectToSeadragon(i, rects[r][0], 
+                            rects[r][1], rects[r][2], rects[r][3]);                
                     viewer.drawer.addOverlay(overlaydiv, sdrect);         
                 }            
             });
         } 
     },
 
-    addBufferOverlayElement: function(element, rect) {
-        var fulldoc = this.activeViewer().source.dimensions;
-        var sdrect = new Seadragon.Rect(
-            rect[0] / fulldoc.x,
-            rect[1] / fulldoc.x,
-            (rect[2] - rect[0]) / fulldoc.x,
-            (rect[3] - rect[1]) / fulldoc.x);
+    addOverlayElement: function(element, rect) {
+        var sdrect; 
         for (var i in this._buffers) {
-            this._buffers[i].drawer.addOverlay(element, sdrect);         
+            sdrect = this.sourceRectToSeadragon(i, rect[0], 
+                    rect[1], rect[2], rect[3]);                
+            if (this._buffers[i].drawer)
+                this._buffers[i].drawer.addOverlay(element, sdrect);         
         }
     },
 
-    updateBufferOverlayElement: function(element, rect) {
-        var fulldoc = this.activeViewer().source.dimensions;
-        var sdrect = new Seadragon.Rect(
-            rect[0] / fulldoc.x,
-            rect[1] / fulldoc.x,
-            (rect[2] - rect[0]) / fulldoc.x,
-            (rect[3] - rect[1]) / fulldoc.x);
+    updateOverlayElement: function(element, rect) {
+        var sdrect;                              
         for (var i in this._buffers) {
-           this._buffers[i].drawer.updateOverlay(element, sdrect);         
+            sdrect = this.sourceRectToSeadragon(i, rect[0], 
+                    rect[1], rect[2], rect[3]);                
+            if (this._buffers[i].drawer)
+                this._buffers[i].drawer.updateOverlay(element, sdrect);         
         }
     },                                    
 
-    removeBufferOverlayElement: function(element, rect) {
+    removeOverlayElement: function(element) {
         for (var i in this._buffers) {
-            this._buffers[i].drawer.removeOverlay(element);         
+            if (this._buffers[i].drawer)
+                this._buffers[i].drawer.removeOverlay(element);         
         }
     },                                    
 
