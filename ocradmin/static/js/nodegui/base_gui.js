@@ -23,11 +23,7 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
         this.base();
         this.idgui = id;
         this._viewer = viewer;
-        this._shapes = [];
-        this._canvas = $("<div></div>")
-            .addClass("imageviewer_canvas")
-            .css("position", "fixed")
-            .attr("id", viewer.options.id + "_canvas");
+        this._trackrects = [];
     },
 
     setupEvents: function() {
@@ -37,18 +33,67 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
                 self.resetSize();
             },
         });            
-    },                     
+    },
+
+    addTransformableRect: function(startpos, css, movedfunc) {
+        var self = this;                              
+        var rect = $("<div></div>")
+            .addClass("nodegui_rect")
+            .css(css);
+        rect.bind("mousedown.rectclick", function(event) {
+            self._viewer.activeViewer().setMouseNavEnabled(false);    
+        }).bind("mouseup.rectclick", function(event) {
+            self._viewer.activeViewer().setMouseNavEnabled(true); 
+        })
+        
+        .resizable({
+            handles: "all",
+            resize: function(event, ui) {
+                var off = $(this).offset();                      
+                var src = self.getSourceRect(off.left, off.top,
+                        off.left + $(this).width(), off.top + $(this).height());
+                movedfunc.call(self, src);
+            },
+            stop: function(event, ui) {
+                var off = $(this).offset();                      
+                var src = self.getSourceRect(off.left, off.top,
+                        off.left + $(this).width(), off.top + $(this).height());
+                self._viewer.updateOverlayElement(rect.get(0),
+                        [src.x0, src.y0, src.x1, src.y1]);
+            },
+        }).draggable({
+            drag: function(event, ui) {
+                var off = $(this).offset();                      
+                var src = self.getSourceRect(off.left, off.top,
+                        off.left + $(this).width(), off.top + $(this).height());
+                movedfunc.call(self, src);
+            },
+            stop: function(event, ui) {
+                var off = $(this).offset();                      
+                var src = self.getSourceRect(off.left, off.top,
+                        off.left + $(this).width(), off.top + $(this).height());
+                self._viewer.updateOverlayElement(rect.get(0),
+                        [src.x0, src.y0, src.x1, src.y1]);
+            },
+        });
+        this._trackrects.push(rect);
+        this._viewer.addOverlayElement(rect.get(0),
+                [startpos.x0, startpos.y0, startpos.x1, startpos.y1]);
+        return rect;
+    },
+
+    removeTransformableRect: function(element) {
+        for (var i in this._trackrects)
+            if (this._trackrects[i] == element)
+                this._trackrects.splice(i, 1);
+        this._viewer.removeOverlayElement(element.get(0));
+        element.unbind(".rectclick").remove();
+    },                                  
 
     resetSize: function() {
-        this._canvas.height($(this._viewer.parent).outerHeight());
-        this._canvas.width($(this._viewer.parent).outerWidth());
     },
 
     resetPosition: function() {
-        this._canvas.css({
-            top: $(this._viewer.parent).offset().top,
-            left: $(this._viewer.parent).offset().left,
-        });
     },                       
 
     setup: function(node) {
@@ -58,6 +103,10 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
     tearDown: function() {
 
     },
+
+    sourceDimensions: function() {
+        return this._viewer.activeViewer().source.dimensions;
+    },                          
 
     getExpandedRect: function() {
         /*
