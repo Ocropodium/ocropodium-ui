@@ -33,6 +33,7 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
             opacity: 0.3,
         };
         this._paramre = /^\s*([-\d]+)\s*,\s*([-\d]+)\s*,\s*([-\d]+)\s*,\s*([-\d]+)\s*$/;
+        this.setCanvasDraggable();        
     },
 
     readNodeData: function(node) {
@@ -79,140 +80,57 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
         }
     },
 
-    setup: function(node) {
-        var self = this;
-        console.assert(node, "Attempted GUI setup with null node");
-        if (this._node)
-            this.tearDown();
+    draggedRect: function(rect) {
+        this.addColumnBox(rect);                     
+        this.updateNodeParameters();
+    },
 
-        this._node = node;
-        this.resetSize();        
-        this.resetPosition();        
-        this._canvas.css({marginTop: 1000}).appendTo(this._viewer.parent);
-        $.each(this.readNodeData(node), function(i, box) {
-            var coords = self.sanitiseInputCoords(box);
-            var elem = self.newColumnBox();
-            self._viewer.addOverlayElement(elem.get(0), 
-                    [coords.x0, coords.y0, coords.x1, coords.y1]);
+    addColumnBox: function(box) {
+        var self = this;                      
+        var css = {};
+        $.extend(true, css, this._css);
+        var colorindex = this._rects.length;
+        if (colorindex > this._colors.length - 1)
+            colorindex = 0;
+        $.extend(css, {
+            backgroundColor: this._colors[colorindex][0],
+            borderColor: this._colors[colorindex][1],
         });
-        //this.setupEvents();
+
+        this._rects.push(this.addTransformableRect(box, css, function(newpos) {
+            self.updateNodeParameters();
+        }));   
+    },                      
+
+    setup: function(node) {
+        if (this._node)
+            return;        
+        this.base();
+        var self = this;
+        this._node = node;        
+        console.log("Setting up crop GUI");
+        var rects = this.readNodeData(node);
+
+        $.each(rects, function(i, box) {
+            self.addColumnBox(box);
+        });
     },
 
     tearDown: function() {
-        this.removeRects();                  
-        this._canvas.detach();
-        this._node = null;
-        $(document).unbind(".togglecanvas");        
-    },
-
-    removeRects: function() {
-        console.log("Removing all boxes");                     
-        for (var i in this._rects) {
-            this._viewer.removeOverlayElement(this._rects[i].get(0));                  
-            this._rects[i].remove();
-        }
+        this.base();                   
+        console.log("Tearing down manual seg gui");                  
+        for (var i in this._rects)
+            this.removeTransformableRect(this._rects[i]);
         this._rects = [];
-    },                    
+        this._node = null;              
+    },
 
     setupEvents: function() {
         var self = this;                     
         this.base();
-
-        $(document).bind("keydown.togglecanvas", function(event) {
-            if (event.which == KC_CTRL) {
-                self._canvas.css({marginTop: 0});
-                self.bindCanvasDrag();
-                console.log("Binding canvas drag");
-                event.stopPropagation();
-                event.preventDefault(); 
-            }
-        });
-        $(document).bind("keyup.togglecanvas", function(event) {
-            if (event.which == KC_CTRL) {
-                self._canvas.css({marginTop: 1000});
-                self.unbindCanvasDrag(); 
-                console.log("UNBinding canvas drag"); 
-                event.stopPropagation();
-                event.preventDefault(); 
-            }
-        });
     },
 
-    bindRectEvents: function(rect) {
-        var self = this;                        
-        rect.bind("mousedown.rectclick", function(event) {
-            self._viewer.activeViewer().setMouseNavEnabled(false);
-        });
-        rect.bind("mouseup.rectclick", function(event) {
-            self._viewer.activeViewer().setMouseNavEnabled(true);
-            var roffset = rect.offset();
-            var src = self.getSourceRect(roffset.left, roffset.top,
-                    roffset.left + rect.width(), roffset.top + rect.height());
-            self._viewer.updateOverlayElement(rect.get(0), 
-                [src.x0, src.y0, src.x1, src.y1]);
-        }); 
-    },                        
-
-    bindCanvasDrag: function() {
-        var self = this;                        
-        var coffset = this._canvas.offset();
-        this._canvas.bind("mousedown.drawcanvas", function(event) {
-            var dragstart = {
-                x: event.pageX,
-                y: event.pageY,
-            };
-            // initialise drawing
-            var droprect = null;
-            var create = false;           
-            self._canvas.bind("mousemove.drawcanvas", function(event) {
-                if (!create && !droprect && self.normalisedRectArea(dragstart.x, dragstart.y,
-                        event.pageX, event.pageY) > 300) {
-                    console.log("Creating new rect!", droprect);
-                    droprect = self.newColumnBox();
-                    create = true;
-                }
-                if (droprect) {
-                    var func = create ? "addOverlay" : "updateOverlay";
-                    var x0 = dragstart.x - coffset.left,
-                        y0 = dragstart.y - coffset.top,
-                        x1 = event.pageX - coffset.left,                        
-                        y1 = event.pageY - coffset.top,
-                        sdrect = self.normalisedRect(x0, y0, x1, y1);
-                    self._viewer.activeViewer().drawer[func](droprect.get(0), sdrect);
-                    create = false;
-                }
-            });
-
-            $(document).bind("mouseup.drawcanvas", function(event) {
-                self.dragDone();
-            });
-        });
-    },
-
-    newColumnBox: function() {
-        var elem = $("<div></div>")
-            .addClass("manualseg_column")
-            .css(this._css).appendTo("body");                    
-        var colorindex = this._rects.length;
-        if (colorindex > this._colors.length - 1)
-            colorindex = 0;
-        elem.css({
-            backgroundColor: this._colors[colorindex][0],
-            borderColor: this._colors[colorindex][1],
-        });
-        this._rects.push(elem);
-        this.bindRectEvents(elem);
-        this.makeRectTransformable(elem);
-        console.log("Adding new box");
-        return elem;
-    },                      
-
-    unbindCanvasDrag: function() {
-        this._canvas.unbind("mousedown.drawcanvas");
-        this._canvas.unbind("mousemove.drawcanvas");        
-    },                          
-
-    updateNodeParameters: function() {                                     
+    updateNodeParameters: function() {
         var self = this;        
         var rects = [];
         $.each(this._rects, function(i, rect) {
@@ -224,46 +142,4 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
         });
         this._node.setParameter("boxes", rects.join("~"), true);
     },                             
-
-    dragDone: function() {
-        var self = this;                  
-        $(document).unbind("mouseup.drawcanvas");
-        this._canvas.unbind("mousemove.drawcanvas");
-        this._canvas.unbind("mouseup.drawcanvas");
-        this.updateNodeParameters();
-        this.callListeners("onCanvasChanged");
-        setTimeout(function() {
-            self._viewer.activeViewer().drawer.update();
-        }, 20);
-    },              
-
-    makeRectTransformable: function(rect) {
-        // add jQuery dragging/resize ability to
-        // an overlay rectangle                            
-        var self = this;
-        rect.resizable({
-            handles: "all",
-            //containment: self._viewer.parent,
-            stop: function() {
-                self.updateNodeParameters();
-                self.callListeners("onCanvasChanged");
-                setTimeout(function() {
-                    self._viewer.activeViewer().drawer.update();
-                }, 50);
-            },
-        })
-        .draggable({
-            //containment: self._viewer.parent,
-            stop: function() {
-                self.updateNodeParameters();
-                self.callListeners("onCanvasChanged");
-                setTimeout(function() {
-                    self._viewer.activeViewer().drawer.update();
-                }, 50);
-            },
-            drag: function() {
-                self.updateNodeParameters();
-            },
-        });
-    },
 });
