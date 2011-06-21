@@ -51,6 +51,19 @@ presetdelete = gv.GenericDeleteView.as_view(
         page_name="Delete OCR Preset",
         success_url="/presets/list/",)
 
+def createjson(request):
+    """Create a preset and return JSON data"""
+    data = request.POST.copy()
+    data.update(dict(user=request.user.pk))
+    form = PresetForm(data)
+    print form.is_valid()
+    if not form.is_valid():
+        return HttpResponse(json.dumps(form.errors),
+                mimetype="application/json")
+    form.save()
+    return HttpResponse(json.dumps(form.instance.slug),
+            status=201, mimetype="application/json")
+
 def data(request, slug):
     """Return the data for a given preset in JSON format"""
     preset = get_object_or_404(Preset, slug=slug)

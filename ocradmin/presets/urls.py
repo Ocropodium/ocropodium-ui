@@ -9,6 +9,7 @@ from ocradmin.presets import views
 urlpatterns = patterns('',
     (r'^list/?$', views.presetlist),
     (r'^create/?$', login_required(views.presetcreate)),
+    (r'^createjson/?$', login_required(views.createjson)),
     (r'^show/(?P<slug>[-\w]+)/?$', views.presetdetail),
     (r'^edit/(?P<slug>[-\w]+)/?$', login_required(views.presetedit)),
     (r'^delete/(?P<slug>[-\w]+)/?$', login_required(views.presetdelete)),
