@@ -44,7 +44,11 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         $.map(this._nodes, function(n) {
             n.setErrored(false);
         });            
-    },                     
+    },
+
+    hasNodes: function() {
+        return this._nodes.length > 0;
+    },                  
 
     setNodeErrored: function(nodename, error) {
         if (!this._usednames[nodename])
