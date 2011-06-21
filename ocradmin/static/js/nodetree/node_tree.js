@@ -44,7 +44,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var self = this;                            
         node.addListeners({
             toggleIgnored: function(ig) {
-                self.scriptChanged();
+                self.scriptChanged("Toggled ignored: " + node.name);
             },
             toggleFocussed: function() {
                 if (!self._multiselect) {
@@ -61,7 +61,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                     if (node.name != other.name)
                         other.setViewing(false);
                 });
-                self.scriptChanged();
+                self.scriptChanged("Toggled viewing: " + node.name);
             },
             moving: function() {
                 // when the node is being dragged, also move any others
@@ -88,7 +88,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             },
             deleted: function() {
                 console.log("Deleted node:", node.name);
-                self.scriptChanged();
+                self.scriptChanged("Deleted: " + node.name);
             },
             clicked: function(event) {
                 if (self._menucontext)
@@ -144,7 +144,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                     self.connectPlugs(plug, self._dragcable.start);
                 else
                     self.connectPlugs(self._dragcable.start, plug);
-                self.scriptChanged();
+                self.scriptChanged("Plugged: " + plug.name);
             }
             self.removeDragCable();    
         }            
@@ -592,7 +592,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             this.connectPlugs(dst.output(), ins[i]);
         dst.setViewing(src.isViewing());
         this.deleteNode(src, false);
-        this.scriptChanged();
+        this.scriptChanged("Replaced node: " + src.name + " with" + dst.name);
     },                     
 
     createNode: function(type, atpoint, context) {
@@ -630,12 +630,12 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             var nmp = SvgHelper.mouseCoord(self.parent, event);
             var npoint = self.relativePoint(nmp);
             nodeobj.moveTo(npoint.x - (nodeobj.width / 2), npoint.y - (nodeobj.height / 2));
-            $(document).add($(nodeobj.group()).find("*")).bind("click.dropnode", function(e) {
-                $(self._group).unbind(".dropnode");
-                $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
-                self.scriptChanged();
-            });
         });        
+        $(document).add($(nodeobj.group()).find("*")).bind("click.dropnode", function(e) {
+            $(self._group).unbind(".dropnode");
+            $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
+            self.scriptChanged("Created node: " + nodeobj.name);
+        });
     },
 
     deleteNode: function(node, alert) {
@@ -659,7 +659,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             if (n.isFocussed()) return n;
         });
         $.map(togo, function(n) {self.deleteNode(n);});
-        this.scriptChanged();        
+        this.scriptChanged("Deleted selected nodes");        
     },                        
 
     buildScript: function() {
