@@ -5,7 +5,7 @@
 var OCRJS = OCRJS || {};
 OCRJS.NodeGui = OCRJS.NodeGui || {}
 
-OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
+OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
     constructor: function(viewer) {
         this.base(viewer, "manualseggui");
 

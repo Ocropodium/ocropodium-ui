@@ -179,9 +179,6 @@ $(function() {
             // loses its images...
             sdviewer.setBufferPath(sdviewer.activeBuffer(),
                 sdviewer.activeBufferPath());
-            setTimeout(function() {
-                sdviewer.drawBufferOverlays();
-            }, 100);
         },
     });
 
@@ -240,7 +237,7 @@ $(function() {
             setTimeout(function() {
                 sdviewer.setActiveBuffer(active^1);
                 guimanager.refreshGui();
-            }, 200);
+            }, 150);
             
             var overlays = {};
             if (data.result.type == "pseg") {
@@ -310,9 +307,10 @@ $(function() {
         if (!node)
             guimanager.tearDownGui();
         else {
-            console.log("Setting GUI for", node.name);
-            if (sdviewer.isReady())
+            if (sdviewer.activeViewer()) {
+                console.log("Setting GUI for", node.name);
                 guimanager.setupGui(node);
+            }
         }
     });
 
