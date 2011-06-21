@@ -258,7 +258,7 @@ $(function() {
         }
     }
 
-    function runScript() {        
+    function runScript() {
         var nodename = nodetree.getEvalNode();
         var node = nodetree.getNode(nodename);
         if (node) {
@@ -283,7 +283,8 @@ $(function() {
     formatter = new OCRJS.LineFormatter();
     nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
 
-    nodetree.addListener("scriptChanged", function() {
+    nodetree.addListener("scriptChanged", function(what) {
+        console.log("Script changed", what);
         if (nodetree.hasNodes()) {
             var elem = $("#open_script").find(".ui-button-text");
             if (!$(elem).text().match(/\*$/)) {
@@ -293,7 +294,10 @@ $(function() {
         }
     });        
 
-    nodetree.addListener("scriptChanged", runScript);
+    nodetree.addListener("scriptChanged", function(what) {
+        console.log("Running script because:", what);
+        runScript();
+    });
     nodetree.addListener("registerUploader", function(name, elem) {
 
         uploader.removeListeners("onXHRLoad.setfilepath");
