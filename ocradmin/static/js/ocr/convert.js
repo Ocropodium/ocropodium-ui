@@ -146,6 +146,7 @@ $(function() {
             nodetree.loadScript(data);
             var elem = $("#open_script").find(".ui-button-text");
             elem.text(name);
+            runScript();
         },
     });
 
@@ -258,7 +259,21 @@ $(function() {
             formatter.blockLayout($(".textcontainer"));
             $("#viewertabs").tabs("select", 1);
         }
-    }        
+    }
+
+    function runScript() {        
+        var nodename = nodetree.getEvalNode();
+        var node = nodetree.getNode(nodename);
+        if (node) {
+            var hash = hex_md5(bencode(node.hashValue()));
+            console.log("Hash for node", node.name, hash);
+            if (resultcache[hash]) {
+                console.log("Found cached result for:", nodename);
+                handleResult(nodename, resultcache[hash], true);
+            } else
+                reshandler.runScript(nodename, nodetree.buildScript());
+        }
+    }    
 
     sdviewer = new OCRJS.ImageViewer($("#imageviewer_1").get(0), {
         numBuffers: 2,
@@ -272,26 +287,16 @@ $(function() {
     nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
 
     nodetree.addListener("scriptChanged", function() {
-        var elem = $("#open_script").find(".ui-button-text");
-        if (!$(elem).text().match(/\*$/)) {
-            $(elem).text($(elem).text() + "*");
+        if (nodetree.hasNodes()) {
+            var elem = $("#open_script").find(".ui-button-text");
+            if (!$(elem).text().match(/\*$/)) {
+                $(elem).text($(elem).text() + "*");
+            }
+            presetmanager.setCurrentScript(nodetree.buildScript());
         }
-        presetmanager.setCurrentScript(nodetree.buildScript());
     });        
 
-    nodetree.addListener("scriptChanged", function() {
-        var nodename = nodetree.getEvalNode();
-        var node = nodetree.getNode(nodename);
-        if (node) {
-            var hash = hex_md5(bencode(node.hashValue()));
-            console.log("Hash for node", node.name, hash);
-            if (resultcache[hash]) {
-                console.log("Found cached result for:", nodename);
-                handleResult(nodename, resultcache[hash], true);
-            } else
-                reshandler.runScript(nodename, nodetree.buildScript());
-        }
-    });
+    nodetree.addListener("scriptChanged", runScript);
     nodetree.addListener("registerUploader", function(name, elem) {
 
         uploader.removeListeners("onXHRLoad.setfilepath");
@@ -356,5 +361,8 @@ $(function() {
     };
 
     $(window).resize();
+
+    // the run script on first load
+    runScript();    
 });
 
