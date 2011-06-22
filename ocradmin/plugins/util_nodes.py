@@ -2,6 +2,7 @@
 Nodes to perform random things.
 """
 
+import re
 from nodetree import node, writable_node, manager
 from ocradmin.plugins import stages, generic_nodes
 
@@ -70,19 +71,33 @@ class FindReplaceNode(node.Node, generic_nodes.TextWriterMixin):
         dict(name="replace", value=""),
     ]
 
+    def __init__(self, *args, **kwargs):
+        super(FindReplaceNode, self).__init__(*args, **kwargs)
+        self._findre = None
+        self._replace = None
+
+    def _validate(self):
+        super(FindReplaceNode, self)._validate()
+        try:
+            re.compile(self._params.get("find"))
+        except Exception, err:
+            raise node.ValidationError(self, "find: regular expression error: %s" % err)
+
     def content_data(self, data, tag, attrs):
         """Replace all content data."""
-        find = self._params.get("find")
-        repl = self._params.get("replace")
-        if not (find and repl):
-            return data
-        return data.replace(find, repl)
+        return self._findre.sub(self._replace, data)
 
     def _eval(self):
         """
         Run find/replace on input
         """
         xml = self.eval_input(0)
+        find = self._params.get("find", "")
+        replace = self._params.get("replace", "")
+        if find.strip() == "" or replace.strip() == "":
+            return xml
+        self._findre = re.compile(find)
+        self._replace = replace        
         parser = HTMLContentHandler()
         parser.content_data = self.content_data
         return parser.parse(xml)
