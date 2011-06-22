@@ -113,14 +113,14 @@ class FinereaderXmlParser():
         """Handle each new element"""
         if tag == "page" and not self.gotpage:
             self.gotpage = True
-            self.data["box"] = [0, 0, attrs.get("width", 0), attrs.get("height", 0)]
+            self.data["bbox"] = [0, 0, attrs.get("width", 0), attrs.get("height", 0)]
         elif tag == "block" and attrs.get("blockType") == "Text":
             self.data["columns"].append(self._attrs_to_box(attrs))
         elif tag == "line":
             if self.currline is None:
                 self.currline = {}
-            self.currline["box"] = self._attrs_to_box(attrs)
-            self.currline["line"] = self.linecnt
+            self.currline["bbox"] = self._attrs_to_box(attrs)
+            self.currline["index"] = self.linecnt
 
     def handle_data(self, data):
         """Handle tag data"""
