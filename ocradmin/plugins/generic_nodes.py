@@ -14,6 +14,26 @@ import ocrolib
 class ExternalToolError(StandardError):
     pass
 
+class TextWriterMixon(writable_node.WritableNodeMixin):
+    """
+    Write text data.
+    """
+    extension = ".txt"
+
+    @classmethod
+    def reader(cls, path):
+        """Read a text cache."""
+        if os.path.exists(path):
+            with open(path, "r") as fh:
+                return fh.read()
+
+    @classmethod
+    def writer(cls, path, data):
+        """Write a text cache."""
+        with open(path, "w") as fh:#
+            fh.write(data)
+        return path            
+
 
 class JSONWriterMixin(writable_node.WritableNodeMixin):
     """
@@ -84,7 +104,7 @@ class GrayPngWriterMixin(BinaryPngWriterMixin):
     pass
 
 
-class LineRecognizerNode(node.Node, JSONWriterMixin):
+class LineRecognizerNode(node.Node, TextWriterMixin):
     """
     Node which takes a binary and a segmentation and
     recognises text one line at a time.
