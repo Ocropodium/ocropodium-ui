@@ -18,6 +18,8 @@ def run(nodelist, outpath):
     manager.register_module("ocradmin.plugins.cuneiform_nodes")
     manager.register_module("ocradmin.plugins.numpy_nodes")
     manager.register_module("ocradmin.plugins.pil_nodes")
+    manager.register_module("ocradmin.plugins.ocrlab_nodes")
+    manager.register_module("ocradmin.plugins.abbyy_nodes")
 
     s = script.Script(nodelist, manager=manager)
     term = s.get_terminals()[0]
