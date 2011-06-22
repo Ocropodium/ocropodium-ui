@@ -623,6 +623,7 @@ class SegmentPageManualNode(node.Node, generic_nodes.JSONWriterMixin):
         if len(coords) == 0:
             coords.append(Rectangle(0, 0, 
                 page_bin.shape[1] - 1, page_bin.shape[0] - 1))
+        self.sanitise_coords(coords, page_bin.shape[1], page_bin.shape[0]);            
         height = page_bin.shape[1]
         boxes = {}
         for rect in coords:
@@ -659,10 +660,34 @@ class SegmentPageManualNode(node.Node, generic_nodes.JSONWriterMixin):
                 continue
             try:
                 ints = [int(i) for i in points]
+                assert len(ints) == 4
                 rects.append(Rectangle(*ints))
             except ValueError:
                 continue
-        return rects            
+        return rects
+
+    @classmethod
+    def sanitise_coords(cls, rectlist, width, height):
+        """
+        Treat negative numbers as the outer bound.
+        """
+        for i in range(len(rectlist)):
+            rect = rectlist[i]
+            rect.x0 = max(rect.x0, 0)
+            rect.y0 = max(rect.y0, 0)
+            if rect.x1 < 0:
+                rect.x1 = width
+            if rect.y1 < 0:
+                rect.y1 = height
+            if rect.x0 > width:
+                rect.x0 = width - 1
+            if rect.y0 > height:
+                rect.y0 = height - 1
+            if rect.x1 > width:
+                rect.x1 = width
+            if rect.y1 > height:
+                rect.y1 = height            
+            rectlist[i] = rect
 
     @classmethod
     def extract_boxes(cls, regions, page_seg, height, dx, dy):
