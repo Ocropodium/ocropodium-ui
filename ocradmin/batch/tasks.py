@@ -15,13 +15,15 @@ from nodetree.manager import ModuleManager
 from django.conf import settings
 from ocradmin.plugins import ocropus_nodes, stages
 
-manager = ModuleManager()
-manager.register_module("ocradmin.plugins.ocropus_nodes")
-manager.register_module("ocradmin.plugins.tesseract_nodes")
-manager.register_module("ocradmin.plugins.cuneiform_nodes")
-manager.register_module("ocradmin.plugins.abbyy_nodes")
-manager.register_module("ocradmin.plugins.numpy_nodes")
-manager.register_module("ocradmin.plugins.pil_nodes")
+MANAGER = ModuleManager()
+MANAGER.register_module("ocradmin.plugins.ocropus_nodes")
+MANAGER.register_module("ocradmin.plugins.tesseract_nodes")
+MANAGER.register_module("ocradmin.plugins.cuneiform_nodes")
+MANAGER.register_module("ocradmin.plugins.abbyy_nodes")
+MANAGER.register_module("ocradmin.plugins.numpy_nodes")
+MANAGER.register_module("ocradmin.plugins.pil_nodes")
+MANAGER.register_module("ocradmin.plugins.ocrlab_nodes")
+MANAGER.register_module("ocradmin.plugins.util_nodes")
 
 
 @register_handlers
@@ -41,7 +43,7 @@ class BatchScriptTask(AbortableTask):
         if not os.path.exists(writepath):
             os.makedirs(writepath, 0777)
 
-        tree = script.Script(json.loads(scriptjson), manager=manager, 
+        tree = script.Script(json.loads(scriptjson), manager=MANAGER, 
                 nodekwargs=dict(
                     logger=logger,
                     abort_func=abort_handler, 
@@ -57,7 +59,7 @@ class BatchScriptTask(AbortableTask):
         term = tree.get_terminals()[0]
         outpath = os.path.join(
                 writepath, os.path.basename("%s.bin%s" % os.path.splitext(filepath)))
-        outbin = manager.get_new_node("Ocropus::FileOut", label="OutputBinary",
+        outbin = MANAGER.get_new_node("Ocropus::FileOut", label="OutputBinary",
                 params=[("path", os.path.abspath(outpath).encode())])
         outbin.set_input(0, term.input(0))
         try:

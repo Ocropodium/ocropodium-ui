@@ -14,7 +14,7 @@ import ocrolib
 class ExternalToolError(StandardError):
     pass
 
-class TextWriterMixon(writable_node.WritableNodeMixin):
+class TextWriterMixin(writable_node.WritableNodeMixin):
     """
     Write text data.
     """
