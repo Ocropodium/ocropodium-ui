@@ -106,7 +106,6 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
                 .css({fontSize: "1.4em"})
                 .addClass("layout_rect_label")
                 .text(this._rects.length + 1));
-        console.log("RECT:", rect);
         // bind the key handlers for changing the reading order
         rect.bind("mouseenter", function(enterevent) {
             $(window).bind("keydown.mousehandle", function(event) {
