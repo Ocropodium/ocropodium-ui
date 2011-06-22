@@ -4,7 +4,8 @@ Cuneiform Recogniser
 
 from nodetree import node, manager
 from ocradmin import plugins
-from ocradmin.plugins import stages, generic_nodes
+from ocradmin.plugins import utils, stages, generic_nodes
+from ocradmin.core import utils as ocrutils
 import types
 
 import os
@@ -30,11 +31,20 @@ class AbbyyRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         """
         return [self.binary, "-if", image, "-f", "XML", "-of", outfile] 
 
+    def set_image_dpi(self, image):
+        """
+        Hack to set 300 PPI on all images.  This should hopefully
+        prevent FR from using up thousands of pages of license
+        if there's no resolution header available.
+        """
+        p = sp.Popen(["convert", "-units", "PixelsPerInch", 
+                "-density", "300", image, image])
+        return p.wait()
+
     def _eval(self):
         """
         Convert a full page.
         """
-        from ocradmin.core.utils import FinereaderXmlParser
         binary = self.get_input_data(0)
         json = None
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
@@ -42,6 +52,7 @@ class AbbyyRecognizerNode(generic_nodes.CommandLineRecognizerNode):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as btmp:
                 btmp.close()
                 self.write_binary(btmp.name, binary)
+                self.set_image_dpi(btmp.name)
                 args = self.get_command(tmp.name, btmp.name)
                 self.logger.debug("Running: '%s'", " ".join(args))
                 proc = sp.Popen(args, stderr=sp.PIPE)
@@ -50,11 +61,11 @@ class AbbyyRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                     return "!!! %s CONVERSION ERROR %d: %s !!!" % (
                             os.path.basename(self.binary).upper(),
                             proc.returncode, err)
-                json = FinereaderXmlParser().parsefile(tmp.name)
-            #os.unlink(tmp.name)
-            #os.unlink(btmp.name)
+                json = ocrutils.FinereaderXmlParser().parsefile(tmp.name)
+            os.unlink(tmp.name)
+            os.unlink(btmp.name)
         plugins.set_progress(self.logger, self.progress_func, 100, 100)
-        return json   
+        return utils.hocr_from_data(json)
 
 
 class Manager(manager.StandardManager):
