@@ -87,8 +87,9 @@ def download(request, slug):
 
 def fetch(request):
     """Hacky method of forcing downloading of an in-progress script via JS"""
+    slug = request.POST.get("name", "untitled")
     script = request.POST.get("script")
     response = HttpResponse(script, mimetype="application/json")
-    response['Content-Disposition'] = "attachment; filename=script.json"
+    response['Content-Disposition'] = "attachment; filename=%s.json" % slug
     return response
 
