@@ -2,32 +2,36 @@
     Test the scripts.
 """
 import os
-from django.utils import simplejson
+import glob
+from django.test import TestCase
+from django.utils import simplejson as json
 from django.conf import settings
 from django.utils.safestring import SafeUnicode
 
-from nodetree import script, node
+from ocradmin.core.tests import testutils
+
+from nodetree import script, node, manager
 import numpy
 
 SCRIPTDIR = "plugins/fixtures/scripts"
 
 
-from ocradmin.plugins.tests.base import OcrScriptTest
-
-
-class ScriptsTest(OcrScriptTest):
+class ScriptsTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json"]
 
     def setUp(self):
         """
             Setup OCR tests.  These run directly, not via views.
         """
-        super(ScriptsTest, self).setUp()
+        self.manager = manager.ModuleManager()
+        self.manager.register_paths(
+                glob.glob("plugins/*_nodes.py"), root="ocradmin")
+        testutils.symlink_model_fixtures()
         self.scripts = {}
         for fname in os.listdir(SCRIPTDIR):
             if fname.endswith("json"):
                 with open(os.path.join(SCRIPTDIR, fname), "r") as f:
-                    self.scripts[fname] = simplejson.load(f)
+                    self.scripts[fname] = json.load(f)
         
     def tearDown(self):
         """

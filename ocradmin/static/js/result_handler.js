@@ -41,7 +41,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
     runScript: function(nodename, script) {
         var self = this;                   
         $.ajax({
-            url: "/plugins/run",
+            url: "/presets/run",
             type: "POST",
             data: {
                 script: JSON.stringify(script),
@@ -71,7 +71,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         }
         this._timer = setTimeout(function() {
             $.ajax({
-                url: "/plugins/results/" + self._pending,
+                url: "/presets/results/" + self._pending,
                 error: OCRJS.ajaxErrorHandler,
                 success: function(ndata) {
                     $.each(ndata, function(i, data) {

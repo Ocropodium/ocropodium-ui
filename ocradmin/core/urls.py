@@ -2,7 +2,6 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
    (r'^/?$', 'ocradmin.core.views.index'),
-	(r'^convert/?$', 'ocradmin.core.views.convert'),
     (r'^task_transcript/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.task_transcript'),
     (r'^save/(?P<task_pk>\d+)/?$', 'ocradmin.core.views.save_transcript'),
     (r'^submit_viewer_binarization/(?P<task_pk>\d+)/?$',

@@ -276,7 +276,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
 
     queryNodeTypes: function() {
         var self = this;
-        var url = "/plugins/query/";
+        var url = "/presets/query/";
         self.callListeners("onUpdateStarted"); 
         $.ajax({
             url: url,

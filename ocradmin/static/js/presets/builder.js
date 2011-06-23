@@ -135,7 +135,7 @@ $(function() {
     // initialise the uploader...
     uploader  = new OCRJS.AjaxUploader(
         null,
-        "/plugins/upload/", 
+        "/presets/upload/", 
         { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
     );
     // load state stored from last time

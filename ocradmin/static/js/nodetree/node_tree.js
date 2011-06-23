@@ -713,7 +713,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     layoutNodes: function(script) {
         var self = this;                
         $.ajax({            
-            url: "/plugins/layout_graph",
+            url: "/presets/layout_graph",
             type: "POST",
             data: {script: JSON.stringify(script)},
             success: function(data) {

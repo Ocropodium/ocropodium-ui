@@ -31,17 +31,7 @@ def index(request):
     """
     OCR index page.
     """
-    return HttpResponseRedirect("/ocr/convert/")
-
-
-@login_required
-@saves_files
-def convert(request):
-    """
-    Save a posted image to the DFS and convert it with Celery.
-    """
-    context = dict(presets=Preset.objects.all().order_by("name"))
-    return render(request, "ocr/convert.html", context)
+    return HttpResponseRedirect("/presets/builder/")
 
 
 @login_required
