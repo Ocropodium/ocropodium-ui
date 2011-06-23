@@ -3,16 +3,38 @@
 {% block title %} OCRopodium - Convert {% endblock %}
 
 {% block headerscript %}
-
-    {% load compressed %}
-    {% compressed_js 'nodetree' %}
-    {% compressed_js 'viewers' %}
-
-	<script type='application/javascript' src='/static/js/presets/builder.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.hoverIntent.min.js'></script>
+	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.svg.js'></script>
+	<script type='application/javascript' src='/static/js/jquery/jquery.svgdom.min.js'></script>
+    <script type='application/javascript' src='/static/js/nodetree/svg_helper.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/cable.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/plug.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/node.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/node_list.js'></script>
+    <script type='application/javascript' src='/static/js/nodetree/node_tree.js'></script>
+    <script type='application/javascript' src='/static/js/nodetree/gui_manager.js'></script>
+	<script type='application/javascript' src='/static/js/nodegui/base_gui.js'></script>
+	<script type='application/javascript' src='/static/js/nodegui/crop_gui.js'></script>
+	<script type='application/javascript' src='/static/js/nodetree/cable.js'></script>
+	<script type='application/javascript' src='/static/js/preset_manager.js'></script>
+	<script type='application/javascript' src='/static/js/result_handler.js'></script>
+	<script type='application/javascript' src='/static/js/ocr/convert.js'></script>
+	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
 	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+    <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
+	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
+    <script type='application/javascript' src='/static/js/text_viewer.js'></script>
+    <script type='application/javascript' src='/static/js/crypto/bencode.js'></script>
+    <script type='application/javascript' src='/static/js/crypto/md5.js'></script>
 
-    {% compressed_css 'nodetree' %}
-    {% compressed_css 'viewers' %}
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/parameters.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/preset_manager.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/viewer.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/text_viewer.css" type="text/css" media="screen" />
+
 
 {% endblock %}
 
@@ -21,105 +43,51 @@
     {% include "includes/preset_manager.html" %}
     <div  id="viewertabs">
         <ul class="ui-layout-north">
-            <li><a href="#imageviewer_1_container">Image Viewer</a></li>
-            <li><a href="#textviewer_1_container">Text Viewer</a></li>
+            <li><a href="#imageviewer-1">Image Viewer</a></li>
+            <li><a href="#textviewer-1">Text Viewer</a></li>
         </ul>
         <div class="ui-layout-center">            
-            <div id="imageviewer_1_container">
-                <div id="imageviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
-                    <button class="tbbutton" id="image_zoomin">Zoom In</button>
-                    <button class="tbbutton" id="image_zoomout">Zoom Out</button>
-                    <button class="tbbutton" id="centre">Centre</button>
-                    <button class="tbbutton" id="fullscreen">Full Screen</button>
-                    <span>&nbsp;&nbsp;&nbsp;</span>
-                    <button class="tbbutton" id="refresh">Refresh</button>
-                </div>
-                <div id="imageviewer_1" class="imageviewer"></div>
-            </div>
-            <div id="textviewer_1_container">
-                <div id="textviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
-                    <button class="tbbutton" id="text_zoomin">Zoom In</button>
-                    <button class="tbbutton" id="text_zoomout">Zoom Out</button>
-                    <span>&nbsp;&nbsp;&nbsp;</span>
-                    <span id="format">
-                        <input type="radio" class="tbbutton" id="format_block" name="format" checked="checked" />
-                        <label for="format_block">Block</label>
-                        <input type="radio" class="tbbutton" id="format_line" name="format" />
-                        <label for="format_line">Line</label>
-                        <input type="radio" class="tbbutton" id="format_column" name="format" />
-                        <label for="format_column">Column</label>
-                    </span>
-                </div>
-                <div id="textviewer_1" class="textviewer"></div>
-            </div>
+            <div id="imageviewer-1" class="imageviewer"></div>
+            <div id="textviewer-1" class="textviewer"></div>
         </div>
     </div>
 {% endblock %}
 {% block sidebar %}
     <form id="optionsform">
-        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
-        <!-- NB. This is lower down in the DOM than the parameters, despite
-         being positioned above.  It is so the menu overlaps the params
-         where necessary -->
-        <div class="ui-layout-north" id="script_toolbar_container">
-            <div id="preset_toolbar_header" class="ui-widget-header ui-corner-all ui-layout-header">Preset Editor -
-                <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved" style="display: none">*</span></div>
-            <div id="script_menu" class="appmenu">
-                <ul class="top">
-                    <li>
-                        <h3>File</h3>
-                        <ul style="display:none">
-                            <li><a href="#" id="new_script">New...</a></li>
-                            <li><a href="#" id="open_script">Open Script</a></li>
-                            <li><a href="#" id="save_script">Save</a></li>
-                            <li><a href="#" id="save_script_as">Save as...</a></li>
-                            <li><a href="#" id="download_script">Export</a></li>
-                            <li><a href="#" id="close_script">Close</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="top">
-                    <li>
-                        <h3>Preset</h3>
-                        <ul style="display: none">
-                            <li><a href="#">Refresh</a></li>
-                            <li class="separator"><hr /></li>
-                            <li><a href="#" id="layout_tree">Layout Tree</a></li>
-                            <li><a href="#" id="focus_tree">Focus Tree</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="top">
-                    <li>
-                        <h3>Help</h3>
-                        <ul style="display: none">
-                            <li><a href="/presets/help">Documentation</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div> 
-            <div id="script_toolbar" class="viewer_toolbar ui-medium-flat">
+        <div class="ui-layout-north">
+            <div id="script_toolbar" class="ui-tabs-nav ui-widget-header ui-corner-top">
                 <span class="buttons_left">
                     <button id="abort">Abort</button>                                                    
                     <button id="rerun_script">Rerun</button>
                 </span>
-               <span class="buttons_right">
-                    <button id="open_script_button">---</button>
-                    <button id="save_script_button">Store Preset</button>
-                    <button id="download_script_button">Download Preset</button>
+                <select id="select_script" name="script">
+                    <option value="0">---</option>
+                    {% for preset in presets %}
+                        <option value="{{preset.slug}}">{{preset.name}}</option>
+                    {% endfor %}
+                </select>
+                <span class="buttons_right">
+                    <button id="open_script">Load Preset</button>
+                    <button id="save_script">Store Preset</button>
+                    <button id="download_script">Download Preset</button>
                 </span>
-                <div id="dialog"></div>
-            </div>                
+            </div>
+            <ul id="test_file_container" class="test_files"></ul>
+            <input type="hidden" id="test_file" value="" name="file" />
+            <div id="dialog"></div>
         </div>
         <div class="ui-layout-south ui-widget">
             <div id="parameters" class="node_parameters ui-medium-flat">
                 <h1>No Node Selected</h1>
             </div>
         </div>
+        <!-- NB. This is lower down in the DOM than the parameters, despite
+         being positioned above.  It is so the menu overlaps the params
+         where necessary -->
+        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
     </form>
     <!-- form for downloading scripts... this is a bit of a hack. -->
     <form id="fetch_script" method="POST" action="/presets/fetch/" >
-        <input name="name" type="hidden" id="fetch_script_slug" />
         <input name="script" type="hidden" id="fetch_script_data" />
     </form>
 {% endblock %}

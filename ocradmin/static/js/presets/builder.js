@@ -2,12 +2,15 @@
 // Handle drag and drop page conversions
 //
 
+// should probably be moved to app-global scope
+const MINFONTSIZE = 6;
+const MAXFONTSIZE = 40;
+
 // only in global scope for dubugging purposes
 var uploader = null;
 var formatter = null;
 var nodetree = null;
 var sdviewer = null;
-var textviewer = null;
 var reshandler = null;
 var presetmanager = null;
 var guimanager = null;
@@ -20,6 +23,9 @@ function saveState() {
 function loadState() {
 
 }
+
+
+
 
 $(function() {
 
@@ -36,108 +42,36 @@ $(function() {
             primary: "ui-icon-refresh",
         }        
     });
-    $("#open_script_button").button({
-        text: true,
+    $("#open_script").button({
+        text: false,
         icons: {
             primary: "ui-icon-folder-open",
-            secondary: "ui-icon-carat-1-s",
         }
     });
-    $("#save_script_button").button({
+    $("#save_script").button({
         text: false,
         icons: {
             primary: "ui-icon-disk",
         }
     });
-    $("#download_script_button").button({
+    $("#download_script").button({
         text: false,
         icons: {
             primary: "ui-icon-document",
         }        
     });
 
-    // viewer toolsbar
-    // style toolbar
-    $(".tbbutton").button({
-        disabled: false,
-    });
-    $("#format").buttonset();
-    $("#text_zoomin").click(function(event) {
-        textviewer.increaseFontSize();
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-zoomin",
-        }
-    });
-    $("#text_zoomout").click(function(event) {
-        textviewer.reduceFontSize();
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-zoomout",
-        }
-    });
-    $("#format_block").click(function(event) {
-        formatter.blockLayout(textviewer.container());
-    });
-    $("#format_line").click(function(event) {
-        formatter.lineLayout(textviewer.container());
-    });
-    $("#format_column").click(function(event) {
-        formatter.columnLayout(textviewer.container());
+    presetmanager = new OCRJS.PresetManager(
+            document.getElementById("script_toolbar"));
+    presetmanager.addListeners({
+        saveDialogOpen: function() {
+            nodetree.setDisabled(true);
+        },
+        saveDialogClose: function() {
+            nodetree.setDisabled(false);
+        },
     });
 
-    $("#image_zoomin").click(function(event) {
-        sdviewer.zoomBy(2);        
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-zoomin",
-        }
-    });
-    $("#image_zoomout").click(function(event) {
-        sdviewer.zoomBy(0.5);    
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-zoomout",
-        }
-    });
-    $("#centre").click(function(event) {
-        sdviewer.goHome();    
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-home",
-        }
-    });
-    $("#fullscreen").click(function(event) {
-        sdviewer.setFullPage(true);    
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-arrow-4-diag",
-        }
-    });
-
-    $("#refresh").click(function(event) {
-        var active = sdviewer.activeBuffer();
-        sdviewer.setBufferPath(active, sdviewer.bufferPath(active));    
-    }).button({
-        text: false,
-        icons: {
-            primary: "ui-icon-refresh",
-        }
-    });
-
-
-    // initialise the uploader...
-    uploader  = new OCRJS.AjaxUploader(
-        null,
-        "/presets/upload/", 
-        { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
-    );
     // load state stored from last time
     loadState();
     
@@ -161,8 +95,78 @@ $(function() {
             // loses its images...
             sdviewer.setBufferPath(sdviewer.activeBuffer(),
                 sdviewer.activeBufferPath());
+            setTimeout(function() {
+                sdviewer.drawBufferOverlays();
+            }, 100);
         },
     });
+
+    //presetmanager = new OCRJS.PresetManager("#script_toolbar");
+    //presetmanager.getPresetData = function() {
+    //    return JSON.stringify(nodetree.buildScript(), false, '\t');
+    //};
+    //presetmanager.addListeners({
+    //    onPresetLoadData: function(data) {
+    //        nodetree.clearScript();
+    //        nodetree.loadScript(JSON.parse(data));
+    //    },
+    //    onPresetClear: function(data) {
+    //        nodetree.clearScript();
+    //    },
+    //});
+    
+    $("#save_script").click(function(event) {
+        presetmanager.showNewPresetDialog(
+                JSON.stringify(nodetree.buildScript(), null, "\t"));
+    });        
+    
+    $("#download_script").click(function(event) {
+        var json = JSON.stringify(nodetree.buildScript(), false, '\t');
+        $("#fetch_script_data").val(json);
+        $("#fetch_script").submit();
+        event.stopPropagation();
+        event.preventDefault();    
+    });
+    
+    $("#select_script").change(function(event) {
+        if ($(this).val() < 1) {
+            nodetree.clearScript();
+        } else {
+            $.ajax({
+                url: "/presets/data/" + $(this).val(),
+                error: OCRJS.ajaxErrorHandler,
+                success: function(data) {
+                    nodetree.clearScript();
+                    nodetree.loadScript(JSON.parse(data));
+                },
+            });
+        }
+        event.stopPropagation();
+        event.preventDefault();    
+    });
+
+    $("#test_file_container").selectable({
+
+    });        
+    // initialise the uploader...
+    uploader  = new OCRJS.AjaxUploader(
+        null,
+        "/plugins/upload/", 
+        { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
+    );
+    uploader.addListener("onXHRLoad", function(data) {
+        var filepath = JSON.parse(data.target.response).file;
+        var filename = filepath.split("/").splice(-1, 1)[0];
+        var elem = $("<li></li>");
+        console.log("filename", filename);
+        elem
+            .data(filepath)
+            .text(filename);
+        $("#test_file_container").append(elem).selectable("refresh");
+    });
+    setTimeout(function() {
+        uploader.setTarget($("#test_file_container").get(0));
+    }, 100);
 
     $("#optionsform").submit(function() {
         nodetree.scriptChanged();
@@ -196,95 +200,76 @@ $(function() {
             sdviewer.setBufferPath(active^1, data.result.dzi);
             setTimeout(function() {
                 sdviewer.setActiveBuffer(active^1);
-                guimanager.refreshGui();
-            }, 150);
+            }, 200);
             
-            var overlays = {};
             if (data.result.type == "pseg") {
-                console.log("Result:", data.result);
                 var overlays = {};
                 $.each(["lines", "paragraphs", "columns"], function(i, class) {
-                    if (data.result[class]) {
-                        overlays[class] = data.result[class];
+                    if (data.result.data[class]) {
+                        overlays[class] = sdviewer.getViewerCoordinateRects(
+                            data.result.data.box, data.result.data[class]);
+                        console.log("Adding overlay: " + class);
                     }
                 });
+                sdviewer.setBufferOverlays(sdviewer.bufferOverlays(0), 1);
+                sdviewer.setBufferOverlays(overlays, 0);
             }
-            sdviewer.setBufferOverlays(overlays, 0);
             $("#viewertabs").tabs("select", 0);
         } else if (data.result.type == "text") {
             textviewer.setData(data.result.data);
             formatter.blockLayout($(".textcontainer"));
             $("#viewertabs").tabs("select", 1);
         }
-    }
+    }        
 
-    function runScript() {
+    sdviewer = new OCRJS.ImageViewer($(".imageviewer").get(0), {
+        numBuffers: 2,        
+    });
+    guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
+
+    textviewer = new OCRJS.TextViewer($(".textviewer").get(0));
+    reshandler = new OCRJS.ResultHandler();
+    formatter = new OCRJS.LineFormatter();
+    nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
+
+    nodetree.addListener("scriptChanged", function() {
         var nodename = nodetree.getEvalNode();
         var node = nodetree.getNode(nodename);
         if (node) {
             var hash = hex_md5(bencode(node.hashValue()));
-            console.log("Hash for node", node.name, hash);
             if (resultcache[hash]) {
                 console.log("Found cached result for:", nodename);
                 handleResult(nodename, resultcache[hash], true);
             } else
                 reshandler.runScript(nodename, nodetree.buildScript());
         }
-    }    
-
-
-    // Initialise objects
-    sdviewer = new OCRJS.ImageViewer($("#imageviewer_1").get(0), {
-        numBuffers: 2,
-        dashboard: false,
     });
-    guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
-    textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
-    reshandler = new OCRJS.ResultHandler();
-    formatter = new OCRJS.LineFormatter();
-    nodetree = new OCRJS.Nodetree.NodeTree($("#node_canvas"));
-    presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
+    //nodetree.addListener("registerUploader", function(name, elem) {
 
-    // Set up events
-    nodetree.addListeners({
-        scriptChanged: function(what) {
-            console.log("Script changed:", what);
-            presetmanager.checkForChanges();
-            runScript();
-        },
-        nodeFocussed: function(node) {
-            if (!node)
-                guimanager.tearDownGui();
-            else {
-                if (sdviewer.activeViewer()) {
-                    console.log("Setting GUI for", node.name);
-                    guimanager.setupGui(node);
-                }
-            }
-        },                          
-        registerUploader: function(name, elem) {
-            uploader.removeListeners("onXHRLoad.setfilepath");
-            uploader.setTarget(elem);
-            // FIXME: No error handling
-            uploader.addListener("onXHRLoad.setfilepath", function(data) {
-                nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
-            });
-        },                              
-    });    
-
-    reshandler.addListeners({
-        resultPending: function() {
-            nodetree.clearErrors();
-        },
-        validationError: function(node, error) {
-            nodetree.setNodeErrored(node, error);
-            // clear the client-size cache
-            resultcache = {};
-        },
-        resultDone: function(node, data) {
-           handleResult(node, data, false);
-        }        
+    //    uploader.removeListeners("onXHRLoad.setfilepath");
+    //    uploader.setTarget(elem);
+    //    // FIXME: No error handling
+    //    uploader.addListener("onXHRLoad.setfilepath", function(data) {
+    //        nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
+    //    });
+    //});
+    nodetree.addListener("nodeViewing", function(node) {
+        if (!node)
+            guimanager.tearDownGui();
+        else
+            guimanager.setupGui(node);
     });
+
+    reshandler.addListener("resultPending", function() {
+        nodetree.clearErrors();
+    });        
+    reshandler.addListener("validationError", function(node, error) {
+        nodetree.setNodeErrored(node, error);
+    });        
+    reshandler.addListener("resultDone", function(node, data) {
+        handleResult(node, data, false);
+    }); 
+    nodetree.init();
 
     var hsplit = $("#sidebar").layout({
         applyDefaultStyles: true,
@@ -318,11 +303,5 @@ $(function() {
     };
 
     $(window).resize();
-
-    // Initialise nodetree!    
-    nodetree.init();
-
-    // the run script on first load
-    runScript();    
 });
 

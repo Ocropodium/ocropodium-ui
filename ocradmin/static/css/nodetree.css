@@ -53,7 +53,6 @@ div#node_canvas {
 }
 
 .nodemenu li {
-    color: #000;
     display: block;
     padding: 2px;
     padding-right: 15px;
@@ -261,4 +260,37 @@ div#node_canvas {
     background: linear-gradient(top, #ffffad 0%,#ffffad 100%);
 }
 
+.test_files {
+    height: 30px;
+    clear: both;
+    background-color: #FDFDFD;
+    border: 1px solid #999; 
+    margin: 0px 0px 5px 0px;
+    color: #D4D4D4;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 0.2em;
+    overflow: hidden; 
+}
 
+.test_file_legend {
+    z-index: 0;
+    position: relative;
+    left: 0px;
+    top: 0px;
+}
+
+ul.test_file_list {
+    margin: 0px;
+    z-index: 1;
+    font-size: 0.9em;
+    display: inline;
+}
+
+ul.test_file_list li {
+    z-index: 100;
+    list-style: none;
+    display: inline;
+    float: left;
+    border: 2px solid #999;    
+}
