@@ -87,15 +87,15 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             }
         });        
         
-        $("#save_script_as, #save_script_as_button").click(function(event) {
+        $("#save_script_as").click(function(event) {
             self.showNewPresetDialog();
         });        
         
-        $("#open_script, #open_script_button").click(function(event) {
+        $("#open_script").click(function(event) {
             self.showOpenPresetDialog();
         });        
         
-        $("#download_script, #download_script_button").click(function(event) {
+        $("#download_script").click(function(event) {
             var json = JSON.stringify(self._nodetree.buildScript(), false, '\t');
             $("#fetch_script_slug").val(self._opened ? self._opened : "untitled");
             $("#fetch_script_data").val(json);
