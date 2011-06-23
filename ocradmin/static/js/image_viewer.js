@@ -6,6 +6,8 @@ if (OCRJS === undefined) {
     var OCRJS = {};
 }
 
+Seadragon.Config.blendTime = 0;
+Seadragon.Config.animationTime = 0;
 
 OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, options) {
@@ -25,6 +27,12 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             this.options.width = $(this.parent).width();
         }
 
+        this._listeners = {
+            onBufferRefresh: [],
+            resized: [],
+            closed: [],
+        };
+
         this._cbuf = 0;
         this._syncfunc = null;
         this._viewport = null;
@@ -33,11 +41,11 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this._buffers = [];
         this._rects = [];
         this._paths = [];
+        this._elementoverlays = [];
 
         // set up UI and init events
         this.init();
     },
-
 
     init: function() {
         this._viewport = $("<div><div>")
@@ -78,11 +86,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this.setMasterBuffer();
     },
 
-
-    container: function() {
-        return this.containerWidget();
-    },
-
     setDashboardVisible: function(show) {
         this.options.dashboard = show;
         this.refreshDashboard(show);
@@ -95,7 +98,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         }
     },
 
-
     close: function() {
         for (var i in this._buffers) {
             if (this._buffers[i].isOpen()) {
@@ -104,8 +106,9 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         }
     },               
 
-    updateSize: function(width, height) {
-        this._logger(width + "   " + height);
+    resetSize: function() {
+        var width = $(this.parent).width(),
+            height = $(this.parent).height();        
         this._viewport
             .height(height)
             .width(width);
@@ -122,13 +125,13 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this.refreshBuffers();        
     },
 
-    setWidth: function(width) {
-        this.updateSize(width, this.options.height);
+    height: function() {
+        return $(this.parent).height();
     },                
 
-    setHeight: function(height) {
-        this.updateSize(this.options.width, height);
-    },                
+    width: function() {
+        return $(this.parent).width();
+    },        
 
     isReady: function() {
         for (var i in this._buffers) {
@@ -139,7 +142,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         return true;
     },                
 
-
     setWaiting: function(wait) {
         this._overlay.css({
             top: this._viewport.position().top,
@@ -148,7 +150,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             height: this._viewport.height(),
         }).toggle(wait);
     },
-
 
     // set the path to a viewer and wire it to switch back
     // to the original position and zoom...
@@ -160,10 +161,11 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             var zoom = buffer.viewport.getZoom();
             buffer.addEventListener("open", function(e) {
                 buffer.viewport.panTo(center, true); 
-                buffer.viewport.zoomTo(zoom, true); 
+                buffer.viewport.zoomTo(zoom, true);                 
             });
         }
-        buffer.openDzi(dzipath);        
+        buffer.openDzi(dzipath);
+        this.callListeners("onBufferRefresh", bufnum);        
     },
 
     bufferPath: function(bufnum) {
@@ -192,8 +194,12 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
     activeBufferOverlays: function(bufnum) {
         return this._rects[this._cbuf];
-    },                    
-    
+    },
+
+    activeViewer: function() {
+        return this._buffers[this._cbuf];
+    },
+
     // set overlay elements for a given buffer, or if
     // no nuffer number given, all buffers                     
     setBufferOverlays: function(rects, bufnum) {
@@ -211,37 +217,81 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
 
         // FIXME: hack around the viewport not
         // being built the first time we try to
-        // draw overlays - assume it'll be ready
-        // in half a second
+        // draw overlays
         var self = this;
         if (this.isReady()) {
             self.drawBufferOverlays(); 
         } else {
             setTimeout(function() {
                 self.drawBufferOverlays();
-            }, 500);        
+            }, 200);        
         }
     },                           
 
-
     drawBufferOverlays: function() {
+        var self = this;                            
         for (var i in this._buffers) {
-            var viewer = this._buffers[i];
-            var overlays = this._rects[i];            
+            var portal = this._portals[i],
+                viewer = this._buffers[i],
+                overlays = this._rects[i];            
             if (!viewer || !viewer.drawer || !overlays)
                 continue;
-            viewer.drawer.clearOverlays();
+            //viewer.drawer.clearOverlays();
+            $(".viewer_highlight", portal).each(function(i, elem) {
+                viewer.drawer.removeOverlay(elem);
+            });
             var overlaydiv;
+            var sdrect;
             $.each(overlays, function(class, rects) {
                 for (var r in rects) {
                     overlaydiv = document.createElement("div");
                     $(overlaydiv).addClass("viewer_highlight " + class);
-                    viewer.drawer.addOverlay(overlaydiv, rects[r]);         
+                    sdrect = self.sourceRectToSeadragon(i, rects[r][0], 
+                            rects[r][1], rects[r][2], rects[r][3]);                
+                    viewer.drawer.addOverlay(overlaydiv, sdrect);         
                 }            
             });
         } 
     },
 
+    addOverlayElement: function(element, rect) {
+        var sdrect;
+        this._elementoverlays[element] = rect; 
+        var i = this.activeBuffer();
+        var viewer = this.activeViewer(); 
+        if (viewer.isOpen()) {
+            sdrect = this.sourceRectToSeadragon(i, rect[0], 
+                    rect[1], rect[2], rect[3]);                
+            viewer.drawer.addOverlay(element, sdrect);
+        }
+    },
+
+    updateOverlayElement: function(element, rect) {
+        var sdrect;                              
+        for (var i in this._elementoverlays) {
+            if (this._elementoverlays[i].elem == element)
+                this._elementoverlays[i].rect = rect;
+        }
+        var i = this.activeBuffer();
+        var viewer = this.activeViewer(); 
+        if (viewer.isOpen()) {
+            sdrect = this.sourceRectToSeadragon(i, rect[0], 
+                    rect[1], rect[2], rect[3]);                
+            viewer.drawer.updateOverlay(element, sdrect);         
+        }
+    },                                    
+
+    removeOverlayElement: function(element) {
+        for (var i in this._elementoverlays) {
+            if (this._elementoverlays[i].elem == element)
+                this._elementoverlays.splice(i, 1);
+        }
+        delete this._elementoverlays[element];
+        var viewer = this.activeViewer(); 
+        if (viewer.isOpen()) {
+            viewer.drawer.removeOverlay(element);         
+        }
+    },
 
     nextBuffer: function() {
         if (this._cbuf < this.options.numBuffers - 1) {
@@ -252,17 +302,15 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         this.refreshBuffers();
     },
 
-
     refreshBuffers: function() {
         this._portalholder.css("margin-top", "-" 
                 + (this._cbuf * this.options.height) + "px");
         this.setMasterBuffer();        
     },
-
                     
     // Sync background buffers to the foreground one
     syncToActiveBuffer: function() {
-        this._logger("Syncing others to: " + this._cbuf);                            
+        //this._logger("Syncing others to: " + this._cbuf);                            
         var active = this._buffers[this._cbuf];
         for (i in this._buffers) {
             if (i != this._cbuf) {
@@ -271,7 +319,6 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             }
         }
     },
-
                         
     // sync movement of inactive viewers to the
     // active one                    
@@ -279,10 +326,21 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         for (var i in this._buffers) {
             this._buffers[i].removeEventListener("animation", this._syncfunc);         
         }
-        this._logger("Setting sync to: " + this._cbuf);
         this._buffers[this._cbuf].addEventListener("animation", this._syncfunc);
-    },
 
+        // redraw the overlays onto the front buffer
+        var self = this;
+        var sdrect, rect;
+        $.each(this._elementoverlays, function(i, elemdict) {
+            for (var i in self._buffers)
+                if (i != self._cbuf)
+                    self._buffers[i].drawer.removeOverlay(elemdict.elem);
+            rect = elemdict.rect;
+            sdrect = self.sourceRectToSeadragon(self._cbuf,
+                    rect[0], rect[1], rect[2], rect[3]);
+            self._buffers[self._cbuf].drawer.addOverlay(elemdict.elem, sdrect);
+        });
+    },
 
     // wrappers for viewport functions
     zoomBy: function(zoom, immediately) {
@@ -298,8 +356,20 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     },
 
     fitBounds: function(rect, immediately) {
-        this._buffers[this._cbuf].viewport.fitBounds(rect, immediately);        
-    },                 
+        var sd = this.sourceRectToSeadragon(
+                this._cbuf, rect[0], rect[1], rect[2], rect[3]);
+        this._buffers[this._cbuf].viewport.fitBounds(sd, immediately);        
+    },
+
+    sourceRectToSeadragon: function(bufnum, x0, y0, x1, y1) {
+        if (!this._buffers[bufnum])
+            throw "Buffer out of range: " + bufnum;
+        if (!this._buffers[bufnum].source)
+            throw "Buffer " + bufnum + " has no source loaded";        
+        var src = this._buffers[bufnum].source.dimensions;
+        var sd = new Seadragon.Rect(x0 / src.x, y0 / src.x, (x1 - x0) / src.x, (y1 - y0) / src.x);
+        return sd;
+    },                         
 });
 
 

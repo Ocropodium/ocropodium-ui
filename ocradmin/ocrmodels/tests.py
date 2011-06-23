@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils import simplejson
 
-from ocradmin.ocr.tests import testutils
+from ocradmin.core.tests import testutils
 from ocradmin.ocrmodels.models import OcrModel
 
 
@@ -32,7 +32,6 @@ class OcrModelTest(TestCase):
         """
         self.testuser.delete()
 
-
     def test_ocrmodels_view(self):
         """
         Test basic list view
@@ -57,12 +56,11 @@ class OcrModelTest(TestCase):
         r = self.client.get("/ocrmodels/list", {"tag": "test"})
         self.assertEqual(r.status_code, 200)
 
-
     def test_new_ajax_form(self):
         """
         Test requesting a new upload form via Ajax works.
         """
-        r = self.client.get("/ocrmodels/new", {}, **AJAX_HEADERS)
+        r = self.client.get("/ocrmodels/create", {}, **AJAX_HEADERS)
         self.assertEqual(r.status_code, 200)
         # make sure there's a form in the results
         self.assertTrue(r.content.find("<form") != -1)
@@ -71,7 +69,7 @@ class OcrModelTest(TestCase):
         """
         Test creating a new model from an uploaded file.
         """
-        # we shouldn't have any ocrmodels in the DB yet.  If 
+        # we shouldn't have any ocrmodels in the DB yet.  If
         # successful it'll redirect back to the list.
         before = OcrModel.objects.count()
         r = self._create_test_model()
@@ -102,7 +100,6 @@ class OcrModelTest(TestCase):
         model = OcrModel.objects.get(pk=1)
         self.assertEqual(model.description, "")
 
-
     def _create_test_model(self):
         """
         Insert a post test model view post
@@ -125,17 +122,19 @@ class OcrModelTest(TestCase):
             )
         return r
 
-
     def _update_test_model(self):
         """
         Update the fixture model.
         """
         return self.client.post(
-            "/ocrmodels/update/1/",
+            "/ocrmodels/edit/1/",
             dict(
                 name="Test Update Model",
                 tags="test model update",
+                app="ocropus",
+                type="char",
                 description="",
                 public=False,
             ),
         )
+

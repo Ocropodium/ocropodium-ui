@@ -15,6 +15,11 @@ SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 # add lib dir to pythonpath
 sys.path.insert(0, os.path.join(SITE_ROOT, "lib"))
 
+# add plugin path to pythonpath
+#sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools"))
+
+#sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools/components"))
+
 # flag whether we're on a server.  Really need a better way of doing this.
 # ocr1 is the db master
 SERVER = False
@@ -43,8 +48,8 @@ ADMINS = (
 MANAGERS = ADMINS
 
 DATABASE_HOST = "localhost" if not SERVER else MASTERNAME
-DATABASE_NAME = "ocr_testing" if DEBUG else "ocr_production"
-DATABASE_USER = "ocr_testing" if DEBUG else "ocr_production"
+DATABASE_NAME = "ocr_testing" # if DEBUG else "ocr_production"
+DATABASE_USER = "ocr_testing" # if DEBUG else "ocr_production"
 DATABASES = {
     'default' : {
         'ENGINE'    : 'django.db.backends.mysql',
@@ -54,6 +59,12 @@ DATABASES = {
         'HOST'      : DATABASE_HOST,
     },
 }
+
+if 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'ocr_testing'
+    }
 
 # celery settings 
 CELERY_RESULT_BACKEND = "database"
@@ -72,7 +83,7 @@ SEND_EVENTS = True
 
 # User Celery's test_runner.  This sets ALWAYS_EAGER to True so
 # that tasks skip the DB infrastructure and run locally
-TEST_RUNNER = "djcelery.contrib.test_runner.run_tests" 
+TEST_RUNNER = "celery_test_runner.CeleryTestSuiteRunner" 
 
 # tagging stuff
 FORCE_LOWERCASE_TAGS = True
@@ -88,6 +99,10 @@ TIME_ZONE = 'Europe/London'
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-gb'
+
+# Login URL
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/ocr/binarize/"
 
 SITE_ID = 1
 
@@ -130,7 +145,8 @@ SECRET_KEY = 'vg@k)$%0#dn=xdelu613c6)y%yhxs)6himtf0l(i)dcpq_9jzp'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
+#    'django.template.loaders.filesystem.load_template_source',
+    'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.load_template_source',
 #     'django.template.loaders.eggs.load_template_source',
 )
@@ -155,6 +171,7 @@ ROOT_URLCONF = 'ocradmin.urls'
 
 # Static root media/css/etc
 STATIC_ROOT = "%s/static" % SITE_ROOT
+STATIC_URL = "/static/"
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -169,18 +186,20 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
+    'autoslug',
     'djcelery',
-    'accounts',
     'filebrowser',
     'batch',
-    'ocr',
+    'core',
     'ocrmodels',
-    'ocrpresets',
+    'presets',
+    'plugins',
     'ocrtasks',
     'reference_pages',
     'training',
     'projects',
     'tagging',
+    'compress',
 )
 
 SERIALIZATION_MODULES = {
@@ -188,4 +207,123 @@ SERIALIZATION_MODULES = {
     'json' : 'wadofstuff.django.serializers.json'
 }
 
+COMPRESS_ROOT = STATIC_ROOT
+COMPRESS_URL = STATIC_URL
+COMPRESS_AUTO = True
+# total hack around csstidy not working with CSS3 gradients, but us
+# still wanting to use file concatenation
+CSSTIDY_BINARY = "cp"
+CSSTIDY_ARGUMENTS = ""
+COMPRESS_CSS_FILTERS = None
+COMPRESS_CSS = {
+    "standard": {
+        "source_filenames": (
+            "css/mainmenu.css",
+            "css/layout-default.css",
+            "css/forms.css",
+            "css/projectbrowser.css",
+            "css/list_widget.css",
+            "css/messages.css",
+            "css/clean.css",
+        ),
+        "output_filename": "css/standard_compress.css",
+        "extra_context": {
+            "media": "screen",
+        }
+    },
+    "nodetree": {
+        "source_filenames": (
+            "css/nodetree.css",
+            "css/preset_manager.css",
+        ),
+        "output_filename": "css/nodetree_compress.css",
+        "extra_context": {
+            "media": "screen",
+        }
+
+    },
+    "viewers": {
+        "source_filenames": (
+            "css/viewer.css",
+            "css/image_viewer.css",
+            "css/text_viewer.css",
+        ),
+        "output_filename": "css/viewers_compress.css",
+        "extra_context": {
+            "media": "screen",
+        }
+
+    },
+}
+
+COMPRESS_JS = {
+    "jquery": {
+        "source_filenames": (
+            "js/jquery/jquery-1.6.js",
+            "js/jquery/jquery-ui-1.8.4.custom.min.js",
+            "js/jquery/jquery.cookie.js",
+            "js/jquery/jquery.globalstylesheet.js",
+            "js/jquery/jquery.text-overflow.min.js",
+            "js/jquery/jquery.titlecase.js",
+            "js/jquery/jquery.tmpl.js",
+            "js/jquery/jquery.rightClick.js",
+            "js/jquery/jquery.layout-latest.js",
+        	"js/jquery/jquery.hoverIntent.min.js",
+        ),
+        "output_filename": "js/jquery_compress.js",
+    },
+    "utils" : {
+        "source_filenames": (
+            "js/utils/json2.js",
+            "js/utils/base.js",
+        ),
+        "output_filename": "js/utils_compress.js",
+    },
+    "global": {
+        "source_filenames": (
+            "js/ocrbase.js",
+            "js/helpers.js",
+            "js/constants.js",
+            "js/abstract_data_source.js",    
+            "js/project_data_source.js",
+            "js/abstract_list_widget.js",
+            "js/project_list_widget.js",
+            "js/projectbrowser.js",
+            "js/appmenu.js",
+        ),
+        "output_filename": "js/global_compress.js",
+    },
+    "nodetree": {
+        "source_filenames": (
+	        "js/jquery/jquery.svg.js",
+            "js/jquery/jquery.svgdom.min.js",
+            "js/nodetree/svg_helper.js",
+            "js/nodetree/cable.js",
+            "js/nodetree/plug.js",
+            "js/nodetree/node.js",
+            "js/nodetree/node_list.js",
+            "js/nodetree/node_tree.js",
+            "js/nodetree/gui_manager.js",
+            "js/nodegui/base_gui.js",
+            "js/nodegui/crop_gui.js",
+            "js/nodegui/manualseg_gui.js",
+            "js/nodetree/cable.js",
+            "js/preset_manager.js",
+            "js/result_handler.js",
+            "js/crypto/bencode.js",
+            "js/crypto/md5.js",
+        ),
+        "output_filename": "js/nodetree_compress.js",
+    },
+    "viewers": {
+        "source_filenames": (
+            "js/seadragon/seadragon-min.js",
+            "js/image_viewer.js",
+            "js/text_viewer.js",
+	        "js/utils/stats.js",
+            "js/line_formatter.js",
+        ),
+        "output_filename": "js/viewers_compress.js",        
+    },
+}
 

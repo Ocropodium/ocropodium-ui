@@ -1,24 +1,27 @@
-import os
+"""
+Object representing an OCR project, used to group files, batches, 
+and presets.
+"""
+
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
-from tagging.fields import TagField
-from ocradmin.ocrmodels.models import OcrModel
-from ocradmin.ocrpresets.models import OcrPreset
-
-from ocradmin.ocr import utils as ocrutils
+import tagging
+import autoslug
+from ocradmin.core import utils as ocrutils
 
 
-class OcrProject(models.Model):
+class Project(models.Model):
     """
     OCR Project model.
     """
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name="projects")
     name = models.CharField(max_length=255, unique=True)
-    slug = models.SlugField(max_length=255, unique=True)
-    description = models.TextField(blank=True, null=True)
-    tags = TagField()
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
-    defaults = models.OneToOneField("OcrProjectDefaults", null=True, blank=True)
+    slug = autoslug.AutoSlugField(populate_from="name", unique=True)
+    description = models.TextField(blank=True)
+    tags = tagging.fields.TagField()
+    created_on = models.DateTimeField(editable=False)
+    updated_on = models.DateTimeField(blank=True, null=True, editable=False)
 
     def __unicode__(self):
         """
@@ -26,22 +29,33 @@ class OcrProject(models.Model):
         """
         return self.name
 
-class OcrProjectDefaults(models.Model):
-    """
-    OCR Project Defaults.  This is something of a 
-    meta-preset.
-    """
-    lmodel = models.ForeignKey(OcrModel, blank=True, null=True, 
-            related_name="lmodel", limit_choices_to={"type": "lang"})
-    cmodel = models.ForeignKey(OcrModel, blank=True, null=True,
-            related_name="cmodel", limit_choices_to={"type": "char"})
-    binarizer = models.ForeignKey(OcrPreset, blank=True, null=True,
-            related_name="binarizer", limit_choices_to={"type": "binarize"})
-    psegmenter = models.ForeignKey(OcrPreset, blank=True, null=True,
-            related_name="psegmenter", limit_choices_to={"type": "segment"})
-    recognizer = models.ForeignKey(OcrPreset, blank=True, null=True,
-            related_name="recognizer", limit_choices_to={"type": "recognize"})
+    def save(self):
+        if not self.id:
+            self.created_on = datetime.datetime.now()
+        else:
+            self.updated_on = datetime.datetime.now()
+        super(Project, self).save()
+
+    def get_absolute_url(self):
+        """URL to view an object detail"""
+        return "/projects/show/%i/" % self.id
+
+    def get_update_url(self):
+        """url to update an object detail"""
+        return "/projects/edit/%i/" % self.id
+
+    def get_delete_url(self):
+        """url to update an object detail"""
+        return "/projects/delete/%i/" % self.id
+
+    @classmethod
+    def get_list_url(cls):
+        """URL to view the object list"""
+        return "/projects/list/"
+
+    @classmethod
+    def get_create_url(cls):
+        """URL to create a new object"""
+        return "/projects/create/"
 
 
-
-    

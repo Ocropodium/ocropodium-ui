@@ -2,7 +2,7 @@
     width: 300px;
 }
 
-#dropzone {
+/*#dropzone {
     padding: 5px;
     border: 1px dotted #999;        
 
@@ -14,7 +14,7 @@
     font-size: 1.4em;
     background-color: #FFF;
     color: #F0F0F0;
-}
+} */
 
 #dropzone.hover {
     background-color: #FFC;

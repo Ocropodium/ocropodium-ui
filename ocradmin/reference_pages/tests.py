@@ -6,12 +6,11 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils import simplejson
 
-from ocradmin.reference_pages.models import ReferencePage
-
 
 AJAX_HEADERS = {
     "HTTP_X_REQUESTED_WITH": "XMLHttpRequest"
 }
+TESTFILE = "etc/simple.png"
 
 class ReferencePageTest(TestCase):
     fixtures = ["test_fixtures.json"]
@@ -35,21 +34,19 @@ class ReferencePageTest(TestCase):
         """
         Test listing ref pages.
         """
-        # we shouldn't have any projects in the DB yet.  If 
+        # we shouldn't have any projects in the DB yet.  If
         # successful it'll redirect back to the list.
         r = self.client.get("/reference_pages/list/")
         self.assertEqual(r.status_code, 200)
-
 
     def test_show(self):
         """
         Test viewing a ref page.
         """
-        # we shouldn't have any projects in the DB yet.  If 
+        # we shouldn't have any projects in the DB yet.  If
         # successful it'll redirect back to the list.
         r = self.client.get("/reference_pages/show/1/")
         self.assertEqual(r.status_code, 200)
-
 
     def test_delete(self):
         """
@@ -57,3 +54,4 @@ class ReferencePageTest(TestCase):
         """
         r = self.client.post("/reference_pages/delete/1/")
         self.assertRedirects(r, "/reference_pages/list")
+

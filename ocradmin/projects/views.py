@@ -1,41 +1,69 @@
+"""
+Project-related view functions.
+"""
+
 import os
 from datetime import datetime
 from django import forms
-from django.forms.models import inlineformset_factory
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core import serializers
-from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.core.serializers.json import DjangoJSONEncoder
 from django.template.defaultfilters import slugify
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
-from django.utils import simplejson
 
 from tagging.models import TaggedItem
-from ocradmin.ocr import utils as ocrutils
+from ocradmin.core import utils as ocrutils
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.batch.models import OcrBatch
-from ocradmin.projects.models import OcrProject, OcrProjectDefaults
-from fedora.adaptor import fcobject, fcdatastream 
+from ocradmin.batch.models import Batch
+from ocradmin.projects.models import Project
+from ocradmin.core import generic_views as gv
+
+
+from fedora.adaptor import fcobject
 from ordereddict import OrderedDict
-from ocradmin.projects.tasks import IngestTask
 PER_PAGE = 10
 
 
-class DeleteProjectForm(forms.Form):
+class ExportForm(forms.Form):
     """
-    Form to ensure the user really, really wants to
-    delete an entire project.
+    Fedora Export form.
     """
-    confirm = forms.CharField()
+    username = forms.CharField(max_length=50)
+    password = forms.CharField(max_length=255,
+            widget=forms.PasswordInput(render_value=False))
+    repository_url = forms.CharField(max_length=255)
+    namespace = forms.CharField(max_length=255)
 
 
-class OcrProjectForm(forms.ModelForm):
+class DublinCoreForm(forms.Form):
+    """
+    Dublin Core Metadata form.
+    """
+    title = forms.CharField(max_length=255)
+    creator = forms.CharField(max_length=255)
+    subject = forms.CharField(max_length=255)
+    description = forms.CharField(max_length=255, required=False)
+    publisher = forms.CharField(max_length=255, required=False)
+    contributors = forms.CharField(max_length=255, required=False)
+    date = forms.DateField(required=False)
+    type = forms.CharField(max_length=255, required=False)
+    format = forms.CharField(max_length=255, required=False)
+    identifier = forms.CharField(max_length=255, required=False)
+    source = forms.CharField(max_length=255, required=False)
+    language = forms.CharField(max_length=255, required=False)
+    relation = forms.CharField(max_length=255, required=False)
+    coverage = forms.CharField(max_length=255, required=False)
+    right = forms.CharField(max_length=255, required=False)
+
+
+
+
+class ProjectForm(forms.ModelForm):
     """
         New project form.
     """
@@ -47,16 +75,42 @@ class OcrProjectForm(forms.ModelForm):
         self.fields['description'].widget.attrs["cols"] = 40
 
     class Meta:
-        model = OcrProject
-        exclude = ["user", "slug", "created_on"]
+        model = Project
+        exclude = ["slug", "created_on"]
+        widgets = dict(
+                user=forms.HiddenInput(),
+        )
 
 
-class OcrProjectDefaultsForm(forms.ModelForm):
-    """
-    New project defaults form.
-    """
-    class Meta:
-        model = OcrProjectDefaults
+projectlist = gv.GenericListView.as_view(
+        model=Project,
+        page_name="OCR Projects",
+        fields=["name", "description", "user", "created_on"],)
+
+projectcreate = gv.GenericCreateView.as_view(
+        model=Project,
+        form_class=ProjectForm,
+        page_name="New OCR Project",
+        success_url="/projects/load/%(id)s/",)
+
+projectdetail = gv.GenericDetailView.as_view(
+        model=Project,
+        template_name="projects/show.html",
+        page_name="OCR Project",
+        fields=["name", "description", "user", "tags", "created_on",
+            "updated_on",])
+
+projectedit = gv.GenericEditView.as_view(
+        model=Project,
+        form_class=ProjectForm,
+        page_name="Edit OCR Project",
+        success_url="/projects/load/%(id)s/",)
+
+projectdelete = gv.GenericDeleteView.as_view(
+        model=Project,
+        page_name="Delete OCR Project",
+        success_url="/projects/list/",)
+
 
 
 def project_query(user, order, **params):
@@ -73,178 +127,28 @@ def project_query(user, order, **params):
     query = Q()
     for key, val in params.items():
         if key.find("__") == -1 and \
-                not key in OcrProject._meta.get_all_field_names():
+                not key in Project._meta.get_all_field_names():
             continue
-        ld = {key:val}
-        query = query & Q(**ld)
+        ldata = {key: val}
+        query = query & Q(**ldata)
 
     # if there's a tag present search by tagged item
     if tag:
         return TaggedItem.objects.get_by_model(
-            OcrProject.objects.filter(query),
+            Project.objects.filter(query),
             tag).order_by(*order)
     else:
-        return OcrProject.objects.filter(query).order_by(*order)
-
-
-
-
-@login_required
-def index(request):
-    """
-    Redirect to the project list.
-    """
-    return list(request)
+        return Project.objects.filter(query).order_by(*order)
 
 
 @login_required
-def list(request):
-    """
-    List available projects.
-    """
-    tag = request.GET.get("tag")
-    order = request.GET.get("order", "name")
-    fields = [ "name", "created_on", "user__pk", ]
-    # add a 'invert token' if we're ordering by the
-    # same field again
-    fields = map(lambda x: "-%s" % x if x == order else x, fields)
-    context = dict(
-        projects=project_query(request.user, [order, "created_on"], tag=tag),
-        fields=fields,
-        order=order
-    )
-    template = "projects/list.html" if not request.is_ajax() \
-            else "projects/includes/project_list.html"
-
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@login_required
-def new(request):
-    """
-    Show a form for a new project.
-    """
-    form = OcrProjectForm()
-    defform = OcrProjectDefaultsForm()
-    context = {"form": form, "defform": defform}
-    template = "projects/new.html" if not request.is_ajax() \
-            else "projects/includes/project_form.html"
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@transaction.autocommit    
-@login_required
-def create(request):
-    """
-    Create a new project.
-    """
-    form = OcrProjectForm(request.POST)
-    defform = OcrProjectDefaultsForm(request.POST)
-    if not request.method == "POST" \
-            or not defform.is_valid() or not form.is_valid():
-        # if we get here there's an error
-        context = {"form": form, "defform": defform}
-        template = "projects/new.html"
-        return render_to_response(template, context,
-                context_instance=RequestContext(request))
-
-    defaults = defform.save()
-    project = form.instance
-    project.defaults = defaults
-    project.slug = slugify(project.name)
-    project.user = request.user
-    project.full_clean()
-    project.save()
-    return HttpResponseRedirect("/projects/load/%s/" % project.pk)
-
-
-
-@login_required
-def edit(request, pk):
-    """
-    Show a form for editing the project.
-    """
-    project = get_object_or_404(OcrProject, pk=pk)
-    form = OcrProjectForm(instance=project)
-    defform = OcrProjectDefaultsForm(instance=project.defaults)    
-    context = {"project": project, "form": form, "defform": defform}
-    template = "projects/edit.html"
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@transaction.autocommit
-@login_required
-def update(request, pk):
-    """
-    Update a project.
-    """
-    project = get_object_or_404(OcrProject, pk=pk)
-    form = OcrProjectForm(request.POST, instance=project)
-    defform = OcrProjectDefaultsForm(request.POST, instance=project.defaults)    
-
-    if request.method == "POST":        
-        if not defform.is_valid() or not form.is_valid():
-            # if we get here there's an error
-            context = {"project": project, "form": form, "defform": defform}
-            template = "projects/edit.html"
-            return render_to_response(template, context,
-                    context_instance=RequestContext(request))
-        defaults = defform.save()
-        project = form.instance
-        project.defaults = defaults
-        project.slug = slugify(project.name)
-        project.full_clean()
-        project.save()
-    return HttpResponseRedirect("/projects/list")
-
-
-@login_required
-def show(request, pk):
-    """
-    Show request details.
-    """
-    project = get_object_or_404(OcrProject, pk=pk)
-    form = OcrProjectForm(instance=project)
-    defform = OcrProjectDefaultsForm(instance=project)
-    context = {"project": project, "form": form, "defform": defform}
-    template = "projects/show.html"
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@login_required
-def open(request):
-    """
-    List available projects.
-    """
-    
-    # this is not complete yet
-    #if not request.is_ajax():
-    #    return list(request)
-
-    order = request.GET.getlist("order_by");
-    params = request.GET.copy()
-    projects = project_query(request.user, order, **params)
-    
-    serializer = serializers.get_serializer("json")()
-    json = serializer.serialize(
-        projects,
-    )
-    return HttpResponse(json, mimetype="application/json")
-
-
-
-@login_required
-def load(request, pk):
+def load(request, project_pk):
     """
     Open a project (load it in the session).
     """
-    project = get_object_or_404(OcrProject, pk=pk)
+    project = get_object_or_404(Project, pk=project_pk)
     request.session["project"] = project
-    return HttpResponseRedirect("/projects/show/%s/" % pk)
+    return HttpResponseRedirect("/projects/show/%s/" % project_pk)
 
 
 def close(request):
@@ -259,23 +163,19 @@ def close(request):
 
 
 @login_required
-def export(request, pk):
+def export(request, project_pk):
     """
     Export a project.
     """
-    project = get_object_or_404(OcrProject, pk=pk)
+    project = get_object_or_404(Project, pk=project_pk)
     template = "projects/export.html" if not request.is_ajax() \
             else "projects/includes/export_form.html"
-    dublincore = OrderedDict([(v, "") for v in fcobject.FedoraObject.DUBLINCORE])
-    dublincore["title"] = "<page_name>"
-    dublincore["creator"] = request.user.get_full_name()
-    dublincore["description"] = project.description
-    dublincore["subject"] = project.name
-    dublincore["date"] = datetime.today()
 
+    exportform, dcform = _get_default_export_forms(request, project)
     context = dict(
         project=project,
-        dublincore=dublincore
+        exportform=exportform,
+        dcform=dcform,
     )
     return render_to_response(template, context,
             context_instance=RequestContext(request))
@@ -283,101 +183,76 @@ def export(request, pk):
 
 @transaction.commit_on_success
 @login_required
-def ingest(request, pk):
+def ingest(request, project_pk):
     """
     Ingest project training data into fedora.
     """
-    project = get_object_or_404(OcrProject, pk=pk)
-    if not request.method == "POST":
-        return export(request)
+    taskname = "fedora.ingest"
+    project = get_object_or_404(Project, pk=project_pk)
+    template = "projects/export.html" if not request.is_ajax() \
+            else "projects/includes/export_form.html"
+    exportform = ExportForm(request.POST)
+    dcform = DublinCoreForm(request.POST)
+    if not request.method == "POST" or not exportform.is_valid() \
+            or not dcform.is_valid():
+        context = dict(exportform=exportform, dcform=dcform,
+                project=project)
+        return render_to_response(template, context,
+                context_instance=RequestContext(request))
 
-    namespace = request.POST.get("fedora_namespace", slugify(project.name))
-    dublincore = OrderedDict()
-    for key, val in request.POST.iteritems():
-        if key.startswith("dc_"):
-            dublincore[key.replace("dc_", "", 1)] = val
-
-    asyncparams = []
+    # get all-string dublincore data
+    dc = dict([(k, str(v)) for k, v in dcform.cleaned_data.iteritems()])
 
     # create a batch db job
-    batch = OcrBatch(
+    batch = Batch(
         user=request.user,
-        name="Fedora Ingest: %s" % namespace,
+        name="Fedora Ingest: %s" % exportform.cleaned_data.get("namespace"),
         description="",
-        task_type=IngestTask.name,
+        task_type=taskname,
         project=project
-    )    
+    )
     batch.save()
 
-
-    for ts in project.reference_sets.all():
-        tid = ocrutils.get_new_task_id()
-        args = (ts.pk, namespace, dublincore)
+    ingesttasks = []
+    for rset in project.reference_sets.all():
+        tid = OcrTask.get_new_task_id()
+        args = (rset.pk, exportform.cleaned_data, dc)
         kwargs = dict(task_id=tid, queue="interactive")
         task = OcrTask(
             task_id=tid,
             user=request.user,
             batch=batch,
             project=project,
-            page_name=os.path.basename(ts.page_name),
-            task_name=IngestTask.name,
+            page_name=os.path.basename(rset.page_name),
+            task_name=taskname,
             status="INIT",
             args=args,
             kwargs=kwargs,
         )
         task.save()
-        asyncparams.append((args, kwargs))            
+        ingesttasks.append(task)
 
     # launch all the tasks
-    publisher = IngestTask.get_publisher(connect_timeout=5)    
-    try:
-        for args, kwargs in asyncparams:
-            IngestTask.apply_async(args=args, publisher=publisher, **kwargs)
-    finally:
-        publisher.close()
-        publisher.connection.close()
-
+    OcrTask.run_celery_task_multiple(taskname, ingesttasks)
     return HttpResponseRedirect("/batch/show/%d/" % batch.pk)
 
 
-@login_required
-def confirm_delete_project(request, project_pk):
+def _get_default_export_forms(request, project):
     """
-    Confirm deletion of the current project.
+    Fill in default values for DC.
     """
-    project = get_object_or_404(OcrProject, pk=project_pk)
-    form = DeleteProjectForm()
-    template = "projects/delete.html" if not request.is_ajax() \
-            else "projects/includes/delete_form.html"
-    context = {"project": project, "form": form}
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-@login_required
-def delete_project(request, project_pk):
-    """
-    Delete a project.
-    """
-    project = get_object_or_404(OcrProject, pk=project_pk)
-    form = DeleteProjectForm(request.POST)
-
-    if not request.method == "POST" or not form.is_valid() \
-            or not form.cleaned_data["confirm"] == "yes":
-        messages.info(request, "Project '%s' was NOT deleted." % project.name)
-    else:
-        project.delete()
-        messages.success(request, "Project '%s' deleted." % project.name)
-    return HttpResponseRedirect("/projects/list")                
-
-
-#@login_required
-#def delete(request, pk):
-#    """
-#    Show a form for editing the project.
-#    """
-#    project = get_object_or_404(OcrProject, pk=pk)
-#    project.delete()
-#    return HttpResponseRedirect("/projects/list/")
-
+    exportform = ExportForm(initial=dict(
+        username="fedoraAdmin",
+        password="fedora",
+        repository_url="http://localhost:8080/fedora/",
+        namespace=project.slug,
+    ))
+    dcform = DublinCoreForm(initial=dict(
+        title="<page_name>",
+        creator=request.user.get_full_name(),
+        description=project.description,
+        subject=project.name,
+        date=datetime.today(),
+    ))
+    return exportform, dcform
 

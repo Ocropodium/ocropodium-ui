@@ -6,52 +6,70 @@
 {% endblock %}
 
 {% block content %}
-    <div id="document_window">
-        <div class="widget">
-            <div class="widget_header">Run Comparison</div>
-            <div class="widget_content">
-                <form id="compare_form" action="/training/score_models/" method="POST"> 
-                    {% include "includes/form_errors.html" %}
-                    <div id="tabs">
-                        <ul>
-                            <li><a id="tabs_1_link" href="#tabs_1">Comparison Models</a></li>
-                            <li><a id="tabs_2_link" href="#tabs_2">Groundtruth</a></li>
-                        </ul>
-                        <div id="tabs_1">
-                            <div class="form_body">
-                                <fieldset>
-                                    <legend>OCR Comparison</legend>
-                                    <div class="field_wrapper">
-                                        {{form.name.label_tag}}
-                                        {{form.name}}
-                                    </div>
-                                    <div class="field_wrapper">
-                                        {{form.notes.label_tag}}                                        
-                                        {{form.notes}}
-                                    </div>
-                                </fieldset>
-                                {% for prefix in prefixes %}
-                                    {% include "training/includes/comparison_paramset.html" %}
-                                {% endfor %}
+<div class="batch ui-corner-top ui-layout-north" id="batch" data-index="{{batch.pk}}">
+    <div class="ui-widget-header ui-corner-top ui-layout-header">
+        Run Comparison
+    </div>    
+    <div class="ui-widget-content">
+        <form id="compare_form" action="/training/score_models/" method="POST"> 
+            {% include "includes/form_errors.html" %}
+            <div id="tabs">
+                <ul>
+                    <li><a id="tabs_1_link" href="#tabs_1">Comparison Models</a></li>
+                    <li><a id="tabs_2_link" href="#tabs_2">Groundtruth</a></li>
+                </ul>
+                <div id="tabs_1">
+                    <div class="form_body">
+                        <fieldset>
+                            <legend>OCR Comparison</legend>
+                            <div class="field_wrapper">
+                                {{form.name.label_tag}}
+                                {{form.name}}
                             </div>
-                            <div class="form_footer">
-                                <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Groundtruth" />
+                            <div class="field_wrapper">
+                                {{form.notes.label_tag}}                                        
+                                {{form.notes}}
                             </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Presets</legend>
+                            <div class="field_wrapper">
+                                <label for="script_1">Script 1</label>
+                                <select name="script1" id="script_1">
+                                    <option value="0">---</option>
+                                    {% for preset in presets %}
+                                    <option value="{{preset.slug}}">{{preset.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="field_wrapper">
+                                <label for="script_2">Script 2</label>
+                                <select name="script2" id="script_1">
+                                    <option value="0">---</option>
+                                    {% for preset in presets %}
+                                    <option value="{{preset.slug}}">{{preset.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="form_footer">
+                        <input type="button" class="next_tab" id="tabs_2_next" value="Next - Select Groundtruth" />
+                    </div>
+                </div>
+                <div id="tabs_2">
+                    {% include "training/includes/groundtruth_selector.html" %}
+                    <div class="form_footer">
+                        <div class="form_submit_buttons">
+                            <input type="submit" value="Submit Model Comparison" 
+                                id="submit_new_comparison_form" disabled="disabled" />
                         </div>
-                        <div id="tabs_2">
-                            {% include "training/includes/groundtruth_selector.html" %}
-                            <div class="form_footer">
-                                <div class="form_submit_buttons">
-                                    <input type="submit" value="Submit Model Comparison" 
-                                        id="submit_new_comparison_form" disabled="disabled" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>            
-                </form>            
-            </div>
-        </div>
+                    </div>
+                </div>
+            </div>            
+        </form>            
     </div>
+</div>
 {% endblock %}
 
 

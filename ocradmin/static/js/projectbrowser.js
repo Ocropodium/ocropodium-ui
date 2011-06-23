@@ -55,7 +55,7 @@ $(function() {
                     $(this).remove();
                 },
                 modal: true,
-            }).load("/projects/new/", function() {
+            }).load("/projects/create/", function() {
                 $("#id_name").live("keyup", function(event) {
                     validateProjectForm(dialog);
                 });

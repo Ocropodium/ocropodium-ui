@@ -97,7 +97,7 @@ class OcrAdmin(object):
         """
         Get results for a job.
         """
-        url = "%s%s%s" % (self.opts.host, RESURL, token["job_name"])
+        url = "%s%s%s" % (self.opts.host, RESURL, token["task_id"])
         data = {} #{"format": "png"}
         #response, content = self.http.request(url, "GET", 
         #        urllib.urlencode(data), headers=self.authheaders)

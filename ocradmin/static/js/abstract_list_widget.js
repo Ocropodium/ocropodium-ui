@@ -1,6 +1,6 @@
 // class for browsing and selecting files on the server
 
-var AbstractListWidget = Base.extend({
+var AbstractListWidget = OCRJS.OcrBase.extend({
     constructor: function(parent, datasource, options) {
         this.base();
         this.parent = parent;   
@@ -12,8 +12,8 @@ var AbstractListWidget = Base.extend({
 
         // currently selected list entry
         // (the last one clicked)
-        this.__current = null;
-        this.__selected = {};
+        this._current = null;
+        this._selected = {};
 
         var self = this;
         this.data.addListener("dataChanged", function() {
@@ -29,20 +29,6 @@ var AbstractListWidget = Base.extend({
     dataSource: function() {
         return this.data;
     },    
-
-    addListener: function(key, func) {
-        if (this.__listeners[key] == undefined)
-            throw "Unknown callback: '" + key + "'";
-        this.__listeners[key].push(func);
-    },
-
-    callListeners: function() {
-        var args = Array.prototype.slice.call(arguments);
-        var key = args.shift();
-        $.each(this.__listeners[key], function(i, func) {
-            func.apply(func.callee, args.concat(Array.prototype.slice.call(arguments)));
-        });
-    },
 
     container: function() {
         return $(this.parent);
@@ -126,7 +112,7 @@ var AbstractListWidget = Base.extend({
         $(".entry", self.parent).live("click.entryselect", function(event) {
             // if ctrl is down TOGGLE selection, else select item
             self.selectEntry(this, event.ctrlKey 
-                ? !$(this).hasClass("selected") 
+                ? !$(this).hasClass("ui-selected") 
                 : true
             );
 
@@ -134,22 +120,22 @@ var AbstractListWidget = Base.extend({
             // recipient and the 'current' (last selected) item.
             if (event.shiftKey && self.options.multiselect) {
                 // deselect everything
-                $(".selected", self.parent).not($(this)).not(self.__current).removeClass("selected");
+                $(".ui-selected", self.parent).not($(this)).not(self._current).removeClass("ui-selected");
                 // if there's a current element and it's not the
                 // one we've just clicked on, select everything in between
-                if (self.__current && self.__current != this) {
-                    var traverser = parseInt($(self.__current).data("row")) >
+                if (self._current && self._current != this) {
+                    var traverser = parseInt($(self._current).data("row")) >
                         parseInt($(this).data("row")) 
                         ? "prevUntil"
                         : "nextUntil";
-                    $(self.__current)[traverser]("#" + this.id).each(function(i, elem) {
+                    $(self._current)[traverser]("#" + this.id).each(function(i, elem) {
                         self.selectEntry(elem, true);                        
                     });
                 }
             // if ctrl is down, don't clear the last selection 
             } else if (!self.options.multiselect || !event.ctrlKey) {
                 var id = this.id;
-                $(".selected", self.parent).each(function(i, entry) {
+                $(".ui-selected", self.parent).each(function(i, entry) {
                     if (entry.id != id) {
                         self.selectEntry(entry, false);
                     }
@@ -157,8 +143,8 @@ var AbstractListWidget = Base.extend({
             }
             // store the selector of the current element
             // to use when selecting a range
-            if (self.__current == null || !event.shiftKey)
-                self.__current = this;
+            if (self._current == null || !event.shiftKey)
+                self._current = this;
 
             // finally, trigger any user callbacks
             self.rowClicked(event, parseInt($(this).data("row")));
@@ -212,13 +198,13 @@ var AbstractListWidget = Base.extend({
     // set a task in the list selected and store it's id
     // so the selection can be preserved after refresh
     selectEntry: function(entry, select) {
-        $(entry).toggleClass("selected", select);
+        $(entry).toggleClass("ui-selected", select);
         var key = $(entry).data("key");
         if (key) {
             if (select) {
-                this.__selected[key] = true;
+                this._selected[key] = true;
             } else {
-                this.__selected[key] = undefined;
+                this._selected[key] = undefined;
             }
         }
     },
@@ -261,8 +247,8 @@ var AbstractListWidget = Base.extend({
             }
             // if the data source defines a usable key, re-select
             // those elements that might've been selected before
-            if (key && this.__selected[key]) {
-                entry.addClass("selected");
+            if (key && this._selected[key]) {
+                entry.addClass("ui-selected");
             }
         };
 
@@ -271,8 +257,8 @@ var AbstractListWidget = Base.extend({
     },
 
     clearSelection: function() {
-        this.__selected = {};
-        $(".entrylist", this.parent).find(".entry.selected").removeClass("selected");        
+        this._selected = {};
+        $(".entrylist", this.parent).find(".entry.ui-selected").removeClass("ui-selected");        
     },
 
     // sync the header table's columns with the file list's widths

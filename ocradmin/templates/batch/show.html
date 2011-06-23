@@ -3,14 +3,12 @@
 {% block title %} OCRopodium - {{batch.name}} {% endblock %}
 
 {% block headerscript %}
-	<script type='application/javascript' src='/static/js/jquery.cookie.js'></script>
-	<script type='application/javascript' src='/static/js/jquery.form.js'></script>
-	<script type='application/javascript' src='/static/js/jquery.mousewheel.min.js'></script>
-	<script type='application/javascript' src='/static/js/stats.js'></script>
 	<script type='application/javascript' src='/static/js/batch/show.js'></script>
 	<script type='application/javascript' src='/static/js/multi_filter_list.js'></script>
 	<script type='application/javascript' src='/static/js/batch_widget.js'></script>
-    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <!--<script type='application/javascript' src='/static/js/export_widget.js'></script>-->
+    <!--<script type='application/javascript' src='/static/js/comparison_widget.js'></script>-->
+    <!--<script type='application/javascript' src='/static/js/parameter_builder.js'></script>-->
     <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/multi_filter_list.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/batch_widget.css" type="text/css" media="screen" />
@@ -18,19 +16,42 @@
 
 {% block content %}
 
-<div class="widget" id="sidebar">
-    <div class="widget_header">Recent Batches</div>
-    <div class="widget_content">
-        <div id="recent_batches">
-
+<script id="row_template" type="text/x-jquery-tmpl">
+<div class="batch_task" style="" data-index="${index}" href="#">
+    <span class="page_name">Loading...</span>                
+    <div class="batch_controls_right">
+        <div class="progressbar_container">
+            <span class="progressbar success">
+                <span class="progress" style="width: 0%; " title="0%"></span>
+            </span>
         </div>
+        <a href="#"
+                class="ui-state-default ui-corner-all button_link ui-icon ui-icon-circle-close abort_task"
+                title="Abort Task"></a>
+        <a href="#"
+                class="ui-state-default ui-corner-all button_link ui-icon ui-icon-refresh retry_task"
+                title="Retry Task"></a>
+        <span class="page_info">Lines: </span>
     </div>
 </div>
+</script>
+
+
+{% include "batch/includes/show_batch.html" %}
+
 
 {% if batch %}
     <form id="batch_form" action="{{request.path}}" >
         <input type="hidden" name="batch_id" value="{{batch.pk}}" id="batch_id" />
+        <input type="hidden" name="batch_type" value="{{batch.task_type}}" id="batch_type" />
     </form>
 {% endif %}
 
+{% endblock %}
+
+{% block sidebar %}
+<div class="ui-layout-north">
+    <div class="ui-widget-header ui-corner-top ui-layout-header">Transcript</div>
+</div>
+<div id="sidebar_content" class="ui-widget-content ui-layout-center"></div> 
 {% endblock %}

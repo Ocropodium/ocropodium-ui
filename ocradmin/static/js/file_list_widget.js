@@ -5,7 +5,7 @@ var FileListWidget = AbstractListWidget.extend({
     },
 
     files: function() {
-        return $.map($(".selected.file"), function(elem, i) {
+        return $.map($(".ui-selected.file"), function(elem, i) {
             return $(elem).data("value");    
         });
     },
@@ -69,7 +69,7 @@ var FileListWidget = AbstractListWidget.extend({
     rowClicked: function(event, row) {
         this.base();
         $("#fbopenbutton").attr(
-                "disabled", $(".selected.file", this.parent).length == 0);
+                "disabled", $(".ui-selected.file", this.parent).length == 0);
     },
 
     open: function(event) {

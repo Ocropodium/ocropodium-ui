@@ -3,6 +3,10 @@
 
 }
 
+#transcriptcontainer {
+    min-height: 400px;
+}
+
 .waiting {
     background-image: url(/static/ajax-loader-large.gif);
     background-position: center;
@@ -11,9 +15,10 @@
 
 
 #page_slider {
-    width: 200px;
+    width: 50px;
     margin: 7px 10px 0px 20px;
     display: inline;
+    float: left;
 }
 
 
@@ -47,7 +52,13 @@ h1.ocr_line {
     min-height: 200px;
 }
 
-#scroll_container {
+.transcript_lines * {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
+
+#innerscroll {
     height: 320px;
     overflow: auto;
     background-color: #FFF;

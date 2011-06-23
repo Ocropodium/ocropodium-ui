@@ -1,27 +1,14 @@
 [
     {
         "pk": 1, 
-        "model": "projects.ocrproject", 
+        "model": "projects.project", 
         "fields": {
             "description": "", 
             "tags": "", 
             "created_on": "2010-08-16 12:06:55", 
             "user": 1, 
-            "defaults": 1, 
             "name": "Test Project 2",
             "slug": "test-project-2"
-        }
-    }
-, 
-    {
-        "pk": 1, 
-        "model": "projects.ocrprojectdefaults", 
-        "fields": {
-            "recognizer": null, 
-            "psegmenter": 1, 
-            "binarizer": 1, 
-            "cmodel": 1, 
-            "lmodel": 2
         }
     }
 ]

@@ -1,17 +1,43 @@
 .ocr_batch {
 }
 
+#batch {
+    overflow: visible;
+    z-index: 20;
+}
+
 .batch_task {
-    margin: 5px 5px 5px 5px;
+    margin: 5px;
     border: 1px solid #999;
     border-radius: 2px;
     -moz-border-radius: 2px;
     padding: 5px;
     background-color: #FCFCFC;
-    height: 15px;
+    /*height: 15px;*/
+    overflow: auto;    
     vertical-align: middle;
     min-width: 540px;
-    cursor: pointer;
+    display: block;
+    text-decoration: none;
+    color: #333;
+    background-position: 5px -20px;
+    background-repeat: no-repeat;
+    background-image: url('/static/icons/document.svg');
+    padding-left: 30px;
+}
+
+.batch_task:hover {
+    background-color: #EEE;
+}
+
+.batch_task.current {
+    background-color: #E0E8EF;
+}
+
+.batch_task.loading {
+    opacity: 0.7;
+    background-position: 5px;
+    background-image: url('/static/ajax-loader-hz3.gif');
 }
 
 #overlay {
@@ -22,7 +48,7 @@
 }
 
 .progressbar_container {
-    float: right;
+    width: 220px;
     padding-left: 20px;
 }
 
@@ -65,39 +91,64 @@
     background-color: #045FB4;
 }
 
-.progressbar.error span {
+.progressbar.failure span {
     background-color: #FA5858;
 }
 
-.batch_header {
-    padding-left: 36px;
-    height: 32px;
-    background-image: url(/static/icons/transcript.png);
-    background-position: center left;
-    background-repeat: no-repeat;
-    float: left;
-}
-
-.batch_header.fedora {
-    background-image: url(/static/icons/fedora.png);
-}
-
-.batch_header.compare {
-    background-image: url(/static/icons/compare.png);
+.batch_info {
+    padding: 10px;
+    display: block;
+    overflow: auto;
 }
 
 .batch_name {
     font-weight: bold;
     font-size: 1.3em;
     #color: 333;
+    padding: 0px 10px 5px 5px;
+    padding-bottom: 10px;
+}
+
+.batch_controls_left {
+    float: left;
+    height: 32px;
+    padding-left: 36px;
+    background-position: center left;
+    background-repeat: no-repeat;
+    background-image: url(/static/icons/transcript.png);
+}
+
+.batch_controls_left.runbatchitem {
+    background-image: url(/static/icons/transcript.png);
+}
+
+
+.batch_controls_left.fedoraingest {
+    background-image: url(/static/icons/fedora.png);
+}
+
+
+.batch_controls_left.comparegroundtruth {
+    background-image: url(/static/icons/compare.png);
+}
+
+.batch_controls_inner {
+    float: left;
+    padding-top:3px;
+}
+
+.batch_controls_right {
+    float: right;
+}
+
+.batch_controls_right a, .page_info, .progressbar_container {
+    float: right;
 }
 
 .transcript_link, .transcript_link:visited {
     text-decoration: none;
     font-size: 0.9em;
     color: #666;
-    float: left;
-    clear: left;
 }
 
 .transcript_link:hover, .export_link:hover {
@@ -109,26 +160,23 @@
     text-decoration: none;
     font-size: 0.9em;
     color: #666;
-    float: left;
     margin-left: 10px;
 }
 
 .page_name {
-    font-size: 0.9em;
+    float: left;
 }
 
 .page_info {
     color: #B9B9B9;
-    float: right;
-    width: 100px;
+    padding-right: 10px;
 }
 
 .button_link {
     text-decoration: none;
-    color: #999;
-    float: right;
+    color: #333;
     margin: 0px 5px;
-    opacity: 0.5;
+    opacity: 0.8;
 }
 
 .retry_errored {
@@ -142,68 +190,6 @@
     margin: 10px;
     background-color: #FFF;
 }
-
-.tl_scrollcontainer {
-    float: right;
-}
-
-.tl_scrollup, .tl_scrolldown {
-    width: 14px;
-    height: 14px;    
-    background-color: #FDFDFD;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-left: 1px solid #999;
-}
-
-.tl_scrollup {
-    background-image: url("/static/hz_scroll_up.gif");
-}
-
-.tl_scrolldown {
-    background-image: url("/static/hz_scroll_down.gif");
-}
-
-.tl_scrollbar {
-    width: 14px;
-    height: 460px;    
-    border-left: 1px solid #999;
-    border-bottom: 1px solid #999;
-    border-top: 1px solid #999;
-
-}
-
-.tl_scrollhandle {
-    width: 100%;
-    height: 80px;
-    float: right;
-    background-color: #999; 
-    background-position: center;
-    background-repeat: no-repeat;
-    background: -webkit-gradient(
-        linear,
-        left top,
-        right top,
-        color-stop(0.35, rgb(135,180,255)),
-        color-stop(0.48, rgb(143,184,255))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(135,180,255) 35%,
-        rgb(143,184,255) 48%
-    );
-    /*background-image: url("/static/hz_scroll_handle.gif");*/
-}
-
-.task_list {
-    margin-right: 15px;
-}
-
-.batch_controls {
-    overflow: auto;
-    padding: 10px 10px 0px 10px;
-}
-
 
 #scroll_viewer {
     color: #FFF;
@@ -219,7 +205,7 @@
     padding: 10px;
 }
 
-#recent_batches {
+.recent_batches {
     border: 1px solid #D0D0D0;
     background-color: #FFF;
     padding-bottom: 10px;
@@ -227,7 +213,9 @@
 
 .recent_batch {
     padding: 5px 10px;
-    overflow: hidden; 
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; 
 }
 
 .recent_batch .recent_batch_link {
@@ -251,6 +239,14 @@
     float: left;
 }
 
+.list_popup input[type=text] {
+    border: 1px solid #999;
+    width: 7em;
+    font-size: 0.95em;
+    background-color: #FFFFDD;
+    margin: 5px;
+}
+
 .list_popup label {
     width: 5em;
     text-align: right;
@@ -262,9 +258,12 @@
     cursor: pointer;
 }
 
+.toggle_button.filtered {
+    text-decoration: underline;
+}
+
 .filter_container {
-    float: right;
-   font-size: 0.8em;
+    float: left;
 }
 
 #filter_list {
@@ -296,6 +295,11 @@
     background-color: #F2F2F2;
 }
 
+/*.ui-dialog .ui-dialog-content {
+    padding: 5px 2px 10px 2px;
+    margin-top: 0px;
+    overflow: hidden;
+} */
 
 
 

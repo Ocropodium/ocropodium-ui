@@ -7,13 +7,13 @@
 {% endblock %}
 
 {% block content %}
-
-    <div id="document_window">
-        <div class="widget">
-            <div class="widget_header">OCR Model Comparison</div>
-            <div class="widget_content">
-                {% include "training/includes/comparison_details.html" %}
-            </div>
+<div class="batch ui-corner-top ui-layout-north" id="batch" data-index="{{batch.pk}}">
+    <div class=" ui-dialog-titlebar ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-top">
+        OCR Preset Comparison
+    </div>    
+    <div class="ui-widget-content">
+        {% include "training/includes/comparison_details.html" %}
     </div>
+</div>
 {% endblock %}
 

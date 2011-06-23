@@ -1,67 +1,9 @@
-// Function to build the lang & char models selects when
-// the engine type is changed.
-function rebuildModelLists(appname) {
-    var opt = $("<option />");
-    var copt = $("#form_cmodel").val();
-    var lopt = $("#form_lmodel").val();
-
-    $("#uploadform").attr("disabled", "disabled");
-    $.get(
-        "/ocrmodels/search",
-        { app: appname },
-        function(response) {
-            $("#form_cmodel").html("");
-            $("#form_lmodel").html("");
-            $.each(response, function(index, item) {
-                var select = item.fields.type == "char"
-                    ? $("#form_cmodel")
-                    : $("#form_lmodel");
-
-                var newopt = opt.clone()
-                        .text(item.fields.name)
-                        .attr("value", item.fields.name);
-                if (item.fields.name == copt) {
-                    newopt.attr("selected", "selected");
-                }
-                select.append(newopt);
-            });
-            $("#uploadform").removeAttr("disabled");
-        }
-    );
-}
-
 
 function saveState() {
-    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
-        $.cookie(item, $("select[name=" + item + "]").val());     
-    });
-
-    // save the job names of the current pages...
-    var jobnames = $(".ocr_page").map(function(i, d) {
-        return $(d).data("jobname");
-    }).get().join(",");
-    if (jobnames) {
-        $.cookie("jobnames", jobnames);
-    }
 }
 
 
 function loadState() {
-    $.each(["engine", "clean", "psegmenter", "cmodel", "lmodel"], function(index, item) {
-        var val = $.cookie(item);
-        if (val) {
-            $("select[name=" + item + "]").val(val);
-        }
-    });
-
-    /*var jobnames = $.cookie("jobnames");
-    if (jobnames) {
-        var joblist = jobnames.split(",");
-        $.each(joblist, function(index, jobname) {
-            pageobjects[index] = new OcrPage("pageout", index, jobname);
-            pageobjects[index].pollForResults();            
-        });
-    }*/
 }
 
 // save state on leaving the page... at least try to...
@@ -75,6 +17,7 @@ window.onbeforeunload = function(event) {
 $(function() {
     var uploader = null;
     var filebrowser = null;
+    var pbuilder = null;
 
     // set up filebrowser
     $("#browse").click(function(event) {
@@ -117,13 +60,9 @@ $(function() {
         .css("margin-top", "0px")
         .css("overflow", "hidden");
 
-    $("select[name=engine]").change(function(e) {
-        rebuildModelLists($(this).val());
-    });
-
     // toggle selection of files
     $(".file_item").live("click", function(event) {
-        $(this).toggleClass("selected");
+        $(this).toggleClass("ui-selected");
     });
 
     // enable the submit button if appropriate
@@ -135,8 +74,9 @@ $(function() {
         $("#tabs").tabs(gotname ? "enable" : "disable", 1);
 
         var gotfiles = $("#batch_file_list").children().length > 0;
-        $("#submit_batch, #tabs_3_next").attr("disabled", !(gotfiles && gotname));
-        $("#tabs").tabs((gotname && gotfiles) ? "enable" : "disable", 2);
+        var gotscript = $("#id_preset").val() != 0 || $.trim($("#id_script").val()
+                 != "");
+        $("#submit_batch").attr("disabled", !(gotfiles && gotscript && gotname));
     };
 
     function stripeFileList() {
@@ -149,7 +89,7 @@ $(function() {
     }
 
     function removeSelectedBatchFiles() {
-        $(".file_item.selected").remove();
+        $(".file_item.ui-selected").remove();
         stripeFileList();
     }
 
@@ -205,13 +145,13 @@ $(function() {
 
     // initialise the uploader...
     uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/batch/upload_files/");
-    uploader.onXHRLoad = onXHRLoad;
-    uploader.onUploadsStarted = function(e) {
+    uploader.addListener("onXHRLoad", onXHRLoad);
+    uploader.addListener("onUploadsStarted", function(e) {
         $("#dropzone").text("Please wait...").addClass("waiting");
-    };
-    uploader.onUploadsFinished = function(e) {
+    });
+    uploader.addListener("onUploadsFinished", function(e) {
         $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-    };
+    });
 
     // make steps into tabs
     $(".next_tab").click(function(event) {
@@ -223,7 +163,8 @@ $(function() {
     // load state stored from last time
     loadState();
 
-    // fetch the appropriate models...
-    rebuildModelLists($("select[name='engine']").val());    
+    //pbuilder = new OCRJS.ParameterBuilder(
+    //        document.getElementById("options"));
+    //pbuilder.init();
 });
 

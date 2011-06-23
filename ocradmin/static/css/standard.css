@@ -10,6 +10,19 @@ body {
     height: 100%;
 }
 
+/* never allow selection! */
+* {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* except on inputs! */
+input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
 
 #header_logo {
     float: right;
@@ -47,8 +60,8 @@ body {
     );
     background: -moz-linear-gradient(
         center bottom,
-        rgb(135,180,255) 35%,
-        rgb(143,184,255) 48%
+        rgb(83,124,195) 48%,
+        rgb(75,120,195) 35%
     );
 }
 
@@ -121,11 +134,11 @@ body {
 }
 
 #sidebar {
-    min-height: 500px;
+    min-height: 300px;
 }
 
 #sidebar {
-    width: 300px;
+    width: 380px;
     float: right;
     /* need this because the document_window
      * somehow shifts the sidebar down... 
@@ -133,7 +146,7 @@ body {
 }
 
 #sidebar .widget_content {
-    padding: 10px 10px 20px 10px;
+    padding: 10px 10px;
 }
 
 #sideviewer {

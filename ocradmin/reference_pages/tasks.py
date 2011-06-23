@@ -18,13 +18,13 @@ class MakeThumbnailTask(AbortableTask):
         """
         Runs the model comparison action.
         """
-        logger = self.get_logger(**kwargs)
+        logger = self.get_logger()
         from PIL import Image
         base = os.path.splitext(path)[0]
         img = Image.open(path)
         img.thumbnail(size, Image.ANTIALIAS)
         thumbpath = "%s.thumb.jpg" % base
         img.save(thumbpath, "JPEG")
-        logger.info("Generated thumb: %s" % thumbpath)
+        logger.debug("Generated thumb: %s" % thumbpath)
 
 

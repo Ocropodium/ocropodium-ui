@@ -1,7 +1,8 @@
 # Fedora Commons Object
 
 import re
-from utils import FedoraException, FedoraAdaptor
+
+import utils
 from ordereddict import OrderedDict
 
 import fcbase
@@ -77,10 +78,11 @@ class FedoraObject(fcbase.FedoraBase):
     ]
  
     
-    def __init__(self, pid=None):
-        fcbase.FedoraBase.__init__(self)
+    def __init__(self, *args, **kwargs):
+        fcbase.FedoraBase.__init__(self, *args, **kwargs)
         self._loaded = False
         self._deleted = False
+        pid = kwargs.get("pid")
         if pid:
             self.pid = pid
             self._saved = True
@@ -97,7 +99,11 @@ class FedoraObject(fcbase.FedoraBase):
             self.pid = self.get_next_pid(namespace=self.NAMESPACE)
             # FIXME: Using the actual objects pid here doesn't seem to work
             # so we add it to the FOXML and use "new" instead.
-            self._response = self._handler.ingest(pid="new", content=self.to_foxml())
+            foxml = self.to_foxml()
+            print foxml
+            self._response = self._handler.ingest(pid="new", content=foxml)
+            print "PARAMS: %s" % self._params
+            print "RESPONSE: %s" % self._response.getBody().getContent()
             self._saved = self._response.getStatus() == "201"  
             return self._saved
         else:
@@ -268,11 +274,17 @@ class FedoraObject(fcbase.FedoraBase):
         doc = minidom.parseString(foxml)
         root = doc.documentElement
 
+    @classmethod
+    def from_xml(cls, xml, **kwargs):
+        fo = cls(**kwargs)
+        for subele in xml.getchildren():
+            fo.__dict__[utils.strip_ns(subele.tag)] = subele.text
+        return fo
 
     def datastream(self, dsid):
         self._response = self._handler.getDatastream(self.pid, dsid, format="xml")
         if self._response.getStatus() != "200":
-            raise FedoraException("Datastream '%s' for object with pid '%s' not found" % (dsid, self.pid))
+            raise utils.FedoraException("Datastream '%s' for object with pid '%s' not found" % (dsid, self.pid))
         rdoc = minidom.parseString(self._response.getBody().getContent())
         return fcdatastream.FedoraDatastream.load_from_xml(self.pid, rdoc.documentElement)   
 
@@ -429,6 +441,7 @@ class FedoraObject(fcbase.FedoraBase):
 
     def set_dublincore(self, dc):
          self._response = self._handler.getDatastreamDissemination(self.pid, "DC", format="xml")
+         print self._response.getBody().getContent()
          dcdoc = minidom.parseString(self._response.getBody().getContent())
          root = dcdoc.documentElement         
          root.childNodes = []        

@@ -1,6 +1,7 @@
 # Fedora Commons Datastream Object
 
-from utils import FedoraException, FedoraAdaptor
+import utils
+reload(utils)
 import fcbase
 reload(fcbase)
 
@@ -56,21 +57,21 @@ class FedoraDatastream(fcbase.FedoraBase):
         "size",
     ]
 
-    def __init__(self, pid, dsid=None, label=None):
-        fcbase.FedoraBase.__init__(self)
+    def __init__(self, *args, **kwargs):
+        fcbase.FedoraBase.__init__(self, *args, **kwargs)
         self._loaded = False
         self._saved = True
         self._temp_content = None
-        self.pid = pid
-        self.dsid = dsid
-        self.label = label
+        self.pid = kwargs.get("pid")
+        self.dsid = kwargs.get("dsid")
+        self.label = kwargs.get("dsid")
 
     @classmethod
     def new(cls, pid, dsid):
         """
             Instantiate a brand-new Datastream ready to be saved.
         """
-        ds = cls(pid, dsid)
+        ds = cls(pid=pid, dsid=dsid)
         ds._saved = False
         return ds
 
@@ -151,6 +152,8 @@ class FedoraDatastream(fcbase.FedoraBase):
             contentLength=self.size,
             content=self._temp_content
         )
+        print self._response.getBody().getContent()
+        print self._response.getStatus()
         return self._response.getStatus() == "201"           
 
     def save_new(self):
@@ -166,6 +169,8 @@ class FedoraDatastream(fcbase.FedoraBase):
             contentLength=self.size,
             content=self._temp_content
         )
+        print self._response.getBody().getContent()
+        print self._response.getStatus()
         self._temp_content = None
         self._saved = self._response.getStatus() == "201" 
         return self._saved  
@@ -182,7 +187,7 @@ class FedoraDatastream(fcbase.FedoraBase):
         """
         self._response = self._handler.getDatastreamDissemination(self.pid, self.dsid, download="true")
         if not self._response != "200":
-            raise FedoraAdaptorException("Datastream '%s' for object with pid '%s' not found" % (self.dsid, self.pid))
+            raise utils.FedoraAdaptorException("Datastream '%s' for object with pid '%s' not found" % (self.dsid, self.pid))
 
         return self._response.getBody().getContent()
  

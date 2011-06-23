@@ -3,8 +3,8 @@
 var ProjectDataSource = AbstractDataSource.extend({
     constructor: function() {
         this.base();
-        this.__data = [];
-        this.__headers = [{
+        this._data = [];
+        this._headers = [{
                 name: "Name",
                 sortAs: "str",
             }, {
@@ -16,10 +16,10 @@ var ProjectDataSource = AbstractDataSource.extend({
             },
         ];
 
-        this.__sortby = "created_on";
-        this.__desc = true;
-        this.__sortcol = 1;
-        this.__col2sort = {
+        this._sortby = "created_on";
+        this._desc = true;
+        this._sortcol = 1;
+        this._col2sort = {
             0: "name",
             1: "created_on",
             2: "description",
@@ -28,41 +28,42 @@ var ProjectDataSource = AbstractDataSource.extend({
 
     params: function() {
         return {
-            order_by: this.__desc 
-                ? "-" + this.__sortby 
-                : this.__sortby,
+            format: "json",
+            order: this._desc 
+                ? "-" + this._sortby 
+                : this._sortby,
         };
     },
 
     dataLength: function() {
-        return this.__data.length;
+        return this._data.length;
     },
 
     rowKey: function(row) {
-        return this.__data[row].pk;
+        return this._data[row].pk;
     },
 
     rowMetadata: function(row) {
         return {
-            pk: this.__data[row].pk,
+            pk: this._data[row].pk,
         };
     },
 
     cellLabel: function(row, col) {
         if (col == 0)
-            return this.__data[row].fields.name;
+            return this._data[row].fields.name;
         if (col == 1)
-            return this.__data[row].fields.created_on.split(" ")[0];
+            return this._data[row].fields.created_on.split(" ")[0];
         if (col == 2)
-            return this.__data[row].fields.description;
+            return this._data[row].fields.description;
     },
 
     sortByColumn: function(col) {
-        var s = this.__col2sort[col];
-        if (this.__sortby == s)
-            this.__desc = !this.__desc;
+        var s = this._col2sort[col];
+        if (this._sortby == s)
+            this._desc = !this._desc;
         else
-            this.__sortby = s;
+            this._sortby = s;
         this.refreshData();
     },
 
@@ -85,7 +86,7 @@ var ProjectDataSource = AbstractDataSource.extend({
                     alert("Error: " + data.error);
                     return;
                 }
-                self.__data = data;
+                self._data = data;
                 self.callListeners("dataChanged");
             },
         });        

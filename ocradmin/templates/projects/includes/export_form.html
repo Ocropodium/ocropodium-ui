@@ -2,19 +2,21 @@
     <div class="form_body">
         <fieldset>
             <legend>Export Options:</legend>
-            <div class="field_wrapper">
-                <label for="fedora_namespace">Namespace:</label>
-                <input type="text" name="fedora_namespace" value="{{project.name|slugify}}" id="fedora_namespace" />
-            </div>
+            {% for field in exportform %}
+                <div class="field_wrapper">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
         </fieldset>
 
         <fieldset>
             <legend>Dublin Core Metadata:</legend>
-            {% for key, value in dublincore.items %}
+            {% for field in dcform %}
             <div class="field_wrapper">
-                <label for="dc_{{key}}">{{key|title}}:</label>
-                <input class="dc_metadata_input" id="dc_{{key}}" 
-                    type="text" name="dc_{{key}}" value="{{value}}" />
+                {{ field.label_tag }}
+                {{ field }}
             </div>
             {% endfor %}                
         </fieldset>

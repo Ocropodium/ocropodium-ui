@@ -1,47 +1,64 @@
+"""
+Object representing a batch operation, consisting of
+one or more OcrTasks.
+"""
+
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from tagging.fields import TagField
 
-from ocradmin.projects.models import OcrProject
+from ocradmin.projects.models import Project
 
 
-class OcrBatch(models.Model):
+class Batch(models.Model):
     """
     OCR Batch object.
     """
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name="batches")
     name = models.CharField(max_length=255)
-    project = models.ForeignKey(OcrProject)
+    project = models.ForeignKey(Project, related_name="batches")
     task_type = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
     tags = TagField()
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    created_on = models.DateTimeField(editable=False)
+    updated_on = models.DateTimeField(blank=True, null=True, editable=False)
+
+    def __unicode__(self):
+        """
+        Unicode representation.
+        """
+        return self.name
+
+    def save(self):
+        if not self.id:
+            self.created_on = datetime.datetime.now()
+        else:
+            self.updated_on = datetime.datetime.now()
+        super(Batch, self).save()
 
     def username(self):
         return self.user.username
-    
+
     def subtasks(self):
         """
         Alias for 'tasks', for use when serializing
         """
         return self.tasks.all()
 
-
     def is_complete(self):
         """
         Check whether all tasks are done.
-        """        
+        """
         numrunning = self.tasks.exclude(
-                status__in=("SUCCESS", "ERROR", "ABORTED")).count()
+                status__in=("SUCCESS", "FAILURE", "ABORTED")).count()
         return numrunning == 0
-
 
     def task_count(self):
         """
         Return the number of contained tasks.
         """
         return self.tasks.count()
-
 
     def estimate_progress(self):
         """
@@ -62,11 +79,11 @@ class OcrBatch(models.Model):
         for t in tasks:
             lines = t.lines or 50
             weight = float(lines) / float(totallines)
-            if t.status in ("ERROR", "ABORTED", "SUCCESS"):
-                percentdone += (weight * 100)            
+            if t.status in ("FAILURE", "ABORTED", "SUCCESS"):
+                percentdone += (weight * 100)
             else:
                 runningtasks += 1
-                percentdone += (weight * t.progress)            
+                percentdone += (weight * t.progress)
         done = min(100.0, percentdone)
         # if there are running tasks, never go above
         # 99%
@@ -74,13 +91,20 @@ class OcrBatch(models.Model):
             done -= 1.0
         return max(0, done)
 
-
     def errored_tasks(self):
         """
         Get all errored tasks.
         """
-        return self.tasks.filter(status="ERROR")
+        return self.tasks.filter(status="FAILURE")
 
+    def inspection_url(self):
+        """
+        URL for viewing results
+        """
+        if self.task_type == "compare.groundtruth":
+            return "/training/comparison/%d/" % self.pk
+        elif self.task_type == "fedora.ingest":
+            return "#"
+        else:
+            return "/batch/transcript/%d/" % self.pk
 
-    class Meta:
-        unique_together = ("project", "name")

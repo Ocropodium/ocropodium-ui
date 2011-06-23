@@ -10,13 +10,29 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         this.options = {
             log: true,      // whether to, uh, log
             multi: true,    // whether to accept multiple files
+            errorhandler: function() {alert("arse");},
         };
         $.extend(this.options, options);
+
+        this._listeners = {            
+            onXHRLoad: [],
+            onUploadStart: [],
+            onUploadEnd: [],
+            onUploadsStarted: [],
+            onUploadsFinished: [],
+        };
 
         this._maxsize = 0;
         this._queue = [];
         this._params = [];
 
+        if (this.target)
+            this.setTarget()
+
+    },
+
+    setTarget: function(elem) {
+        this.target = elem || this.target;
         $(this.target).wrap($("<div></div>"));
         this._fakeinput = $("<input></input>")
             .attr("type", "file")
@@ -25,14 +41,15 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             .width($(this.target).outerWidth())
             .height($(this.target).outerHeight())
             .css({
-                position: "absolute",
-                opacity: 0.0,                
+                position: "fixed",
+                opacity: 0,                
                 top: $(this.target).offset().top + "px",
                 left: $(this.target).offset().left + "px",
             }).insertAfter(this.target);
         this._cnt = $(this.target).parent().get(0);
         
         this.setupEvents();
+
     },
 
     setupEvents: function() {
@@ -101,8 +118,12 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         return params;    
     },
 
+    clearParameters: function() {
+        this._params = [];
+    },         
+
     uploadPost: function(files) {
-        this.onUploadsStarted();
+        this.callListeners("onUploadsStarted");
 
         // chuck away all but the first file if not
         // in multi mode
@@ -124,7 +145,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
                 
     postNextItem: function() {
         if (!this._queue.length) {
-            this.onUploadsFinished();
+            this.callListeners("onUploadsFinished");
             return false;
         }
 
@@ -133,13 +154,14 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         var xhr = new XMLHttpRequest();
         xhr.onload = function(event) {
             self.postNextItem();
-            self.onXHRLoad(event);        
+            self.callListeners("onXHRLoad", event);        
         };
+        xhr.onerror = this.options.errorhandler;
 
         var params = this.parameters();
         params["inlinefile"] = file.fileName;
         var urlstring = this.getQueryString(params);
-        this.onUploadStart()
+        this.callListeners("onUploadStart");
         xhr.open("POST", urlstring, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.setRequestHeader('content-type', file.type); 
@@ -158,26 +180,6 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         return this._maxsize;
     },
 
-    // callbacks:
-    onXHRLoad: function(event) {
-
-    },
-
-    onUploadStart: function(event) {
-
-    },
-
-    onUploadEnd: function(event) {
-
-    },
-
-    onUploadsStarted: function(event) {
-
-    },
-
-    onUploadsFinished: function(event) {
-
-    },
 });
 
 

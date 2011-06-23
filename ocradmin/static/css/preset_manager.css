@@ -1,57 +1,49 @@
-#preset_container.waiting {
-    background-image: url("/static/ajax-loader-hz2.gif");
-    background-position: right bottom;
+.preset_dialog .loading {
+    background-image: url("/static/ajax-loader-large.gif");
+    background-position: center center;
     background-repeat: no-repeat;
 }
 
-.save_dialog .ui-dialog-titlebar {
+.preset_dialog .buttons {
+    float: right;
+    padding: 5px 0px;
+}
+
+.preset_manager_dialog .ui-dialog-titlebar {
     display: none;
 }
 
-a.preset_control {
-    text-decoration: none;
-    font-weight: bold;
-    padding: 2px;
-    margin-left: 5px;
+.preset_manager_dialog {
+    box-shadow: 5px 6px 14px rgba(0, 0, 0, 0.26);
+    -moz-box-shadow: 5px 6px 14px rgba(0, 0, 0, 0.26);
+    -webkit-box-shadow: 5px 6px 14px rgba(0, 0, 0, 0.26);
 }
 
-a.preset_control:hover {
-    color: #1B4765;
+#open_preset_list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    height: 300px;
+    overflow: auto;    
 }
 
-.pm_preset_list {
-    padding: 5px;
-    margin-bottom: 5px;
-    height: 100px;
-    overflow: auto;
-    list-style-type: square;
-    border: 1px solid #999999;
+
+#open_preset_list .ui-selecting {
+    background: #639bc1;
+    background: -moz-linear-gradient(top, #639bc1 0%, #468bbc 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#639bc1), color-stop(100%,#468bbc));
+    background: -webkit-linear-gradient(top, #639bc1 0%,#468bbc 100%);
+    background: -o-linear-gradient(top, #639bc1 0%,#468bbc 100%);
+    background: -ms-linear-gradient(top, #639bc1 0%,#468bbc 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#639bc1', endColorstr='#468bbc',GradientType=0 );
+    background: linear-gradient(top, #639bc1 0%,#468bbc 100%);
 }
 
-.pm_preset_item {
+#open_preset_list li {
+    margin: 3px;
+    padding: 0.4em;
+    font-size: 1.4em;
+    height: 18px;
     cursor: pointer;
-    background-image: url("/static/icons/preset.png");
-    background-repeat: no-repeat;
-    background-position: left;
-    padding-left: 18px;
-
-}
-
-.pm_preset_list li.odd {
-    background-color: #FBFBFB;
-}
-
-.pm_preset_details {
-    margin-bottom: 5px;
-    padding: 5px;
-    height:40px;
-    overflow: auto;
-}
-
-.pm_preset_button {
-    float: right;
-}
-
-.pm_preset_select {
-    width: 10em;
-}
+    border-top: 1px solid #DDD;
+}    

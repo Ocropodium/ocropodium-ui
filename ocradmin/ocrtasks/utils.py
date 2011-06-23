@@ -1,29 +1,41 @@
-# Miscellaneous task-related functions
+"""
+Utilities for managing OcrTasks.
+"""
 
-#from pygments import highlight
-#from pygments.lexers import PythonLexer
-#from pygments.formatters import HtmlFormatter
-#import pprint
-#
-#
-#def html_format(data):
-#    """
-#    Returns a string formatted by Pygments.
-#    """
-#    return highlight(pprint.pformat(data, indent=4), 
-#            PythonLexer(), HtmlFormatter())
-#
-#
-#def html_format_querydict(data):
-#    """
-#    Formats a django querydict as a dict.
-#    Ignores multi-value items.
-#    """
-#    d = {}
-#    for k in data.iterkeys():
-#        d[k] = data.get(k)
-#    return highlight(pprint.pformat(d, indent=4), 
-#            PythonLexer(), HtmlFormatter())
-#    
-    
+from celery.contrib.abortable import AbortableAsyncResult
+from models import OcrTask
+
+
+
+def get_progress_callback(task_id):
+    """
+    Closure for generating a function that refers to
+    a task id in outer scope.
+    """
+    def progress_func(progress, lines=None):
+        """
+        Set progress for the given task.
+        """
+        task = OcrTask.objects.get(task_id=task_id)
+        task.progress = progress
+        if lines is not None:
+            task.lines = lines
+        task.save()
+    return progress_func
+
+
+def get_abort_callback(task_id):
+    """
+    Closure for generating a function that takes
+    no params but uses a task_id in outer scope.
+    """
+    def abort_func():
+        """
+        Check whether the task in question has been aborted.
+        """
+        asyncres = AbortableAsyncResult(task_id)
+        return asyncres.is_aborted()
+    return abort_func
+
+
 

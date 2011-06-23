@@ -10,12 +10,14 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import simplejson
 
+from ocradmin.core.tests import testutils
 
 TESTFILE = "simple.png"
 
 
 class TrainingTest(TestCase):
     fixtures = ["ocrmodels/fixtures/test_fixtures.json",
+            "presets/fixtures/test_fixtures.json",
             "projects/fixtures/test_fixtures.json",
             "reference_pages/fixtures/test_fixtures.json"]
 
@@ -27,7 +29,7 @@ class TrainingTest(TestCase):
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
         self.client.get("/projects/load/1/")
-
+        testutils.symlink_reference_pages()
 
     def tearDown(self):
         """
@@ -43,7 +45,6 @@ class TrainingTest(TestCase):
         r = self.client.get("/training/new/")
         self.assertEqual(r.status_code, 200)
 
-
     def test_comparisons_view(self):
         """
         Test viewing the comparisons list.
@@ -57,14 +58,13 @@ class TrainingTest(TestCase):
         of settings.  FIXME: Fragile hard-coded
         references to batch & ref set pks.
         """
-        r = self.client.post("/training/score_models", {
+        params = {
             "name": "Test comparison",
-            "p0_paramset_name": "Test Ocropus",
-            "p1_paramset_name": "Test Tesseract",
-            "p0_engine": "ocropus",
-            "p1_engine": "tesseract",
+            "script1": "tesseractbasic",
+            "script2": "ocropusbasic",
             "tset": 1,
-        }, follow=True)
+        }
+        r = self.client.post("/training/score_models", params, follow=True)
         # check we were redirected to the batch page
         self.assertRedirects(r, "/batch/show/1/")
 

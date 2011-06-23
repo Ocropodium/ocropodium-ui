@@ -5,7 +5,7 @@
             <div class="field_wrapper">
                 {% for tset in tsets %}
                     <div class="ground_truth_item">
-                        {{tset.data.page}}
+                        {{tset.page_name}}
                         <input type="checkbox" class="ground_truth_enabled"
                             name="tset" value="{{tset.pk}}" />
                     </div>

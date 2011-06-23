@@ -19,7 +19,7 @@
     text-align: left;
 }
 
-.field_wrapper input[type="text"] {
+.field_wrapper input[type="text"],input[type="password"] {
     width: 20em;
     border: 1px solid #999;
     padding: 2px;
@@ -60,8 +60,17 @@ fieldset .field_wrapper select {
     overflow: auto;
 }
 
-.form_footer input {
+.form_footer * {
     float: right;
+}
+
+ul.errorlist {
+	display: inline;
+}
+
+ul.errorlist li {
+	display: inline;
+    color: red;
 }
 
 fieldset {
