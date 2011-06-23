@@ -6,9 +6,11 @@
 var OCRJS = OCRJS || {};
 
 OCRJS.PresetManager = OCRJS.OcrBase.extend({
-    constructor: function(parent, options) {
+    constructor: function(parent, nodetree, options) {
         this.base(parent, options);
         this.parent = parent;
+
+        this._nodetree = nodetree;
 
         this._dialog = $("#dialog", this.parent);
         this._opentmpl = $.template($("#openDialog"));
@@ -25,36 +27,96 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         };
 
         this._opened = null;
-        this._openeddata = null;
+        this._openedhash = null;
         this._current = null;
 
         // flag telling us we should continue to
         // offer the open dialog after the current
         // save dialog
         this._continuewithopen = false;
+
+        this.setupEvents();
     },
+
+    setupEvents: function() {
+        var self = this;
+
+        $("#save_script").click(function(event) {
+            presetmanager.showNewPresetDialog();
+            event.stopPropagation();
+            event.preventDefault();    
+        });        
+        
+        $("#open_script").click(function(event) {
+            presetmanager.showOpenPresetDialog();
+            event.stopPropagation();
+            event.preventDefault();    
+        });        
+        
+        $("#download_script").click(function(event) {
+            var json = JSON.stringify(self._nodetree.buildScript(), false, '\t');
+            $("#fetch_script_data").val(json);
+            $("#fetch_script").submit();
+            event.stopPropagation();
+            event.preventDefault();    
+        });
+    },
+
+    checkForChanges: function() {
+        var elem = $("#open_script").find(".ui-button-text");
+        if (this.hasChanged()) {
+            if (!$(elem).text().match(/\*$/)) {
+                $(elem).text($(elem).text() + "*");
+            }
+        } else {
+            $(elem).text($(elem).text().replace(/\*$/, ""));
+        }            
+    },                         
+
+    hasChanged: function() {
+        // if we don't have a current hash and the nodetree
+        // is empty, we don't need to bother doing anything                         
+        if (!this._nodetree.hasNodes() && !this._openedhash)
+            return false;
+        // if we've got nodes and no current hash, we definitely
+        // have something worth saving
+        else if (this._nodetree.hasNodes() && !this._openedhash)
+            return true;
+        // otherwise compare the new hash and the current one
+        // if they're different we need to save
+        var hash = bencode(this._nodetree.buildScript());
+        return hash != this._openedhash;
+    },                         
 
     setCurrentScript: function(script) {
         console.log("Set current script");                          
         this._current = script;
-    },        
+    },
+
+    setCurrentOpenScript: function(slug, name, data, reload) {
+        console.log("Set current open script", slug, name, data);                              
+        this._opened = slug;                              
+        console.log("Data: ", data);
+        this._openedhash = bencode(data);
+        if (reload) {        
+            this._nodetree.clearScript();
+            this._nodetree.loadScript(data);
+            this._nodetree.scriptChanged("Loaded script");
+        }
+        $("#open_script").find(".ui-button-text").text(name);
+    },                              
 
     showOpenPresetDialog: function() {
         var self = this;
 
-        if (this._opened && this._current) {
-            console.log("Comparing", this._openeddata, this._current);
-            if (bencode(this._openeddata) != bencode(this._current)) {
-                console.log("Current doesn't equal opened");
-                this._continuewithopen = true;
-                this.showSavePresetDialog();
-                return;
-            }
-        } else if (this._current) {
-            this.showNewPresetDialog();
+        if (this.hasChanged()) {
             this._continuewithopen = true;
+            if (this._opened)
+                this.showSavePresetDialog();
+            else
+                this.showNewPresetDialog();
             return;
-        }           
+        }
 
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
@@ -84,13 +146,11 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this._dialog.find("input[type='submit']").click(function(event) {
             var item =  self._dialog.find(".preset_item.ui-selected").first();
             var slug = item.data("slug");
-            $.getJSON("/presets/data/" + slug, {format: "json"}, function(data) {
-                self._opened = slug;
-                self._openeddata = JSON.parse(data);
+            self.openPreset(slug, function(data) {
+                self.setCurrentOpenScript(slug, item.text(), data, true);
                 self._dialog.dialog("close");
                 self._continuewithopen = false;
-                self.callListeners("openScript", item.text(), self._openeddata);
-            });
+            }, OCRJS.ajaxErrorHandler);
             event.preventDefault();
             event.stopPropagation();
         });
@@ -104,9 +164,12 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
         console.assert(this._opened);
         this._dialog.find("#save_script").click(function(event) {
-            self.saveExistingPreset(self._opened, self._current, function(data) {
+            var data = self._nodetree.buildScript();
+            var name = $("#open_script").find(".ui-button-text").text().replace(/\*$/, "");
+            self.saveExistingPreset(self._opened, data, function(data) {
+                self.setCurrentOpenScript(self._opened, name, data, false);
+                console.log("Saved current preset, opening: ", self._continuewithopen);
                 self._dialog.dialog("close");
-                self._openeddata = JSON.parse(data);
                 if (self._continuewithopen)
                     self.showOpenPresetDialog();
             }, OCRJS.ajaxErrorHandler);
@@ -116,7 +179,8 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         });
         this._dialog.find("#close_without_saving").click(function(event) {
             console.log("Abandoned changes!");
-            self._opened = self._openeddata = self._current = null;            
+            self._opened = self._openedhash = null;
+            self._nodetree.clearScript();            
             self._dialog.dialog("close");
             if (self._continuewithopen)
                 self.showOpenPresetDialog();
@@ -139,30 +203,27 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.html($.tmpl(this._createtmpl, {}));
-        this._dialog.find("#id_data").val(JSON.stringify(this._current, null, '\t'));
         this._dialog.find("input[type='text']").keyup(function(event) {
             self.validateNewForm();
         });
-        this._dialog.find("input[type='submit']").click(function(event) {
-            var name = self._dialog.find("#id_name").val();
-            $.ajax({
-                url: "/presets/create/",
-                type: "POST",
-                data: self._dialog.find("form").serialize(),
-                error: OCRJS.ajaxErrorHandler,
-                statusCode: {
-                    200: function(data) {
-                        // FIXME: Assume something actually worked here... if
-                        // it fails we'll get another form, but it's fiddly
-                        // to distinguish from the redirect response
-                        self._dialog.dialog("close");
-                        if (self._continuewithopen)
-                            self.showOpenPresetDialog();
-                    },        
-                }
-            });
+        this._dialog.find("#create_new").click(function(event) {
             event.preventDefault();
             event.stopPropagation();
+            self.saveNewPreset(
+                self._dialog.find("#id_name").val(),
+                self._dialog.find("#id_tags").val(),
+                self._dialog.find("#id_description").val(),
+                self._dialog.find("#id_public").prop("checked"),
+                self._nodetree.buildScript(),
+                function(data) {
+                    self.setCurrentOpenScript(data, 
+                            self._dialog.find("#id_name").val(), data, false)
+                    self._dialog.dialog("close");
+                    if (self._continuewithopen)
+                        self.showOpenPresetDialog();
+                },
+                OCRJS.ajaxErrorHandler
+            );
         });
 
         this._dialog.dialog({
@@ -192,6 +253,8 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     },
 
     saveExistingPreset: function(slug, script, successfunc, errorfunc) {
+        if (!script || $.map(script, function(k,v){ return k;}).length == 0)
+            throw "Attempt to save existing preset with no data! " + slug;            
         $.ajax({
             url: "/presets/update_data/" + slug,
             data: {data: JSON.stringify(script, null, '\t')},
@@ -202,15 +265,8 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     },
 
     saveNewPreset: function(name, tags, description, private, script, successfunc, errorfunc) {
-        // need to be extra picky about the argument types                       
-        console.assert(typeof(name) == "string", "Name should be a string");                       
-        console.assert(typeof(tags) == "string", "Tags should be a string");                       
-        console.assert(typeof(description) == "string", "Description should be a string");                       
-        console.assert(typeof(private) == "boolean", "Private should be a boolean");                       
-        console.assert(typeof(script) == "object", "Script should be an object");                       
-        console.assert(typeof(successfunc) == "function", "Successfunc should be a function");                       
-        console.assert(typeof(errorfunc) == "function", "Errorfunc should be a function");                       
-
+        if (!script || $.map(script, function(k,v){ return k;}).length == 0)
+            throw "Attempt to save new preset with no data! " + name;            
         $.ajax({
             url: "/presets/createjson/",
             type: "POST",
