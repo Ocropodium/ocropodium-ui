@@ -15,6 +15,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
             scriptCleared: [],
             nodeViewing: [],
             nodeFocussed: [],
+            ready: [],
         };
         this._nodelisttmpl = $.template($("#nodeListTmpl"));
         this._nodetreetmpl = $.template($("#nodeTreeTmpl"));
@@ -290,7 +291,8 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                     self._nodedata[nodeinfo.stage].push(nodeinfo);
                     self._nodetypes[nodeinfo.name] = nodeinfo;
                 });
-                self.populateCanvas();                
+                self.populateCanvas();
+                self.callListeners("ready");                
             },
         });
     },
@@ -301,7 +303,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         this.populateAvailableList();
 
         this.setupEvents();
-        this.loadState();
     },                        
 
     populateAvailableList: function() {
@@ -464,28 +465,5 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
     buildSection: function(parent, data) {
         var self = this;
     },                  
-
-    saveState: function() {
-        $.cookie("preset", $("#select_script").val());                   
-        $.cookie("script", JSON.stringify(this.buildScript()));
-    },
-
-    loadState: function() {
-        var self = this;
-        var preset = $.cookie("preset");
-        if (preset != "0") {
-            $("#select_script").val(preset);
-            $("#select_script").change();
-        } else {
-            var scriptjson = $.cookie("script");
-            if (scriptjson) {
-                var script = JSON.parse(scriptjson);
-                console.log("Loading script:", script);        
-                self.loadScript(script);
-            }
-        }
-        this._sessionid = $.cookie("sessionid") 
-            || new Date().getTime(); 
-    },               
 });
 

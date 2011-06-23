@@ -38,6 +38,36 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this.setupEvents();
     },
 
+    saveState: function() {
+        var presetdata = {
+            opened: this._opened,
+            name: $("#current_preset_name").text(),
+        };
+        if (this.hasChanged()) {
+            presetdata.script = this._nodetree.buildScript();
+        }
+        $.cookie("presetdata", JSON.stringify(presetdata));
+    },
+
+    loadState: function() {
+        var self = this;                   
+        var cookie = $.cookie("presetdata");
+        if (!cookie)
+            return;
+        var presetdata = JSON.parse(cookie);
+        if (presetdata.opened && !presetdata.script) {
+            this.openPreset(presetdata.opened, function(data) {
+                self.setCurrentOpenPreset(presetdata.opened, presetdata.name, data, true);
+                self._dialog.dialog("close");
+            }, OCRJS.ajaxErrorHandler);
+        } else if (presetdata.opened && presetdata.script) {
+            self.setCurrentOpenPreset(presetdata.opened, presetdata.name, presetdata.script, true);
+            $("#preset_unsaved").toggle(true);                         
+        } else {
+
+        }            
+    },                   
+
     setupEvents: function() {
         var self = this;
 
@@ -116,7 +146,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     setCurrentOpenPreset: function(slug, name, data, reload) {
         console.log("Set current open script", slug, name, data);                              
         this._opened = slug;                              
-        console.log("Data: ", data);
         this._openedhash = bencode(data);
         if (reload) {        
             this._nodetree.clearScript();

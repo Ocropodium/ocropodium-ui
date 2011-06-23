@@ -13,12 +13,12 @@ var presetmanager = null;
 var guimanager = null;
 
 function saveState() {
-    nodetree.saveState();
+    presetmanager.saveState();
 }
 
 
 function loadState() {
-
+    presetmanager.loadState();
 }
 
 $(function() {
@@ -138,9 +138,6 @@ $(function() {
         "/presets/upload/", 
         { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
     );
-    // load state stored from last time
-    loadState();
-    
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
         try {
@@ -269,7 +266,11 @@ $(function() {
             uploader.addListener("onXHRLoad.setfilepath", function(data) {
                 nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
             });
-        },                              
+        },
+        ready: function() {
+            // load state stored from last time
+            loadState();
+        },                   
     });    
 
     reshandler.addListeners({
@@ -321,7 +322,7 @@ $(function() {
 
     // Initialise nodetree!    
     nodetree.init();
-
+    
     // the run script on first load
     runScript();    
 });
