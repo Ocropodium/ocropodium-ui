@@ -36,20 +36,20 @@ $(function() {
             primary: "ui-icon-refresh",
         }        
     });
-    $("#open_script").button({
+    $("#open_script_button").button({
         text: true,
         icons: {
             primary: "ui-icon-folder-open",
             secondary: "ui-icon-carat-1-s",
         }
     });
-    $("#save_script").button({
+    $("#save_script_button").button({
         text: false,
         icons: {
             primary: "ui-icon-disk",
         }
     });
-    $("#download_script").button({
+    $("#download_script_button").button({
         text: false,
         icons: {
             primary: "ui-icon-document",

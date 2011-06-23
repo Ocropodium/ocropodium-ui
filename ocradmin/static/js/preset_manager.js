@@ -23,7 +23,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             saveDialogClose: [],
             openDialogOpen: [],
             openDialogClose: [],
-            openScript: [],
+            openPreset: [],
         };
 
         this._opened = null;
@@ -33,7 +33,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         // flag telling us we should continue to
         // offer the open dialog after the current
         // save dialog
-        this._continuewithopen = false;
+        this._continueaction = null;
 
         this.setupEvents();
     },
@@ -41,29 +41,55 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     setupEvents: function() {
         var self = this;
 
-        $("#save_script").click(function(event) {
-            presetmanager.showNewPresetDialog();
-            event.stopPropagation();
-            event.preventDefault();    
+        $("#new_script, #new_script_button").click(function(event) {
+            self.newPreset();
         });        
         
-        $("#open_script").click(function(event) {
-            presetmanager.showOpenPresetDialog();
-            event.stopPropagation();
-            event.preventDefault();    
+        $("#save_script, #save_script_button").click(function(event) {
+            if (self._opened) {
+                var name = $("#open_script_button").find(".ui-button-text").text().replace(/\*$/, "");
+                self.saveExistingPreset(self._opened,
+                    self._nodetree.buildScript(), function(data) {
+                        self.setCurrentOpenPreset(self._opened, name, data, false);
+                    });
+            } else {
+                self.showNewPresetDialog();
+            }
         });        
         
-        $("#download_script").click(function(event) {
+        $("#save_script_as, #save_script_as_button").click(function(event) {
+            self.showNewPresetDialog();
+        });        
+        
+        $("#open_script, #open_script_button").click(function(event) {
+            self.showOpenPresetDialog();
+        });        
+        
+        $("#download_script, #download_script_button").click(function(event) {
             var json = JSON.stringify(self._nodetree.buildScript(), false, '\t');
             $("#fetch_script_data").val(json);
             $("#fetch_script").submit();
-            event.stopPropagation();
-            event.preventDefault();    
         });
     },
 
+    newPreset: function() {
+        if (this.hasChanged()) {
+            this._continueaction = this.newPreset;
+            if (this._opened)
+                this.showSavePresetDialog();
+            else
+                this.showNewPresetDialog();
+            return;
+        }
+
+        this._nodetree.clearScript();
+        this._opened = this._openedhash = null;
+        this._continueaction = null;
+        $("#open_script_button").find(".ui-button-text").text("---");
+    },                   
+
     checkForChanges: function() {
-        var elem = $("#open_script").find(".ui-button-text");
+        var elem = $("#open_script_button").find(".ui-button-text");
         if (this.hasChanged()) {
             if (!$(elem).text().match(/\*$/)) {
                 $(elem).text($(elem).text() + "*");
@@ -88,12 +114,12 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         return hash != this._openedhash;
     },                         
 
-    setCurrentScript: function(script) {
+    setCurrentPreset: function(script) {
         console.log("Set current script");                          
         this._current = script;
     },
 
-    setCurrentOpenScript: function(slug, name, data, reload) {
+    setCurrentOpenPreset: function(slug, name, data, reload) {
         console.log("Set current open script", slug, name, data);                              
         this._opened = slug;                              
         console.log("Data: ", data);
@@ -103,14 +129,14 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             this._nodetree.loadScript(data);
             this._nodetree.scriptChanged("Loaded script");
         }
-        $("#open_script").find(".ui-button-text").text(name);
+        $("#open_script_button").find(".ui-button-text").text(name);
     },                              
 
     showOpenPresetDialog: function() {
         var self = this;
 
         if (this.hasChanged()) {
-            this._continuewithopen = true;
+            this._continueaction = this.showOpenPresetDialog;
             if (this._opened)
                 this.showSavePresetDialog();
             else
@@ -126,6 +152,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             dialogClass: "preset_manager_dialog",
             position: pos,
             width: tb.width(),
+            modal: true,
             close: function(e, ui) {
                 self._dialog.children().remove();
                 self.callListeners("openDialogClose");    
@@ -147,9 +174,9 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             var item =  self._dialog.find(".preset_item.ui-selected").first();
             var slug = item.data("slug");
             self.openPreset(slug, function(data) {
-                self.setCurrentOpenScript(slug, item.text(), data, true);
+                self.setCurrentOpenPreset(slug, item.text(), data, true);
                 self._dialog.dialog("close");
-                self._continuewithopen = false;
+                self._continueaction = null;
             }, OCRJS.ajaxErrorHandler);
             event.preventDefault();
             event.stopPropagation();
@@ -162,32 +189,31 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.html($.tmpl(this._updatetmpl, {}));
 
-        console.assert(this._opened);
-        this._dialog.find("#save_script").click(function(event) {
+        this._dialog.find("#submit_save_script").click(function(event) {
             var data = self._nodetree.buildScript();
-            var name = $("#open_script").find(".ui-button-text").text().replace(/\*$/, "");
+            var name = $("#open_script_button").find(".ui-button-text").text().replace(/\*$/, "");
             self.saveExistingPreset(self._opened, data, function(data) {
-                self.setCurrentOpenScript(self._opened, name, data, false);
-                console.log("Saved current preset, opening: ", self._continuewithopen);
+                self.setCurrentOpenPreset(self._opened, name, data, false);
                 self._dialog.dialog("close");
-                if (self._continuewithopen)
-                    self.showOpenPresetDialog();
+                if (self._continueaction)
+                    self._continueaction()
             }, OCRJS.ajaxErrorHandler);
         });
-        this._dialog.find("#save_script_as").click(function(event) {
+        this._dialog.find("#submit_save_script_as").click(function(event) {
             self.showNewPresetDialog();
         });
-        this._dialog.find("#close_without_saving").click(function(event) {
+        this._dialog.find("#submit_close_without_saving").click(function(event) {
             console.log("Abandoned changes!");
             self._opened = self._openedhash = null;
             self._nodetree.clearScript();            
             self._dialog.dialog("close");
-            if (self._continuewithopen)
-                self.showOpenPresetDialog();
+            if (self._continueaction)
+                self._continueaction();
         });
 
         this._dialog.dialog({
             dialogClass: "preset_manager_dialog",
+            modal: true,
             position: pos,
             width: tb.width(),
             close: function(e, ui) {
@@ -195,7 +221,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 self.callListeners("saveDialogClose");    
             },
         });
-
     },
 
     showNewPresetDialog: function() {
@@ -206,21 +231,22 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this._dialog.find("input[type='text']").keyup(function(event) {
             self.validateNewForm();
         });
-        this._dialog.find("#create_new").click(function(event) {
+        this._dialog.find("#submit_create_new").click(function(event) {
             event.preventDefault();
             event.stopPropagation();
+            var currdata = self._nodetree.buildScript();
             self.saveNewPreset(
                 self._dialog.find("#id_name").val(),
                 self._dialog.find("#id_tags").val(),
                 self._dialog.find("#id_description").val(),
                 self._dialog.find("#id_public").prop("checked"),
-                self._nodetree.buildScript(),
+                currdata,
                 function(data) {
-                    self.setCurrentOpenScript(data, 
-                            self._dialog.find("#id_name").val(), data, false)
+                    self.setCurrentOpenPreset(data, 
+                            self._dialog.find("#id_name").val(), currdata, false)
                     self._dialog.dialog("close");
-                    if (self._continuewithopen)
-                        self.showOpenPresetDialog();
+                    if (self._continueaction)
+                        self._continueaction();
                 },
                 OCRJS.ajaxErrorHandler
             );
@@ -228,6 +254,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
         this._dialog.dialog({
             dialogClass: "preset_manager_dialog",
+            modal: true,
             position: pos,
             width: tb.width(),
             close: function(e, ui) {
@@ -236,19 +263,17 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             },
         });
         this.callListeners("saveDialogOpen");
-        event.stopPropagation();
-        event.preventDefault();    
     },
 
     validateOpenSelection: function() {
         var selection = this._dialog.find(".preset_item.ui-selected");
-        var submit = this._dialog.find("#open_preset");
+        var submit = this._dialog.find("#submit_open_preset");
         submit.attr("disabled", selection.length != 1);
     },                               
 
     validateNewForm: function() {
         var namefield = this._dialog.find("#id_name");
-        var submit = this._dialog.find("#create_new");
+        var submit = this._dialog.find("#submit_create_new");
         submit.attr("disabled", $.trim(namefield.val()) == "");
     },
 

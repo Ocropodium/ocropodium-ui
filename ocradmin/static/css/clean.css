@@ -41,8 +41,9 @@ div.clear {
 }
 
 /* this is necessary so the dropdowns overlap the content */
-#menucontainer {
+#menucontainer, #script_toolbar_container {
     overflow: visible;
+    z-index:500;
 }
 
 #sidebar {
