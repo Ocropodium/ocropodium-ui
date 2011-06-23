@@ -3,11 +3,11 @@ Generic base classes for other nodes.
 """
 
 import os
+import codecs
 import json
 from ocradmin import plugins
 from ocradmin.plugins import stages
 from ocradmin.plugins import utils
-from django.utils.safestring import SafeUnicode
 from nodetree import node, writable_node
 import ocrolib
 
@@ -24,14 +24,15 @@ class TextWriterMixin(writable_node.WritableNodeMixin):
     def reader(cls, path):
         """Read a text cache."""
         if os.path.exists(path):
-            with open(path, "r") as fh:
+            with codecs.open(path, "r", "utf8") as fh:
                 return fh.read()
 
     @classmethod
     def writer(cls, path, data):
         """Write a text cache."""
-        with open(path, "w") as fh:#
-            fh.write(data)
+        with open(path, "w") as fh:
+            fh.write(codecs.BOM_UTF8)
+            fh.write(data.encode("utf8"))
         return path            
 
 
@@ -112,7 +113,7 @@ class LineRecognizerNode(node.Node, TextWriterMixin):
     stage = stages.RECOGNIZE
     arity = 2
     intypes = [ocrolib.numpy.ndarray, dict]
-    outtype = SafeUnicode
+    outtype = basestring
     passthrough = 1
 
     def init_converter(self):

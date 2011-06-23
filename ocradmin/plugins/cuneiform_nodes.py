@@ -5,10 +5,10 @@ Cuneiform Recogniser
 from nodetree import node, manager
 from ocradmin import plugins
 from ocradmin.plugins import stages, generic_nodes
-from django.utils.safestring import SafeUnicode
 import types
 
 import os
+import codecs
 import shutil
 import tempfile
 import subprocess as sp
@@ -58,12 +58,12 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                     return "!!! %s CONVERSION ERROR %d: %s !!!" % (
                             os.path.basename(self.binary).upper(),
                             proc.returncode, err)
-                with open(tmp.name, "r") as tread:
+                with codecs.open(tmp.name, "r", "utf8") as tread:
                     hocr = tread.read()
             os.unlink(tmp.name)
             os.unlink(btmp.name)
         plugins.set_progress(self.logger, self.progress_func, 100, 100)
-        return SafeUnicode(hocr)
+        return hocr
 
 
 class Manager(manager.StandardManager):
