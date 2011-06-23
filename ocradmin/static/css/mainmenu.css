@@ -2,7 +2,7 @@
  * http://www.seoconsultants.com/css/menus/horizontal/css/menuh.css
  */
 
-#menu {
+.appmenu {
     /* top margin is to prevent glitchy hovers to the child
      * elements when the browser is temporarily unaware of 
      * the position of the mouse (i.e. when closing select
@@ -30,17 +30,17 @@
     z-index:400;
 }
 
-#menu ul {
+.appmenu ul {
     cursor: pointer;
 }
 
-#menu a {
+.appmenu a {
     display: block;
     white-space: nowrap;
     margin: 0;
 }
 
-#menu h3 {
+.appmenu h3 {
     display: block;
     white-space: nowrap;
     margin: 0;
@@ -48,28 +48,28 @@
     font-weight: normal;
 }
 
-#menu ul ul a, .disabled_option {
+.appmenu ul ul a, .disabled_option {
     padding: 5px 40px 5px 5px;
     font-size: 1.1em;
 }
 
-#menu h3.top {
+.appmenu h3.top {
     background-image: url("/static/hz_scroll_down.gif");
     background-repeat: no-repeat;
     background-position: center right;
 }
 
-#menu ul li {
+.appmenu ul li {
     border-top: 1px solid transparent;
     border-right: 1px solid transparent;
     border-left: 1px solid transparent;
 }
 
-#menu ul {
+.appmenu ul {
     border: 1px solid transparent;
 }
 
-#menu ul.ui-selected {
+.appmenu ul.ui-selected {
     color: #FFF;
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
@@ -80,35 +80,35 @@
     border-left: 1px solid #4B6E99;
 }
 
-#menu h3.right {
+.appmenu h3.right {
     background-image: url("/static/vt_scroll_right.gif");
     background-repeat: no-repeat;
     background-position: center right;
 }
 
-#menu a {
+.appmenu a {
     text-decoration: none;
 }
 
-#menu ul a, #menu a:visited {
+.appmenu ul a, .appmenu a:visited {
     color: #060606;
 }
 
-#menu a:active {
+.appmenu a:active {
 }
 
-#menu ul {
+.appmenu ul {
     list-style: none;
     margin: 0;
     padding: 0;
     float: left;
 }
 
-#menu li {
+.appmenu li {
     position: relative;
 }
 
-#menu ul ul {
+.appmenu ul ul {
     position: absolute;
     z-index: 500;
     top: auto;
@@ -119,20 +119,20 @@
     -moz-box-shadow: 2px 3px 3px #919598;
 }
 
-#menu ul ul ul {
+.appmenu ul ul ul {
     top: 0;
     left: 100%;
 }
 
-#menu ul ul li {
+.appmenu ul ul li {
     border: 1px solid transparent;
 }
 
-#menu ul ul li.ui-selected {
+.appmenu ul ul li.ui-selected {
     border: 1px solid #4B6E99;
 }
 
-#menu ul ul li.ui-selected a {
+.appmenu ul ul li.ui-selected a {
     color: #FFF;
 }
 
