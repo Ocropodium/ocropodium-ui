@@ -1,12 +1,12 @@
-#-e svn+http://code.djangoproject.com/svn/django/branches/releases/1.3.X#egg=django
-#-e svn+http://django-tagging.googlecode.com/svn/trunk#egg=django-tagging
-#-e svn+http://wadofstuff.googlecode.com/svn/trunk/python/serializer#egg=django-full-serializer
-#-e git+https://github.com/ask/celery.git@v2.2.6#egg=celery
-#-e git+https://github.com/ask/django-celery.git@v2.2.3#egg=django-celery
-#-e hg+https://bitbucket.org/neithere/django-autoslug#egg=autoslug
--e git+https://github.com/joymax/django-compress.git#egg=django-compress
+-e svn+http://code.djangoproject.com/svn/django/branches/releases/1.3.X#egg=django
+-e svn+http://django-tagging.googlecode.com/svn/trunk#egg=django-tagging
+-e svn+http://wadofstuff.googlecode.com/svn/trunk/python/serializer#egg=django-full-serializer
+-e git+https://github.com/ask/celery.git@v2.2.6#egg=celery
+-e git+https://github.com/ask/django-celery.git@v2.2.3#egg=django-celery
+-e hg+https://bitbucket.org/neithere/django-autoslug#egg=autoslug
+-e git@github.com:mikesname/django-compress.git#egg=django-compress
 -e git+https://github.com/lamby/django-lint.git#egg=django-lint
-#django-picklefield
-#bencode 
-#pydot
+django-picklefield
+bencode 
+pydot
 mock
