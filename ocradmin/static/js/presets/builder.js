@@ -36,23 +36,10 @@ $(function() {
             primary: "ui-icon-refresh",
         }        
     });
-    $("#open_script_button").button({
-        text: true,
-        icons: {
-            primary: "ui-icon-folder-open",
-            secondary: "ui-icon-carat-1-s",
-        }
-    });
-    $("#save_script_button").button({
+    $("#focus_script").button({
         text: false,
         icons: {
-            primary: "ui-icon-disk",
-        }
-    });
-    $("#download_script_button").button({
-        text: false,
-        icons: {
-            primary: "ui-icon-document",
+            primary: "ui-icon-home",
         }        
     });
 
@@ -129,6 +116,10 @@ $(function() {
         icons: {
             primary: "ui-icon-refresh",
         }
+    });
+
+    $("#focus_script").click(function(event) {
+        nodetree.centreTree();
     });
 
 
