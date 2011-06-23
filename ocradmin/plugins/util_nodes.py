@@ -64,8 +64,8 @@ class FindReplaceNode(node.Node, generic_nodes.TextWriterMixin):
     name = "Utils::FindReplace"
     description = "Find and replace string in HOCR documents"
     arity = 1
-    intypes = [generic_nodes.SafeUnicode]
-    outtype = generic_nodes.SafeUnicode
+    intypes = [basestring]
+    outtype = basestring
     _parameters = [
         dict(name="find", value=""),
         dict(name="replace", value=""),

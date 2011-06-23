@@ -10,4 +10,4 @@ def hocr_from_data(pagedata):
     from django.template import Template, Context
     with open(os.path.join(os.path.dirname(__file__), "hocr_template.html"), "r") as tmpl:
         t = Template(tmpl.read())
-        return t.render(Context(pagedata))
+        return unicode(t.render(Context(pagedata)))
