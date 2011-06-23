@@ -57,17 +57,55 @@
 {% endblock %}
 {% block sidebar %}
     <form id="optionsform">
-        <div class="ui-layout-north">
-            <div class="ui-widget-header ui-corner-all ui-layout-header">Script Editor</div>        
+        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
+        <!-- NB. This is lower down in the DOM than the parameters, despite
+         being positioned above.  It is so the menu overlaps the params
+         where necessary -->
+        <div class="ui-layout-north" id="script_toolbar_container">
+            <div class="ui-widget-header ui-corner-all ui-layout-header">Preset Editor</div>
+            <div id="script_menu" class="appmenu">
+                <ul class="top">
+                    <li>
+                        <h3>File</h3>
+                        <ul style="display:none">
+                            <li><a href="#" id="new_script">New...</a></li>
+                            <li><a href="#" id="open_script">Open Script</a></li>
+                            <li><a href="#" id="save_script">Save</a></li>
+                            <li><a href="#" id="save_script_as">Save as...</a></li>
+                            <li><a href="#" id="download_script">Export</a></li>
+                            <li><a href="#" id="close_script">Close</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="top">
+                    <li>
+                        <h3>Preset</h3>
+                        <ul style="display: none">
+                            <li><a href="#">Refresh</a></li>
+                            <li class="separator"><hr /></li>
+                            <li><a href="#" id="layout_tree">Layout Tree</a></li>
+                            <li><a href="#" id="focus_tree">Focus Tree</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="top">
+                    <li>
+                        <h3>Help</h3>
+                        <ul style="display: none">
+                            <li><a href="/presets/help">Documentation</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div> 
             <div id="script_toolbar" class="viewer_toolbar ui-medium-flat">
                 <span class="buttons_left">
                     <button id="abort">Abort</button>                                                    
                     <button id="rerun_script">Rerun</button>
                 </span>
-                <span class="buttons_right">
-                    <button id="open_script">---</button>
-                    <button id="save_script">Store Preset</button>
-                    <button id="download_script">Download Preset</button>
+               <span class="buttons_right">
+                    <button id="open_script_button">---</button>
+                    <button id="save_script_button">Store Preset</button>
+                    <button id="download_script_button">Download Preset</button>
                 </span>
                 <div id="dialog"></div>
             </div>                
@@ -77,10 +115,6 @@
                 <h1>No Node Selected</h1>
             </div>
         </div>
-        <!-- NB. This is lower down in the DOM than the parameters, despite
-         being positioned above.  It is so the menu overlaps the params
-         where necessary -->
-        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
     </form>
     <!-- form for downloading scripts... this is a bit of a hack. -->
     <form id="fetch_script" method="POST" action="/presets/fetch/" >

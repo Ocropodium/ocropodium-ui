@@ -2,9 +2,9 @@
     <div class="preset_dialog"  id="open_preset">    
         <div>Do you want to update '${scriptname}' or save under a different name?</div>
         <div class="buttons">
-            <button id="close_without_saving">Discard</button>
-            <button id="save_script">Save Changes</button>
-            <button id="save_script_as">Save Script as...</button>
+            <button id="submit_close_without_saving">Discard</button>
+            <button id="submit_save_script">Save Changes</button>
+            <button id="submit_save_script_as">Save Script as...</button>
         </div>
     </div>
 </script>
@@ -23,7 +23,7 @@
         </div>
         <ul id="open_preset_list"></ul>
         <div class="buttons">
-            <input type="submit" disabled="disabled" id="open_preset" value="Open" />
+            <input type="submit" disabled="disabled" id="submit_open_preset" value="Open" />
         </div>
     </div>
 </script>    
@@ -51,7 +51,7 @@
                 </div>
             </fieldset>
             <div class="buttons">
-                <input type="submit" disabled="disabled" id="create_new" value="Save" />
+                <input type="submit" disabled="disabled" id="submit_create_new" value="Save" />
             </div>
         </form>
     </div>
