@@ -242,20 +242,14 @@ $(function() {
     textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
-    nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
-    presetmanager = new OCRJS.PresetManager(
-            document.getElementById("script_toolbar"), nodetree);
+    nodetree = new OCRJS.Nodetree.NodeTree($("#node_canvas"));
+    presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
 
     // Set up events
     nodetree.addListeners({
         scriptChanged: function(what) {
-            console.log("Script changed", what);
-            if (nodetree.hasNodes()) {
-                var elem = $("#open_script").find(".ui-button-text");
-                if (!$(elem).text().match(/\*$/)) {
-                    $(elem).text($(elem).text() + "*");
-                }
-            }
+            console.log("Script changed:", what);
+            presetmanager.checkForChanges();
             runScript();
         },
         nodeFocussed: function(node) {
