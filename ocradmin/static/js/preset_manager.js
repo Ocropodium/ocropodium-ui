@@ -41,6 +41,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     saveState: function() {
         var presetdata = {
             opened: this._opened,
+            openedhash: this._openedhash,
             name: $("#current_preset_name").text(),
         };
         if (this.hasChanged()) {
@@ -58,6 +59,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         if (presetdata.opened && !presetdata.script) {
             this.openPreset(presetdata.opened, function(data) {
                 self.setCurrentOpenPreset(presetdata.opened, presetdata.name, data, true);
+                self._openedhash = presetdata.openedhash;
                 self._dialog.dialog("close");
             }, OCRJS.ajaxErrorHandler);
         } else if (presetdata.opened && presetdata.script) {
