@@ -47,7 +47,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         
         $("#save_script, #save_script_button").click(function(event) {
             if (self._opened) {
-                var name = $("#open_script_button").find(".ui-button-text").text().replace(/\*$/, "");
+                var name = $("#current_preset_name").text();
                 self.saveExistingPreset(self._opened,
                     self._nodetree.buildScript(), function(data) {
                         self.setCurrentOpenPreset(self._opened, name, data, false);
@@ -67,6 +67,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         
         $("#download_script, #download_script_button").click(function(event) {
             var json = JSON.stringify(self._nodetree.buildScript(), false, '\t');
+            $("#fetch_script_slug").val(self._opened ? self._opened : "untitled");
             $("#fetch_script_data").val(json);
             $("#fetch_script").submit();
         });
@@ -85,18 +86,11 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this._nodetree.clearScript();
         this._opened = this._openedhash = null;
         this._continueaction = null;
-        $("#open_script_button").find(".ui-button-text").text("---");
+        $("#current_preset_name").text("Untitled");
     },                   
 
     checkForChanges: function() {
-        var elem = $("#open_script_button").find(".ui-button-text");
-        if (this.hasChanged()) {
-            if (!$(elem).text().match(/\*$/)) {
-                $(elem).text($(elem).text() + "*");
-            }
-        } else {
-            $(elem).text($(elem).text().replace(/\*$/, ""));
-        }            
+        $("#preset_unsaved").toggle(this.hasChanged());                         
     },                         
 
     hasChanged: function() {
@@ -129,7 +123,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             this._nodetree.loadScript(data);
             this._nodetree.scriptChanged("Loaded script");
         }
-        $("#open_script_button").find(".ui-button-text").text(name);
+        $("#current_preset_name").text(name);
     },                              
 
     showOpenPresetDialog: function() {
@@ -191,7 +185,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
         this._dialog.find("#submit_save_script").click(function(event) {
             var data = self._nodetree.buildScript();
-            var name = $("#open_script_button").find(".ui-button-text").text().replace(/\*$/, "");
+            var name = $("#current_preset_name").text();
             self.saveExistingPreset(self._opened, data, function(data) {
                 self.setCurrentOpenPreset(self._opened, name, data, false);
                 self._dialog.dialog("close");

@@ -62,7 +62,8 @@
          being positioned above.  It is so the menu overlaps the params
          where necessary -->
         <div class="ui-layout-north" id="script_toolbar_container">
-            <div class="ui-widget-header ui-corner-all ui-layout-header">Preset Editor</div>
+            <div id="preset_toolbar_header" class="ui-widget-header ui-corner-all ui-layout-header">Preset Editor -
+                <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved" style="display: none">*</span></div>
             <div id="script_menu" class="appmenu">
                 <ul class="top">
                     <li>
@@ -118,6 +119,7 @@
     </form>
     <!-- form for downloading scripts... this is a bit of a hack. -->
     <form id="fetch_script" method="POST" action="/presets/fetch/" >
+        <input name="name" type="hidden" id="fetch_script_slug" />
         <input name="script" type="hidden" id="fetch_script_data" />
     </form>
 {% endblock %}
