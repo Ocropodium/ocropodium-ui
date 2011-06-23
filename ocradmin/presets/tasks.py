@@ -1,21 +1,19 @@
 """
 Run plugin tasks on the Celery queue
 """
-
 import os
 
 from celery.contrib.abortable import AbortableTask
-from ocradmin.ocrtasks.decorators import register_handlers
-from ocradmin.core import utils
+from django.conf import settings
+from django.utils import simplejson as json
 
-import json
-import numpy
+from ocradmin.core import utils
+from ocradmin.ocrtasks.decorators import register_handlers
+from ocradmin.plugins import ocropus_nodes, cache
 
 from nodetree import node, script
 from nodetree.manager import ModuleManager
-from django.conf import settings
-
-from ocradmin.plugins import ocropus_nodes, cache
+import numpy
 
 
 MANAGER = ModuleManager()

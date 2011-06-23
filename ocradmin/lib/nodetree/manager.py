@@ -50,6 +50,19 @@ class ModuleManager(object):
         self._mods = self.get_modules()
         self._nodes = self.get_nodes()
 
+    def register_paths(self, paths, root=None):
+        """
+        Register a list of Python files, but hackily
+        converting them to module paths.
+        """
+        for path in paths:
+            if not path.endswith(".py"):
+                continue
+            if root is not None:
+                path = os.path.join(root, path)
+            path = path[0:-3]
+            self.register_module(path.replace("/", "."))
+
     def register_module(self, module):
         """
         Register a module containing nodes.
