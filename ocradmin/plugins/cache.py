@@ -43,18 +43,21 @@ class PersistantFileCacher(BaseCacher):
         """
         readpath = os.path.join(path, node.get_file_name())
         self.logger.debug("Reading binary cache: %s", readpath)
-        return node.reader(readpath)
+        with open(readpath, "r") as fh:
+            return node.reader(fh)
 
     def _write_node_data(self, node, path, data):
         if not os.path.exists(path):
             os.makedirs(path, 0777)
-        outpath = node.writer(os.path.join(path, node.get_file_name()), data)
-        self.logger.info("Wrote cache: %s" % outpath)
-        if outpath.endswith(".png"):
+        filepath = os.path.join(path, node.get_file_name())
+        self.logger.info("Writing cache: %s", filepath)
+        with open(filepath, "w") as fh:
+            node.writer(fh, data)
+        if filepath.endswith(".png"):
             creator = deepzoom.ImageCreator(tile_size=512,
                     tile_overlap=2, tile_format="png",
                     image_quality=1, resize_filter="nearest")
-            creator.create(outpath, "%s.dzi" % os.path.splitext(outpath)[0])
+            creator.create(filepath, "%s.dzi" % os.path.splitext(filepath)[0])
 
     def get_path(self, n):
         hash = hashlib.md5(bencode.bencode(n.hash_value())).hexdigest()
@@ -69,7 +72,7 @@ class PersistantFileCacher(BaseCacher):
         self._write_node_data(n, self.get_path(n), data)
 
     def has_cache(self, n):
-        return os.path.exists(self.get_path(n))
+        return os.path.exists(os.path.join(self.get_path(n), n.get_file_name()))
 
 
 class TestMockCacher(BaseCacher):
