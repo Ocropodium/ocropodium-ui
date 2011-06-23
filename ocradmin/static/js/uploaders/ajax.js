@@ -39,13 +39,13 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             .attr("id", "fakeinput")
             .attr("multiple", this.options.multi ? "multiple" : null)
             .width($(this.target).outerWidth())
-            .height($(this.target).outerHeight())
+            .height($(this.target).outerHeight() || 30)
             .css({
-                position: "fixed",
+                position: "absolute",
                 opacity: 0,                
-                top: $(this.target).offset().top + "px",
-                left: $(this.target).offset().left + "px",
-            }).insertAfter(this.target);
+                top: $(this.target).position().top,
+                left: $(this.target).position().left,
+            }).insertBefore(this.target);
         this._cnt = $(this.target).parent().get(0);
         
         this.setupEvents();
