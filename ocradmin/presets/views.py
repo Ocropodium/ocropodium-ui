@@ -67,7 +67,7 @@ def createjson(request):
 def data(request, slug):
     """Return the data for a given preset in JSON format"""
     preset = get_object_or_404(Preset, slug=slug)
-    return HttpResponse(json.dumps(preset.data), mimetype="application/json")
+    return HttpResponse(preset.data, mimetype="application/json")
 
 def update_data(request, slug):
     """Update script data for a given script."""
@@ -76,7 +76,7 @@ def update_data(request, slug):
     # TODO: Validate script data
     preset.data = scriptdata
     preset.save()
-    return HttpResponse(json.dumps(preset.data), mimetype="application/json")
+    return HttpResponse(preset.data, mimetype="application/json")
 
 def download(request, slug):
     """Return the data for a preset as an attachment"""
@@ -87,8 +87,9 @@ def download(request, slug):
 
 def fetch(request):
     """Hacky method of forcing downloading of an in-progress script via JS"""
+    slug = request.POST.get("name", "untitled")
     script = request.POST.get("script")
     response = HttpResponse(script, mimetype="application/json")
-    response['Content-Disposition'] = "attachment; filename=script.json"
+    response['Content-Disposition'] = "attachment; filename=%s.json" % slug
     return response
 

@@ -8,7 +8,7 @@ $(function() {
         $(menu).removeClass("ui-selected")
             .unbind("click.menuclose")
             .find("ul").hide();
-        $("div#menu ul.top").unbind("mouseenter.menuover");
+        $("div.appmenu ul.top").unbind("mouseenter.menuover");
         $(window).unbind("click.menuclose");        
         $(window).unbind("keydown.menuclose");        
         $(menu).bind("click.menuopen", function(event) {
@@ -17,7 +17,7 @@ $(function() {
     }
 
     function activateMenu(menu) {
-        $("div#menu ul.top").not($(menu)).each(function(i, elem) {
+        $("div.appmenu ul.top").not($(menu)).each(function(i, elem) {
             deactivateMenu(elem);
         }).bind("mouseenter.menuover", function(event) {
             activateMenu(this);
@@ -28,7 +28,7 @@ $(function() {
             .bind("click.menuclose", function(event) {
                 deactivateMenu(menu);
             }).find("ul").show()
-            .find("li").bind("mouseenter", function(event) {
+            .find("li").not(".separator").bind("mouseenter", function(event) {
                 $(this).addClass("ui-selected");    
             }).bind("mouseleave", function(event) {
                 $(this).removeClass("ui-selected");    
@@ -37,7 +37,7 @@ $(function() {
             .bind("keydown.menuclose", function(event) {
                 if (event.keyCode == KC_ESCAPE) {
                     deactivateMenu(menu);
-                    $("div#menu ul.top").unbind("click.menuclose");
+                    $("div.appmenu ul.top").unbind("click.menuclose");
                     $(window).unbind("keydown.menuclose");
                 } else if (event.keyCode == KC_LEFT) {
                     if (menu.previousElementSibling) {
@@ -62,8 +62,14 @@ $(function() {
     }
 
     // active main menu click dropdown
-    $("div#menu ul.top").bind("click.menuopen", function(e1) {
+    $("div.appmenu ul.top").bind("click.menuopen", function(e1) {
+        console.log("Menu open!");
         activateMenu(this);
+    });
+    
+    // active main menu click dropdown
+    $("div.appmenu ul.top ul li").bind("click.launch", function(e1) {
+        deactivateMenu(this);
     });
     
     

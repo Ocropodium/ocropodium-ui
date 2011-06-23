@@ -36,20 +36,20 @@ $(function() {
             primary: "ui-icon-refresh",
         }        
     });
-    $("#open_script").button({
+    $("#open_script_button").button({
         text: true,
         icons: {
             primary: "ui-icon-folder-open",
             secondary: "ui-icon-carat-1-s",
         }
     });
-    $("#save_script").button({
+    $("#save_script_button").button({
         text: false,
         icons: {
             primary: "ui-icon-disk",
         }
     });
-    $("#download_script").button({
+    $("#download_script_button").button({
         text: false,
         icons: {
             primary: "ui-icon-document",
@@ -132,24 +132,6 @@ $(function() {
     });
 
 
-    presetmanager = new OCRJS.PresetManager(
-            document.getElementById("script_toolbar"));
-    presetmanager.addListeners({
-        saveDialogOpen: function() {
-            nodetree.setDisabled(true);
-        },
-        saveDialogClose: function() {
-            nodetree.setDisabled(false);
-        },
-        openScript: function(name, data) {
-            nodetree.clearScript();                        
-            nodetree.loadScript(data);
-            var elem = $("#open_script").find(".ui-button-text");
-            elem.text(name);
-            runScript();
-        },
-    });
-
     // initialise the uploader...
     uploader  = new OCRJS.AjaxUploader(
         null,
@@ -181,28 +163,6 @@ $(function() {
                 sdviewer.activeBufferPath());
         },
     });
-
-    $("#save_script").click(function(event) {
-        presetmanager.showNewPresetDialog(
-                JSON.stringify(nodetree.buildScript(), null, "\t"));
-        event.stopPropagation();
-        event.preventDefault();    
-    });        
-    
-    $("#open_script").click(function(event) {
-        presetmanager.showOpenPresetDialog();
-        event.stopPropagation();
-        event.preventDefault();    
-    });        
-    
-    $("#download_script").click(function(event) {
-        var json = JSON.stringify(nodetree.buildScript(), false, '\t');
-        $("#fetch_script_data").val(json);
-        $("#fetch_script").submit();
-        event.stopPropagation();
-        event.preventDefault();    
-    });
-    
 
     $("#optionsform").submit(function() {
         nodetree.scriptChanged();
@@ -272,64 +232,59 @@ $(function() {
         }
     }    
 
+
+    // Initialise objects
     sdviewer = new OCRJS.ImageViewer($("#imageviewer_1").get(0), {
         numBuffers: 2,
         dashboard: false,
     });
     guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
-
     textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
-    nodetree = new OCRJS.Nodetree.NodeTree(document.getElementById("node_canvas"));
+    nodetree = new OCRJS.Nodetree.NodeTree($("#node_canvas"));
+    presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
 
-    nodetree.addListener("scriptChanged", function(what) {
-        console.log("Script changed", what);
-        if (nodetree.hasNodes()) {
-            var elem = $("#open_script").find(".ui-button-text");
-            if (!$(elem).text().match(/\*$/)) {
-                $(elem).text($(elem).text() + "*");
+    // Set up events
+    nodetree.addListeners({
+        scriptChanged: function(what) {
+            console.log("Script changed:", what);
+            presetmanager.checkForChanges();
+            runScript();
+        },
+        nodeFocussed: function(node) {
+            if (!node)
+                guimanager.tearDownGui();
+            else {
+                if (sdviewer.activeViewer()) {
+                    console.log("Setting GUI for", node.name);
+                    guimanager.setupGui(node);
+                }
             }
-            presetmanager.setCurrentScript(nodetree.buildScript());
-        }
-    });        
+        },                          
+        registerUploader: function(name, elem) {
+            uploader.removeListeners("onXHRLoad.setfilepath");
+            uploader.setTarget(elem);
+            // FIXME: No error handling
+            uploader.addListener("onXHRLoad.setfilepath", function(data) {
+                nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
+            });
+        },                              
+    });    
 
-    nodetree.addListener("scriptChanged", function(what) {
-        console.log("Running script because:", what);
-        runScript();
+    reshandler.addListeners({
+        resultPending: function() {
+            nodetree.clearErrors();
+        },
+        validationError: function(node, error) {
+            nodetree.setNodeErrored(node, error);
+            // clear the client-size cache
+            resultcache = {};
+        },
+        resultDone: function(node, data) {
+           handleResult(node, data, false);
+        }        
     });
-    nodetree.addListener("registerUploader", function(name, elem) {
-
-        uploader.removeListeners("onXHRLoad.setfilepath");
-        uploader.setTarget(elem);
-        // FIXME: No error handling
-        uploader.addListener("onXHRLoad.setfilepath", function(data) {
-            nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
-        });
-    });
-    nodetree.addListener("nodeFocussed", function(node) {
-        if (!node)
-            guimanager.tearDownGui();
-        else {
-            if (sdviewer.activeViewer()) {
-                console.log("Setting GUI for", node.name);
-                guimanager.setupGui(node);
-            }
-        }
-    });
-
-    reshandler.addListener("resultPending", function() {
-        nodetree.clearErrors();
-    });        
-    reshandler.addListener("validationError", function(node, error) {
-        nodetree.setNodeErrored(node, error);
-        // clear the client-size cache
-        resultcache = {};
-    });        
-    reshandler.addListener("resultDone", function(node, data) {
-        handleResult(node, data, false);
-    }); 
-    nodetree.init();
 
     var hsplit = $("#sidebar").layout({
         applyDefaultStyles: true,
@@ -363,6 +318,9 @@ $(function() {
     };
 
     $(window).resize();
+
+    // Initialise nodetree!    
+    nodetree.init();
 
     // the run script on first load
     runScript();    
