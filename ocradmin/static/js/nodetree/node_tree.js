@@ -482,7 +482,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this.callListeners("scriptLoaded");
     },                    
 
-    addNode: function(name, typedata) {
+    addNode: function(name, typedata) {                         
         var id = $.map(this._usednames, function(){return true;}).length;
         var node = new NT.TreeNode(name, typedata, id);
         this.setupNodeListeners(node);
@@ -677,7 +677,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     },                   
 
     loadState: function() {
-        this.base();
         var transform = $.cookie("canvaspos");
         if (transform)
             $(this.group()).attr("transform", transform);
