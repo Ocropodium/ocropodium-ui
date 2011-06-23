@@ -20,15 +20,11 @@ class WritableNodeMixin(object):
         return "%s%s" % (cls.name, cls.extension)
 
     @classmethod
-    def reader(cls, path):
+    def reader(cls, handle):
         """Read a cache from a given dir."""
-        if os.path.exists(path):
-            with open(path, "r") as fh:
-                return pickle.load(fh)
+        return pickle.load(handle)
 
     @classmethod
-    def writer(cls, path, data):
+    def writer(cls, handle, data):
         """Write a cache from a given dir."""
-        with open(path, "w") as fh:
-            pickle.dump(data, fh)
-        return path            
+        pickle.dump(data, handle)

@@ -10,6 +10,7 @@ from ocradmin.plugins import stages
 from ocradmin.plugins import utils
 from nodetree import node, writable_node
 import ocrolib
+from PIL import Image
 
 class ExternalToolError(StandardError):
     pass
@@ -21,19 +22,15 @@ class TextWriterMixin(writable_node.WritableNodeMixin):
     extension = ".txt"
 
     @classmethod
-    def reader(cls, path):
+    def reader(cls, handle):
         """Read a text cache."""
-        if os.path.exists(path):
-            with codecs.open(path, "r", "utf8") as fh:
-                return fh.read()
+        return handle.read()
 
     @classmethod
-    def writer(cls, path, data):
+    def writer(cls, handle, data):
         """Write a text cache."""
-        with open(path, "w") as fh:
-            fh.write(codecs.BOM_UTF8)
-            fh.write(data.encode("utf8"))
-        return path            
+        handle.write(codecs.BOM_UTF8)
+        handle.write(data.encode("utf8"))
 
 
 class JSONWriterMixin(writable_node.WritableNodeMixin):
@@ -43,18 +40,14 @@ class JSONWriterMixin(writable_node.WritableNodeMixin):
     extension = ".json"
 
     @classmethod
-    def reader(cls, path):
+    def reader(cls, handle):
         """Read a cache from a given dir."""
-        if os.path.exists(path):
-            with open(path, "r") as fh:
-                return json.load(fh)
+        return json.load(handle)
 
     @classmethod
-    def writer(cls, path, data):
+    def writer(cls, handle, data):
         """Write a cache from a given dir."""
-        with open(path, "w") as fh:
-            json.dump(data, fh)
-        return path            
+        json.dump(data, handle)
 
 
 class PngWriterMixin(writable_node.WritableNodeMixin):
@@ -69,33 +62,13 @@ class BinaryPngWriterMixin(PngWriterMixin):
     Functions for reading and writing a node's data in binary PNG.
     """
     @classmethod
-    def reader(cls, path):
-        if os.path.exists(path):
-            return ocrolib.read_image_gray(path.encode())
+    def reader(cls, handle):
+        return ocrolib.numpy.asarray(Image.open(handle))
 
     @classmethod
-    def writer(cls, path, data):
-        ocrolib.write_image_gray(path.encode(), data)
-        return path
-
-
-class ColorPngWriterMixin(PngWriterMixin):
-    """
-    Functions for reading and writing a node's data in binary PNG.
-    """
-    @classmethod
-    def reader(cls, path):
-        if os.path.exists(path):
-            packed = ocrolib.iulib.intarray()
-            ocrolib.iulib.read_image_packed(packed, path)
-            return ocrolib.narray2numpy(packed)
-
-    @classmethod
-    def writer(cls, path, data):
-        packed = ocrolib.numpy2narray(data)
-        ocrolib.iulib.write_image_packed(
-                path.encode(), ocrolib.pseg2narray(data))
-        return path
+    def writer(cls, handle, data):
+        pil = Image.fromarray(data)
+        pil.save(handle, "PNG")
 
 
 class GrayPngWriterMixin(BinaryPngWriterMixin):

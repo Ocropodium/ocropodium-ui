@@ -109,10 +109,7 @@ class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
     def _eval(self):
         if not os.path.exists(self._params.get("path", "")):
             return self.null_data()
-        packed = ocrolib.iulib.intarray()
-        ocrolib.iulib.read_image_packed(
-                packed, makesafe(self._params.get("path")))
-        return ocrolib.narray2numpy(packed)
+        return ocrolib.read_image_gray(makesafe(self._params.get("path")))
         
 
 class OcropusFileOutNode(node.Node, generic_nodes.GrayPngWriterMixin):
@@ -277,7 +274,7 @@ class OcropusBinarizeBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
         # we ignore the latter.
         input = self.get_input_data(0)
         try:
-            out = self._comp.binarize(input)[0]
+            out = self._comp.binarize(input, type="B")[0]
         except (IndexError, TypeError, ValueError), err:
             raise OcropusNodeError(self, err.message)
         return out
@@ -341,7 +338,7 @@ class OcropusGrayscaleFilterBase(OcropusBase, generic_nodes.GrayPngWriterMixin):
     def _eval(self):
         input = self.get_input_data(0)
         try:
-            out = self._comp.cleanup_gray(input)
+            out = self._comp.cleanup_gray(input, type="B")
         except (IndexError, TypeError, ValueError), err:
             raise OcropusNodeError(self, err.message)
         return out
@@ -360,7 +357,7 @@ class OcropusBinaryFilterBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
     def _eval(self):
         input = self.get_input_data(0)
         try:
-            out = self._comp.cleanup(input)
+            out = self._comp.cleanup(input, type="B")
         except (IndexError, TypeError, ValueError), err:
             raise OcropusNodeError(self, err.message)
         return out
