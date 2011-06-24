@@ -30,125 +30,24 @@ def makesafe(val):
     return val
 
 
-class SwitchNode(node.Node, writable_node.WritableNodeMixin):
-    """
-    Node which passes through its selected input.
-    """
-    name = "Ocropus::Switch"
-    description = "Switch between multiple inputs"
-    stage = stages.UTILS
-    arity = 2
-    _parameters = [dict(name="input", value=0, type="switch")]
-
-    def __init__(self, *args, **kwargs):
-        super(SwitchNode, self).__init__(*args, **kwargs)
-        self.arity = kwargs.get("arity", 2)
-        self.intypes = [object for i in range(self.arity)]
-        self.outtype = object
-
-    def _eval(self):
-        """
-        Pass through the selected input.
-        """
-        input = int(self._params.get("input", 0))        
-        return self.eval_input(input)
-
-    def set_input(self, num, n):
-        """
-        Override the base set input to dynamically change our
-        in and out types.
-        """
-        super(SwitchNode, self).set_input(num, n)
-        input = int(self._params.get("input", 0))
-        if input == num:
-            self.outtype = self._inputs[input].outtype
-
-    def first_active(self):
-        if self.arity > 0 and self.ignored:
-            return self._inputs[self.passthrough].first_active()
-        input = int(self._params.get("input", 0))
-        return self._inputs[input].first_active()
-
-    def get_file_name(self):
-        input = int(self._params.get("input", 0))
-        if self.input(input):
-            return "%s%s" % (self.input(input), self.input(input).extension)
-        return "%s%s" % (self.input(input), self.extension)
-
-    def writer(self, path, data):
-        """
-        Pass through the writer function from the selected node.
-        """
-        input = int(self._params.get("input", 0))
-        if self.input(input):
-            return self.input(input).writer(path, data)
-        
-    def reader(self, path):
-        """
-        Pass through the writer function from the selected node.
-        """
-        input = int(self._params.get("input", 0))
-        if self.input(input):
-            return self.input(input).reader(path)
-        
-
-
-
 
 class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
-            generic_nodes.FileNode):
+            generic_nodes.FileNode, generic_nodes.GrayPngWriterMixin):
     """
     A node that takes a file and returns a numpy object.
     """
-    name = "Ocropus::FileIn"
-    description = "File Input Node"
+    name = "Ocropus::GrayFileIn"
+    description = "Image file input node"
     stage = stages.INPUT
+    arity = 0
+    intypes = []
     outtype = ocrolib.numpy.ndarray
-    _parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
         if not os.path.exists(self._params.get("path", "")):
             return self.null_data()
         return ocrolib.read_image_gray(makesafe(self._params.get("path")))
         
-
-class OcropusFileOutNode(node.Node, generic_nodes.GrayPngWriterMixin):
-    """
-    A node that writes a file to disk.
-    """
-    name = "Ocropus::FileOut"
-    description = "File Output Node"
-    arity = 1
-    stage = stages.OUTPUT
-    _parameters = [dict(name="path", value="", type="filepath")]
-
-    def _validate(self):
-        """
-        Check params are OK.
-        """
-        if self._params.get("path") is None:
-            raise node.ValidationError(self, "'path' not set")
-
-
-    def null_data(self):
-        """
-        Return the input.
-        """
-        next = self.first_active()
-        if next is not None:
-            return next.eval()
-
-    def _eval(self):
-        """
-        Write the input to the given path.
-        """
-        input = self.eval_input(0)
-        if input is None:
-            return
-        path = self._params.get("path")
-        self._inputs[0].writer(path, input)
-        return input
-
 
 class OcropusCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
     """
@@ -470,7 +369,7 @@ class Manager(manager.StandardManager):
 
         if name == "OcropusRecognizer":
             return OcropusRecognizerNode
-        elif name == "FileIn":
+        elif name == "GrayFileIn":
             return OcropusFileInNode
         elif name == "FileOut":
             return OcropusFileOutNode

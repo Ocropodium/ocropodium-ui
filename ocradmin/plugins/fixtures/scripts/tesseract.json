@@ -11,7 +11,7 @@
                 "etc/simple.png"
             ]
         ], 
-        "type": "Ocropus::FileIn", 
+        "type": "Ocropus::GrayFileIn", 
         "inputs": []
     }, 
     "DeskewPageByRAST1": {

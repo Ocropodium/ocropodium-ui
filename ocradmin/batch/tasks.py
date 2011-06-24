@@ -3,7 +3,7 @@ Celery tasks for Batch operations.
 """
 
 import os
-
+import glob
 from celery.contrib.abortable import AbortableTask
 from celery.task.sets import subtask
 from ocradmin.ocrtasks.decorators import register_handlers
@@ -16,14 +16,8 @@ from django.conf import settings
 from ocradmin.plugins import ocropus_nodes, stages
 
 MANAGER = ModuleManager()
-MANAGER.register_module("ocradmin.plugins.ocropus_nodes")
-MANAGER.register_module("ocradmin.plugins.tesseract_nodes")
-MANAGER.register_module("ocradmin.plugins.cuneiform_nodes")
-MANAGER.register_module("ocradmin.plugins.abbyy_nodes")
-MANAGER.register_module("ocradmin.plugins.numpy_nodes")
-MANAGER.register_module("ocradmin.plugins.pil_nodes")
-MANAGER.register_module("ocradmin.plugins.ocrlab_nodes")
-MANAGER.register_module("ocradmin.plugins.util_nodes")
+MANAGER.register_paths(
+                glob.glob("plugins/*_nodes.py"), root="ocradmin")
 
 
 @register_handlers
@@ -58,8 +52,8 @@ class BatchScriptTask(AbortableTask):
         # save it as a binary file
         term = tree.get_terminals()[0]
         outpath = os.path.join(
-                writepath, os.path.basename("%s.bin%s" % os.path.splitext(filepath)))
-        outbin = MANAGER.get_new_node("Ocropus::FileOut", label="OutputBinary",
+                writepath, os.path.basename("%s.bin%s" % os.path.splitext(filepath)))        
+        outbin = MANAGER.get_new_node("Utils::FileOut", label="OutputBinary",
                 params=[("path", os.path.abspath(outpath).encode())])
         outbin.set_input(0, term.input(0))
         try:

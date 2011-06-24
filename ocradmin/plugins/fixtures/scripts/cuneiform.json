@@ -5,7 +5,7 @@
         "tags": "basic cuneiform recognize" 
     },
     "filein1": {
-        "type": "Ocropus::FileIn", 
+        "type": "Ocropus::GrayFileIn", 
         "params": [
             [
                 "path", 
