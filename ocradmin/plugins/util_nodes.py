@@ -4,7 +4,7 @@ Nodes to perform random things.
 
 import re
 from nodetree import node, writable_node, manager
-from ocradmin.plugins import stages, generic_nodes
+from ocradmin.plugins import stages, generic_nodes, types
 
 NAME = "Utils"
 
@@ -56,6 +56,44 @@ class HTMLContentHandler(HTMLParser):
         self._data.append("</%s>" % tag)
 
 
+class HocrToText(HTMLParser):
+    """
+    Get text from a HOCR document.
+    """
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self._text = []
+        self._gotline = False
+
+    def parsefile(self, filename):
+        self._text = []
+        with open(filename, "r") as f:
+            for line in f.readlines():
+                self.feed(line)
+        return "\n".join(self._text)
+
+    def parse(self, string):
+        self._text = []
+        self.feed(string)
+        return "\n".join(self._text)
+
+    def handle_starttag(self, tag, attrs):
+        for name, val in attrs:
+            if name == "class" and val.find("ocr_line") != -1:
+                self._gotline = True
+            if name == "br":
+                self._text.append("\n")
+
+    def handle_data(self, data):
+        if self._gotline:
+            self._text.append(data)
+
+    def handle_endtag(self, tag):
+        self._gotline = False
+            
+        
+
+
 class FindReplaceNode(node.Node, generic_nodes.TextWriterMixin):
     """
     Find an replace stuff in input with output.
@@ -64,8 +102,8 @@ class FindReplaceNode(node.Node, generic_nodes.TextWriterMixin):
     name = "Utils::FindReplace"
     description = "Find and replace string in HOCR documents"
     arity = 1
-    intypes = [basestring]
-    outtype = basestring
+    intypes = [types.HocrString]
+    outtype = types.HocrString
     _parameters = [
         dict(name="find", value=""),
         dict(name="replace", value=""),
@@ -103,6 +141,26 @@ class FindReplaceNode(node.Node, generic_nodes.TextWriterMixin):
         return parser.parse(xml)
 
 
+class HocrToTextNode(node.Node, generic_nodes.TextWriterMixin):
+    """
+    Convert HOCR to text.
+    """
+    stage = stages.UTILS
+    name = "Utils::HocrToText"
+    description = "Find and replace string in HOCR documents"
+    arity = 1
+    intypes = [types.HocrString]
+    outtype = unicode
+    _parameters = []
+
+    def _eval(self):
+        input = self.eval_input(0)
+        parser = HocrToText()
+        return parser.parse(input)
+
+
+
+
     
 class Manager(manager.StandardManager):
     """
@@ -114,6 +172,8 @@ class Manager(manager.StandardManager):
             name = name.split("::")[-1]
         if name == "FindReplace":
             return FindReplaceNode(**kwargs)
+        elif name == "HocrToText":
+            return HocrToTextNode(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):

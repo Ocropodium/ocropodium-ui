@@ -6,7 +6,7 @@ import os
 import codecs
 import json
 from ocradmin import plugins
-from ocradmin.plugins import stages
+from ocradmin.plugins import stages, types
 from ocradmin.plugins import utils
 from nodetree import node, writable_node
 import ocrolib
@@ -24,13 +24,14 @@ class TextWriterMixin(writable_node.WritableNodeMixin):
     @classmethod
     def reader(cls, handle):
         """Read a text cache."""
-        return handle.read()
+        utf8reader = codecs.getreader("utf8")(handle)
+        return utf8reader.read()
 
     @classmethod
     def writer(cls, handle, data):
         """Write a text cache."""
-        handle.write(codecs.BOM_UTF8)
-        handle.write(data.encode("utf8"))
+        utf8writer = codecs.getwriter("utf8")(handle)
+        utf8writer.write(data)
 
 
 class JSONWriterMixin(writable_node.WritableNodeMixin):
@@ -86,7 +87,7 @@ class LineRecognizerNode(node.Node, TextWriterMixin):
     stage = stages.RECOGNIZE
     arity = 2
     intypes = [ocrolib.numpy.ndarray, dict]
-    outtype = basestring
+    outtype = types.HocrString
     passthrough = 1
 
     def init_converter(self):
