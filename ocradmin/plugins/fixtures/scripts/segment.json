@@ -5,7 +5,7 @@
 		"tags": "ocropus segmentation test"
 	},
 	"FileIn1": {
-		"type": "Ocropus::FileIn",
+		"type": "Ocropus::GrayFileIn",
 		"stage": "input",
 		"inputs": [],
 		"params": [

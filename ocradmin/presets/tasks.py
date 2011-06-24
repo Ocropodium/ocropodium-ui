@@ -2,7 +2,7 @@
 Run plugin tasks on the Celery queue
 """
 import os
-
+import glob
 from celery.contrib.abortable import AbortableTask
 from django.conf import settings
 from django.utils import simplejson as json
@@ -17,15 +17,8 @@ import numpy
 
 
 MANAGER = ModuleManager()
-MANAGER.register_module("ocradmin.plugins.ocropus_nodes")
-MANAGER.register_module("ocradmin.plugins.tesseract_nodes")
-MANAGER.register_module("ocradmin.plugins.cuneiform_nodes")
-MANAGER.register_module("ocradmin.plugins.abbyy_nodes")
-MANAGER.register_module("ocradmin.plugins.numpy_nodes")
-MANAGER.register_module("ocradmin.plugins.pil_nodes")
-MANAGER.register_module("ocradmin.plugins.ocrlab_nodes")
-MANAGER.register_module("ocradmin.plugins.util_nodes")
-
+MANAGER.register_paths(
+                glob.glob("plugins/*_nodes.py"), root="ocradmin")
 
 
 class UnhandledRunScriptTask(AbortableTask):

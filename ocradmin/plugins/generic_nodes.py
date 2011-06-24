@@ -226,7 +226,7 @@ class ImageGeneratorNode(node.Node):
         return ocrolib.numpy.zeros((640,480,3), dtype=ocrolib.numpy.uint8)
 
 
-class FileNode(node.Node, GrayPngWriterMixin):
+class FileNode(node.Node):
     """
     Node which reads or writes to a file path.
     """

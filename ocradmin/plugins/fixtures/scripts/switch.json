@@ -5,7 +5,7 @@
         "tags": "switch test"
     },
 	"filein1": {
-		"type": "Ocropus::FileIn",
+		"type": "Ocropus::GrayFileIn",
 		"stage": "input",
 		"inputs": [],
 		"params": [
@@ -160,7 +160,7 @@
 		}
 	},
 	"Switch1": {
-		"type": "Ocropus::Switch",
+		"type": "Utils::Switch",
 		"stage": "utils",
 		"inputs": [
 			"SegmentPageByXYCUTS1",
