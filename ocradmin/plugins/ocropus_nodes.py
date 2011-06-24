@@ -42,6 +42,7 @@ class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
     arity = 0
     intypes = []
     outtype = ocrolib.numpy.ndarray
+    _parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
         if not os.path.exists(self._params.get("path", "")):

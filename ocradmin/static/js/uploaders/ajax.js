@@ -131,7 +131,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
             files = [files[0]]
 
         for (var i = 0; i < files.length; i++) {
-            if (files[i].type.search("image/") == -1) {
+            if (!files[i].type.match(/text|image/)) {
                 throw("invalid file type: " + files[i].type);
             }
         }

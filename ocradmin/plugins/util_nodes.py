@@ -2,7 +2,10 @@
 Nodes to perform random things.
 """
 
+import os
 import re
+import tempfile
+import subprocess as sp
 from nodetree import node, writable_node, manager
 from ocradmin.plugins import stages, generic_nodes, types
 
@@ -166,9 +169,11 @@ class TextFileInNode(generic_nodes.FileNode, generic_nodes.TextWriterMixin):
     stage = stages.UTILS
     name = "Utils::TextFileIn"
     description = "Read a text file"
+    stage = stages.INPUT
     arity = 0
     intypes = []
     outtype = unicode
+    _parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
         with open(self._params.get("path"), "r") as fh:
@@ -254,7 +259,6 @@ class FileOutNode(node.Node):
         if self._params.get("path") is None:
             raise node.ValidationError(self, "'path' not set")
 
-
     def null_data(self):
         """
         Return the input.
@@ -274,6 +278,32 @@ class FileOutNode(node.Node):
         with open(path, "w") as fh:
             self._inputs[0].writer(fh, input)
         return input
+
+
+class TextEvaluationNode(node.Node, generic_nodes.TextWriterMixin):
+    """
+    Evaluate two text inputs with ISRI accuracy program.
+    """
+    name = "Utils::TextEvaluation"
+    description = "Evaluate two text inputs with ISRI accuracy."
+    stage = stages.UTILS
+    arity = 2
+    intypes = [basestring, basestring]
+    outtype = basestring
+    _parameters = []
+
+    def _eval(self):
+        intext = self.eval_input(0)
+        gttext = self.eval_input(1)
+        with tempfile.NamedTemporaryFile(delete=False) as t1:
+            with tempfile.NamedTemporaryFile(delete=False) as t2:
+                self.writer(t1, gttext)
+                self.writer(t2, intext)
+        p = sp.Popen(["accuracy", t1.name, t2.name], stdout=sp.PIPE)
+        report = p.communicate()[0]
+        os.unlink(t1.name)
+        os.unlink(t2.name)
+        return report
 
 
 
@@ -297,6 +327,8 @@ class Manager(manager.StandardManager):
             return SwitchNode(**kwargs)
         elif name == "FileOut":
             return FileOutNode(**kwargs)
+        elif name == "TextEvaluation":
+            return TextEvaluationNode(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):

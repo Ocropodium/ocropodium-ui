@@ -465,7 +465,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $.each(script, function(name, node) {
             var typedata = self._nodetypes[node.type];
             var newnode = self.addNode(name, typedata);
-            newnode.setIgnored(node.ignored);  
+            newnode.setIgnored(node.ignored);
+            console.log(name, node, newnode.parameters, node.params);  
             $.each(node.params, function(i, p) {
                 newnode.parameters[i].value = p[1];
             });

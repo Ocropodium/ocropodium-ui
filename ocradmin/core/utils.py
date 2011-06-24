@@ -28,16 +28,19 @@ class HocrParser(HTMLParser):
         self.gotpage = False
 
     def parsefile(self, filename):
+        self.data = {}
         with open(filename, "r") as f:
             for line in f.readlines():
                 self.feed(line)
         return self.data                
 
     def parse(self, string):
+        self.data = {}
         self.feed(string)
         return self.data
 
     def handle_starttag(self, tag, attrs):
+        print "start: %s %s" % (tag, attrs)
         if tag == "div" and not self.gotpage:
             for attr in attrs:
                 if attr[0] == "class" and attr[1].find("ocr_page") != -1:
@@ -56,6 +59,7 @@ class HocrParser(HTMLParser):
                         if namematch:
                             self.data["page"] = namematch.groups()[0]
         elif tag == "span":
+            print "Got span"
             for attr in attrs:
                 if attr[0] == "class" and attr[1].find("ocr_line") != -1:
                     self.currline = {}

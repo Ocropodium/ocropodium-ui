@@ -7,7 +7,7 @@ var uploader = null;
 var formatter = null;
 var nodetree = null;
 var sdviewer = null;
-var textviewer = null;
+var hocrviewer = null;
 var reshandler = null;
 var presetmanager = null;
 var guimanager = null;
@@ -49,16 +49,16 @@ $(function() {
         disabled: false,
     });
     $("#format").buttonset();
-    $("#text_zoomin").click(function(event) {
-        textviewer.increaseFontSize();
+    $("#hocr_zoomin").click(function(event) {
+        hocrviewer.increaseFontSize();
     }).button({
         text: false,
         icons: {
             primary: "ui-icon-zoomin",
         }
     });
-    $("#text_zoomout").click(function(event) {
-        textviewer.reduceFontSize();
+    $("#hocr_zoomout").click(function(event) {
+        hocrviewer.reduceFontSize();
     }).button({
         text: false,
         icons: {
@@ -66,13 +66,13 @@ $(function() {
         }
     });
     $("#format_block").click(function(event) {
-        formatter.blockLayout(textviewer.container());
+        formatter.blockLayout(hocrviewer.container());
     });
     $("#format_line").click(function(event) {
-        formatter.lineLayout(textviewer.container());
+        formatter.lineLayout(hocrviewer.container());
     });
     $("#format_column").click(function(event) {
-        formatter.columnLayout(textviewer.container());
+        formatter.columnLayout(hocrviewer.container());
     });
 
     $("#image_zoomin").click(function(event) {
@@ -105,6 +105,22 @@ $(function() {
         text: false,
         icons: {
             primary: "ui-icon-arrow-4-diag",
+        }
+    });
+    $("#text_zoomin").click(function(event) {
+        textviewer.increaseFontSize();
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomin",
+        }
+    });
+    $("#text_zoomout").click(function(event) {
+        textviewer.reduceFontSize();
+    }).button({
+        text: false,
+        icons: {
+            primary: "ui-icon-zoomout",
         }
     });
 
@@ -199,10 +215,15 @@ $(function() {
             }
             sdviewer.setBufferOverlays(overlays, 0);
             $("#viewertabs").tabs("select", 0);
+        } else if (data.result.type == "hocr") {
+            hocrviewer.setData(data.result.data);
+            formatter.blockLayout(hocrviewer.container());
+            $("#viewertabs").tabs("select", 1);
         } else if (data.result.type == "text") {
             textviewer.setData(data.result.data);
-            formatter.blockLayout($(".textcontainer"));
-            $("#viewertabs").tabs("select", 1);
+            $("#viewertabs").tabs("select", 2);
+        } else {
+            throw "Unknown result type: " + data.result.type;
         }
     }
 
@@ -227,6 +248,7 @@ $(function() {
         dashboard: false,
     });
     guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
+    hocrviewer = new OCRJS.HocrViewer($("#hocrviewer_1").get(0));
     textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
