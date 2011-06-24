@@ -15,7 +15,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this.name = name;
         this.type = classdata.name;
         this.arity = classdata.arity;
-        this.desc = classdata.description;
+        this.description = classdata.description;
         this.stage = classdata.stage;
         this.passthough = classdata.passthrough;
         this.parameters = $.extend(true, [], classdata.parameters);
@@ -85,7 +85,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         var tip = this.name + "\n\n"
             + this.type;
         if (this.description && this.description != "")
-            tip += "\n\n" + this.description + "\n\n";
+            tip += "\n\n" + this.description + "\n";
         if (this._error && this._error != "")
             tip += "\n\nError: " + this._error;        
         return tip;
