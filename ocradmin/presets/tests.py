@@ -63,19 +63,25 @@ class ViewsTest(TestCase):
         """
         Test a script that should return transcript data.
         """
-        self._run_script("ocropus.json", "SUCCESS", "text", ["data"])
+        self._run_script("ocropus.json", "SUCCESS", "hocr", ["data"])
 
     def test_tesseract_script(self):
         """
         Test a script that should return transcript data.
         """
-        self._run_script("tesseract.json", "SUCCESS", "text", ["data"])
+        self._run_script("tesseract.json", "SUCCESS", "hocr", ["data"])
 
     def test_cuneiform_script(self):
         """
         Test a script that should return transcript data.
         """
-        self._run_script("cuneiform.json", "SUCCESS", "text", ["data"])
+        self._run_script("cuneiform.json", "SUCCESS", "hocr", ["data"])
+
+    def test_evaluation_script(self):
+        """
+        Test a script that should return transcript data.
+        """
+        self._run_script("evaluation.json", "SUCCESS", "text", ["data"])
 
     def test_invalid_path(self):
         """

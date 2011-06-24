@@ -303,7 +303,7 @@ class TextEvaluationNode(node.Node, generic_nodes.TextWriterMixin):
         report = p.communicate()[0]
         os.unlink(t1.name)
         os.unlink(t2.name)
-        return report
+        return unicode(report)
 
 
 
