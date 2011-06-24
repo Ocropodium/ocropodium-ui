@@ -320,6 +320,7 @@ COMPRESS_JS = {
             "js/seadragon/seadragon-min.js",
             "js/image_viewer.js",
             "js/text_viewer.js",
+            "js/hocr_viewer.js",
 	        "js/utils/stats.js",
             "js/line_formatter.js",
         ),

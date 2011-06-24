@@ -9,7 +9,7 @@ from django.utils import simplejson as json
 
 from ocradmin.core import utils
 from ocradmin.ocrtasks.decorators import register_handlers
-from ocradmin.plugins import ocropus_nodes, cache
+from ocradmin.plugins import ocropus_nodes, cache, types
 
 from nodetree import node, script
 from nodetree.manager import ModuleManager
@@ -50,24 +50,29 @@ class UnhandledRunScriptTask(AbortableTask):
             return dict(type="error", node=err.node.label, error=err.msg)
 
         path = cacher.get_path(term.first_active())
+        logger.debug("OUT TYPE: %s", term.outtype)
+        logger.debug("RESULT: %s", result)
         filename = term.first_active().get_file_name()
-        if isinstance(result, numpy.ndarray):
+        if term.outtype == numpy.ndarray:
             dzi = "%s.dzi" % os.path.splitext(filename)[0]
             return dict(
                 type="image",
                 path=utils.media_path_to_url(os.path.join(path, filename)),
                 dzi=utils.media_path_to_url(os.path.join(path, dzi))
             )
-        elif isinstance(result, dict):
+        elif term.outtype == dict:
             path = cacher.get_path(term._inputs[0].first_active())
             filename = term._inputs[0].first_active().get_file_name()
             dzi = "%s.dzi" % os.path.splitext(filename)[0]
             dzipath=utils.media_path_to_url(os.path.join(path, dzi))
             result.update(type="pseg", dzi=dzipath)
             return result
-        else:
+        elif term.outtype == types.HocrString: 
             parser = utils.HocrParser()
-            return dict(type="text", data=parser.parse(result))
+            return dict(type="hocr", data=parser.parse(result))
+        elif issubclass(term.outtype, basestring):
+            return dict(type="text", data=result)
+
 
 
 @register_handlers
