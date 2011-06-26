@@ -3,11 +3,12 @@
 //
 
 OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
-    constructor: function(node, name) {
+    constructor: function(node, name, datatype) {
         this.base();
 
         this.node = node;
         this.name = name;
+        this.dtype = datatype || "?";
         this._pw = 30;
         this._ph = 20;
 
@@ -29,19 +30,87 @@ OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
         var self = this;
         self.svg = svg;
         self._group = svg.group(parent, self.name);                
-        self._rect = svg.rect(parent, 
+        self._rect = svg.rect(this._group, 
                 x - (this._pw / 2), y - (this._ph / 2), this._pw, this._ph, 5, 5, {
             fill: this._gradient,
             stroke: "#BBB",
             strokeWidth: 1,
-        });                        
-        this.setupEvents();
+        });
     },
 
+    drawDatatype_ndarray: function(parent, x, y) {
+        var radius = this._ph / 4;                              
+        var dtype = this.svg.circle(parent, x, y, radius, {
+            fill: "#FFF",
+            strokeWidth: 0.5,
+            stroke: "#666",
+        });
+        var path = this.svg.createPath()
+            .move(x, y)
+            .horiz(radius, true)
+            .arc(radius, radius, -90, false, false, x, y - radius)
+            .vert(y + radius)
+            .arc(radius, radius, 90, false, true, x - radius, y)
+            .close();
+        this.svg.path(parent, path.path(), {
+            fill: "#666",
+        }); 
+        return dtype;
+    },                             
+
+    drawDatatype_HocrString: function(parent, x, y) {
+        var radius = this._ph / 4;                              
+        //this.svg.circle(parent, x, y, radius, {
+        //    fill: "#F5F6CE",
+        //    strokeWidth: 0.5,
+        //    stroke: "#666",
+        //});
+        var dtype = this.svg.text(parent, x - 0.5, y + 0.5, "HOCR", {
+                textAnchor: "middle",
+                alignmentBaseline: "middle",
+                fontSize: 6,
+                fontStretch: "narrower",
+                fontWeight: "bold",
+            }
+        );
+    },                             
+
+    drawDatatype_unicode: function(parent, x, y) {
+        var radius = this._ph / 4;                              
+        //this.svg.circle(parent, x, y, radius, {
+        //    fill: "#FDFDFD",
+        //    strokeWidth: 0.5,
+        //    stroke: "#666",
+        //});
+        var dtype = this.svg.text(parent, x, y + 0.5, "TEXT", {
+                textAnchor: "middle",
+                alignmentBaseline: "middle",
+                fontSize: 6,
+                fontFamily: "Serif",
+                fontStretch: "narrower",
+                fontWeight: "bold",
+            }
+        );
+    },                             
+
+    drawDatatype_dict: function(parent, x, y) {
+        var radius = this._ph / 4;                              
+        var start = (y + 1) - radius;
+        for (var i = 0; i < 3; i++) {
+            this.svg.rect(parent, x - radius, start + (i * ((radius / 3) + 1)), radius * 2, radius / 3, 0, 0, {
+                strokewidth: 0.25,
+                stroke: "#888",
+                fill: "#FFF",
+            });
+        } 
+   },                             
+
     wouldAccept: function(other) {
+        if (other == this)
+            return false;
         if (other.type == this.type)
             return false;
-        if (other == this)
+        if (other.dtype != this.dtype)
             return false;
         if (other.node == this.node)
             return false;
@@ -68,11 +137,11 @@ OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
     setupEvents: function() {
         var self = this;
 
-        $(self._rect).noContext().rightClick(function(event) {
+        $(this._group).noContext().rightClick(function(event) {
             self.callListeners("rightClicked", event);
         });            
 
-        $(self._rect).bind("click.attachcable", function(event) {
+        $(this._group).bind("click.attachcable", function(event) {
             self.callListeners("attachCable", self);
             event.stopPropagation();
             event.preventDefault();
@@ -104,8 +173,8 @@ OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
 
 
 OCRJS.Nodetree.InPlug = OCRJS.Nodetree.BasePlug.extend({
-    constructor: function(node, name) {
-        this.base(node, name);
+    constructor: function(node, name, datatype) {
+        this.base(node, name, datatype);
         this.type = "input";
         this._gradient = "url(#InPlugGradient)";
         this._cable = null;
@@ -133,18 +202,43 @@ OCRJS.Nodetree.InPlug = OCRJS.Nodetree.BasePlug.extend({
     
     isAttached: function() {
         return Boolean(this._cable);
+    },
+
+    draw: function(svg, parent, x, y) {              
+        this.base(svg, parent, x, y);
+        var func = this["drawDatatype_" + this.dtype];
+        if (func)
+            this._label = func.call(this, this._group, x, y - (this._ph / 5));
+        else {
+            this._label = svg.text(this._group, x, y + (this._ph / 4), this.dtype, {
+                    textAnchor: "middle",
+                    alignmentBaseline: "middle",
+                    fontSize: 7,
+                }
+            );
+        }
+        this.setupEvents();
     },        
 });
 
 OCRJS.Nodetree.OutPlug = OCRJS.Nodetree.BasePlug.extend({
-    constructor: function(node, name) {
-        this.base(node, name);
+    constructor: function(node, name, datatype) {
+        this.base(node, name, datatype);
         this.type = "output";
         this._gradient = "url(#OutPlugGradient)";
     },
 
     toString: function() {
         return "<OutPlug: " + this.name + ">";
-    },                  
+    },
+
+    draw: function(svg, parent, x, y) {
+        this.base(svg, parent, x, y);    
+
+        var func = this["drawDatatype_" + this.dtype];
+        if (func)
+            this._label = func.call(this, this._group, x, y + (this._ph / 5));
+        this.setupEvents();
+    },
 });
 
