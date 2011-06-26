@@ -174,7 +174,9 @@ def run_preset(request):
         status=async.status,
         results=async.result
     )
-    return HttpResponse(json.dumps(out), mimetype="application/json")
+    response = HttpResponse(mimetype="application/json")
+    json.dump(out, response, ensure_ascii=False)
+    return response
 
 
 def results(request, task_ids):
@@ -189,7 +191,9 @@ def results(request, task_ids):
             task_id=task_id,
             status=async.status,
         ))
-    return HttpResponse(json.dumps(out), mimetype="application/json")
+    response = HttpResponse(mimetype="application/json")
+    json.dump(out, response, ensure_ascii=False)
+    return response
 
 
 @saves_files

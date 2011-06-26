@@ -24,13 +24,13 @@ class TextWriterMixin(writable_node.WritableNodeMixin):
     @classmethod
     def reader(cls, handle):
         """Read a text cache."""
-        utf8reader = codecs.getreader("utf8")(handle)
+        utf8reader = codecs.getreader("utf_8")(handle)
         return utf8reader.read()
 
     @classmethod
     def writer(cls, handle, data):
         """Write a text cache."""
-        utf8writer = codecs.getwriter("utf8")(handle)
+        utf8writer = codecs.getwriter("utf_8")(handle)
         utf8writer.write(data)
 
 
@@ -48,7 +48,7 @@ class JSONWriterMixin(writable_node.WritableNodeMixin):
     @classmethod
     def writer(cls, handle, data):
         """Write a cache from a given dir."""
-        json.dump(data, handle)
+        json.dump(data, handle, ensure_ascii=False)
 
 
 class PngWriterMixin(writable_node.WritableNodeMixin):
@@ -210,7 +210,7 @@ class CommandLineRecognizerNode(LineRecognizerNode):
                 if lines and lines[-1] == "":
                     lines = lines[:-1]
                 os.unlink(txt.name)
-        return " ".join(lines)
+        return unicode(" ".join(lines), "utf8")
 
 
 class ImageGeneratorNode(node.Node):

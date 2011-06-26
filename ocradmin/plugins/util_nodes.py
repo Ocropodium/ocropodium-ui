@@ -4,6 +4,7 @@ Nodes to perform random things.
 
 import os
 import re
+import codecs
 import tempfile
 import subprocess as sp
 from nodetree import node, writable_node, manager
@@ -295,15 +296,16 @@ class TextEvaluationNode(node.Node, generic_nodes.TextWriterMixin):
     def _eval(self):
         intext = self.eval_input(0)
         gttext = self.eval_input(1)
-        with tempfile.NamedTemporaryFile(delete=False) as t1:
-            with tempfile.NamedTemporaryFile(delete=False) as t2:
+        with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
+            with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t2:
                 self.writer(t1, gttext)
                 self.writer(t2, intext)
-        p = sp.Popen(["accuracy", t1.name, t2.name], stdout=sp.PIPE)
+        writer = codecs.getwriter("utf8")(sp.PIPE)
+        p = sp.Popen(["accuracy", t1.name, t2.name], stdout=writer)
         report = p.communicate()[0]
         os.unlink(t1.name)
         os.unlink(t2.name)
-        return unicode(report)
+        return unicode(report, "utf8", "replace")
 
 
 
