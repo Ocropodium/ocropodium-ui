@@ -261,7 +261,6 @@ div#node_canvas {
     background: linear-gradient(top, #ffffad 0%,#ffffad 100%);
 }
 
-.ui-icon-cancel.waiting {
-    background-image: url(/static/ajax-loader-small.gif) !important;
-    background-position: 0px 0px !important;
+.ui-button.waiting span {
+    background-image: url(custom-theme/images/ui-icons_cd0a0a_256x240.png);
 }
