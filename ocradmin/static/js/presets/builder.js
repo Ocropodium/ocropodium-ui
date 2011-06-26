@@ -170,6 +170,12 @@ $(function() {
         },
     });
 
+    $("#abort").click(function() {
+        reshandler.abort();
+        event.stopPropagation();
+        event.preventDefault();
+    });        
+
     $("#optionsform").submit(function() {
         nodetree.scriptChanged();
         event.stopPropagation();
@@ -178,6 +184,7 @@ $(function() {
 
     var resultcache = {};
     function handleResult(nodename, data, cached) {
+        console.log("Data:", data);
         if (data.result.type == "error") {
             console.log("NODE ERROR: ", data.result.node, data.result.error);
             nodetree.setNodeErrored(data.result.node, data.result.error);
@@ -290,15 +297,19 @@ $(function() {
 
     reshandler.addListeners({
         resultPending: function() {
+            $("#abort > .ui-button-icon-primary").addClass("waiting");
             nodetree.clearErrors();
         },
         validationError: function(node, error) {
+            $("#abort > .ui-button-icon-primary").removeClass("waiting");
             nodetree.setNodeErrored(node, error);
             // clear the client-size cache
             resultcache = {};
         },
-        resultDone: function(node, data) {
-           handleResult(node, data, false);
+        resultDone: function(node, data) {                                
+            $("#abort > .ui-button-icon-primary").removeClass("waiting");
+           if (data.status != "ABORT" && data.status != "FAILURE")
+               handleResult(node, data, false);
         }        
     });
 
