@@ -8,7 +8,6 @@ from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.utils import simplejson
 
 from ocradmin.batch.models import Batch
 from ocradmin.ocrtasks.models import OcrTask
@@ -24,7 +23,10 @@ SCRIPT2 = "plugins/fixtures/scripts/ocropus.json"
 
 
 class BatchTest(TestCase):
-    fixtures = ["ocrmodels/fixtures/test_fixtures.json",
+    fixtures = [
+            "ocrtasks/fixtures/test_task.json",
+            "ocrtasks/fixtures/test_transcript.json",
+            "ocrmodels/fixtures/test_fixtures.json",
             "projects/fixtures/test_fixtures.json",
             "batch/fixtures/test_batch.json"]
 
@@ -78,7 +80,7 @@ class BatchTest(TestCase):
         pk = self._test_batch_action()
         r = self.client.get("/batch/results/%s" % pk)
         self.assert_(r.content, "No content returned")
-        content = simplejson.loads(r.content)
+        content = json.loads(r.content)
         self.assertEqual(
                 content[0]["fields"]["tasks"][0]["fields"]["page_name"],
                 os.path.basename(TESTFILE))
@@ -92,7 +94,7 @@ class BatchTest(TestCase):
         pk = self._test_batch_action()
         r = self.client.get("/batch/results/%s/0/" % pk)
         self.assert_(r.content, "No content returned")
-        content = simplejson.loads(r.content)
+        content = json.loads(r.content)
         self.assertEqual(
                 content[0]["fields"]["page_name"],
                 os.path.basename(TESTFILE))
@@ -105,7 +107,7 @@ class BatchTest(TestCase):
         pk = self._test_batch_action()
         r = self.client.get("/batch/results/%s/0/" % pk)
         self.assert_(r.content, "No content returned")
-        content = simplejson.loads(r.content)
+        content = json.loads(r.content)
         self.assertEqual(
                 content[0]["fields"]["page_name"],
                 os.path.basename(TESTFILE))
@@ -178,7 +180,7 @@ class BatchTest(TestCase):
             headers = {}
             r = self.client.post("/batch/upload_files/", params, **headers)
         #fh.close()
-        content = simplejson.loads(r.content)
+        content = json.loads(r.content)
         self.assertEqual(content, [os.path.join("test-project-2",
             os.path.basename(TESTFILE))])
 
