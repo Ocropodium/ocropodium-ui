@@ -119,10 +119,13 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this._opened = this._openedhash = null;
         this._continueaction = null;
         $("#current_preset_name").text("Untitled");
+        $("#preset_unsaved").toggle(false);                         
     },                   
 
     checkForChanges: function() {
-        $("#preset_unsaved").toggle(this.hasChanged());                         
+        var changed = this.hasChanged();                         
+        console.log("CHANGED: ", changed);
+        $("#preset_unsaved").toggle(changed);                         
     },                         
 
     hasChanged: function() {
@@ -140,12 +143,8 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         return hash != this._openedhash;
     },                         
 
-    setCurrentPreset: function(script) {
-        console.log("Set current script");                          
-        this._current = script;
-    },
-
     setCurrentOpenPreset: function(slug, name, data, reload) {
+        console.log("Setting current:", this._nodetree._nodedata);
         console.log("Set current open script", slug, name, data);                              
         this._opened = slug;                              
         this._openedhash = bencode(data);
@@ -220,6 +219,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             self.saveExistingPreset(self._opened, data, function(data) {
                 self.setCurrentOpenPreset(self._opened, name, data, false);
                 self._dialog.dialog("close");
+                $("#preset_unsaved").toggle(false);   
                 if (self._continueaction)
                     self._continueaction()
             }, OCRJS.ajaxErrorHandler);
@@ -270,6 +270,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                     self.setCurrentOpenPreset(data, 
                             self._dialog.find("#id_name").val(), currdata, false)
                     self._dialog.dialog("close");
+                    $("#preset_unsaved").toggle(false);                         
                     if (self._continueaction)
                         self._continueaction();
                 },
