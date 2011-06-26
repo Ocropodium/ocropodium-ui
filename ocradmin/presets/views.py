@@ -187,10 +187,26 @@ def results(request, task_ids):
     for task_id in task_ids.split(","):
         async = OcrTask.get_celery_result(task_id)
         out.append(dict(
-            result=async.result,
+            result=_flatten_result(async.result),
             task_id=task_id,
             status=async.status,
         ))
+    response = HttpResponse(mimetype="application/json")
+    json.dump(out, response, ensure_ascii=False)
+    return response
+
+
+def abort(request, task_ids):
+    """
+    Kill a running task.
+    """
+    out = []
+    for task_id in task_ids.split(","):
+        OcrTask.revoke_celery_task(task_id, kill=True)
+        out.append(dict(
+            task_id=task_id,
+        ))
+    print "OUT: %s" % out
     response = HttpResponse(mimetype="application/json")
     json.dump(out, response, ensure_ascii=False)
     return response
@@ -224,3 +240,11 @@ def layout_graph(request):
                 mimetype="application/json")
 
 
+def _flatten_result(result):
+    """
+    Ensure we can serialize a celery result.
+    """
+    if issubclass(type(result), Exception):
+        return result.message
+    else:
+        return result

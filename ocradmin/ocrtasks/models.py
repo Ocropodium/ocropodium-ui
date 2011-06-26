@@ -167,6 +167,13 @@ class OcrTask(models.Model):
         return results
 
     @classmethod
+    def revoke_celery_task(cls, task_id, kill=True):
+        """
+        Kill a Celery task.
+        """
+        celery.task.control.revoke(task_id, terminate=kill, signal="SIGTERM")
+
+    @classmethod
     def get_celery_result(cls, task_id):
         """
         Proxy for fetching Celery results.
