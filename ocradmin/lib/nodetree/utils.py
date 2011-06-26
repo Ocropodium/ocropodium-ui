@@ -24,6 +24,8 @@ class NodeEncoder(json.JSONEncoder):
                 stage=n.stage,
                 passthrough=n.passthrough,
                 parameters=n.parameters(),
+                intypes=[t.__name__ for t in n.intypes],
+                outtype=n.outtype.__name__
             )
         return super(NodeEncoder, self).default(n)            
 
