@@ -449,7 +449,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             onLoad: function(svg) {
                 self.svg = svg;
                 self.drawTree();
-                self.loadState();
                 self.setupEvents();
                 self.buildNodeMenu();
                 self.callListeners("ready");
@@ -481,6 +480,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         if (!havemeta)
             this.layoutNodes(script);
         this.callListeners("scriptLoaded");
+        this.loadState();
     },                    
 
     addNode: function(name, typedata) {                         
