@@ -15,11 +15,6 @@ SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 # add lib dir to pythonpath
 sys.path.insert(0, os.path.join(SITE_ROOT, "lib"))
 
-# add plugin path to pythonpath
-#sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools"))
-
-#sys.path.insert(0, os.path.join(SITE_ROOT, "plugins/tools/components"))
-
 # flag whether we're on a server.  Really need a better way of doing this.
 # ocr1 is the db master
 SERVER = False
@@ -33,6 +28,9 @@ if os.environ.get("OCR_SERVER") and SITE_ROOT.find("/dev/") == -1:
 # don't run in debug mode on the servers
 DEBUG = TEMPLATE_DEBUG = not SERVER
 
+# Path to some random binary tools
+BIN_PATH = "%s/bin" % SITE_ROOT
+
 # get architecture for the system we're running
 # on - this is mainly for choosing the correct
 # executable for the isri tools in bin/
@@ -41,6 +39,12 @@ ARCH = sp.Popen(
     shell=True,
     stdout=sp.PIPE
 ).communicate()[0].strip()
+
+# add bin the env path
+os.environ["PATH"] = "%s:%s" % (
+        os.path.join(BIN_PATH, ARCH),
+        os.environ.get("PATH", "")
+)
 
 ADMINS = (
 )
@@ -109,9 +113,6 @@ SITE_ID = 1
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
-
-# Path to some random binary tools
-BIN_PATH = "%s/bin" % SITE_ROOT
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
