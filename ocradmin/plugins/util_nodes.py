@@ -289,8 +289,8 @@ class TextEvaluationNode(node.Node, generic_nodes.TextWriterMixin):
     description = "Evaluate two text inputs with ISRI accuracy."
     stage = stages.UTILS
     arity = 2
-    intypes = [basestring, basestring]
-    outtype = basestring
+    intypes = [unicode, unicode]
+    outtype = unicode
     _parameters = []
 
     def _eval(self):
