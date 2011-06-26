@@ -26,13 +26,7 @@ function loadState() {
 $(function() {
 
     // script builder buttons
-    $("#abort").button({
-        text: false,
-        icons: {
-            primary: "ui-icon-cancel",
-        }        
-    });
-    $("#rerun_script").button({
+    $("#stop_refresh").button({
         text: false,
         icons: {
             primary: "ui-icon-refresh",
@@ -42,6 +36,18 @@ $(function() {
         text: false,
         icons: {
             primary: "ui-icon-home",
+        }        
+    });
+    $("#layout_nodes").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-grip-dotted-vertical",
+        }        
+    });
+    $("#clear_cache").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-suitcase",
         }        
     });
 
@@ -138,8 +144,19 @@ $(function() {
 
     $("#focus_script").click(function(event) {
         nodetree.centreTree();
+        event.preventDefault();
+        event.stopPropagation();
     });
-
+    $("#layout_nodes").click(function(event) {
+        nodetree.layoutNodes();
+        event.preventDefault();
+        event.stopPropagation();
+    });
+    $("#clear_cache").click(function(event) {
+        resultcache = {};
+        event.preventDefault();
+        event.stopPropagation();
+    });
 
     // initialise the uploader...
     uploader  = new OCRJS.AjaxUploader(
@@ -170,8 +187,12 @@ $(function() {
         },
     });
 
-    $("#abort").click(function() {
-        reshandler.abort();
+    $("#stop_refresh").click(function() {
+        if (reshandler.isPending()) {
+            reshandler.abort();
+        } else {
+            nodetree.scriptChanged("Refresh");
+        }
         event.stopPropagation();
         event.preventDefault();
     });        
@@ -293,22 +314,57 @@ $(function() {
             // load state stored from last time
             loadState();
         },                   
-    });    
+    });
+
+    //var iconstates = ["ui-icon-arrowrefresh-1-w", "ui-icon-arrowrefresh-1-n",
+    //        "ui-icon-arrowrefresh-1-e", "ui-icon-arrowrefresh-1-s"];
+    //var refindex = 0;
+    //var reftimer = null;
+    //function showPending() {
+    //    clearTimeout(reftimer);
+    //    reftimer = setTimeout(function() {            
+    //        $("#stop_refresh").button("option", "icons", {
+    //            primary: iconstates[refindex],
+    //        });
+    //        refindex++;
+    //        if (refindex >= iconstates.length)
+    //            refindex = 0;
+    //        showPending(); 
+    //    }, 100);
+    //}    
 
     reshandler.addListeners({
         resultPending: function() {
-            $("#abort > .ui-button-icon-primary").addClass("waiting");
+            $("#stop_refresh").button({
+                text: false,
+                icons: {
+                    primary: "ui-icon-cancel",    
+                }
+            });
+            //showPending();
             nodetree.clearErrors();
         },
         validationError: function(node, error) {
-            $("#abort > .ui-button-icon-primary").removeClass("waiting");
+            //clearTimeout(reftimer);
+            $("#stop_refresh").button({
+                text: false,
+                icons: {
+                    primary: "ui-icon-refresh",    
+                }
+            });
             nodetree.setNodeErrored(node, error);
             // clear the client-size cache
             resultcache = {};
         },
         resultDone: function(node, data) {                                
-            $("#abort > .ui-button-icon-primary").removeClass("waiting");
-           if (data.status != "ABORT" && data.status != "FAILURE")
+            //clearTimeout(reftimer);
+            $("#stop_refresh").button({
+                text: false,
+                icons: {
+                    primary: "ui-icon-refresh",    
+                }
+            });
+            if (data.status != "ABORT" && data.status != "FAILURE")
                handleResult(node, data, false);
         }        
     });

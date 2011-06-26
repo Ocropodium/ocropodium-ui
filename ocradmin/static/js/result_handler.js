@@ -35,6 +35,10 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         self.pollForResults();
     },
 
+    isPending: function() {
+        return Boolean(this._pending);
+    },        
+
     abort: function() {
         var self = this;
         if (this._pending) {
