@@ -43,7 +43,7 @@ class PersistantFileCacher(BaseCacher):
         """
         readpath = os.path.join(path, node.get_file_name())
         self.logger.debug("Reading binary cache: %s", readpath)
-        with open(readpath, "r") as fh:
+        with open(readpath, "rb") as fh:
             return node.reader(fh)
 
     def _write_node_data(self, node, path, data):
