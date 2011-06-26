@@ -47,6 +47,28 @@ class CoreTest(TestCase):
         stdout, stderr = self._run_cmd("convert")
         self.assertRegexpMatches(stdout, "Usage")
 
+    def test_PIL(self):
+        """
+        Make sure PIL >= 1.1 is available.
+        """
+        from PIL import Image
+        version = [int(v) for v in Image.VERSION.split(".")]
+        self.assertGreaterEqual(version[1], 1)
+
+    def test_numpy(self):
+        """
+        Make sure numpy >= 1.5 is available.
+        """
+        from numpy import version        
+        version = [int(v) for v in version.version.split(".")]
+        self.assertGreaterEqual(version[1], 5)
+
+    def test_ocrolib(self):
+        """
+        Just check importing ocrolib doesn't error.
+        """
+        import ocrolib
+
     def _run_cmd(self, *args):
         p = sp.Popen(args, stdout=sp.PIPE, stderr=sp.PIPE)
         return p.communicate()
