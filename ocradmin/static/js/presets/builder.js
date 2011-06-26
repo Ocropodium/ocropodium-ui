@@ -14,11 +14,13 @@ var guimanager = null;
 
 function saveState() {
     presetmanager.saveState();
+    nodetree.saveState();
 }
 
 
 function loadState() {
     presetmanager.loadState();
+    nodetree.loadState();
 }
 
 $(function() {

@@ -17,6 +17,8 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this.arity = classdata.arity;
         this.description = classdata.description;
         this.stage = classdata.stage;
+        this.intypes = classdata.intypes;
+        this.outtype = classdata.outtype;
         this.passthough = classdata.passthrough;
         this.parameters = $.extend(true, [], classdata.parameters);
         this._ignored = false;
@@ -268,16 +270,18 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         this._group = g;
         // draw the plugs on each node.
         var plugx = this.width / (this.arity + 1);
-
+        console.log("Intypes:", this.intypes);
         for (var p = 1; p <= this.arity; p++) {
-            var plug = new OCRJS.Nodetree.InPlug(this, this.name + "_input" + (p-1));
+            var plug = new OCRJS.Nodetree.InPlug(
+                    this, this.name + "_input" + (p-1), this.intypes[p-1]);
             plug.draw(svg, g, x + (p*plugx), y - 1);
             this._inplugs.push(plug);
             this.setupPlugListeners(plug);
         }
         
         // draw the bottom plug            
-        this._outplug = new OCRJS.Nodetree.OutPlug(this, this.name + "_output");
+        this._outplug = new OCRJS.Nodetree.OutPlug(
+                this, this.name + "_output", this.outtype);
         this._outplug.draw(svg, g, x  + (this.width / 2), y + this.height + 1);
         this.setupPlugListeners(this._outplug);
 
