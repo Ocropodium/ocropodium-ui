@@ -292,7 +292,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
                     self._nodetypes[nodeinfo.name] = nodeinfo;
                 });
                 self.populateCanvas();
-                self.callListeners("ready");                
             },
         });
     },
@@ -301,8 +300,8 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         $(this.parent).html("");
         $(this.parent).append($.tmpl(this._nodeslottmpl));
         this.populateAvailableList();
-
         this.setupEvents();
+        this.callListeners("ready");                
     },                        
 
     populateAvailableList: function() {
@@ -437,7 +436,6 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         $.each(script, function(name, nodedata) {
             if (name != "__meta") {
                 var typedata = self._nodetypes[nodedata.type];
-                console.log("Creating node", name);
                 var node = self.addNode(name, typedata);
                 node.setIgnored(nodedata.ignored);
                 $.each(nodedata.params, function(i, p) {
