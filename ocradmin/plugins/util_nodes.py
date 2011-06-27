@@ -308,6 +308,35 @@ class TextEvaluationNode(node.Node, generic_nodes.TextWriterMixin):
         return unicode(report, "utf8", "replace")
 
 
+class TextDiffNode(node.Node, generic_nodes.TextWriterMixin):
+    """
+    Do a side-by-side.
+    """
+    name = "Utils::TextDiff"
+    description = "Diff two text inputs."
+    stage = stages.UTILS
+    arity = 2
+    intypes = [unicode, unicode]
+    outtype = unicode
+    _parameters = [dict(name="format", value="normal",
+        choices=("normal", "side-by-side", "rcs"))]
+
+    def _eval(self):
+        intext = self.eval_input(0)
+        gttext = self.eval_input(1)
+        format = self._params.get("format", "normal")
+        with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
+            with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t2:
+                self.writer(t1, gttext)                                               
+                self.writer(t2, intext)
+        writer = codecs.getwriter("utf8")(sp.PIPE)
+        p = sp.Popen(["diff", "--%s" % format, t1.name, t2.name], stdout=writer)
+        report = p.communicate()[0]
+        os.unlink(t1.name)
+        os.unlink(t2.name)
+        return unicode(report, "utf8", "replace")
+
+
 
 
     
@@ -331,6 +360,8 @@ class Manager(manager.StandardManager):
             return FileOutNode(**kwargs)
         elif name == "TextEvaluation":
             return TextEvaluationNode(**kwargs)
+        elif name == "TextDiff":
+            return TextDiffNode(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):
