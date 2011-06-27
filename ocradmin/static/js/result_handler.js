@@ -12,7 +12,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         this._timer = null;
 
         this._listeners = {
-            validationError: [],
+            validationErrors: [],
             resultPending: [],
             resultDone: [],
             haveErrorForNode: [],
@@ -72,9 +72,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
                 if (data.status == "NOSCRIPT")
                     console.log("Server said 'Nothing to do'")
                 else if (data.status == "VALIDATION") {
-                    $.each(data.errors, function(name, error) {
-                        self.callListeners("validationError", name, error);
-                    });
+                    self.callListeners("validationErrors", data.errors);
                 } else {
                     self.callListeners("resultPending");
                     self.watchNode(nodename, data);
