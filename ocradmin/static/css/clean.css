@@ -283,8 +283,8 @@ a.button:hover {
     float: left;
 }
 
-.textviewer, .imageviewer {
-    padding: 0.4em;
+.textviewer {
+    padding: 0.5em;
 }
 
 /* jquery UI override */
@@ -294,6 +294,12 @@ a.button:hover {
 
 .ui-tabs-nav {
     
+}
+
+/* NB: this depends on the image viewer
+ * auto-sizing to fit the content */
+.imageviewer {
+    overflow: hidden;
 }
 
 .ui-layout-header {

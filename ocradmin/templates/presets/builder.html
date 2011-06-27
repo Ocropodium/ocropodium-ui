@@ -19,48 +19,50 @@
 {% block content %}
     {% include "includes/node.html" %}
     {% include "includes/preset_manager.html" %}
-    <div  id="viewertabs">
-        <ul class="ui-layout-north">
-            <li><a href="#imageviewer_1_container">Image Viewer</a></li>
-            <li><a href="#hocrviewer_1_container">OCR Viewer</a></li>
-            <li><a href="#textviewer_1_container">Text Viewer</a></li>
-        </ul>
-        <div class="ui-layout-center">            
-            <div id="imageviewer_1_container">
-                <div id="imageviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
-                    <button class="tbbutton" id="image_zoomout">Zoom Out</button>
-                    <button class="tbbutton" id="image_zoomin">Zoom In</button>
-                    <button class="tbbutton" id="centre">Centre</button>
-                    <button class="tbbutton" id="fullscreen">Full Screen</button>
-                    <span>&nbsp;&nbsp;&nbsp;</span>
-                    <button class="tbbutton" id="refresh">Refresh</button>
+    <div id="tabs_container">
+        <div  id="viewertabs" class="ui-layout-center">
+            <ul>
+                <li><a href="#imageviewer_1_container">Image Viewer</a></li>
+                <li><a href="#hocrviewer_1_container">OCR Viewer</a></li>
+                <li><a href="#textviewer_1_container">Text Viewer</a></li>
+            </ul>
+            <div class="ui-layout-content">            
+                <div id="imageviewer_1_container">
+                    <div id="imageviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
+                        <button class="tbbutton" id="image_zoomout">Zoom Out</button>
+                        <button class="tbbutton" id="image_zoomin">Zoom In</button>
+                        <button class="tbbutton" id="centre">Centre</button>
+                        <button class="tbbutton" id="fullscreen">Full Screen</button>
+                        <span>&nbsp;&nbsp;&nbsp;</span>
+                        <button class="tbbutton" id="refresh">Refresh</button>
+                    </div>
+                    <div id="imageviewer_1" class="imageviewer"></div>
                 </div>
-                <div id="imageviewer_1" class="imageviewer"></div>
-            </div>
-            <div id="hocrviewer_1_container">
-                <div id="hocrviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
-                    <button class="tbbutton" id="hocr_zoomout">Zoom Out</button>
-                    <button class="tbbutton" id="hocr_zoomin">Zoom In</button>
-                    <span>&nbsp;&nbsp;&nbsp;</span>
-                    <span id="format">
-                        <input type="radio" class="tbbutton" id="format_block" name="format" checked="checked" />
-                        <label for="format_block">Block</label>
-                        <input type="radio" class="tbbutton" id="format_line" name="format" />
-                        <label for="format_line">Line</label>
-                        <input type="radio" class="tbbutton" id="format_column" name="format" />
-                        <label for="format_column">Column</label>
-                    </span>
+                <div id="hocrviewer_1_container">
+                    <div id="hocrviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
+                        <button class="tbbutton" id="hocr_zoomout">Zoom Out</button>
+                        <button class="tbbutton" id="hocr_zoomin">Zoom In</button>
+                        <span>&nbsp;&nbsp;&nbsp;</span>
+                        <span id="format">
+                            <input type="radio" class="tbbutton" id="format_block" name="format" checked="checked" />
+                            <label for="format_block">Block</label>
+                            <input type="radio" class="tbbutton" id="format_line" name="format" />
+                            <label for="format_line">Line</label>
+                            <input type="radio" class="tbbutton" id="format_column" name="format" />
+                            <label for="format_column">Column</label>
+                        </span>
+                    </div>
+                    <div id="hocrviewer_1" class="textviewer"></div>
                 </div>
-                <div id="hocrviewer_1" class="textviewer"></div>
-            </div>
-            <div id="textviewer_1_container">
-                <div id="textviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
-                    <button class="tbbutton" id="text_zoomout">Zoom Out</button>
-                    <button class="tbbutton" id="text_zoomin">Zoom In</button>
+                <div id="textviewer_1_container">
+                    <div id="textviewer_1_toolbar" class="viewer_toolbar ui-medium-flat">
+                        <button class="tbbutton" id="text_zoomout">Zoom Out</button>
+                        <button class="tbbutton" id="text_zoomin">Zoom In</button>
+                    </div>
+                    <div id="textviewer_1" class="textviewer"></div>
                 </div>
-                <div id="textviewer_1" class="textviewer"></div>
             </div>
-        </div>
+        </div>            
     </div>
 {% endblock %}
 {% block sidebar %}
