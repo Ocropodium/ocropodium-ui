@@ -206,7 +206,6 @@ def abort(request, task_ids):
         out.append(dict(
             task_id=task_id,
         ))
-    print "OUT: %s" % out
     response = HttpResponse(mimetype="application/json")
     json.dump(out, response, ensure_ascii=False)
     return response
