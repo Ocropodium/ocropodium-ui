@@ -46,7 +46,7 @@ class AbbyyRecognizerNode(generic_nodes.CommandLineRecognizerNode):
         Convert a full page.
         """
         binary = self.get_input_data(0)
-        json = None
+        hocr = ""
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.close()
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as btmp:
@@ -61,11 +61,11 @@ class AbbyyRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                     return "!!! %s CONVERSION ERROR %d: %s !!!" % (
                             os.path.basename(self.binary).upper(),
                             proc.returncode, err)
-                json = ocrutils.FinereaderXmlParser().parsefile(tmp.name)
+                hocr = utils.hocr_from_abbyy(tmp.name)
             os.unlink(tmp.name)
             os.unlink(btmp.name)
         plugins.set_progress(self.logger, self.progress_func, 100, 100)
-        return utils.hocr_from_data(json)
+        return hocr
 
 
 class Manager(manager.StandardManager):
