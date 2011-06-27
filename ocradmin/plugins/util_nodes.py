@@ -153,7 +153,7 @@ class HocrToTextNode(node.Node, generic_nodes.TextWriterMixin):
     name = "Utils::HocrToText"
     description = "Find and replace string in HOCR documents"
     arity = 1
-    intypes = [types.HocrString]
+    intypes = [unicode]
     outtype = unicode
     _parameters = []
 
@@ -226,21 +226,21 @@ class SwitchNode(node.Node, writable_node.WritableNodeMixin):
             return "%s%s" % (self.input(input), self.input(input).extension)
         return "%s%s" % (self.input(input), self.extension)
 
-    def writer(self, path, data):
+    def writer(self, fh, data):
         """
         Pass through the writer function from the selected node.
         """
         input = int(self._params.get("input", 0))
         if self.input(input):
-            return self.input(input).writer(path, data)
+            return self.input(input).writer(fh, data)
         
-    def reader(self, path):
+    def reader(self, fh):
         """
         Pass through the writer function from the selected node.
         """
         input = int(self._params.get("input", 0))
         if self.input(input):
-            return self.input(input).reader(path)
+            return self.input(input).reader(fh)
         
 
 class FileOutNode(node.Node):
