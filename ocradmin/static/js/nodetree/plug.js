@@ -110,8 +110,8 @@ OCRJS.Nodetree.BasePlug = OCRJS.OcrBase.extend({
             return false;
         if (other.type == this.type)
             return false;
-        if (other.dtype != this.dtype)
-            return false;
+        //if (other.dtype != this.dtype)
+        //    return false;
         if (other.node == this.node)
             return false;
         return true;
