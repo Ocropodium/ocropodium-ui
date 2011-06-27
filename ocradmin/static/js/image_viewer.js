@@ -17,7 +17,7 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             id: new Date().getTime(),
             numBuffers: 2,        
             width: -1,
-            height: 500,
+            height: 800,
             log: false,
             dashboard: true,        
         };
