@@ -38,7 +38,7 @@ class CoreTest(TestCase):
         Ensure tesseract is available.
         """
         stdout, stderr = self._run_cmd("tesseract")
-        self.assertRegexpMatches(stderr, "^Usage")
+        self.assertRegexpMatches(stderr, "Usage")
 
     def test_convert(self):
         """
