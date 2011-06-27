@@ -344,7 +344,7 @@ $(function() {
             //showPending();
             nodetree.clearErrors();
         },
-        validationError: function(node, error) {
+        validationErrors: function(nodeerrors) {
             //clearTimeout(reftimer);
             $("#stop_refresh").button({
                 text: false,
@@ -352,7 +352,10 @@ $(function() {
                     primary: "ui-icon-refresh",    
                 }
             });
-            nodetree.setNodeErrored(node, error);
+            nodetree.clearErrors();
+            $.each(nodeerrors, function(node, error) {
+                nodetree.setNodeErrored(node, error);
+            });
             // clear the client-size cache
             resultcache = {};
         },
