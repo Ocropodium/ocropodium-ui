@@ -625,7 +625,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         nodeobj.moveTo(point.x - (nodeobj.width / 2), point.y - (nodeobj.height / 2));
         $(document).bind("keydown.dropnode", function(event) {
             if (event.which == KC_ESCAPE)
-                nodeobj.remove();
+                self.deleteNode(nodeobj);
         });
         $(self._group).bind("mousemove.dropnode", function(event) {
             var nmp = SvgHelper.mouseCoord(self.parent, event);
