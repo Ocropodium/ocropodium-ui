@@ -8,7 +8,7 @@ import codecs
 import tempfile
 import subprocess as sp
 from nodetree import node, writable_node, manager
-from ocradmin.plugins import stages, generic_nodes, types
+from ocradmin.plugins import stages, generic_nodes, types, utils
 
 NAME = "Utils"
 
@@ -275,6 +275,8 @@ class FileOutNode(node.Node):
         input = self.eval_input(0)
         if input is None:
             return
+        if not os.environ.get("NODETREE_WRITE_FILEOUT"):
+            return input
         path = self._params.get("path")
         with open(path, "w") as fh:
             self._inputs[0].writer(fh, input)
@@ -337,6 +339,27 @@ class TextDiffNode(node.Node, generic_nodes.TextWriterMixin):
         return unicode(report, "utf8", "replace")
 
 
+class AbbyyXmlToHocrNode(node.Node, generic_nodes.TextWriterMixin):
+    """
+    Convert Abbyy XML to HOCR.
+    """
+    name = "Utils::AbbyyXmlToHocr"
+    description = "Convert Abbyy XML to HOCR"
+    stage = stages.UTILS
+    arity = 1
+    intypes = [unicode]
+    outtype = unicode
+    _parameters = []
+
+    def _eval(self):
+        intext = self.eval_input(0)
+        out = ""
+        with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
+            self.writer(t1, intext)
+            t1.close()
+            out = utils.hocr_from_abbyy(t1.name)
+            os.unlink(t1.name)
+        return out            
 
 
     
@@ -362,6 +385,8 @@ class Manager(manager.StandardManager):
             return TextEvaluationNode(**kwargs)
         elif name == "TextDiff":
             return TextDiffNode(**kwargs)
+        elif name == "AbbyyXmlToHocr":
+            return AbbyyXmlToHocrNode(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):
