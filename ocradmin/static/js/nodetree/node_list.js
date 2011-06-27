@@ -250,7 +250,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
             node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
                 input.val(value);
             });
-            $("select#" + node.name + param.name + " input[type='hidden']")
+            $("select#" + node.name + param.name + ", input[type='hidden']")
                     .bind("change.paramval", function(event) {
                 node.parameters[i].value = $(this).val();
             });
