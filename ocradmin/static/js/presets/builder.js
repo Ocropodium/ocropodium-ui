@@ -393,14 +393,22 @@ $(function() {
                 });
             },
         },                   
-
-
     });
 
     vsplit.options.east.onresize_end = function() {
         setTimeout(function() {
             nodetree.resetSize();
+            sdviewer.resetSize();
         });
+    };
+    vsplit.options.center.onresize_end = function() {
+        // FIXME: grotesque hack to resize the image viewer
+        // to fit the full page height.  The viewers overflow
+        // is also hidden in CSS.
+        var iv = $("#imageviewer_1");
+            mc = $("#maincontent");
+        iv.height((mc.height() + mc.offset().top) - (iv.offset().top));
+        sdviewer.resetSize();            
     };
 
     $(window).resize();
