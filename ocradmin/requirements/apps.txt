@@ -11,3 +11,4 @@ bencode
 pydot
 mock
 pymongo
+lxml
