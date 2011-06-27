@@ -80,7 +80,8 @@ $(function() {
             closable: false, 
         },
     });
-    vsplit = $("#vsplitter").layout({
+
+    var defaultlayout = {
         applyDefaultStyles: true,
         north: {
             resizable: false,
@@ -91,6 +92,22 @@ $(function() {
         east: {
             size: 400,
         }        
+    };    
+    var loadstate = $.cookie("panels");
+    if (loadstate) {
+        var state = JSON.parse(loadstate).vsplit;
+        console.log("extending layout", state);
+        $.extend(defaultlayout, state);
+    }
+
+    console.log("LAYOUT", defaultlayout);
+    vsplit = $("#vsplitter").layout(defaultlayout);
+
+    $(window).unload(function() {
+        var state = {
+            vsplit: vsplit.getState(),
+        };
+        $.cookie("panels", JSON.stringify(state));
     });
 
     $(window).resize();
