@@ -334,7 +334,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             y + this.height / 2, this.name, {
                 textAnchor: "middle",
                 alignmentBaseline: "middle",
-                fontSize: 11,
+                fontSize: 10,
             }
         );
         this.setupEvents();
