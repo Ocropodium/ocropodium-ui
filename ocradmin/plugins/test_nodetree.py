@@ -19,7 +19,6 @@ def run(nodelist, outpath):
     s = script.Script(nodelist, manager=manager)
     term = s.get_terminals()[0]
     print "Rendering to %s" % outpath
-    print term.eval()
     out = manager.get_new_node("Utils::FileOut", label="Output",
             params=[("path", os.path.abspath(outpath))])
     out.set_input(0, term)
