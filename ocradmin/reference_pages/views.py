@@ -82,8 +82,8 @@ def create_from_task(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
 
     srcpath = task.args[0]
-    binpath = os.path.join(request.output_path, 
-            "%s.bin.png" % os.path.splitext(os.path.basename(srcpath))[0])
+    binpath = ocrutils.get_binary_path(srcpath, 
+            os.path.dirname(srcpath))
     if not os.path.exists(binpath):
         return HttpResponseServerError(
                 "Unable to find binary path for file: %s (%s)" % (
