@@ -267,7 +267,7 @@ $(function() {
             $("#viewertabs").tabs("select", 0);
         } else if (data.result.type == "hocr") {
             hocrviewer.setData(data.result.data);
-            formatter.blockLayout(hocrviewer.container());
+            //formatter.blockLayout(hocrviewer.container());
             $("#viewertabs").tabs("select", 1);
         } else if (data.result.type == "text") {
             textviewer.setData(data.result.data);

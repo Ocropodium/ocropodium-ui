@@ -12,3 +12,4 @@ pydot
 mock
 pymongo
 lxml
+BeautifulSoup
