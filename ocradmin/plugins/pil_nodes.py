@@ -30,10 +30,10 @@ def array2image(a):
     return Image.fromstring(mode, (a.shape[1], a.shape[0]), a.tostring())
 
 
-class PilFileInNode(generic_nodes.ImageGeneratorNode, generic_nodes.BinaryPngWriterMixin):
+class RGBFileInNode(generic_nodes.ImageGeneratorNode, generic_nodes.BinaryPngWriterMixin):
     """Read a file with PIL."""
     stage = stages.INPUT
-    name = "Pil::FileIn"
+    name = "Pil::RGBFileIn"
     description = "PIL File Input node"
     intypes = [numpy.ndarray]
     outtype = numpy.ndarray
@@ -111,18 +111,19 @@ class PilCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
         return n
 
 
-class PilColorToGrayscaleNode(node.Node, generic_nodes.GrayPngWriterMixin):    
+class RGB2GrayNode(node.Node, generic_nodes.GrayPngWriterMixin):    
     """
     Convert (roughly) between a color image and BW.
     """
     stage = stages.FILTER_GRAY
     name = "Pil::RGB2Gray"
     description = "Convert an image from color to grayscale"
+    intypes = [numpy.ndarray]
+    outtype = numpy.ndarray
     _parameters = []
 
     def _eval(self):
-        ni = self.eval_input(0)
-        pil = Image.fromarray(ni)        
+        pil = Image.fromarray(self.eval_input(0))        
         return numpy.asarray(pil.convert("L"))
 
 
@@ -152,12 +153,9 @@ class Manager(manager.StandardManager):
     def get_node(self, name, **kwargs):
         if name.find("::") != -1:
             name = name.split("::")[-1]
-        if name == "FileIn":            
-            return PilFileInNode(**kwargs)
-        if name == "PilCrop":            
-            return PilCropNode(**kwargs)
-        elif name == "RGB2Gray":
-            return PilColorToGrayscaleNode(**kwargs)
+        g = globals()
+        if g.get(name + "Node"):            
+            return g.get(name + "Node")(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):
