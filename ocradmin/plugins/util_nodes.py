@@ -251,7 +251,10 @@ class FileOutNode(node.Node):
     description = "File output node"
     arity = 1
     stage = stages.OUTPUT
-    _parameters = [dict(name="path", value="", type="filepath")]
+    _parameters = [
+            dict(name="path", value="", type="filepath"),
+            dict(name="create_dir", value=False, type="bool"),
+    ]
 
     def _validate(self):
         """
@@ -278,6 +281,8 @@ class FileOutNode(node.Node):
         if not os.environ.get("NODETREE_WRITE_FILEOUT"):
             return input
         path = self._params.get("path")
+        if not os.path.exists(os.path.dirname(path)) and self._params.get("create_dir", False):
+            os.makedirs(os.path.dirname(path), 0777)
         with open(path, "w") as fh:
             self._inputs[0].writer(fh, input)
         return input
