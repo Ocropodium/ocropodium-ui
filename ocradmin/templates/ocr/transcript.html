@@ -3,23 +3,13 @@
 {% block title %} OCRopodium - {{batch.name}} Transcript {% endblock %}
 
 {% block headerscript %}
-    <script type="application/javascript" src="/static/js/seadragon/seadragon-min.js"></script>
-	<script type='application/javascript' src='/static/js/image_viewer.js'></script>
-	<script type='application/javascript' src='/static/js/utils/stats.js'></script>
-	<script type='application/javascript' src='/static/js/ocr/transcript.js'></script>
-	<script type='application/javascript' src='/static/js/line_formatter.js'></script>
-	<script type='application/javascript' src='/static/js/undo/command.js'></script>
-	<script type='application/javascript' src='/static/js/undo/stack.js'></script>
-	<script type='application/javascript' src='/static/js/line_editor.js'></script>
-	<script type='application/javascript' src='/static/js/spellcheck/suggestion_list.js'></script>
-	<script type='application/javascript' src='/static/js/spellcheck/spellchecker.js'></script>
-	<script type='application/javascript' src='/static/js/transcript_editor.js'></script>
+    {% load compressed %}
+    {% compressed_js 'viewers' %}
+    {% compressed_js 'transcript_edit' %}
+    <script type='application/javascript' src='/static/js/ocr/transcript.js'></script>
 
-    <link rel="stylesheet" href="/static/css/image_viewer.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/transcript_editor.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/line_editor.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/spellcheck.css" type="text/css" media="screen" />
+    {% compressed_css 'viewers' %}
+    {% compressed_css 'transcript_edit' %}
 {% endblock %}
 
 
