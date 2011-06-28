@@ -27,6 +27,7 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         console.log(textbox);                
 
         console.log(pagediv.width());
+        var scalefactor = pagediv.width() / (textbox[3] - textbox[1]);
 
         // expand the text box a bit
         textbox[0] = Math.min(0, textbox[0] - 50); 
@@ -34,7 +35,6 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         textbox[2] = Math.min(pagebox[2], textbox[2] + 50); 
         textbox[3] = Math.min(pagebox[3], textbox[3] + 50);
 
-        var scalefactor = pagediv.width() / (textbox[3] - textbox[1]);
         
         // now stick a position attribute on everything
         var linebox;
@@ -42,11 +42,14 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
             var linebox = self.parseBbox($(elem));
             var x = (linebox[0] - textbox[0]) * scalefactor;
             var y = (linebox[1] - textbox[1]) * scalefactor;
+            var w = (linebox[2] - linebox[0]) * scalefactor;
+            var h = (linebox[3] - linebox[1]) * scalefactor;
             $(elem).css({
                 position: "absolute",
                 left: x,
                 top: y
             });
+            self._resizeToTarget($(elem), w, h);
         }); 
     },
 
@@ -103,15 +106,17 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         });
     },
 
-    _resizeToTarget: function(span, targetheight, targetwidth) {
+    _resizeToTarget: function(span, targetwidth, targetheight) {
+        console.log("Resizing", span, targetwidth, targetheight);                         
         var iheight = span.height();
         var iwidth = span.width();
         var count = 0
         if (iheight < targetheight && iheight) {
+            console.log("Enlarging", span, iheight, targetheight);
             //alert("grow! ih: " + iheight + " th: " + targetheight);
             while (iheight < targetheight && iwidth < targetwidth) {
-                var cfs = parseInt(span.css("font-size").replace("px", ""));
-                span = span.css("font-size", (cfs + 1) + "px");
+                var cfs = parseInt(span.css("fontSize").replace("px", ""));
+                span = span.css("fontSize", (cfs + 1));
                 iheight = span.height();
                 count++;
                 if (count > 50) {
@@ -120,9 +125,10 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
                 }
             }
         } else if (iheight > targetheight) {
+            console.log("Shrinking", span);
             while (iheight && iheight > targetheight) {
-                var cfs = parseInt(span.css("font-size").replace("px", ""));
-                span = span.css("font-size", (cfs - 1) + "px");
+                var cfs = parseInt(span.css("fontSize").replace("px", ""));
+                span = span.css("fontSize", (cfs - 1));
                 iheight = span.height();
                 //alert("ih: " + iheight + " fs:" + cfs + " th: " + targetheight);
                 //alert("iheight: " + iheight + " fs: " + span.css("font-size") + " cfs: " + (cfs - 1));
@@ -133,6 +139,6 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
                 }
             }
         }
-        return span.css("font-size");
+        return span.css("fontSize");
     },
 });
