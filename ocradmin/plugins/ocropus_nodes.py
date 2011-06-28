@@ -31,7 +31,7 @@ def makesafe(val):
 
 
 
-class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
+class GrayFileInNode(generic_nodes.ImageGeneratorNode,
             generic_nodes.FileNode, generic_nodes.GrayPngWriterMixin):
     """
     A node that takes a file and returns a numpy object.
@@ -50,7 +50,7 @@ class OcropusFileInNode(generic_nodes.ImageGeneratorNode,
         return ocrolib.read_image_gray(makesafe(self._params.get("path")))
         
 
-class OcropusCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
+class CropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
     """
     Crop a PNG input.
     """
@@ -368,16 +368,10 @@ class Manager(manager.StandardManager):
         if name.find("::") != -1:
             name = name.split("::")[-1]
 
-        if name == "OcropusRecognizer":
-            return OcropusRecognizerNode
-        elif name == "GrayFileIn":
-            return OcropusFileInNode
-        elif name == "FileOut":
-            return OcropusFileOutNode
-        elif name == "Switch":
-            return SwitchNode
-        elif name == "Crop":
-            return OcropusCropNode
+        g = globals()
+        if g.get(name + "Node"):            
+            return g.get(name + "Node")
+        
         # FIXME: This clearly sucks
         comp = None
         if comps is not None:

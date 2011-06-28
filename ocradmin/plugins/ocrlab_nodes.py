@@ -718,10 +718,9 @@ class Manager(manager.StandardManager):
     def get_node(self, name, **kwargs):
         if name.find("::") != -1:
             name = name.split("::")[-1]
-        if name == "SegmentPageByHint":
-            return SegmentPageByHintNode(**kwargs)
-        elif name == "SegmentPageManual":
-            return SegmentPageManualNode(**kwargs)
+        g = globals()
+        if g.get(name + "Node"):            
+            return g.get(name + "Node")(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):

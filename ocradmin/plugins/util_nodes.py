@@ -376,22 +376,9 @@ class Manager(manager.StandardManager):
     def get_node(self, name, **kwargs):
         if name.find("::") != -1:
             name = name.split("::")[-1]
-        if name == "FindReplace":
-            return FindReplaceNode(**kwargs)
-        elif name == "HocrToText":
-            return HocrToTextNode(**kwargs)
-        elif name == "TextFileIn":
-            return TextFileInNode(**kwargs)
-        elif name == "Switch":
-            return SwitchNode(**kwargs)
-        elif name == "FileOut":
-            return FileOutNode(**kwargs)
-        elif name == "TextEvaluation":
-            return TextEvaluationNode(**kwargs)
-        elif name == "TextDiff":
-            return TextDiffNode(**kwargs)
-        elif name == "AbbyyXmlToHocr":
-            return AbbyyXmlToHocrNode(**kwargs)
+        g = globals()
+        if g.get(name + "Node"):            
+            return g.get(name + "Node")(**kwargs)
 
     @classmethod
     def get_nodes(cls, *oftypes):
