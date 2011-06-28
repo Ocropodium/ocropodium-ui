@@ -50,6 +50,7 @@ h1.ocr_line {
     background-color: #FFF;
     padding: 10px;
     min-height: 200px;
+    position: relative;
 }
 
 .transcript_lines * {

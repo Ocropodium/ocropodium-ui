@@ -5,123 +5,69 @@
 OCRJS.LineFormatter = OCRJS.OcrBase.extend({
     constructor: function(options) {
         this.base();
-    },
 
-    parseBoundingBoxAttr: function(bbox) {
-        var dims = [-1, -1, -1, -1];
-        if (bbox.match(boxpattern)) {
-            dims[0] = parseInt(RegExp.$1);
-            dims[1] = parseInt(RegExp.$2); 
-            dims[2] = parseInt(RegExp.$3);
-            dims[3] = parseInt(RegExp.$4);            
-        }
-        return dims;
+        this.parseBbox = OCRJS.Hocr.parseBbox;
+        this.parseIndex = OCRJS.Hocr.parseIndex;
     },
 
     // Fudgy function to insert line breaks (<br />) in places
     // where there are large gaps between lines.  Significantly
     // improves the look of a block of OCR'd text.
     blockLayout: function(pagediv) {
-        // insert space between each line
-        this._resetState(pagediv);
-        $("<span></span>").text("\u00a0").insertBefore(
-            pagediv.find(".ocr_line").first().nextAll());        
-        pagediv.removeClass("literal");
-        pagediv.css("height", null);
-        this._insertBreaks(pagediv);
+        $(".ocr_line", pagediv).attr("style", "");
     },
 
-
-    lineLayout: function(pagediv) {
-        this._resetState(pagediv);
-        this._insertBreaks(pagediv);
-        $(".ocr_line", pagediv).css("display", "block");
-    },
 
     // Horrid function to try and position lines how they would be on
     // the source material.  TODO: Make this not suck.
     columnLayout: function(pagediv) {
-        if (!pagediv.data("bbox"))
-            return;                
         var self = this;                      
-        this._resetState(pagediv);
-        var dims  = pagediv.data("bbox");
-        var scale = pagediv.width() / dims[2];
-        pagediv.addClass("literal");
-        var heights = [];
-        var ypositions = [];
-        var orderedheights = [];
-        var orderedwidths = [];
-        var sizedheights = [];        
-        // counteract the relative shifting down of each line
-        // by summing the height of previous lines and subtracting
-        // that from the relative Y position.
-        $(".ocr_line", pagediv).each(function(position, item) {
-            $(item).children("br").remove();
-            var linedims = $(item).data("bbox");
-            var h = linedims[3] * scale;
-            orderedheights.push(h);
-            heights.push(h);
-            orderedwidths.push(linedims[2] * scale);
-        });
+        var pagebox = this.parseBbox($(".ocr_page", pagediv).first());
+        var textbox = this._getTextBbox(pagediv, pagebox);    
+        console.log(textbox);                
 
-        var stats = new Stats(heights);
-        var medianfs = null;
-        pagediv.children(".ocr_line").each(function(position, item) {
-            //var lspan = $(item);
-            //var iheight = lspan.height();
-            //var iwidth = lspan.width();
-            
-            // if 'h' is within .25% of median, use the median instead    
-            var h = orderedheights[position];
-            var w = orderedwidths[position];
-            var ismedian = false;
-            if ((h / stats.median - 1) < 0.25) {
-                h = stats.median;
-                ismedian = true;
-            } 
+        console.log(pagediv.width());
 
-            // also clamp 'h' is min 3
-            h = Math.max(h, 3);
-            if (medianfs != null && ismedian) {
-                $(item).css("font-size", medianfs);
-            } else {            
-                var fs = self._resizeToTarget($(item), h, w);
-                if (medianfs == null && ismedian) {
-                    medianfs = fs;
-                }
-            }
-            // after extensive trial and error have determined this
-            // to be the correct formula
-            // FIXME: The  minus 1 (px) fudge here relates (I think)
-            // to the element border size, in the case 1px solid trans.
-            sizedheights[position] = $(item).height() - 1; // fudge!
-        });
+        // expand the text box a bit
+        textbox[0] = Math.min(0, textbox[0] - 50); 
+        textbox[1] = Math.min(0, textbox[1] - 50); 
+        textbox[2] = Math.min(pagebox[2], textbox[2] + 50); 
+        textbox[3] = Math.min(pagebox[3], textbox[3] + 50);
 
-        var upshift = 0;
-        $(".ocr_line", pagediv).each(function(position, item) {
-            var lspan = $(item);
-            var linedims = lspan.data("bbox");
-            var x = (linedims[0] - dims[0]) * scale;
-            var y = (linedims[1] - dims[1]) * scale;
-            var w = orderedwidths[position];
-            var h = sizedheights[position];
-            // reset the upshift for new columns
-            if (y < ypositions[ypositions.length - 1]) {
-                var yindex = ypositions.length;
-                while (yindex--) {
-                    if (y > ypositions[yindex]) 
-                        break;
-                }
-                for (var i = Math.max(0, yindex); i < position; i++) {
-                    upshift += sizedheights[i];    
-                }
-            }
-            lspan.css("top", y - upshift).css("left", x);
-            ypositions.push(y);
-            upshift += h;
-        });
+        var scalefactor = pagediv.width() / (textbox[3] - textbox[1]);
+        
+        // now stick a position attribute on everything
+        var linebox;
+        $(".ocr_line", pagediv).each(function(i, elem) {
+            var linebox = self.parseBbox($(elem));
+            var x = (linebox[0] - textbox[0]) * scalefactor;
+            var y = (linebox[1] - textbox[1]) * scalefactor;
+            $(elem).css({
+                position: "absolute",
+                left: x,
+                top: y
+            });
+        }); 
     },
+
+
+    _getTextBbox: function(pagediv, pagebox) {
+        var self = this;                      
+        var minx0 = pagebox[2],
+            miny0 = pagebox[3],
+            minx1 = pagebox[0],
+            miny1 = pagebox[1];
+
+        var linebox;
+        $(".ocr_line", pagediv).each(function(i, elem) {
+            linebox = self.parseBbox($(elem));
+            minx0 = Math.min(minx0, linebox[0]);
+            miny0 = Math.min(miny0, linebox[1]);
+            minx1 = Math.max(minx1, linebox[2]);
+            miny1 = Math.max(miny1, linebox[3]);    
+        });
+        return [minx0, miny0, minx1, miny1];
+    },                      
 
     _resetState: function(pagediv) {
         $("span", pagediv).map(function(i, elem) {
