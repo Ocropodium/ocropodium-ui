@@ -21,6 +21,7 @@ from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.training.tasks import LineTrainTask, ComparisonTask
 from ocradmin.presets.models import Preset
+from ocradmin.batch.views import script_for_page_file
 
 class ReferenceSetForm(forms.Form):
     """
@@ -206,9 +207,11 @@ def score_models(request):
     for script in scripts:
         for gtruth in tsets:
             path = gtruth.source_image.path
+            pagescript = script_for_page_file(script.data,
+                    path, request.output_path)
             tid = OcrTask.get_new_task_id()
             callback = ComparisonTask.subtask(args=(tid, gtruth.pk,))
-            args = (path, script.data, request.output_path)
+            args = (path, pagescript, request.output_path)
             kwargs = dict(callback=callback)
             ocrtask = OcrTask(
                 task_id=tid,

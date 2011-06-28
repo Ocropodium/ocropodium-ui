@@ -63,6 +63,9 @@ class Aspell(object):
         return sp.Popen(["aspell %s" % options], shell=True, 
                 stdout=sp.PIPE, stdin=sp.PIPE, close_fds=True) 
 
+
+
+
 if __name__=="__main__":
     a = Aspell()
     print a.spellcheck("This is some\nlins to check")
