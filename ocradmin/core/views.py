@@ -77,16 +77,18 @@ def save_transcript(request, task_pk):
     Save data for a single page.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
-    jsondata = request.POST.get("data")
-    if not jsondata:
+    data = request.POST.get("data")
+    if not data:
         return HttpResponseServerError("No data passed to 'save' function.")
-    data = json.loads(jsondata)
+    from BeautifulSoup import BeautifulSoup
+    soup = BeautifulSoup(task.latest_transcript())
+    soup.find("div", {"class": "ocr_page"}).replaceWith(data)
+    print "REPLACED"
     # FIXME: This method of saving the data could potentially throw away
     # metadata from the OCR source.  Ultimately we need to merge it
     # into the old HOCR document, rather than creating a new one
-    result = Transcript(data=pluginutils.hocr_from_data(data), task=task)
+    result = Transcript(data=str(soup), task=task)
     result.save()
-
     return HttpResponse(json.dumps({"ok": True}),
             mimetype="application/json")
 
@@ -97,21 +99,7 @@ def task_transcript(request, task_pk):
     Retrieve the results using the previously provided task name.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
-    #pyserializer = serializers.get_serializer("python")()
-    #response = HttpResponse(mimetype="application/json")
-    #parser = ocrutils.HocrParser() 
-    #taskssl = pyserializer.serialize(
-    #    [task],
-    #    excludes=("transcripts", "args", "kwargs",),
-    #)
-    #out = parser.parse(task.latest_transcript())
-    #print "TRANSCRIPT OUT", out
-    #taskssl[0]["fields"]["results"] = out
-    #json.dump(taskssl, response,
-    #        cls=DjangoJSONEncoder, ensure_ascii=False)
-    #return response
-    print task.transcripts.all()[0].data
-    return HttpResponse(task.transcripts.all()[0].data)
+    return HttpResponse(task.latest_transcript())
 
 
 @login_required

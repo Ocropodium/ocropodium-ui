@@ -68,8 +68,7 @@ class UnhandledRunScriptTask(AbortableTask):
             result.update(type="pseg", dzi=dzipath)
             return result
         elif term.outtype == types.HocrString: 
-            parser = utils.HocrParser()
-            return dict(type="hocr", data=parser.parse(result))
+            return dict(type="hocr", data=result)
         elif issubclass(term.outtype, basestring):
             return dict(type="text", data=result)
 
