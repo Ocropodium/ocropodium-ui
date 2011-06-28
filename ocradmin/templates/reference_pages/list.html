@@ -1,0 +1,23 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+{% endblock %}
+
+
+{% block content %}
+
+<div class="widget">
+    <div class="widget_header">
+        {{project.name}}
+    </div>
+    <div class="widget_content">
+        {% include "includes/messages.html" %}
+        {% include "reference_pages/includes/reference_page_list.html" %}
+    </div>
+</div>
+
+
+{% endblock %}
+
