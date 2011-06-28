@@ -432,12 +432,8 @@ $(function() {
     };
     hsplitR.options.center.onresize_end = function() {
         setTimeout(function() {
-            sdviewer.resetSize();
-        });
-    };
-
-    vsplit.options.east.onresize_end = function() {
-        setTimeout(function() {
+            var active = sdviewer.activeBuffer();
+            sdviewer.setBufferPath(active, sdviewer.bufferPath(active));
             sdviewer.resetSize();
         });
     };
