@@ -200,9 +200,6 @@ $(function() {
     $("#format_block").click(function(event) {
         formatter.blockLayout($(".transcript_lines"));
     });
-    $("#format_line").click(function(event) {
-        formatter.lineLayout($(".transcript_lines"));
-    });
     $("#format_column").click(function(event) {
         formatter.columnLayout($(".transcript_lines"));
     });
@@ -298,7 +295,7 @@ $(function() {
     });
     transcript.addListener("onLinesReady", function() {
         // trigger a reformat
-        $("input[name=format]:checked").click();
+        //$("input[name=format]:checked").click();
     });
 
     var positionViewer = function(position) {

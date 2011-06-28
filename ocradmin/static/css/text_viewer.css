@@ -9,4 +9,6 @@
     -moz-user-select: text;
 }
 
-
+.textcontainer {
+    position: relative;
+}

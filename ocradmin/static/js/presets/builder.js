@@ -87,9 +87,6 @@ $(function() {
     $("#format_block").click(function(event) {
         formatter.blockLayout(hocrviewer.container());
     });
-    $("#format_line").click(function(event) {
-        formatter.lineLayout(hocrviewer.container());
-    });
     $("#format_column").click(function(event) {
         formatter.columnLayout(hocrviewer.container());
     });
