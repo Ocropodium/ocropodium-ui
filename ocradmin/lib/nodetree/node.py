@@ -129,6 +129,12 @@ class Node(object):
             raise InputOutOfRange(self, "Input '%d'" % num)
         return self._inputs[num]
 
+    def inputs(self):
+        """
+        Return list of inputs.
+        """
+        return self._inputs
+
     def set_input(self, num, n):
         """
         Set an input.

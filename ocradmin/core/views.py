@@ -41,7 +41,16 @@ def update_ocr_task(request, task_pk):
     Re-save the params for a task and resubmit it,
     redirecting to the transcript page.
     """
-    raise NotImplementedError
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    script = request.POST.get("script")
+    try:
+        json.loads(script)
+        task.args = (task.args[0], script, task.args[2])
+        task.save()
+        task.retry()
+    except ValueError:
+        pass
+    return HttpResponseRedirect("/batch/show/%d/" % task.batch.pk)
 
 
 @login_required
@@ -107,8 +116,10 @@ def task_config(request, task_pk):
     """
     Get a task config as a set of key/value strings.
     """
-    raise NotImplementedError
-   
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    path, script, outdir = task.args
+    return HttpResponse(script, mimetype="application/json")
+
 
 @project_required
 @login_required

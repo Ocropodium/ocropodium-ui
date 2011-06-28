@@ -19,6 +19,8 @@ class Script(object):
         self._script = script
         self._error = None
         self._tree = {}
+        self._meta = []
+        self._nodemeta = {}
         self._manager = manager if manager is not None \
                 else stdmanager.ModuleManager()
         self._build_tree()
@@ -29,7 +31,11 @@ class Script(object):
         """
         for name, n in self._script.iteritems():
             if name.startswith("__"):
+                self._meta.append((name, n))
                 continue
+            for attr, val in n.iteritems():
+                if attr.startswith("__"):
+                    self._nodemeta[name] = (attr, val)
             self._tree[name] = self._manager.get_new_node(
                     n["type"], name, n["params"], **self._nodekwargs)
             self._tree[name].ignored = n.get("ignored", False)
@@ -38,6 +44,12 @@ class Script(object):
                 continue
             for i in range(len(n["inputs"])):
                 self._tree[name].set_input(i, self._tree.get(n["inputs"][i]))
+
+    def add_node(self, type, label, params): 
+        self._tree[label] = self._manager.get_new_node(type, label=label,
+                params=params, **self._nodekwargs)
+        return self._tree[label]
+
 
     def get_node(self, name):
         """
@@ -73,5 +85,20 @@ class Script(object):
             except node.ValidationError, err:
                 errors[name] = err.msg
         return errors                
+
+    def serialize(self):
+        out = {}
+        for name, node in self._tree.iteritems():
+            out[name] = dict(
+                type=node.name,
+                stage=node.stage,
+                inputs=[n.label if n else n for n in node.inputs()],
+                params=[(p["name"], node._params[p["name"]]) for p \
+                    in node.parameters() if node._params.get(p["name"])],
+            )
+            meta = self._nodemeta.get(name)
+            if meta is not None:
+                out[name][meta[0]] = meta[1]
+        return out            
 
 

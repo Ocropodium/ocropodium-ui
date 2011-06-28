@@ -42,20 +42,9 @@ class BatchScriptTask(AbortableTask):
                     logger=logger,
                     abort_func=abort_handler, 
                     progress_func=progress_handler))
-        # get the input node and replace it with out path
-        inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
-        if not inputs:
-            raise IndexError("No input stages found in script")
-        input = inputs[0]
-        input.set_param("path", filepath)
-        # attach a fileout node to the binary input of the recognizer and
-        # save it as a binary file
-        term = tree.get_terminals()[0]
-        outpath = os.path.join(
-                writepath, os.path.basename("%s.bin%s" % os.path.splitext(filepath)))        
-        outbin = MANAGER.get_new_node("Utils::FileOut", label="OutputBinary",
-                params=[("path", os.path.abspath(outpath).encode())])
-        outbin.set_input(0, term.input(0))
+        logger.debug("Running tree: %s", json.dumps(tree.serialize(), indent=2))                
+        term = [t for t in tree.get_terminals() if t.label != "OutputBinary"][0]
+        outbin = tree.get_node("OutputBinary")                
         try:
             # write out the binary... this should cache it's input
             outbin.eval()

@@ -3,6 +3,7 @@ Batch-related views.
 """
 
 import os
+import glob
 from types import MethodType
 import tarfile
 import StringIO
@@ -20,7 +21,7 @@ from django.http import HttpResponse, HttpResponseRedirect, \
         HttpResponseServerError
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from django.utils import simplejson
+from django.utils import simplejson as json
 from django.utils.encoding import smart_str
 from ocradmin.batch import utils as batchutils
 from ocradmin.core import utils as ocrutils
@@ -28,9 +29,14 @@ from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, Batch
 from ocradmin.core.views import AppException
 from ocradmin.presets.models import Preset
-
+from ocradmin.plugins import stages
+from nodetree import script, manager
 
 PER_PAGE = 25
+
+MANAGER = manager.ModuleManager()
+MANAGER.register_paths(
+                glob.glob("plugins/*_nodes.py"), root="ocradmin")
 
 
 def batch_query(params):
@@ -130,7 +136,7 @@ def batch_list(request):
     )
 
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(serializedpage, response,
+    json.dump(serializedpage, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
@@ -177,8 +183,10 @@ def create(request):
     ocrtasks = []
     options = dict(loglevel=60, retries=2)
     for path in paths:
+        pagescript = _script_for_page(script,
+                path, request.output_path)
         tid = OcrTask.get_new_task_id()
-        args = (path, script, request.output_path)
+        args = (path, pagescript, request.output_path)
         kwargs = dict()
         ocrtask = OcrTask(
             task_id=tid,
@@ -222,7 +230,7 @@ def results(request, batch_pk):
     if "ALL" in statuses:
         statuses = None
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(_serialize_batch(batch, start, limit, statuses, name),
+    json.dump(_serialize_batch(batch, start, limit, statuses, name),
             response, cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
@@ -245,7 +253,7 @@ def page_results(request, batch_pk, page_index):
         excludes=("transcripts", "args", "kwargs",),
     )
     taskssl[0]["fields"]["results"] = page.latest_transcript()
-    simplejson.dump(taskssl, response,
+    json.dump(taskssl, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
 
@@ -294,15 +302,15 @@ def upload_files(request):
     try:
         paths = _handle_upload(request, request.output_path)
     except AppException, err:
-        return HttpResponse(simplejson.dumps({"error": err.message}),
+        return HttpResponse(json.dumps({"error": err.message}),
             mimetype="application/json")
     if not paths:
         return HttpResponse(
-                simplejson.dumps({"error": "no valid images found"}),
+                json.dumps({"error": "no valid images found"}),
                 mimetype="application/json")
 
     pathlist = [os.path.join(relpath, os.path.basename(p)) for p in paths]
-    return HttpResponse(simplejson.dumps(pathlist), mimetype=mimetype)
+    return HttpResponse(json.dumps(pathlist), mimetype=mimetype)
 
 
 @login_required
@@ -338,7 +346,7 @@ def abort_batch(request, batch_pk):
         task.abort()
     transaction.commit()
     if request.is_ajax():
-        return HttpResponse(simplejson.dumps({"ok": True}),
+        return HttpResponse(json.dumps({"ok": True}),
                 mimetype="application/json")
     else:
         return HttpResponseRedirect("/batch/show/%s/" % batch_pk)
@@ -355,7 +363,7 @@ def retry(request, batch_pk):
         task.retry()
     transaction.commit()
     if request.is_ajax():
-        return HttpResponse(simplejson.dumps({"ok": True}),
+        return HttpResponse(json.dumps({"ok": True}),
                 mimetype="application/json")
     else:
         return HttpResponseRedirect("/batch/show/%s/" % batch_pk)
@@ -372,7 +380,7 @@ def retry_errored(request, batch_pk):
         task.retry()
     transaction.commit()
     if request.is_ajax():
-        return HttpResponse(simplejson.dumps({"ok": True}),
+        return HttpResponse(json.dumps({"ok": True}),
                 mimetype="application/json")
     else:
         return HttpResponseRedirect("/batch/show/%s/" % batch_pk)
@@ -418,11 +426,11 @@ def export(request, batch_pk):
     response = HttpResponse(content_type="application/x-gzip")
     tar = tarfile.open(fileobj=response, mode='w|gz')
     for task in batch.tasks.all():
-        json = task.latest_transcript()
+        transcript = task.latest_transcript()
         for fmt, ext in formats.iteritems():
             if not fmt in reqformats:
                 continue
-            output = getattr(ocrutils, "output_to_%s" % fmt)(json)
+            output = getattr(ocrutils, "output_to_%s" % fmt)(transcript)
             info = tarfile.TarInfo(
                     "%s.%s" % (os.path.splitext(task.page_name)[0], ext))
             info.size = len(output)
@@ -444,10 +452,10 @@ def spellcheck(request):
     if not jsondata:
         return HttpResponseServerError(
                 "No data passed to 'spellcheck' function.")
-    data = simplejson.loads(jsondata)
+    data = json.loads(jsondata)
     aspell = batchutils.Aspell()
     response = HttpResponse(mimetype="application/json")
-    simplejson.dump(aspell.spellcheck(data), response, ensure_ascii=False)
+    json.dump(aspell.spellcheck(data), response, ensure_ascii=False)
     return response
 
 
@@ -561,3 +569,26 @@ def _handle_multipart_upload(request, outdir):
     else:
         paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
     return paths
+
+
+def _script_for_page(scriptjson, filepath, writepath):
+    """
+    Modify the given script for a specific file.
+    """
+    tree = script.Script(json.loads(scriptjson), manager=MANAGER) 
+    # get the input node and replace it with out path
+    inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
+    if not inputs:
+        raise IndexError("No input stages found in script")
+    input = inputs[0]
+    input.set_param("path", filepath)
+    # attach a fileout node to the binary input of the recognizer and
+    # save it as a binary file
+    term = tree.get_terminals()[0]
+    outpath = os.path.join(
+            writepath, os.path.basename("%s.bin%s" % os.path.splitext(filepath)))        
+    outbin = tree.add_node("Utils::FileOut", "OutputBinary",
+            params=[("path", os.path.abspath(outpath).encode())])
+    outbin.set_input(0, term.input(0))
+    return json.dumps(tree.serialize(), indent=2)
+

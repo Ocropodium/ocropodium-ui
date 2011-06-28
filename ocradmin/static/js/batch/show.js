@@ -70,32 +70,19 @@ $(function() {
                 sidebar.data("task_pk", pk);
                 var loaded = false;
                 $.getJSON("/ocr/task_config/" + pk + "/", function(data) {
-                    sideparams = new OCRJS.ParameterBuilder(
-                            html.find("#options").get(0), data);
-                    sideparams.addListeners({
-                        onReadyState: function() {
-                            if (!loaded) {
-                                sidebar.html(html);
-                                sidebar.find("#tabs")
-                                    .accordion({
-                                        collapsible: true,
-                                        autoHeight: false,
-                                        active: parseInt(selectedtab),
-                                        change: function(event, ui) {
-                                            selectedtab = ui.options.active;
-                                            $.cookie("selectedtab", selectedtab); 
-                                        },
-                                    });
-                                loaded = true;
-                                header.text("Task #" + pk);
-                            }
-                            $(".submit_update", sidebar).attr("disabled", false);
-                        },
-                        onUpdateStarted: function() {
-                            $(".submit_update", sidebar).attr("disabled", true);
-                        }
-                    });
-                    sideparams.init();
+                    sidebar.html(html);
+                    sidebar.find("#tabs")
+                        .accordion({
+                            collapsible: true,
+                            autoHeight: false,
+                            active: parseInt(selectedtab),
+                            change: function(event, ui) {
+                                selectedtab = ui.options.active;
+                                $.cookie("selectedtab", selectedtab); 
+                            },
+                        });
+                    loaded = true;
+                    header.text("Task #" + pk);
                 });
             },
         });
