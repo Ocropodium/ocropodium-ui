@@ -1,7 +1,7 @@
 // ready() functions executed after everything else.
 // Mainly for widget layout
 
-var vplit, bsplit;
+var vplit, bsplit, defaultlayout;
 
 $(function() {
     function deactivateMenu(menu) {
@@ -81,7 +81,7 @@ $(function() {
         },
     });
 
-    var defaultlayout = {
+    defaultlayout = {
         applyDefaultStyles: true,
         north: {
             resizable: false,
@@ -92,15 +92,14 @@ $(function() {
         east: {
             size: 400,
         }        
-    };    
+    };
     var loadstate = $.cookie("panels");
     if (loadstate) {
         var state = JSON.parse(loadstate).vsplit;
-        console.log("extending layout", state);
-        $.extend(defaultlayout, state);
+        $.extend(defaultlayout.north, state.north);
+        $.extend(defaultlayout.east, state.east);
     }
 
-    console.log("LAYOUT", defaultlayout);
     vsplit = $("#vsplitter").layout(defaultlayout);
 
     $(window).unload(function() {
