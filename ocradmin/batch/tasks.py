@@ -47,6 +47,7 @@ class BatchScriptTask(AbortableTask):
         outbin = tree.get_node("OutputBinary")                
         try:
             # write out the binary... this should cache it's input
+            os.environ["NODETREE_WRITE_FILEOUT"] = "1"
             outbin.eval()
             result = term.eval()
             if callback is not None:
