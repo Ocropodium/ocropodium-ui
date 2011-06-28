@@ -52,21 +52,41 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
     loadState: function() {
         var self = this;                   
-        var cookie = $.cookie("presetdata");
-        if (!cookie)
-            return;
-        var presetdata = JSON.parse(cookie);
-        if (presetdata.opened && !presetdata.script) {
-            this.openPreset(presetdata.opened, function(data) {
-                self.setCurrentOpenPreset(presetdata.opened, presetdata.name, data, true);
-                self._openedhash = presetdata.openedhash;
-                self._dialog.dialog("close");
-            }, OCRJS.ajaxErrorHandler);
-        } else if (presetdata.opened && presetdata.script) {
-            self.setCurrentOpenPreset(presetdata.opened, presetdata.name, presetdata.script, true);
-            $("#preset_unsaved").toggle(true);                         
+
+        // check if we need to load a task's data                   
+        var taskpk = $("#edit_task_pk").val();
+        if (taskpk) {
+            $.ajax({
+                url: "/ocr/task_config/" + taskpk,
+                dataType: "JSON",                
+                error: OCRJS.ajaxErrorHandler,
+                success: function(data) {
+                    console.log("OPENING TASK SCRIPT:", data);                    
+                    self.setCurrentOpenPreset(
+                        "edittask" + taskpk, 
+                        $("#edit_task_batch").val() + ": " + $("#edit_task_page").val(),
+                        data, true);
+                },                
+            });
+
         } else {
 
+            var cookie = $.cookie("presetdata");
+            if (!cookie)
+                return;
+            var presetdata = JSON.parse(cookie);
+            if (presetdata.opened && !presetdata.script) {
+                this.openPreset(presetdata.opened, function(data) {
+                    self.setCurrentOpenPreset(presetdata.opened, presetdata.name, data, true);
+                    self._openedhash = presetdata.openedhash;
+                    self._dialog.dialog("close");
+                }, OCRJS.ajaxErrorHandler);
+            } else if (presetdata.opened && presetdata.script) {
+                self.setCurrentOpenPreset(presetdata.opened, presetdata.name, presetdata.script, true);
+                $("#preset_unsaved").toggle(true);                         
+            } else {
+
+            }
         }            
     },                   
 

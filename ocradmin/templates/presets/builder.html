@@ -67,13 +67,18 @@
 {% endblock %}
 {% block sidebar %}
     <form id="optionsform">
+        <input type="hidden" id="edit_task_pk" name="task_pk" value="{{task.pk}}" />
+        <input type="hidden" id="edit_task_batch" name="task_batch" value="{{task.batch.name}}" />
+        <input type="hidden" id="edit_task_page" name="task_page" value="{{task.page_name}}" />
+
         <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
         <!-- NB. This is lower down in the DOM than the parameters, despite
          being positioned above.  It is so the menu overlaps the params
          where necessary -->
         <div class="ui-layout-north" id="script_toolbar_container">
             <div id="preset_toolbar_header" class="ui-widget-header ui-corner-all ui-layout-header">Preset Editor -
-                <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved">*</span></div>
+                <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved">*</span>
+            </div>
             <div id="script_menu" class="appmenu">
                 <ul class="top">
                     <li>
@@ -115,6 +120,12 @@
                     <button id="layout_nodes">Cleanup Node Layout</button>
                     <button id="clear_cache">Clear Cache</button>
                 </span>
+                {% if task %}
+                <span class="buttons_right">
+                    <button id="save_task_preset">Save &amp; Rerun Task</button>
+                    <button id="cancel_task_preset">Cancel</button>
+                </span>
+                {% endif %}
                 <div id="dialog"></div>
             </div>                
         </div>
@@ -124,6 +135,12 @@
             </div>
         </div>
     </form>
+    {% if task %}
+    <!-- form for POSTing updated task scripts -->
+    <form id="task_update_form" action="/ocr/update_task/{{task.pk}}/" method="POST">
+        <input type="hidden" id="task_update_script" name="script" value="" />
+    </form>
+    {% endif %}
     <!-- form for downloading scripts... this is a bit of a hack. -->
     <form id="fetch_script" method="POST" action="/presets/fetch/" >
         <input name="name" type="hidden" id="fetch_script_slug" />

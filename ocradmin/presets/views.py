@@ -126,8 +126,17 @@ def builder(request):
     """
     Show the preset builder.
     """
-    context = dict(presets=Preset.objects.all().order_by("name"))
-    return render(request, "presets/builder.html", context)
+    return render(request, "presets/builder.html", {})
+
+
+@saves_files
+def builder_task_edit(request, task_pk):
+    """
+    Show the preset builder for a specific task.
+    """
+    from ocradmin.ocrtasks.models import OcrTask
+    task = get_object_or_404(OcrTask, pk=task_pk)
+    return render(request, "presets/builder.html", dict(task=task))
 
 
 def query_nodes(request):

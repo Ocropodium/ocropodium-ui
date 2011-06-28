@@ -50,6 +50,17 @@ $(function() {
             primary: "ui-icon-suitcase",
         }        
     });
+    $("#save_task_preset").button({
+        icons: {
+            primary: "ui-icon-arrowreturnthick-1-w",
+        }        
+    });
+    $("#cancel_task_preset").button({
+        icons: {
+            primary: "ui-icon-cancel",
+        }        
+    });
+
 
     // viewer toolsbar
     // style toolbar
@@ -156,6 +167,15 @@ $(function() {
         resultcache = {};
         event.preventDefault();
         event.stopPropagation();
+    });
+    $("#save_task_preset").click(function(event) {
+        $("#task_update_script").val(
+           JSON.stringify(nodetree.buildScript(), null, '\t'));
+        $("#task_update_form").submit(); 
+    });
+    $("#cancel_task_preset").click(function(event) {
+        $("#task_update_script").val("");
+        $("#task_update_form").submit(); 
     });
 
     // initialise the uploader...

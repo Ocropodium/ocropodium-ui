@@ -41,7 +41,7 @@ def get_node_positions(nodedict):
         gn = g.get_node(name)
         if isinstance(gn, list):
             gn = gn[0]
-        out[name] = [int(d) \
+        out[name] = [int(float(d)) \
                 for d in gn.get_pos().replace('"', "").split(",")]
     return out
    
