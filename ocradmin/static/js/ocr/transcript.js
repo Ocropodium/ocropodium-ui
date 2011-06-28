@@ -54,7 +54,7 @@ function reconvertLines(lines) {
     pdata["coords"] =  JSON.stringify(linedata);
 
     $.ajax({
-        url: "/ocr/reconvert_lines/" + transcript.taskData().pk + "/",
+        url: "/ocr/reconvert_lines/" + transcript.taskId() + "/",
         data: pdata,
         type: "POST",
         beforeSend: function(event) {
@@ -257,10 +257,6 @@ $(function() {
         }
     });
 
-    $("#heading").change(function() {
-        transcript.setCurrentLineType($(this).prop("checked") ? "h1" : "span");        
-    });
-
     // When a page loads, read the data and request the source
     // image is rebinarized so we can view it in the viewer
     // This is likely to be horribly inefficient, at least
@@ -269,7 +265,7 @@ $(function() {
         // get should-be-hidden implementation details
         // i.e. the task id that process the page.  We
         // want to rebinarize with the same params
-        var task_pk = transcript.taskData().pk;
+        var task_pk = transcript.taskId();
         $("#edit_task").attr("href",
                 "/presets/builder/" + task_pk + "?ref="
                 + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
@@ -342,7 +338,7 @@ $(function() {
     });
 
     $("#save_training_data").click(function(event) {
-        var pk = transcript.taskData().pk;
+        var pk = transcript.taskId();
         $.ajax({
             url: "/reference_pages/create_from_task/" + pk + "/",
             dataType: "json",
