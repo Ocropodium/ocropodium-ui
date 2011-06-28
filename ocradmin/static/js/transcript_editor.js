@@ -38,6 +38,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
 
         this._task_pk = null;
         this._bboxre = /bbox\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/;
+        this._indexre = /(\d+)$/;
         this._editor = new OCRJS.LineEditor(); // line editor widget
         this._speller = new OCRJS.Spellchecker(".ocr_line", {log: true}); // spell check widget
         this._undostack = new OCRJS.UndoStack(this);
@@ -84,25 +85,28 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
 
         $(".ocr_line").live("mouseover.selectline", function(event) {
-            self.callListeners("onHoverPosition", $(this).data("bbox"));
+            self.callListeners("onHoverPosition", self.parseBbox($(this)));
         });
     },
 
 
     setupKeyEvents: function() {
         var self = this;
-
+        
         $(window).bind("keydown.tabshift", function(event) {        
+            var first = self.parseIndex($(".ocr_line", self._pagediv).first()),
+                last = self.parseIndex($(".ocr_line", self._pagediv).last());
             if (!self._spellchecking && event.keyCode == KC_TAB) {
                 var elem;
                 if (self._currentline) {
+                    var index = self.parseIndex(self._currentline);                    
                     elem = event.shiftKey
-                        ? self._currentline.prevAll(".ocr_line").first()
-                        : self._currentline.nextAll(".ocr_line").first();
+                        ? $("#line_" + (index - 1))
+                        : $("#line_" + (index + 1));
                     if (elem.length == 0) {
                         elem = event.shiftKey
-                            ? self._currentline.nextAll(".ocr_line").last()
-                            : self._currentline.prevAll(".ocr_line").last();
+                            ? $("#line_" + last)
+                            : $("#line_" + first);
                     }
                 } else {
                     elem = event.shiftKey
@@ -245,89 +249,43 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this.refresh();
     },
 
-    setCurrentLineType: function(type) {
-        if (!this._currentline.length)
-            return;
-        var newline = $("<" + type + "></" + type + ">")
-            .data("bbox", this._currentline.data("bbox"))
-            .data("num", this._currentline.data("num"))
-            .addClass("ocr_line")
-            .attr("class", this._currentline.attr("class"))
-            .css("top", this._currentline.css("top"))
-            .css("left", this._currentline.css("left"))
-            .css("font-size", this._currentline.css("font-size"))
-            .html(this._currentline.html());
-        this._currentline.replaceWith(newline);
-        this._currentline = newline;
-        this._textChanged();        
-    },
-
     // set a waiting spinner when doing something
     setWaiting: function(waiting) {
         this._pagediv.toggleClass("waiting", waiting);
     },
 
     taskData: function() {
-        return this._taskdata;
+        return this._task_pk;
     },                  
 
     refresh: function() {
         var self = this;                 
-        $.ajax({
-            url: "/ocr/task_transcript/" + self._task_pk + "/",
-            beforeSend: function(e) {
-               self.setWaiting(true); 
-            },
-            complete: function(e) {
-               self.setWaiting(false); 
-            },
-            success: function(data) {
-                console.log("DATA: ", data);
-                if (data == null) {
-                    alert("Unable to retrieve page data.");
-                } else if (data.error) {
-                    alert(data.error);
-                }
-                //self._taskdata = data[0];
-                self.setPageLines(data);              
-                self.callListeners("onTaskLoad");
-            },
-            error: OCRJS.ajaxErrorHandler,
+        this._pagediv.load("/ocr/task_transcript/" + self._task_pk + " .ocr_page:first", 
+                null, function(text) {
+                    self.setWaiting(false);
+                    self.callListeners("onTaskLoad");
+                    self.setPageLines();
         });
     },
 
     parseBbox: function(elem) {
         if (elem.attr("title").match(this._bboxre)) {
-            return [RegExp.$1, RegExp.$2, RegExp.$3, RegExp.$4];
+            return [parseInt(RegExp.$1), parseInt(RegExp.$2),
+                parseInt(RegExp.$3), parseInt(RegExp.$4)];
         }        
-        console.log("No BBox match:", elem);
+        console.error("No BBox match:", elem);
         return [-1, -1, -1, -1];
-    },                   
+    },
 
-    setPageLines: function(data) {
-        var self = this;
-        console.log(data);
-        this._pagediv.children().remove();
-        this._data = data;
-        var page = $(data).find(".ocr_page").first();
-        if (page.length == 0) {
-            console.error("No OCR page found in document data", data);
-            return;
+    parseIndex: function(elem) {
+        if (elem.attr("id").match(this._indexre)) {
+            return parseInt(RegExp.$1);
         }
-        this._pagediv.data("bbox", this.parseBbox(page));
-        this._pagediv.append(page.find(".ocr_line"));
-        //console.log(data);
-        //$.each(data.fields.results.lines, function(linenum, line) {
-        //    var type = line.type ? line.type : "span";
-        //    var lspan = $("<" + type + "></" + type + ">")
-        //        .attr("id", "line_" + line.index)
-        //        .addClass("ocr_line")
-        //        .data("bbox", line.bbox)
-        //        .data("index", line.index)
-        //        .text(line.text);
-        //    self._pagediv.append(lspan);
-        //});
-        //self.insertBreaks();
+        console.error("No Index match:", elem);
+        return -1;
+    },    
+
+    setPageLines: function() {
         this._textbuffer = this._pagediv.text();
         this.callListeners("onLinesReady");
     },
@@ -377,7 +335,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         if (pos != 0) {
             line.get(0).scrollIntoView(pos == -1);
         }        
-        this.callListeners("onClickPosition", line.data("bbox"));
+        this.callListeners("onClickPosition", this.parseBbox(line));
         this.callListeners("onLineSelected", line.get(0).tagName.toLowerCase());
     },
                  
