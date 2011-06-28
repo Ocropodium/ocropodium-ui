@@ -130,8 +130,7 @@ def submit_viewer_binarization(request, task_pk):
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
     taskname = "create.dzi"
-    binname = "%s.bin.png" % os.path.splitext(os.path.basename(task.args[0]))[0]
-    binpath = os.path.join(request.output_path, binname)
+    binpath = ocrutils.get_binary_path(task.args[0], request.output_path)
     dzipath = ocrutils.get_dzi_path(binpath)
     assert os.path.exists(binpath), "Binary path does not exist: %s" % binpath
     async = OcrTask.run_celery_task(taskname, (binpath, dzipath), untracked=True,

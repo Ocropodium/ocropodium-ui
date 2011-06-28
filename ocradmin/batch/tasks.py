@@ -57,5 +57,5 @@ class BatchScriptTask(AbortableTask):
             return dict(type="error", node=err.node.label, error=err.msg)
         except Exception, err:
             logger.error("Unhandled exception: %s", err)
-            return dict(error=err.message)
+            return dict(error=err.msg)
             

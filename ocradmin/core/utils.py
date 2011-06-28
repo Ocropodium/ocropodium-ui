@@ -180,6 +180,16 @@ def get_refpage_path(refpage, filename):
             filename)
 
 
+def get_binary_path(filename, targetdir):
+    """
+    Get the binary path relative to the original
+    image path.
+    """
+    binname = "%s.bin.png" % os.path.splitext(
+            os.path.basename(filename))[0]
+    return os.path.join(targetdir, "binary", binname)
+
+
 def save_ocr_images(images, path):
     """
     Save OCR images to the media directory...
