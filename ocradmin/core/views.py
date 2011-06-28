@@ -97,20 +97,21 @@ def task_transcript(request, task_pk):
     Retrieve the results using the previously provided task name.
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
-    pyserializer = serializers.get_serializer("python")()
-    response = HttpResponse(mimetype="application/json")
-    parser = ocrutils.HocrParser() 
-    taskssl = pyserializer.serialize(
-        [task],
-        excludes=("transcripts", "args", "kwargs",),
-    )
-    print "HOCR OUT:", task.latest_transcript()
-    out = parser.parse(task.latest_transcript())
-    print "TRANSCRIPT OUT", out
-    taskssl[0]["fields"]["results"] = out
-    json.dump(taskssl, response,
-            cls=DjangoJSONEncoder, ensure_ascii=False)
-    return response
+    #pyserializer = serializers.get_serializer("python")()
+    #response = HttpResponse(mimetype="application/json")
+    #parser = ocrutils.HocrParser() 
+    #taskssl = pyserializer.serialize(
+    #    [task],
+    #    excludes=("transcripts", "args", "kwargs",),
+    #)
+    #out = parser.parse(task.latest_transcript())
+    #print "TRANSCRIPT OUT", out
+    #taskssl[0]["fields"]["results"] = out
+    #json.dump(taskssl, response,
+    #        cls=DjangoJSONEncoder, ensure_ascii=False)
+    #return response
+    print task.transcripts.all()[0].data
+    return HttpResponse(task.transcripts.all()[0].data)
 
 
 @login_required

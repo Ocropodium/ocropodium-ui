@@ -37,7 +37,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         };
 
         this._task_pk = null;
-
+        this._bboxre = /bbox\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/;
         this._editor = new OCRJS.LineEditor(); // line editor widget
         this._speller = new OCRJS.Spellchecker(".ocr_line", {log: true}); // spell check widget
         this._undostack = new OCRJS.UndoStack(this);
@@ -275,7 +275,6 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         var self = this;                 
         $.ajax({
             url: "/ocr/task_transcript/" + self._task_pk + "/",
-            dataType: "json",
             beforeSend: function(e) {
                self.setWaiting(true); 
             },
@@ -289,30 +288,45 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
                 } else if (data.error) {
                     alert(data.error);
                 }
-                self._taskdata = data[0];
-                self.setPageLines(data[0]);              
+                //self._taskdata = data[0];
+                self.setPageLines(data);              
                 self.callListeners("onTaskLoad");
             },
             error: OCRJS.ajaxErrorHandler,
         });
     },
 
+    parseBbox: function(elem) {
+        if (elem.attr("title").match(this._bboxre)) {
+            return [RegExp.$1, RegExp.$2, RegExp.$3, RegExp.$4];
+        }        
+        console.log("No BBox match:", elem);
+        return [-1, -1, -1, -1];
+    },                   
 
     setPageLines: function(data) {
         var self = this;
-        this._pagediv.children().remove();
-        this._pagediv.data("bbox", data.fields.results.bbox);
         console.log(data);
-        $.each(data.fields.results.lines, function(linenum, line) {
-            var type = line.type ? line.type : "span";
-            var lspan = $("<" + type + "></" + type + ">")
-                .attr("id", "line_" + line.index)
-                .addClass("ocr_line")
-                .data("bbox", line.bbox)
-                .data("index", line.index)
-                .text(line.text);
-            self._pagediv.append(lspan);
-        });
+        this._pagediv.children().remove();
+        this._data = data;
+        var page = $(data).find(".ocr_page").first();
+        if (page.length == 0) {
+            console.error("No OCR page found in document data", data);
+            return;
+        }
+        this._pagediv.data("bbox", this.parseBbox(page));
+        this._pagediv.append(page.find(".ocr_line"));
+        //console.log(data);
+        //$.each(data.fields.results.lines, function(linenum, line) {
+        //    var type = line.type ? line.type : "span";
+        //    var lspan = $("<" + type + "></" + type + ">")
+        //        .attr("id", "line_" + line.index)
+        //        .addClass("ocr_line")
+        //        .data("bbox", line.bbox)
+        //        .data("index", line.index)
+        //        .text(line.text);
+        //    self._pagediv.append(lspan);
+        //});
         //self.insertBreaks();
         this._textbuffer = this._pagediv.text();
         this.callListeners("onLinesReady");
@@ -334,6 +348,9 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
             lines.push(line);
         });
         results.lines = lines;
+        $.each(lines, function(i, line) {
+            console.log("Line", i, ": ", line.text);
+        });
         $.ajax({
             url: "/ocr/save/" + this._task_pk + "/",
             data: {data: JSON.stringify(results)},
