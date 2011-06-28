@@ -61,6 +61,15 @@
                             {% templatetag openvariable %}/each{% templatetag closevariable %}
                             </span>
                         </td>
+                    {% templatetag openvariable %}else param.type == "bool"{% templatetag closevariable %}
+                        <td><label for="${nodename}${param.name}">${param.name}</label></td>
+                        <td>
+                            {% templatetag openvariable %}if param.value{% templatetag closevariable %}
+                                <input type="checkbox" id="${nodename}${param.name}" checked="checked" />
+                            {% templatetag openvariable %}else param.type == "bool"{% templatetag closevariable %}
+                                <input type="checkbox" id="${nodename}${param.name}" />
+                            {% templatetag openvariable %}/if{% templatetag closevariable %}
+                        </td>
                     {% templatetag openvariable %}else{% templatetag closevariable %}    
                         <td><label for="${nodename}${param.name}">${param.name}</label></td>
                         <td>

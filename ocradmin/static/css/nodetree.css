@@ -166,7 +166,7 @@ div#node_canvas {
     background-color: #E2E2E2;
 }
 
-.node_parameters input {
+.node_parameters input[type=text], .node_parameters input[type=file] {
     border: 1px solid #999;
     background-color: #FFFFDD;
     width: 100%;

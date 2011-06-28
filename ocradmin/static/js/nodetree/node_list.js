@@ -243,16 +243,29 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
         });
         // bind each param to its actual value
         $.each(node.parameters, function(i, param) {
-            var input = $("input#" + node.name + param.name).not(".proxy");
-            input.bind("keyup.paramval", function(event) {
-                node.parameters[i].value = $(this).val();
+            $("input[type='text']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
+                $(elem).bind("keyup.paramval", function(event) {
+                    node.parameters[i].value = $(this).val();
+                });
+                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
+                    $(elem).val(value);
+                });
             });
-            node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
-                input.val(value);
+            $("input[type='checkbox']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
+                $(elem).bind("change.paramval", function(event) {
+                    node.parameters[i].value = $(this).prop("checked");
+                });
+                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
+                    $(elem).prop("checked");
+                });
             });
-            $("select#" + node.name + param.name + ", input[type='hidden']")
-                    .bind("change.paramval", function(event) {
-                node.parameters[i].value = $(this).val();
+            $("select#" + node.name + param.name + ", input[type='hidden']#" + node.name + param.name).each(function(ii, elem) {
+                $(elem).bind("change.paramval", function(event) {
+                    node.parameters[i].value = $(this).val();
+                });
+                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
+                    $(elem).val(value);
+                });
             });
             $("input[type='file'].proxy").each(function(ii, elem) {
                 self.callListeners("registerUploader", node.name, elem);
