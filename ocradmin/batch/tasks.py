@@ -34,9 +34,6 @@ class BatchScriptTask(AbortableTask):
         abort_handler = get_abort_callback(self.request.id)
         progress_handler(0)
 
-        if not os.path.exists(writepath):
-            os.makedirs(writepath, 0777)
-
         tree = script.Script(json.loads(scriptjson), manager=MANAGER, 
                 nodekwargs=dict(
                     logger=logger,
@@ -44,7 +41,7 @@ class BatchScriptTask(AbortableTask):
                     progress_func=progress_handler))
         logger.debug("Running tree: %s", json.dumps(tree.serialize(), indent=2))                
         term = [t for t in tree.get_terminals() if t.label != "OutputBinary"][0]
-        outbin = tree.get_node("OutputBinary")                
+        outbin = tree.get_node("OutputBinary")
         try:
             # write out the binary... this should cache it's input
             os.environ["NODETREE_WRITE_FILEOUT"] = "1"

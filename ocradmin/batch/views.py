@@ -183,7 +183,7 @@ def create(request):
     ocrtasks = []
     options = dict(loglevel=60, retries=2)
     for path in paths:
-        pagescript = _script_for_page(script,
+        pagescript = script_for_page_file(script,
                 path, request.output_path)
         tid = OcrTask.get_new_task_id()
         args = (path, pagescript, request.output_path)
@@ -570,8 +570,7 @@ def _handle_multipart_upload(request, outdir):
         paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
     return paths
 
-
-def _script_for_page(scriptjson, filepath, writepath):
+def script_for_page_file(scriptjson, filepath, writepath):
     """
     Modify the given script for a specific file.
     """
@@ -592,4 +591,5 @@ def _script_for_page(scriptjson, filepath, writepath):
                 ("create_dir", True)])
     outbin.set_input(0, term.input(0))
     return json.dumps(tree.serialize(), indent=2)
+
 
