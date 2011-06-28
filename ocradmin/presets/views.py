@@ -136,7 +136,8 @@ def builder_task_edit(request, task_pk):
     """
     from ocradmin.ocrtasks.models import OcrTask
     task = get_object_or_404(OcrTask, pk=task_pk)
-    return render(request, "presets/builder.html", dict(task=task))
+    ref = request.GET.get("ref", "/batch/show/%d/" % task.batch.pk)
+    return render(request, "presets/builder.html", dict(task=task, ref=ref))
 
 
 def query_nodes(request):

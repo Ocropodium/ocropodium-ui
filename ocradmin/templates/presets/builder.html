@@ -139,6 +139,7 @@
     <!-- form for POSTing updated task scripts -->
     <form id="task_update_form" action="/ocr/update_task/{{task.pk}}/" method="POST">
         <input type="hidden" id="task_update_script" name="script" value="" />
+        <input type="hidden" id="task_update_ref" name="ref" value="{{ref}}" />
     </form>
     {% endif %}
     <!-- form for downloading scripts... this is a bit of a hack. -->

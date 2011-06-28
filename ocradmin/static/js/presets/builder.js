@@ -175,7 +175,7 @@ $(function() {
     });
     $("#cancel_task_preset").click(function(event) {
         $("#task_update_script").val("");
-        $("#task_update_form").submit(); 
+        $("#task_update_form").submit();
     });
 
     // initialise the uploader...

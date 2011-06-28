@@ -57,6 +57,7 @@
             <button id="save_data">Save Text</button>
             <button id="save_training_data">Save Training Page</button>
             <span>&nbsp;&nbsp;&nbsp;</span>
+            <a href="/presets/builder/{{task.pk}}" id="edit_task">Edit</a>
             
             <input type="hidden" name="batchoffset" value="{{batchoffset|default_if_none:0}}" id="batchoffset" />
             <input type="hidden" name="batchsize" value="{{batchsize|default_if_none:0}}" id="batchsize" />

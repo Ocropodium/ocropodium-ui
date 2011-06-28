@@ -43,6 +43,8 @@ def update_ocr_task(request, task_pk):
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
     script = request.POST.get("script")
+    ref = request.POST.get("ref", "/batch/show/%d/" % task.batch.pk)
+    print "UPDATING WITH REF: %s" % ref
     try:
         json.loads(script)
         task.args = (task.args[0], script, task.args[2])
@@ -50,7 +52,7 @@ def update_ocr_task(request, task_pk):
         task.retry()
     except ValueError:
         pass
-    return HttpResponseRedirect("/batch/show/%d/" % task.batch.pk)
+    return HttpResponseRedirect(ref)
 
 
 @login_required
