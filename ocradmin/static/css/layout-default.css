@@ -41,15 +41,16 @@ p {
 *	RESIZER-BARS
 */
 .ui-layout-resizer	{ /* all 'resizer-bars' */
-	background:		#DDD;
+	background:		#F0F0F0;
 	border:			1px solid #BBB;
-	border-width:	0;
+    margin-left: 3px;
+    margin-right: 3px;
 	}
 	.ui-layout-resizer-drag {		/* REAL resizer while resize in progress */
 	}
 	.ui-layout-resizer-open:hover ,	/* hover-color to 'resize' */
 	.ui-layout-resizer-dragging {	/* resizer beging 'dragging' */
-		background: #C4E1A4;
+		background: #a7c7dc;
 	}
 	.ui-layout-resizer-dragging {	/* CLONED resizer being dragged */
 		border-left:  1px solid #BBB;
