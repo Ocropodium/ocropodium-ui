@@ -1,0 +1,71 @@
+
+<div class="task_info_container" id="tabs">
+    <h3><a href="#">Basic Info</a></h3>
+    <div id="tab_1">
+        <table class="properties_table" border="0px">
+            <tr class="odd">
+                <td class="attr">Page Name:</td>
+                <td>{{task.page_name}}</td>
+            </tr>
+            <tr class="even">
+                <td class="attr">Num. Lines:</td>
+                <td>{{task.lines}}</td>
+            </tr>
+            <tr class="odd">
+                <td class="attr">User:</td>
+                <td>{{task.user}}</td>
+            </tr>
+            <tr class="even">
+                <td class="attr">Task ID:</td>
+                <td>{{task.task_id}}</td>
+            </tr>
+            <tr class="odd">
+                <td class="attr">Batch:</td>
+                <td>{% if task.batch %} {{task.batch.name}} {% else %} N/A {% endif %}</td>
+            </tr>
+            <tr class="even">
+                <td class="attr">Submitted:</td>
+                <td>{{task.created_on|date:"SHORT_DATETIME_FORMAT"}}</td>
+            </tr>
+            <tr class="odd">
+                <td class="attr">Last Update:</td>
+                <td>{{task.updated_on|date:"SHORT_DATETIME_FORMAT"}}</td>
+            </tr>
+            <tr class="even">
+                <td class="attr">Status:</td>
+                <td>{{task.status}}</td>
+            </tr>
+            <tr class="odd">
+                <td class="attr">Progress:</td>
+                <td>{{task.progress}}%</td>
+            </tr>
+        </table>
+    </div>
+    <h3><a href="#">Options</a></h3>
+    <div id="tab_2">
+        <a href="/presets/builder/{{task.pk}}/" title="Edit Task Preset">Edit Task Preset</a>
+    </div>
+    <h3><a href="#">Results</a></h3>
+    <div id="tab_3">
+        <ul class="results_list">
+            <li><a target="_blank" href="/ocr/results/{{task.task_id}}/?format=json" title="JSON Format">JSON</a></li>
+            <li><a target="_blank" href="/ocr/results/{{task.task_id}}/?format=text" title="Text Format">Plain Text</a></li>
+        </ul>
+    </div>
+    {% if task.error %}
+        <h3><a href="#">Errors</a></h3>
+        <div id="tab_4">
+            <pre>
+{{task.error}}
+
+{{task.traceback }}
+            </pre>
+        </div>
+    {% endif %}
+</div>
+
+
+
+
+
+

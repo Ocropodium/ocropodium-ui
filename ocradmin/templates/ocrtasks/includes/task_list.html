@@ -1,0 +1,61 @@
+{# List of OCR tasks #}
+
+
+<form class="table_form" id="task_list_form" method="GET" action="/ocrtasks/list">
+    <input type="hidden" id="task_order" name="order" value="{{order}}" />
+    <input type="hidden" id="page" name="page" value="{{ tasks.number }}" />
+    {% if tasks.object_list %}
+        <table id="task_list" class="info_table" cellspacing="0" cellpadding="0">
+            <tr class="header_row">
+            {% for field in fields %}
+                <th><a class="sort_table" href="/ocrtasks/list?order={{field}}">{{field|cut:"-"|capfirst|cut:"_"}}</a></th>
+            {% endfor %}
+            <th colspan="2"></th>
+            </tr>
+            {% for cm in tasks.object_list %}
+            <tr class="task_item {{cm.status|lower}}" id="task_{{cm.pk}}">                
+                <td>{{cm.page_name}}</td>        
+                <td>{{cm.batch.user}}</td>
+                <td>{{cm.updated_on|date:"d-m-Y H:i"}}</td>        
+                <td>{{cm.status}}</td>        
+                <td><a title="Task Details"  class="show_task" href="/ocrtasks/show/{{cm.pk}}/">Details</a></td>
+                <td>
+                {% if cm.status in revokable %} 
+                    {% if cm.batch.user == user or user.is_superuser %}
+                        <a title="Revoke Task" class="revoke_task" href="/ocrtasks/revoke/{{cm.task_id}}/">Revoke</a>
+                    {% else %}
+                        <span class="disabled_link">Revoke</span>
+                    {% endif %}
+                {% else %}
+                <span class="disabled_link">Revoke</span>
+                {% endif %}
+                </td> 
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        No tasks found.
+    {% endif %}
+
+    <div class="pagination">
+        <span class="step_links">
+            {% if tasks.has_previous %}
+                <a href="/ocrtasks/list?page={{ tasks.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ tasks.number }} of {{ tasks.paginator.num_pages }} &nbsp;
+            </span>
+
+            {% if tasks.has_next %}
+                <a href="/ocrtasks/list?page={{ tasks.next_page_number }}">Next</a>
+            {% endif %}
+        </span>
+    </div>
+
+</form>
+
+
+
+
+            

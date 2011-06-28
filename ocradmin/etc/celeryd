@@ -1,0 +1,85 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          celeryd
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
+# Should-Start:      fam
+# Should-Stop:       fam
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start celeryd daemons.
+### END INIT INFO
+
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/bin/python
+NAME=celeryd
+DESC="process server"
+SCRIPTNAME=/etc/init.d/$NAME
+PIDFILE=/var/run/$NAME.pid
+USER=root
+CHDIR=/home/michaelb/webapps/ocradmin
+DAEMON_OPTS="manage.py $NAME -E"
+
+test -x $DAEMON || exit 0
+
+set -e
+
+
+. /lib/lsb/init-functions
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESC" $NAME
+        if ! start-stop-daemon --start --quiet --oknodo --background \
+             --chuid $USER --chdir $CHDIR \
+	     --make-pidfile --pidfile $PIDFILE \
+	     --exec $DAEMON -- $DAEMON_OPTS
+        then
+            log_end_msg 1
+        else
+            log_end_msg 0
+        fi
+        ;;
+    stop)
+        log_daemon_msg "Stopping $DESC" $NAME
+        if start-stop-daemon --quiet --stop --oknodo --retry 30 --oknodo \
+            --chdir $CHDIR --pidfile $PIDFILE --exec $DAEMON
+        then
+            rm -f $PIDFILE
+            log_end_msg 0
+        else
+            log_end_msg 1
+        fi
+        ;;
+    reload)
+        log_daemon_msg "Reloading $DESC configuration" $NAME
+        if start-stop-daemon --stop --signal 2 --oknodo --retry 30 --oknodo \
+            --quiet --pidfile $PIDFILE --exec $DAEMON
+        then
+            if start-stop-daemon --start --quiet --background \
+                --chuid $USER --chdir $CHDIR \
+	        --make-pidfile --pidfile $PIDFILE \
+	        --exec $DAEMON -- $DAEMON_OPTS ;
+	    then
+                log_end_msg 0
+            else
+                log_end_msg 1
+            fi
+        else
+            log_end_msg 1
+        fi
+        ;;
+    restart|force-reload)
+        $0 stop
+        sleep 2
+	$0 start
+        ;;
+    *)
+        echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
+

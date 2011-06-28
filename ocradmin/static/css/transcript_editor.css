@@ -1,0 +1,92 @@
+#tsnavform * {
+    float: left;    
+
+}
+
+#transcriptcontainer {
+    min-height: 400px;
+}
+
+.waiting {
+    background-image: url(/static/ajax-loader-large.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+
+#page_slider {
+    width: 50px;
+    margin: 7px 10px 0px 20px;
+    display: inline;
+    float: left;
+}
+
+
+.batch_head span {
+    margin-left:10px;
+}
+
+#page_name {
+    font-weight: normal; 
+}
+
+.ocr_line {
+    font-size: 1.1em;
+    border: 1px solid transparent;
+    padding: 0px;
+    margin: 3px 0px;
+}
+
+h1.ocr_line {
+    font-size: 1.5em;
+    margin: 10px 0px;
+}
+
+.toolbar_item {
+    float: left;
+}
+
+.transcript_lines {
+    background-color: #FFF;
+    padding: 10px;
+    min-height: 200px;
+}
+
+.transcript_lines * {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
+
+#innerscroll {
+    height: 320px;
+    overflow: auto;
+    background-color: #FFF;
+}
+
+.ocr_line.hover {
+    background-color: #DDDDFF;
+}
+
+.viewer_highlight {
+    opacity: 0.5;
+    background-color: #FFFF66;
+}
+
+.ocr_line.reconvert {
+    background-color: #F8E0E0;
+}
+
+.ocr_line.reconverted {
+    background-color: #CEF6CE;
+}
+
+.ocr_line.reconverting {
+    background-color: #F7BE81;
+}
+
+.ocr_line.ui-selected {
+    color: #000;
+    background-color: #FFFFBB;
+}
+

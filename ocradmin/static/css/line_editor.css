@@ -1,0 +1,34 @@
+.ocr_line.editing {
+    border: 1px solid #FFF;
+    min-width: 0.5em;
+}
+
+.ocr_line.selected {
+    color: #000;
+    background: #FFFFAA;
+}
+
+.ocr_line span.sl {
+    color: #FFF;
+    background-color: #9999DD;
+}
+
+.editcursor {
+    float: right;
+    position: fixed;
+    width: 1px;
+    height: 20px;
+    background-color: #000;
+    color: #000;
+    z-index:1001;
+}
+
+.editcursor.blinkoff {
+    background-color: transparent;
+}
+
+.endmarker {
+    display: inline;
+    overflow: hidden;
+    width; 0px;
+}
