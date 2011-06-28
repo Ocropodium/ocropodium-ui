@@ -24,9 +24,6 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         var self = this;                      
         var pagebox = this.parseBbox($(".ocr_page", pagediv).first());
         var textbox = this._getTextBbox(pagediv, pagebox);    
-        console.log(textbox);                
-
-        console.log(pagediv.width());
         var scalefactor = pagediv.width() / (textbox[3] - textbox[1]);
 
         // expand the text box a bit
@@ -107,12 +104,10 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
     },
 
     _resizeToTarget: function(span, targetwidth, targetheight) {
-        console.log("Resizing", span, targetwidth, targetheight);                         
         var iheight = span.height();
         var iwidth = span.width();
         var count = 0
         if (iheight < targetheight && iheight) {
-            console.log("Enlarging", span, iheight, targetheight);
             //alert("grow! ih: " + iheight + " th: " + targetheight);
             while (iheight < targetheight && iwidth < targetwidth) {
                 var cfs = parseInt(span.css("fontSize").replace("px", ""));
@@ -125,7 +120,6 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
                 }
             }
         } else if (iheight > targetheight) {
-            console.log("Shrinking", span);
             while (iheight && iheight > targetheight) {
                 var cfs = parseInt(span.css("fontSize").replace("px", ""));
                 span = span.css("fontSize", (cfs - 1));
