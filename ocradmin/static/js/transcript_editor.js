@@ -54,6 +54,10 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this.setupKeyEvents();
         this.setupCallbacks();        
         this.resetSize();
+
+        // convenience functions
+        this.parseBbox = OCRJS.Hocr.parseBbox;
+        this.parseIndex = OCRJS.Hocr.parseIndex;
     },
 
 
@@ -268,28 +272,10 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
     },
 
-    parseBbox: function(elem) {
-        if (elem.attr("title").match(this._bboxre)) {
-            return [parseInt(RegExp.$1), parseInt(RegExp.$2),
-                parseInt(RegExp.$3), parseInt(RegExp.$4)];
-        }        
-        console.error("No BBox match:", elem);
-        return [-1, -1, -1, -1];
-    },
-
-    parseIndex: function(elem) {
-        if (elem.attr("id").match(this._indexre)) {
-            return parseInt(RegExp.$1);
-        }
-        console.error("No Index match:", elem);
-        return -1;
-    },    
-
     setPageLines: function() {
         this._textbuffer = this._pagediv.text();
         this.callListeners("onLinesReady");
     },
-
 
     save: function() {
         var self = this;
