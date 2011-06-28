@@ -140,6 +140,12 @@ $(function() {
             primary: "ui-icon-check",
         },
     });
+    $("#edit_task").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-wrench",
+        },
+    });
     $("#heading").button({
         disabled: true,
         text: true,
@@ -264,6 +270,9 @@ $(function() {
         // i.e. the task id that process the page.  We
         // want to rebinarize with the same params
         var task_pk = transcript.taskData().pk;
+        $("#edit_task").attr("href",
+                "/presets/builder/" + task_pk + "?ref="
+                + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
         $.ajax({
             url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
             dataType: "json",
