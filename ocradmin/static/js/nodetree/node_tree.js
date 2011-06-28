@@ -624,8 +624,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var point = self.relativePoint(atpoint);
         nodeobj.moveTo(point.x - (nodeobj.width / 2), point.y - (nodeobj.height / 2));
         $(document).bind("keydown.dropnode", function(event) {
-            if (event.which == KC_ESCAPE)
+            if (event.which == KC_ESCAPE) {
+                $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
                 self.deleteNode(nodeobj);
+            }
         });
         $(self._group).bind("mousemove.dropnode", function(event) {
             var nmp = SvgHelper.mouseCoord(self.parent, event);
