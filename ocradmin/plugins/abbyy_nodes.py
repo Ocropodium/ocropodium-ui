@@ -24,12 +24,25 @@ class AbbyyRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     binary = "abbyyocr"
     stage = stages.RECOGNIZE
     arity = 1
+    _parameters = [
+        dict(name="single_column", type="bool", value=False),
+        dict(name="invert_image", type="bool", value=False),
+        dict(name="no_despeckle", type="bool", value=False),
+    ]
 
     def get_command(self, outfile, image):
         """
         Cuneiform command line.  Simplified for now.
         """
-        return [self.binary, "-if", image, "-f", "XML", "-of", outfile] 
+        args = [self.binary]
+        if self._params.get("invert_image", False):
+            args.append("--invertImage")
+        if self._params.get("no_despeckle", False):
+            args.append("--dontDespecleImage")
+        if self._params.get("single_column", False):
+            args.append("--singleColumnMode")
+        args.extend(["-if", image, "-f", "XML", "-of", outfile])
+        return args
 
     def set_image_dpi(self, image):
         """

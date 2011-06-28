@@ -24,18 +24,16 @@ class CuneiformRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     binary = "cuneiform"
     stage = stages.RECOGNIZE
     arity = 1
-    _parameters = [dict(name="single_column", type="bool", value="0")]
+    _parameters = [
+            dict(name="single_column", type="bool", value=False)
+    ]
 
     def get_command(self, outfile, image):
         """
         Cuneiform command line.  Simplified for now.
         """
         args = [self.binary, "-o", outfile]
-        try:
-            single = bool(int(self._params.get("single_column", 0)))
-        except TypeError:
-            single = False
-        if single:
+        if self._params.get("single_column", False):
             args.extend(["--singlecolumn"])
         return args + [image]
 
