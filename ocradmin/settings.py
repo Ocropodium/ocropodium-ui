@@ -255,6 +255,18 @@ COMPRESS_CSS = {
         }
 
     },
+
+    "transcript_edit": {
+        "source_filenames": (            
+           "css/transcript_editor.css",
+           "css/line_editor.css",
+           "css/spellcheck.css",
+        ),
+        "output_filename": "css/transcript_edit_compress.css",
+        "extra_context": {
+            "media": "screen",
+        }
+    },
 }
 
 COMPRESS_JS = {
@@ -320,10 +332,22 @@ COMPRESS_JS = {
         "source_filenames": (
             "js/seadragon/seadragon-min.js",
             "js/image_viewer.js",
+            "js/hocr_utils.js",
             "js/text_viewer.js",
             "js/hocr_viewer.js",
 	        "js/utils/stats.js",
             "js/line_formatter.js",
+        ),
+        "output_filename": "js/viewers_compress.js",        
+    },
+    "transcript_edit": {
+        "source_filenames": (
+            "js/undo/command.js",
+            "js/undo/stack.js",
+            "js/line_editor.js",
+            "js/spellcheck/suggestion_list.js",
+            "js/spellcheck/spellchecker.js",
+            "js/transcript_editor.js",
         ),
         "output_filename": "js/viewers_compress.js",        
     },
