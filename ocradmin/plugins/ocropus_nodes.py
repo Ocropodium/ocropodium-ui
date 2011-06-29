@@ -143,12 +143,16 @@ class OcropusBase(node.Node):
         """
         Get parameters from an Ocropus Node.
         """
+        def makesafe(v):
+            if v is None:
+                return 0
+            return v
         p = []
         for i in range(cls._comp.plength()):
             n = cls._comp.pname(i)
             p.append(dict(
                 name=n,
-                value=cls._comp.pget(n),
+                value=makesafe(cls._comp.pget(n)),
             ))
         return p            
 
