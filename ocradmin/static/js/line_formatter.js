@@ -8,6 +8,7 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
 
         this.parseBbox = OCRJS.Hocr.parseBbox;
         this.parseIndex = OCRJS.Hocr.parseIndex;
+        this.margin = 50;
     },
 
     // Fudgy function to insert line breaks (<br />) in places
@@ -26,27 +27,28 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         var textbox = this._getTextBbox(pagediv, pagebox);    
         var scalefactor = pagediv.width() / (textbox[3] - textbox[1]);
 
-        // expand the text box a bit
-        textbox[0] = Math.min(0, textbox[0] - 50); 
-        textbox[1] = Math.min(0, textbox[1] - 50); 
-        textbox[2] = Math.min(pagebox[2], textbox[2] + 50); 
-        textbox[3] = Math.min(pagebox[3], textbox[3] + 50);
-
-        
         // now stick a position attribute on everything
-        var linebox;
-        $(".ocr_line", pagediv).each(function(i, elem) {
+        var lineboxes = $(".ocr_line", pagediv).map(function(i, elem) {
             var linebox = self.parseBbox($(elem));
-            var x = (linebox[0] - textbox[0]) * scalefactor;
-            var y = (linebox[1] - textbox[1]) * scalefactor;
-            var w = (linebox[2] - linebox[0]) * scalefactor;
-            var h = (linebox[3] - linebox[1]) * scalefactor;
+            return [[(linebox[0] - textbox[0]) * scalefactor,
+                    (linebox[1] - textbox[1]) * scalefactor,
+                    (linebox[2] - linebox[0]) * scalefactor,
+                    (linebox[3] - linebox[1]) * scalefactor]];
+        });
+        var stats = new Stats($.map(lineboxes, function(b) {
+            return b[3];
+        }));
+        
+        $(".ocr_line", pagediv).each(function(i, elem) {
             $(elem).css({
                 position: "absolute",
-                left: x,
-                top: y
+                left: lineboxes[i][0] + 50,
+                top: lineboxes[i][1] + 50
             });
-            self._resizeToTarget($(elem), w, h);
+            var th = (lineboxes[i][3] / stats.median - 1) < 0.5
+                ? stats.median
+                : lineboxes[i][3];
+            self._resizeToTarget($(elem), lineboxes[i][2], th);
         }); 
     },
 
