@@ -427,6 +427,8 @@ def export(request, batch_pk):
     tar = tarfile.open(fileobj=response, mode='w|gz')
     for task in batch.tasks.all():
         transcript = task.latest_transcript()
+        if transcript is None:
+            continue
         for fmt, ext in formats.iteritems():
             if not fmt in reqformats:
                 continue
