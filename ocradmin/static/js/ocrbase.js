@@ -65,8 +65,9 @@ OCRJS.OcrBase = Base.extend({
         var namespace = null;                     
         if (key.match(/^(.*)\.([^\.]+)$/))
             key = RegExp.$1, namespace = RegExp.$2;
-        if (this._listeners[key] == undefined)
-            throw "Unknow callback: '" + key + "'";
+        if (this._listeners[key] == undefined) {
+            console.error("Unknown callback:", key, this._listeners);
+        }
         if (func) {
             var i = this._listeners[key].indexOf(func);
             if (i != -1)
