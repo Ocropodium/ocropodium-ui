@@ -29,6 +29,9 @@ class BasicCacher(object):
     def clear_cache(self, node):
         del self._cache[node.label]
 
+    def clear(self):
+        self._cache = {}
+
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
 
