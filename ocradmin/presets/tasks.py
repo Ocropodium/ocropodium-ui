@@ -29,14 +29,14 @@ class UnhandledRunScriptTask(AbortableTask):
     name = "_run.script"
     max_retries = None
 
-    def run(self, evalnode, nodelist, writepath):
+    def run(self, evalnode, nodelist, writepath, cachedir):
         """
         Runs the convert action.
         """
         logger = self.get_logger()
-        cacher = cache.PersistantFileCacher(
+        cacher = cache.DziFileCacher(
                 path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
-                key="sessionkey", logger=logger)
+                key=cachedir, logger=logger)
 
         try:
             tree = script.Script(nodelist, manager=MANAGER, 
@@ -50,8 +50,6 @@ class UnhandledRunScriptTask(AbortableTask):
             return dict(type="error", node=err.node.label, error=err.msg)
 
         path = cacher.get_path(term.first_active())
-        logger.debug("OUT TYPE: %s", term.outtype)
-        logger.debug("RESULT: %s", result)
         filename = term.first_active().get_file_name()
         if term.outtype == numpy.ndarray:
             dzi = "%s.dzi" % os.path.splitext(filename)[0]
