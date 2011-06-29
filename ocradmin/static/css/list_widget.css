@@ -86,6 +86,18 @@
     background-color: #F4F4F4;
 }
 
+.entrylist tr.ui-selected {
+    color: #000;
+    background-color: #A7C7DC;
+    background-color: -moz-linear-gradient(top, #A7C7DC 0%, #85B2D3 100%);
+    background-color: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#A7C7DC), color-stop(100%,#85B2D3));
+    background-color: -webkit-linear-gradient(top, #A7C7DC 0%,#85B2D3 100%);
+    background-color: -o-linear-gradient(top, #A7C7DC 0%,#85B2D3 100%);
+    background-color: -ms-linear-gradient(top, #A7C7DC 0%,#85B2D3 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7c7dc', endColorstr='#85b2d3',GradientType=0 );
+    background: linear-gradient(top, #A7C7DC 0%,#85B2D3 100%);
+}
+
 .sort_arrow {
     float: right;
     height: 1em;
