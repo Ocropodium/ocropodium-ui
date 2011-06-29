@@ -61,12 +61,13 @@ class OcrTask(models.Model):
         if not self.is_active():
             return
         asyncres = AbortableAsyncResult(self.task_id)
-        asyncres.revoke()
         if self.is_abortable():
             asyncres.abort()
             if asyncres.is_aborted():
                 self.status = "ABORTED"
                 self.save()
+        celery.task.control.revoke(self.task_id,
+                terminate=True, signal="SIGTERM")
 
     def run(self, task_name=None, asyncronous=True, untracked=False, **kwargs):
         """
