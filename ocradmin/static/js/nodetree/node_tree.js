@@ -550,7 +550,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     lassoNodes: function(lasso) {
         // lasso nodes overlapping the lasso box
-        // FIXME: Hard-coded node width/height;                    
         var rect = {};
         $.each(["x", "y", "width", "height"], function(i, v) {
             rect[v] = parseInt($(lasso).attr(v));
