@@ -85,8 +85,10 @@ class HocrToText(HTMLParser):
         for name, val in attrs:
             if name == "class" and val.find("ocr_line") != -1:
                 self._gotline = True
-            if name == "br":
-                self._text.append("\n")
+        if tag.lower() == "br":
+            self._text.append("\n")
+        elif tag.lower() == "p":
+            self._text.append("\n\n")
 
     def handle_data(self, data):
         if self._gotline:
