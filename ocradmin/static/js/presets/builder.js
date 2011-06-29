@@ -162,6 +162,12 @@ $(function() {
     });
     $("#clear_cache").click(function(event) {
         resultcache = {};
+        $.getJSON("/presets/clear_cache/", function(data) {
+            if (data && data.ok)
+                alert("Cache cleared");
+            else
+                console.error("Unexpect result on cache clear", data);
+        });
         event.preventDefault();
         event.stopPropagation();
     });
