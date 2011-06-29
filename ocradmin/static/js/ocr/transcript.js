@@ -4,10 +4,25 @@ var formatter = null;
 var polltimeout = -1;
 var hsplitL, hsplitR;
 
-function onBinaryFetchResult(data) {
 
 
+function saveState() {
+    var view = {
+        follow: $("input[name='vlink']:checked").attr("id"),
+        format: $("input[name='format']:checked").attr("id"), 
+    };
+    $.cookie("transcript_view", JSON.stringify(view));
+}    
+
+function loadState() {
+    var viewcookie = $.cookie("transcript_view");
+    if (viewcookie) {
+        var view = JSON.parse(viewcookie);
+        $("#" + view.follow).prop("checked", true).button("refresh");
+        $("#" + view.format).prop("checked", true).button("refresh");
+    }
 }
+
 
 function pollForResults(data, polltime) {
     if (data == null) {
@@ -258,44 +273,46 @@ $(function() {
     // image is rebinarized so we can view it in the viewer
     // This is likely to be horribly inefficient, at least
     // at first...
-    transcript.addListener("onTaskLoad", function() {
-        // get should-be-hidden implementation details
-        // i.e. the task id that process the page.  We
-        // want to rebinarize with the same params
-        var task_pk = transcript.taskId();
-        $("#edit_task").attr("href",
-                "/presets/builder/" + task_pk + "?ref="
-                + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
-        $.ajax({
-            url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
-            dataType: "json",
-            beforeSend: function(e) {
-                sdviewer.close();
-                sdviewer.setWaiting(true);
-            },
-            success: function(data) {
-                if (polltimeout != -1) {
-                    clearTimeout(polltimeout);
-                    polltimeout = -1;
-                }
-                pollForResults(data, 300);
-            },
-            error: OCRJS.ajaxErrorHandler,
-        });
-    });
-    transcript.addListener("onTextChanged", function() {
-        $("#save_data").button({
-            disabled: false,
-        });
-    });
-    transcript.addListener("onSave", function() {
-        $("#save_data").button({
-            disabled: true,
-        });
-    });
-    transcript.addListener("onLinesReady", function() {
-        // trigger a reformat
-        //$("input[name=format]:checked").click();
+    transcript.addListeners({
+            onTaskLoad: function() {
+            // get should-be-hidden implementation details
+            // i.e. the task id that process the page.  We
+            // want to rebinarize with the same params
+            var task_pk = transcript.taskId();
+            $("#edit_task").attr("href",
+                    "/presets/builder/" + task_pk + "?ref="
+                    + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
+            $.ajax({
+                url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
+                dataType: "json",
+                beforeSend: function(e) {
+                    sdviewer.close();
+                    sdviewer.setWaiting(true);
+                },
+                success: function(data) {
+                    if (polltimeout != -1) {
+                        clearTimeout(polltimeout);
+                        polltimeout = -1;
+                    }
+                    pollForResults(data, 300);
+                },
+                error: OCRJS.ajaxErrorHandler,
+            })
+        },
+        onTextChanged: function() {
+            $("#save_data").button({
+                disabled: false,
+            });
+        },
+        onSave: function() {
+            $("#save_data").button({
+                disabled: true,
+            });
+        },
+        onLinesReady: function() {
+            // trigger a reformat
+            $("input[name=format]:checked").click();
+        },
     });
 
     var positionViewer = function(position) {
@@ -440,6 +457,12 @@ $(function() {
         });
     };
 
+    $(window).unload(function() {
+        saveState();
+    });
+
     $(window).resize();
+
+    loadState();
 });        
 
