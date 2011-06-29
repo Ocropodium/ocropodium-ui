@@ -5,10 +5,8 @@
 OCRJS.LineFormatter = OCRJS.OcrBase.extend({
     constructor: function(options) {
         this.base();
-
         this.parseBbox = OCRJS.Hocr.parseBbox;
         this.parseIndex = OCRJS.Hocr.parseIndex;
-        this.margin = 50;
     },
 
     // Fudgy function to insert line breaks (<br />) in places
@@ -18,9 +16,6 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         $(".ocr_line", pagediv).attr("style", "");
     },
 
-
-    // Horrid function to try and position lines how they would be on
-    // the source material.  TODO: Make this not suck.
     columnLayout: function(pagediv) {
         var self = this;                      
         var margin = 50;
@@ -51,7 +46,6 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         }); 
     },
 
-
     _getTextBbox: function(pagediv, pagebox) {
         var self = this;                      
         var minx0 = pagebox[2],
@@ -69,40 +63,6 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         });
         return [minx0, miny0, minx1, miny1];
     },                      
-
-    _resetState: function(pagediv) {
-        $("span", pagediv).map(function(i, elem) {
-            if ($.trim($(elem).text()) == "" || $.trim($(elem).text()) == "\u00a0") 
-                return $(elem);
-        }).remove();
-        pagediv.find("br").remove();
-        pagediv.removeClass("literal");
-        pagediv.css("height", null);
-        $(".ocr_line", pagediv).css("display", null);
-    },
-
-
-    _insertBreaks: function(pagediv) {
-        var lastyh = -1;
-        var lasth = -1;
-        var lastitem;
-        $(".ocr_line", pagediv).each(function(lnum, item) {
-            var dims = $(item).data("bbox");
-            var y = dims[1];  // bbox x, y, w, h
-            var h = dims[3];
-            if (dims[0] != -1) {
-                $(item).attr("style", "");
-                $(item).children("br").remove();
-                if ((lastyh != -1 && lasth != -1) 
-                        && (y - (h * 0.75) > lastyh || lasth < (h * 0.75))) {
-                    $(lastitem).after($("<br />")).after($("<br />"));
-                }
-                lastitem = item;                
-                lastyh = y + h;
-                lasth = h;
-            }                        
-        });
-    },
 
     _resizeToTarget: function(span, targetwidth, targetheight) {
         var iheight = span.height(),
