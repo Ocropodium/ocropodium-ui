@@ -447,6 +447,7 @@ $(function() {
     hsplitL.options.center.onresize_end = function() {
         setTimeout(function() {
             transcript.resetSize();
+            $("input[name=format]:checked").click();
         });
     };
     hsplitR.options.center.onresize_end = function() {
@@ -454,6 +455,7 @@ $(function() {
             var active = sdviewer.activeBuffer();
             sdviewer.setBufferPath(active, sdviewer.bufferPath(active));
             sdviewer.resetSize();
+            $("input[name=format]:checked").click();
         });
     };
 
