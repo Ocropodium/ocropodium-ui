@@ -6,7 +6,6 @@ to the latter.
 
 import os
 import datetime
-from picklefield import fields
 from django.db import models
 from django.contrib.auth.models import User
 from ocradmin.projects.models import Project
@@ -22,7 +21,7 @@ class ReferencePage(models.Model):
     page_name = models.CharField(max_length=255)
     user = models.ForeignKey(User, related_name="reference_sets")
     project = models.ForeignKey(Project, related_name="reference_sets")
-    data = fields.PickledObjectField()
+    data = models.TextField()
     source_image = models.FileField(upload_to=ocrutils.get_refpage_path, max_length=255)
     binary_image = models.FileField(upload_to=ocrutils.get_refpage_path, max_length=255)
     created_on = models.DateTimeField(editable=False)
