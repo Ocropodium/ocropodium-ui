@@ -625,20 +625,23 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         nodeobj.moveTo(point.x - (nodeobj.width / 2), point.y - (nodeobj.height / 2));
         $(document).bind("keydown.dropnode", function(event) {
             if (event.which == KC_ESCAPE) {
-                $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
                 self.deleteNode(nodeobj);
+            } else if (event.which == KC_RETURN) {
+                nodeobj.removeListeners("clicked.dropnode");
+                $(self._group).unbind(".dropnode");
+                self.scriptChanged("Created node: " + nodeobj.name);
             }
         });
         $(self._group).bind("mousemove.dropnode", function(event) {
             var nmp = SvgHelper.mouseCoord(self.parent, event);
             var npoint = self.relativePoint(nmp);
             nodeobj.moveTo(npoint.x - (nodeobj.width / 2), npoint.y - (nodeobj.height / 2));
-        });        
-        $(document).add($(nodeobj.group()).find("*")).bind("click.dropnode", function(e) {
-            $(self._group).unbind(".dropnode");
-            $(document).add($(nodeobj.group()).find("*")).unbind(".dropnode");
-            self.scriptChanged("Created node: " + nodeobj.name);
         });
+        nodeobj.addListener("clicked.dropnode", function() {
+            nodeobj.removeListeners("clicked.dropnode");
+            $(self._group).unbind(".dropnode");
+            self.scriptChanged("Created node: " + nodeobj.name);
+        });        
     },
 
     deleteNode: function(node, alert) {
