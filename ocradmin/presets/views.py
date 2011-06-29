@@ -176,8 +176,8 @@ def run_preset(request):
             )), mimetype="application/json")
         term = terms[0]
     async = OcrTask.run_celery_task("run.script", (evalnode, nodes,
-            request.output_path), untracked=True,
-            asyncronous=True, queue="interactive")
+            request.output_path, "cache_%s" % request.user.username),
+            untracked=True, asyncronous=True, queue="interactive")
     out = dict(
         node=evalnode,
         task_id=async.task_id,
