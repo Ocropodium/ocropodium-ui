@@ -84,13 +84,13 @@
 </script>
 
 <script id="nodeMenuTmpl" type="application/x-jquery-tmpl">
-    <div class="nodemenu ui-medium-flat" id="nodemenu">
+    <div class="nodemenu" id="nodemenu">
         <h4>OCR Nodes</h4>
         <ul>
         {% templatetag openvariable %}each(i,stage) stages{% templatetag closevariable %}    
             <li class="topmenu itemname">
-                ${stage.name}
-                <ul class="nodemenu ui-medium-flat submenu hidden">
+                ${stage.name[0].toUpperCase() + stage.name.replace("_", " ").slice(1)}
+                <ul class="nodemenu submenu hidden">
                 {% templatetag openvariable %}each(ii,node) stage.nodes{% templatetag closevariable %}    
                     <li data-name="${node.name}">
                         ${node.name.replace(/^[^:]+::/, "")}

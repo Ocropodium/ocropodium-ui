@@ -35,6 +35,8 @@ div#node_canvas {
     border: 1px solid #999;
     padding: 3px;
     z-index: 1000;
+    background-color: #FFF;
+    opacity: 0.95;
 }
 
 .nodemenu h4 {
