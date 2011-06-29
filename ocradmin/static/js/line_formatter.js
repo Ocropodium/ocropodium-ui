@@ -23,11 +23,10 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
     // the source material.  TODO: Make this not suck.
     columnLayout: function(pagediv) {
         var self = this;                      
+        var margin = 50;
         var pagebox = this.parseBbox($(".ocr_page", pagediv).first());
         var textbox = this._getTextBbox(pagediv, pagebox);    
-        var scalefactor = pagediv.width() / (textbox[3] - textbox[1]);
-
-        // now stick a position attribute on everything
+        var scalefactor = (pagediv.width() - (2 * margin)) / (textbox[2] - textbox[0]);
         var lineboxes = $(".ocr_line", pagediv).map(function(i, elem) {
             var linebox = self.parseBbox($(elem));
             return [[(linebox[0] - textbox[0]) * scalefactor,
@@ -38,12 +37,12 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
         var stats = new Stats($.map(lineboxes, function(b) {
             return b[3];
         }));
-        
+        // now stick a position attribute on everything
         $(".ocr_line", pagediv).each(function(i, elem) {
             $(elem).css({
                 position: "absolute",
-                left: lineboxes[i][0] + 50,
-                top: lineboxes[i][1] + 50
+                left: lineboxes[i][0] + margin,
+                top: lineboxes[i][1] + margin
             });
             var th = (lineboxes[i][3] / stats.median - 1) < 0.5
                 ? stats.median
@@ -106,35 +105,29 @@ OCRJS.LineFormatter = OCRJS.OcrBase.extend({
     },
 
     _resizeToTarget: function(span, targetwidth, targetheight) {
-        var iheight = span.height();
-        var iwidth = span.width();
-        var count = 0
+        var iheight = span.height(),
+            iwidth = span.width(),
+            count = 0,
+            cfs;
         if (iheight < targetheight && iheight) {
-            //alert("grow! ih: " + iheight + " th: " + targetheight);
             while (iheight < targetheight && iwidth < targetwidth) {
-                var cfs = parseInt(span.css("fontSize").replace("px", ""));
+                cfs = parseInt(span.css("fontSize").replace("px", ""));
                 span = span.css("fontSize", (cfs + 1));
                 iheight = span.height();
+                iwidth = span.width();
                 count++;
-                if (count > 50) {
-                    //alert("growing too long: iheight: " + iheight + " th: " + targetheight);
+                if (count > 50)
                     break;
-                }
             }
         } else if (iheight > targetheight) {
             while (iheight && iheight > targetheight) {
-                var cfs = parseInt(span.css("fontSize").replace("px", ""));
+                cfs = parseInt(span.css("fontSize").replace("px", ""));
                 span = span.css("fontSize", (cfs - 1));
                 iheight = span.height();
-                //alert("ih: " + iheight + " fs:" + cfs + " th: " + targetheight);
-                //alert("iheight: " + iheight + " fs: " + span.css("font-size") + " cfs: " + (cfs - 1));
                 count++;
-                if (count > 50) {
-                    //alert("shrinking too long: iheight: " + iheight + " th: " + targetheight);
+                if (count > 50)
                     break;
-                }
             }
         }
-        return span.css("fontSize");
     },
 });
