@@ -138,34 +138,11 @@ class FinereaderXmlParser():
             self.currline = None
 
         
-   
-
-
 class AppException(StandardError):
     """
     Most generic app error.
     """
     pass
-
-
-HEADER_TEMPLATE = """
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-    <head>
-        <title>OCR Results</title>
-        <meta name="Description" content="OCRopus Output" />
-        <meta name="ocr-system" content="ocropus-0.4" />
-        <meta name="ocr-capabilities" content="ocr_line ocr_page" />
-    </head>
-    <body>
-"""
-
-FOOTER_TEMPLATE = """
-    </body>
-</html>
-"""
 
 
 def get_refpage_path(refpage, filename):
@@ -350,49 +327,29 @@ def media_path_to_url(path):
         return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)    
 
 
-def output_to_text(jsondata, linesep="\n"):
+def output_to_text(hocrdata):
     """
     Convert page json to plain text.
     """
-    return linesep.join([line["text"] for line in jsondata["lines"]])
+    # FIXME: Import
+    from ocradmin.plugins.util_nodes import HocrToText
+    parser = HocrToText()
+    return parser.parse(hocrdata)
 
 
-def output_to_json(jsondata, indent=4):
+def output_to_json(hocrdata, indent=4):
     """
     Process raw json data to user output, with an indent.
     """
-    return simplejson.dumps(jsondata, indent=indent)
+    parser = HocrParser()
+    data = parser.parse(hocrdata)
+    return simplejson.dumps(data, indent=indent)
 
 
-def output_to_hocr(jsondata):
+def output_to_hocr(hocrdata):
     """
-    Convert page hocr.
+    Convert page hocr.  No-op currently.
     """
-    hocr = HEADER_TEMPLATE
-    hocr += "\t<div class='ocr_page' title=\"bbox %d %d %d %d\" image='%s'>\n" % (
-        jsondata["box"][0],
-        jsondata["box"][1],
-        jsondata["box"][2],
-        jsondata["box"][3],
-        jsondata["page"]
-    )
-    
-    def hocr_line(line):
-        return "\t\t<%s title=\"bbox %d %d %d %d\">%s</%s>\n" % (
-            line.get("type", "span"),
-            line["box"][0],
-            line["box"][1],
-            line["box"][2],
-            line["box"][3],
-            line["text"],
-            line.get("type", "span"),
-        )
-
-    for line in jsondata["lines"]:
-        hocr += hocr_line(line)
-    hocr += "\t</div>"
-    hocr += FOOTER_TEMPLATE
-
-    return hocr
+    return hocrdata
 
 
