@@ -683,8 +683,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     loadState: function() {
         var transform = $.cookie("canvaspos");
-        if (transform)
+        if (transform) {
             $(this.group()).attr("transform", transform);
+            this.syncDragTarget();
+        }
     },
 
     drawTree: function() {
@@ -759,27 +761,28 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     mouseZoom: function(event) {
         // ensure the point under the mouse stays under
-        // the mouse when zooming.  FIXME: This is a bit
-        // skew-whiff....
+        // the mouse when zooming.
+               
         var self = this;         
         var scale = SvgHelper.getScale(this.group());
         var trans = SvgHelper.getTranslate(this.group());
         var point = SvgHelper.mouseCoord(this.parent, event);
         var cp = {
-            x: (point.x - trans.x) * scale.x,
-            y: (point.y - trans.y) * scale.y,
+            x: (point.x / scale.x) + trans.x,
+            y: (point.y / scale.y) + trans.y,
         };
-        if (event.wheelDelta < 0)
-            self.scaleContainer(0.8);
-        else
-            self.scaleContainer(1.25);
+        
+        var factor = event.wheelDelta < 0 ? 0.8 : 1.25;
+        this.scaleContainer(factor);
+        
         var scaleb = SvgHelper.getScale(this.group());
         var cp2 = {
-            x: (point.x - trans.x) * scaleb.x,
-            y: (point.y - trans.y) * scaleb.y,
+            x: (point.x / scaleb.x) + trans.x,
+            y: (point.y / scaleb.y) + trans.y,
         };
-        SvgHelper.updateTranslate(this.group(), trans.x + (cp.x - cp2.x),
-                trans.y + (cp.y - cp2.y));
+        SvgHelper.updateTranslate(this.group(), trans.x + (cp2.x - cp.x),
+                trans.y + (cp2.y - cp.y));
+        this.syncDragTarget();                               
     },                   
 
     scaleContainer: function(by) {
