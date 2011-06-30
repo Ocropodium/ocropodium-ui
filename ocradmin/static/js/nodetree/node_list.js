@@ -2,7 +2,7 @@
 // Basic parameter builder...
 //
 
-OCRJS.Nodetree.NodeList = OCRJS.OcrBase.extend({
+OCRJS.Nodetree.NodeList = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, valuedata) {
         this.base(parent);
         this.parent = parent;
