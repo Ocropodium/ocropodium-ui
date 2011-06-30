@@ -45,8 +45,8 @@ class UnhandledRunScriptTask(AbortableTask):
             if term is None:
                 term = tree.get_terminals()[0]
             result = term.eval()
-        except ocropus_nodes.OcropusNodeError, err:
-            logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
+        except node.NodeError, err:
+            logger.error("Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.msg)
 
         path = cacher.get_path(term.first_active())
