@@ -33,7 +33,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         svg
             .attr("width", Math.max($(this.parent).width(), svg.attr("width")))
             .attr("height", Math.max($(this.parent).height(), svg.attr("height")));
-        this.syncDragTarget();
     },                   
 
     group: function() {
@@ -234,12 +233,12 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     setupEvents: function() {
         var self = this;                     
-        $(self._group).noContext().rightClick(function(event) {
+        $(self.parent).noContext().rightClick(function(event) {
             self._menucontext = null;
             self.showContextMenu(event);
         });
 
-        $(self._group).click(function(event) {
+        $(self.parent).click(function(event) {
             if (!event.shiftKey)
                 self.deselectAll();
         });
@@ -255,7 +254,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $(self.parent).bind("mousewheel.zoomcanvas", function(event) {
             self.mouseZoom(event);
         });
-        $(this._group).bind("mousedown", function(event) {
+        $(this.parent).bind("mousedown", function(event) {
             if (event.button == 1 || event.button == 0 && event.shiftKey && event.ctrlKey) {
                 self.panContainer(event);
             } else if (event.button == 0) {
@@ -338,7 +337,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
         SvgHelper.updateScale(this.group(), usedscale, usedscale);
         SvgHelper.updateTranslate(this.group(), transx, transy);
-        this.syncDragTarget();
     },                    
 
     deselectAll: function() {
@@ -685,7 +683,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var transform = $.cookie("canvaspos");
         if (transform) {
             $(this.group()).attr("transform", transform);
-            this.syncDragTarget();
         }
     },
 
@@ -695,12 +692,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
         this._group = svg.group(null, "canvas");
         this._cablegroup = svg.group(this._group, "cables");
-        this._dragtarget = svg.rect(this._group, 0, 0, svg._width(), svg._height(), {
-            fill: "transparent",
-            fillOpacity: 0,
-            stroke: "transparent",    
-        });
-        this.syncDragTarget();
         this.defineGradients();
     },
 
@@ -735,7 +726,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
     resetCanvas: function() {
         SvgHelper.updateTransform(this.group(), 0, 0, 1, 1);
-        this.syncDragTarget();
     },                     
 
     panContainer: function(event) {
@@ -755,7 +745,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             $(this).unbind(".pancanvas");
             event.stopPropagation();
             event.preventDefault();
-            self.syncDragTarget();
         });
     },
 
@@ -782,7 +771,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         };
         SvgHelper.updateTranslate(this.group(), trans.x + (cp2.x - cp.x),
                 trans.y + (cp2.y - cp.y));
-        this.syncDragTarget();                               
     },                   
 
     scaleContainer: function(by) {
@@ -790,19 +778,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var cx = scale.x, cy = scale.y;
         cx *= by, cy *= by;
         SvgHelper.updateScale(this.group(), cx, cy);
-        this.syncDragTarget();
     },
-
-    syncDragTarget: function() {
-        var scale = SvgHelper.getScale(this.group());
-        var trans = SvgHelper.getTranslate(this.group());
-        var tx = $(this.parent).width(), ty = $(this.parent).height();
-        $(this._dragtarget)
-            .attr("width", tx / scale.x)
-            .attr("height", ty / scale.y)
-            .attr("x", -trans.x / scale.x)
-            .attr("y", -trans.y / scale.y);
-    },                        
 
     defineGradients: function() {                         
         var defs = this.svg.defs(this._group);
