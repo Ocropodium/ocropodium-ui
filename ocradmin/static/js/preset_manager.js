@@ -118,7 +118,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         });        
         
         $("#download_script").click(function(event) {
-            var json = JSON.stringify(self._nodetree.buildScript(), false, '\t');
+            var json = JSON.stringify(self._nodetree.buildScript(), null, 2);
             $("#fetch_script_slug").val(self._opened ? self._opened : "untitled");
             $("#fetch_script_data").val(json);
             $("#fetch_script").submit();
@@ -328,7 +328,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             throw "Attempt to save existing preset with no data! " + slug;            
         $.ajax({
             url: "/presets/update_data/" + slug,
-            data: {data: JSON.stringify(script, null, '\t')},
+            data: {data: JSON.stringify(script, null, 2)},
             type: "POST",
             error: errorfunc,
             success: successfunc,
@@ -346,7 +346,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 tags: tags,
                 description: description,
                 private: private,
-                data: JSON.stringify(script, null, '\t'),
+                data: JSON.stringify(script, null, 2),
             },        
             error: errorfunc, 
             statusCode: {
