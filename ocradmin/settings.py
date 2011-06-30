@@ -219,7 +219,7 @@ COMPRESS_CSS_FILTERS = None
 COMPRESS_CSS = {
     "standard": {
         "source_filenames": (
-            "css/mainmenu.css",
+            "css/appmenu.css",
             "css/layout-default.css",
             "css/forms.css",
             "css/projectbrowser.css",
@@ -303,6 +303,7 @@ COMPRESS_JS = {
             "js/project_list_widget.js",
             "js/projectbrowser.js",
             "js/appmenu.js",
+            "js/global.js",
         ),
         "output_filename": "js/global_compress.js",
     },
