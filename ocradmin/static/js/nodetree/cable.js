@@ -48,34 +48,11 @@ OCRJS.Nodetree.Cable = OCRJS.Nodetree.BaseCable.extend({
 
     setupEvents: function() {
         var self = this;
-        //self.start.addListener("moved", function() {
-        //    self.updateOnMove();
-        //});
-        //self.end.addListener("moved", function() {
-        //    self.updateOnMove();
-        //});
-        $(self._hpath).hover(function(event) {
-            self.svg.change(self._path, {fill: "#333"}); 
-        }, function(event) {
-            self.svg.change(self._path, {fill: "#999"}); 
-        });
-        $(self._hpath).click(function(event) {
-            console.log("clicked!");
-        });
     },
-
-    //updateOnMove: function() {                      
-    //    var m1 = this.denorm(this.start.centre(), this.start.group(), this.group());
-    //    var m2 = this.denorm(this.end.centre(), this.end.group(), this.group());
-    //    this.update(m1, m2);            
-    //},
 
     draw: function(svg, parent, p1, p2) {
         this.svg = svg;        
         this._group = svg.group(parent, "cable_" + this.start.name + "_" + this.end.name);      
-        this._hpath = this.svg.path(this._group, this.getPath(p1, p2), {
-            fill: "none", stroke: "#ddd", strokeWidth: 3,
-        });
         this._path = this.svg.path(this._group, this.getPath(p1, p2), {
             fill: "none", stroke: "#666", strokeWidth: 1,
         });
@@ -83,7 +60,6 @@ OCRJS.Nodetree.Cable = OCRJS.Nodetree.BaseCable.extend({
     },
 
     update: function(p1, p2) {
-        $(this._hpath).attr("d", this.getPath(p1, p2).path());
         $(this._path).attr("d", this.getPath(p1, p2).path());
     },                
 });    
