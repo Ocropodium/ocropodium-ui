@@ -735,10 +735,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         };
         var self = this;
         var trans = SvgHelper.getTranslate(this.group());
+        var scale = SvgHelper.getScale(this.group());
         $(document).bind("mousemove.pancanvas", function(moveevent) {
             SvgHelper.updateTranslate(self.group(), 
-                trans.x + (moveevent.pageX - dragstart.x),
-                trans.y + (moveevent.pageY - dragstart.y)
+                trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
+                trans.y + ((moveevent.pageY - dragstart.y) / scale.y)
             );
         });
         $(document).bind("mouseup.pancanvas", function() {
