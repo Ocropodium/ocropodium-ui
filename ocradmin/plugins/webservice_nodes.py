@@ -10,22 +10,30 @@ from ocradmin.plugins import generic_nodes, stages
 import json
 import httplib2
 import urllib
+from BeautifulSoup import BeautifulSoup
 
 
 class WebServiceNodeError(node.NodeError):
     pass
 
 
-class MashapeProcessingNode(node.Node, generic_nodes.TextWriterMixin):
+class BaseWebService(node.Node, generic_nodes.TextWriterMixin):
     """
-    Convert HOCR to text.
+    Base class for web service nodes.
+    """
+    stage = stages.POST
+    arity = 1
+    intypes = [unicode]
+    outtype = unicode
+
+
+class MashapeProcessingNode(BaseWebService):
+    """
+    Mashape entity extraction.
     """
     stage = stages.POST
     name = "%s::MashapeProcessing" % NAME
     description = "Perform phrase or sentiment extraction"
-    arity = 1
-    intypes = [unicode]
-    outtype = unicode
     baseurl = "http://text-processing.com/api/"
     _parameters = [
         dict(name="extract", value="phrases", choices=["phrases", "sentiment"]),
@@ -54,6 +62,41 @@ class MashapeProcessingNode(node.Node, generic_nodes.TextWriterMixin):
                 out += "%s\n" % key
                 for entity in keydata:
                     out += "   %s\n" % entity
+        return out
+
+
+class DBPediaAnnotateNode(BaseWebService):
+    """
+    Mashape entity extraction.
+    """
+    stage = stages.POST
+    name = "%s::DBPediaAnnotate" % NAME
+    description = "Find links to DBPedia content"
+    baseurl = "http://spotlight.dbpedia.org/rest/annotate/"
+    _parameters = [
+        dict(name="confident", value=0.2),
+        dict(name="support", value=20),
+    ]
+
+    def _eval(self):
+        input = self.eval_input(0)
+        
+        http = httplib2.Http()
+        headers = {}
+        body = dict(
+                text=input.encode("utf8", "replace"),
+                confidence=self._params.get("confident"),
+                support=self._params.get("support"),
+        )
+        url = "%s?%s" % (self.baseurl, urllib.urlencode(body))
+        request, content = http.request(url, "GET", headers=headers)
+        if request["status"] != "200":
+            raise WebServiceNodeError(self, "A web service error occured.  Status: %s" % request["status"])
+        out = u""
+        soup = BeautifulSoup(content)
+        for ref in soup.findAll("a"):
+            out += "%s\n" % ref.text
+            out += "   %s\n\n" % ref.get("href")
         return out
 
 
