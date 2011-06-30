@@ -175,7 +175,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             var nmp = SvgHelper.mouseCoord(self.parent, event);
             cable.update(npoint, self.relativePoint(nmp));
         }); 
-        $(self.group()).bind("click.dropcable", function(event) {
+        $(self.parent).bind("click.dropcable", function(event) {
             self.removeDragCable();
         });
     },
@@ -567,9 +567,17 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     },                         
 
     relativePoint: function(point) {
+        //var scale = SvgHelper.getScale(this.group());
+        //var trans = SvgHelper.getTranslate(this.group());
+        //return {x: (point.x - trans.x) / scale.x, y: (point.y - trans.y) / scale.y};
+    
         var scale = SvgHelper.getScale(this.group());
         var trans = SvgHelper.getTranslate(this.group());
-        return {x: (point.x - trans.x) / scale.x, y: (point.y - trans.y) / scale.y};
+        return {
+            x: (point.x / scale.x) - trans.x,
+            y: (point.y / scale.y) - trans.y,
+        };
+                   
     },
 
     replaceNode: function(src, dst) {
@@ -625,18 +633,18 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 self.deleteNode(nodeobj);
             } else if (event.which == KC_RETURN) {
                 nodeobj.removeListeners("clicked.dropnode");
-                $(self._group).unbind(".dropnode");
+                $(self.parent).unbind(".dropnode");
                 self.scriptChanged("Created node: " + nodeobj.name);
             }
         });
-        $(self._group).bind("mousemove.dropnode", function(event) {
+        $(self.parent).bind("mousemove.dropnode", function(event) {
             var nmp = SvgHelper.mouseCoord(self.parent, event);
             var npoint = self.relativePoint(nmp);
             nodeobj.moveTo(npoint.x - (nodeobj.width / 2), npoint.y - (nodeobj.height / 2));
         });
         nodeobj.addListener("clicked.dropnode", function() {
             nodeobj.removeListeners("clicked.dropnode");
-            $(self._group).unbind(".dropnode");
+            $(self.parent).unbind(".dropnode");
             self.scriptChanged("Created node: " + nodeobj.name);
         });        
     },
