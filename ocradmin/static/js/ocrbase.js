@@ -102,7 +102,9 @@ OCRJS.OcrBaseWidget = OCRJS.OcrBase.extend({
         $.extend(this.options, options);        
     },
 
-    containerWidget: function() {
-        return $(this.parent).closest(".widget");    
+    getState: function() {
+    },
+
+    setState: function() {
     },
 });
