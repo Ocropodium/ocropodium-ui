@@ -27,3 +27,15 @@ def hocr_from_abbyy(abbyyxml):
             return unicode(transform(xml))
 
 
+def get_cacher(settings):
+    cache_path = settings.NODETREE_PERSISTANT_CACHER.split('.')
+    # Allow for Python 2.5 relative paths
+    if len(cache_path) > 1:
+        cache_module_name = '.'.join(cache_path[:-1])
+    else:
+        cache_module_name = '.'
+    cache_module = __import__(cache_module_name, {}, {}, cache_path[-1])
+    cacher = getattr(cache_module, cache_path[-1])
+    return cacher
+
+

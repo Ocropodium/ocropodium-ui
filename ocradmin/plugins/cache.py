@@ -114,7 +114,7 @@ class MongoDBCacher(PersistantFileCacher):
         self._db.drop_collection("fs.chunks")
 
 
-class DziFileCacher(MongoDBCacher):
+class DziFileCacher(PersistantFileCacher):
     """
     Write a DZI after having written a PNG.
     """
