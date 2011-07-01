@@ -99,7 +99,7 @@ class ViewsTest(TestCase):
                 content["status"], "Status field is not '%s'" % expectedstatus)
         self.assertIn("filein1", content["errors"], "'filein1' not in errors field" )
 
-    @patch("ocradmin.plugins.cache.DziFileCacher", cache.TestMockCacher)
+    @patch(settings.NODETREE_PERSISTANT_CACHER, cache.TestMockCacher)
     def _run_script(self, scriptname, expectedstatus, expectedtype, expecteddatafields):
         """
         Run a script and assert the results resemble what we expect.
