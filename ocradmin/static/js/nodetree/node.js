@@ -496,8 +496,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 self.group(),
                 trans.x + ((moveevent.pageX - dragstart.x) / scale),
                 trans.y + ((moveevent.pageY - dragstart.y) / scale),
-                1,
-                1 
+                1
             );
             self._notifyMove();
         });
