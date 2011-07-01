@@ -483,8 +483,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
             moved = true;
             SvgHelper.updateTransform(
                 self.group(),
-                trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
-                trans.y + ((moveevent.pageY - dragstart.y) / scale.y),
+                trans.x + ((moveevent.pageX - dragstart.x) / scale),
+                trans.y + ((moveevent.pageY - dragstart.y) / scale),
                 1,
                 1 
             );
