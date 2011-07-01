@@ -279,6 +279,11 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                    self._multiselect = true;
                 else if (event.which == KC_HOME)
                     self.centreTree();
+                else if (event.ctrlKey && event.which == 65) { // 'L' key                 
+                    self.selectAll(); 
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
                 else if (event.ctrlKey && event.which == 76) // 'L' key
                     self.layoutNodes(self.buildScript()); 
             });
