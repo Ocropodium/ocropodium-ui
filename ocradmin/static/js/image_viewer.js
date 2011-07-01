@@ -242,10 +242,10 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
             });
             var overlaydiv;
             var sdrect;
-            $.each(overlays, function(class, rects) {
+            $.each(overlays, function(klass, rects) {
                 for (var r in rects) {
                     overlaydiv = document.createElement("div");
-                    $(overlaydiv).addClass("viewer_highlight " + class);
+                    $(overlaydiv).addClass("viewer_highlight " + klass);
                     sdrect = self.sourceRectToSeadragon(i, rects[r][0], 
                             rects[r][1], rects[r][2], rects[r][3]);                
                     viewer.drawer.addOverlay(overlaydiv, sdrect);         
