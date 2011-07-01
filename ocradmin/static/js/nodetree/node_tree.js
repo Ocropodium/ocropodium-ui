@@ -250,8 +250,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                 self.keyZoom(event.which == 61 ? 1.5 : 0.75);
             }
         }
-        $(self.parent).bind("mousewheel.zoomcanvas", function(event) {
-            self.mouseZoom(event);
+        $(self.parent).bind("mousewheel.zoomcanvas", function(event, delta) {
+            self.mouseZoom(event, delta);
         });
         $(this.parent).bind("mousedown", function(event) {
             if (event.button == 1 || event.button == 0 && event.shiftKey && event.ctrlKey) {
@@ -691,10 +691,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this.defineGradients();
     },
 
-    reset: function() {
-        SvgHelper.updateTransform(this.group(), 0, 0, 1);
-    },               
-
     connectNodes: function(treenodes) {
         var self = this;                      
         $.each(treenodes, function(name, node) {
@@ -725,7 +721,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     },
 
     resetCanvas: function() {
-        SvgHelper.updateTransform(this.group(), 0, 0, 1, 1);
+        SvgHelper.updateTransform(this.group(), 0, 0, 1);
     },                     
 
     panContainer: function(event) {
@@ -756,26 +752,24 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this.zoomAtPoint(point, factor);
     },                 
 
-    mouseZoom: function(event) {
+    mouseZoom: function(event, delta) {
         // ensure the point under the mouse stays under
         // the mouse when zooming.
         var point = SvgHelper.mouseCoord(this.parent, event);
-        var factor = event.wheelDelta < 0 ? 0.75 : 1.5;
+        var factor = delta < 0 ? 0.75 : 1.5;
         this.zoomAtPoint(point, factor);
     },
 
     zoomAtPoint: function(point, factor) {                           
         var scale = SvgHelper.getScale(this.group());
         var trans = SvgHelper.getTranslate(this.group());
-
         var sx = scale * factor;
         if (sx < this._minzoom || sx > this._maxzoom)
             return false;
 
-        SvgHelper.updateScale(this.group(), sx, sx);
-        var shiftx = (point.x - trans.x) * (1 - factor),
-            shifty = (point.y - trans.y) * (1 - factor);
-        SvgHelper.updateTranslate(this.group(), trans.x + shiftx, trans.y + shifty);
+        var shiftx = (point.x - trans.x) * (1 - factor) + trans.x,
+            shifty = (point.y - trans.y) * (1 - factor) + trans.y;
+        SvgHelper.updateTransform(this.group(), shiftx, shifty, sx);
     },                   
 
     defineGradients: function() {                         
