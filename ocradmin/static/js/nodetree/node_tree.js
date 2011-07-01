@@ -21,6 +21,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._menu = null;
         this._menucontext = null;
         this._menutemplate = $.template($("#nodeMenuTmpl"));
+        this._minzoom = 0.1;
+        this._maxzoom = 7;
     },
 
 
@@ -771,6 +773,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         };
         
         var factor = event.wheelDelta < 0 ? 0.8 : 1.25;
+
         this.scaleContainer(factor);
         
         var scaleb = SvgHelper.getScale(this.group());
@@ -786,6 +789,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         var scale = SvgHelper.getScale(this.group());
         var cx = scale.x, cy = scale.y;
         cx *= by, cy *= by;
+        if (cx < this._minzoom || cx > this._maxzoom)
+            return;
         SvgHelper.updateScale(this.group(), cx, cy);
     },
 
