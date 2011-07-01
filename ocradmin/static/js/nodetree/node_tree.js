@@ -247,10 +247,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
 
         function nodeCmd(event) {
             if (event.which == 61 || event.which == 45) {                    
-                if (event.which == 61)
-                    self.scaleContainer(1.5);                
-                else
-                    self.scaleContainer(0.75);
+                self.keyZoom(event.which == 61 ? 1.5 : 0.75);
             }
         }
         $(self.parent).bind("mousewheel.zoomcanvas", function(event) {
@@ -259,19 +256,17 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         $(this.parent).bind("mousedown", function(event) {
             if (event.button == 1 || event.button == 0 && event.shiftKey && event.ctrlKey) {
                 self.panContainer(event);
+                event.stopPropagation();
+                event.preventDefault();
             } else if (event.button == 0) {
                 self.lassoSelect(event);    
             }                
         });
 
-        //$(document).bind("keypress.nodecmd", nodeCmd);
         $(self.parent).bind("mouseenter", function(mvevent) {
             $(document).bind("keypress.nodecmd", function(event) {
                 nodeCmd(event);
             });
-            //$(document).bind("mousemove.debug", function(event) {
-            //    self.debugMouseMove(event);
-            //});
             $(document).bind("keydown.nodecmd", function(event) {
                 if (event.which == KC_DELETE)
                     self.deleteSelected();
@@ -322,7 +317,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         // centre the tree in the viewport
         if (this._nodes.length == 0)
             return;
-
+        
         var border = 25;
         var tw = $(this.parent).width() - (2 * border),
             th = $(this.parent).height() - (2 * border);
@@ -485,7 +480,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         if (!havemeta)
             this.layoutNodes(script);
         this.callListeners("scriptLoaded");
-        this.loadState();
     },                    
 
     addNode: function(name, typedata) {                         
@@ -496,14 +490,6 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._nodes.push(node);
         node.draw(this.svg, this._group, 0, 0);
         return node;
-    },
-
-    debugMouseMove: function(event) {
-        var self = this;                        
-        var pos = SvgHelper.mouseCoord(self.parent, event);
-        var scale = SvgHelper.getScale(self.group());
-        var mult = SvgHelper.multPoints(pos, scale);
-        var div = SvgHelper.divPoints(pos, scale);
     },
 
     lassoSelect: function(event) {                             
@@ -522,8 +508,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
                             rect.width, rect.height, 0, 0, {
                         fill: "none",
                         stroke: "#000",
-                        strokeWidth: 1 / scale.x, 
-                        strokeDashArray: 2 / scale.x + "," + 2 / scale.x,
+                        strokeWidth: 1 / scale, 
+                        strokeDashArray: (2 / scale) + "," + (2 / scale),
                 });
             }
             if (lasso) {
@@ -574,18 +560,13 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     },                         
 
     relativePoint: function(point) {
-        //var scale = SvgHelper.getScale(this.group());
-        //var trans = SvgHelper.getTranslate(this.group());
-        //return {x: (point.x - trans.x) / scale.x, y: (point.y - trans.y) / scale.y};
-    
         var scale = SvgHelper.getScale(this.group());
         var trans = SvgHelper.getTranslate(this.group());
         return {
-            x: (point.x / scale.x) - trans.x,
-            y: (point.y / scale.y) - trans.y,
+            x: (point.x - trans.x) / scale,
+            y: (point.y - trans.y) / scale
         };
-                   
-    },
+    },    
 
     replaceNode: function(src, dst) {
         var outs = [];
@@ -695,10 +676,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
     },                   
 
     loadState: function() {
-        var transform = $.cookie("canvaspos");
-        if (transform) {
-            $(this.group()).attr("transform", transform);
-        }
+        //var transform = $.cookie("canvaspos");
+        //if (transform) {
+        //    $(this.group()).attr("transform", transform);
+        //}
     },
 
     drawTree: function() {
@@ -709,6 +690,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this._cablegroup = svg.group(this._group, "cables");
         this.defineGradients();
     },
+
+    reset: function() {
+        SvgHelper.updateTransform(this.group(), 0, 0, 1);
+    },               
 
     connectNodes: function(treenodes) {
         var self = this;                      
@@ -750,11 +735,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         };
         var self = this;
         var trans = SvgHelper.getTranslate(this.group());
-        var scale = SvgHelper.getScale(this.group());
         $(document).bind("mousemove.pancanvas", function(moveevent) {
             SvgHelper.updateTranslate(self.group(), 
-                trans.x + ((moveevent.pageX - dragstart.x) / scale.x),
-                trans.y + ((moveevent.pageY - dragstart.y) / scale.y)
+                trans.x + (moveevent.pageX - dragstart.x),
+                trans.y + (moveevent.pageY - dragstart.y)
             );
         });
         $(document).bind("mouseup.pancanvas", function() {
@@ -764,40 +748,35 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         });
     },
 
+    keyZoom: function(factor) {
+        var point = {
+            x: $(this.parent).width() / 2,
+            y: $(this.parent).height() / 2,
+        };
+        this.zoomAtPoint(point, factor);
+    },                 
+
     mouseZoom: function(event) {
         // ensure the point under the mouse stays under
         // the mouse when zooming.
-               
-        var self = this;         
+        var point = SvgHelper.mouseCoord(this.parent, event);
+        var factor = event.wheelDelta < 0 ? 0.75 : 1.5;
+        this.zoomAtPoint(point, factor);
+    },
+
+    zoomAtPoint: function(point, factor) {                           
         var scale = SvgHelper.getScale(this.group());
         var trans = SvgHelper.getTranslate(this.group());
-        var point = SvgHelper.mouseCoord(this.parent, event);
-        var cp = {
-            x: (point.x / scale.x) + trans.x,
-            y: (point.y / scale.y) + trans.y,
-        };
-        
-        var factor = event.wheelDelta < 0 ? 0.8 : 1.25;
 
-        this.scaleContainer(factor);
-        
-        var scaleb = SvgHelper.getScale(this.group());
-        var cp2 = {
-            x: (point.x / scaleb.x) + trans.x,
-            y: (point.y / scaleb.y) + trans.y,
-        };
-        SvgHelper.updateTranslate(this.group(), trans.x + (cp2.x - cp.x),
-                trans.y + (cp2.y - cp.y));
+        var sx = scale * factor;
+        if (sx < this._minzoom || sx > this._maxzoom)
+            return false;
+
+        SvgHelper.updateScale(this.group(), sx, sx);
+        var shiftx = (point.x - trans.x) * (1 - factor),
+            shifty = (point.y - trans.y) * (1 - factor);
+        SvgHelper.updateTranslate(this.group(), trans.x + shiftx, trans.y + shifty);
     },                   
-
-    scaleContainer: function(by) {
-        var scale = SvgHelper.getScale(this.group());
-        var cx = scale.x, cy = scale.y;
-        cx *= by, cy *= by;
-        if (cx < this._minzoom || cx > this._maxzoom)
-            return;
-        SvgHelper.updateScale(this.group(), cx, cy);
-    },
 
     defineGradients: function() {                         
         var defs = this.svg.defs(this._group);

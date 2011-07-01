@@ -13,34 +13,23 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
     translatere: /translate\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/,
     scalere: /scale\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/,
 
-    updateScale: function(element, cx, cy) {
-        var sstr = " scale("  + cx + "," + cy + ")";
-        var sattr = $(element).attr("transform");
-        if (sattr && sattr.match(this.scalere)) 
-            $(element).attr("transform", $.trim(sattr.replace(this.scalere, sstr)));
-        else if (sattr)
-            $(element).attr("transform", $.trim(sattr + sstr));
-        else
-            $(element).attr("transform", $.trim(sstr)); 
+    updateScale: function(element, scale) {
+        var trans = this.getTranslate(element);
+        this.updateTransform(element, trans.x, trans.y, scale);
     },
 
     updateTranslate: function(element, x, y) {
-        var sstr = " translate("  + (x).toFixed(2) + "," + (y).toFixed(2) + ")";
-        var sattr = $(element).attr("transform");
-        if (sattr && sattr.match(this.translatere))
-            $(element).attr("transform", $.trim(sattr.replace(this.translatere, sstr)));
-        else if (sattr)
-            $(element).attr("transform", $.trim(sattr + sstr));
-        else
-            $(element).attr("transform", $.trim(sstr)); 
+        this.updateTransform(element, x, y, this.getScale(element));
     },
 
-    updateTransform: function(element, tx, ty, sx, sy) {
+    updateTransform: function(element, tx, ty, scale) {
         // slightly more efficent method where we can just set the 
         // scale and transform outright without parsing for
         // existing values.
         // Assumes there's no rotation!
-        var str = "translate(" + tx + "," + ty + ") scale(" + sx + "," + sy + ")";
+        var str = "translate(" + (tx).toFixed(2) + ","
+                + (ty).toFixed(2) + ") scale("
+                + (scale).toFixed(2) + "," + (scale).toFixed(2) + ")";
         $(element).attr("transform", str);
         
     },                         
@@ -56,13 +45,14 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
     },
 
     getScale: function(element) {
-        var trans = {x: 1, y: 1},
-            tattr = $(element).attr("transform"),
+        // N.B: Ignore                  
+        var tattr = $(element).attr("transform"),
             tparse = tattr ? tattr.match(this.scalere) : null;
-        if (tparse) {
-            trans = {x: parseFloat(RegExp.$1), y: parseFloat(RegExp.$2)};
-        }
-        return trans;
+        if (!tparse)
+            return 1;
+        console.assert(RegExp.$1 == RegExp.$2, 
+                    "Error: mismatching scale values", RegExp.$1, RegExp.$2);
+        return parseFloat(RegExp.$1);
     },
 
     multPoints: function(p1, p2) {
@@ -97,8 +87,8 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
         while (parent && parent != stop && parent.nodeName == "g") {
             trans = this.getTranslate(parent);
             scale = this.getScale(parent);
-            abs.x -= (trans.x * scale.x);
-            abs.y -= (trans.y * scale.y);
+            abs.x -= (trans.x * scale);
+            abs.y -= (trans.y * scale);
             parent = parent.parentNode;
         }
         return abs;
@@ -113,8 +103,8 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
         while (parent && parent != stop && parent.nodeName == "g") {
             trans = this.getTranslate(parent);
             scale = this.getScale(parent);
-            abs.x += (trans.x / scale.x);
-            abs.y += (trans.y / scale.y);
+            abs.x += (trans.x / scale);
+            abs.y += (trans.y / scale);
             parent = parent.parentNode;
         }
         return abs;
