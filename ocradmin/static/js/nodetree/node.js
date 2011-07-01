@@ -37,6 +37,8 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             created: [],
         };
 
+        this._setBaseGradient(this._focussed);
+
         // dynamically set up callbacks for when this node's parameters are 
         // updates via a third party
         for (var i in this.parameters) {
@@ -270,7 +272,6 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         this._group = g;
         // draw the plugs on each node.
         var plugx = this.width / (this.arity + 1);
-        console.log("Intypes:", this.intypes);
         for (var p = 1; p <= this.arity; p++) {
             var plug = new OCRJS.Nodetree.InPlug(
                     this, this.name + "_input" + (p-1), this.intypes[p-1]);
@@ -298,8 +299,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 x + strokewidth,
                 y + strokewidth,
                 buttonwidth, this.height - (2*strokewidth), 1, 1, {
-            fill: "none",
-            stroke: "transparent",
+            fill: "url(#NodeGradient)",
+            stroke: "none",
             strokeWidth: 0,
         });
 
@@ -308,8 +309,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 x + this.width - (buttonwidth + strokewidth),
                 y + strokewidth,
                 buttonwidth, this.height - (2*strokewidth), 1, 1, {
-            fill: "none",
-            stroke: "transparent",
+            fill: "url(#NodeGradient)",
+            stroke: "none",
             strokeWidth: 0,            
         });         
         // add the dividers between button and body
@@ -352,16 +353,17 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 self._dragging = false;
                 return false;
             }
+            console.log("Got an IGNORE click");
             self.setIgnored(!self._ignored, true);
             event.stopPropagation();
             event.preventDefault();
         });
-
         $(this._viewbutton).click(function(event) {
             if (self._dragging) {
                 self._dragging = false;
                 return false;
             }
+            console.log("Got a VIEW click");
             self.setViewing(!self._viewing, true);
             event.stopPropagation();
             event.preventDefault();
@@ -377,6 +379,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 self._dragging = false;
                 return false;
             }
+            console.log("Got a rect click");
             self.callListeners("clicked", event);
             event.stopPropagation();
             event.preventDefault();
@@ -448,18 +451,22 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
     },                          
 
     _toggleIgnored: function(bool) {
-        var gradient = bool ? "url(#IgnoreGradient)" : "none";
+        var gradient = bool ? "url(#IgnoreGradient)" : this._gradient;
         this.svg.change(this._ignorebutton, {fill: gradient});        
     },
 
     _toggleViewing: function(bool) {
-        var gradient = bool ? "url(#ViewingGradient)" : "none";
+        var gradient = bool ? "url(#ViewingGradient)" : this._gradient;
         this.svg.change(this._viewbutton, {fill: gradient});        
     },
 
     _toggleFocussed: function(bool) {
-        var gradient = bool ? "url(#FocusGradient)" : "url(#NodeGradient)";
-        this.svg.change(this._rect, {fill: gradient});        
+        this._setBaseGradient(bool);                         
+        this.svg.change(this._rect, {fill: this._gradient});        
+        if (!this.isIgnored())
+            this.svg.change(this._ignorebutton, {fill: this._gradient});
+        if (!this.isViewing())
+            this.svg.change(this._viewbutton, {fill: this._gradient});
     },
 
     _toggleErrored: function(bool) {
@@ -467,7 +474,11 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         this.svg.change(this._rect, {stroke: stroke});
         this.svg.change(this._centre, {stroke: stroke});
         $(this._tooltip).text(this.getToolTip());            
-    },    
+    },
+
+    _setBaseGradient: function(focussed) {
+        this._gradient = focussed ? "url(#FocusGradient)" : "url(#NodeGradient)";
+    },                          
 
     move: function(event, element) {
         var self = this;
