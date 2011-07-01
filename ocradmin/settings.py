@@ -280,6 +280,7 @@ COMPRESS_JS = {
             "js/jquery/jquery.titlecase.js",
             "js/jquery/jquery.tmpl.js",
             "js/jquery/jquery.rightClick.js",
+            "js/jquery/jquery.mousewheel.min.js",
             "js/jquery/jquery.layout-latest.js",
         	"js/jquery/jquery.hoverIntent.min.js",
         ),
