@@ -46,6 +46,9 @@ os.environ["PATH"] = "%s:%s" % (
         os.environ.get("PATH", "")
 )
 
+#NODETREE_PERSISTANT_CACHER = "ocradmin.plugins.cache.PersistantFileCacher"
+NODETREE_PERSISTANT_CACHER = "ocradmin.plugins.cache.MongoDBCacher"
+
 ADMINS = (
 )
 

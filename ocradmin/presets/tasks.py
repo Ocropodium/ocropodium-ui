@@ -4,12 +4,14 @@ Run plugin tasks on the Celery queue
 import os
 import glob
 from celery.contrib.abortable import AbortableTask
+from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.utils import simplejson as json
 
 from ocradmin.core import utils
 from ocradmin.ocrtasks.decorators import register_handlers
 from ocradmin.plugins import ocropus_nodes, cache, types
+from ocradmin.plugins import utils as pluginutils
 
 from nodetree import node, script
 from nodetree.manager import ModuleManager
@@ -34,9 +36,15 @@ class UnhandledRunScriptTask(AbortableTask):
         Runs the convert action.
         """
         logger = self.get_logger()
-        cacher = cache.DziFileCacher(
-                path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
-                key=cachedir, logger=logger)
+        try:            
+            cachebase = pluginutils.get_cacher(settings)
+            cache.DziFileCacher.__bases__ = (cachebase,)
+            cacher = cache.DziFileCacher(
+                    path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+                    key=cachedir, logger=logger)
+        except ImportError:
+            raise ImproperlyConfigured(                    
+                    "Error importing base cache module '%s'" % settings.NODETREE_PERSISTANT_CACHER)
 
         try:
             tree = script.Script(nodelist, manager=MANAGER, 
