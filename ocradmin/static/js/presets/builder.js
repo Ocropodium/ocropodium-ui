@@ -260,9 +260,9 @@ $(function() {
             if (data.result.type == "pseg") {
                 console.log("Result:", data.result);
                 var overlays = {};
-                $.each(["lines", "paragraphs", "columns"], function(i, class) {
-                    if (data.result[class]) {
-                        overlays[class] = data.result[class];
+                $.each(["lines", "paragraphs", "columns"], function(i, klass) {
+                    if (data.result[klass]) {
+                        overlays[klass] = data.result[klass];
                     }
                 });
             }
