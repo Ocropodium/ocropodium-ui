@@ -201,7 +201,6 @@ div#node_canvas {
 }
 
 .node_param_table {
-    border-collapse: collapse;
     width: 100%;
     background-color: #FFF;
 }
