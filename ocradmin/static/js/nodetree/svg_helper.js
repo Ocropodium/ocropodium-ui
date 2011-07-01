@@ -10,8 +10,8 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
     constructor: function() {
         this.base();                 
     },
-    translatere: /translate\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/,
-    scalere: /scale\(([-\d\.]+)\s*,\s*([-\d\.]+)\)/,
+    translatere: /translate\(([-\d\.]+)(\s*,\s*([-\d\.]+))?\)/,
+    scalere: /scale\(([-\d\.]+)(\s*,\s*([-\d\.]+)\))?/,
 
     updateScale: function(element, scale) {
         var trans = this.getTranslate(element);
@@ -39,7 +39,12 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
             tattr = $(element).attr("transform"),
             tparse = tattr ? tattr.match(this.translatere) : null;
         if (tparse) {
-            trans = {x: parseInt(RegExp.$1), y: parseInt(RegExp.$2)};
+            trans = {
+                x: parseInt(tparse[1]),
+                y: tparse[3] !== undefined
+                    ? parseInt(tparse[3])
+                    : parseInt(tparse[1]),
+            };
         }
         return trans;
     },
@@ -50,9 +55,7 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
             tparse = tattr ? tattr.match(this.scalere) : null;
         if (!tparse)
             return 1;
-        console.assert(RegExp.$1 == RegExp.$2, 
-                    "Error: mismatching scale values", RegExp.$1, RegExp.$2);
-        return parseFloat(RegExp.$1);
+        return parseFloat(tparse[1]);
     },
 
     multPoints: function(p1, p2) {
