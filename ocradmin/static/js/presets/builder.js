@@ -220,7 +220,7 @@ $(function() {
         event.preventDefault();
     });        
 
-    $("#optionsform").submit(function() {
+    $("#optionsform").submit(function(event) {
         nodetree.scriptChanged();
         event.stopPropagation();
         event.preventDefault();
