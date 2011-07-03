@@ -45,7 +45,7 @@ class UnhandledRunScriptTask(AbortableTask):
         except ImportError:
             raise ImproperlyConfigured(                    
                     "Error importing base cache module '%s'" % settings.NODETREE_PERSISTANT_CACHER)
-
+        logger.debug("Using cacher: %s, Base %s", cacher, cachebase)
         try:
             tree = script.Script(nodelist, manager=MANAGER, 
                     nodekwargs=dict(logger=logger, cacher=cacher))
