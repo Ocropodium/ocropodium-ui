@@ -37,6 +37,10 @@ class BaseCacher(cache.BasicCacher):
     def clear(self):
         pass
 
+    def clear_cache(self, n):
+        pass
+
+
 
 class PersistantFileCacher(BaseCacher):
     """
@@ -87,6 +91,18 @@ class PersistantFileCacher(BaseCacher):
     def clear(self):
         shutil.rmtree(os.path.join(self._path, self._key), True)
 
+    def clear_cache(self, n):
+        if self.has_cache(n):
+            path = self.get_path(n)
+            fpath = os.path.join(path, n.get_file_name())
+            os.unlink(fpath)
+            try:
+                os.rmdir(path)
+            except OSError, (errno, strerr):
+                if errno != 39:
+                    raise
+
+
 
 class MongoDBCacher(PersistantFileCacher):
     """
@@ -109,6 +125,13 @@ class MongoDBCacher(PersistantFileCacher):
     def has_cache(self, n):
         return self._fs.exists(filename=os.path.join(self.get_path(n), n.get_file_name()))
 
+    def clear_cache(self, n):
+        if self.has_cache(n):
+            path = self.get_path(n)
+            filepath = os.path.join(path, n.get_file_name())
+            gridout = self._fs.get_last_version(filepath)
+            self._fs.delete(gridout._id)
+
     def clear(self):
         self._db.drop_collection("fs.files")
         self._db.drop_collection("fs.chunks")
@@ -129,6 +152,20 @@ class DziFileCacher(PersistantFileCacher):
                     tile_overlap=2, tile_format="png",
                     image_quality=1, resize_filter="nearest")
             creator.create(fh, "%s.dzi" % os.path.splitext(filepath)[0])
+
+    def clear_cache(self, n):
+        super(DziFileCacher, self).clear_cache(n)                    
+        if self.has_cache(n):
+            path = self.get_path(n)
+            fpath = os.path.join(path, n.get_file_name())
+            if fpath.endswith(".png"):
+                dzipath = "%s.dzi" % os.path.splitext(filepath)[0]
+                os.unlink(fpath)
+                try:
+                    os.rmdir(path)
+                except OSError, (errno, strerr):
+                    if errno != 39:
+                        raise
 
     def clear(self):
         super(DziFileCacher, self).clear()
