@@ -178,6 +178,27 @@ $(function() {
         event.preventDefault();
         event.stopPropagation();
     });
+    $("#clear_node_cache").click(function(event) {
+        resultcache = {};
+        $.ajax({
+            url: "/presets/clear_node_cache/",
+            data: {
+                node: nodetree.getEvalNode(),
+                script: JSON.stringify(nodetree.buildScript()),
+            },
+            type: "POST",            
+            dataType: "JSON",
+            error: OCRJS.ajaxErrorHandler,
+            success: function(data) {
+                if (data && data.ok)
+                    alert("Cache cleared");
+                else
+                    console.error("Unexpect result on cache clear", data);
+            },
+        });
+        event.preventDefault();
+        event.stopPropagation();
+    });
     $("#save_task_preset").click(function(event) {
         $("#task_update_script").val(
            JSON.stringify(nodetree.buildScript(), null, '\t'));
