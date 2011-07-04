@@ -3,12 +3,15 @@ OCR-specific nodetree cacher classes.
 """
 import os
 import shutil
+from contextlib import closing, contextmanager
 
 from nodetree import cache
 from ocradmin.vendor import deepzoom
 import hashlib
 import bencode
 
+from pymongo import Connection
+import gridfs
 
 class UnsupportedCacheTypeError(StandardError):
     pass
@@ -54,33 +57,37 @@ class PersistantFileCacher(BaseCacher):
         """
         readpath = os.path.join(path, node.get_file_name())
         self.logger.debug("Reading %s cache: %s", self.cachetype, readpath)
-        fh = self.get_read_handle(readpath)
-        data = node.reader(fh)
-        try:
-            fh.close()
-        except AttributeError:
-            pass
-        return data
+        with self.get_read_handle(readpath) as fh:
+            return node.reader(fh)
 
     def write_node_data(self, node, path, data):
         filepath = os.path.join(path, node.get_file_name())
         self.logger.info("Writing %s cache: %s", self.cachetype, filepath)
-        fh = self.get_write_handle(filepath)
-        node.writer(fh, data)
-        fh.close()
+        with self.get_write_handle(filepath) as fh:
+            node.writer(fh, data)
 
     def get_cache(self, n):
         path = self.get_path(n)
         if os.path.exists(path):
             return self.read_node_data(n, path)
-    
-    def get_read_handle(self, readpath):
-        return open(readpath, "rb")
 
+    @contextmanager
+    def get_read_handle(self, readpath):
+        try:
+            h = open(readpath, "rb")
+            yield h
+        finally:
+            h.close()
+
+    @contextmanager
     def get_write_handle(self, filepath):
         if not os.path.exists(path):
             os.makedirs(path, 0777)
-        return open(filepath, "wb")
+        try:
+            h = open(filepath, "wb")
+            yield h
+        finally:
+            h.close()
 
     def set_cache(self, n, data):
         self.write_node_data(n, self.get_path(n), data)
@@ -103,7 +110,6 @@ class PersistantFileCacher(BaseCacher):
                     raise
 
 
-
 class MongoDBCacher(PersistantFileCacher):
     """
     Write data to MongoDB instead of the FS.
@@ -111,16 +117,23 @@ class MongoDBCacher(PersistantFileCacher):
     cachetype = "MongoDB"
     def __init__(self, *args, **kwargs):
         super(MongoDBCacher, self).__init__(*args, **kwargs)
-        from pymongo import Connection
-        import gridfs
         self._db = getattr(Connection(), self._key)
         self._fs = gridfs.GridFS(self._db)
 
+    @contextmanager
     def get_read_handle(self, readpath):
-        return self._fs.get_last_version(filename=readpath)
+        try:
+            yield self._fs.get_last_version(filename=readpath)
+        finally:
+            pass
 
+    @contextmanager
     def get_write_handle(self, filepath):
-        return self._fs.new_file(filename=filepath)
+        try:
+            h = self._fs.new_file(filename=filepath)
+            yield h
+        finally:
+            h.close()
 
     def has_cache(self, n):
         return self._fs.exists(filename=os.path.join(self.get_path(n), n.get_file_name()))
@@ -144,8 +157,9 @@ class DziFileCacher(PersistantFileCacher):
     def write_node_data(self, node, path, data):
         super(DziFileCacher, self).write_node_data(node, path, data)
         filepath = os.path.join(path, node.get_file_name())
-        fh = self.get_read_handle(filepath)
-        if filepath.endswith(".png"):
+        if not filepath.endswith(".png"):
+            return
+        with closing(self.get_read_handle(filepath)) as fh:
             if not os.path.exists(path):
                 os.makedirs(path)
             creator = deepzoom.ImageCreator(tile_size=512,
