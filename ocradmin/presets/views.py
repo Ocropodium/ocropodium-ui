@@ -280,3 +280,22 @@ def clear_cache(request):
     return HttpResponse(json.dumps({"ok": True}), 
             mimetype="application/json")
 
+
+def clear_node_cache(request):    
+    """
+    Clear the preset cache for a single node.
+    """
+    evalnode = request.POST.get("node")
+    jsondata = request.POST.get("script")
+    nodes = json.loads(jsondata)
+    tree = script.Script(nodes, manager=MANAGER)
+    node = tree.get_node(evalnode)
+    cacheclass = pluginutils.get_dzi_cacher(settings)
+    cacher = cacheclass(
+            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+            key=_cache_name(request))
+    cacher.clear_cache(node)
+    return HttpResponse(json.dumps({"ok": True}), 
+            mimetype="application/json")
+
+
