@@ -36,16 +36,11 @@ class UnhandledRunScriptTask(AbortableTask):
         Runs the convert action.
         """
         logger = self.get_logger()
-        try:            
-            cachebase = pluginutils.get_cacher(settings)
-            cache.DziFileCacher.__bases__ = (cachebase,)
-            cacher = cache.DziFileCacher(
-                    path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
-                    key=cachedir, logger=logger)
-        except ImportError:
-            raise ImproperlyConfigured(                    
-                    "Error importing base cache module '%s'" % settings.NODETREE_PERSISTANT_CACHER)
-        logger.debug("Using cacher: %s, Base %s", cacher, cachebase)
+        cacheclass = pluginutils.get_dzi_cacher(settings)
+        cacher = cacheclass(
+                path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+                key=cachedir, logger=logger)
+        logger.debug("Using cacher: %s, Bases %s", cacher, cacheclass.__bases__)
         try:
             tree = script.Script(nodelist, manager=MANAGER, 
                     nodekwargs=dict(logger=logger, cacher=cacher))

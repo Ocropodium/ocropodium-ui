@@ -15,6 +15,7 @@ from ocradmin.core import generic_views as gv
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.plugins import graph, cache
+from ocradmin.plugins import utils as pluginutils
 from ocradmin.presets.models import Preset
 
 from nodetree import script, node
@@ -259,17 +260,20 @@ def _flatten_result(result):
     else:
         return result
 
+
 def _cache_name(request):
     """
     Name for a preset cache.
     """
     return "cache_%s" % request.user.username
 
+
 def clear_cache(request):
     """
     Clear a preset data cache.
     """
-    cacher = cache.DziFileCacher(
+    cacheclass = pluginutils.get_dzi_cacher(settings)
+    cacher = cacheclass(
             path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
             key=_cache_name(request))
     cacher.clear()

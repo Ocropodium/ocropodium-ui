@@ -85,7 +85,7 @@ class PersistantFileCacher(BaseCacher):
         return os.path.exists(os.path.join(self.get_path(n), n.get_file_name()))
 
     def clear(self):
-        shutil.rmtree(os.path.join(self._path, self._key))
+        shutil.rmtree(os.path.join(self._path, self._key), True)
 
 
 class MongoDBCacher(PersistantFileCacher):
