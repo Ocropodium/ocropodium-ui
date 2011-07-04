@@ -11,6 +11,7 @@ var hocrviewer = null;
 var reshandler = null;
 var presetmanager = null;
 var guimanager = null;
+var resultcache = {};
 
 function saveState() {
     presetmanager.saveState();
@@ -232,7 +233,6 @@ $(function() {
         event.preventDefault();
     });        
 
-    var resultcache = {};
     function handleResult(nodename, data, cached) {
         console.log("Data:", data);
         if (data.result.type == "error") {
