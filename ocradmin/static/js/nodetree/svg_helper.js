@@ -40,10 +40,10 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
             tparse = tattr ? tattr.match(this.translatere) : null;
         if (tparse) {
             trans = {
-                x: parseInt(tparse[1]),
+                x: parseFloat(tparse[1]),
                 y: tparse[3] !== undefined
-                    ? parseInt(tparse[3])
-                    : parseInt(tparse[1]),
+                    ? parseFloat(tparse[3])
+                    : parseFloat(tparse[1]),
             };
         }
         return trans;
