@@ -59,8 +59,6 @@ class PersistantFileCacher(BaseCacher):
         return data
 
     def write_node_data(self, node, path, data):
-        if not os.path.exists(path):
-            os.makedirs(path, 0777)
         filepath = os.path.join(path, node.get_file_name())
         self.logger.info("Writing %s cache: %s", self.cachetype, filepath)
         fh = self.get_write_handle(filepath)
@@ -76,6 +74,8 @@ class PersistantFileCacher(BaseCacher):
         return open(readpath, "rb")
 
     def get_write_handle(self, filepath):
+        if not os.path.exists(path):
+            os.makedirs(path, 0777)
         return open(filepath, "wb")
 
     def set_cache(self, n, data):
@@ -122,9 +122,9 @@ class DziFileCacher(PersistantFileCacher):
         super(DziFileCacher, self).write_node_data(node, path, data)
         filepath = os.path.join(path, node.get_file_name())
         fh = self.get_read_handle(filepath)
-        if not os.path.exists(path):
-            os.makedirs(path)
         if filepath.endswith(".png"):
+            if not os.path.exists(path):
+                os.makedirs(path)
             creator = deepzoom.ImageCreator(tile_size=512,
                     tile_overlap=2, tile_format="png",
                     image_quality=1, resize_filter="nearest")
