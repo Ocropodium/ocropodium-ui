@@ -92,6 +92,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                     self._nodetree.buildScript(), function(data) {
                         self.setCurrentOpenPreset(self._opened, name, data, false);
                     });
+                $("#preset_unsaved").hide();
             } else {
                 self.showNewPresetDialog();
             }
@@ -152,8 +153,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     },                         
 
     setCurrentOpenPreset: function(slug, name, data, reload) {
-        console.log("Setting current:", this._nodetree._nodedata);
-        console.log("Set current open script", slug, name, data);                              
         this._opened = slug;                              
         this._openedhash = bencode(data);
         if (reload) {        
@@ -209,6 +208,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 self.setCurrentOpenPreset(slug, item.text(), data, true);
                 self._dialog.dialog("close");
                 self._continueaction = null;
+                $("#preset_unsaved").hide();
             }, OCRJS.ajaxErrorHandler);
             event.preventDefault();
             event.stopPropagation();
