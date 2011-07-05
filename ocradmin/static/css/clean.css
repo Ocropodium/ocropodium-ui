@@ -321,3 +321,11 @@ a.button:hover {
 .appmenu.dropdown {
     width: auto;
 }
+
+/* HACK! For some reason Jquery UI buttons have a 2px top margin
+ * for reasons as-yet undetermined.  Make sure buttonsets match and
+ * try not to forgot about this when it comes back to bite us.
+ */
+span.ui-buttonset {
+    margin-top: 2px;
+}
