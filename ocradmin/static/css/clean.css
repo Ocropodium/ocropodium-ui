@@ -348,7 +348,7 @@ span.ui-buttonset {
 }
 
 #status_message2 {
-    /*visibility: hidden;    */
+    visibility: hidden;
 }
 
 #status_bar_progress {

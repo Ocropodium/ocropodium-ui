@@ -24,6 +24,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             openDialogOpen: [],
             openDialogClose: [],
             openPreset: [],
+            newPreset: [],
         };
 
         this._opened = null;
@@ -123,7 +124,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 this.showNewPresetDialog();
             return;
         }
-
+        this.callListeners("newPreset");
         this._nodetree.clearScript();
         this._opened = this._openedhash = null;
         this._continueaction = null;
@@ -205,6 +206,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             var item =  self._dialog.find(".preset_item.ui-selected").first();
             var slug = item.data("slug");
             self.openPreset(slug, function(data) {
+                self.callListeners("openPreset");
                 self.setCurrentOpenPreset(slug, item.text(), data, true);
                 self._dialog.dialog("close");
                 self._continueaction = null;

@@ -352,10 +352,22 @@ $(function() {
 
     statusbar.addListeners({
         cancel: function() {
-            if (reshandler.isPending()) {
-                reshandler.abort();
-            }
+            reshandler.abort();
         },
+    });
+
+    presetmanager.addListeners({
+        openPreset: function() {
+            reshandler.abort();
+            statusbar.setWorking(false);
+        },
+        newPreset: function() {
+            reshandler.abort();
+            statusbar.setWorking(false);
+            textviewer.clearData();
+            hocrviewer.clearData();
+            sdviewer.close();
+        },    
     });
 
     // Set up events
