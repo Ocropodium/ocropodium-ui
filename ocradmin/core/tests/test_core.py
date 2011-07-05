@@ -57,11 +57,11 @@ class CoreTest(TestCase):
 
     def test_numpy(self):
         """
-        Make sure numpy >= 1.5 is available.
+        Make sure numpy >= 1.4 is available.
         """
         from numpy import version        
         version = [int(v) for v in version.version.split(".")]
-        self.assertGreaterEqual(version[1], 5)
+        self.assertGreaterEqual(version[1], 4)
 
     def test_ocrolib(self):
         """
