@@ -27,9 +27,9 @@ OCRJS.Nodetree.SvgHelper = OCRJS.OcrBase.extend({
         // scale and transform outright without parsing for
         // existing values.
         // Assumes there's no rotation!
-        var str = "translate(" + (tx).toFixed(2) + ","
-                + (ty).toFixed(2) + ") scale("
-                + (scale).toFixed(2) + "," + (scale).toFixed(2) + ")";
+        var str = "translate(" + (parseFloat(tx)).toFixed(2) + ","
+                + (parseFloat(ty)).toFixed(2) + ") scale("
+                + (parseFloat(scale)).toFixed(2) + "," + (parseFloat(scale)).toFixed(2) + ")";
         $(element).attr("transform", str);
         
     },                         
