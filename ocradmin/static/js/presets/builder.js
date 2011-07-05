@@ -342,6 +342,9 @@ $(function() {
             presetmanager.checkForChanges();
             runScript();
         },
+        nodeMoved: function(what) {
+            presetmanager.checkForChanges();
+        },
         nodeFocussed: function(node) {
             if (!node)
                 guimanager.tearDownGui();

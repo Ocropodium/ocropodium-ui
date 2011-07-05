@@ -13,6 +13,7 @@ OCRJS.Nodetree.NodeList = OCRJS.OcrBaseWidget.extend({
             scriptChanged: [],
             scriptLoaded: [],
             scriptCleared: [],
+            nodeMoved: [],
             nodeViewing: [],
             nodeFocussed: [],
             ready: [],

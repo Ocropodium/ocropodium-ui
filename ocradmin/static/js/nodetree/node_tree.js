@@ -86,6 +86,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             },
             dropped: function() {
                 node.removeListeners("moved.dragmulti");
+                self.callListeners("nodeMoved", node);
             },
             deleted: function() {
                 console.log("Deleted node:", node.name);
