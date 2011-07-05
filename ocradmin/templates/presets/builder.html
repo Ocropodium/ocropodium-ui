@@ -73,46 +73,28 @@
         <!-- NB. This is lower down in the DOM than the parameters, despite
          being positioned above.  It is so the menu overlaps the params
          where necessary -->
-        <div class="ui-layout-north" id="script_toolbar_container">
+        <div class="ui-layout-north toolbar_container" id="script_toolbar_container">
             <div id="preset_toolbar_header" class="ui-widget-header ui-corner-all ui-layout-header">Preset Editor -
                 <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved">*</span>
             </div>
-            <div id="script_menu" class="appmenu">
-                <ul class="top">
-                    <li>
-                        <h3>File</h3>
-                        <ul style="display:none">
-                            <li><a href="#" id="new_script">New...</a></li>
-                            <li><a href="#" id="open_script">Open Script</a></li>
-                            <li><a href="#" id="save_script">Save</a></li>
-                            <li><a href="#" id="save_script_as">Save as...</a></li>
-                            <li><a href="#" id="download_script">Export</a></li>
-                            <li><a href="#" id="close_script">Close</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="top">
-                    <li>
-                        <h3>Preset</h3>
-                        <ul style="display: none">
-                            <li><a href="#">Refresh</a></li>
-                            <li class="separator"><hr /></li>
-                            <li><a href="#" id="layout_tree">Layout Tree</a></li>
-                            <li><a href="#" id="focus_tree">Focus Tree</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="top">
-                    <li>
-                        <h3>Help</h3>
-                        <ul style="display: none">
-                            <li><a href="/presets/help">Documentation</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div> 
             <div id="script_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
                 <span class="buttons_left">
+                    <div class="appmenu dropdown">
+                        <ul class="top">
+                            <li>
+                                <a id="show_file_menu" class="ui-helper-clearfix">Hello</a>
+                                <ul id="file_menu" style="display:none">
+                                    <li><a href="#" id="new_script">New...</a></li>
+                                    <li><a href="#" id="open_script">Open Script</a></li>
+                                    <li><a href="#" id="save_script">Save</a></li>
+                                    <li><a href="#" id="save_script_as">Save as...</a></li>
+                                    <li><a href="#" id="download_script">Export</a></li>
+                                    <li><a href="#" id="close_script">Close</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <span>&nbsp;&nbsp;&nbsp;</span>
                     <button id="stop_refresh">Rerun</button>
                     <button id="focus_script">Home</button>
                     <button id="layout_nodes">Cleanup Node Layout</button>

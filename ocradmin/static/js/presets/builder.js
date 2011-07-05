@@ -27,6 +27,13 @@ function loadState() {
 $(function() {
 
     // script builder buttons
+    $("#show_file_menu").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-document",
+            secondary: "ui-icon-carat-1-s",
+        }        
+    });
     $("#stop_refresh").button({
         text: false,
         icons: {
@@ -246,6 +253,12 @@ $(function() {
         }
         event.stopPropagation();
         event.preventDefault();
+    });        
+
+    $("#show_file_menu").click(function() {
+//        $("#file_menu").toggle();
+//        event.stopPropagation();
+//        event.preventDefault();
     });        
 
     $("#optionsform").submit(function(event) {

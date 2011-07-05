@@ -41,9 +41,13 @@ div.clear {
 }
 
 /* this is necessary so the dropdowns overlap the content */
-#menucontainer, #script_toolbar_container {
+#menucontainer {
     overflow: visible;
     z-index:500;
+}
+
+.toolbar_container {
+    overflow: visible;
 }
 
 #sidebar {
@@ -278,7 +282,7 @@ a.button:hover {
     padding: 0.4em;
 }
 
-.viewer_toolbar * {
+.viewer_toolbar span, .viewer_toolbar button, .viewer_toolbar input, .viewer_toolbar label {
     float: left;
 }
 
@@ -314,3 +318,6 @@ a.button:hover {
     padding: 0.2em !important;
 }
 
+.appmenu.dropdown {
+    width: auto;
+}
