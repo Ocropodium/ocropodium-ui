@@ -3,7 +3,7 @@ OCR-specific nodetree cacher classes.
 """
 import os
 import shutil
-from contextlib import closing, contextmanager
+from contextlib import contextmanager
 
 from nodetree import cache
 from ocradmin.vendor import deepzoom
@@ -159,7 +159,7 @@ class DziFileCacher(PersistantFileCacher):
         filepath = os.path.join(path, node.get_file_name())
         if not filepath.endswith(".png"):
             return
-        with closing(self.get_read_handle(filepath)) as fh:
+        with self.get_read_handle(filepath) as fh:
             if not os.path.exists(path):
                 os.makedirs(path)
             creator = deepzoom.ImageCreator(tile_size=512,
