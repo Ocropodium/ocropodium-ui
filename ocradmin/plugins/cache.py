@@ -63,12 +63,13 @@ class PersistantFileCacher(BaseCacher):
     def write_node_data(self, node, path, data):
         filepath = os.path.join(path, node.get_file_name())
         self.logger.info("Writing %s cache: %s", self.cachetype, filepath)
-        with self.get_write_handle(filepath) as fh:
-            node.writer(fh, data)
+        if data is not None:
+            with self.get_write_handle(filepath) as fh:
+                node.writer(fh, data)
 
     def get_cache(self, n):
         path = self.get_path(n)
-        if os.path.exists(path):
+        if self.has_cache(n):
             return self.read_node_data(n, path)
 
     @contextmanager
@@ -81,8 +82,8 @@ class PersistantFileCacher(BaseCacher):
 
     @contextmanager
     def get_write_handle(self, filepath):
-        if not os.path.exists(path):
-            os.makedirs(path, 0777)
+        if not os.path.exists(os.path.dirname(filepath)):
+            os.makedirs(os.path.dirname(filepath), 0777)
         try:
             h = open(filepath, "wb")
             yield h
@@ -123,7 +124,7 @@ class MongoDBCacher(PersistantFileCacher):
     @contextmanager
     def get_read_handle(self, readpath):
         try:
-            yield self._fs.get_last_version(filename=readpath)
+            yield self._fs.get_last_version(readpath)
         finally:
             pass
 
