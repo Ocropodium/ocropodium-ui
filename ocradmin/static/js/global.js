@@ -23,6 +23,12 @@ $(function() {
             slidable: false,
             spacing_open: 0, 
         },
+        south: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0, 
+        },
         east: {
             size: 400,
         }        
