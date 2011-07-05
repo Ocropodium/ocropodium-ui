@@ -256,12 +256,6 @@ $(function() {
         event.preventDefault();
     });        
 
-    $("#show_file_menu").click(function() {
-//        $("#file_menu").toggle();
-//        event.stopPropagation();
-//        event.preventDefault();
-    });        
-
     $("#optionsform").submit(function(event) {
         nodetree.scriptChanged();
         event.stopPropagation();
@@ -403,23 +397,6 @@ $(function() {
             loadState();
         },                   
     });
-
-    //var iconstates = ["ui-icon-arrowrefresh-1-w", "ui-icon-arrowrefresh-1-n",
-    //        "ui-icon-arrowrefresh-1-e", "ui-icon-arrowrefresh-1-s"];
-    //var refindex = 0;
-    //var reftimer = null;
-    //function showPending() {
-    //    clearTimeout(reftimer);
-    //    reftimer = setTimeout(function() {            
-    //        $("#stop_refresh").button("option", "icons", {
-    //            primary: iconstates[refindex],
-    //        });
-    //        refindex++;
-    //        if (refindex >= iconstates.length)
-    //            refindex = 0;
-    //        showPending(); 
-    //    }, 100);
-    //}    
 
     reshandler.addListeners({
         resultPending: function() {
