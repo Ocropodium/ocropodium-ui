@@ -69,7 +69,7 @@
 <div class="tl_container ui-layout-center ui-widget ui-tabs ui-corner-bottom">
     <div class="task_list ui-tabs-nav ui-helper-reset ui-helper-clearfix" style="margin-right: 0px; ">
         {% for i in batch.task_count|get_range %}
-        <div class="batch_task empty" style="" data-index="{{i}}" href="#">
+        <div class="batch_task empty ui-helper-clearfix" style="" data-index="{{i}}" href="#">
             <span class="page_name">Loading... {{i}}</span>               
             <div class="batch_controls_right">
                 <div class="progressbar_container">
