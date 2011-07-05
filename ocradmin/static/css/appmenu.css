@@ -13,20 +13,16 @@
     vertical-align: middle;
     background-color: #F0F0F0;
     text-align: left;
-    background: -webkit-gradient(
-        linear,
-        left bottom,
-        left top,
-        color-stop(0.75, rgb(250,250,250)),
-        color-stop(0.25, rgb(240,240,240))
-    );
-    background: -moz-linear-gradient(
-        center bottom,
-        rgb(240,240,240) 25%,
-        rgb(250,250,250) 75%
-    );
     clear: both;
     z-index:400;
+    background: #fafafa;
+    background: -moz-linear-gradient(top, #fafafa 0%, #fafafa 25%, #f0f0f0 75%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fafafa), color-stop(25%,#fafafa), color-stop(75%,#f0f0f0));
+    background: -webkit-linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);
+    background: -o-linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);
+    background: -ms-linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#f0f0f0',GradientType=0 );
+    background: linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);    
 }
 
 .appmenu ul {

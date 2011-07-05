@@ -329,3 +329,78 @@ a.button:hover {
 span.ui-buttonset {
     margin-top: 2px;
 }
+
+#status_bar {
+    height: 30px;
+    color: #f0f0f0;
+    background: #f0f0f0;
+    overflow: hidden;
+}
+
+#status_bar .status_bar_left {
+    padding: 5px;
+    float: left;
+}
+
+#status_bar .status_bar_right {
+    padding: 5px;
+    float: right;
+}
+
+#status_message2 {
+    /*visibility: hidden;    */
+}
+
+#status_bar_progress {
+    -moz-border-radius: 2px;
+    border: 1px solid #D0D0D0;
+}
+
+#progress_bar_progress {
+    width: 220px;
+    border-radius: 2px;
+    float: right;
+    background-repeat: no-repeat;
+    background-image: url("/static/progbar.gif");
+    height: 20px;
+    opacity: 0.7;
+    
+}
+
+#progress_bar_cancel {
+    border: red;
+    float: right;
+    border-radius: 5px;
+    font-size: 0.9em;
+    cursor: pointer;
+    margin-top: 3px;
+    width: 12px;
+    opacity: 0.6;    
+
+    color: #ff3019;
+    background: #ff3019;
+    background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ff3019), color-stop(100%,#cf0404));
+    background: -webkit-linear-gradient(top, #ff3019 0%,#cf0404 100%);
+    background: -o-linear-gradient(top, #ff3019 0%,#cf0404 100%);
+    background: -ms-linear-gradient(top, #ff3019 0%,#cf0404 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff3019', endColorstr='#cf0404',GradientType=0 );
+    background: linear-gradient(top, #ff3019 0%,#cf0404 100%);   
+}
+
+#progress_bar_cancel.hover {
+    color: #ff6453;
+    background: #ff6453;
+    background: -moz-linear-gradient(top, #ff6453 0%, #ff1f1f 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ff6453), color-stop(100%,#ff1f1f));
+    background: -webkit-linear-gradient(top, #ff6453 0%,#ff1f1f 100%);
+    background: -o-linear-gradient(top, #ff6453 0%,#ff1f1f 100%);
+    background: -ms-linear-gradient(top, #ff6453 0%,#ff1f1f 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff6453', endColorstr='#ff1f1f',GradientType=0 );
+    background: linear-gradient(top, #ff6453 0%,#ff1f1f 100%);
+}
+
+#status_bar_cancel {
+    float: right;
+}
+

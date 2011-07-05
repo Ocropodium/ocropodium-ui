@@ -30,6 +30,17 @@
             {% include "includes/appmenu.html" %}
             <div class="clear"></div>
         </div>
+        <div id="status_bar" class="ui-layout-south ui-helper-clearfix">
+            <div id="status_message1" class="status_bar_left">
+                Welcome to OWP
+            </div>
+            <div id="status_message2" class="status_bar_right">
+                <span id="status_bar_progress">
+                    <span title="Abort" id="progress_bar_cancel" class="">.</span>
+                    <span id="progress_bar_progress">0%</span>
+                </span>
+            </div>
+        </div>
     </div>
 </body>
 </html>

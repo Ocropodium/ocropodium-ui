@@ -12,6 +12,7 @@ var reshandler = null;
 var presetmanager = null;
 var guimanager = null;
 var resultcache = {};
+var statusbar = null;
 
 function saveState() {
     presetmanager.saveState();
@@ -340,6 +341,7 @@ $(function() {
         numBuffers: 2,
         dashboard: false,
     });
+    statusbar = new OCRJS.StatusBar($("#status_bar").get(0));    
     guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
     hocrviewer = new OCRJS.HocrViewer($("#hocrviewer_1").get(0));
     textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
@@ -347,6 +349,14 @@ $(function() {
     formatter = new OCRJS.LineFormatter();
     nodetree = new OCRJS.Nodetree.NodeTree($("#node_canvas"));
     presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
+
+    statusbar.addListeners({
+        cancel: function() {
+            if (reshandler.isPending()) {
+                reshandler.abort();
+            }
+        },
+    });
 
     // Set up events
     nodetree.addListeners({
@@ -409,6 +419,7 @@ $(function() {
             });
             //showPending();
             nodetree.clearErrors();
+            statusbar.setWorking(true);
         },
         validationErrors: function(nodeerrors) {
             //clearTimeout(reftimer);
@@ -433,6 +444,7 @@ $(function() {
                     primary: "ui-icon-refresh",    
                 }
             });
+            statusbar.setWorking(false);
             if (data.status != "ABORT" && data.status != "FAILURE")
                handleResult(node, data, false);
         }        
