@@ -308,6 +308,7 @@ COMPRESS_JS = {
             "js/projectbrowser.js",
             "js/appmenu.js",
             "js/global.js",
+            "js/status_bar.js",
         ),
         "output_filename": "js/global_compress.js",
     },
