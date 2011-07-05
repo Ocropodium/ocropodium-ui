@@ -43,10 +43,9 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             opened: this._opened,
             openedhash: this._openedhash,
             name: $("#current_preset_name").text(),
+            script: this._nodetree.buildScript(),
+            unsaved: this.hasChanged(),
         };
-        if (this.hasChanged()) {
-            presetdata.script = this._nodetree.buildScript();
-        }
         $.cookie("presetdata", JSON.stringify(presetdata));
     },
 
@@ -61,32 +60,21 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 dataType: "JSON",                
                 error: OCRJS.ajaxErrorHandler,
                 success: function(data) {
-                    console.log("OPENING TASK SCRIPT:", data);                    
                     self.setCurrentOpenPreset(
                         "edittask" + taskpk, 
                         $("#edit_task_batch").val() + ": " + $("#edit_task_page").val(),
                         data, true);
                 },                
             });
-
         } else {
-
             var cookie = $.cookie("presetdata");
             if (!cookie)
                 return;
             var presetdata = JSON.parse(cookie);
-            if (presetdata.opened && !presetdata.script) {
-                this.openPreset(presetdata.opened, function(data) {
-                    self.setCurrentOpenPreset(presetdata.opened, presetdata.name, data, true);
-                    self._openedhash = presetdata.openedhash;
-                    self._dialog.dialog("close");
-                }, OCRJS.ajaxErrorHandler);
-            } else if (presetdata.opened && presetdata.script) {
-                self.setCurrentOpenPreset(presetdata.opened, presetdata.name, presetdata.script, true);
-                $("#preset_unsaved").toggle(true);                         
-            } else {
-
-            }
+            this.setCurrentOpenPreset(
+                    presetdata.opened, presetdata.name, presetdata.script, true);
+            this._openedhash = presetdata.openedhash;
+            $("#preset_unsaved").toggle(this.hasChanged());                         
         }            
     },                   
 
