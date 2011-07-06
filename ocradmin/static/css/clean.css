@@ -326,8 +326,8 @@ a.button:hover {
  * for reasons as-yet undetermined.  Make sure buttonsets match and
  * try not to forgot about this when it comes back to bite us.
  */
-span.ui-buttonset {
-    margin-top: 2px;
+button.ui-button, a.ui-button {
+    margin-top: 0px;
 }
 
 #status_bar {
