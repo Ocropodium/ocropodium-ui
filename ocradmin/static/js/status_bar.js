@@ -27,7 +27,9 @@ OCRJS.StatusBar = OCRJS.OcrBase.extend({
             $(this).addClass("hover");    
         }).bind("mouseleave", function(event) {
             $(this).removeClass("hover");    
-        });            
+        });
+
+        this._right.css("visibility", "visible");        
     },
 
     setStatus: function(string) {
