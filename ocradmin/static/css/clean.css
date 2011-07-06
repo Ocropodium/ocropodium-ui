@@ -348,7 +348,7 @@ span.ui-buttonset {
 }
 
 #status_message2 {
-    visibility: hidden;
+   /* visibility: hidden;*/
 }
 
 #status_bar_progress {
@@ -357,26 +357,37 @@ span.ui-buttonset {
 }
 
 #progress_bar_progress {
-    width: 220px;
-    border-radius: 2px;
+    width: 200px;
+    border-radius: 4px;
     float: right;
+    background-color: #FBFBFB;
     background-repeat: no-repeat;
-    background-image: url("/static/progbar.gif");
-    height: 20px;
+    background-position: -10px -2px;
+    height: 12px;
     opacity: 0.7;
-    
+    border-top: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-bottom: 1px solid #FFF;
+    margin-right: 5px;
+}
+
+#progress_bar_progress.working {
+    background-image: url("/static/progbar.gif");
 }
 
 #progress_bar_cancel {
-    border: red;
+    border: 1px solid #CCC;
     float: right;
-    border-radius: 5px;
+    border-radius: 4px;
     font-size: 0.9em;
     cursor: pointer;
-    margin-top: 3px;
     width: 12px;
+    height: 12px;
     opacity: 0.6;    
+}
 
+#progress_bar_cancel.working {
     color: #ff3019;
     background: #ff3019;
     background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%);
@@ -388,7 +399,7 @@ span.ui-buttonset {
     background: linear-gradient(top, #ff3019 0%,#cf0404 100%);   
 }
 
-#progress_bar_cancel.hover {
+#progress_bar_cancel.working.hover {
     color: #ff6453;
     background: #ff6453;
     background: -moz-linear-gradient(top, #ff6453 0%, #ff1f1f 100%);
