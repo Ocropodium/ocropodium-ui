@@ -159,7 +159,8 @@ div#node_canvas {
 }
 
 .node_parameters h1 {
-    color: #D3D3D3;    
+    color: #D3D3D3;
+    padding: 5px;    
 }    
 
 .node_param_header {
