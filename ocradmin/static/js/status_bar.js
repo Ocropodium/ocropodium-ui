@@ -11,6 +11,7 @@ OCRJS.StatusBar = OCRJS.OcrBase.extend({
 
         this._left = $("#status_message1", parent);
         this._right = $("#status_message2", parent);
+        this._progress = $("#progress_bar_progress", parent);
         this._cancel = $("#progress_bar_cancel", parent);
 
         this._listeners = {
@@ -45,9 +46,7 @@ OCRJS.StatusBar = OCRJS.OcrBase.extend({
     },
 
     setWorking: function(bool) {
-        this._right.css({
-            visibility: bool ? "visible" : "hidden",
-        });
+        this._progress.add(this._cancel).toggleClass("working", bool);
     },                    
 
 });
