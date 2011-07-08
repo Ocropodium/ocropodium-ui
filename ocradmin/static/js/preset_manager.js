@@ -113,6 +113,12 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             $("#fetch_script_data").val(json);
             $("#fetch_script").submit();
         });
+
+        $("#cancel_dialog").live("click", function(event) {
+            self._dialog.dialog("close");
+            event.stopPropagation();
+            event.preventDefault();
+        });
     },
 
     newPreset: function() {
