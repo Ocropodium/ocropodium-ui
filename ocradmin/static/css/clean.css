@@ -309,12 +309,12 @@ a.button:hover {
     padding: 0.4em;
 }
  
-#viewertabs.ui-tabs {
+.ui-header-tabs {
     padding: 0px !important;
     border: none !important;
 }
 
-#viewertabs .ui-tabs-nav li a {
+.ui-header-tabs .ui-tabs-nav li a {
     padding: 0.2em !important;
 }
 
