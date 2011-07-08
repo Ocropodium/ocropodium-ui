@@ -1,0 +1,33 @@
+<div class="task_info_container" id="tabs">
+    <h3><a href="#">Basic Info</a></h3>
+    <div id="tab_1">
+        {% include "includes/generic_detail_body.html" %}
+    </div>
+    <h3><a href="#">Options</a></h3>
+    <div id="tab_2">
+        <a href="/presets/builder/{{object.pk}}/" title="Edit Task Preset">Edit Task Preset</a>
+    </div>
+    <h3><a href="#">Results</a></h3>
+    <div id="tab_3">
+        <ul class="results_list">
+            <li><a target="_blank" href="/ocr/results/{{object.task_id}}/?format=json" title="JSON Format">JSON</a></li>
+            <li><a target="_blank" href="/ocr/results/{{object.task_id}}/?format=text" title="Text Format">Plain Text</a></li>
+        </ul>
+    </div>
+    {% if object.error %}
+        <h3><a href="#">Errors</a></h3>
+        <div id="tab_4">
+            <pre>
+{{object.error}}
+
+{{object.traceback }}
+            </pre>
+        </div>
+    {% endif %}
+</div>
+
+
+
+
+
+
