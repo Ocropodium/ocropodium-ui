@@ -419,3 +419,27 @@ button.ui-button, a.ui-button {
     float: right;
 }
 
+/* New batch form -> /batch/new */
+#batch_file_list {
+    max-height: 400px;
+    min-height: 200px;
+    overflow: auto;
+    background: #FFF;
+    border: 1px solid #666;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    width: 400px;
+}
+
+
+#batchform .file_item {
+    padding: 3px;
+    color: #333;
+    cursor: pointer;    
+}
+
+#batch_file_list .odd {
+    background-color: #F2F2F2;
+}
+
+

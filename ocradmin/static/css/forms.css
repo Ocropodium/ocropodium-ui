@@ -64,7 +64,7 @@ fieldset .field_wrapper select {
 }
 
 .form_footer {
-    overflow: auto;
+    margin: 10px 5px;
 }
 
 .form_footer * {

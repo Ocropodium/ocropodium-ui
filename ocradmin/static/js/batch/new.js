@@ -67,16 +67,13 @@ $(function() {
 
     // enable the submit button if appropriate
     $("#id_name").keyup(updateButtons);
+    $("#id_preset").change(updateButtons);
 
     function updateButtons() {
-        var gotname = $.trim($("#id_name").val()).length > 0;
-        $("#submit_batch, #tabs_2_next").attr("disabled", !gotname);
-        $("#tabs").tabs(gotname ? "enable" : "disable", 1);
-
-        var gotfiles = $("#batch_file_list").children().length > 0;
-        var gotscript = $("#id_preset").val() != 0 || $.trim($("#id_script").val()
-                 != "");
-        $("#submit_batch").attr("disabled", !(gotfiles && gotscript && gotname));
+        var gotname = $.trim($("#id_name").val()).length > 0,
+            gotpreset = $("#id_preset").val() > 0,
+            gotfiles = $("#batch_file_list").children().length > 0;
+        $("#submit_batch").attr("disabled", !(gotfiles && gotpreset && gotname));
     };
 
     function stripeFileList() {
@@ -136,35 +133,21 @@ $(function() {
         var data = $.parseJSON(xhr.responseText);
         if (data.error) {
             alert("Error: " + data.error + "\n\n" + data.trace);
-            $("#dropzone").text("Drop images here...").removeClass("waiting");
+            //$("#dropzone").text("Drop images here...").removeClass("waiting");
             return;
         }
         addBatchFiles(data);
     };
 
-
-    // initialise the uploader...
-    uploader  = new OCRJS.AjaxUploader($("#dropzone").get(0), "/batch/upload_files/");
-    uploader.addListener("onXHRLoad", onXHRLoad);
-    uploader.addListener("onUploadsStarted", function(e) {
-        $("#dropzone").text("Please wait...").addClass("waiting");
-    });
-    uploader.addListener("onUploadsFinished", function(e) {
-        $("#dropzone").text("Drop images here...").removeClass("waiting"); 
-    });
-
-    // make steps into tabs
-    $(".next_tab").click(function(event) {
-        var tabid = $(this).attr("id").replace(/_next/, "_link");
-        $("#" + tabid).trigger("click");
-    });
-    $("#tabs").tabs( { disabled: [2], } );
+    // initialise the uploader... in a timeout so
+    // it places the overlay button after the page
+    // layout has been done
+    setTimeout(function() {
+        uploader  = new OCRJS.AjaxUploader($("#upload").get(0), "/batch/upload_files/");
+        uploader.addListener("onXHRLoad", onXHRLoad);
+    }, 100);
 
     // load state stored from last time
     loadState();
-
-    //pbuilder = new OCRJS.ParameterBuilder(
-    //        document.getElementById("options"));
-    //pbuilder.init();
 });
 

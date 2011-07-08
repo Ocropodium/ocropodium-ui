@@ -19,11 +19,12 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseRedirect, \
         HttpResponseServerError
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson as json
 from django.utils.encoding import smart_str
 from ocradmin.batch import utils as batchutils
+from ocradmin.core import generic_views as gv
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask, Batch
@@ -73,9 +74,11 @@ class BatchForm(forms.ModelForm):
 
     class Meta:
         model = Batch
-        exclude = ["user", "created_on", "project", "task_type"]
+        exclude = ["script", "created_on", "updated_on"]
         widgets = dict(
                 user=forms.HiddenInput(),
+                project=forms.HiddenInput(),
+                task_type=forms.HiddenInput(),
         )
 
 
@@ -85,60 +88,17 @@ def new(request):
     """
     Present a new batch form.
     """
+    tasktype = "run.batchitem"
     template = "batch/new.html" if not request.is_ajax() \
         else "batch/includes/new_form.html"
-    return render_to_response(template, _new_batch_context(request),
-            context_instance=RequestContext(request))
+    return render(request, template, _new_batch_context(request, tasktype))
 
 
-@login_required
-@project_required
-def batch_list(request):
-    """
-    List recent batches.
-    """
-    params = request.GET.copy()
-    params["project"] = request.session["project"].pk
-    context = dict(params=params)
-    if not request.is_ajax():
-        return render_to_response("batch/list.html", context,
-                context_instance=RequestContext(request))
-
-    paginator = Paginator(batch_query(params), PER_PAGE)
-    try:
-        page = int(request.GET.get('page', '1'))
-    except ValueError:
-        page = 1
-
-    try:
-        batches = paginator.page(page)
-    except (EmptyPage, InvalidPage):
-        batches = paginator.page(paginator.num_pages)
-
-    pythonserializer = serializers.get_serializer("python")()
-    serializedpage = {}
-    serializedpage["num_pages"] = paginator.num_pages
-    wanted = ("end_index", "has_next", "has_other_pages", "has_previous",
-            "next_page_number", "number",
-            "start_index", "previous_page_number")
-    for attr in wanted:
-        want = getattr(batches, attr)
-        if isinstance(want, MethodType):
-            serializedpage[attr] = want()
-        elif isinstance(want, (str, int)):
-            serializedpage[attr] = want
-    # This gets rather gnarly, see:
-    # http://code.google.com/p/wadofstuff/wiki/DjangoFullSerializers
-    serializedpage["params"] = params
-    serializedpage["object_list"] = pythonserializer.serialize(
-        batches.object_list,
-        extras=("username", "is_complete", "task_count",),
-    )
-
-    response = HttpResponse(mimetype="application/json")
-    json.dump(serializedpage, response,
-            cls=DjangoJSONEncoder, ensure_ascii=False)
-    return response
+batchlist = project_required(login_required(gv.GenericListView.as_view(
+        model=Batch,
+        page_name="OCR Batches",
+        fields=["name", "description", "user", "task_type",
+                "created_on", "tasks.count"],)))
 
 
 @login_required
@@ -153,37 +113,24 @@ def create(request):
 
     # get the subject file paths from comma seperated POST data
     paths = _get_batch_file_paths(request)
-    script = request.POST.get("script")
-    if not script and request.POST.get("preset") is not None:
-        try:
-            script = Preset.objects.get(pk=request.POST.get("preset")).data
-        except Preset.DoesNotExist:
-            print "PRESET %d not found" % request.POST.get("preset")
-            pass
-
-    form = BatchForm(request.POST)
-    if not request.method == "POST" or not form.is_valid() or not paths or not script:
-        return render_to_response("batch/new.html",
-            _new_batch_context(request),
-            context_instance=RequestContext(request))
+    preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))
+    form = BatchForm(request.POST)    
+    if not request.method == "POST" or not form.is_valid() or not paths:
+        return render(request, "batch/new.html", dict(
+            form=form, paths=paths, presets=Preset.objects.all().order_by("name"),
+        ))
 
     # create a batch db job
     # TODO: catch potential integrity error for a duplicate
     # batch name within the given project
-    batch = Batch(
-        user=request.user,
-        name=form.cleaned_data["name"],
-        description=form.cleaned_data["description"],
-        tags=form.cleaned_data["tags"],
-        task_type=taskname,
-        project=request.session["project"]
-    )
+    batch = form.instance
+    batch.script = preset.data
     batch.save()
 
     ocrtasks = []
     options = dict(loglevel=60, retries=2)
     for path in paths:
-        pagescript = script_for_page_file(script,
+        pagescript = script_for_page_file(batch.script,
                 path, request.output_path)
         tid = OcrTask.get_new_task_id()
         args = (path, pagescript, request.output_path)
@@ -504,7 +451,7 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):
     return batchsl
 
 
-def _new_batch_context(request):
+def _new_batch_context(request, tasktype):
     """
     Template variables for a new batch form.
     """
@@ -514,13 +461,9 @@ def _new_batch_context(request):
     project = request.session["project"]
     batchname = "%s - Batch %d" % (project.name,
             project.batches.count() + 1)
-    form = BatchForm(initial=dict(name=batchname, user=request.user))
-    presets = Preset.objects.all().order_by("name")
-    return dict(
-        prefix="",
-        form=form,
-        presets=presets,
-    )
+    form = BatchForm(initial=dict(name=batchname, 
+            user=request.user, project=project, task_type=tasktype))
+    return dict(form=form, presets=Preset.objects.all().order_by("name"))
 
 
 def _get_batch_file_paths(request):

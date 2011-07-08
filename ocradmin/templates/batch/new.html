@@ -10,23 +10,33 @@
     <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/file_list_widget.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/static/css/batch_widget.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
 {% endblock %}
 
 {% block content %}
-    {% include "batch/includes/new_form.html" %}
-    <div id="file_browser"></div>
+    <div class="ui-widget ui-corner-top">
+        <div class="ui-widget-header ui-corner-top ui-layout-header">New Batch</div>
+        <div class="ui-widget-content">
+            {% include "includes/messages.html" %}
+            <div id="object_form">
+
+                <form name="batchform" method="POST" action="/batch/create/" id="batchform">
+                    <div class="form_body ui-layout-content">
+                        {% include "batch/includes/new_form.html" %}
+                    </div>
+                    <div class="object_detail_footer form_footer ui-helper-clearfix">
+                        <input type="submit" disabled="disabled" id="submit_batch" value="Submit Batch" />
+                        <a href="/batch/list">Back to List</a>
+                    </div>
+                </form>
+
+                <div id="file_browser"></div>
+            </div>
+        </div>
+    </div>        
 {% endblock %}
  
 {% block sidebar %}
-    <h3>Upload New Files</h3>
-    <form id="uploadform" name="uploadoptions" action="/batch/upload_files/" method="POST" enctype="multipart/form-data">
-        <div id="dragdrop">
-            <div id="dropzone">
-                Drop images here...
-            </div>
-        </div>
-    </form>            
 {% endblock %}
 
 

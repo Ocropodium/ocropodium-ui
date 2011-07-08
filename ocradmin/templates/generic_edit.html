@@ -13,7 +13,7 @@
         <div id="object_form">
             <form id="edit_object_form" action="{{object.get_update_url}}" enctype="{{enctype}}" method="POST">
                 {% include "includes/generic_edit_body.html" %}
-                <div class="object_detail_footer form_footer">
+                <div class="object_detail_footer form_footer ui-helper-clearfix">
                     <input type="submit" value="Submit" id="submit_edit_form" />
                     <a href="{{object.get_absolute_url}}">Cancel</a>
                 </div>        
