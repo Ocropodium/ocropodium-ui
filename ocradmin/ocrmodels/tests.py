@@ -63,7 +63,7 @@ class OcrModelTest(TestCase):
         r = self.client.get("/ocrmodels/create", {}, **AJAX_HEADERS)
         self.assertEqual(r.status_code, 200)
         # make sure there's a form in the results
-        self.assertTrue(r.content.find("<form") != -1)
+        self.assertTrue(r.content.find("<fieldset") != -1)
 
     def test_create_model_ajax(self):
         """

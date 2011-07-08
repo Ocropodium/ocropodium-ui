@@ -3,8 +3,10 @@ Callbacks to run when certain celery signals are recieved in response
 to the ConvertPageTask.
 """
 
-from models import OcrTask, Transcript
+from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.transcripts.models import Transcript
 from celery.datastructures import ExceptionInfo
+
 
 def on_task_sent(**kwargs):
     """

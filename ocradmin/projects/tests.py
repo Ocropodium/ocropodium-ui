@@ -50,7 +50,7 @@ class ProjectsTest(TestCase):
         r = self.client.get("/projects/create/", {}, **AJAX_HEADERS)
         self.assertEqual(r.status_code, 200)
         # make sure there's a form in the results
-        self.assertTrue(r.content.find("<form") != -1)
+        self.assertTrue(r.content.find("<fieldset") != -1)
 
     def test_create_project_ajax(self):
         """

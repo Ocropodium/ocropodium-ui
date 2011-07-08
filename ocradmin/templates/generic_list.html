@@ -1,4 +1,5 @@
 {% extends "standard.html" %}
+{% load tagging_tags %}
 
 {% block title %} {{page_name}} {% endblock %}
 {% block headerscript %}
@@ -15,4 +16,10 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block sidebar %}
+    <h1>Tags for {{model}}</h1>
+
+
 {% endblock %}

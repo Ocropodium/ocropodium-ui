@@ -276,7 +276,11 @@ a.button:hover {
     background-color: -ms-linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f7f7f7', endColorstr='#ebebeb',GradientType=0 );
     background: linear-gradient(top, #f7f7f7 0%,#ebebeb 100%);
-}    
+}
+
+.ui-background-flat {
+    background: #e4e4e4;
+}
 
 .viewer_toolbar {
     padding: 0.4em;
@@ -309,12 +313,12 @@ a.button:hover {
     padding: 0.4em;
 }
  
-#viewertabs.ui-tabs {
+.ui-header-tabs {
     padding: 0px !important;
     border: none !important;
 }
 
-#viewertabs .ui-tabs-nav li a {
+.ui-header-tabs .ui-tabs-nav li a {
     padding: 0.2em !important;
 }
 
