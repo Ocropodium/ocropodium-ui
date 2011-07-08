@@ -1,22 +1,6 @@
-div#options {
-    /*height: 500px;*/
-}
-
-#script_toolbar {
-    /*padding: .2em .2em 0;*/
-}
-
-div#node_canvas {
+#node_canvas {
     margin: 5px;
     overflow: hidden;
-    background: #e4e4e4;
-    background: -moz-linear-gradient(left, #e4e4e4 0%, #d4d4d4 100%);
-    background: -webkit-gradient(linear, left top, right top, color-stop(0%,#e4e4e4), color-stop(100%,#d4d4d4));
-    background: -webkit-linear-gradient(left, #e4e4e4 0%,#d4d4d4 100%);
-    background: -o-linear-gradient(left, #e4e4e4 0%,#d4d4d4 100%);
-    background: -ms-linear-gradient(left, #e4e4e4 0%,#d4d4d4 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e4e4e4', endColorstr='#d4d4d4',GradientType=1 );
-    background: linear-gradient(left, #e4e4e4 0%,#d4d4d4 100%);    
 }
 
 #options .buttons_left {
