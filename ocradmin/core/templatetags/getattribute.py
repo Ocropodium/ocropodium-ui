@@ -1,4 +1,5 @@
 import re
+import types
 from django.template import Library
 from django.conf import settings
 
@@ -14,7 +15,10 @@ def getattribute(value, argstr):
     for lead in leads:
         value = getattr(value, lead)
     if hasattr(value, str(arg)):
-        return getattr(value, arg)
+        val = getattr(value, arg)
+        if isinstance(val, types.MethodType):
+            return val()
+        return val
     elif hasattr(value, 'has_key') and value.has_key(arg):
         return value[arg]
     elif numeric_test.match(str(arg)) and len(value) > int(arg):
