@@ -1,5 +1,5 @@
 //
-// Handle drag and drop page conversions
+// Create presets using the tree builder.
 //
 
 // only in global scope for dubugging purposes
@@ -231,10 +231,6 @@ $(function() {
             alert(msg);
         }
     }
-
-    $(".nodefilein").live("change", function(event) {
-        console.log("Change:", $(this).val());
-    });
 
     $("#viewertabs").tabs({
         select: function(event, ui) {
