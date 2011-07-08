@@ -1,0 +1,25 @@
+{% extends "standard.html" %}
+{% load tagging_tags %}
+
+{% block title %} {{page_name}} {% endblock %}
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block content %}
+<div class="ui-widget ui-corner-top">
+    <div class="ui-widget-header ui-corner-top ui-layout-header">{{page_name}}</div>
+    <div class="ui-widget-content">
+        {% include "includes/messages.html" %}
+        <div id="object_list">
+            {% include "includes/generic_list_body.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+    <h1>Tags for {{model}}</h1>
+
+
+{% endblock %}
