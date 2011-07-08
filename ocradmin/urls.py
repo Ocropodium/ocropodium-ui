@@ -26,6 +26,7 @@ urlpatterns = patterns('',
     (r'^projects/?', include('ocradmin.projects.urls')),
     (r'^reference_pages/?', include('ocradmin.reference_pages.urls')),
     (r'^training/?', include('ocradmin.training.urls')),
+    (r'^transcripts/?', include('ocradmin.transcripts.urls')),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
     # to INSTALLED_APPS to enable admin documentation:
