@@ -7,7 +7,7 @@
             "name": "Test Task", 
             "task_type" : "run.batchitem",
             "user": 1,
-            "preset": 1,
+            "script": "",
             "project": 1
         }
     }

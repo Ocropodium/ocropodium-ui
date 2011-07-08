@@ -28,6 +28,7 @@ class BatchTest(TestCase):
             "transcripts/fixtures/test_transcript.json",
             "ocrmodels/fixtures/test_fixtures.json",
             "projects/fixtures/test_fixtures.json",
+            "presets/fixtures/test_fixtures.json",
             "batch/fixtures/test_batch.json"]
 
     def setUp(self):
@@ -160,8 +161,10 @@ class BatchTest(TestCase):
             params = dict(
                     name="Test Batch",
                     user=self.testuser.pk,
+                    project=1,
+                    task_type="run.batchitem",
                     files=os.path.join("test-project-2", os.path.basename(TESTFILE)),
-                    script=self.script1
+                    preset=1,
             )
         r = self._get_batch_response(params, headers)
         # check the POST redirected as it should
