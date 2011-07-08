@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from tagging.fields import TagField
 
 from ocradmin.projects.models import Project
+from ocradmin.presets.models import Preset
 
 
 class Batch(models.Model):
@@ -18,6 +19,7 @@ class Batch(models.Model):
     user = models.ForeignKey(User, related_name="batches")
     name = models.CharField(max_length=255)
     project = models.ForeignKey(Project, related_name="batches")
+    script = models.TextField()
     task_type = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     tags = TagField()

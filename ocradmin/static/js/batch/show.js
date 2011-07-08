@@ -13,16 +13,16 @@ $(function() {
     //});
 
     function loadBatchList() {
-        $.ajax({
-            url: "/batch/list?order_by=-created_on",
-            data: {},
-            dataType: "json",
-            error: OCRJS.ajaxErrorHandler,
-            success: function(data) {
-                populateBatchList(data);
-                header.text("Recent Batches");
-            },
-        });
+        //$.ajax({
+        //    url: "/batch/list?order_by=-created_on",
+        //    data: {},
+        //    dataType: "json",
+        //    error: OCRJS.ajaxErrorHandler,
+        //    success: function(data) {
+        //        populateBatchList(data);
+        //        header.text("Recent Batches");
+        //    },
+        //});
     }
 
     function populateBatchList(data) {
