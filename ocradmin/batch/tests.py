@@ -25,7 +25,7 @@ SCRIPT2 = "plugins/fixtures/scripts/ocropus.json"
 class BatchTest(TestCase):
     fixtures = [
             "ocrtasks/fixtures/test_task.json",
-            "ocrtasks/fixtures/test_transcript.json",
+            "transcripts/fixtures/test_transcript.json",
             "ocrmodels/fixtures/test_fixtures.json",
             "projects/fixtures/test_fixtures.json",
             "batch/fixtures/test_batch.json"]

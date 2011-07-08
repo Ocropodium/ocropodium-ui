@@ -14,7 +14,8 @@ from django.utils import simplejson as json
 from ocradmin.core import utils as ocrutils
 from ocradmin.plugins import utils as pluginutils
 from ocradmin.core.decorators import saves_files
-from ocradmin.ocrtasks.models import OcrTask, Transcript
+from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.transcripts.models import Transcript
 from ocradmin.presets.models import Preset
 from ocradmin.core.decorators import project_required
 
