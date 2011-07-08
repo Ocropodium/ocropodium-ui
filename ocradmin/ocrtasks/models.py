@@ -189,6 +189,20 @@ class OcrTask(models.Model):
         """
         return str(uuid.uuid1())
 
+    def get_absolute_url(self):
+        """URL to view an object detail"""
+        return "/ocrtasks/detail/%d/" % self.pk
+
+    def get_delete_url(self):
+        """url to update an object detail"""
+        return "/ocrtasks/delete/%d/" % self.pk
+
+    @classmethod
+    def get_list_url(cls):
+        """URL to view the object list"""
+        return "/ocrtasks/list/"
+
+
 
 
 class Transcript(models.Model):
