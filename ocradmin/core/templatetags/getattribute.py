@@ -6,8 +6,13 @@ numeric_test = re.compile("^\d+$")
 register = Library()
 
 @register.filter
-def getattribute(value, arg):
+def getattribute(value, argstr):
     """Gets an attribute of an object dynamically from a string name"""
+    args = argstr.split(".")
+    leads = args[:-1]
+    arg = args[-1]
+    for lead in leads:
+        value = getattr(value, lead)
     if hasattr(value, str(arg)):
         return getattr(value, arg)
     elif hasattr(value, 'has_key') and value.has_key(arg):

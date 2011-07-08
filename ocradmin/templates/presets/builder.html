@@ -20,7 +20,7 @@
     {% include "includes/node.html" %}
     {% include "includes/preset_manager.html" %}
     <div id="tabs_container">
-        <div  id="viewertabs" class="ui-layout-center">
+        <div  id="viewertabs" class="ui-layout-center ui-header-tabs">
             <ul>
                 <li><a href="#imageviewer_1_container">Image Viewer</a></li>
                 <li><a href="#hocrviewer_1_container">OCR Viewer</a></li>
@@ -36,7 +36,7 @@
                         <span>&nbsp;&nbsp;&nbsp;</span>
                         <button class="tbbutton" id="refresh">Refresh</button>
                     </div>
-                    <div id="imageviewer_1" class="imageviewer"></div>
+                    <div id="imageviewer_1" class="imageviewer ui-background-flat"></div>
                 </div>
                 <div id="hocrviewer_1_container">
                     <div id="hocrviewer_1_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
@@ -69,7 +69,7 @@
         <input type="hidden" id="edit_task_batch" name="task_batch" value="{{task.batch.name}}" />
         <input type="hidden" id="edit_task_page" name="task_page" value="{{task.page_name}}" />
 
-        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center"></div>
+        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center ui-background-flat"></div>
         <!-- NB. This is lower down in the DOM than the parameters, despite
          being positioned above.  It is so the menu overlaps the params
          where necessary -->

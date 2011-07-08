@@ -245,7 +245,7 @@ class SwitchNode(node.Node, writable_node.WritableNodeMixin):
             return self.input(input).reader(fh)
         
 
-class FileOutNode(node.Node):
+class FileOutNode(node.Node, writable_node.WritableNodeMixin):
     """
     A node that writes a file to disk.
     """
@@ -265,6 +265,14 @@ class FileOutNode(node.Node):
         if self._params.get("path") is None:
             raise node.ValidationError(self, "'path' not set")
 
+    def set_input(self, num, n):
+        """
+        Override the base set input to dynamically change our
+        in and out types.
+        """
+        super(FileOutNode, self).set_input(num, n)
+        self.outtype = self._inputs[num].outtype
+
     def null_data(self):
         """
         Return the input.
@@ -273,6 +281,25 @@ class FileOutNode(node.Node):
         if next is not None:
             return next.eval()
 
+    def get_file_name(self):
+        if self.input(0):
+            return "%s%s" % (self.input(0), self.input(0).extension)
+        return "%s%s" % (self, self.extension)
+
+    def writer(self, fh, data):
+        """
+        Pass through the writer function from the selected node.
+        """
+        if self.input(0):
+            return self.input(0).writer(fh, data)
+        
+    def reader(self, fh):
+        """
+        Pass through the writer function from the selected node.
+        """
+        if self.input(0):
+            return self.input(0).reader(fh)
+        
     def _eval(self):
         """
         Write the input to the given path.

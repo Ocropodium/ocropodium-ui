@@ -1,4 +1,5 @@
 {% load getattribute %}
+{% load formatattr %}
 
 {% if object_list %}
     <table id="{{template_object_name}}_list" class="object_list">
@@ -11,7 +12,7 @@
                     {% else %}
                         <a href="?order={{field}}&page={{page_obj.number}}">
                     {% endif %}
-                    {{field|capfirst}}</a>
+                    {{field|formatattr}}</a>
                 </th>
                  {% endfor %}
                  <td colspan="3"></td>
@@ -24,8 +25,12 @@
                     <td>{{object|getattribute:field|truncatewords:5}}</td>
                 {% endfor %}
                 <td><a href="{{object.get_absolute_url}}" class="view_url">View</a></td>
+                {% if object.get_update_url %}                
                 <td><a href="{{object.get_update_url}}" class="view_url">Edit</a></td>
+                {% endif %}
+                {% if object.get_delete_url %}
                 <td><a href="{{object.get_delete_url}}" class="view_url">Delete</a></td>
+                {% endif %}
             </tr>        
             {% endfor %}
         </tbody>
@@ -46,10 +51,12 @@
                 <a href="?order={{ order }}&page={{ paginator.num_pages }}">Last</a>
             {% endif %}
         </span>
-    </div>    
+    </div>   
+    {% if model.get_create_url %} 
     <div class="object_list_footer">
         <a href="{{model.get_create_url}}">New {{model}}</a>        
     </div>
+    {% endif %}
     
 {% else %}
     No {{template_object_name}}s found.

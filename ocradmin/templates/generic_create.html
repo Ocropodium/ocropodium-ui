@@ -11,7 +11,14 @@
     <div class="ui-widget-content">
         {% include "includes/messages.html" %}
         <div id="object_form">
-            {% include "includes/generic_create_body.html" %}
+            <form id="create_object_form" action="{{model.get_create_url}}" enctype="{{enctype}}" method="POST">
+                {% include "includes/generic_create_body.html" %}
+                <div class="object_detail_footer form_footer">
+                    <input type="submit" value="Submit" id="submit_create_form" />
+                    <a href="{{model.get_list_url}}">Back to List</a>
+                </div>        
+            </form>
+
         </div>
     </div>
 </div>
