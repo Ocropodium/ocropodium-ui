@@ -126,7 +126,7 @@ class BatchTest(TestCase):
         Test viewing batch details.
         """
         before = Batch.objects.count()
-        r = self.client.get("/batch/delete/1/")
+        r = self.client.post("/batch/delete/1/", follow=True)
         self.assertRedirects(r, "/batch/list/")
         self.assertEqual(before, Batch.objects.count() + 1)
 

@@ -110,3 +110,17 @@ class Batch(models.Model):
         else:
             return "/batch/transcript/%d/" % self.pk
 
+    def get_absolute_url(self):
+        """URL to view an object detail"""
+        return "/batch/show/%d/" % self.pk
+
+    def get_delete_url(self):
+        """url to update an object detail"""
+        return "/batch/delete/%d/" % self.pk
+
+    @classmethod
+    def get_list_url(cls):
+        """URL to view the object list"""
+        return "/batch/list/"
+
+

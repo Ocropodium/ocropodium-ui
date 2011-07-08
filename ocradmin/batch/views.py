@@ -19,7 +19,7 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseRedirect, \
         HttpResponseServerError
-from django.shortcuts import render, render_to_response, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson as json
 from django.utils.encoding import smart_str
@@ -27,7 +27,8 @@ from ocradmin.batch import utils as batchutils
 from ocradmin.core import generic_views as gv
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
-from ocradmin.ocrtasks.models import OcrTask, Batch
+from ocradmin.batch.models import Batch
+from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.core.views import AppException
 from ocradmin.presets.models import Preset
 from ocradmin.plugins import stages
@@ -38,27 +39,6 @@ PER_PAGE = 25
 MANAGER = manager.ModuleManager()
 MANAGER.register_paths(
                 glob.glob("plugins/*_nodes.py"), root="ocradmin")
-
-
-def batch_query(params):
-    """
-    Query the batch db.
-    """
-    order = [x for x in params.getlist("order_by") if x != ""] \
-            or ["created_on"]
-
-    query = Q()
-    for key, val in params.items():
-        if key.find("__") == -1 and \
-                not key in Batch._meta.get_all_field_names():
-            continue
-        if not val:
-            continue
-        query = query & Q(**{str(key): str(val)})
-    query = Batch.objects.select_related().filter(query)
-    if order and order[0].replace("-", "", 1) == "task_count":
-        query = query.annotate(task_count=Count("tasks"))
-    return query.order_by(*order)
 
 
 class BatchForm(forms.ModelForm):
@@ -94,14 +74,19 @@ def new(request):
     return render(request, template, _new_batch_context(request, tasktype))
 
 
-batchlist = project_required(login_required(gv.GenericListView.as_view(
+batchlist = project_required(gv.GenericListView.as_view(
         model=Batch,
         page_name="OCR Batches",
         fields=["name", "description", "user", "task_type",
-                "created_on", "tasks.count"],)))
+                "created_on", "tasks.count"],))
 
 
-@login_required
+batchdelete = gv.GenericDeleteView.as_view(
+        model=Batch,
+        page_name="Delete OCR Batch",
+        success_url="/batch/list/",)
+
+
 @project_required
 @saves_files
 @transaction.commit_on_success
@@ -158,7 +143,6 @@ def create(request):
     return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
 
 
-@login_required
 def results(request, batch_pk):
     """
     Get results for a taskset.
@@ -182,7 +166,6 @@ def results(request, batch_pk):
     return response
 
 
-@login_required
 def page_results(request, batch_pk, page_index):
     """
     Get the results for a single page.
@@ -205,7 +188,6 @@ def page_results(request, batch_pk, page_index):
     return response
 
 
-@login_required
 @project_required
 def latest(request):
     """
@@ -222,7 +204,6 @@ def latest(request):
     return _show_batch(request, batch)
 
 
-@login_required
 @project_required
 def show(request, batch_pk):
     """
@@ -236,7 +217,6 @@ def show(request, batch_pk):
     return _show_batch(request, batch)
 
 
-@login_required
 @project_required
 @saves_files
 def upload_files(request):
@@ -260,7 +240,6 @@ def upload_files(request):
     return HttpResponse(json.dumps(pathlist), mimetype=mimetype)
 
 
-@login_required
 @project_required
 def transcript(request, batch_pk):
     """
@@ -278,12 +257,10 @@ def _show_batch(request, batch):
     template = "batch/show.html" if not request.is_ajax() \
             else "batch/includes/show_batch.html"
     context = {"batch": batch}
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
+    return render(request, template, context)
 
 
 @transaction.commit_on_success
-@login_required
 def abort_batch(request, batch_pk):
     """
     Abort an entire batch.
@@ -300,7 +277,6 @@ def abort_batch(request, batch_pk):
 
 
 @transaction.commit_on_success
-@login_required
 def retry(request, batch_pk):
     """
     Retry all tasks in a batch.
@@ -317,7 +293,6 @@ def retry(request, batch_pk):
 
 
 @transaction.commit_on_success
-@login_required
 def retry_errored(request, batch_pk):
     """
     Retry all errored tasks in a batch.
@@ -337,11 +312,9 @@ def test(request):
     """
     Test action
     """
-    return render_to_response("batch/test.html",
-            {}, context_instance=RequestContext(request))
+    return render(request, "batch/test.html", {})
 
 
-@login_required
 def export_options(request, batch_pk):
     """
     Setup export.
@@ -354,11 +327,9 @@ def export_options(request, batch_pk):
         batch=batch,
         formats=formats
     )
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
+    return render(request, template, context)
 
 
-@login_required
 def export(request, batch_pk):
     """
     Export a batch as HOCR.
@@ -391,7 +362,6 @@ def export(request, batch_pk):
     return response
 
 
-@login_required
 def spellcheck(request):
     """
     Spellcheck some POST data.
@@ -406,20 +376,6 @@ def spellcheck(request):
     response = HttpResponse(mimetype="application/json")
     json.dump(aspell.spellcheck(data), response, ensure_ascii=False)
     return response
-
-
-@login_required
-def delete(request, batch_pk):
-    """
-    Delete a batch and all tasks belonging to it.
-    """
-    batch = get_object_or_404(Batch, pk=batch_pk)
-    if request.user != batch.user:
-        messages.warning(request,
-                "Unable to delete batch '%s': Permission denied" % batch.name)
-        return HttpResponseRedirect
-    batch.delete()
-    return HttpResponseRedirect("/batch/list/")
 
 
 def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):
@@ -514,6 +470,7 @@ def _handle_multipart_upload(request, outdir):
     else:
         paths = ocrutils.save_ocr_images(request.FILES.iteritems(), outdir)
     return paths
+
 
 def script_for_page_file(scriptjson, filepath, writepath):
     """
