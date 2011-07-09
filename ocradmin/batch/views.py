@@ -4,23 +4,18 @@ Batch-related views.
 
 import os
 import glob
-from types import MethodType
 import tarfile
 import StringIO
 
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.core import serializers
-from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseRedirect, \
         HttpResponseServerError
 from django.shortcuts import render, get_object_or_404
-from django.template import RequestContext
 from django.utils import simplejson as json
 from django.utils.encoding import smart_str
 from ocradmin.batch import utils as batchutils
@@ -33,8 +28,6 @@ from ocradmin.core.views import AppException
 from ocradmin.presets.models import Preset
 from ocradmin.plugins import stages
 from nodetree import script, manager
-
-PER_PAGE = 25
 
 MANAGER = manager.ModuleManager()
 MANAGER.register_paths(
@@ -102,7 +95,8 @@ def create(request):
     form = BatchForm(request.POST)    
     if not request.method == "POST" or not form.is_valid() or not paths:
         return render(request, "batch/new.html", dict(
-            form=form, paths=paths, presets=Preset.objects.all().order_by("name"),
+            form=form, paths=paths,
+            presets=Preset.objects.all().order_by("name"),
         ))
 
     # create a batch db job
@@ -344,13 +338,13 @@ def export(request, batch_pk):
     response = HttpResponse(content_type="application/x-gzip")
     tar = tarfile.open(fileobj=response, mode='w|gz')
     for task in batch.tasks.all():
-        transcript = task.latest_transcript()
-        if transcript is None:
+        trans = task.latest_transcript()
+        if trans is None:
             continue
         for fmt, ext in formats.iteritems():
             if not fmt in reqformats:
                 continue
-            output = getattr(ocrutils, "output_to_%s" % fmt)(transcript)
+            output = getattr(ocrutils, "output_to_%s" % fmt)(trans)
             info = tarfile.TarInfo(
                     "%s.%s" % (os.path.splitext(task.page_name)[0], ext))
             info.size = len(output)
@@ -481,8 +475,7 @@ def script_for_page_file(scriptjson, filepath, writepath):
     inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
     if not inputs:
         raise IndexError("No input stages found in script")
-    input = inputs[0]
-    input.set_param("path", filepath)
+    inputs[0].set_param("path", filepath)
     # attach a fileout node to the binary input of the recognizer and
     # save it as a binary file
     term = tree.get_terminals()[0]

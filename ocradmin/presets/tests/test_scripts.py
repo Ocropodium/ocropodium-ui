@@ -21,7 +21,8 @@ from ocradmin.plugins import cache
 
 
 class ViewsTest(TestCase):
-    fixtures = ["ocrmodels/fixtures/test_fixtures.json"]
+    fixtures = ["presets/fixtures/test_fixtures.json",
+            "ocrmodels/fixtures/test_fixtures.json"]
 
     def setUp(self):
         """

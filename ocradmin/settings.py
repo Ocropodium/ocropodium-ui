@@ -203,6 +203,7 @@ INSTALLED_APPS = (
     'training',
     'projects',
     'tagging',
+    'test_utils',
     'transcripts',
     'compress',
 )
