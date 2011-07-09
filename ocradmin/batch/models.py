@@ -9,7 +9,6 @@ from django.contrib.auth.models import User
 from tagging.fields import TagField
 
 from ocradmin.projects.models import Project
-from ocradmin.presets.models import Preset
 
 
 class Batch(models.Model):
@@ -33,6 +32,9 @@ class Batch(models.Model):
         return self.name
 
     def save(self):
+        """
+        Override save to add timestamps.
+        """
         if not self.id:
             self.created_on = datetime.datetime.now()
         else:
