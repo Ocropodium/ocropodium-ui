@@ -39,9 +39,6 @@ class Testmaker(TestCase):
     def test_staticcssupload_resultscss_131016997546(self):
         r = self.client.get('/static/css/upload_results.css', {})
         self.assertEqual(r.status_code, 200)
-    def test_faviconico_131016997567(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_batchcreate_131016999447(self):
         r = self.client.post('/batch/create/', {'files': 'another-test-project/align-input-1.png,another-test-project/align-input-2.png', 'task_type': 'run.batchitem', 'name': 'Another Test Project - Batch 2', 'tags': '', 'project': '1', 'preset': '26', 'user': '1', 'description': 'Hello, world', })
     def test_batchshow3_131016999465(self):
@@ -54,39 +51,6 @@ class Testmaker(TestCase):
         r = self.client.get('/static/css/batch_widget.css', {})
         self.assertEqual(r.status_code, 200)
     def test_batchresults3_13101699950(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_faviconico_131016999534(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
-    def test_batchresults3_131016999551(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999585(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999618(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999652(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999687(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999718(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999753(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999787(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999821(self):
-        r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
-        self.assertEqual(r.status_code, 302)
-    def test_batchresults3_131016999855(self):
         r = self.client.get('/batch/results/3/', {'start': '0', 'limit': '60', })
         self.assertEqual(r.status_code, 302)
     def test_ocrtasksshow9_131017000009(self):
@@ -143,6 +107,3 @@ class Testmaker(TestCase):
     def test_ocrsubmit_viewer_binarization10_131017000581(self):
         r = self.client.get('/ocr/submit_viewer_binarization/10/', {})
         self.assertEqual(r.status_code, 302)
-    def test_faviconico_131017000588(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)

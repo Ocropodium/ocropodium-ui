@@ -53,9 +53,6 @@ class Testmaker(TestCase):
     def test_presetsquery_131016875081(self):
         r = self.client.get('/presets/query/', {})
         self.assertEqual(r.status_code, 200)
-    def test_faviconico_131016875104(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetslist_131016875553(self):
         r = self.client.get('/presets/list/', {})
         self.assertEqual(r.status_code, 200)
@@ -76,9 +73,6 @@ class Testmaker(TestCase):
     def test_staticcssgenericcss_13101687559(self):
         r = self.client.get('/static/css/generic.css', {})
         self.assertEqual(r.status_code, 200)
-    def test_faviconico_131016875606(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetsshowcuneiformbasic_131016875901(self):
         r = self.client.get('/presets/show/cuneiformbasic/', {})
         self.assertEqual(r.status_code, 200)
@@ -92,15 +86,9 @@ class Testmaker(TestCase):
         self.assertEqual(unicode(r.context["user"]), u"""AnonymousUser""")
         self.assertEqual(unicode(r.context["LANGUAGE_BIDI"]), u"""False""")
         self.assertEqual(unicode(r.context["MEDIA_URL"]), u"""/media/""")
-    def test_faviconico_131016875934(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetseditcuneiformbasic_131016876156(self):
         r = self.client.get('/presets/edit/cuneiformbasic/', {})
         self.assertEqual(r.status_code, 302)
-    def test_faviconico_13101687619(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetsshowcuneiformbasic_131016877426(self):
         r = self.client.get('/presets/show/cuneiformbasic/', {})
         self.assertEqual(r.status_code, 200)
@@ -114,15 +102,9 @@ class Testmaker(TestCase):
         self.assertEqual(unicode(r.context["user"]), u"""AnonymousUser""")
         self.assertEqual(unicode(r.context["LANGUAGE_BIDI"]), u"""False""")
         self.assertEqual(unicode(r.context["MEDIA_URL"]), u"""/media/""")
-    def test_faviconico_131016877469(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetsdeletecuneiformbasic_13101687797(self):
         r = self.client.get('/presets/delete/cuneiformbasic/', {})
         self.assertEqual(r.status_code, 302)
-    def test_faviconico_131016877994(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetsshowcuneiformbasic_131016878162(self):
         r = self.client.get('/presets/show/cuneiformbasic/', {})
         self.assertEqual(r.status_code, 200)
@@ -136,9 +118,6 @@ class Testmaker(TestCase):
         self.assertEqual(unicode(r.context["user"]), u"""AnonymousUser""")
         self.assertEqual(unicode(r.context["LANGUAGE_BIDI"]), u"""False""")
         self.assertEqual(unicode(r.context["MEDIA_URL"]), u"""/media/""")
-    def test_faviconico_131016878204(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetslist_13101687835(self):
         r = self.client.get('/presets/list/', {})
         self.assertEqual(r.status_code, 200)
@@ -156,9 +135,6 @@ class Testmaker(TestCase):
         self.assertEqual(unicode(r.context["order"]), u"""name""")
         self.assertEqual(unicode(r.context["LANGUAGE_BIDI"]), u"""False""")
         self.assertEqual(unicode(r.context["MEDIA_URL"]), u"""/media/""")
-    def test_faviconico_131016878384(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetsshowcuneiformbasic_131016879459(self):
         r = self.client.get('/presets/show/cuneiformbasic/', {})
         self.assertEqual(r.status_code, 200)
@@ -172,9 +148,6 @@ class Testmaker(TestCase):
         self.assertEqual(unicode(r.context["user"]), u"""AnonymousUser""")
         self.assertEqual(unicode(r.context["LANGUAGE_BIDI"]), u"""False""")
         self.assertEqual(unicode(r.context["MEDIA_URL"]), u"""/media/""")
-    def test_faviconico_131016879492(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetslist_131016879738(self):
         r = self.client.get('/presets/list/', {})
         self.assertEqual(r.status_code, 200)
@@ -192,9 +165,6 @@ class Testmaker(TestCase):
         self.assertEqual(unicode(r.context["order"]), u"""name""")
         self.assertEqual(unicode(r.context["LANGUAGE_BIDI"]), u"""False""")
         self.assertEqual(unicode(r.context["MEDIA_URL"]), u"""/media/""")
-    def test_faviconico_131016879787(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetsbuilder_13101688024(self):
         r = self.client.get('/presets/builder/', {})
         self.assertEqual(r.status_code, 302)
@@ -203,9 +173,6 @@ class Testmaker(TestCase):
         self.assertEqual(r.status_code, 200)
     def test_presetslayout_graph_131016880292(self):
         r = self.client.post('/presets/layout_graph', {'script': '{}', })
-    def test_faviconico_131016880321(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_staticcsscustom_themeimagesui_icons_454545_256x240png_13101688043(self):
         r = self.client.get('/static/css/custom-theme/images/ui-icons_454545_256x240.png', {})
         self.assertEqual(r.status_code, 200)
@@ -215,9 +182,6 @@ class Testmaker(TestCase):
     def test_staticcsscustom_themeimagesui_bg_flat_0_aaaaaa_40x100png_13101688056(self):
         r = self.client.get('/static/css/custom-theme/images/ui-bg_flat_0_aaaaaa_40x100.png', {})
         self.assertEqual(r.status_code, 200)
-    def test_faviconico_131016880565(self):
-        r = self.client.get('/favicon.ico', {})
-        self.assertEqual(r.status_code, 404)
     def test_presetsdatacuneiformbasic_131016880844(self):
         r = self.client.get('/presets/data/cuneiformbasic', {'format': 'json', })
         self.assertEqual(r.status_code, 200)
