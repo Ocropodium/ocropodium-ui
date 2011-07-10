@@ -442,4 +442,38 @@ button.ui-button, a.ui-button {
     background-color: #F2F2F2;
 }
 
+#tag_list {
+    font-size: 1.4em;
+    padding: 0.4em;
+}
+
+.taglist {
+    list-style-type: none;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.tagitem {
+    margin: .8em;
+    padding: .4em;
+}
+
+.taglink {
+    border-radius: 4px;
+    border: 1px solid #0F0;
+    background-color: #DFD;
+    padding: .4em;
+    color: #000;    
+    text-decoration: none;
+}
+
+.taglink:hover {
+    border-color: #0F0;
+    background-color: #EFE;
+}
+
+.taglink.current, .taglink:hover.current {
+    border-color: #00F;
+    background-color: #DDF;
+}
 

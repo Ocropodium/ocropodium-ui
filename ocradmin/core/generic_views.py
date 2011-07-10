@@ -12,6 +12,7 @@ from django import http
 from django.views import generic
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
+from tagging.models import Tag, TaggedItem
 
 class JSONResponseMixin(object):
     def render_to_response(self, context):
@@ -67,8 +68,13 @@ class GenericListView(HybridListView):
     page_name = "Objects"
     fields = ["id"]
 
-    def get_queryset(self):        
+    def get_queryset(self):
         order = self.request.GET.get("order", self.fields[0])
+        tag = self.request.GET.get("tag")
+        # if there's a tag present search by tagged item
+        if tag:
+            return TaggedItem.objects.get_by_model(
+                    self.model, tag).order_by(order)
         return self.model.objects.all().order_by(order)    
 
     def get_template_names(self):
@@ -84,6 +90,8 @@ class GenericListView(HybridListView):
             page_name=self.page_name,
             fields=self.fields,
             model=self.model,
+            tags=Tag.objects.usage_for_model(self.model, counts=True),
+            tag=self.request.GET.get("tag"),
             order=self.request.GET.get("order", self.fields[0])
         )
         return context
