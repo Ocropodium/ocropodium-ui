@@ -12,7 +12,8 @@ from ocradmin.core.tests import testutils
 from nodetree import script, node, manager
 import numpy
 
-SCRIPTDIR = "plugins/fixtures/scripts"
+VALID_SCRIPTDIR = "plugins/scripts/valid"
+INVALID_SCRIPTDIR = "plugins/scripts/invalid"
 
 
 class ScriptsTest(TestCase):
@@ -26,11 +27,16 @@ class ScriptsTest(TestCase):
         self.manager.register_paths(
                 glob.glob("plugins/*_nodes.py"), root="ocradmin")
         testutils.symlink_model_fixtures()
-        self.scripts = {}
-        for fname in os.listdir(SCRIPTDIR):
+        self.validscripts = {}
+        self.invalidscripts = {}
+        for fname in os.listdir(VALID_SCRIPTDIR):
             if fname.endswith("json"):
-                with open(os.path.join(SCRIPTDIR, fname), "r") as f:
-                    self.scripts[fname] = json.load(f)
+                with open(os.path.join(VALID_SCRIPTDIR, fname), "r") as f:
+                    self.validscripts[fname] = json.load(f)
+        for fname in os.listdir(INVALID_SCRIPTDIR):
+            if fname.endswith("json"):
+                with open(os.path.join(INVALID_SCRIPTDIR, fname), "r") as f:
+                    self.invalidscripts[fname] = json.load(f)
         
     def tearDown(self):
         """
@@ -42,7 +48,7 @@ class ScriptsTest(TestCase):
         """
         Test the supposedly valid script don't raise errors.
         """
-        for name, nodes in self.scripts.iteritems():
+        for name, nodes in self.validscripts.iteritems():
             if name.startswith("invalid"):
                 continue
             s = script.Script(nodes, manager=self.manager)
@@ -60,7 +66,7 @@ class ScriptsTest(TestCase):
         """
         Test supposedly invalid script DO raise errors.
         """
-        for name, nodes in self.scripts.iteritems():
+        for name, nodes in self.invalidscripts.iteritems():
             if not name.startswith("invalid"):
                 continue
             s = script.Script(nodes, manager=self.manager)
