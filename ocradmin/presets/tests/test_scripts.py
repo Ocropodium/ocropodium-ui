@@ -15,7 +15,8 @@ from nodetree import script, node, manager
 import numpy
 from mock import patch
 
-SCRIPTDIR = "plugins/fixtures/scripts"
+VALID_SCRIPTDIR = "plugins/scripts/valid"
+INVALID_SCRIPTDIR = "plugins/scripts/invalid"
 
 from ocradmin.plugins import cache
 
@@ -33,9 +34,13 @@ class ViewsTest(TestCase):
                 glob.glob("plugins/*_nodes.py"), root="ocradmin")
         testutils.symlink_model_fixtures()
         self.scripts = {}
-        for fname in os.listdir(SCRIPTDIR):
+        for fname in os.listdir(VALID_SCRIPTDIR):
             if fname.endswith("json"):
-                with open(os.path.join(SCRIPTDIR, fname), "r") as f:
+                with open(os.path.join(VALID_SCRIPTDIR, fname), "r") as f:
+                    self.scripts[fname] = json.load(f)
+        for fname in os.listdir(INVALID_SCRIPTDIR):
+            if fname.endswith("json"):
+                with open(os.path.join(INVALID_SCRIPTDIR, fname), "r") as f:
                     self.scripts[fname] = json.load(f)
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
