@@ -1,28 +1,17 @@
-{% extends "standard.html" %}
+{% extends "generic.html" %}
 
-{% block title %} {{page_name}} {% endblock %}
-{% block headerscript %}
-    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
-{% endblock %}
+{% block bodycontent %}
+    <div id="object_form">
+        {% include "includes/generic_detail_body.html" %}
 
-{% block content %}
-<div class="ui-widget ui-corner-top">
-    <div class="ui-widget-header ui-corner-top ui-layout-header">{{page_name}}</div>
-    <div class="ui-widget-content">
-        {% include "includes/messages.html" %}
-        <div id="object_form">
-            {% include "includes/generic_detail_body.html" %}
-
-            <div class="object_detail_footer">
-                <a class="list_link" href="{{object.get_list_url}}">Back to List</a>
-                {% if object.get_update_url %}
-                <a class="edit_link" href="{{object.get_update_url}}">Edit</a>
-                {% endif %}
-                {% if object.get_delete_url %}
-                <a class="delete_link" href="{{object.get_delete_url}}">Delete</a>
-                {% endif %}
-            </div>
+        <div class="object_detail_footer">
+            <a class="list_link" href="{{object.get_list_url}}">Back to List</a>
+            {% if object.get_update_url %}
+            <a class="edit_link" href="{{object.get_update_url}}">Edit</a>
+            {% endif %}
+            {% if object.get_delete_url %}
+            <a class="delete_link" href="{{object.get_delete_url}}">Delete</a>
+            {% endif %}
         </div>
     </div>
-</div>
 {% endblock %}

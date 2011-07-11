@@ -114,7 +114,12 @@ class GenericDetailView(HybridDetailView, generic.detail.BaseDetailView):
 
     def get_context_data(self, **kwargs):
         context = super(GenericDetailView, self).get_context_data(**kwargs)
-        context.update(page_name=self.page_name, fields=self.fields)
+        context.update(
+            page_name=self.page_name,
+            fields=self.fields,
+            model=self.model,
+            tags=Tag.objects.get_for_object(self.object),
+        )
         return context
 
 
@@ -144,8 +149,11 @@ class GenericCreateView(generic.CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(GenericCreateView, self).get_context_data(**kwargs)
-        context.update(page_name=self.page_name, model=self.model, 
-                enctype=self.enctype)
+        context.update(
+            page_name=self.page_name,
+            model=self.model, 
+            enctype=self.enctype
+        )
         return context
 
 
@@ -171,8 +179,12 @@ class GenericEditView(generic.UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(GenericEditView, self).get_context_data(**kwargs)
-        context.update(page_name=self.page_name, model=self.model, 
-                enctype=self.enctype)
+        context.update(
+            page_name=self.page_name,
+            model=self.model, 
+            tags=Tag.objects.get_for_object(self.object),
+            enctype=self.enctype
+        )
         return context
 
 
@@ -192,7 +204,10 @@ class GenericDeleteView(generic.DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super(GenericDeleteView, self).get_context_data(**kwargs)
-        context.update(page_name=self.page_name)
+        context.update(
+            page_name=self.page_name,
+            tags=Tag.objects.get_for_object(self.object),
+        )
         return context
 
 
