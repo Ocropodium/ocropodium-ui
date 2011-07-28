@@ -1,0 +1,70 @@
+{% load getattribute %}
+{% load formatattr %}
+
+{% if object_list %}
+    <table id="{{template_object_name}}_list" class="object_list">
+        <thead>
+            <tr class="object_list_header">
+                {% for field in fields %}
+                <th>
+                    {% if field == order %}    
+                        <a href="?order=-{{field}}&page={{page_obj.number}}">
+                    {% else %}
+                        <a href="?order={{field}}&page={{page_obj.number}}">
+                    {% endif %}
+                    {{field|formatattr}}</a>
+                </th>
+                 {% endfor %}
+                 <td colspan="3"></td>
+             </tr>
+        </thead>
+        <tbody>
+            {% for object in object_list %}
+            <tr class="{% cycle '' 'odd' %}">
+                {% for field in fields %}
+                    <td>{{object|getattribute:field|truncatewords:5}}</td>
+                {% endfor %}
+                <td><a href="{{object.get_absolute_url}}" class="view_url">View</a></td>
+                {% if object.get_update_url %}                
+                <td><a href="{{object.get_update_url}}" class="view_url">Edit</a></td>
+                {% endif %}
+                {% if object.get_delete_url %}
+                <td><a href="{{object.get_delete_url}}" class="view_url">Delete</a></td>
+                {% endif %}
+            </tr>        
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="pagination object_list_footer">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?order={{ order }}&page=1">First</a>
+                <a href="?order={{ order }}&page={{ page_obj.previous_page_number }}">Prev</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?order={{ order }}&page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?order={{ order }}&page={{ paginator.num_pages }}">Last</a>
+            {% endif %}
+        </span>
+    </div>   
+    {% if model.get_create_url %} 
+    <div class="object_list_footer">
+        <a href="{{model.get_create_url}}">New {{model}}</a>        
+    </div>
+    {% endif %}
+    
+{% else %}
+    No {{model}}s found.
+{% endif %}
+
+
+
+
+
+
+            

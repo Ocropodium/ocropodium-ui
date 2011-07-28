@@ -1,0 +1,46 @@
+
+.imageviewer_viewport {
+    overflow: hidden;
+}
+
+
+.imageviewer_overlay {
+    position: absolute;
+    z-index: 100;
+    background-color: transparent;
+    background-image: url(/static/ajax-loader-large.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.imageviewer_canvas {
+    position: absolute;
+    z-index: 200;
+    background-color: transparent;
+    cursor: crosshair;
+}
+
+.layout_rect {
+    background-color: transparent;
+    border: 3px solid #FF8888;
+    background-color: #FFBBBB;
+    opacity: 0.6;
+    font-size: 3em;
+    font-weight: bold;
+    margin-top: auto;
+    margin-bottom: auto;
+    min-height: 10px;
+}
+
+.layout_rect_label {
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    opacity: 1;
+    font-size: 3em;
+}
+
+.layout_rect.hover {
+    opacity: 0.8;
+}
+

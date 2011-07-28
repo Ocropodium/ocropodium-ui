@@ -1,0 +1,17 @@
+{% extends "generic.html" %}
+
+{% block bodycontent %}
+    <div id="object_form">
+        {% include "includes/generic_detail_body.html" %}
+
+        <div class="object_detail_footer">
+            <a class="list_link" href="{{object.get_list_url}}">Back to List</a>
+            {% if object.get_update_url %}
+            <a class="edit_link" href="{{object.get_update_url}}">Edit</a>
+            {% endif %}
+            {% if object.get_delete_url %}
+            <a class="delete_link" href="{{object.get_delete_url}}">Delete</a>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

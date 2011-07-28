@@ -1,0 +1,14 @@
+
+.textviewer {
+    font-size: 1.5em;
+}
+
+.textviewer * {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
+
+.textcontainer {
+    position: relative;
+}
