@@ -50,7 +50,7 @@ class UnhandledRunScriptTask(AbortableTask):
             result = term.eval()
         except node.NodeError, err:
             logger.error("Node Error (%s): %s", err.node, err.message)
-            return dict(type="error", node=err.node.label, error=err.msg)
+            return dict(type="error", node=err.node.label, error=err.message)
 
         path = cacher.get_path(term.first_active())
         filename = term.first_active().get_file_name()

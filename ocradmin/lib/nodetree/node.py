@@ -13,7 +13,7 @@ class NodeError(Exception):
     def __init__(self, node, msg):
         super(NodeError, self).__init__(msg)
         self.node = node
-        self.msg = msg
+        self.message = msg
 
 class UnsetParameterError(NodeError):
     pass
