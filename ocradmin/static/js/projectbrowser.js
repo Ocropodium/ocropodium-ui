@@ -55,11 +55,22 @@ $(function() {
                     $(this).remove();
                 },
                 modal: true,
-            }).load("/projects/create/", function() {
+            }).append(
+                $("<form></form>")
+                    .attr("method", "POST")
+                    .attr("action", "/projects/create")                        
+            .load("/projects/create/", function() {
+                $(this).append(
+                    $("<div></div>").addClass("form_footer")
+                        .append($("<input />")
+                            .attr("id", "submit_new_project_form")
+                            .attr("disabled", true)
+                            .attr("type", "submit").val("Create New Project"))
+                )
                 $("#id_name").live("keyup", function(event) {
                     validateProjectForm(dialog);
                 });
-            });
+            }));
         event.preventDefault();
     });
 });
