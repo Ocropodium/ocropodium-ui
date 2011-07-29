@@ -202,6 +202,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                     $.tmpl(self._opentmplitem, preset)
                 );
             });
+            $("li", "#open_preset_list").textOverflow("...", true);
             $("#open_preset_list").selectable({
                 selected: function(event, ui) {
                     self.validateOpenSelection();
