@@ -83,7 +83,7 @@ class Script(object):
             try:
                 n.validate(skipinputs=True)
             except node.ValidationError, err:
-                errors[name] = err.msg
+                errors[name] = err.message
         return errors                
 
     def serialize(self):
