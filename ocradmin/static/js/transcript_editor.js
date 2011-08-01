@@ -277,27 +277,18 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this.callListeners("onLinesReady");
     },
 
-    save: function() {
-        var self = this;
-        $(".ocr_line.hover", this._pagediv).removeClass("hover");
-        $.ajax({
-            url: "/ocr/save/" + this._task_pk + "/",
-            data: {data: self._pagediv.html()},
-            dataType: "json",
-            type: "POST",
-            error: OCRJS.ajaxErrorHandler,
-            success: function(data) {
-                if (data && data.ok) {
-                    self._textbuffer = self._pagediv.text();
-                    self._haschanges = false;                    
-                    self.callListeners("onSave");
-                } else {
-                    console.error(data);
-                }
-            },
-        });
+    getData: function() {
+        var hover = $(".ocr_line.hover", this._pagediv);
+        hover.removeClass("hover");
+        var data = this._pagediv.html();
+        hover.addClass("hover");
+        return data;
     },
 
+    setCleanState: function() {
+        this._textbuffer = this._pagediv.text();
+        this._haschanges = false;
+    },                       
 
     setCurrentLine: function(line) {
         line = $(line);                        
