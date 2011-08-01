@@ -325,40 +325,4 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._haschanges = true;
         this.callListeners("onTextChanged");
     },                      
-
-    /*
-     * Overridable events
-     *
-     */
-                 
-    onLinesReady: function() {
-    },
-
-    onTextChanged: function() {
-    },
-
-    onTaskLoad: function() {
-    },
-
-    onTaskChange: function() {
-    },
-
-    onClickPosition: function(position) {
-    },
-
-    onHoverPosition: function(position) {
-    },
-
-    onSave: function() {
-    },
-
-    onLineSelected: function(linetype) {
-    },
-
-    onLineDeselected: function() {
-    },
-
-
-
-
 });
