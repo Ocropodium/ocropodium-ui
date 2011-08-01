@@ -348,7 +348,25 @@ $(function() {
     });
 
     $("#save_data").click(function(event) {
-        transcript.save();
+        $.ajax({
+            url: "/ocr/save/" + transcript.taskId() + "/",
+            data: {
+                data: transcript.getData()
+            },
+            dataType: "json",
+            type: "POST",
+            error: OCRJS.ajaxErrorHandler,
+            success: function(data) {
+                if (data && data.ok) {
+                    transcript.setCleanState();
+                    $("#save_data").button({
+                        disabled: true,
+                    });
+                } else {
+                    console.error(data);
+                }
+            },
+        });
     });
 
     $("#save_training_data").click(function(event) {
