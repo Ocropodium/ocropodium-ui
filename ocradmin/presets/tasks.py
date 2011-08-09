@@ -3,7 +3,9 @@ Run plugin tasks on the Celery queue
 """
 import os
 import glob
+from datetime import datetime, timedelta
 from celery.contrib.abortable import AbortableTask
+from celery.task import PeriodicTask
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.utils import simplejson as json
@@ -78,3 +80,32 @@ class UnhandledRunScriptTask(AbortableTask):
 @register_handlers
 class RunScriptTask(UnhandledRunScriptTask):
     name = "run.script"
+
+
+class PruneCacheTask(PeriodicTask):
+    """
+    Periodically prune a user's cache directory by deleting
+    node cache's (oldest first) till the dir is under
+    NODETREE_USER_MAX_CACHE size.
+    """
+    name = "cleanup.cache"
+    run_every = timedelta(seconds=600)
+    relative = True
+    ignore_result = True
+
+    def run(self, **kwargs):
+        """
+        Clean the modia folder of any files that haven't
+        been accessed for X minutes.
+        """
+        logger = self.get_logger()
+        cacheclass = pluginutils.get_dzi_cacher(settings)
+        for user in User.objects.all():
+            cacher = cacheclass(
+                    path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+                    key=cachedir, logger=logger)
+            logger.debug("Using cacher: %s, Bases %s", cacher, cacheclass.__bases__)
+
+
+
+
