@@ -48,6 +48,7 @@ os.environ["PATH"] = "%s:%s" % (
 
 NODETREE_PERSISTANT_CACHER = "ocradmin.plugins.cache.PersistantFileCacher"
 #NODETREE_PERSISTANT_CACHER = "ocradmin.plugins.cache.MongoDBCacher"
+NODETREE_USER_MAX_CACHE = 10 # Maximum cache size, in Megabytes
 
 ADMINS = (
 )
@@ -322,7 +323,6 @@ COMPRESS_JS = {
             "js/nodetree/cable.js",
             "js/nodetree/plug.js",
             "js/nodetree/node.js",
-            "js/nodetree/node_list.js",
             "js/nodetree/node_tree.js",
             "js/nodetree/gui_manager.js",
             "js/nodegui/base_gui.js",
