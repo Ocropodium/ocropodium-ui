@@ -363,7 +363,6 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 self._dragging = false;
                 return false;
             }
-            console.log("Got a VIEW click");
             self.setViewing(!self._viewing, true);
             event.stopPropagation();
             event.preventDefault();
