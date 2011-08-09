@@ -43,6 +43,9 @@ class BaseCacher(cache.BasicCacher):
     def clear_cache(self, n):
         pass
 
+    def size(self):
+        pass
+
 
 
 class PersistantFileCacher(BaseCacher):
@@ -109,6 +112,15 @@ class PersistantFileCacher(BaseCacher):
             except OSError, (errno, strerr):
                 if errno != 39:
                     raise
+
+    def size(self):
+        folder = os.path.join(self._path, self._key)
+        size = 0
+        for (path, dirs, files) in os.walk(folder):
+            for file in files:
+                filename = os.path.join(path, file)
+                size += os.path.getsize(filename)
+        return size            
 
 
 class MongoDBCacher(PersistantFileCacher):
