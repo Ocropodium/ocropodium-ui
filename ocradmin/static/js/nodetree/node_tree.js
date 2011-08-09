@@ -6,17 +6,31 @@ var OCRJS = OCRJS || {}
 var NT = OCRJS.Nodetree;
 var SvgHelper = SvgHelper || new OCRJS.Nodetree.SvgHelper();
 
-OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
+OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, options) {
         this.base(parent, options);
 
+        this._listeners = {
+            onUpdateStarted: [],
+            registerUploader: [],
+            scriptChanged: [],
+            scriptLoaded: [],
+            scriptCleared: [],
+            nodeMoved: [],
+            nodeViewing: [],
+            nodeFocussed: [],
+            ready: [],
+        };
+
         this.parent = parent;
         this.svg = null;
-        this._dragcable = null;
+
         this._nodes = [];
-        this._usednames = {};
         this._nodedata = {};
         this._nodetypes = {};
+        this._usednames = {};
+
+        this._dragcable = null;
         this._multiselect = false;
         this._menu = null;
         this._menucontext = null;
@@ -30,6 +44,77 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
         this.queryNodeTypes();
     },
 
+    getEvalNode: function() {
+        for (var i in this._nodes) {
+            if (this._nodes[i].isViewing())
+                return this._nodes[i].name;
+        }    
+        for (var i in this._nodes) {
+            if (this._nodes[i].isFocussed())
+                return this._nodes[i].name;
+        }    
+        for (var i in this._nodes) {
+            if (this._nodes[i].stage == "recognize")
+                return this._nodes[i].name;
+        }    
+        // fall back on the last node in the list
+        var last = this._nodes[this._nodes.length - 1];
+        if (last)
+            return last.name;
+    },
+
+    getNode: function(nodename) {
+        return this._usednames[nodename];
+    },                 
+
+    clearScript: function() {
+        var self = this;
+        $.each(this._nodes, function(i, n) {
+            n.removeNode(true);
+        });
+        this._usednames = {};        
+        this._nodes = [];
+        this.callListeners("scriptCleared");
+        
+    },               
+
+    setFileInPath: function(name, path) {
+        console.log("Setting filein path", name, path);                       
+        for (var n in this._nodes) {
+            if (this._nodes[n].name == name) {
+                var params = this._nodes[n].parameters;
+                for (var i in params) {
+                    console.log("Setting", params[i].name, path)
+                    if (params[i].name == "path")
+                        params[i].value = path;
+                    break;
+                }                
+            }                
+        }            
+        this.scriptChanged("Set file in path: " + name);
+    },               
+
+    queryNodeTypes: function() {
+        var self = this;
+        var url = "/presets/query/";
+        self.callListeners("onUpdateStarted"); 
+        $.ajax({
+            url: url,
+            type: "GET",
+            error: OCRJS.ajaxErrorHandler,
+            success: function(data) {
+                self._nodedata = {};
+                $.each(data, function(i, nodeinfo) {
+                    if (!self._nodedata[nodeinfo.stage])
+                        self._nodedata[nodeinfo.stage] = [];
+                    self._nodedata[nodeinfo.stage].push(nodeinfo);
+                    self._nodetypes[nodeinfo.name] = nodeinfo;
+                });
+                self.populateCanvas();
+            },
+        });
+    },
+
     resetSize: function() {                           
         var svg = $(this.parent).find("svg");
         svg
@@ -37,9 +122,131 @@ OCRJS.Nodetree.NodeTree = OCRJS.Nodetree.NodeList.extend({
             .attr("height", Math.max($(this.parent).height(), svg.attr("height")));
     },                   
 
+    clearErrors: function() {
+        $.map(this._nodes, function(n) {
+            n.setErrored(false);
+        });            
+    },
+
+    hasNodes: function() {
+        return this._nodes.length > 0;
+    },                  
+
+    setNodeErrored: function(nodename, error) {
+        if (!this._usednames[nodename])
+            throw "Unknown node name: " + nodename;
+        if (this._usednames[nodename])
+            this._usednames[nodename].setErrored(true, error);
+    },                        
+
+    newNodeName: function(type) {
+        var count = 1;
+        var tname = $.trim(type.replace(/^[^:]+::/, ""));
+        var space = type.match(/\d$/) ? "_" : "";
+        while (this._usednames[tname + space + count])
+            count += 1;
+        return tname + space + count;
+    },
+
+    isValidNodeName: function(name, original) {
+        if (name == original)
+            return true;        
+        if (name == "" || ~name.search(/\s/))
+            return false;
+        return !Boolean(this._usednames[name]);
+    },
+
+    renameNode: function(node, name) {
+        this._usednames[name] = this._usednames[node.name];
+        delete this._usednames[node.name];
+        node.setName(name);        
+    },                    
+
     group: function() {
         return this._group;
     },        
+
+    scriptChanged: function(what) {
+        console.log("running script");      
+        this.callListeners("scriptChanged", what);
+    },
+
+    buildParams: function(node) {
+        var self = this;
+        console.log("Setting parameter listeners for", node.name, node.parameters);
+        // if we've already got a node, unbind the update
+        // handlers
+        if ($("#parameters").data("node")) {
+            $("#parameters").data("node").removeListeners(".paramobserve");
+            $("#parameters").data("node", node);
+        }
+        $("#parameters").html("");
+        var inputs = [];
+        for (var i = 0; i < node.arity; i++)
+            inputs.push(i);
+        $("#parameters").append($.tmpl(self._paramtmpl, {
+            nodename: node.name,
+            nodetype: node.type.replace(/^[^:]+::/, ""),
+            node: node,
+            parameters: node.parameters,
+            inputs: inputs, 
+        }));
+        $("input").unbind("keyup.paramval");
+        $("input.nameedit").bind("keyup.paramval", function(event) {
+            var val = $.trim($(this).val());
+            if (self.isValidNodeName(val)) {
+                $(this).removeClass("invalid");
+                self.renameNode(node, val); 
+            } else {
+                $(this).addClass("invalid");
+            }
+        });
+        // bind each param to its actual value
+        $.each(node.parameters, function(i, param) {
+            $("input[type='text']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
+                $(elem).bind("keyup.paramval", function(event) {
+                    node.parameters[i].value = $(this).val();
+                });
+                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
+                    $(elem).val(value);
+                });
+            });
+            $("input[type='checkbox']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
+                $(elem).bind("change.paramval", function(event) {
+                    node.parameters[i].value = $(this).prop("checked");
+                });
+                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
+                    $(elem).prop("checked");
+                });
+            });
+            $("select#" + node.name + param.name + ", input[type='hidden']#" + node.name + param.name).each(function(ii, elem) {
+                $(elem).bind("change.paramval", function(event) {
+                    node.parameters[i].value = $(this).val();
+                });
+                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
+                    $(elem).val(value);
+                });
+            });
+            $("input[type='file'].proxy").each(function(ii, elem) {
+                self.callListeners("registerUploader", node.name, elem);
+            });
+            if ($("#switch").length) {
+                $("#switch", "#parameters").buttonset();
+                $("input[type='radio']").change(function(event) {
+                    node.parameters[i].value = parseInt(
+                        $("input[name='" + node.name + "input']:checked").val());
+                    self.scriptChanged();
+                });
+            }
+        });
+    },
+
+    clearParams: function() {
+        $("input, select", $("#parameters")).unbind(".paramval");
+        $("#parameters").data("node", null);
+        $("#parameters").html("<h1>No Node Selected</h1>");
+        this.callListeners("nodeFocussed", null);
+    },                     
 
     setupNodeListeners: function(node) {
         var self = this;                            
