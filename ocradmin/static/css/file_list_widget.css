@@ -1,0 +1,11 @@
+.entrylist tr td.n {
+    padding-left: 32px;
+    background-image: url("/static/icons/file.png");
+    background-position: 5px;
+    background-repeat: no-repeat;
+}
+
+.entrylist tr.dir td.n {
+    background-image: url("/static/icons/folder.png");
+}
+

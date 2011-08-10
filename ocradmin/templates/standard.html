@@ -1,0 +1,46 @@
+{% load compressed %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>
+        {% if request.session.project %}
+            {{ request.session.project }} -
+        {% endif %}
+        {% block title %} OCRopodium - Test Server {% endblock %}
+    </title>
+    {% compressed_js "jquery" %}
+    {% compressed_js "utils" %}
+    {% compressed_js "global" %}
+	{% block headerscript %}{% endblock %}
+
+    <link rel="stylesheet" href="/static/css/custom-theme/jquery-ui-1.8.4.custom.css" type="text/css" media="screen" />
+    {% compressed_css "standard" %}
+</head>
+<body>
+    <div id="vsplitter" class="ui-layout-center">
+        <div id="maincontent" class="ui-layout-center">
+            {% block content %}{% endblock %}
+        </div>
+        <div id="sidebar" class="ui-layout-east">
+            {% block sidebar %}{% endblock %}
+        </div>
+        <div id="menucontainer" class="ui-layout-north">
+            {% include "includes/appmenu.html" %}
+            <div class="clear"></div>
+        </div>
+        <div id="status_bar" class="ui-layout-south ui-helper-clearfix">
+            <div id="status_message1" class="status_bar_left">
+                Welcome to OWP
+            </div>
+            <div id="status_message2" class="status_bar_right">
+                <span id="status_bar_progress">
+                    <span title="Abort" id="progress_bar_cancel" class=""></span>
+                    <span id="progress_bar_progress"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
