@@ -11,34 +11,17 @@ OCRJS.AddNodeCommand = OCRJS.UndoCommand.extend({
     constructor: function(tree, name, type, atpoint, context) {
         this.base("Add Node");
         console.log("Adding node", name);
-        var typedata = tree._nodetypes[type];
-        var nodeobj = tree.createNode(name, typedata);
-        tree.registerNode(nodeobj);
+        
         this.redo = function() {
-            if (context instanceof OCRJS.Nodetree.BasePlug) {
-                var attachedplug = context;
-                if (attachedplug.isOutput() && nodeobj.arity > 0)
-                    tree.connectPlugs(attachedplug, nodeobj.input(0));
-                else
-                    tree.connectPlugs(nodeobj.output(), attachedplug);
-            } else if (context && context instanceof OCRJS.Nodetree.Node) {
-                tree.replaceNode(context, nodeobj);
-                var pos = SvgHelper.getTranslate(context.group());
-                nodeobj.moveTo(pos.x, pos.y);
-                nodeobj.setFocussed(true);
-            }           
+            var node = tree.createNode(name, tree._nodetypes[type]);
+            node.moveTo(atpoint.x - (node.width / 2), atpoint.y - (node.height / 2));
+            tree.registerNode(node);
+
         };
         this.undo = function() {
-            if (context instanceof OCRJS.Nodetree.Node) {
-                var replace = tree.createNode(context.name, tree._nodetypes[context.type]);
-                tree.registerNode(replace);
-                var pos = SvgHelper.getTranslate(context.group());
-                replace.moveTo(pos.x, pos.y);
-                tree.replaceNode(nodeobj, replace);
-            } else {
-                tree.unregisterNode(nodeobj);
-                tree.deleteNode(nodeobj);
-            }
+            var node = tree._usednames[name];
+            tree.unregisterNode(node);
+            tree.deleteNode(node);
         };
     }
 });
@@ -888,9 +871,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                 outs.push(src.input(i).cable().start);
         var ins = this.attachedInputs(src.output());
         for (var i in src.inputs())
-            src.input(i).detach();
+            this.detachPlug(src.input(i));
         for (var i in ins)
-            ins[i].detach();
+            this.detachPlug(ins[i]);
         // src node is now  fully detached, hopefully
         for (var i in outs)
             if (dst.input(i))
@@ -898,16 +881,32 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         for (var i in ins)
             this.connectPlugs(dst.output(), ins[i]);
         dst.setViewing(src.isViewing());
-        this.unregisterNode(src);
-        this.deleteNode(src, false);
+        this._undostack.push(new DeleteNodeCommand(this, src));
+        //this.unregisterNode(src);
+        //this.deleteNode(src, false);
         this.scriptChanged("Replaced node: " + src.name + " with" + dst.name);
     },                     
 
     createNodeAtPoint: function(type, atpoint, context) {
         var self = this;                   
         var name = this.newNodeName(type);
+        this._undostack.beginMacro("Create Node");
         this._undostack.push(
-                new OCRJS.AddNodeCommand(this, name, type, atpoint, context));
+                new OCRJS.AddNodeCommand(this, name, type, atpoint));
+        var node = this._usednames[name];
+
+        if (context instanceof OCRJS.Nodetree.BasePlug) {
+            var attachedplug = context;
+            if (attachedplug.isOutput() && node.arity > 0)
+                tree.connectPlugs(attachedplug, node.input(0));
+            else
+                tree.connectPlugs(node.output(), attachedplug);
+        } else if (context && context instanceof OCRJS.Nodetree.Node) {
+            tree.replaceNode(context, node);
+            var pos = SvgHelper.getTranslate(context.group());
+            node.moveTo(pos.x, pos.y);
+            node.setFocussed(true);
+        }
 
         // we need to attach the node to the mouse UNLESS it's replacing
         // another node
@@ -915,28 +914,29 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
             return;
 
 
-        var nodeobj = this._usednames[name];
         var point = this.relativePoint(atpoint);
-        nodeobj.moveTo(point.x - (nodeobj.width / 2), point.y - (nodeobj.height / 2));
+        node.moveTo(point.x - (node.width / 2), point.y - (node.height / 2));
         $(document).bind("keydown.dropnode", function(event) {
             if (event.which == KC_ESCAPE) {
                 self._undostack.undo();
             } else if (event.which == KC_RETURN) {
-                nodeobj.removeListeners("clicked.dropnode");
+                node.removeListeners("clicked.dropnode");
                 $(self.parent).unbind(".dropnode");
-                self.scriptChanged("Created node: " + nodeobj.name);
+                self.scriptChanged("Created node: " + node.name);
             }
         });
         $(this.parent).bind("mousemove.dropnode", function(event) {
             var nmp = SvgHelper.mouseCoord(self.parent, event);
             var npoint = self.relativePoint(nmp);
-            nodeobj.moveTo(npoint.x - (nodeobj.width / 2), npoint.y - (nodeobj.height / 2));
+            node.moveTo(npoint.x - (node.width / 2), npoint.y - (node.height / 2));
         });
-        nodeobj.addListener("clicked.dropnode", function() {
-            nodeobj.removeListeners("clicked.dropnode");
+        node.addListener("clicked.dropnode", function() {
+            node.removeListeners("clicked.dropnode");
             $(self.parent).unbind(".dropnode");
-            self.scriptChanged("Created node: " + nodeobj.name);
-        });        
+            self.scriptChanged("Created node: " + node.name);
+        });
+
+        this._undostack.endMacro();        
     },
 
     deleteNode: function(node, alert) {
