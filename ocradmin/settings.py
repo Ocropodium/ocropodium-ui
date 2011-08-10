@@ -312,6 +312,8 @@ COMPRESS_JS = {
             "js/appmenu.js",
             "js/global.js",
             "js/status_bar.js",
+            "js/undo/command.js",
+            "js/undo/stack.js",
         ),
         "output_filename": "js/global_compress.js",
     },
@@ -350,8 +352,6 @@ COMPRESS_JS = {
     },
     "transcript_edit": {
         "source_filenames": (
-            "js/undo/command.js",
-            "js/undo/stack.js",
             "js/line_editor.js",
             "js/spellcheck/suggestion_list.js",
             "js/spellcheck/spellchecker.js",
