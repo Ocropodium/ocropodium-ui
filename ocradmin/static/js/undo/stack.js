@@ -11,6 +11,7 @@ OCRJS.UndoStack = Base.extend({
         this.index = 0;
         this.__context = context;
         this.__nocomp = false;
+        this._currentmacro = null;        
     },
 
     clear: function() {
@@ -18,7 +19,25 @@ OCRJS.UndoStack = Base.extend({
         this.__stack = [];
     },
 
+    beginMacro: function(text) {
+        this._currentmacro = new OCRJS.UndoMacro(text);
+    },
+
+    endMacro: function() {
+        if (!this._currentmacro)
+            throw "endMacro called without calling beginMacro";
+        var macro = this._currentmacro;
+        this._currentmacro = null;        
+        this.push(macro);
+    },                  
+
     push: function(cmd) {
+        if (this._currentmacro) {
+            this._currentmacro.push(cmd);
+            cmd.redo.call(this.__context);
+            return;
+        } 
+
         while (this.__stack.length > this.index) {
             this.__stack.pop();
         }
@@ -58,7 +77,7 @@ OCRJS.UndoStack = Base.extend({
     undo: function() {
         if (!this.canUndo())
             return;
-        this.__stack[this.index - 1].undo.call(this.__context);    
+        this.__stack[this.index - 1].undo();    
         this.index--;
     },
 
@@ -66,14 +85,18 @@ OCRJS.UndoStack = Base.extend({
         if (!this.canRedo())
             return;
         this.index++;
-        this.__stack[this.index - 1].redo.call(this.__context);
+        this.__stack[this.index - 1].redo();
     },
 
     canUndo: function() {
+        if (this._currentmacro)
+            return false;            
         return this.index > 0;    
     },
 
     canRedo: function() {
+        if (this._currentmacro)
+            return false;            
         return this.__stack.length > this.index;
     },
 

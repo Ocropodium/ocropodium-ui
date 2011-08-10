@@ -220,7 +220,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         return this._inplugs[i];
     },
 
-    inputs: function(i) {
+    inputs: function() {
         return this._inplugs;
     },        
 
@@ -435,7 +435,22 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         out.__meta.focussed = self.isFocussed();
         out.__meta.viewing = self.isViewing();
         return out;
-    },                   
+    },
+
+    deserialize: function(data) {
+        var self = this;                     
+        this.type = data.type;
+        this.stage = data.stage;
+        $.each(data.params, function(i, kv) {
+            self.parameters[kv[0]] = kv[1];
+        });
+        this.setIgnored(data.ignored);
+        if (data.__meta) {
+            this.moveTo(data.__meta.x, data.__meta.y);
+            this.setFocussed(data.__meta.focussed);
+            this.setViewing(data.__meta.viewing);
+        }
+    },                     
 
     removeNode: function(skipcleanup) {
         for (var i in this._inplugs)
@@ -477,7 +492,19 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
 
     _setBaseGradient: function(focussed) {
         this._gradient = focussed ? "url(#FocusGradient)" : "url(#NodeGradient)";
-    },                          
+    },
+
+    x: function() {
+        return SvgHelper.getTranslate(this.group()).x;
+    },           
+
+    y: function() {
+        return SvgHelper.getTranslate(this.group()).y;
+    },
+
+    position: function() {
+        return SvgHelper.getTranslate(this.group());
+    },        
 
     move: function(event, element) {
         var self = this;

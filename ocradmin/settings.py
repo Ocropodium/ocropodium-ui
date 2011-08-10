@@ -313,6 +313,7 @@ COMPRESS_JS = {
             "js/global.js",
             "js/status_bar.js",
             "js/undo/command.js",
+            "js/undo/macro.js",
             "js/undo/stack.js",
         ),
         "output_filename": "js/global_compress.js",

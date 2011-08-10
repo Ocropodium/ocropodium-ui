@@ -8,67 +8,89 @@ var SvgHelper = SvgHelper || new OCRJS.Nodetree.SvgHelper();
 
 
 OCRJS.AddNodeCommand = OCRJS.UndoCommand.extend({
-    constructor: function(tree, type, atpoint, context) {
+    constructor: function(tree, name, type, atpoint, context) {
         this.base("Add Node");
-
-        var name = tree.newNodeName(type);
+        console.log("Adding node", name);
         var typedata = tree._nodetypes[type];
-        var nodeobj = tree.addNode(name, typedata);
-        var dragnode = true;
+        var nodeobj = tree.createNode(name, typedata);
+        tree.registerNode(nodeobj);
         this.redo = function() {
-            // N.B. This uses a nasty hack to determine weather the context is
-            // a node (to replace) or a plug (to wire).
-            if (context && context.toString().search(/^<(In|Out)Plug/) > -1) {
+            if (context instanceof OCRJS.Nodetree.BasePlug) {
                 var attachedplug = context;
                 if (attachedplug.isOutput() && nodeobj.arity > 0)
                     tree.connectPlugs(attachedplug, nodeobj.input(0));
                 else
                     tree.connectPlugs(nodeobj.output(), attachedplug);
-            } else if (context && context.toString().search(/^<Node/) > -1) {
+            } else if (context && context instanceof OCRJS.Nodetree.Node) {
                 tree.replaceNode(context, nodeobj);
                 var pos = SvgHelper.getTranslate(context.group());
                 nodeobj.moveTo(pos.x, pos.y);
                 nodeobj.setFocussed(true);
-                dragnode = false;
             }           
-
-            if (!dragnode)
-                return;
-
-            var point = tree.relativePoint(atpoint);
-            nodeobj.moveTo(point.x - (nodeobj.width / 2), point.y - (nodeobj.height / 2));
-            $(document).bind("keydown.dropnode", function(event) {
-                if (event.which == KC_ESCAPE) {
-                    tree.deleteNode(nodeobj);
-                } else if (event.which == KC_RETURN) {
-                    nodeobj.removeListeners("clicked.dropnode");
-                    $(tree.parent).unbind(".dropnode");
-                    tree.scriptChanged("Created node: " + nodeobj.name);
-                }
-            });
-            $(tree.parent).bind("mousemove.dropnode", function(event) {
-                var nmp = SvgHelper.mouseCoord(tree.parent, event);
-                var npoint = tree.relativePoint(nmp);
-                nodeobj.moveTo(npoint.x - (nodeobj.width / 2), npoint.y - (nodeobj.height / 2));
-            });
-            nodeobj.addListener("clicked.dropnode", function() {
-                nodeobj.removeListeners("clicked.dropnode");
-                $(tree.parent).unbind(".dropnode");
-                tree.scriptChanged("Created node: " + nodeobj.name);
-            });        
-
         };
         this.undo = function() {
-            if (context && context.toString().search(/^<Node/) > -1) {
-                var replace = tree.addNode(context.name, tree._nodetypes[context.type]);
+            if (context instanceof OCRJS.Nodetree.Node) {
+                var replace = tree.createNode(context.name, tree._nodetypes[context.type]);
+                tree.registerNode(replace);
                 var pos = SvgHelper.getTranslate(context.group());
                 replace.moveTo(pos.x, pos.y);
                 tree.replaceNode(nodeobj, replace);
-            } else 
+            } else {
+                tree.unregisterNode(nodeobj);
                 tree.deleteNode(nodeobj);
+            }
         };
     }
 });
+
+OCRJS.DeleteNodeCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, name) {
+        this.base("Delete Node: " + name);
+        var data = tree._usednames[name].serialize();
+        this.redo = function() {
+            var node = tree._usednames[name];
+            tree.unregisterNode(node);
+            tree.deleteNode(node);
+        };
+        this.undo = function() {
+            var newnode = tree.createNode(name, tree._nodetypes[data.type]);
+            newnode.deserialize(data);
+            tree.registerNode(newnode);            
+        };            
+    },                     
+});    
+
+OCRJS.ConnectPlugsCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, src, dst) {
+        this.base("Connect Plugs");
+        console.log("Connecting plugs", src, dst);        
+        console.assert(dst instanceof OCRJS.Nodetree.InPlug, "Destination is not an input plug.");
+        this.redo = function() {
+            tree._connectPlugs(src, dst);
+        };
+
+        this.undo = function() {
+            dst.detach();
+        };
+    }        
+});
+
+OCRJS.DetachPlugCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, plug) {
+        this.base("Detach Plug");
+        console.assert(plug.isAttached(), "Plug is not attached.");
+        console.assert(plug instanceof OCRJS.Nodetree.InPlug, "Attempt to detach a non-input plug.");
+        var origin = plug.cable().start;
+        this.redo = function() {
+            plug.detach();    
+        };
+
+        this.undo = function() {
+            console.log("Reconnecting detached plugs", origin.name, plug.name);
+            tree._connectPlugs(origin, plug);
+        };            
+    },
+});    
                      
 
 OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
@@ -317,10 +339,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
     setupNodeListeners: function(node) {
         var self = this;                            
         node.addListeners({
-            toggleIgnored: function(ig) {
+            "toggleIgnored.tree": function(ig) {
                 self.scriptChanged("Toggled ignored: " + node.name);
             },
-            toggleFocussed: function() {
+            "toggleFocussed.tree": function() {
                 if (!self._multiselect) {
                     $.each(self._nodes, function(i, other) {
                         if (node != other)
@@ -330,14 +352,14 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                     self.callListeners("nodeFocussed", node);        
                 }
             },
-            toggleViewing: function(view) {
+            "toggleViewing.tree": function(view) {
                 $.each(self._usednames, function(name, other) {
                     if (node.name != other.name)
                         other.setViewing(false);
                 });
                 self.scriptChanged("Toggled viewing: " + node.name);
             },
-            moving: function() {
+            "moving.tree": function() {
                 // when the node is being dragged, also move any others
                 // that are selected
                 // FIXME: This seems an awfully inefficient way of doing
@@ -357,15 +379,15 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                     trans = newtrans;                    
                 });
             },
-            dropped: function() {
+            "dropped.tree": function() {
                 node.removeListeners("moved.dragmulti");
                 self.callListeners("nodeMoved", node);
             },
-            deleted: function() {
+            "deleted.tree": function() {
                 console.log("Deleted node:", node.name);
                 self.scriptChanged("Deleted: " + node.name);
             },
-            clicked: function(event) {
+            "clicked.tree": function(event) {
                 if (self._menucontext)
                     return self.hideContextMenu();                    
                 if (event.shiftKey)
@@ -373,27 +395,31 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                 else
                     node.setFocussed(true, true);
             },
-            rightClicked: function(event) {
+            "rightClicked.tree": function(event) {
                 self._menucontext = node;
                 self.showContextMenu(event);
             },
-            inputAttached: function(plug) {
+            "inputAttached.tree": function(plug) {
                 console.log("Attached input to", node.name, plug.name);
                 self.handlePlug(plug);
             },                               
-            outputAttached: function(plug) {
+            "outputAttached.tree": function(plug) {
                 console.log("Attached output to", node.name, plug.name);
                 self.handlePlug(plug);
             },
-            plugHoverIn: function(plug) {
+            "plugHoverIn.tree": function(plug) {
                 self.handlePlugHover(plug);
             },
-            plugRightClicked: function(plug, event) {
+            "plugRightClicked.tree": function(plug, event) {
                 self._menucontext = plug;
                 self.showContextMenu(event);
             },                                  
         });
     },
+
+    teardownNodeListeners: function(node) {
+        node.removeListeners(".tree");
+    },                               
 
     removeDragCable: function() {
         if (this._dragcable) {
@@ -402,23 +428,29 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
             this._dragcable = null;
         }
         $(document).unbind(".dragcable").unbind(".dropcable");
-    },                        
+    },
+
+    detachPlug: function(plug) {
+        this._undostack.push(new OCRJS.DetachPlugCommand(this, plug));
+    },                    
 
     handlePlug: function(plug) {
         var self = this;
         if (!self._dragcable && plug.isInput() && plug.isAttached()) {
-            plug.detach();
+            this.detachPlug(plug);
             self.startCableDrag(plug);
         } else if (!self._dragcable) {
             self.startCableDrag(plug);
         } else {
             if (self._dragcable.start.wouldAccept(plug)) {
+                this._undostack.beginMacro("Connect Plugs");
                 if (plug.isInput() && plug.isAttached())
-                    plug.detach();
+                    this.detachPlug(plug);
                 if (self._dragcable.start.isInput())
                     self.connectPlugs(plug, self._dragcable.start);
                 else
                     self.connectPlugs(self._dragcable.start, plug);
+                this._undostack.endMacro();
                 self.scriptChanged("Plugged: " + plug.name);
             }
             self.removeDragCable();    
@@ -457,22 +489,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
     },
 
     connectPlugs: function(src, dst) {
-        var self = this;                        
-        var cable = new NT.Cable(src, dst);
-        var p1 = SvgHelper.denorm(src.centre(), src.group(), this.group());
-        var p2 = SvgHelper.denorm(dst.centre(), dst.group(), this.group());
-        src.addListener("moved", function() {
-            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
-            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
-            cable.update(m1, m2);            
-        });
-        dst.addListener("moved", function() {
-            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
-            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
-            cable.update(m1, m2);            
-        });
-        cable.draw(self.svg, self._cablegroup, p1, p2);
+        this._undostack.push(new OCRJS.ConnectPlugsCommand(this, src, dst));
     },
+
 
     disconnectNode: function(node) {
         // when we're about to delete a node, clean
@@ -483,13 +502,16 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         var outplug = node.output();
         var referencees = self.attachedInputs(outplug);
         for (var i in referencees)
-            referencees[i].detach();                
+            this.detachPlug(referencees[i]);
         var input = node.input(0);
-        if (!(input && input.isAttached()))
+        if (!input || !input.isAttached())
             return;
-        var srcplug = input.cable().start;
-        for (var i in referencees) {
-            self.connectPlugs(srcplug, referencees[i]);
+        if (input.isAttached()) {
+            var srcplug = input.cable().start;
+            this.detachPlug(input);
+            for (var i in referencees) {
+                self.connectPlugs(srcplug, referencees[i]);
+            }
         }
     },
 
@@ -651,7 +673,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         );
 
         self._menu.find(".topmenu").find("li").click(function(event) {
-            self.createNode($(this).data("name"), 
+            self.createNodeAtPoint($(this).data("name"), 
                     SvgHelper.mouseCoord(self.parent, event), self._menucontext);
             self.hideContextMenu();
             event.stopPropagation();
@@ -743,7 +765,8 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         delete script["__meta"];
         $.each(script, function(name, node) {
             var typedata = self._nodetypes[node.type];
-            var newnode = self.addNode(name, typedata);
+            var newnode = self.createNode(name, typedata);
+            self.registerNode(newnode);
             newnode.setIgnored(node.ignored);
             $.each(node.params, function(i, p) {
                 newnode.parameters[i].value = p[1];
@@ -761,15 +784,26 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         this.callListeners("scriptLoaded");
     },                    
 
-    addNode: function(name, typedata) {                         
+    createNode: function(name, typedata) {                         
         var id = $.map(this._usednames, function(){return true;}).length;
         var node = new NT.TreeNode(name, typedata, id);
-        this.setupNodeListeners(node);
-        this._usednames[name] = node;
-        this._nodes.push(node);
         node.draw(this.svg, this._group, 0, 0);
         return node;
     },
+
+    registerNode: function(node) {
+        this.setupNodeListeners(node);
+        this._usednames[node.name] = node;
+        this._nodes.push(node);
+    },                      
+
+    unregisterNode: function(node) {
+        this.teardownNodeListeners(node);
+        delete this._usednames[node.name];
+        var i = this._nodes.indexOf(node);
+        console.assert(i > -1, "Node", node.name, "not found in self._nodes");
+        this._nodes.splice(i, 1);
+    },                        
 
     lassoSelect: function(event) {                             
         var self = this;
@@ -864,22 +898,48 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         for (var i in ins)
             this.connectPlugs(dst.output(), ins[i]);
         dst.setViewing(src.isViewing());
+        this.unregisterNode(src);
         this.deleteNode(src, false);
         this.scriptChanged("Replaced node: " + src.name + " with" + dst.name);
     },                     
 
-    createNode: function(type, atpoint, context) {
+    createNodeAtPoint: function(type, atpoint, context) {
         var self = this;                   
+        var name = this.newNodeName(type);
         this._undostack.push(
-                new OCRJS.AddNodeCommand(this, type, atpoint, context));
+                new OCRJS.AddNodeCommand(this, name, type, atpoint, context));
 
+        // we need to attach the node to the mouse UNLESS it's replacing
+        // another node
+        if (context instanceof OCRJS.Nodetree.Node)
+            return;
+
+
+        var nodeobj = this._usednames[name];
+        var point = this.relativePoint(atpoint);
+        nodeobj.moveTo(point.x - (nodeobj.width / 2), point.y - (nodeobj.height / 2));
+        $(document).bind("keydown.dropnode", function(event) {
+            if (event.which == KC_ESCAPE) {
+                self._undostack.undo();
+            } else if (event.which == KC_RETURN) {
+                nodeobj.removeListeners("clicked.dropnode");
+                $(self.parent).unbind(".dropnode");
+                self.scriptChanged("Created node: " + nodeobj.name);
+            }
+        });
+        $(this.parent).bind("mousemove.dropnode", function(event) {
+            var nmp = SvgHelper.mouseCoord(self.parent, event);
+            var npoint = self.relativePoint(nmp);
+            nodeobj.moveTo(npoint.x - (nodeobj.width / 2), npoint.y - (nodeobj.height / 2));
+        });
+        nodeobj.addListener("clicked.dropnode", function() {
+            nodeobj.removeListeners("clicked.dropnode");
+            $(self.parent).unbind(".dropnode");
+            self.scriptChanged("Created node: " + nodeobj.name);
+        });        
     },
 
     deleteNode: function(node, alert) {
-        var i = this._nodes.indexOf(node);
-        console.assert(i > -1, "Node", node.name, "not found in self._nodes");
-        delete this._usednames[node.name];
-        this._nodes.splice(i, 1);
         this.disconnectNode(node);
         node.removeNode(alert);
     },                    
@@ -895,7 +955,13 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         var togo = $.map(this._nodes, function(n) {
             if (n.isFocussed()) return n;
         });
-        $.map(togo, function(n) {self.deleteNode(n);});
+        var multi = togo.length > 1;
+        this._undostack.beginMacro("Delete Selection");
+        $.map(togo, function(n) {
+            self.disconnectNode(n);
+            self._undostack.push(new OCRJS.DeleteNodeCommand(self, n.name));
+        });
+        this._undostack.endMacro();
         this.scriptChanged("Deleted selected nodes");        
     },                        
 
@@ -936,7 +1002,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                 console.log("Connecting:", input, name);
                 var n1 = self._usednames[input];
                 var n2 = self._usednames[name];
-                self.connectPlugs(n1.output(), n2.input(i));
+                self._connectPlugs(n1.output(), n2.input(i));
             });
         });    
     },                      
@@ -1033,4 +1099,23 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         this.svg.linearGradient(defs, "PlugDragging", 
             [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
     },
+
+    _connectPlugs: function(src, dst) {
+        var self = this;
+        console.log("_CONNECT PLUGS", src.name, dst.name);        
+        var cable = new NT.Cable(src, dst);
+        var p1 = SvgHelper.denorm(src.centre(), src.group(), this.group());
+        var p2 = SvgHelper.denorm(dst.centre(), dst.group(), this.group());
+        src.addListener("moved", function() {
+            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
+            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
+            cable.update(m1, m2);            
+        });
+        dst.addListener("moved", function() {
+            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
+            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
+            cable.update(m1, m2);            
+        });
+        cable.draw(this.svg, this._cablegroup, p1, p2);
+    },                       
 });
