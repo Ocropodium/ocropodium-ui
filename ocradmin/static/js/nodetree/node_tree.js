@@ -7,77 +7,139 @@ var NT = OCRJS.Nodetree;
 var SvgHelper = SvgHelper || new OCRJS.Nodetree.SvgHelper();
 
 
-OCRJS.AddNodeCommand = OCRJS.UndoCommand.extend({
+NT.AddNodeCommand = OCRJS.UndoCommand.extend({
+    /*
+     * This command contains a nasty hack.  When the node is created
+     * it is temporarily attached to the mouse to allow positioning.
+     * When creating a node is undone the function stores the position
+     * in the class closure so that subsequent redo operations put
+     * it back in the right place afterwards.
+     */
     constructor: function(tree, name, type, atpoint, context) {
         this.base("Add Node");
-        console.log("Adding node", name);
-        
+        var self = this;
+        var pos = atpoint;
         this.redo = function() {
             var node = tree.createNode(name, tree._nodetypes[type]);
-            node.moveTo(atpoint.x - (node.width / 2), atpoint.y - (node.height / 2));
             tree.registerNode(node);
-
+            node.moveTo(
+                pos.x - (node.width / 2),
+                pos.y - (node.height / 2)
+            );
         };
         this.undo = function() {
-            var node = tree._usednames[name];
+            var node = tree.getNode(name);
+            pos = {
+                x: node.position().x + (node.width / 2),
+                y: node.position().y + (node.height / 2),
+            };
             tree.unregisterNode(node);
             tree.deleteNode(node);
         };
     }
 });
 
-OCRJS.DeleteNodeCommand = OCRJS.UndoCommand.extend({
+NT.DeleteNodeCommand = OCRJS.UndoCommand.extend({
     constructor: function(tree, name) {
         this.base("Delete Node: " + name);
-        var data = tree._usednames[name].serialize();
+        var data = tree.getNode(name).serialize();
         this.redo = function() {
-            var node = tree._usednames[name];
+            var node = tree.getNode(name);
             tree.unregisterNode(node);
             tree.deleteNode(node);
         };
         this.undo = function() {
             var newnode = tree.createNode(name, tree._nodetypes[data.type]);
+            console.log("Serialized node", data);
             newnode.deserialize(data);
             tree.registerNode(newnode);            
         };            
     },                     
 });    
 
-OCRJS.ConnectPlugsCommand = OCRJS.UndoCommand.extend({
-    constructor: function(tree, src, dst) {
+NT.ConnectPlugsCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, srcname, dstname) {
         this.base("Connect Plugs");
-        console.log("Connecting plugs", src, dst);        
-        console.assert(dst instanceof OCRJS.Nodetree.InPlug, "Destination is not an input plug.");
+        //console.assert(dst instanceof NT.InPlug, "Destination is not an input plug.");
+        var self = this;
         this.redo = function() {
-            tree._connectPlugs(src, dst);
+            var src = tree.getPlug(srcname);
+            var dst = tree.getPlug(dstname);
+            tree.connectPlugs(src, dst);
         };
 
         this.undo = function() {
+            var dst = tree.getPlug(dstname);
             dst.detach();
         };
-    }        
+    },        
+
 });
 
-OCRJS.DetachPlugCommand = OCRJS.UndoCommand.extend({
-    constructor: function(tree, plug) {
+NT.DetachPlugCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, plugname) {
         this.base("Detach Plug");
-        console.assert(plug.isAttached(), "Plug is not attached.");
-        console.assert(plug instanceof OCRJS.Nodetree.InPlug, "Attempt to detach a non-input plug.");
-        var origin = plug.cable().start;
+        var self = this;
+        //console.assert(plug.isAttached(), "Plug is not attached.");
+        //console.assert(plug instanceof NT.InPlug, "Attempt to detach a non-input plug.");
+        var originname = tree.getPlug(plugname).cable().start.name;
         this.redo = function() {
-            plug.detach();    
+            tree.getPlug(plugname).detach();
         };
 
         this.undo = function() {
-            console.log("Reconnecting detached plugs", origin.name, plug.name);
-            tree._connectPlugs(origin, plug);
+            tree.connectPlugs(tree.getPlug(originname), tree.getPlug(plugname));
         };            
     },
-});    
-                     
+});
 
-OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
-    constructor: function(parent, options) {
+NT.IgnoreNodeCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, nodename) {
+        this.base("Ignore Node: " + nodename);
+        var self = this;
+        this.redo = function() {
+            var node = tree.getNode(nodename);
+            node.setIgnored(!node.isIgnored());
+        };
+        this.undo = function() {
+            var node = tree.getNode(nodename);
+            node.setIgnored(!node.isIgnored());
+        };        
+    },
+});    
+                   
+NT.ViewNodeCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, nodename) {
+        this.base("View Output for Node: " + nodename);
+        var self = this;
+        this.redo = function() {
+            var node = tree.getNode(nodename);
+            node.setViewing(!node.isViewing());
+        };
+        this.undo = function() {
+            var node = tree.getNode(nodename);
+            node.setViewing(!node.isViewing());
+        };        
+    },
+});    
+                   
+NT.SetNodeParameterCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, nodename, param, oldvalue, value) {
+        this.base("Set Parameter: " + nodename + "." + param);
+        var self = this;
+        this.redo = function() {
+            tree.getNode(nodename).setParameter(param, value, true);
+        };
+        this.undo = function() {
+            tree.getNode(nodename).setParameter(param, oldvalue, true);
+        };
+    },
+});    
+
+
+
+NT.NodeTree = OCRJS.OcrBaseWidget.extend({
+    constructor: function(parent, cmdstack, options) {
         this.base(parent, options);
 
         this._listeners = {
@@ -105,9 +167,12 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         this._menu = null;
         this._menucontext = null;
         this._menutemplate = $.template($("#nodeMenuTmpl"));
+        this._paramtmpl = $.template($("#paramTmpl"));
         this._minzoom = 0.1;
         this._maxzoom = 7;
-        this._undostack = new OCRJS.UndoStack(this);
+        this._plugre = /^(.*?)_(input|output)(\d*)$/;
+        this._undostack = cmdstack;
+        this._undostack.setCompressionEnabled(false);
     },
 
 
@@ -136,6 +201,21 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
 
     getNode: function(nodename) {
         return this._usednames[nodename];
+    },
+
+    getPlug: function(plugname) {
+        var match = plugname.match(this._plugre);                 
+        if (!match)
+            throw "Invalid plug name: " + plugname;
+        var node = this._usednames[match[1]];
+        switch (match[2]) {
+            case "input": 
+                return node.input(parseInt(match[3], 10));                          
+            case "output":
+                return node.output();
+            default:
+                throw "Unexpected plug name: " + plugname;
+        }                
     },                 
 
     clearScript: function() {
@@ -150,19 +230,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
     },               
 
     setFileInPath: function(name, path) {
-        console.log("Setting filein path", name, path);                       
-        for (var n in this._nodes) {
-            if (this._nodes[n].name == name) {
-                var params = this._nodes[n].parameters;
-                for (var i in params) {
-                    console.log("Setting", params[i].name, path)
-                    if (params[i].name == "path")
-                        params[i].value = path;
-                    break;
-                }                
-            }                
-        }            
-        this.scriptChanged("Set file in path: " + name);
+        console.log("Setting filein path", name, path);
+        var oldval = this.getNode(name).getParameter("path");
+        this.cmdSetNodeParameter(this.getNode(name), "path", oldval, path);
     },               
 
     queryNodeTypes: function() {
@@ -242,6 +312,22 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         this.callListeners("scriptChanged", what);
     },
 
+    getNodeParameter: function(node, param) {
+        for (var i in node.parameters) {
+            if (node.parameters[i].name == param)
+                return node.parameters[i].value;
+        }
+        throw "Unknown node parameter: " + node.name + ": " + param;        
+    },                          
+
+    setNodeParameter: function(node, param, value) {
+        for (var i in node.parameters) {
+            if (node.parameters[i].name == param)
+                node.parameters[i].value = value;
+        }
+        throw "Unknown node parameter: " + node.name + ": " + param;        
+    },                          
+
     buildParams: function(node) {
         var self = this;
         console.log("Setting parameter listeners for", node.name, node.parameters);
@@ -272,11 +358,17 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                 $(this).addClass("invalid");
             }
         });
+        var oldparams = {};
         // bind each param to its actual value
         $.each(node.parameters, function(i, param) {
+            oldparams[param.name] = param.value;
             $("input[type='text']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
                 $(elem).bind("keyup.paramval", function(event) {
                     node.parameters[i].value = $(this).val();
+                });
+                $(elem).bind("blur.paramval", function(event) {
+                    if ($(this).val() != oldparams[param.name])
+                        self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).val()); 
                 });
                 node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
                     $(elem).val(value);
@@ -286,6 +378,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                 $(elem).bind("change.paramval", function(event) {
                     node.parameters[i].value = $(this).prop("checked");
                 });
+                $(elem).bind("blur.paramval", function(event) {
+                    if ($(this).prop("checked") != oldparams[param.name])
+                        self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).prop("checked")); 
+                });
                 node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
                     $(elem).prop("checked");
                 });
@@ -293,6 +389,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
             $("select#" + node.name + param.name + ", input[type='hidden']#" + node.name + param.name).each(function(ii, elem) {
                 $(elem).bind("change.paramval", function(event) {
                     node.parameters[i].value = $(this).val();
+                });
+                $(elem).bind("blur.paramval", function(event) {
+                    if ($(this).val() != oldparams[param.name])
+                        self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).val()); 
                 });
                 node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
                     $(elem).val(value);
@@ -304,9 +404,9 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
             if ($("#switch").length) {
                 $("#switch", "#parameters").buttonset();
                 $("input[type='radio']").change(function(event) {
-                    node.parameters[i].value = parseInt(
+                    var newval = parseInt(
                         $("input[name='" + node.name + "input']:checked").val());
-                    self.scriptChanged();
+                    self.cmdSetNodeParameter(node, param.name, oldparams[param.name], newval); 
                 });
             }
         });
@@ -323,7 +423,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         var self = this;                            
         node.addListeners({
             "toggleIgnored.tree": function(ig) {
-                self.scriptChanged("Toggled ignored: " + node.name);
+                self.cmdSetNodeIgnored(node);
             },
             "toggleFocussed.tree": function() {
                 if (!self._multiselect) {
@@ -331,16 +431,15 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                         if (node != other)
                             other.setFocussed(false);
                     });
+                    node.setFocussed(true);
                     self.buildParams(node);
                     self.callListeners("nodeFocussed", node);        
+                } else {
+                    node.setFocussed(!node.isFocussed());    
                 }
             },
-            "toggleViewing.tree": function(view) {
-                $.each(self._usednames, function(name, other) {
-                    if (node.name != other.name)
-                        other.setViewing(false);
-                });
-                self.scriptChanged("Toggled viewing: " + node.name);
+            "toggleViewing.tree": function() {
+                self.cmdSetNodeViewing(node);
             },
             "moving.tree": function() {
                 // when the node is being dragged, also move any others
@@ -368,15 +467,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
             },
             "deleted.tree": function() {
                 console.log("Deleted node:", node.name);
-                self.scriptChanged("Deleted: " + node.name);
             },
             "clicked.tree": function(event) {
                 if (self._menucontext)
                     return self.hideContextMenu();                    
-                if (event.shiftKey)
-                    node.setFocussed(!node.isFocussed(), true);
-                else
-                    node.setFocussed(true, true);
             },
             "rightClicked.tree": function(event) {
                 self._menucontext = node;
@@ -413,14 +507,14 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         $(document).unbind(".dragcable").unbind(".dropcable");
     },
 
-    detachPlug: function(plug) {
-        this._undostack.push(new OCRJS.DetachPlugCommand(this, plug));
+    cmdDetachPlug: function(plug) {
+        this._undostack.push(new NT.DetachPlugCommand(this, plug.name));
     },                    
 
     handlePlug: function(plug) {
         var self = this;
         if (!self._dragcable && plug.isInput() && plug.isAttached()) {
-            this.detachPlug(plug);
+            this.cmdDetachPlug(plug);
             self.startCableDrag(plug);
         } else if (!self._dragcable) {
             self.startCableDrag(plug);
@@ -428,13 +522,12 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
             if (self._dragcable.start.wouldAccept(plug)) {
                 this._undostack.beginMacro("Connect Plugs");
                 if (plug.isInput() && plug.isAttached())
-                    this.detachPlug(plug);
+                    this.cmdDetachPlug(plug);
                 if (self._dragcable.start.isInput())
-                    self.connectPlugs(plug, self._dragcable.start);
+                    self.cmdConnectPlugs(plug, self._dragcable.start);
                 else
-                    self.connectPlugs(self._dragcable.start, plug);
+                    self.cmdConnectPlugs(self._dragcable.start, plug);
                 this._undostack.endMacro();
-                self.scriptChanged("Plugged: " + plug.name);
             }
             self.removeDragCable();    
         }            
@@ -471,31 +564,72 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         });
     },
 
-    connectPlugs: function(src, dst) {
-        this._undostack.push(new OCRJS.ConnectPlugsCommand(this, src, dst));
+    cmdSetNodeParameter: function(node, param, oldval, newval) {
+        this._undostack.push(new NT.SetNodeParameterCommand(this, node.name, param, oldval, newval));
     },
 
+    cmdConnectPlugs: function(src, dst) {
+        this._undostack.push(new NT.ConnectPlugsCommand(this, src.name, dst.name));
+    },
 
-    disconnectNode: function(node) {
+    cmdSetNodeViewing: function(node) {
+        var self = this;                           
+        this._undostack.beginMacro("Set Viewing Output");
+        if (!node.isViewing()) {
+            $.each(this._usednames, function(name, other) {
+                if (node.name != other.name && other.isViewing())
+                    self._undostack.push(new NT.ViewNodeCommand(self, other.name));
+            });
+        }
+        this._undostack.push(new NT.ViewNodeCommand(this, node.name));
+        this._undostack.endMacro();
+    },
+
+    cmdSetNodeIgnored: function(node) {
+        this._undostack.push(new NT.IgnoreNodeCommand(this, node.name));
+    },                           
+
+    cmdDisconnectNode: function(node) {
         // when we're about to delete a node, clean
         // up its cables
         // check if we've got an input                
         var self = this;                        
-        console.log("Delete initiated:", node.name);
         var outplug = node.output();
+        this._undostack.beginMacro("Disconnect Node");
         var referencees = self.attachedInputs(outplug);
         for (var i in referencees)
-            this.detachPlug(referencees[i]);
+            this.cmdDetachPlug(referencees[i]);
         var input = node.input(0);
         if (!input || !input.isAttached())
             return;
         if (input.isAttached()) {
             var srcplug = input.cable().start;
-            this.detachPlug(input);
+            this.cmdDetachPlug(input);
             for (var i in referencees) {
-                self.connectPlugs(srcplug, referencees[i]);
+                self.cmdConnectPlugs(srcplug, referencees[i]);
             }
         }
+        this._undostack.endMacro();
+    },
+
+    connectPlugs: function(src, dst) {
+        var self = this;
+        console.log("_CONNECT PLUGS", src.name, dst.name);        
+        var cable = new NT.Cable(src, dst);
+        var p1 = SvgHelper.denorm(src.centre(), src.group(), this.group());
+        var p2 = SvgHelper.denorm(dst.centre(), dst.group(), this.group());
+        src.addListener("moved", function() {
+            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
+            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
+            cable.update(m1, m2);            
+        });
+        dst.addListener("moved", function() {
+            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
+            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
+            cable.update(m1, m2);                    
+        });
+        console.log("Cable drawing:", p1, p2);
+        cable.draw(this.svg, this._cablegroup, p1, p2);
     },
 
     attachedInputs: function(outplug) {
@@ -548,7 +682,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
             });
             $(document).bind("keydown.nodecmd", function(event) {
                 if (event.which == KC_DELETE)
-                    self.deleteSelected();
+                    self.cmdDeleteSelected();
                 else if (event.which == KC_SHIFT)
                    self._multiselect = true;
                 else if (event.which == KC_HOME)
@@ -656,7 +790,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         );
 
         self._menu.find(".topmenu").find("li").click(function(event) {
-            self.createNodeAtPoint($(this).data("name"), 
+            self.cmdCreateNode($(this).data("name"), 
                     SvgHelper.mouseCoord(self.parent, event), self._menucontext);
             self.hideContextMenu();
             event.stopPropagation();
@@ -769,7 +903,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
 
     createNode: function(name, typedata) {                         
         var id = $.map(this._usednames, function(){return true;}).length;
-        var node = new NT.TreeNode(name, typedata, id);
+        var node = new NT.Node(name, typedata, id);
         node.draw(this.svg, this._group, 0, 0);
         return node;
     },
@@ -848,6 +982,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                 x: trans.x, y: trans.y, width: node.width, height: node.height,
             })) nodes.push(node);
         });
+        console.log("Lassood", nodes.length, "nodes");
         return nodes;        
     },
 
@@ -864,45 +999,42 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         };
     },    
 
-    replaceNode: function(src, dst) {
+    cmdReplaceNode: function(src, dst) {
         var outs = [];
         for (var i in src.inputs())
             if (src.input(i).isAttached())
                 outs.push(src.input(i).cable().start);
         var ins = this.attachedInputs(src.output());
         for (var i in src.inputs())
-            this.detachPlug(src.input(i));
+            this.cmdDetachPlug(src.input(i));
         for (var i in ins)
-            this.detachPlug(ins[i]);
+            this.cmdDetachPlug(ins[i]);
         // src node is now  fully detached, hopefully
         for (var i in outs)
             if (dst.input(i))
-                this.connectPlugs(outs[i], dst.input(i));
+                this.cmdConnectPlugs(outs[i], dst.input(i));
         for (var i in ins)
-            this.connectPlugs(dst.output(), ins[i]);
+            this.cmdConnectPlugs(dst.output(), ins[i]);
         dst.setViewing(src.isViewing());
-        this._undostack.push(new DeleteNodeCommand(this, src));
-        //this.unregisterNode(src);
-        //this.deleteNode(src, false);
-        this.scriptChanged("Replaced node: " + src.name + " with" + dst.name);
+        this._undostack.push(new NT.DeleteNodeCommand(this, src.name));
     },                     
 
-    createNodeAtPoint: function(type, atpoint, context) {
+    cmdCreateNode: function(type, atpoint, context) {
         var self = this;                   
         var name = this.newNodeName(type);
         this._undostack.beginMacro("Create Node");
         this._undostack.push(
-                new OCRJS.AddNodeCommand(this, name, type, atpoint));
+                new NT.AddNodeCommand(this, name, type, atpoint));
         var node = this._usednames[name];
 
-        if (context instanceof OCRJS.Nodetree.BasePlug) {
+        if (context instanceof NT.BasePlug) {
             var attachedplug = context;
             if (attachedplug.isOutput() && node.arity > 0)
-                tree.connectPlugs(attachedplug, node.input(0));
+                this.cmdConnectPlugs(attachedplug, node.input(0));
             else
-                tree.connectPlugs(node.output(), attachedplug);
-        } else if (context && context instanceof OCRJS.Nodetree.Node) {
-            tree.replaceNode(context, node);
+                this.cmdConnectPlugs(node.output(), attachedplug);
+        } else if (context && context instanceof NT.Node) {
+            this.cmdReplaceNode(context, node);
             var pos = SvgHelper.getTranslate(context.group());
             node.moveTo(pos.x, pos.y);
             node.setFocussed(true);
@@ -910,41 +1042,36 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
 
         // we need to attach the node to the mouse UNLESS it's replacing
         // another node
-        if (context instanceof OCRJS.Nodetree.Node)
-            return;
-
-
-        var point = this.relativePoint(atpoint);
-        node.moveTo(point.x - (node.width / 2), point.y - (node.height / 2));
-        $(document).bind("keydown.dropnode", function(event) {
-            if (event.which == KC_ESCAPE) {
-                self._undostack.undo();
-            } else if (event.which == KC_RETURN) {
+        if (!(context instanceof NT.Node)) {
+            var point = this.relativePoint(atpoint);
+            node.moveTo(point.x - (node.width / 2), point.y - (node.height / 2));
+            $(document).bind("keydown.dropnode", function(event) {
+                if (event.which == KC_ESCAPE) {
+                    self._undostack.undo();
+                } else if (event.which == KC_RETURN) {
+                    node.removeListeners("clicked.dropnode");
+                    $(self.parent).unbind(".dropnode");
+                }
+            });
+            $(this.parent).bind("mousemove.dropnode", function(event) {
+                var nmp = SvgHelper.mouseCoord(self.parent, event);
+                var npoint = self.relativePoint(nmp);
+                node.moveTo(npoint.x - (node.width / 2), npoint.y - (node.height / 2));
+            });
+            node.addListener("clicked.dropnode", function() {
                 node.removeListeners("clicked.dropnode");
                 $(self.parent).unbind(".dropnode");
-                self.scriptChanged("Created node: " + node.name);
-            }
-        });
-        $(this.parent).bind("mousemove.dropnode", function(event) {
-            var nmp = SvgHelper.mouseCoord(self.parent, event);
-            var npoint = self.relativePoint(nmp);
-            node.moveTo(npoint.x - (node.width / 2), npoint.y - (node.height / 2));
-        });
-        node.addListener("clicked.dropnode", function() {
-            node.removeListeners("clicked.dropnode");
-            $(self.parent).unbind(".dropnode");
-            self.scriptChanged("Created node: " + node.name);
-        });
+            });
+        }            
 
         this._undostack.endMacro();        
     },
 
     deleteNode: function(node, alert) {
-        this.disconnectNode(node);
         node.removeNode(alert);
     },                    
 
-    deleteSelected: function() {
+    cmdDeleteSelected: function() {
         var self = this;                        
         // have to watch out we don't barf the _nodes index
         var togo = [];
@@ -958,11 +1085,10 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         var multi = togo.length > 1;
         this._undostack.beginMacro("Delete Selection");
         $.map(togo, function(n) {
-            self.disconnectNode(n);
-            self._undostack.push(new OCRJS.DeleteNodeCommand(self, n.name));
+            self.cmdDisconnectNode(n);
+            self._undostack.push(new NT.DeleteNodeCommand(self, n.name));
         });
         this._undostack.endMacro();
-        this.scriptChanged("Deleted selected nodes");        
     },                        
 
     buildScript: function() {
@@ -1002,7 +1128,7 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
                 console.log("Connecting:", input, name);
                 var n1 = self._usednames[input];
                 var n2 = self._usednames[name];
-                self._connectPlugs(n1.output(), n2.input(i));
+                self.connectPlugs(n1.output(), n2.input(i));
             });
         });    
     },                      
@@ -1099,23 +1225,4 @@ OCRJS.Nodetree.NodeTree = OCRJS.OcrBaseWidget.extend({
         this.svg.linearGradient(defs, "PlugDragging", 
             [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
     },
-
-    _connectPlugs: function(src, dst) {
-        var self = this;
-        console.log("_CONNECT PLUGS", src.name, dst.name);        
-        var cable = new NT.Cable(src, dst);
-        var p1 = SvgHelper.denorm(src.centre(), src.group(), this.group());
-        var p2 = SvgHelper.denorm(dst.centre(), dst.group(), this.group());
-        src.addListener("moved", function() {
-            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
-            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
-            cable.update(m1, m2);            
-        });
-        dst.addListener("moved", function() {
-            var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
-            var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
-            cable.update(m1, m2);            
-        });
-        cable.draw(this.svg, this._cablegroup, p1, p2);
-    },                       
 });
