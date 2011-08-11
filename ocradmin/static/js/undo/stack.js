@@ -5,14 +5,25 @@ if (OCRJS === undefined) {
 }
 
 
-OCRJS.UndoStack = Base.extend({
+OCRJS.UndoStack = OCRJS.OcrBase.extend({
     constructor: function(context) {
         this.__stack = [];
         this.index = 0;
         this.__context = context;
         this.__nocomp = false;
+        this.__cancompress = true;
         this._currentmacro = null;        
+
+        this._listeners = {
+            indexChanged: [],
+            undoStateChanged: [],
+            redoStateChanged: [],            
+        };
     },
+
+    setCompressionEnabled: function(allow) {
+        this.__cancompress = allow;
+    },        
 
     clear: function() {
         this.index = 0;
@@ -43,7 +54,7 @@ OCRJS.UndoStack = Base.extend({
         }
         cmd.redo.call(this.__context);
         var merged = false;
-        if (this.__stack.length && !this.__nocomp) {
+        if (this.__cancompress && this.__stack.length && !this.__nocomp) {
             var prev = this.__stack[this.__stack.length - 1];
             if (prev.text == cmd.text) {
                 if (cmd.mergeWith(prev)) {
@@ -57,6 +68,7 @@ OCRJS.UndoStack = Base.extend({
             this.__stack.push(cmd);
             this.index++;
             this.__nocomp = false;
+            this.callListeners("indexChanged");
         }
     },
 
@@ -79,6 +91,7 @@ OCRJS.UndoStack = Base.extend({
             return;
         this.__stack[this.index - 1].undo();    
         this.index--;
+        this.callListeners("undoStateChanged");
     },
 
     redo: function() {
@@ -86,6 +99,7 @@ OCRJS.UndoStack = Base.extend({
             return;
         this.index++;
         this.__stack[this.index - 1].redo();
+        this.callListeners("redoStateChanged");
     },
 
     canUndo: function() {
