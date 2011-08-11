@@ -128,10 +128,10 @@ NT.SetNodeParameterCommand = OCRJS.UndoCommand.extend({
         this.base("Set Parameter: " + nodename + "." + param);
         var self = this;
         this.redo = function() {
-            tree.getNode(nodename).setParameter(param, value, true);
+            tree.getNode(nodename).setParameter(param, value, false);
         };
         this.undo = function() {
-            tree.getNode(nodename).setParameter(param, oldvalue, true);
+            tree.getNode(nodename).setParameter(param, oldvalue, false);
         };
     },
 });    
@@ -1067,10 +1067,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         this._undostack.endMacro();        
     },
 
-    deleteNode: function(node, alert) {
-        node.removeNode(alert);
-    },                    
-
     cmdDeleteSelected: function() {
         var self = this;                        
         // have to watch out we don't barf the _nodes index
@@ -1090,6 +1086,10 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         });
         this._undostack.endMacro();
     },                        
+
+    deleteNode: function(node, alert) {
+        node.removeNode(alert);
+    },                    
 
     buildScript: function() {
         var script = {};                     
