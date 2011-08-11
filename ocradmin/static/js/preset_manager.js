@@ -124,10 +124,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     newPreset: function() {
         if (this.hasChanged()) {
             this._continueaction = this.newPreset;
-            if (this._opened)
-                this.showSavePresetDialog();
-            else
-                this.showNewPresetDialog();
+            this.showSavePresetDialog(!this._opened);
             return;
         }
         this.callListeners("newPreset");
@@ -224,12 +221,12 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         });
     },
 
-    showSavePresetDialog: function() {
+    showSavePresetDialog: function(saveas) {
         var self = this;        
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.html($.tmpl(this._updatetmpl, {}));
-
+        this._dialog.find("#submit_save_script").attr("disabled", saveas);
         this._dialog.find("#submit_save_script").click(function(event) {
             var data = self._nodetree.buildScript();
             var name = $("#current_preset_name").text();
