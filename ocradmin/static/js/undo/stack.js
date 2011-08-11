@@ -9,10 +9,10 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
     constructor: function(context) {
         this.__stack = [];
         this.index = 0;
-        this.__context = context;
-        this.__nocomp = false;
-        this.__cancompress = true;
-        this._currentmacro = null;        
+        this._context = context;
+        this._nocomp = false;
+        this._cancompress = true;
+        this._macros = [];
 
         this._listeners = {
             indexChanged: [],
@@ -22,7 +22,7 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
     },
 
     setCompressionEnabled: function(allow) {
-        this.__cancompress = allow;
+        this._cancompress = allow;
     },        
 
     clear: function() {
@@ -31,30 +31,32 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
     },
 
     beginMacro: function(text) {
-        this._currentmacro = new OCRJS.UndoMacro(text);
+        this._macros.push(new OCRJS.UndoMacro(text));
     },
 
     endMacro: function() {
-        if (!this._currentmacro)
+        if (this._macros.length == 0)
             throw "endMacro called without calling beginMacro";
-        var macro = this._currentmacro;
-        this._currentmacro = null;        
-        this.push(macro);
+        var macro = this._macros.pop();
+        if (this._macros.length > 0)
+            this._macros[this._macros.length - 1].push(macro);
+        else        
+            this.push(macro);
     },                  
 
     push: function(cmd) {
-        if (this._currentmacro) {
-            this._currentmacro.push(cmd);
-            cmd.redo.call(this.__context);
+        if (this._macros.length > 0) {
+            this._macros[this._macros.length - 1].push(cmd);
+            cmd.redo.call(this._context);
             return;
         } 
 
         while (this.__stack.length > this.index) {
             this.__stack.pop();
         }
-        cmd.redo.call(this.__context);
+        cmd.redo.call(this._context);
         var merged = false;
-        if (this.__cancompress && this.__stack.length && !this.__nocomp) {
+        if (this._cancompress && this.__stack.length && !this._nocomp) {
             var prev = this.__stack[this.__stack.length - 1];
             if (prev.text == cmd.text) {
                 if (cmd.mergeWith(prev)) {
@@ -67,21 +69,21 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
         } else {
             this.__stack.push(cmd);
             this.index++;
-            this.__nocomp = false;
+            this._nocomp = false;
             this.callListeners("indexChanged");
         }
     },
 
     undoText: function() {
-        if (this.__stack.length) {
-            return "Undo " + this.__stack[this.index - 1].text();
+        if (this.canUndo()) {
+            return "Undo " + this.__stack[this.index - 1].text;
         }
         return "Nothing to undo";
     },    
 
     redoText: function() {
-        if (this.__stack.length && this.index < this.__stack.length) {
-            return "Redo " + this.__stack[this.index].text();
+        if (this.canRedo()) {
+            return "Redo " + this.__stack[this.index].text;
         }
         return "Nothing to redo";
     },    
@@ -103,19 +105,19 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
     },
 
     canUndo: function() {
-        if (this._currentmacro)
+        if (this._macros.length)
             return false;            
         return this.index > 0;    
     },
 
     canRedo: function() {
-        if (this._currentmacro)
+        if (this._macros.length)
             return false;            
         return this.__stack.length > this.index;
     },
 
     breakCompression: function() {
-        this.__nocomp = true;
+        this._nocomp = true;
     }             
 });
 
