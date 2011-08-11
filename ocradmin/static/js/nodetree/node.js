@@ -11,7 +11,7 @@ var SvgHelper = SvgHelper || new OCRJS.Nodetree.SvgHelper;
 
 OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
     constructor: function(name, classdata, id) {
-        this.base();
+        this.base(name, classdata, id);
         this.name = name;
         this.type = classdata.name;
         this.arity = classdata.arity;
@@ -26,6 +26,9 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         this._viewing = false;
         this._id = id;
         this._error = null;
+        this._inplugs = [];
+        this._outplug = null;
+        this._dragging = false;
 
         this._listeners = {
             toggleIgnored: [],
@@ -35,6 +38,17 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             parameterSet: [],
             deleted: [],
             created: [],
+            inputAttached: [],
+            outputAttached: [],
+            aboutToMove: [],
+            dropped: [],
+            moving: [],
+            moved: [],
+            clicked: [],
+            rightClicked: [],
+            plugHoverIn: [],
+            plugHoverOut: [],
+            plugRightClicked: [],
         };
 
         this._setBaseGradient(this._focussed);
@@ -46,20 +60,21 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         }    
     },
 
-    hashValue: function() {
-        // Not implemented on the tree view so
-        // return a semi-pseudo-random number
-        return (new Date()).getTime();
-    },                   
+    // class-level dimension attributes
+    width: 150,
+    height: 30,
 
     group: function() {
         return this._group;
     },
 
-    setName: function(name) {
-        this.name = name;
-        this.elem.find(".nodename").text(name);
-    },
+    getParameter: function(name) {
+        for(var i in this.parameters) {
+            if (this.parameters[i].name == name)
+                return this.parameters[i].value;
+        }
+        throw "Unknown node parameter: " + this.name + ": " + name;
+    },                      
 
     setParameter: function(name, value, emit) {
         var set = false;                      
@@ -78,13 +93,6 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
                 + node.name + ": '" + name + "' = '" + value + "'"; 
     },                      
 
-    buildElem: function() {
-        var tmpl = $.template($("#nodeTreeTmpl"));
-        this.elem = $.tmpl(tmpl, this);
-        this.elem.data("nodedata", this);
-        this.setupEvents();
-    },
-
     getToolTip: function() {
         var tip = this.name + "\n\n"
             + this.type;
@@ -94,30 +102,6 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             tip += "\n\nError: " + this._error;        
         return tip;
     },                    
-
-    setupEvents: function() {
-        var self = this;                     
-        this.elem.find(".ignorebutton").click(function(event) {
-            self.setIgnored(!self._ignored, true);
-            event.stopPropagation();
-            event.preventDefault();
-        });
-
-        this.elem.find(".viewingbutton").click(function(event) {
-            self.setViewing(!self._viewing, true);
-            event.stopPropagation();
-            event.preventDefault();
-        });
-
-        this.elem.click(function(event) {
-            if (!self._focussed)
-                self.setFocussed(true, true);
-            else if (event.shiftKey)
-                self.setFocussed(false, true);
-            event.stopPropagation();
-            event.preventDefault();
-        });
-    },
 
     toString: function() {
         return "<Node: " + this.name + ">";
@@ -140,81 +124,25 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         return this._viewing;
     },                    
 
-    setIgnored: function(ignored, emit) {
+    setIgnored: function(ignored) {
         this._ignored = Boolean(ignored);
         this._toggleIgnored(this._ignored);
-        if (emit) 
-            this.callListeners("toggleIgnored", this, this._ignored);
     },
 
-    setViewing: function(viewing, emit) {
+    setViewing: function(viewing) {
         this._viewing = Boolean(viewing);
         this._toggleViewing(this._viewing);
-        if (emit) 
-            this.callListeners("toggleViewing", this, this._viewing);
     },
 
-    setFocussed: function(focus, emit) {
+    setFocussed: function(focus) {
         this._focussed = Boolean(focus);
         this._toggleFocussed(this._focussed);
-        if (emit) 
-            this.callListeners("toggleFocussed");
     },
 
     setErrored: function(errored, msg) {
         this._error = errored ? msg : null;
         this._toggleErrored(errored, msg);
     },
-
-    _toggleIgnored: function(bool) {
-        this.elem.find(".ignorebutton").toggleClass("active", bool);
-    },
-
-    _toggleViewing: function(bool) {
-        this.elem.find(".viewingbutton").toggleClass("active", bool);
-    },                        
-
-    _toggleFocussed: function(bool) {
-        this.elem.toggleClass("current", bool);
-    },
-
-    _toggleErrored: function(bool) {
-        this.elem.toggleClass("validation_error", bool);                    
-        this.elem.attr("title", this.getToolTip());    
-    },                       
-});
-
-
-
-OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
-    constructor: function(name, classdata, id) {
-        this.base(name, classdata, id);
-        this._inplugs = [];
-        this._outplug = null;
-        this._dragging = false;
-
-        var self = this;
-        $.each([
-            "inputAttached",
-            "outputAttached",
-            "aboutToMove",
-            "dropped",
-            "moving",
-            "moved",
-            "clicked",
-            "rightClicked",
-            "plugHoverIn",
-            "plugHoverOut",
-            "plugRightClicked",
-            ], function(i, ename) {
-            self.registerListener(ename);    
-        });
-        
-    },
-
-    // class-level dimension attributes
-    width: 150,
-    height: 30,
 
     input: function(i) {
         return this._inplugs[i];
@@ -354,7 +282,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 return false;
             }
             console.log("Got an IGNORE click");
-            self.setIgnored(!self._ignored, true);
+            self.callListeners("toggleIgnored");
             event.stopPropagation();
             event.preventDefault();
         });
@@ -363,7 +291,7 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 self._dragging = false;
                 return false;
             }
-            self.setViewing(!self._viewing, true);
+            self.callListeners("toggleViewing");
             event.stopPropagation();
             event.preventDefault();
         });
@@ -378,8 +306,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
                 self._dragging = false;
                 return false;
             }
-            console.log("Got a rect click");
             self.callListeners("clicked", event);
+            self.callListeners("toggleFocussed");
             event.stopPropagation();
             event.preventDefault();
         });
@@ -442,7 +370,8 @@ OCRJS.Nodetree.TreeNode = OCRJS.Nodetree.Node.extend({
         this.type = data.type;
         this.stage = data.stage;
         $.each(data.params, function(i, kv) {
-            self.parameters[kv[0]] = kv[1];
+            self.parameters[i].name = kv[0];
+            self.parameters[i].value = kv[1];
         });
         this.setIgnored(data.ignored);
         if (data.__meta) {
