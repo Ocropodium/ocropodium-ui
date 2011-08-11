@@ -6,6 +6,7 @@
 var uploader = null;
 var formatter = null;
 var nodetree = null;
+var cmdstack = null;
 var sdviewer = null;
 var hocrviewer = null;
 var reshandler = null;
@@ -33,6 +34,20 @@ $(function() {
         icons: {
             primary: "ui-icon-document",
             secondary: "ui-icon-carat-1-s",
+        }        
+    });
+    $("#undo_command").button({
+        text: false,
+        disabled: true,
+        icons: {
+            primary: "ui-icon-arrowreturnthick-1-w",
+        }        
+    });
+    $("#redo_command").button({
+        text: false,
+        disabled: true,
+        icons: {
+            primary: "ui-icon-arrowreturnthick-1-e",
         }        
     });
     $("#stop_refresh").button({
@@ -207,6 +222,12 @@ $(function() {
         event.preventDefault();
         event.stopPropagation();
     });
+    $("#undo_command").click(function(event) {
+        cmdstack.undo();
+    });
+    $("#redo_command").click(function(event) {
+        cmdstack.redo();
+    });
     $("#save_task_preset").click(function(event) {
         $("#task_update_script").val(
            JSON.stringify(nodetree.buildScript(), null, '\t'));
@@ -246,7 +267,7 @@ $(function() {
         if (reshandler.isPending()) {
             reshandler.abort();
         } else {
-            nodetree.scriptChanged("Refresh");
+            stackChanged();
         }
         event.stopPropagation();
         event.preventDefault();
@@ -337,7 +358,8 @@ $(function() {
     textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
-    nodetree = new OCRJS.Nodetree.NodeTree($("#node_canvas"));
+    cmdstack = new OCRJS.UndoStack(this);
+    nodetree = new OCRJS.Nodetree.NodeTree($("#node_canvas"), cmdstack);
     presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
 
     statusbar.addListeners({
@@ -360,12 +382,29 @@ $(function() {
         },    
     });
 
+    function stackChanged() {
+        $("#undo_command")
+            .text(cmdstack.undoText())
+            .button({disabled: !cmdstack.canUndo()})
+            .button("refresh");
+        $("#redo_command")
+            .text(cmdstack.redoText())
+            .button({disabled: !cmdstack.canRedo()})
+            .button("refresh");
+        presetmanager.checkForChanges();
+        runScript();
+    };        
+
+    cmdstack.addListeners({
+        undoStateChanged: stackChanged,
+        redoStateChanged: stackChanged,
+        indexChanged: stackChanged,
+    });
+
     // Set up events
     nodetree.addListeners({
         scriptChanged: function(what) {
             console.log("Script changed:", what);
-            presetmanager.checkForChanges();
-            runScript();
         },
         nodeMoved: function(what) {
             presetmanager.checkForChanges();
