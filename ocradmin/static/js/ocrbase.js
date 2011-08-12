@@ -51,13 +51,14 @@ OCRJS.OcrBase = Base.extend({
     },                 
 
     callListeners: function() {
+        var self = this;                       
         var args = Array.prototype.slice.call(arguments);
         var key = args.shift();
         if (this._listeners[key] == undefined)
             throw "Unknown callback: '" + key + "'";
         $.each(this._listeners[key], function(i, func) {
             func.apply(
-                func.callee, args.concat(Array.prototype.slice.call(arguments)));
+                self, args.concat(Array.prototype.slice.call(arguments)));
         });
     },
 
