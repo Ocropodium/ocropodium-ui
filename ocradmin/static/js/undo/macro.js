@@ -32,6 +32,18 @@ OCRJS.UndoMacro = OCRJS.UndoCommand.extend({
             this._stack[i].redo();
         }
     },
+
+    size: function() {
+        return this._stack.length;
+    },              
+
+    debug: function(indent, curr) {
+        var pad = indent ? Array(indent + 1).join("\t") : "";               
+        console.log((new Date).getTime() + (curr ? " --> " : "     ") + pad + " M " + this.text);
+        for (var i in this._stack) {
+            this._stack[i].debug(indent ? (indent + 1) : 1);
+        }
+    },               
 });
 
 

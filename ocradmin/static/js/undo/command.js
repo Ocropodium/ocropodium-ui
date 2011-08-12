@@ -33,5 +33,10 @@ OCRJS.UndoCommand = Base.extend({
         // default implementation does nothing
         return false;
     },
+
+    debug: function(indent, curr) {
+        var pad = indent ? Array(indent + 1).join("  ") : "";               
+        console.log((new Date).getTime() + (curr ? " --> " : "     ") + pad + " C " + this.text);
+    },               
 });
 
