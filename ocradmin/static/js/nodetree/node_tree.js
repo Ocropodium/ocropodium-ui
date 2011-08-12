@@ -17,6 +17,7 @@ NT.AddNodeCommand = OCRJS.UndoCommand.extend({
      */
     constructor: function(tree, name, type, atpoint, context) {
         this.base("Add Node");
+        console.log("ADD NODE COMMAND");
         var self = this;
         var pos = atpoint;
         this.redo = function() {
@@ -42,6 +43,7 @@ NT.AddNodeCommand = OCRJS.UndoCommand.extend({
 NT.DeleteNodeCommand = OCRJS.UndoCommand.extend({
     constructor: function(tree, name) {
         this.base("Delete Node: " + name);
+        console.log("DELETE NODE");
         var data = tree.getNode(name).serialize();
         this.redo = function() {
             var node = tree.getNode(name);
@@ -274,8 +276,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
     },                  
 
     setNodeErrored: function(nodename, error) {
-        if (!this._usednames[nodename])
-            throw "Unknown node name: " + nodename;
         if (this._usednames[nodename])
             this._usednames[nodename].setErrored(true, error);
     },                        
@@ -312,22 +312,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         this.callListeners("scriptChanged", what);
     },
 
-    getNodeParameter: function(node, param) {
-        for (var i in node.parameters) {
-            if (node.parameters[i].name == param)
-                return node.parameters[i].value;
-        }
-        throw "Unknown node parameter: " + node.name + ": " + param;        
-    },                          
-
-    setNodeParameter: function(node, param, value) {
-        for (var i in node.parameters) {
-            if (node.parameters[i].name == param)
-                node.parameters[i].value = value;
-        }
-        throw "Unknown node parameter: " + node.name + ": " + param;        
-    },                          
-
     buildParams: function(node) {
         var self = this;
         console.log("Setting parameter listeners for", node.name, node.parameters);
@@ -363,36 +347,33 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         $.each(node.parameters, function(i, param) {
             oldparams[param.name] = param.value;
             $("input[type='text']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
-                $(elem).bind("keyup.paramval", function(event) {
-                    node.parameters[i].value = $(this).val();
-                });
                 $(elem).bind("blur.paramval", function(event) {
-                    if ($(this).val() != oldparams[param.name])
-                        self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).val()); 
+                    if ($(this).val() != oldparams[param.name]) {
+                        self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).val());
+                        oldparams[param.name] = $(this).val();
+                    }
                 });
                 node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
                     $(elem).val(value);
                 });
             });
             $("input[type='checkbox']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
-                $(elem).bind("change.paramval", function(event) {
-                    node.parameters[i].value = $(this).prop("checked");
-                });
                 $(elem).bind("blur.paramval", function(event) {
-                    if ($(this).prop("checked") != oldparams[param.name])
+                    if ($(this).prop("checked") != oldparams[param.name]) {
                         self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).prop("checked")); 
+                        oldparams[param.name] = $(this).prop("checked");
+                    }
                 });
                 node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
                     $(elem).prop("checked");
                 });
             });
             $("select#" + node.name + param.name + ", input[type='hidden']#" + node.name + param.name).each(function(ii, elem) {
-                $(elem).bind("change.paramval", function(event) {
-                    node.parameters[i].value = $(this).val();
-                });
                 $(elem).bind("blur.paramval", function(event) {
-                    if ($(this).val() != oldparams[param.name])
+                    if ($(this).val() != oldparams[param.name]) {
                         self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).val()); 
+                        oldparams[param.name] = $(this).val();
+                    }
                 });
                 node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
                     $(elem).val(value);
@@ -417,6 +398,18 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         $("#parameters").data("node", null);
         $("#parameters").html("<h1>No Node Selected</h1>");
         this.callListeners("nodeFocussed", null);
+    },
+
+    resetParams: function() {
+        var focussed = [];
+        $.each(this._nodes, function(i, n) {
+            if (n.isFocussed())
+                focussed.push(n);
+        });
+        if (focussed.length)
+            this.buildParams(focussed[0]);
+        else
+            this.clearParams();
     },                     
 
     setupNodeListeners: function(node) {
@@ -507,10 +500,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         $(document).unbind(".dragcable").unbind(".dropcable");
     },
 
-    cmdDetachPlug: function(plug) {
-        this._undostack.push(new NT.DetachPlugCommand(this, plug.name));
-    },                    
-
     handlePlug: function(plug) {
         var self = this;
         if (!self._dragcable && plug.isInput() && plug.isAttached()) {
@@ -552,7 +541,7 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         var cable = new NT.DragCable(plug);
         var point = SvgHelper.denorm(plug.centre(), plug.group(), self.group());
         cable.draw(self.svg, self._cablegroup, point, point);
-        self._dragcable = cable;
+        this._dragcable = cable;
         plug.setDraggingState();
         $(document).bind("mousemove.dragcable", function(event) {
             var npoint = SvgHelper.denorm(plug.centre(), plug.group(), self.group());
@@ -563,6 +552,10 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
             self.removeDragCable();
         });
     },
+
+    cmdDetachPlug: function(plug) {
+        this._undostack.push(new NT.DetachPlugCommand(this, plug.name));
+    },                    
 
     cmdSetNodeParameter: function(node, param, oldval, newval) {
         this._undostack.push(new NT.SetNodeParameterCommand(this, node.name, param, oldval, newval));
@@ -600,9 +593,7 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         for (var i in referencees)
             this.cmdDetachPlug(referencees[i]);
         var input = node.input(0);
-        if (!input || !input.isAttached())
-            return;
-        if (input.isAttached()) {
+        if (input && input.isAttached()) {
             var srcplug = input.cable().start;
             this.cmdDetachPlug(input);
             for (var i in referencees) {
@@ -612,9 +603,141 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         this._undostack.endMacro();
     },
 
+    cmdReplaceNode: function(src, dst) {
+        this._undostack.beginMacro("Replace Node");                        
+        var outs = [];
+        for (var i in src.inputs())
+            if (src.input(i).isAttached())
+                outs.push(src.input(i).cable().start);
+        var ins = this.attachedInputs(src.output());
+        for (var i in src.inputs())
+            this.cmdDetachPlug(src.input(i));
+        for (var i in ins)
+            this.cmdDetachPlug(ins[i]);
+        // src node is now  fully detached, hopefully
+        for (var i in outs)
+            if (dst.input(i))
+                this.cmdConnectPlugs(outs[i], dst.input(i));
+        for (var i in ins)
+            this.cmdConnectPlugs(dst.output(), ins[i]);
+        dst.setViewing(src.isViewing());
+        dst.setFocussed(src.isFocussed());
+        var pos = SvgHelper.getTranslate(src.group());
+        dst.moveTo(pos.x, pos.y);
+        this._undostack.push(new NT.DeleteNodeCommand(this, src.name));
+        this._undostack.endMacro();
+        this.resetParams();
+    },
+
+    cmdCreateReplacementNode: function(type, replace, atpoint) {
+        var name = this.newNodeName(type);
+        this._undostack.beginMacro("Create Node");
+        this._undostack.push(
+                new NT.AddNodeCommand(this, name, type, atpoint));
+        var node = this.getNode(name);
+        this.cmdReplaceNode(replace, node);
+        this._undostack.endMacro();        
+    },                                  
+
+    createNodeWithContext: function(type, atpoint, context) {
+        var self = this;
+        var name = this.newNodeName(type);
+
+        if (context instanceof NT.Node)
+            return this.cmdCreateReplacementNode(type, context, atpoint);
+
+        // otherwise, create a temporary node and defer the
+        // actual creation until it is "dropped" somewhere 
+        // on the canvas.
+        var node = this.createNode(name, this._nodetypes[type]);
+        var point = this.relativePoint(atpoint);
+        node.moveTo(
+                point.x - (node.width / 2),
+                point.y - (node.height / 2)
+        );
+        var plug = null,
+            cable = null,
+            cpoint1 = null;
+        if (context instanceof NT.BasePlug && node.arity > 0) {
+            cable = new NT.DragCable(context);
+            plug = (context instanceof NT.OutPlug) ? node.input(0) : node.output();
+            cpoint1 = SvgHelper.denorm(context.centre(), context.group(), this.group());
+            var cpoint2 = SvgHelper.denorm(plug.centre(), plug.group(), this.group());
+            cable.draw(this.svg, this._cablegroup, cpoint1, cpoint2);
+        }
+
+        var removeDragProxies = function(n) {
+            n.removeListeners("clicked.dropnode");
+            self.deleteNode(n);
+            if (plug && cable)
+                cable.remove();
+        };            
+
+        var doNodeCreation = function(atpoint) {
+            self._undostack.beginMacro("Create Node");
+            self._undostack.push(new NT.AddNodeCommand(self, name, type, atpoint));
+            if (plug && cable) {
+                if (plug instanceof NT.InPlug)
+                    self.cmdConnectPlugs(context, plug);
+                else
+                    self.cmdConnectPlugs(plug, context);
+            }
+            self._undostack.endMacro();        
+        };
+
+        $(document).bind("keydown.dropnode", function(event) {
+            var p = node.position();
+            if (event.which == KC_ESCAPE || event.which == KC_RETURN) {
+                $(self.parent).add(document).unbind(".dropnode");
+                removeDragProxies(node);
+            }
+            if (event.which == KC_RETURN) {
+                doNodeCreation({
+                    x: p.x + (node.width / 2),
+                    y: p.y + (node.height / 2),
+                });    
+            }
+        });
+        $(this.parent).bind("mousemove.dropnode", function(event) {
+            var nmp = SvgHelper.mouseCoord(self.parent, event);
+            var npoint = self.relativePoint(nmp);
+            if (plug) {
+                var cpoint2 = SvgHelper.denorm(plug.centre(), plug.group(), self.group());
+                cable.update(cpoint1, cpoint2);
+            }
+            node.moveTo(npoint.x - (node.width / 2), npoint.y - (node.height / 2));
+        });
+        node.addListener("clicked.dropnode", function(event) {
+            $(self.parent).add(document).unbind(".dropnode");
+            var p = self.relativePoint(SvgHelper.mouseCoord(self.parent, event));
+            removeDragProxies(this);
+            doNodeCreation(p);
+        });        
+    },                    
+
+    cmdDeleteSelected: function() {
+        var self = this;                        
+        // have to watch out we don't barf the _nodes index
+        var togo = [];
+        for (var i in this._nodes) {
+            if (this._nodes[i].isFocussed())
+                togo.push(this._nodes[i]);
+        }
+        var togo = $.map(this._nodes, function(n) {
+            if (n.isFocussed()) return n;
+        });
+        var multi = togo.length > 1;
+        this._undostack.beginMacro("Delete Selection");
+        $.map(togo, function(n) {
+            self.cmdDisconnectNode(n);
+            self._undostack.push(new NT.DeleteNodeCommand(self, n.name));
+        });
+        this._undostack.endMacro();
+        this.resetParams();
+    },                        
+
     connectPlugs: function(src, dst) {
         var self = this;
-        console.log("_CONNECT PLUGS", src.name, dst.name);        
         var cable = new NT.Cable(src, dst);
         var p1 = SvgHelper.denorm(src.centre(), src.group(), this.group());
         var p2 = SvgHelper.denorm(dst.centre(), dst.group(), this.group());
@@ -628,7 +751,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
             var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
             cable.update(m1, m2);                    
         });
-        console.log("Cable drawing:", p1, p2);
         cable.draw(this.svg, this._cablegroup, p1, p2);
     },
 
@@ -644,7 +766,7 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
             });                
         });            
         return inplugs;
-    },                        
+    },
 
     setupEvents: function() {
         var self = this;                     
@@ -653,7 +775,9 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
             self.showContextMenu(event);
         });
 
-        $(self.parent).click(function(event) {
+        // enable clicking on the canvas to deselect nodes
+        $(this.parent).unbind("click.deselectall")
+                .bind("click.deselectall", function(event) {
             if (!event.shiftKey)
                 self.deselectAll();
         });
@@ -677,30 +801,26 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         });
 
         $(self.parent).bind("mouseenter", function(mvevent) {
-            $(document).bind("keypress.nodecmd", function(event) {
+            $(document).unbind("keypress.nodecmd").bind("keypress.nodecmd", function(event) {
                 nodeCmd(event);
             });
-            $(document).bind("keydown.nodecmd", function(event) {
+            $(document).unbind("keydown.nodecmd").bind("keydown.nodecmd", function(event) {
                 if (event.which == KC_DELETE)
                     self.cmdDeleteSelected();
                 else if (event.which == KC_SHIFT)
                    self._multiselect = true;
                 else if (event.which == KC_HOME)
                     self.centreTree();
-                else if (event.ctrlKey && event.which == 65) { // 'L' key                 
+                else if (event.ctrlKey && event.which == 65) { // 'A' key                 
                     self.selectAll(); 
                     event.preventDefault();
                     event.stopPropagation();
-                } else if (event.ctrlKey && event.keyCode == 90) {
-                    if (!event.shiftKey) {
-                        self._undostack.undo();
-                    } else {
-                        self._undostack.redo();
-                    }
-                } else if (event.ctrlKey && event.which == 76) // 'L' key
+                } else if (event.ctrlKey && event.keyCode == 90)
+                    event.shiftKey ? self._undostack.redo() : self._undostack.undo();
+                else if (event.ctrlKey && event.which == 76) // 'L' key
                     self.layoutNodes(self.buildScript()); 
             });
-            $(document).bind("keyup.nodecmd", function(event) {
+            $(document).unbind("keyup.nodecmd").bind("keyup.nodecmd", function(event) {
                 if (event.which == KC_SHIFT)
                    self._multiselect = false;
             });
@@ -733,7 +853,7 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
 
     centreTree: function() {
         // centre the tree in the viewport
-        if (this._nodes.length == 0)
+        if (this.hasNodes())
             return;
         
         var border = 25;
@@ -760,6 +880,7 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
     },                    
 
     deselectAll: function() {
+        console.log("DESELECT ALL");                     
         $.map(this._nodes, function(n) {
             n.setFocussed(false);
         });
@@ -790,7 +911,7 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         );
 
         self._menu.find(".topmenu").find("li").click(function(event) {
-            self.cmdCreateNode($(this).data("name"), 
+            self.createNodeWithContext($(this).data("name"), 
                     SvgHelper.mouseCoord(self.parent, event), self._menucontext);
             self.hideContextMenu();
             event.stopPropagation();
@@ -929,7 +1050,7 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         var start = self.relativePoint(
                 SvgHelper.mouseCoord(self.parent, event));
         var lasso = null;
-        $(document).bind("mousemove.lasso", function(mevent) {
+        $(document).unbind("mousemove.lasso").bind("mousemove.lasso", function(mevent) {
             var end = self.relativePoint(
                     SvgHelper.mouseCoord(self.parent, mevent));
             var rect = SvgHelper.rectFromPoints(start, end);
@@ -951,7 +1072,7 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
                 });
             }
         });
-        $(document).bind("mouseup.lasso", function(uevent) {
+        $(document).unbind("mouseup.lasso").bind("mouseup.lasso", function(uevent) {
             if (lasso) {
                 var got = self.lassoNodes($(lasso));
                 if (self._multiselect)
@@ -998,94 +1119,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
             y: (point.y - trans.y) / scale
         };
     },    
-
-    cmdReplaceNode: function(src, dst) {
-        var outs = [];
-        for (var i in src.inputs())
-            if (src.input(i).isAttached())
-                outs.push(src.input(i).cable().start);
-        var ins = this.attachedInputs(src.output());
-        for (var i in src.inputs())
-            this.cmdDetachPlug(src.input(i));
-        for (var i in ins)
-            this.cmdDetachPlug(ins[i]);
-        // src node is now  fully detached, hopefully
-        for (var i in outs)
-            if (dst.input(i))
-                this.cmdConnectPlugs(outs[i], dst.input(i));
-        for (var i in ins)
-            this.cmdConnectPlugs(dst.output(), ins[i]);
-        dst.setViewing(src.isViewing());
-        this._undostack.push(new NT.DeleteNodeCommand(this, src.name));
-    },                     
-
-    cmdCreateNode: function(type, atpoint, context) {
-        var self = this;                   
-        var name = this.newNodeName(type);
-        this._undostack.beginMacro("Create Node");
-        this._undostack.push(
-                new NT.AddNodeCommand(this, name, type, atpoint));
-        var node = this._usednames[name];
-
-        if (context instanceof NT.BasePlug) {
-            var attachedplug = context;
-            if (attachedplug.isOutput() && node.arity > 0)
-                this.cmdConnectPlugs(attachedplug, node.input(0));
-            else
-                this.cmdConnectPlugs(node.output(), attachedplug);
-        } else if (context && context instanceof NT.Node) {
-            this.cmdReplaceNode(context, node);
-            var pos = SvgHelper.getTranslate(context.group());
-            node.moveTo(pos.x, pos.y);
-            node.setFocussed(true);
-        }
-
-        // we need to attach the node to the mouse UNLESS it's replacing
-        // another node
-        if (!(context instanceof NT.Node)) {
-            var point = this.relativePoint(atpoint);
-            node.moveTo(point.x - (node.width / 2), point.y - (node.height / 2));
-            $(document).bind("keydown.dropnode", function(event) {
-                if (event.which == KC_ESCAPE) {
-                    self._undostack.undo();
-                } else if (event.which == KC_RETURN) {
-                    node.removeListeners("clicked.dropnode");
-                    $(self.parent).unbind(".dropnode");
-                }
-            });
-            $(this.parent).bind("mousemove.dropnode", function(event) {
-                var nmp = SvgHelper.mouseCoord(self.parent, event);
-                var npoint = self.relativePoint(nmp);
-                node.moveTo(npoint.x - (node.width / 2), npoint.y - (node.height / 2));
-            });
-            node.addListener("clicked.dropnode", function() {
-                node.removeListeners("clicked.dropnode");
-                $(self.parent).unbind(".dropnode");
-            });
-        }            
-
-        this._undostack.endMacro();        
-    },
-
-    cmdDeleteSelected: function() {
-        var self = this;                        
-        // have to watch out we don't barf the _nodes index
-        var togo = [];
-        for (var i in this._nodes) {
-            if (this._nodes[i].isFocussed())
-                togo.push(this._nodes[i]);
-        }
-        var togo = $.map(this._nodes, function(n) {
-            if (n.isFocussed()) return n;
-        });
-        var multi = togo.length > 1;
-        this._undostack.beginMacro("Delete Selection");
-        $.map(togo, function(n) {
-            self.cmdDisconnectNode(n);
-            self._undostack.push(new NT.DeleteNodeCommand(self, n.name));
-        });
-        this._undostack.endMacro();
-    },                        
 
     deleteNode: function(node, alert) {
         node.removeNode(alert);

@@ -393,6 +393,7 @@ $(function() {
             .button("refresh");
         presetmanager.checkForChanges();
         runScript();
+        //cmdstack.debug();
     };        
 
     cmdstack.addListeners({
