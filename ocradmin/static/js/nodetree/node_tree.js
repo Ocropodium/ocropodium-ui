@@ -17,7 +17,6 @@ NT.AddNodeCommand = OCRJS.UndoCommand.extend({
      */
     constructor: function(tree, name, type, atpoint, context) {
         this.base("Add Node");
-        console.log("ADD NODE COMMAND");
         var self = this;
         var pos = atpoint;
         this.redo = function() {
@@ -43,7 +42,6 @@ NT.AddNodeCommand = OCRJS.UndoCommand.extend({
 NT.DeleteNodeCommand = OCRJS.UndoCommand.extend({
     constructor: function(tree, name) {
         this.base("Delete Node: " + name);
-        console.log("DELETE NODE");
         var data = tree.getNode(name).serialize();
         this.redo = function() {
             var node = tree.getNode(name);
@@ -52,7 +50,6 @@ NT.DeleteNodeCommand = OCRJS.UndoCommand.extend({
         };
         this.undo = function() {
             var newnode = tree.createNode(name, tree._nodetypes[data.type]);
-            console.log("Serialized node", data);
             newnode.deserialize(data);
             tree.registerNode(newnode);            
         };            
@@ -69,7 +66,6 @@ NT.ConnectPlugsCommand = OCRJS.UndoCommand.extend({
             var dst = tree.getPlug(dstname);
             tree.connectPlugs(src, dst);
         };
-
         this.undo = function() {
             var dst = tree.getPlug(dstname);
             dst.detach();
@@ -88,7 +84,6 @@ NT.DetachPlugCommand = OCRJS.UndoCommand.extend({
         this.redo = function() {
             tree.getPlug(plugname).detach();
         };
-
         this.undo = function() {
             tree.connectPlugs(tree.getPlug(originname), tree.getPlug(plugname));
         };            
@@ -228,7 +223,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         this._usednames = {};        
         this._nodes = [];
         this.callListeners("scriptCleared");
-        
     },               
 
     setFileInPath: function(name, path) {
@@ -880,7 +874,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
     },                    
 
     deselectAll: function() {
-        console.log("DESELECT ALL");                     
         $.map(this._nodes, function(n) {
             n.setFocussed(false);
         });
