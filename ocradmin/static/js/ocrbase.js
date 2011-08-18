@@ -78,7 +78,7 @@ OCRJS.OcrBase = Base.extend({
         } else {
             var self = this;
             $.each(self._listeners, function(k, funcs) {
-                if (k == "" || k == key) {
+                if (key == "" || k == key) {
                     $.each(funcs, function(i, f) {
                         if (f.__namespace && f.__namespace == namespace) {
                             funcs.splice(i, 1);
