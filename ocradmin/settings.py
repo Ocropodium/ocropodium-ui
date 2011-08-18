@@ -327,6 +327,7 @@ COMPRESS_JS = {
             "js/nodetree/plug.js",
             "js/nodetree/node.js",
             "js/nodetree/node_tree.js",
+            "js/nodetree/parameters.js",
             "js/nodetree/gui_manager.js",
             "js/nodegui/base_gui.js",
             "js/nodegui/crop_gui.js",

@@ -26,59 +26,8 @@
         </span>
     </div>
     <div class="node_params">
-        <table class="node_param_table">
-        {% templatetag openvariable %}each(i,param) parameters{% templatetag closevariable %}    
-            <tr class="node_parameter">
-                {% templatetag openvariable %}if param.choices{% templatetag closevariable %}
-                    <td><label for="${nodename}${param.name}">${param.name}</label></td>
-                    <td>
-                        <select id="${nodename}${param.name}"> 
-                        {% templatetag openvariable %}each(i,choice) param.choices{% templatetag closevariable %}    
-                            <option value="${choice}"
-                            {% templatetag openvariable %}if choice == param.value{% templatetag closevariable %}
-                                selected="selected"            
-                            {% templatetag openvariable %}/if{% templatetag closevariable %}    
-                            >${choice}</option> 
-                        {% templatetag openvariable %}/each{% templatetag closevariable %}    
-                        </select>
-                    </td>
-                {% templatetag openvariable %}else{% templatetag closevariable %}    
-                    {% templatetag openvariable %}if param.type == "filepath"{% templatetag closevariable %}
-                        <td><label for="${nodename}${param.name}">${param.name}</label></td>
-                        <td>
-                            <div id="dropzone">
-                                <input class="nodefilein proxy" type="file" value="" />
-                                <input type="hidden" id="${nodename}${param.name}" value="${param.value}" />
-                            </div>
-                        </td>
-                    {% templatetag openvariable %}else param.type == "switch"{% templatetag closevariable %}
-                        <td><label>Select Input</label></td>
-                        <td>
-                            <span id="switch">
-                            {% templatetag openvariable %}each(i,input) inputs{% templatetag closevariable %}
-                            <input id="${nodename}${param.name}${i}" value="${i}" type="radio" class="switch" name="${nodename}input" />
-                            <label class="radio" for="${nodename}${param.name}${i}">${i}</label>
-                            {% templatetag openvariable %}/each{% templatetag closevariable %}
-                            </span>
-                        </td>
-                    {% templatetag openvariable %}else param.type == "bool"{% templatetag closevariable %}
-                        <td><label for="${nodename}${param.name}">${param.name}</label></td>
-                        <td>
-                            {% templatetag openvariable %}if param.value{% templatetag closevariable %}
-                                <input type="checkbox" id="${nodename}${param.name}" checked="checked" />
-                            {% templatetag openvariable %}else param.type == "bool"{% templatetag closevariable %}
-                                <input type="checkbox" id="${nodename}${param.name}" />
-                            {% templatetag openvariable %}/if{% templatetag closevariable %}
-                        </td>
-                    {% templatetag openvariable %}else{% templatetag closevariable %}    
-                        <td><label for="${nodename}${param.name}">${param.name}</label></td>
-                        <td>
-                            <input type="text" id="${nodename}${param.name}" value="${param.value}" />
-                        </td>
-                    {% templatetag openvariable %}/if{% templatetag closevariable %}    
-                {% templatetag openvariable %}/if{% templatetag closevariable %}    
-            </tr>
-        {% templatetag openvariable %}/each{% templatetag closevariable %}
+        <table id="node_param_list" class="node_param_table">
+
         </table>
     </div>                    
 </script>

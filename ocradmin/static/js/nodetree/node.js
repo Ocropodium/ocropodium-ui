@@ -82,9 +82,11 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             if (this.parameters[i].name == name) {
                 this.parameters[i].value = value;
                 set = true;
-                if (emit)
+                if (emit) {
                     this.callListeners("parameterUpdated_"
                             + this.parameters[i].name, value);
+                    console.log("PARAMETER UPDATED!!!");
+                }
                 break;                
             }
         }            
