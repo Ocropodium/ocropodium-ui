@@ -29,6 +29,8 @@ OCRJS.OcrBase = Base.extend({
     },
 
     addListener: function(key, func) {
+        if (!func)
+            console.error("Adding null function listener for", key);            
         var namespace = null;                     
         if (key.match(/^(.+)\.([^\.]+)$/))
             key = RegExp.$1, namespace = RegExp.$2;
@@ -69,6 +71,7 @@ OCRJS.OcrBase = Base.extend({
         if (key != "" && this._listeners[key] === undefined) {
             console.error("Unknown callback:", key, this._listeners);
         }
+        console.log("Removing listeners", key, namespace, func);
         if (func) {
             var i = this._listeners[key].indexOf(func);
             if (i != -1)
@@ -80,6 +83,8 @@ OCRJS.OcrBase = Base.extend({
             $.each(self._listeners, function(k, funcs) {
                 if (key == "" || k == key) {
                     $.each(funcs, function(i, f) {
+                        if (!f)
+                            console.error("Function is null!", k, namespace);
                         if (f.__namespace && f.__namespace == namespace) {
                             funcs.splice(i, 1);
                         }    

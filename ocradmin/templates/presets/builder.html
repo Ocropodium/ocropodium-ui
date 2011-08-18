@@ -64,60 +64,63 @@
     </div>
 {% endblock %}
 {% block sidebar %}
-    <form id="optionsform">
+    <form id="taskdetailsform">
         <input type="hidden" id="edit_task_pk" name="task_pk" value="{{task.pk}}" />
         <input type="hidden" id="edit_task_batch" name="task_batch" value="{{task.batch.name}}" />
         <input type="hidden" id="edit_task_page" name="task_page" value="{{task.page_name}}" />
+    </form>
 
-        <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center ui-background-flat"></div>
-        <!-- NB. This is lower down in the DOM than the parameters, despite
-         being positioned above.  It is so the menu overlaps the params
-         where necessary -->
-        <div class="ui-layout-north toolbar_container" id="script_toolbar_container">
-            <div id="preset_toolbar_header" class="ui-widget-header ui-corner-all ui-layout-header">Preset Editor -
-                <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved">*</span>
-            </div>
-            <div id="script_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
-                <span class="buttons_left">
-                    <div class="appmenu dropdown">
-                        <ul class="top">
-                            <li>
-                                <a id="show_file_menu" class="ui-helper-clearfix">Hello</a>
-                                <ul id="file_menu" style="display:none">
-                                    <li><a href="#" id="new_script">New...</a></li>
-                                    <li><a href="#" id="open_script">Open Script</a></li>
-                                    <li><a href="#" id="save_script">Save</a></li>
-                                    <li><a href="#" id="save_script_as">Save as...</a></li>
-                                    <li><a href="#" id="download_script">Export</a></li>
-                                    <li><a href="#" id="close_script">Close</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-                    <span>&nbsp;&nbsp;&nbsp;</span>
-                    <button id="undo_command" disabled="disabled">Undo</button>
-                    <button id="redo_command" disabled="disabled">Redo</button>
-                    <span>&nbsp;&nbsp;&nbsp;</span>
-                    <button id="stop_refresh">Rerun</button>
-                    <button id="focus_script">Home</button>
-                    <button id="layout_nodes">Cleanup Node Layout</button>
-                    <button id="clear_cache">Clear Cache</button>
-                </span>
-                {% if task %}
-                <span class="buttons_right">
-                    <button id="save_task_preset">Save &amp; Rerun Task</button>
-                    <button id="cancel_task_preset">Cancel</button>
-                </span>
-                {% endif %}
-                <div id="dialog"></div>
-            </div>                
+    <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center ui-background-flat"></div>
+    <!-- NB. This is lower down in the DOM than the parameters, despite
+     being positioned above.  It is so the menu overlaps the params
+     where necessary -->
+    <div class="ui-layout-north toolbar_container" id="script_toolbar_container">
+        <div id="preset_toolbar_header" class="ui-widget-header ui-corner-all ui-layout-header">Preset Editor -
+            <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved">*</span>
         </div>
-        <div class="ui-layout-south ui-widget">
+        <div id="script_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
+            <span class="buttons_left">
+                <div class="appmenu dropdown">
+                    <ul class="top">
+                        <li>
+                            <a id="show_file_menu" class="ui-helper-clearfix">Hello</a>
+                            <ul id="file_menu" style="display:none">
+                                <li><a href="#" id="new_script">New...</a></li>
+                                <li><a href="#" id="open_script">Open Script</a></li>
+                                <li><a href="#" id="save_script">Save</a></li>
+                                <li><a href="#" id="save_script_as">Save as...</a></li>
+                                <li><a href="#" id="download_script">Export</a></li>
+                                <li><a href="#" id="close_script">Close</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <span>&nbsp;&nbsp;&nbsp;</span>
+                <button id="undo_command" disabled="disabled">Undo</button>
+                <button id="redo_command" disabled="disabled">Redo</button>
+                <span>&nbsp;&nbsp;&nbsp;</span>
+                <button id="stop_refresh">Rerun</button>
+                <button id="focus_script">Home</button>
+                <button id="layout_nodes">Cleanup Node Layout</button>
+                <button id="clear_cache">Clear Cache</button>
+                <button id="focus_dummy"></button>
+            </span>
+            {% if task %}
+            <span class="buttons_right">
+                <button id="save_task_preset">Save &amp; Rerun Task</button>
+                <button id="cancel_task_preset">Cancel</button>
+            </span>
+            {% endif %}
+            <div id="dialog"></div>
+        </div>                
+    </div>
+    <div class="ui-layout-south ui-widget">
+        <form id="optionsform">
             <div id="parameters" class="node_parameters ui-medium-flat">
                 <h1>No Node Selected</h1>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
     {% if task %}
     <!-- form for POSTing updated task scripts -->
     <form id="task_update_form" action="/ocr/update_task/{{task.pk}}/" method="POST">

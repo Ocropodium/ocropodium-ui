@@ -28,6 +28,7 @@ NT.AddNodeCommand = OCRJS.UndoCommand.extend({
             );
         };
         this.undo = function() {
+            console.log("Add node undo triggered", name);
             var node = tree.getNode(name);
             pos = {
                 x: node.position().x + (node.width / 2),
@@ -122,7 +123,7 @@ NT.ViewNodeCommand = OCRJS.UndoCommand.extend({
                    
 NT.SetNodeParameterCommand = OCRJS.UndoCommand.extend({
     constructor: function(tree, nodename, param, oldvalue, value) {
-        this.base("Set Parameter: " + nodename + "." + param);
+        this.base("Set Parameter: " + nodename + "." + param + " (" + oldvalue + " -> " + value + ")");
         var self = this;
         this.redo = function() {
             tree.getNode(nodename).setParameter(param, value, false);
@@ -164,12 +165,10 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         this._menu = null;
         this._menucontext = null;
         this._menutemplate = $.template($("#nodeMenuTmpl"));
-        this._paramtmpl = $.template($("#paramTmpl"));
         this._minzoom = 0.1;
         this._maxzoom = 7;
         this._plugre = /^(.*?)_(input|output)(\d*)$/;
         this._undostack = cmdstack;
-        this._undostack.setCompressionEnabled(false);
     },
 
 
@@ -196,7 +195,18 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
             return last.name;
     },
 
+    getFocussedNode: function() {
+        var focussed = [];
+        $.each(this._nodes, function(i, n) {
+            if (n.isFocussed())
+                focussed.push(n);
+        });
+        return focussed[0]; // might be null!
+    },        
+
     getNode: function(nodename) {
+        if (!this._usednames[nodename])
+            throw "Unknown node name: " + nodename;
         return this._usednames[nodename];
     },
 
@@ -306,106 +316,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         this.callListeners("scriptChanged", what);
     },
 
-    buildParams: function(node) {
-        var self = this;
-        console.log("Setting parameter listeners for", node.name, node.parameters);
-        // if we've already got a node, unbind the update
-        // handlers
-        if ($("#parameters").data("node")) {
-            $("#parameters").data("node").removeListeners(".paramobserve");
-            $("#parameters").data("node", node);
-        }
-        $("#parameters").html("");
-        var inputs = [];
-        for (var i = 0; i < node.arity; i++)
-            inputs.push(i);
-        $("#parameters").append($.tmpl(self._paramtmpl, {
-            nodename: node.name,
-            nodetype: node.type.replace(/^[^:]+::/, ""),
-            node: node,
-            parameters: node.parameters,
-            inputs: inputs, 
-        }));
-        $("input").unbind("keyup.paramval");
-        $("input.nameedit").bind("keyup.paramval", function(event) {
-            var val = $.trim($(this).val());
-            if (self.isValidNodeName(val)) {
-                $(this).removeClass("invalid");
-                self.renameNode(node, val); 
-            } else {
-                $(this).addClass("invalid");
-            }
-        });
-        var oldparams = {};
-        // bind each param to its actual value
-        $.each(node.parameters, function(i, param) {
-            oldparams[param.name] = param.value;
-            $("input[type='text']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
-                $(elem).bind("blur.paramval", function(event) {
-                    if ($(this).val() != oldparams[param.name]) {
-                        self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).val());
-                        oldparams[param.name] = $(this).val();
-                    }
-                });
-                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
-                    $(elem).val(value);
-                });
-            });
-            $("input[type='checkbox']#" + node.name + param.name).not(".proxy").each(function(ii, elem) {
-                $(elem).bind("blur.paramval", function(event) {
-                    if ($(this).prop("checked") != oldparams[param.name]) {
-                        self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).prop("checked")); 
-                        oldparams[param.name] = $(this).prop("checked");
-                    }
-                });
-                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
-                    $(elem).prop("checked");
-                });
-            });
-            $("select#" + node.name + param.name + ", input[type='hidden']#" + node.name + param.name).each(function(ii, elem) {
-                $(elem).bind("blur.paramval", function(event) {
-                    if ($(this).val() != oldparams[param.name]) {
-                        self.cmdSetNodeParameter(node, param.name, oldparams[param.name], $(this).val()); 
-                        oldparams[param.name] = $(this).val();
-                    }
-                });
-                node.addListener("parameterUpdated_" + param.name + ".paramobserve", function(value) {
-                    $(elem).val(value);
-                });
-            });
-            $("input[type='file'].proxy").each(function(ii, elem) {
-                self.callListeners("registerUploader", node.name, elem);
-            });
-            if ($("#switch").length) {
-                $("#switch", "#parameters").buttonset();
-                $("input[type='radio']").change(function(event) {
-                    var newval = parseInt(
-                        $("input[name='" + node.name + "input']:checked").val());
-                    self.cmdSetNodeParameter(node, param.name, oldparams[param.name], newval); 
-                });
-            }
-        });
-    },
-
-    clearParams: function() {
-        $("input, select", $("#parameters")).unbind(".paramval");
-        $("#parameters").data("node", null);
-        $("#parameters").html("<h1>No Node Selected</h1>");
-        this.callListeners("nodeFocussed", null);
-    },
-
-    resetParams: function() {
-        var focussed = [];
-        $.each(this._nodes, function(i, n) {
-            if (n.isFocussed())
-                focussed.push(n);
-        });
-        if (focussed.length)
-            this.buildParams(focussed[0]);
-        else
-            this.clearParams();
-    },                     
-
     setupNodeListeners: function(node) {
         var self = this;                            
         node.addListeners({
@@ -419,7 +329,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
                             other.setFocussed(false);
                     });
                     node.setFocussed(true);
-                    self.buildParams(node);
                     self.callListeners("nodeFocussed", node);        
                 } else {
                     node.setFocussed(!node.isFocussed());    
@@ -620,7 +529,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         dst.moveTo(pos.x, pos.y);
         this._undostack.push(new NT.DeleteNodeCommand(this, src.name));
         this._undostack.endMacro();
-        this.resetParams();
     },
 
     cmdCreateReplacementNode: function(type, replace, atpoint) {
@@ -727,7 +635,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
             self._undostack.push(new NT.DeleteNodeCommand(self, n.name));
         });
         this._undostack.endMacro();
-        this.resetParams();
     },                        
 
     connectPlugs: function(src, dst) {
@@ -809,8 +716,10 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
                     self.selectAll(); 
                     event.preventDefault();
                     event.stopPropagation();
-                } else if (event.ctrlKey && event.keyCode == 90)
+                } else if (event.ctrlKey && event.keyCode == 90) {
+                    console.log("UNDO/REDO TRIGGERED BY KEY");
                     event.shiftKey ? self._undostack.redo() : self._undostack.undo();
+                }
                 else if (event.ctrlKey && event.which == 76) // 'L' key
                     self.layoutNodes(self.buildScript()); 
             });
@@ -877,7 +786,6 @@ NT.NodeTree = OCRJS.OcrBaseWidget.extend({
         $.map(this._nodes, function(n) {
             n.setFocussed(false);
         });
-        this.clearParams();
         this.callListeners("nodeFocussed", null);
     },
 

@@ -6,12 +6,16 @@ if (OCRJS === undefined) {
 
 
 OCRJS.UndoStack = OCRJS.OcrBase.extend({
-    constructor: function(context) {
+    constructor: function(context, options) {
+        this.options = {
+            levels: -1,
+            compress: true,
+        };
+        $.extend(this.options, options);
         this._stack = [];
         this.index = 0;
         this._context = context;
         this._nocomp = false;
-        this._cancompress = true;
         this._macros = [];
 
         this._listeners = {
@@ -20,10 +24,6 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
             redoStateChanged: [],            
         };
     },
-
-    setCompressionEnabled: function(allow) {
-        this._cancompress = allow;
-    },        
 
     clear: function() {
         this.index = 0;
@@ -57,13 +57,9 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
         }
         cmd.redo.call(this._context);
         var merged = false;
-        if (this._cancompress && this._stack.length && !this._nocomp) {
+        if (this.options.compress && this._stack.length && !this._nocomp) {
             var prev = this._stack[this._stack.length - 1];
-            if (prev.text == cmd.text) {
-                if (cmd.mergeWith(prev)) {
-                    merged = true;    
-                }
-            }
+            merged = prev.text == cmd.text && cmd.mergeWith(prev);
         }
         if (merged) {
             this._stack[this._stack.length - 1] = cmd;
@@ -71,6 +67,7 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
             this._stack.push(cmd);
             this.index++;
             this._nocomp = false;
+            this._compact();
             this.callListeners("indexChanged");
         }
     },
@@ -125,6 +122,15 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
         for (var i in this._stack) {
             this._stack[i].debug(0, i == this.index - 1);
         }
-    },    
+    },
+
+    _compact: function() {
+        if (this.options.levels > 0) {
+            while (this._stack.length > this.options.levels) {
+                this._stack.shift();
+                this.index--;
+            }
+        }
+    }                
 });
 

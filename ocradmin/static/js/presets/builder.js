@@ -28,6 +28,10 @@ function loadState() {
 
 $(function() {
 
+    // we don't want any button to have the default focus,
+    // so put it on a dummy button and hide it
+    $("#focus_dummy").focus().hide();
+
     // script builder buttons
     $("#show_file_menu").button({
         text: false,
@@ -223,9 +227,11 @@ $(function() {
         event.stopPropagation();
     });
     $("#undo_command").click(function(event) {
+        console.log("UNDO BUTTON CLICKED");
         cmdstack.undo();
     });
     $("#redo_command").click(function(event) {
+        console.log("REDO BUTTON CLICKED");
         cmdstack.redo();
     });
     $("#save_task_preset").click(function(event) {
@@ -274,10 +280,12 @@ $(function() {
     });        
 
     $("#optionsform").submit(function(event) {
-        nodetree.scriptChanged();
+        //nodetree.scriptChanged();
+        console.log("OPTIONS FORM SUBMITTED!!!");
+        return false;
         event.stopPropagation();
         event.preventDefault();
-    });        
+    });    
 
     function handleResult(nodename, data, cached) {
         console.log("Data:", data);
@@ -358,8 +366,9 @@ $(function() {
     textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
-    cmdstack = new OCRJS.UndoStack(this);
+    cmdstack = new OCRJS.UndoStack(this, {compress: false, max: 50});
     nodetree = new OCRJS.Nodetree.NodeTree($("#node_canvas"), cmdstack);
+    nodeparams = new OCRJS.Nodetree.Parameters($("#parameters").get(0));
     presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
 
     statusbar.addListeners({
@@ -383,6 +392,7 @@ $(function() {
     });
 
     function stackChanged() {
+        console.log("STACK CHANGED");
         $("#undo_command")
             .text(cmdstack.undoText())
             .button({disabled: !cmdstack.canUndo()})
@@ -392,9 +402,17 @@ $(function() {
             .button({disabled: !cmdstack.canRedo()})
             .button("refresh");
         presetmanager.checkForChanges();
+        nodeparams.resetParams(nodetree.getFocussedNode());
         runScript();
-        //cmdstack.debug();
-    };        
+        cmdstack.debug();
+    };
+
+    nodeparams.addListeners({
+        parameterSet: function(node, paramname, value) {
+            var oldval = node.getParameter(paramname);                          
+            nodetree.cmdSetNodeParameter(node, paramname, oldval, value);
+        },
+    });    
 
     cmdstack.addListeners({
         undoStateChanged: stackChanged,
@@ -412,13 +430,14 @@ $(function() {
         },
         nodeFocussed: function(node) {
             if (!node)
-                guimanager.tearDownGui();
+                guimanager.tearDownGui();                
             else {
                 if (sdviewer.activeViewer()) {
                     console.log("Setting GUI for", node.name);
                     guimanager.setupGui(node);
                 }
             }
+            nodeparams.resetParams(node);
         },                          
         registerUploader: function(name, elem) {
             uploader.removeListeners("onXHRLoad.setfilepath");
@@ -431,6 +450,7 @@ $(function() {
         ready: function() {
             // load state stored from last time
             loadState();
+            nodeparams.resetParams(nodetree.getFocussedNode());
         },                   
     });
 
