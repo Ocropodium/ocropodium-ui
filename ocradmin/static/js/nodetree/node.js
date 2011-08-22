@@ -41,10 +41,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             inputAttached: [],
             outputAttached: [],
             aboutToMove: [],
-            dropped: [],
-            moving: [],
             moved: [],
-            movedBy: [],
             clicked: [],
             rightClicked: [],
             plugHoverIn: [],
@@ -445,14 +442,13 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             x: event.pageX,
             y: event.pageY,
         };
-        self.callListeners("moving");
         var trans = SvgHelper.getTranslate(element);
         var scale = SvgHelper.getScale(element.parentNode);
         var moved = false;
         $(document).bind("mousemove.dragelem", function(moveevent) {
             moved = true;
             self.callListeners(
-                "movedBy", 
+                "moved", 
                 ((moveevent.pageX - start.x) / scale),
                 ((moveevent.pageY - start.y) / scale)
             ); 
@@ -466,7 +462,6 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             $(document).unbind(event);
             event.stopPropagation();
             event.preventDefault();
-            self.callListeners("dropped");
         });
     },
 
@@ -482,7 +477,6 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
     },
 
     _notifyMove: function() {
-        this.callListeners("moved");
         $.each(this._inplugs, function(i, plug) {
             plug.callListeners("moved");                
         });
