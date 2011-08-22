@@ -508,6 +508,9 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
     },
 
     cmdReplaceNode: function(src, dst) {
+        var srcpos = src.position(),
+            dstpos = dst.position();
+
         this._undostack.beginMacro("Replace Node");                        
         var outs = [];
         for (var i in src.inputs())
@@ -528,12 +531,30 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             this.cmdConnectPlugs(dst.output(), ins[i]);
         dst.setViewing(src.isViewing());
         dst.setFocussed(src.isFocussed());
-        var pos = SvgHelper.getTranslate(src.group());
-        var dstpos = dst.position();        
-        this.cmdMoveNodesBy([dst], pos.x - dstpos.x, pos.y - dstpos.y);
+        this.cmdMoveNodesBy([dst], srcpos.x - dstpos.x, srcpos.y - dstpos.y);
         this._undostack.push(new NT.DeleteNodeCommand(this, src.name));
         this._undostack.endMacro();
     },
+
+    cmdDeleteSelected: function() {
+        var self = this;                        
+        // have to watch out we don't barf the _nodes index
+        var togo = [];
+        for (var i in this._nodes) {
+            if (this._nodes[i].isFocussed())
+                togo.push(this._nodes[i]);
+        }
+        var togo = $.map(this._nodes, function(n) {
+            if (n.isFocussed()) return n;
+        });
+        var multi = togo.length > 1;
+        this._undostack.beginMacro("Delete Selection");
+        $.map(togo, function(n) {
+            self.cmdDisconnectNode(n);
+            self._undostack.push(new NT.DeleteNodeCommand(self, n.name));
+        });
+        this._undostack.endMacro();
+    },                        
 
     cmdCreateReplacementNode: function(type, replace, atpoint) {
         var name = this.newNodeName(type);
@@ -620,26 +641,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             doNodeCreation(p);
         });        
     },                    
-
-    cmdDeleteSelected: function() {
-        var self = this;                        
-        // have to watch out we don't barf the _nodes index
-        var togo = [];
-        for (var i in this._nodes) {
-            if (this._nodes[i].isFocussed())
-                togo.push(this._nodes[i]);
-        }
-        var togo = $.map(this._nodes, function(n) {
-            if (n.isFocussed()) return n;
-        });
-        var multi = togo.length > 1;
-        this._undostack.beginMacro("Delete Selection");
-        $.map(togo, function(n) {
-            self.cmdDisconnectNode(n);
-            self._undostack.push(new NT.DeleteNodeCommand(self, n.name));
-        });
-        this._undostack.endMacro();
-    },                        
 
     connectPlugs: function(src, dst) {
         var self = this;
