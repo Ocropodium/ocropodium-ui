@@ -136,7 +136,7 @@ NT.SetNodeParameterCommand = OCRJS.UndoCommand.extend({
 
 
 
-NT.NodeTree = OCRJS.OcrBaseWidget.extend({
+NT.Tree = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, cmdstack, options) {
         this.base(parent, options);
 

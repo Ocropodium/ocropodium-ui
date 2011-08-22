@@ -371,7 +371,7 @@ $(function() {
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
     cmdstack = new OCRJS.UndoStack(this, {compress: false, max: 50});
-    nodetree = new OCRJS.Nodetree.NodeTree($("#node_canvas"), cmdstack);
+    nodetree = new OCRJS.Nodetree.Tree($("#node_canvas"), cmdstack);
     nodeparams = new OCRJS.Nodetree.Parameters($("#parameters").get(0));
     presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
 
