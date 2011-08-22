@@ -132,6 +132,30 @@ NT.SetNodeParameterCommand = OCRJS.UndoCommand.extend({
             tree.getNode(nodename).setParameter(param, oldvalue, false);
         };
     },
+});
+
+NT.MoveNodesCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, nodes, x, y) {
+        this.base("Move Node" + (nodes.length > 1 ? "s" : ""));                     
+        var self = this;
+        this.nodes = nodes;
+        this.x = x, this.y = y;
+        this.redo = function() {
+            for (var i in nodes)
+                tree.getNode(nodes[i]).moveBy(self.x, self.y);
+        },
+        this.undo = function() {
+            for (var i in nodes)
+                tree.getNode(nodes[i]).moveBy(-self.x, -self.y);
+        }
+        this.mergeWith = function(other) {
+            if (self.nodes.join() != other.nodes.join())
+                return false;
+            self.x += other.x;
+            self.y += other.y;
+            return true; 
+        }
+    },
 });    
 
 
@@ -338,14 +362,16 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 self.cmdSetNodeViewing(node);
             },
             "movedBy.tree": function(x, y) {
+                var nodes = [];
                 if (node.isFocussed()) {
                     for (var i in self._nodes) {
                         if (self._nodes[i].isFocussed())
-                            self._nodes[i].moveBy(x, y);
+                            nodes.push(self._nodes[i].name);
                     }    
                 } else {
-                    node.moveBy(x, y);
+                    nodes.push(node.name);
                 }
+                self._undostack.push(new NT.MoveNodesCommand(self, nodes, x, y));
             },
             "dropped.tree": function() {
                 node.removeListeners("moved.dragmulti");
