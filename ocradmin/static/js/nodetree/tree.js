@@ -337,25 +337,15 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             "toggleViewing.tree": function() {
                 self.cmdSetNodeViewing(node);
             },
-            "moving.tree": function() {
-                // when the node is being dragged, also move any others
-                // that are selected
-                // FIXME: This seems an awfully inefficient way of doing
-                // things but it's much less complicated than doing funky
-                // things with adding/removing transformation groups                        
-                if (!node.isFocussed())
-                    return;
-                var trans = SvgHelper.getTranslate(node.group());
-                node.addListener("moved.dragmulti", function() {
-                    var newtrans = SvgHelper.getTranslate(node.group());
-                    $.each(self._nodes, function(i, other) {
-                        if (other != node && other.isFocussed()) {
-                            other.moveBy(
-                                newtrans.x - trans.x, newtrans.y - trans.y);
-                        }
-                    });
-                    trans = newtrans;                    
-                });
+            "movedBy.tree": function(x, y) {
+                if (node.isFocussed()) {
+                    for (var i in self._nodes) {
+                        if (self._nodes[i].isFocussed())
+                            self._nodes[i].moveBy(x, y);
+                    }    
+                } else {
+                    node.moveBy(x, y);
+                }
             },
             "dropped.tree": function() {
                 node.removeListeners("moved.dragmulti");
