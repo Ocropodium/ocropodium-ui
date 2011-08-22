@@ -15,7 +15,8 @@ OCRJS.Nodetree.Parameters = OCRJS.OcrBase.extend({
         this._node = null;
 
         this._listeners = {
-            "parameterSet": [],
+            parameterSet: [],
+            registerUploader: [],
         };
     },                     
 
@@ -57,7 +58,7 @@ OCRJS.Nodetree.Parameters = OCRJS.OcrBase.extend({
         for (var i in node.parameters) {
             console.log("Updating param val", node.parameters[i].name, node.parameters[i].value);
             var row = $($("#node_param_list", this.parent).find("tr")[i]);
-            var control = $(row.find("input, select")[i]);
+            var control = $(row.find("input, select").not(".proxy")[i]);
             if (this._getControlValue(control) != node.parameters[i].value)
                 this._setControlValue(control, node.parameters[i].value);
         }            
@@ -81,10 +82,33 @@ OCRJS.Nodetree.Parameters = OCRJS.OcrBase.extend({
     },
 
     _buildFileParam: function(node, param) {
-
+        var control = $("<input type='text'></input"),
+            label = $("<label></label>"); 
+        control
+            .attr("id", node.name + param.name)
+            .val(param.value);
+        label
+            .attr("for", node.name + param.name)
+            .text(param.name);
+        var wrap = $("<div></div>")
+            .attr("id", "dropzone")
+            .append(control);
+        this._addControl(label, wrap);
+        this._setupEvents(node, param, control);
+        this.callListeners("registerUploader", node.name, control);
     },
 
     _buildBooleanParam: function(node, param) {    
+        var control = $("<input type='checkbox'></input"),
+            label = $("<label></label>"); 
+        control
+            .attr("id", node.name + param.name)
+            .prop("checked", param.value);
+        label
+            .attr("for", node.name + param.name)
+            .text(param.name);
+        this._addControl(label, control);
+        this._setupEvents(node, param, control);
 
     },
 
@@ -92,10 +116,12 @@ OCRJS.Nodetree.Parameters = OCRJS.OcrBase.extend({
         var control = $("<select></select"),
             label = $("<label></label>");
         $.each(param.choices, function(i, choice) {
-            control.append(
-                $("<option></option>")
+            var opt = $("<option></option>")
                     .attr("value", choice)
-                    .text(choice));
+                    .text(choice);
+            if (choice == param.value)
+                opt.attr("selected", "selected");
+            control.append(opt);
         }); 
         control
             .attr("id", node.name + param.name)
