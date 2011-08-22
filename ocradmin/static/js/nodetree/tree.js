@@ -8,32 +8,19 @@ var SvgHelper = SvgHelper || new OCRJS.Nodetree.SvgHelper();
 
 
 NT.AddNodeCommand = OCRJS.UndoCommand.extend({
-    /*
-     * This command contains a nasty hack.  When the node is created
-     * it is temporarily attached to the mouse to allow positioning.
-     * When creating a node is undone the function stores the position
-     * in the class closure so that subsequent redo operations put
-     * it back in the right place afterwards.
-     */
     constructor: function(tree, name, type, atpoint, context) {
         this.base("Add Node");
         var self = this;
-        var pos = atpoint;
         this.redo = function() {
             var node = tree.createNode(name, tree._nodetypes[type]);
             tree.registerNode(node);
             node.moveTo(
-                pos.x - (node.width / 2),
-                pos.y - (node.height / 2)
+                atpoint.x - (node.width / 2),
+                atpoint.y - (node.height / 2)
             );
         };
         this.undo = function() {
-            console.log("Add node undo triggered", name);
             var node = tree.getNode(name);
-            pos = {
-                x: node.position().x + (node.width / 2),
-                y: node.position().y + (node.height / 2),
-            };
             tree.unregisterNode(node);
             tree.deleteNode(node);
         };
