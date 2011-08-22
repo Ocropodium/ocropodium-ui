@@ -289,6 +289,10 @@ $(function() {
 
     function handleResult(nodename, data, cached) {
         console.log("Data:", data);
+        if (!data.result || !data.result.type) {
+            console.error("Unexpected process result: ", data);
+            return;
+        }
         if (data.result.type == "error") {
             console.log("NODE ERROR: ", data.result.node, data.result.error);
             nodetree.setNodeErrored(data.result.node, data.result.error);
