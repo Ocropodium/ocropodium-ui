@@ -370,11 +370,9 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 self.showContextMenu(event);
             },
             "inputAttached.tree": function(plug) {
-                console.log("Attached input to", node.name, plug.name);
                 self.handlePlug(plug);
             },                               
             "outputAttached.tree": function(plug) {
-                console.log("Attached output to", node.name, plug.name);
                 self.handlePlug(plug);
             },
             "plugHoverIn.tree": function(plug) {
@@ -516,8 +514,10 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             if (src.input(i).isAttached())
                 outs.push(src.input(i).cable().start);
         var ins = this.attachedInputs(src.output());
-        for (var i in src.inputs())
-            this.cmdDetachPlug(src.input(i));
+        for (var i in src.inputs()) {
+            if (src.input(i).isAttached())
+                this.cmdDetachPlug(src.input(i));
+        }
         for (var i in ins)
             this.cmdDetachPlug(ins[i]);
         // src node is now  fully detached, hopefully
@@ -529,7 +529,8 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         dst.setViewing(src.isViewing());
         dst.setFocussed(src.isFocussed());
         var pos = SvgHelper.getTranslate(src.group());
-        dst.moveTo(pos.x, pos.y);
+        var dstpos = dst.position();        
+        this.cmdMoveNodesBy([dst], pos.x - dstpos.x, pos.y - dstpos.y);
         this._undostack.push(new NT.DeleteNodeCommand(this, src.name));
         this._undostack.endMacro();
     },
