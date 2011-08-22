@@ -6,6 +6,8 @@ from django.contrib import admin
 from django.contrib.auth.views import login, logout
 admin.autodiscover()
 
+import djcelery
+
 urlpatterns = patterns('',
     # Static media
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
@@ -27,6 +29,7 @@ urlpatterns = patterns('',
     (r'^reference_pages/?', include('ocradmin.reference_pages.urls')),
     (r'^training/?', include('ocradmin.training.urls')),
     (r'^transcripts/?', include('ocradmin.transcripts.urls')),
+    (r'^celery/?', include('djcelery.urls')),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
     # to INSTALLED_APPS to enable admin documentation:
