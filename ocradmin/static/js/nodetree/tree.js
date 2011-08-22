@@ -361,21 +361,15 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             "toggleViewing.tree": function() {
                 self.cmdSetNodeViewing(node);
             },
-            "movedBy.tree": function(x, y) {
+            "moved.tree": function(dx, dy) {
                 var nodes = [];
                 if (node.isFocussed()) {
-                    for (var i in self._nodes) {
-                        if (self._nodes[i].isFocussed())
-                            nodes.push(self._nodes[i].name);
-                    }    
+                    self.cmdMoveNodesBy(self._nodes.filter(function(n) {
+                        return n.isFocussed();
+                    }), dx, dy);
                 } else {
-                    nodes.push(node.name);
+                    self.cmdMoveNodesBy([node], dx, dy);
                 }
-                self._undostack.push(new NT.MoveNodesCommand(self, nodes, x, y));
-            },
-            "dropped.tree": function() {
-                node.removeListeners("moved.dragmulti");
-                self.callListeners("nodeMoved", node);
             },
             "deleted.tree": function() {
                 console.log("Deleted node:", node.name);
@@ -471,6 +465,12 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             self.removeDragCable();
         });
     },
+
+    cmdMoveNodesBy: function(nodes, x, y) {
+        this._undostack.push(new NT.MoveNodesCommand(this, nodes.map(function(n) {
+            return n.name;
+        }), x, y));
+    },                        
 
     cmdDetachPlug: function(plug) {
         this._undostack.push(new NT.DetachPlugCommand(this, plug.name));

@@ -438,9 +438,6 @@ $(function() {
         scriptChanged: function(what) {
             console.log("Script changed:", what);
         },
-        nodeMoved: function(what) {
-            presetmanager.checkForChanges();
-        },
         nodeFocussed: function(node) {
             if (!node)
                 guimanager.tearDownGui();                
