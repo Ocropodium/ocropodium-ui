@@ -56,6 +56,38 @@ class RGBFileInNode(generic_nodes.ImageGeneratorNode, generic_nodes.BinaryPngWri
         return path
 
 
+class PilScaleNode(node.Node, generic_nodes.BinaryPngWriterMixin):
+    """Scale an image with PIL"""
+    stage = stages.FILTER_GRAY
+    name = "Pil::PilScale"
+    description = "PIL Scale/resize image node"
+    intypes = [numpy.ndarray]
+    outtype = numpy.ndarray
+    _parameters = [
+        dict(name="scale", value=1.0),
+        dict(name="filter", value="NEAREST", choices=[
+            "NEAREST", "BILINEAR", "BICUBIC", "ANTIALIAS"    
+        ]),
+    ]
+
+    def _validate(self):
+        super(PilScaleNode, self)._validate()
+        if not self._params.get("scale"):
+            raise node.ValidationError(self, "'scale' is not set")
+        try:
+            num = float(self._params.get("scale"))
+        except ValueError:
+            raise node.ValidationError(self, "'float' must be a float")
+    
+    def _eval(self):
+        """Scale image."""
+        scale = float(self._params.get("scale"))
+        pil = Image.fromarray(self.get_input_data(0))
+        dims = [dim * scale for dim in pil.size]
+        scaled = pil.resize(tuple(dims), getattr(Image, self._params.get("filter")))
+        return numpy.asarray(scaled.convert("L"))
+
+
 class PilCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
     """Crop an image with PIL."""
     stage = stages.FILTER_GRAY
@@ -69,14 +101,6 @@ class PilCropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
         dict(name="x1", value=-1),
         dict(name="y1", value=-1),
     ]
-
-    def _validate(self):
-        """
-        Check inputs are connected.
-        """
-        for i in range(len(self._inputs)):
-            if self._inputs[i] is None:
-                raise node.ValidationError(self, "missing input '%d'" % i)
 
     def _eval(self):
         """
