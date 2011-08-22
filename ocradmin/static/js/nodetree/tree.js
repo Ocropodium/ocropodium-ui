@@ -132,6 +132,30 @@ NT.SetNodeParameterCommand = OCRJS.UndoCommand.extend({
             tree.getNode(nodename).setParameter(param, oldvalue, false);
         };
     },
+});
+
+NT.MoveNodesCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, nodes, x, y) {
+        this.base("Move Node" + (nodes.length > 1 ? "s" : ""));                     
+        var self = this;
+        this.nodes = nodes;
+        this.x = x, this.y = y;
+        this.redo = function() {
+            for (var i in nodes)
+                tree.getNode(nodes[i]).moveBy(self.x, self.y);
+        },
+        this.undo = function() {
+            for (var i in nodes)
+                tree.getNode(nodes[i]).moveBy(-self.x, -self.y);
+        }
+        this.mergeWith = function(other) {
+            if (self.nodes.join() != other.nodes.join())
+                return false;
+            self.x += other.x;
+            self.y += other.y;
+            return true; 
+        }
+    },
 });    
 
 
@@ -337,25 +361,17 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             "toggleViewing.tree": function() {
                 self.cmdSetNodeViewing(node);
             },
-            "moving.tree": function() {
-                // when the node is being dragged, also move any others
-                // that are selected
-                // FIXME: This seems an awfully inefficient way of doing
-                // things but it's much less complicated than doing funky
-                // things with adding/removing transformation groups                        
-                if (!node.isFocussed())
-                    return;
-                var trans = SvgHelper.getTranslate(node.group());
-                node.addListener("moved.dragmulti", function() {
-                    var newtrans = SvgHelper.getTranslate(node.group());
-                    $.each(self._nodes, function(i, other) {
-                        if (other != node && other.isFocussed()) {
-                            other.moveBy(
-                                newtrans.x - trans.x, newtrans.y - trans.y);
-                        }
-                    });
-                    trans = newtrans;                    
-                });
+            "movedBy.tree": function(x, y) {
+                var nodes = [];
+                if (node.isFocussed()) {
+                    for (var i in self._nodes) {
+                        if (self._nodes[i].isFocussed())
+                            nodes.push(self._nodes[i].name);
+                    }    
+                } else {
+                    nodes.push(node.name);
+                }
+                self._undostack.push(new NT.MoveNodesCommand(self, nodes, x, y));
             },
             "dropped.tree": function() {
                 node.removeListeners("moved.dragmulti");
