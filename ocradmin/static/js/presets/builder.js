@@ -403,6 +403,7 @@ $(function() {
             .button("refresh");
         presetmanager.checkForChanges();
         nodeparams.resetParams(nodetree.getFocussedNode());
+        console.log("Stack changed. Running script", nodetree.buildScript());
         runScript();
         cmdstack.debug();
     };
@@ -411,6 +412,14 @@ $(function() {
         parameterSet: function(node, paramname, value) {
             var oldval = node.getParameter(paramname);                          
             nodetree.cmdSetNodeParameter(node, paramname, oldval, value);
+        },
+        registerUploader: function(name, elem) {
+            uploader.removeListeners("onXHRLoad.setfilepath");
+            uploader.setTarget(elem);
+            // FIXME: No error handling
+            uploader.addListener("onXHRLoad.setfilepath", function(data) {
+                nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
+            });
         },
     });    
 
@@ -439,14 +448,6 @@ $(function() {
             }
             nodeparams.resetParams(node);
         },                          
-        registerUploader: function(name, elem) {
-            uploader.removeListeners("onXHRLoad.setfilepath");
-            uploader.setTarget(elem);
-            // FIXME: No error handling
-            uploader.addListener("onXHRLoad.setfilepath", function(data) {
-                nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
-            });
-        },
         ready: function() {
             // load state stored from last time
             loadState();
@@ -538,8 +539,5 @@ $(function() {
 
     // Initialise nodetree!    
     nodetree.init();
-    
-    // the run script on first load
-    runScript();    
 });
 
