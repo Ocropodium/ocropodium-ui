@@ -44,6 +44,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
             dropped: [],
             moving: [],
             moved: [],
+            movedBy: [],
             clicked: [],
             rightClicked: [],
             plugHoverIn: [],
@@ -440,7 +441,7 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
 
     move: function(event, element) {
         var self = this;
-        var dragstart = {
+        var start = {
             x: event.pageX,
             y: event.pageY,
         };
@@ -450,13 +451,13 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
         var moved = false;
         $(document).bind("mousemove.dragelem", function(moveevent) {
             moved = true;
-            SvgHelper.updateTransform(
-                self.group(),
-                trans.x + ((moveevent.pageX - dragstart.x) / scale),
-                trans.y + ((moveevent.pageY - dragstart.y) / scale),
-                1
-            );
-            self._notifyMove();
+            self.callListeners(
+                "movedBy", 
+                ((moveevent.pageX - start.x) / scale),
+                ((moveevent.pageY - start.y) / scale)
+            ); 
+            start.x = moveevent.pageX;
+            start.y = moveevent.pageY;
         });
         $(document).bind("mouseup.dragelem", function(event) {
             if (moved)
