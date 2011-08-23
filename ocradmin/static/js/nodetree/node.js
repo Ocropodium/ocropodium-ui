@@ -405,7 +405,6 @@ OCRJS.Nodetree.Node = OCRJS.OcrBase.extend({
 
     _toggleFocussed: function(bool) {
         this._setBaseGradient(bool);                         
-        console.log("Toggling", this.name, "focus:", bool, "Gradient", this._gradient);                         
         this.svg.change(this._rect, {fill: this._gradient});        
         if (!this.isIgnored())
             this.svg.change(this._ignorebutton, {fill: this._gradient});
