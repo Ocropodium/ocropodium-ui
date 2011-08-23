@@ -2,11 +2,152 @@
 // Interface for node parameters
 //
 
-OCRJS = OCRJS || {};
+var OCRJS = OCRJS || {};
 OCRJS.Nodetree = OCRJS.Nodetree || {};
 
+var NT = OCRJS.Nodetree;
 
-OCRJS.Nodetree.Parameters = OCRJS.OcrBase.extend({
+NT.TextParam = OCRJS.OcrBase.extend({
+    constructor: function(node, param, options) {
+        this.base(node, param, options);
+        this.node = node;
+        this.data = param;
+        this.name = node.name + param.name;
+        this.options = {};
+        $.extend(this.options, options);
+        this._initCtrl();
+        this._bindCtrl();
+
+        this._listeners = {
+            change: [],
+        };
+    },      
+
+    _initCtrl: function() {
+        this.ctrl = $("<input type='text'></input>");
+        this.ctrl
+            .attr("id", this.name);
+        this.setValue(this.data.value);
+    },
+
+    _bindCtrl: function() {
+        var self = this;                   
+        this.ctrl.bind("change.paramupdate", function(event) {
+            self.callListeners("change", self.getValue());            
+        });            
+    },                   
+
+    setValue: function(val) {
+        console.log("Setting value", this.ctrl, val);                  
+        this.ctrl.val(val);
+    },                  
+
+    getValue: function() {
+        return this.ctrl.val();
+    },                  
+
+    getLabel: function() {
+        return $("<label></label>")
+            .attr("for", this.name)
+            .text(this.data.name);
+    },                  
+
+    buildHtml: function() {
+        return $("<tr></tr>")
+            .addClass("node_parameter")
+            .append($("<td></td>").append(this.getLabel()))
+            .append($("<td></td>").append(this.ctrl));                        
+    }                   
+});
+
+NT.ChoiceParam = NT.TextParam.extend({
+    _initCtrl: function() {
+        var self = this;                   
+        this.ctrl = $("<select></select");
+        $.each(this.data.choices, function(i, choice) {
+            var opt = $("<option></option>")
+                    .attr("value", choice)
+                    .text(choice);
+            if (choice == self.data.value)
+                opt.attr("selected", "selected");
+            self.ctrl.append(opt);
+        }); 
+        this.ctrl
+            .attr("id", this.name);
+        this.setValue(this.data.value);
+    },              
+});
+
+NT.BooleanParam = NT.TextParam.extend({
+    _initCtrl: function() {
+        this.ctrl = $("<input type='checkbox'></input>");
+        this.ctrl
+            .attr("id", this.name);
+        this.setValue(this.data.value);
+    },                   
+
+    setValue: function(val) {
+        this.ctrl.prop("checked", val);
+    },
+
+    getValue: function() {
+        return this.ctrl.prop("checked");
+    },                  
+});
+
+NT.FileParam = NT.TextParam.extend({
+    _initCtrl: function() {
+        this.base();
+        this.ctrl
+            .addClass("dropzone")
+            .attr("disabled", true);
+    },
+
+    setValue: function(val) {
+        this.ctrl
+            .data("val", val)
+            .val(val.match(/.*?([^\/]+)?$/)[1]);            
+    },
+
+    getValue: function() {
+        return this.ctrl.data("val");
+    },                  
+});
+
+NT.SwitchParam = NT.TextParam.extend({
+    _initCtrl: function() {
+        this.ctrl = $("<span></span>")
+            .attr("id", this.name)
+            .css("float", "left")
+            .css("width", "90%")
+            .slider({
+                value: this.data.value,
+                min: 0,
+                step: 1,
+                max: 1,
+            });
+    },
+
+    _bindCtrl: function() {
+        var self = this;                   
+        this.ctrl.slider({
+            stop: function(event, ui) {
+                self.callListeners("change", self.getValue());            
+            },
+        });
+    },                   
+
+    setValue: function(val) {
+        this.ctrl.slider("value", val);
+    },
+
+    getValue: function() {
+        return this.ctrl.slider("value");
+    },                  
+});    
+
+
+NT.Parameters = OCRJS.OcrBase.extend({
     constructor: function(parent, options) {
         this.base(options);
         this.parent = parent;
@@ -14,58 +155,70 @@ OCRJS.Nodetree.Parameters = OCRJS.OcrBase.extend({
         this._paramtmpl = $.template($("#paramTmpl"));
         this._node = null;
 
+        this._params = [];
+
         this._listeners = {
             parameterSet: [],
             registerUploader: [],
         };
-    },                     
+    },
+
+    newParam: function(data) {
+        switch(data.type) {
+            case "switch": return new NT.SwitchParam(this._node, data);
+            case "bool": return new NT.BooleanParam(this._node, data);
+            case "filepath": return new NT.FileParam(this._node, data);
+            default: 
+                if (data.choices)
+                    return new NT.ChoiceParam(this._node, data);
+                else
+                    return new NT.TextParam(this._node, data);
+        }                                             
+    },                  
+
+    setupParameterEvents: function(param) {
+        var self = this;                              
+        param.addListeners({
+            change: function(val) {
+                self.callListeners("parameterSet", self._node, param.data.name, val);
+            },
+        });        
+
+        // FIXME: Hack to wire in uploader events to file path controls
+        if (param.data.type == "filepath")
+            this.callListeners("registerUploader", this._node.name, param.ctrl);
+    },                              
 
     buildParams: function() {
         var self = this,
             node = this._node;
 
+        this._params = [];
         $(this.parent).html("").append(
             $.tmpl(this._paramtmpl, {
                 nodename: node.name
             }));
 
+        var tab = $("#node_param_list", this.parent);
         for (var i in node.parameters) {
-            switch (node.parameters[i].type) {
-                case "filepath":
-                    this._buildFileParam(node, node.parameters[i]);
-                    break;
-                case "bool":
-                    this._buildBooleanParam(node, node.parameters[i]);
-                    break;
-                default: {
-                    if (node.parameters[i].choices)
-                        this._buildChoiceParam(node, node.parameters[i]);
-                    else
-                        this._buildParam(node, node.parameters[i]);
-                }
-            }                
+            var p = this.newParam(node.parameters[i]);
+            this._params.push(p);
+            tab.append(p.buildHtml());
+            this.setupParameterEvents(p);
         }            
     },
 
     clearParams: function() {
         $(this.parent).html("");
+        this._params = [];
     },
 
     updateParams: function() {
-        var self = this,
-            node = this._node;
-
-        for (var i in node.parameters) {
-            console.log("Updating param val", node.parameters[i].name, node.parameters[i].value);
-            var row = $($("#node_param_list", this.parent).find("tr")[i]);
-            var control = $(row.find("input, select").not(".proxy")[i]);
-            if (this._getControlValue(control) != node.parameters[i].value)
-                this._setControlValue(control, node.parameters[i].value);
-        }            
+        for (var i in this._node.parameters)
+            this._params[i].setValue(this._node.parameters[i].value);
     },                      
 
     resetParams: function(node) {
-
         if (!node) {
             this._node = null;
             this.clearParams();
@@ -80,115 +233,5 @@ OCRJS.Nodetree.Parameters = OCRJS.OcrBase.extend({
             }
         }
     },
-
-    _buildFileParam: function(node, param) {
-        var control = $("<input type='text'></input"),
-            label = $("<label></label>"); 
-        control
-            .attr("id", node.name + param.name)
-            .val(param.value);
-        label
-            .attr("for", node.name + param.name)
-            .text(param.name);
-        var wrap = $("<div></div>")
-            .attr("id", "dropzone")
-            .append(control);
-        this._addControl(label, wrap);
-        this._setupEvents(node, param, control);
-        this.callListeners("registerUploader", node.name, control);
-    },
-
-    _buildBooleanParam: function(node, param) {    
-        var control = $("<input type='checkbox'></input"),
-            label = $("<label></label>"); 
-        control
-            .attr("id", node.name + param.name)
-            .prop("checked", param.value);
-        label
-            .attr("for", node.name + param.name)
-            .text(param.name);
-        this._addControl(label, control);
-        this._setupEvents(node, param, control);
-
-    },
-
-    _buildChoiceParam: function(node, param) {
-        var control = $("<select></select"),
-            label = $("<label></label>");
-        $.each(param.choices, function(i, choice) {
-            var opt = $("<option></option>")
-                    .attr("value", choice)
-                    .text(choice);
-            if (choice == param.value)
-                opt.attr("selected", "selected");
-            control.append(opt);
-        }); 
-        control
-            .attr("id", node.name + param.name)
-            .val(param.value);
-        label
-            .attr("for", node.name + param.name)
-            .text(param.name);
-        this._addControl(label, control);
-        this._setupEvents(node, param, control);
-    },
-
-    _buildParam: function(node, param) {
-        var control = $("<input type='text'></input"),
-            label = $("<label></label>"); 
-        control
-            .attr("id", node.name + param.name)
-            .val(param.value);
-        label
-            .attr("for", node.name + param.name)
-            .text(param.name);
-        this._addControl(label, control);
-        this._setupEvents(node, param, control);
-    },
-
-    _addControl: function(label, control) {
-        var tab = $("#node_param_list", this.parent);
-        var row = $("<tr></tr>").addClass("node_parameter");
-        tab.append(row);
-        row
-            .append($("<td></td>").append(label))
-            .append($("<td></td>").append(control));
-    },                     
-
-    _setupEvents: function(node, param, control) {
-        var self = this,                      
-            listenername = "parameterUpdated_" + param.name + ".paramchange";
-
-        // to prevent a circular loop we have to unbind the 
-        // listener, change the value, and rebind it.
-        control.bind("change", function(event) {
-            self.callListeners("parameterSet", node, param.name, self._getControlValue(control));
-        });
-    },
-
-    _getControlValue: function(control) {
-        var val;                       
-        switch (control.attr("type")) {
-            case "checkbox":
-                val = control.prop("checked");
-                break;
-            case "radio":
-                val = "TODO";
-                break;
-            default:
-                val = control.val();
-        }
-        return val;        
-    },             
-
-    _setControlValue: function(control, value) {
-        switch (control.attr("type")) {
-            case "checkbox":
-                control.prop("checked", value);
-                break;
-            default:
-                control.val(value);
-        }        
-    },                          
 });
 
