@@ -9,6 +9,7 @@ from celery.task import PeriodicTask
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.utils import simplejson as json
+from django.contrib.auth.models import User
 
 from ocradmin.core import utils
 from ocradmin.ocrtasks.decorators import register_handlers
@@ -101,6 +102,7 @@ class PruneCacheTask(PeriodicTask):
         logger = self.get_logger()
         cacheclass = pluginutils.get_dzi_cacher(settings)
         for user in User.objects.all():
+            cachedir = "cache_%s" % user.username
             cacher = cacheclass(
                     path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
                     key=cachedir, logger=logger)
