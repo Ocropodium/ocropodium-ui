@@ -826,7 +826,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
     },
 
     showContextMenu: function(event) {
-        var self = this;                         
+        var self = this;
         this._menu.show();
         var maxx = $(this.parent).offset().left + $(this.parent).width();
         var left = event.pageX;
@@ -837,11 +837,17 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             top: event.pageY,
             left: left,    
         });
-        $(document).bind("click.menuhide", function(event) {
-            self.hideContextMenu();            
-            $(document).unbind("click.menuhide");
-            event.stopPropagation();
-            event.preventDefault();
+        // NB: The setTimeout here is a hacky workaround for an
+        // additional click event being fired in Firefox.  I think
+        // it's this issue:
+        // http://stackoverflow.com/questions/1489817/jquery-liveclick-firing-for-right-click
+        setTimeout(function() {
+            $(document).bind("click.menuhide", function(event) {
+                self.hideContextMenu();            
+                $(document).unbind("click.menuhide");
+                event.stopPropagation();
+                event.preventDefault();
+            });
         });
     },                         
 
