@@ -77,7 +77,7 @@ OCRJS.Nodetree.DragCable = OCRJS.Nodetree.BaseCable.extend({
               
         this._group = svg.group(parent);      
         this._path = this.svg.path(this._group, this.getPath(p1, p2), {
-            fill: "transparent", stroke: "black", strokeWidth: 1,
+            fill: "none", stroke: "black", strokeWidth: 1,
             strokeDashArray: "2,2",
         });
     },              
