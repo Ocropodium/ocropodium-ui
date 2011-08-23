@@ -100,6 +100,37 @@ class DBPediaAnnotateNode(BaseWebService):
         return out
 
 
+class OpenCalaisNode(BaseWebService):
+    """
+    OpenCalias sematic markup.
+    """
+    stage = stages.POST
+    name = "%s::OpenCalais" % NAME
+    description = "OpenCalais Semantic Markup"
+    baseurl =  "http://api.opencalais.com/tag/rs/enrich"
+    _parameters = [
+    ]
+
+    def _eval(self):
+        input = self.eval_input(0)
+        
+        http = httplib2.Http()
+        headers = {
+                "x-calais-licenseID": "dsza6q6zwa9nzvz9wbz7f6y5",
+                "content-type": "text/raw",
+                "Accept": "xml/rdf",
+                "enableMetadataType": "GenericRelations",
+        }
+        request, content = http.request(
+                self.baseurl,
+                "POST",
+                headers=headers,
+                body=input.encode("utf8")
+        )
+        if request["status"] != "200":
+            raise WebServiceNodeError(self, "A web service error occured.  Status: %s" % request["status"])
+        return content.decode("utf8")
+
 
 
 
