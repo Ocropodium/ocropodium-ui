@@ -83,7 +83,7 @@ class PilScaleNode(node.Node, generic_nodes.BinaryPngWriterMixin):
         """Scale image."""
         scale = float(self._params.get("scale"))
         pil = Image.fromarray(self.get_input_data(0))
-        dims = [dim * scale for dim in pil.size]
+        dims = [int(dim * scale) for dim in pil.size]
         scaled = pil.resize(tuple(dims), getattr(Image, self._params.get("filter")))
         return numpy.asarray(scaled.convert("L"))
 
