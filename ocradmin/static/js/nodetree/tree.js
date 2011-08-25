@@ -632,6 +632,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 else
                     self.cmdConnectPlugs(plug, context);
             }
+            self.getNode(name).setFocussed(true);
             self._undostack.endMacro();        
         };
 
