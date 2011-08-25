@@ -4,6 +4,7 @@
 
 {% block headerscript %}
     {% load compressed %}
+    {% compressed_js 'undostack' %}
     {% compressed_js 'viewers' %}
     {% compressed_js 'transcript_edit' %}
     <script type='application/javascript' src='/static/js/ocr/transcript.js'></script>
