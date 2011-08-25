@@ -274,7 +274,17 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
 
     hasNodes: function() {
         return this._nodes.length > 0;
-    },                  
+    },
+
+    nodeCount: function() {
+        return this._nodes.length;
+    },
+
+    selectedNodeCount: function() {
+        return this._nodes.filter(function(n) {
+            return n.isFocussed();
+        }).length;    
+    },
 
     setNodeErrored: function(nodename, error) {
         if (this._usednames[nodename])
@@ -549,7 +559,11 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         var node = this.getNode(name);
         this.cmdReplaceNode(replace, node);
         this._undostack.endMacro();        
-    },                                  
+    },
+
+    cmdCreateNode: function(name, type, atpoint) {
+        this._undostack.push(new NT.AddNodeCommand(this, name, type, atpoint));
+    },                       
 
     cmdLayoutNodes: function(data) {
         var self = this;
@@ -570,10 +584,14 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         this.centreTree();
     },
 
-    createNodeWithContext: function(type, event, context) {
+    createNodeWithContextFromEvent: function(type, event, context) {
+        var atpoint = SvgHelper.mouseCoord(this.parent, event);
+        this.createNodeWithContext(type, atpoint, context);
+    },                                        
+
+    createNodeWithContext: function(type, atpoint, context) {
         var self = this;
         var name = this.newNodeName(type);
-        var atpoint = SvgHelper.mouseCoord(this.parent, event);
 
         if (context instanceof NT.Node)
             return this.cmdCreateReplacementNode(type, context, atpoint);
@@ -607,7 +625,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
 
         var doNodeCreation = function(atpoint) {
             self._undostack.beginMacro("Create Node");
-            self._undostack.push(new NT.AddNodeCommand(self, name, type, atpoint));
+            self.cmdCreateNode(name, type, atpoint);
             if (plug && cable) {
                 if (plug instanceof NT.InPlug)
                     self.cmdConnectPlugs(context, plug);
