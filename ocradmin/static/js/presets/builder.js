@@ -441,7 +441,7 @@ $(function() {
 
     nodemenu.addListeners({
         newNodeClicked: function(event, typename, context) {
-            nodetree.createNodeWithContext(typename, event, context);
+            nodetree.createNodeWithContextFromEvent(typename, event, context);
         },
     });                        
 
