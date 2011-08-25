@@ -183,8 +183,15 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
     },
 
 
-    init: function() {
-        this.queryNodeTypes();
+    init: function(data) {
+        var self = this;
+        $.each(data, function(i, nodeinfo) {
+            if (!self._nodedata[nodeinfo.stage])
+                self._nodedata[nodeinfo.stage] = [];
+            self._nodedata[nodeinfo.stage].push(nodeinfo);
+            self._nodetypes[nodeinfo.name] = nodeinfo;
+        });
+        this.populateCanvas();
     },
 
     getEvalNode: function() {
@@ -251,27 +258,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         var oldval = this.getNode(name).getParameter("path");
         this.cmdSetNodeParameter(this.getNode(name), "path", oldval, path);
     },               
-
-    queryNodeTypes: function() {
-        var self = this;
-        var url = "/presets/query/";
-        self.callListeners("onUpdateStarted"); 
-        $.ajax({
-            url: url,
-            type: "GET",
-            error: OCRJS.ajaxErrorHandler,
-            success: function(data) {
-                self._nodedata = {};
-                $.each(data, function(i, nodeinfo) {
-                    if (!self._nodedata[nodeinfo.stage])
-                        self._nodedata[nodeinfo.stage] = [];
-                    self._nodedata[nodeinfo.stage].push(nodeinfo);
-                    self._nodetypes[nodeinfo.name] = nodeinfo;
-                });
-                self.populateCanvas();
-            },
-        });
-    },
 
     resetSize: function() {                           
         var svg = $(this.parent).find("svg");

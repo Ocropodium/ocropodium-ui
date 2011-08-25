@@ -539,6 +539,8 @@ $(function() {
     $(window).resize();
 
     // Initialise nodetree!    
-    nodetree.init();
+    $.getJSON("/presets/query/", function(data) {
+        nodetree.init(data);
+    });
 });
 
