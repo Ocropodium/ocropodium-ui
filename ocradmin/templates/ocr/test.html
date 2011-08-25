@@ -1,9 +1,17 @@
+{% load compressed %}
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
       "http://www.w3.org/TR/html4/loose.dtd">  
 <html>  
-  <head>  
+    <head> 
+
+    {% compressed_js "jquery" %}
+    {% compressed_js "utils" %}
+    {% compressed_js "ocrjs" %}
+    {% compressed_js "undostack" %}
+    {% compressed_js "nodetree" %}
+
     <link rel="stylesheet" href="/static/css/qunit.css" type="text/css"/>  
-    <script src="http://code.jquery.com/jquery-latest.js"> </script>  
     <script type="text/javascript" src="/static/js/jquery/qunit.js"></script>  
     <script type="text/javascript" src="/static/js/test/ocr.js"></script>  
   </head>  
