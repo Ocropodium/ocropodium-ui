@@ -6,6 +6,8 @@
 var uploader = null;
 var formatter = null;
 var nodetree = null;
+var nodeparams = null;
+var nodemenu = null;
 var cmdstack = null;
 var sdviewer = null;
 var hocrviewer = null;
@@ -373,6 +375,7 @@ $(function() {
     cmdstack = new OCRJS.UndoStack(this, {max: 50});
     nodetree = new OCRJS.Nodetree.Tree($("#node_canvas"), cmdstack);
     nodeparams = new OCRJS.Nodetree.Parameters($("#parameters").get(0));
+    nodemenu = new OCRJS.Nodetree.ContextMenu($("#body").get(0), $("#node_canvas").get(0));
     presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
 
     statusbar.addListeners({
@@ -425,7 +428,13 @@ $(function() {
                 nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
             });
         },
-    });    
+    });
+
+    nodemenu.addListeners({
+        newNodeClicked: function(event, typename, context) {
+            nodetree.createNodeWithContext(typename, event, context);
+        },
+    });                        
 
     cmdstack.addListeners({
         undoStateChanged: stackChanged,
@@ -453,7 +462,13 @@ $(function() {
             // load state stored from last time
             loadState();
             nodeparams.resetParams(nodetree.getFocussedNode());
-        },                   
+        },
+        clicked: function(event) {
+            nodemenu.hideContextMenu();
+        },        
+        rightClicked: function(event, context) {
+            nodemenu.showContextMenu(event, context);
+        },                          
     });
 
     reshandler.addListeners({
@@ -541,6 +556,7 @@ $(function() {
     // Initialise nodetree!    
     $.getJSON("/presets/query/", function(data) {
         nodetree.init(data);
+        nodemenu.init(data);
     });
 });
 
