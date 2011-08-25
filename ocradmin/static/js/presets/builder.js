@@ -186,7 +186,16 @@ $(function() {
         event.stopPropagation();
     });
     $("#layout_nodes").click(function(event) {
-        nodetree.layoutNodes();
+        var self = this;                
+        $.ajax({            
+            url: "/presets/layout_graph",
+            type: "POST",
+            data: {script: JSON.stringify(nodetree.buildScript())},
+            success: function(data) {
+                nodetree.cmdLayoutNodes(data);
+            },
+            error: OCRJS.ajaxErrorHandler,
+        });
         event.preventDefault();
         event.stopPropagation();
     });

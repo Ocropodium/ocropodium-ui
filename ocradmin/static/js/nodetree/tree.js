@@ -551,6 +551,25 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         this._undostack.endMacro();        
     },                                  
 
+    cmdLayoutNodes: function(data) {
+        var self = this;
+        console.log("Laying out", data);
+        var height = this.svg._height();
+        this._undostack.beginMacro("Layout Nodes");
+        $.each(data, function(name, value) {
+            console.log("Laying out", name, value);
+            var node = self.getNode(name);
+            var pos = node.position();            
+            self.cmdMoveNodesBy(
+                [node],
+                value[0] - pos.x,
+                ((height - value[1]) - 100) - pos.y
+            );
+        });
+        this._undostack.endMacro();
+        this.centreTree();
+    },
+
     createNodeWithContext: function(type, event, context) {
         var self = this;
         var name = this.newNodeName(type);
@@ -710,8 +729,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 } else if (event.ctrlKey && event.keyCode == 90) {
                     event.shiftKey ? self._undostack.redo() : self._undostack.undo();
                 }
-                else if (event.ctrlKey && event.which == 76) // 'L' key
-                    self.layoutNodes(self.buildScript()); 
             });
             $(document).unbind("keyup.nodecmd").bind("keyup.nodecmd", function(event) {
                 if (event.which == KC_SHIFT)
@@ -819,8 +836,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             }
         });
         this.connectNodes(script);
-        if (!havemeta)
-            this.layoutNodes(script);
         this.callListeners("scriptLoaded");
     },                    
 
@@ -967,23 +982,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             });
         });    
     },                      
-
-    layoutNodes: function() {
-        var self = this;                
-        $.ajax({            
-            url: "/presets/layout_graph",
-            type: "POST",
-            data: {script: JSON.stringify(self.buildScript())},
-            success: function(data) {
-                $.each(data, function(node, value) {
-                    self._usednames[node].moveTo(value[0], 
-                            (self.svg._height() - value[1]) - 100);
-                });
-                self.centreTree();
-            },
-            error: OCRJS.ajaxErrorHandler,
-        });
-    },
 
     resetCanvas: function() {
         SvgHelper.updateTransform(this.group(), 0, 0, 1);
