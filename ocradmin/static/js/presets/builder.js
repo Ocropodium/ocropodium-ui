@@ -238,11 +238,9 @@ $(function() {
         event.stopPropagation();
     });
     $("#undo_command").click(function(event) {
-        console.log("UNDO BUTTON CLICKED");
         cmdstack.undo();
     });
     $("#redo_command").click(function(event) {
-        console.log("REDO BUTTON CLICKED");
         cmdstack.redo();
     });
     $("#save_task_preset").click(function(event) {
@@ -356,17 +354,19 @@ $(function() {
     }
 
     function runScript() {
-        var nodename = nodetree.getEvalNode();
-        var node = nodetree.getNode(nodename);
-        if (node) {
-            var hash = hex_md5(bencode(node.hashValue()));
-            console.log("Hash for node", node.name, hash);
-            if (resultcache[hash]) {
-                console.log("Found cached result for:", nodename);
-                handleResult(nodename, resultcache[hash], true);
-            } else
-                reshandler.runScript(nodename, nodetree.buildScript());
-        }
+        if (nodetree.hasNodes()) {
+            var nodename = nodetree.getEvalNode();
+            var node = nodetree.getNode(nodename);
+            if (node) {
+                var hash = hex_md5(bencode(node.hashValue()));
+                console.log("Hash for node", node.name, hash);
+                if (resultcache[hash]) {
+                    console.log("Found cached result for:", nodename);
+                    handleResult(nodename, resultcache[hash], true);
+                } else
+                    reshandler.runScript(nodename, nodetree.buildScript());
+            }
+        }            
     }    
 
 
