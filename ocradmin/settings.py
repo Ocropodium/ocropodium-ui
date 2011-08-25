@@ -301,23 +301,38 @@ COMPRESS_JS = {
     },
     "global": {
         "source_filenames": (
+            "js/appmenu.js",
+            "js/global.js",
+            "js/status_bar.js",
+        ),
+        "output_filename": "js/global_compress.js",
+    },
+    "ocrjs": {
+        "source_filenames": (
             "js/ocrbase.js",
             "js/helpers.js",
             "js/constants.js",
+        ),
+        "output_filename": "js/ocrjs_compress.js",
+    },        
+    "projectbrowser": {
+        "source_filenames": (
             "js/abstract_data_source.js",    
             "js/project_data_source.js",
             "js/abstract_list_widget.js",
             "js/project_list_widget.js",
             "js/projectbrowser.js",
-            "js/appmenu.js",
-            "js/global.js",
-            "js/status_bar.js",
+        ),
+        "output_filename": "js/projectbrowser_compress.js",
+    },        
+    "undostack": {
+        "source_filenames": (
             "js/undo/command.js",
             "js/undo/macro.js",
             "js/undo/stack.js",
         ),
-        "output_filename": "js/global_compress.js",
-    },
+        "output_filename": "js/undostack_compress.js",
+    },        
     "nodetree": {
         "source_filenames": (
 	        "js/jquery/jquery.svg.js",
