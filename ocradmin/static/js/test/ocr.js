@@ -1,13 +1,5 @@
 
-var nodetree, cmdstack;
-
 $(document).ready(function(){  
-
-    function init(parent) {
-        cmdstack = new OCRJS.UndoStack(this); 
-        nodetree = new OCRJS.Nodetree.Tree(parent, cmdstack);
-    }        
-
 
     module("OCR Page Object Test");
 
@@ -24,35 +16,25 @@ $(document).ready(function(){
 
     
 
-    test("Nodetree Initialisation", function() {  
-        expect(2);  
-
-        var parent = $("<div></div>")
-            .attr("id", "nodetree_canvas")
-            .appendTo("body");
-
-        equal(nodetree, undefined,  
-            "Expected nodetree to be initially undefined"); 
-
-        init(parent.get(0));        
-
-        notEqual(nodetree, undefined,  
-            "Expected nodetree to be defined after initialisation"); 
-    });
-
-
-    test("Nodetree Create Node", function() {
+    test("Test Nodetree", function() {
         expect(7);
 
         var parent = $("<div></div>")
             .attr("id", "nodetree_canvas")
             .appendTo("body");
-        init(parent.get(0));
+        var cmdstack = new OCRJS.UndoStack(this); 
+        var nodetree = new OCRJS.Nodetree.Tree(parent, cmdstack);
 
+
+        // Initialise nodetree!    
         stop();
+        $.getJSON("/presets/query/", function(data) {
+            nodetree.init(data);
+        });
 
         nodetree.addListeners({
             ready: function() {
+                start();
                 equal(!nodetree.hasNodes(), true,
                     "Expected nodetree to be initially empty");
 
@@ -61,24 +43,24 @@ $(document).ready(function(){
                 var name = nodetree.newNodeName(testtype);
                 nodetree.cmdCreateNode(name, testtype, {x: 100, y: 100});
                 equal(nodetree.nodeCount(), 1,
-                    "Expected one node to exist in the tree");
+                    "Expected number of nodes in the tree to be");
 
                 // test undoing the action
                 cmdstack.undo();
                 equal(nodetree.nodeCount(), 0,
-                    "Expected undoing action to remove created node.");
+                    "After undo, expected number of nodes in the tree to be");
 
                 // test redoing the action
                 cmdstack.redo();
                 equal(nodetree.nodeCount(), 1,
-                    "Expected redoing action to place node back in tree.");
+                    "After redo, expected number of nodes in the tree to be");
 
                 // create a second node
                 var testtype2 = "Utils::FileOut";
                 var name2 = nodetree.newNodeName(testtype2);          
                 nodetree.cmdCreateNode(name2, testtype2, {x: 100, y: 200});
                 equal(nodetree.nodeCount(), 2,
-                        "Expected 2 nodes to now exist in the tree.");
+                        "Created another node, expected number of nodes in the tree to be");
 
                 // connect them up
                 nodetree.cmdConnectPlugs(
@@ -86,20 +68,13 @@ $(document).ready(function(){
                         nodetree.getNode(name2).input(0)
                 );
                 equal(nodetree.getNode(name2).input(0).isAttached(), true,
-                        "Expected node 1 output to be attached.");
+                        "After connecting plugs, expected input isAttached to be");
 
                 // select all nodes
                 nodetree.selectAll();
                 equal(nodetree.selectedNodeCount(), nodetree.nodeCount(),
-                        "Expected all nodes to be selected");
-
+                        "SelectAll, expected number of selected nodes to be");
             },
         });            
-
-        // Initialise nodetree!    
-        $.getJSON("/presets/query/", function(data) {
-            start();
-            nodetree.init(data);
-        });
     });        
 });  
