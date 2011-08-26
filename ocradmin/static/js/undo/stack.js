@@ -20,6 +20,7 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
 
         this._listeners = {
             indexChanged: [],
+            stateChanged: [],
             undoStateChanged: [],
             redoStateChanged: [],            
         };
@@ -49,6 +50,7 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
         if (this._macros.length > 0) {
             this._macros[this._macros.length - 1].push(cmd);
             cmd.redo.call(this._context);
+            this.callListeners("stateChanged");
             return;
         } 
 
@@ -63,6 +65,7 @@ OCRJS.UndoStack = OCRJS.OcrBase.extend({
         }
         if (merged) {
             this._stack[this._stack.length - 1] = cmd;
+            this.callListeners("stateChanged");
         } else {
             this._stack.push(cmd);
             this.index++;
