@@ -38,7 +38,6 @@ NT.TextParam = OCRJS.OcrBase.extend({
     },                   
 
     setValue: function(val) {
-        console.log("Setting value", this.ctrl, val);                  
         this.ctrl.val(val);
     },                  
 
