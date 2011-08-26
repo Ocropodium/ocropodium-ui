@@ -53,10 +53,10 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     sanitiseOutputCoords: function(coords) {
         var fulldoc = this.sourceDimensions();
         return {
-            x0: Math.max(-1, Math.min(coords.x0, fulldoc.x)),
-            y0: Math.max(-1, Math.min(coords.y0, fulldoc.y)),
-            x1: Math.max(-1, Math.min(coords.x1, fulldoc.x)),
-            y1: Math.max(-1, Math.min(coords.y1, fulldoc.y)),
+            x0: Math.round(Math.max(-1, Math.min(coords.x0, fulldoc.x))),
+            y0: Math.round(Math.max(-1, Math.min(coords.y0, fulldoc.y))),
+            x1: Math.round(Math.max(-1, Math.min(coords.x1, fulldoc.x))),
+            y1: Math.round(Math.max(-1, Math.min(coords.y1, fulldoc.y))),
         }
     },
 
@@ -78,6 +78,12 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         });
     },
 
+    update: function() {
+        if (!this._node)
+            console.error("Gui update called with no current node");
+        this.updateTransformableRect(this._rect, this.readNodeData(this._node));
+    },                
+
     tearDown: function() {
         this.base();                  
         console.log("Tearing down crop gui");                  
@@ -86,10 +92,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
         this._node = null;
     },                  
 
-    updateNodeParameters: function(srcrect) {                                     
-        var self = this;
-        $.each(this.sanitiseOutputCoords(srcrect), function(name, value) {
-            self._node.setParameter(name, Math.round(value), true);
-        });
+    updateNodeParameters: function(srcrect) {
+        this.callListeners("parametersSet", this._node, this.sanitiseOutputCoords(srcrect));
     },                             
 });

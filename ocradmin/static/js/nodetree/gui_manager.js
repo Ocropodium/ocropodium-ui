@@ -16,6 +16,8 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
         this._listeners = {
             setupGui: [],
             tearDownGui: [],
+            parametersSet: [],
+            interacting: [],
         };
         this.registerGuis();
     },
@@ -40,8 +42,12 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
         });
     },
 
+    updateGui: function() {
+        if (this._current && this._currentgui)
+            this._currentgui.update();
+    },                   
+
     refreshGui: function() {
-        console.log("REFRESHING GUI");                    
         if (this._current && this._currentgui) {
             this._currentgui.tearDown();
             this._currentgui.setup(this._current);
@@ -51,13 +57,22 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
     },                    
 
     setupGui: function(node) {
-        console.log("Set up GUI");
+        var self = this;
         if (this._current && this._current != node)
             this.tearDownGui();            
         this._current = node;
         this._currentgui = this._types[node.type];
         if (this._currentgui) {
             this._currentgui.setup(node);
+            this._currentgui.addListener("parametersSet.nodegui", function(n, pd) {                
+                self.callListeners("parametersSet", n, pd); 
+            });
+            this._currentgui.addListener("interactingStart.nodegui", function() {
+                self.callListeners("interacting", true); 
+            });
+            this._currentgui.addListener("interactingStop.nodegui", function() {
+                self.callListeners("interacting", false); 
+            });
             this.callListeners("setupGui");
         } else {
             console.log("No current node", node.type, this._types);
@@ -67,6 +82,7 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
     tearDownGui: function() {
         if (this._currentgui) {
             this._currentgui.tearDown();
+            this._currentgui.removeListeners(".nodegui");
             this.callListeners("tearDownGui");
             this._currentgui = null;
             this._current = null;
