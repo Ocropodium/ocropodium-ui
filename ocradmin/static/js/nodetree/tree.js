@@ -110,14 +110,61 @@ NT.ViewNodeCommand = OCRJS.UndoCommand.extend({
                    
 NT.SetNodeParameterCommand = OCRJS.UndoCommand.extend({
     constructor: function(tree, nodename, param, oldvalue, value) {
-        this.base("Set Parameter: " + nodename + "." + param + " (" + oldvalue + " -> " + value + ")");
+        this.base("Set Parameter: " + nodename + "." + param); // + " (" + oldvalue + " -> " + value + ")");
         var self = this;
+        this.ts = (new Date()).getTime();
+        this.node = nodename;
+        this.param = param;
+        this.value = value;
+        this.oldvalue = oldvalue;
         this.redo = function() {
-            tree.getNode(nodename).setParameter(param, value, false);
+            tree.getNode(nodename).setParameter(param, self.value, false);
         };
         this.undo = function() {
-            tree.getNode(nodename).setParameter(param, oldvalue, false);
+            tree.getNode(nodename).setParameter(param, self.oldvalue, false);
         };
+        this.mergeWith = function(other) {
+            // only merge numerical values that occur within 
+            // a certain time-span
+            if (self.ts - other.ts > 200) {
+                console.log("Not merging, diff", self.ts - other.ts);
+                return false;
+            }
+            self.oldvalue = other.oldvalue;
+            return true;
+        };            
+    },
+});
+
+NT.SetMultipleNodeParametersCommand = OCRJS.UndoCommand.extend({
+    constructor: function(tree, nodename, paramvals) {
+        this.base("Set Multiple Parameters: " + nodename);
+        this.ts = (new Date()).getTime();
+        this.node = nodename;
+        this.paramvals = paramvals;
+        var self = this;
+        this.redo = function() {
+            $.each(self.paramvals, function(param, newold) {
+                tree.getNode(nodename).setParameter(param, newold[0], false);
+            });
+        };
+        this.undo = function() {
+            $.each(self.paramvals, function(param, newold) {
+                tree.getNode(nodename).setParameter(param, newold[1], false);
+            });
+        };
+        this.mergeWith = function(other) {
+            // only merge numerical values that occur within 
+            // a certain time-span
+            if (self.ts - other.ts > 200) {
+                console.log("Not merging, diff", self.ts - other.ts);
+                return false;
+            }
+            $.each(other.paramvals, function(param, newold) {
+                self.paramvals[param][1] = other.paramvals[param][1];
+            });
+            return true;
+        };            
     },
 });
 
@@ -251,12 +298,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         this._usednames = {};        
         this._nodes = [];
         this.callListeners("scriptCleared");
-    },               
-
-    setFileInPath: function(name, path) {
-        console.log("Setting filein path", name, path);
-        var oldval = this.getNode(name).getParameter("path");
-        this.cmdSetNodeParameter(this.getNode(name), "path", oldval, path);
     },               
 
     resetSize: function() {                           
@@ -456,8 +497,18 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         this._undostack.push(new NT.DetachPlugCommand(this, plug.name));
     },                    
 
-    cmdSetNodeParameter: function(node, param, oldval, newval) {
-        this._undostack.push(new NT.SetNodeParameterCommand(this, node.name, param, oldval, newval));
+    cmdSetNodeParameter: function(node, param, value) {
+        var oldval = node.getParameter(param);                             
+        this._undostack.push(new NT.SetNodeParameterCommand(this, node.name, param, oldval, value));
+    },
+
+    cmdSetMultipleNodeParameters: function(node, paramvals) {
+        var updates = {};
+        $.each(paramvals, function(param, newval) {
+            var oldval = node.getParameter(param);
+            updates[param] = [newval, oldval];
+        });
+        this._undostack.push(new NT.SetMultipleNodeParametersCommand(this, node.name, updates));
     },
 
     cmdConnectPlugs: function(src, dst) {
@@ -632,6 +683,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 else
                     self.cmdConnectPlugs(plug, context);
             }
+            self.deselectAll();
             self.getNode(name).setFocussed(true);
             self._undostack.endMacro();        
         };
@@ -745,8 +797,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                     self.selectAll(); 
                     event.preventDefault();
                     event.stopPropagation();
-                } else if (event.ctrlKey && event.keyCode == 90) {
-                    event.shiftKey ? self._undostack.redo() : self._undostack.undo();
                 }
             });
             $(document).unbind("keyup.nodecmd").bind("keyup.nodecmd", function(event) {
