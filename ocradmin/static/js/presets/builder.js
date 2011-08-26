@@ -243,6 +243,14 @@ $(function() {
     $("#redo_command").click(function(event) {
         cmdstack.redo();
     });
+    $(document).bind("keydown.keycmd", function(event) {
+        if (event.ctrlKey && event.keyCode == 90) {
+            event.shiftKey ? cmdstack.redo() : cmdstack.undo();
+            event.stopPropagation();
+            event.preventDefault();
+        } 
+    });
+
     $("#save_task_preset").click(function(event) {
         $("#task_update_script").val(
            JSON.stringify(nodetree.buildScript(), null, '\t'));
@@ -282,7 +290,8 @@ $(function() {
         if (reshandler.isPending()) {
             reshandler.abort();
         } else {
-            stackChanged();
+            runScript();
+            //stackChanged();
         }
         event.stopPropagation();
         event.preventDefault();
@@ -393,6 +402,8 @@ $(function() {
         },
     });
 
+    var UPDATE = true;
+
     presetmanager.addListeners({
         openPreset: function() {
             reshandler.abort();
@@ -404,39 +415,54 @@ $(function() {
             textviewer.clearData();
             hocrviewer.clearData();
             sdviewer.close();
+            nodeparams.resetParams();
+            guimanager.tearDownGui();                
         },    
     });
 
     function stackChanged() {
-        console.log("STACK CHANGED");
-        $("#undo_command")
-            .text(cmdstack.undoText())
-            .button({disabled: !cmdstack.canUndo()})
-            .button("refresh");
-        $("#redo_command")
-            .text(cmdstack.redoText())
-            .button({disabled: !cmdstack.canRedo()})
-            .button("refresh");
-        presetmanager.checkForChanges();
+        if (UPDATE) {
+            $("#undo_command")
+                .text(cmdstack.undoText())
+                .button({disabled: !cmdstack.canUndo()})
+                .button("refresh");
+            $("#redo_command")
+                .text(cmdstack.redoText())
+                .button({disabled: !cmdstack.canRedo()})
+                .button("refresh");
+            presetmanager.checkForChanges();
+            guimanager.updateGui();
+            runScript();
+        } else {
+            console.log("Stack changed but not updating", cmdstack.index);
+        }
         nodeparams.resetParams(nodetree.getFocussedNode());
-        console.log("Stack changed. Running script", nodetree.buildScript());
-        runScript();
-        cmdstack.debug();
+        //cmdstack.debug();
     };
 
     nodeparams.addListeners({
         parameterSet: function(node, paramname, value) {
-            var oldval = node.getParameter(paramname);                          
-            nodetree.cmdSetNodeParameter(node, paramname, oldval, value);
+            nodetree.cmdSetNodeParameter(node, paramname, value);
         },
         registerUploader: function(name, elem) {
             uploader.removeListeners("onXHRLoad.setfilepath");
             uploader.setTarget(elem);
             // FIXME: No error handling
             uploader.addListener("onXHRLoad.setfilepath", function(data) {
-                nodetree.setFileInPath(name, JSON.parse(data.target.response).file);
+                nodetree.cmdSetNodeParameter(nodetree.getNode(name), "path", 
+                    JSON.parse(data.target.response).file);
             });
         },
+    });
+
+    guimanager.addListeners({
+        parametersSet: function(node, paramvals) {
+            nodetree.cmdSetMultipleNodeParameters(node, paramvals);
+        },
+        interacting: function(bool) {
+            UPDATE = !bool;
+            stackChanged();
+        },        
     });
 
     nodemenu.addListeners({
@@ -449,6 +475,9 @@ $(function() {
         undoStateChanged: stackChanged,
         redoStateChanged: stackChanged,
         indexChanged: stackChanged,
+        stateChanged: function() {
+            nodeparams.resetParams(nodetree.getFocussedNode());
+        },
     });
 
     // Set up events
@@ -470,7 +499,16 @@ $(function() {
         ready: function() {
             // load state stored from last time
             loadState();
-            nodeparams.resetParams(nodetree.getFocussedNode());
+            var node = nodetree.getFocussedNode();
+            if (!node)
+                guimanager.tearDownGui();                
+            else {
+                if (sdviewer.activeViewer()) {
+                    console.log("Setting GUI for", node.name);
+                    guimanager.setupGui(node);
+                }
+            }
+            nodeparams.resetParams(node);
         },
         clicked: function(event) {
             nodemenu.hideContextMenu();

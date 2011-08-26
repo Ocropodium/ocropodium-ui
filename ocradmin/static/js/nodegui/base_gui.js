@@ -34,7 +34,18 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
             borderColor: "#000",
         };
 
+        this._listeners = {
+            parameterSet: [],
+            parametersSet: [],
+            interactingStart: [],
+            interactingStop: [], 
+        };
+
     },
+
+    setInteracting: function(bool) {
+        this.callListeners(bool ? "interactingStart" : "interactingStop");
+    },                        
 
     setupEvents: function() {
         var self = this;                     
@@ -43,8 +54,10 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
                 self.resetSize();
             },
         });
+
         if (this._canvasdraggable) {
             $(this._viewer.parent).bind("mousedown.viewdrag", function(event) {
+                self.setInteracting(true);
                 if (event.ctrlKey) {                    
                     self._viewer.activeViewer().setMouseNavEnabled(false);    
                     $(this).css("cursor", "crosshair");
@@ -83,7 +96,8 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
                             .unbind("mousemove.viewdrag")
                             .unbind("mouseup.viewdrag");
                         $(self._viewer.parent).css("cursor", "auto");
-                        self._viewer.activeViewer().setMouseNavEnabled(true);    
+                        self._viewer.activeViewer().setMouseNavEnabled(true);
+                        self.setInteracting(false);
                     });
                 }
             });
@@ -96,7 +110,7 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
     },                     
 
     tearDownEvents: function() {
-        $(this._viewer.parent).unbind(".viewdrag");
+        $(this._viewer.parent).unbind(".viewdrag").unbind(".interact");
     },
 
     setCanvasDraggable: function() {
@@ -116,12 +130,14 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
             .addClass("nodegui_rect")
             .css(css);
         rect.bind("mousedown.rectclick", function(event) {
-            self._viewer.activeViewer().setMouseNavEnabled(false);    
+            self._viewer.activeViewer().setMouseNavEnabled(false);
+            self.setInteracting(true);    
             event.stopPropagation();
             event.preventDefault();
 
             rect.bind("mouseup.rectclick", function(event) {
                 self._viewer.activeViewer().setMouseNavEnabled(true);
+                self.setInteracting(false);    
                 rect.unbind("mouseup.rectclick");
             });             
         })
@@ -134,11 +150,15 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
                         off.left + $(this).width(), off.top + $(this).height());
                 movedfunc.call(self, src);
             },
+            start: function(event, ui) {
+                self.setInteracting(true);
+            },
             stop: function(event, ui) {
                 var off = $(this).offset();                      
                 var src = self.getSourceRect(off.left, off.top,
                         off.left + $(this).width(), off.top + $(this).height());
                 self.updateElement(rect, src);
+                self.setInteracting(false);
             },
         }).draggable({
             drag: function(event, ui) {
@@ -147,11 +167,15 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
                         off.left + $(this).width(), off.top + $(this).height());
                 movedfunc.call(self, src);
             },
+            start: function(event, ui) {
+                self.setInteracting(true);
+            },
             stop: function(event, ui) {
                 var off = $(this).offset();                      
                 var src = self.getSourceRect(off.left, off.top,
                         off.left + $(this).width(), off.top + $(this).height());
                 self.updateElement(rect, src);
+                self.setInteracting(false);
             },
         });
         this._trackrects.push(rect);
@@ -166,7 +190,13 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
                 this._trackrects.splice(i, 1);
         this._viewer.removeOverlayElement(element.get(0));
         element.unbind(".rectclick").remove();
-    },                                  
+    },
+
+    updateTransformableRect: function(element, rect) {
+        this._viewer.updateOverlayElement($(element).get(0),
+                [rect.x0, rect.y0, rect.x1, rect.y1]);
+        $(element).trigger("resize");        
+    },                                 
 
     resetSize: function() {
     },
@@ -178,6 +208,10 @@ OCRJS.NodeGui.BaseGui = OCRJS.OcrBase.extend({
         this.setupEvents();
 
     },
+
+    update: function() {
+        
+    },                
 
     tearDown: function() {
         this.tearDownEvents();

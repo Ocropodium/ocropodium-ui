@@ -81,8 +81,11 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
     },
 
     draggedRect: function(rect) {
-        this.addColumnBox(rect);                     
-        this.updateNodeParameters();
+        var self = this;
+        this.addColumnBox(rect);
+        setTimeout(function() {
+            self.updateNodeParameters();
+        });
     },
 
     addColumnBox: function(box) {
@@ -118,7 +121,6 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
         }).bind("mouseleave", function(leaveevent) {
             $(window).unbind("keydown.mousehandle");
         });
-
         this._rects.push(rect);
     },
 
@@ -175,6 +177,12 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
         });
     },
 
+    update: function() {
+        var node = this._node;
+        this.tearDown();
+        this.setup(node);
+    },                
+
     tearDown: function() {
         this.base();                   
         console.log("Tearing down manual seg gui");                  
@@ -199,6 +207,8 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
             var out = self.sanitiseOutputCoords(src);
             rects.push([out.x0, out.y0, out.x1, out.y1].join(","));
         });
-        this._node.setParameter("boxes", rects.join("~"), true);
+        this.callListeners("parametersSet", this._node, {
+            boxes: rects.join("~")
+        });
     },                             
 });
