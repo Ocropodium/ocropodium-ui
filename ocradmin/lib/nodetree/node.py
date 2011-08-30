@@ -202,8 +202,13 @@ class Node(object):
 
     def _validate(self):
         """
-        Check inputs are present and of the correct type.
+        Check the node can execute properly.
         """
+        self._validate_inputs()
+        self._validate_parameters()
+
+    def _validate_inputs(self):
+        """Ensure parameters in/out have compatible types."""
         for i in range(len(self._inputs)):
             if self._inputs[i] is None:
                 raise ValidationError(self, "missing input '%d'" % i)
@@ -212,6 +217,17 @@ class Node(object):
                         "incorrect input type '%s' for input '%d': should be '%s'" % (
                             self._inputs[i].outtype.__name__, i, self.intypes[i].__name__))
 
+    def _validate_parameters(self):
+        """Ensure parameters are sane."""
+        for p in self._parameters:
+            choices = p.get("choices")
+            if choices is None:
+                continue
+            val = self._params.get(p.get("name"))
+            if not val in choices:
+                raise ValidationError(self, 
+                        "parameter '%s'='%s' is not a valid value, must be one of: %s" % (
+                            p.get("name"), val, ", ".join(choices)))
 
     def hash_value(self):
         """
