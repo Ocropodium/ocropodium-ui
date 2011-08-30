@@ -92,6 +92,7 @@ class Node(object):
         Set a parameter.
         """
         self._params[param] = name
+        self.mark_dirty()
 
     def _set_p(self, p, v):
         """
@@ -155,7 +156,7 @@ class Node(object):
         self.logger.debug("%s marked dirty", self)
         for parent in self._parents:
             parent.mark_dirty()
-        self._cacher.clear_cache()
+        self._cacher.clear_cache(self)
 
     def set_cache(self, cache):
         """
