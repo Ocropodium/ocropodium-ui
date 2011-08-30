@@ -19,7 +19,7 @@ class TestManager(unittest.TestCase):
     def test_register_module(self):
         m = manager.ModuleManager()
         m.register_module("test_nodes")
-        self.assertGreater(len(m.get_nodes()), 0)        
+        self.assertTrue(len(m.get_nodes()) > 0)        
 
 
 class TestScript(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestScript(unittest.TestCase):
         self.assertEqual(len(s.serialize()), 1)
 
         nget = s.get_node("Val1")
-        self.assertEqual(nget, n1)
+        self.assertEqual(nget, n1)        
 
 
 
@@ -53,10 +53,13 @@ class NodeTests(unittest.TestCase):
 
         op = self.script.get_node("Add")
         op.set_param("operator", "*")
-        print op._params
-        print op._eval()
         self.assertEqual(op._params.get("operator"), "*")
         self.assertEqual(op.eval(), 6)
+
+    def test_set_invalid_value(self):
+        n = self.script.get_node("Add")
+        n.set_param("operator", "!")
+        self.assertRaises(node.ValidationError, n.validate)
 
     def _buildTestScript(self):
         m = manager.ModuleManager()
