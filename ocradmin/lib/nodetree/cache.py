@@ -27,7 +27,8 @@ class BasicCacher(object):
         return self._cache.get(node.label) is not None
 
     def clear_cache(self, node):
-        del self._cache[node.label]
+        if self._cache.get(node.label):
+            del self._cache[node.label]
 
     def clear(self):
         self._cache = {}
