@@ -1,0 +1,98 @@
+<script id="nodeTmpl" type="application/x-jquery-tmpl">
+    <div class="node ${stage} arity${arity}" title="${description}">
+        <div class="nodename">${name}</div>
+    </div>
+</script>
+
+<script id="nodeListTmpl" type="application/x-jquery-tmpl">
+    <li class="node ${stage} arity${arity} ui-medium-flat" data-stage="${stage}" data-type="${name}" title="${description}">
+        <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
+    </li>
+</script>
+
+<script id="nodeTreeTmpl" type="application/x-jquery-tmpl">
+    <li class="node ${stage} arity${arity} ui-medium-flat" data-stage="${stage}" data-type="${type}" title="${description}">
+        <span class="viewingbutton" title="Focus Viewer"></span>
+        <div class="nodename">${name}</div>
+        <span class="ignorebutton" title="Ignore Node"></span>
+    </li>
+</script>
+
+<script id="paramTmpl" type="application/x-jquery-tmpl">
+    <div class="node_param_header ui-widget-header ui-corner-all">
+        <span class="node_param_type">${nodetype}</span>
+        <span class="node_param_name">
+            <input type="text" class="nameedit" id="${nodename}_rename" value="${nodename}" />
+        </span>
+    </div>
+    <div class="node_params">
+        <table id="node_param_list" class="node_param_table">
+
+        </table>
+    </div>                    
+</script>
+
+<script id="nodeMenuTmpl" type="application/x-jquery-tmpl">
+    <div class="nodemenu" id="nodemenu">
+        <h4>OCR Nodes</h4>
+        <ul>
+        {% templatetag openvariable %}each(i,stage) stages{% templatetag closevariable %}    
+            <li class="topmenu itemname">
+                ${stage.name[0].toUpperCase() + stage.name.replace("_", " ").slice(1)}
+                <ul class="nodemenu submenu hidden">
+                {% templatetag openvariable %}each(ii,node) stage.nodes{% templatetag closevariable %}    
+                    <li data-name="${node.name}">
+                        ${node.name.replace(/^[^:]+::/, "")}
+                    </li>
+                {% templatetag openvariable %}/each{% templatetag closevariable %}    
+                </ul>
+            </li>
+        {% templatetag openvariable %}/each{% templatetag closevariable %}    
+        </ul>
+    </div>
+</script>
+
+<script id="nodeSlots" type="application/x-jquery-tmpl">
+    <div class="nodelist used">
+        <h4>Input File</h4>
+        <ul class="input" data-stage="input">
+        </ul>
+        <h4>Grayscale Filters</h4>
+        <ul class="filter_gray multiple" data-stage="filter_gray">
+        </ul>                    
+        <h4>Binarizer</h4>
+        <ul class="binarize" data-stage="binarize">
+        </ul>                    
+        <h4>Binary Filters</h4>
+        <ul class="filter_binary multiple" data-stage="filter_binary">
+        </ul>                    
+        <h4>Page Segmenter</h4>
+        <ul class="page_segment" data-stage="page_segment">
+        </ul>                    
+        <h4>Recogniser</h4>
+        <ul class="recognize" data-stage="recognize">
+        </ul>                    
+    </div>
+    <div class="nodelist available">
+        <h4>File Input</h4>
+        <ul class="input multiple" data-stage="input">
+        </ul>                    
+        <h4>Grayscale Filers</h4>
+        <ul class="filter_gray" data-stage="filter_gray">
+        </ul>                    
+        <h4>Binarizers</h4>
+        <ul class="binarize" data-stage="binarize">
+        </ul>                    
+        <h4>Binary Filters</h4>
+        <ul class="filter_binary" data-stage="filter_binary">
+        </ul>                    
+        </ul>                    
+        <h4>Page Segmenters</h4>
+        <ul class="page_segment" data-stage="page_segment">
+        </ul>                    
+        <h4>Recognisers</h4>
+        <ul class="recognize" data-stage="recognize">
+        </ul>                    
+    </div>
+</script>
+

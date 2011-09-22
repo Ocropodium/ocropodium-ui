@@ -1,0 +1,16 @@
+<div class="form_body">
+    <fieldset>
+        <legend>{{page_name}}</legend>
+        {% for field in form.visible_fields %}
+            <div class="field_wrapper">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors}}
+            </div>
+        {% endfor %}
+        {% for field in form.hidden_fields %}
+            {{ field }}
+        {% endfor %}
+    </fieldset>
+</div>        
+
