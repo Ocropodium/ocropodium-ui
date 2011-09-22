@@ -13,6 +13,7 @@ OCRJS.Nodetree.StateManager = OCRJS.OcrBase.extend({
 
         this._listeners = {
             opened: [],
+            cleared: [],
         };
     },
 
@@ -39,11 +40,13 @@ OCRJS.Nodetree.StateManager = OCRJS.OcrBase.extend({
         this._open = slug;
         this._name = name;
         this._hash = this.getTreeHash();        
+        this.callListeners("opened", this.getCurrentName());
     },
 
     clear: function() {
         this.tree.clearScript();
         this._hash = this._name = this._open = null;
+        this.callListeners("cleared");
     },
 
     isDirty: function() {
@@ -54,14 +57,18 @@ OCRJS.Nodetree.StateManager = OCRJS.OcrBase.extend({
 
     getCurrentSlug: function() {
         return this.getOpen() || "untitled";
-    },                       
+    },
+
+    getCurrentName: function() {
+        return this.getName() || "Untitled";
+    },                        
 
     getTreeHash: function() {
         return hex_md5(bencode(this.tree.buildScript())); 
     },
 
     getTreeJSON: function() {
-        return JSON.stringify(this.getScript(), null, 2)
+        return JSON.stringify(this.getTreeScript(), null, 2)
     },
 
     getTreeScript: function() {
@@ -111,6 +118,6 @@ OCRJS.Nodetree.StateManager = OCRJS.OcrBase.extend({
         this._hash = data.hash;
         if (data.treehash != this.getTreeHash())
             throw "Error loading data.  Loaded tree hash does not match stored.";        
-        this.callListeners("opened", name);
+        this.callListeners("opened", this.getCurrentName());
     }    
 });

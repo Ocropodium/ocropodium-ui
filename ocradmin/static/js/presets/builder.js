@@ -412,6 +412,17 @@ $(function() {
         },    
     });
 
+    statemanager.addListeners({
+        opened: function(name) {
+            $("#current_preset_name").text(name);
+            $("#preset_unsaved").toggle(statemanager.isDirty());                         
+        },
+        cleared: function() {
+            $("#current_preset_name").text(statemanager.getCurrentName());
+            $("#preset_unsaved").hide();                         
+        },                     
+    });        
+
     function stackChanged() {
         if (UPDATE) {
             $("#undo_command")
@@ -422,7 +433,8 @@ $(function() {
                 .text(cmdstack.redoText())
                 .button({disabled: !cmdstack.canRedo()})
                 .button("refresh");
-            presetmanager.checkForChanges();
+            $("#preset_unsaved").toggle(statemanager.isDirty());                         
+
             guimanager.updateGui();
             runScript();
         } else {
