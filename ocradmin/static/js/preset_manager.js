@@ -46,7 +46,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             if (self.state.getOpen()) {
                 self.saveExistingPreset(self.state.getOpen(),
                     self.state.getTreeScript(), function(data) {
-                        self.setCurrentOpenPreset(self.state.getOpen(), name, data, false);
+                        self.setCurrentOpenPreset(self.state.getOpen(), self.state.getName(), data, false);
                     });
             } else {
                 self.showCreatePresetDialog();
