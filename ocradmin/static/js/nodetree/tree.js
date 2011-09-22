@@ -832,9 +832,8 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
 
     centreTree: function() {
         // centre the tree in the viewport
-        if (this.hasNodes())
+        if (!this.hasNodes())
             return;
-        
         var border = 25;
         var tw = $(this.parent).width() - (2 * border),
             th = $(this.parent).height() - (2 * border);
