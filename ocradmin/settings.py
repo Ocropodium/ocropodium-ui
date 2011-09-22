@@ -345,6 +345,7 @@ COMPRESS_JS = {
             "js/nodetree/parameters.js",
             "js/nodetree/context_menu.js",
             "js/nodetree/gui_manager.js",
+            "js/nodetree/state_manager.js",
             "js/nodegui/base_gui.js",
             "js/nodegui/crop_gui.js",
             "js/nodegui/manualseg_gui.js",

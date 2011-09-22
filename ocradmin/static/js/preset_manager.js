@@ -6,11 +6,11 @@
 var OCRJS = OCRJS || {};
 
 OCRJS.PresetManager = OCRJS.OcrBase.extend({
-    constructor: function(parent, nodetree, options) {
-        this.base(parent, options);
+    constructor: function(parent, state) {
+        this.base(parent);
         this.parent = parent;
 
-        this._nodetree = nodetree;
+        this.state = state;
 
         this._dialog = $("#dialog", this.parent);
         this._opentmpl = $.template($("#openDialog"));
@@ -27,10 +27,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             newPreset: [],
         };
 
-        this._opened = null;
-        this._openedhash = null;
-        this._current = null;
-
         // flag telling us we should continue to
         // offer the open dialog after the current
         // save dialog
@@ -38,46 +34,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
 
         this.setupEvents();
     },
-
-    saveState: function() {
-        var presetdata = {
-            opened: this._opened,
-            openedhash: this._openedhash,
-            name: $("#current_preset_name").text(),
-            script: this._nodetree.buildScript(),
-            unsaved: this.hasChanged(),
-        };
-        $.cookie("presetdata", JSON.stringify(presetdata));
-    },
-
-    loadState: function() {
-        var self = this;                   
-
-        // check if we need to load a task's data                   
-        var taskpk = $("#edit_task_pk").val();
-        if (taskpk) {
-            $.ajax({
-                url: "/ocr/task_config/" + taskpk,
-                dataType: "JSON",                
-                error: OCRJS.ajaxErrorHandler,
-                success: function(data) {
-                    self.setCurrentOpenPreset(
-                        "edittask" + taskpk, 
-                        $("#edit_task_batch").val() + ": " + $("#edit_task_page").val(),
-                        data, true);
-                },                
-            });
-        } else {
-            var cookie = $.cookie("presetdata");
-            if (!cookie)
-                return;
-            var presetdata = JSON.parse(cookie);
-            this.setCurrentOpenPreset(
-                    presetdata.opened, presetdata.name, presetdata.script, true);
-            this._openedhash = presetdata.openedhash;
-            $("#preset_unsaved").toggle(this.hasChanged());                         
-        }            
-    },                   
 
     setupEvents: function() {
         var self = this;
@@ -87,20 +43,20 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         });        
         
         $("#save_script, #save_script_button").click(function(event) {
-            if (self._opened) {
+            if (self.state.getOpen()) {
                 var name = $("#current_preset_name").text();
-                self.saveExistingPreset(self._opened,
-                    self._nodetree.buildScript(), function(data) {
-                        self.setCurrentOpenPreset(self._opened, name, data, false);
+                self.saveExistingPreset(self.state.getOpen(),
+                    self.state.getTreeScript(), function(data) {
+                        self.setCurrentOpenPreset(self.state.getOpen(), name, data, false);
                     });
                 $("#preset_unsaved").hide();
             } else {
-                self.showNewPresetDialog();
+                self.showCreatePresetDialog();
             }
         });        
         
         $("#save_script_as").click(function(event) {
-            self.showNewPresetDialog();
+            self.showCreatePresetDialog();
         });        
         
         $("#open_script").click(function(event) {
@@ -108,9 +64,8 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         });        
         
         $("#download_script").click(function(event) {
-            var json = JSON.stringify(self._nodetree.buildScript(), null, 2);
-            $("#fetch_script_slug").val(self._opened ? self._opened : "untitled");
-            $("#fetch_script_data").val(json);
+            $("#fetch_script_slug").val(self.state.getCurrentSlug());
+            $("#fetch_script_data").val(self.state.getTreeJSON());
             $("#fetch_script").submit();
         });
 
@@ -122,60 +77,34 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
     },
 
     newPreset: function() {
-        if (this.hasChanged()) {
+        console.log("New preset...");                   
+        if (this.state.isDirty()) {
             this._continueaction = this.newPreset;
-            this.showSavePresetDialog(!this._opened);
+            this.showUnsavedPresetDialog(!this._opened);
             return;
         }
         this.callListeners("newPreset");
-        this._nodetree.clearScript();
-        this._opened = this._openedhash = null;
+        this.state.clear();
         this._continueaction = null;
         $("#current_preset_name").text("Untitled");
         $("#preset_unsaved").toggle(false);                         
     },                   
 
-    checkForChanges: function() {
-        var changed = this.hasChanged();                         
-        console.log("CHANGED: ", changed);
-        $("#preset_unsaved").toggle(changed);                         
-    },                         
-
-    hasChanged: function() {
-        // if we don't have a current hash and the nodetree
-        // is empty, we don't need to bother doing anything                         
-        if (!this._nodetree.hasNodes() && !this._openedhash)
-            return false;
-        // if we've got nodes and no current hash, we definitely
-        // have something worth saving
-        else if (this._nodetree.hasNodes() && !this._openedhash)
-            return true;
-        // otherwise compare the new hash and the current one
-        // if they're different we need to save
-        var hash = bencode(this._nodetree.buildScript());
-        return hash != this._openedhash;
-    },                         
-
     setCurrentOpenPreset: function(slug, name, data, reload) {
-        this._opened = slug;                              
-        this._openedhash = bencode(data);
-        if (reload) {        
-            this._nodetree.clearScript();
-            this._nodetree.loadScript(data);
-            this._nodetree.scriptChanged("Loaded script");
+        this.state.setOpen(slug, name);
+        if (reload) {
+            this.state.setScript(data);        
         }
         $("#current_preset_name").text(name);
     },                              
 
     showOpenPresetDialog: function() {
         var self = this;
+        console.log("Showing open preset dialog...");
 
-        if (this.hasChanged()) {
+        if (this.state.isDirty()) {
             this._continueaction = this.showOpenPresetDialog;
-            if (this._opened)
-                this.showSavePresetDialog();
-            else
-                this.showNewPresetDialog();
+            this.showUnsavedPresetDialog();
             return;
         }
 
@@ -211,7 +140,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             var slug = item.data("slug");
             self.openPreset(slug, function(data) {
                 self.callListeners("openPreset");
-                self.setCurrentOpenPreset(slug, item.text(), data, true);
+                self.setCurrentOpenPreset(slug, $.trim(item.text()), data, true);
                 self._dialog.dialog("close");
                 self._continueaction = null;
                 $("#preset_unsaved").hide();
@@ -221,14 +150,15 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         });
     },
 
-    showSavePresetDialog: function(saveas) {
+    showUnsavedPresetDialog: function(saveas) {
+        console.log("Showing unsaved preset dialog...");
         var self = this;        
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.html($.tmpl(this._updatetmpl, {}));
         this._dialog.find("#submit_save_script").attr("disabled", saveas);
         this._dialog.find("#submit_save_script").click(function(event) {
-            var data = self._nodetree.buildScript();
+            var data = self.state.getTreeScript();
             var name = $("#current_preset_name").text();
             self.saveExistingPreset(self._opened, data, function(data) {
                 self.setCurrentOpenPreset(self._opened, name, data, false);
@@ -239,12 +169,11 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             }, OCRJS.ajaxErrorHandler);
         });
         this._dialog.find("#submit_save_script_as").click(function(event) {
-            self.showNewPresetDialog();
+            self.showCreatePresetDialog();
         });
         this._dialog.find("#submit_close_without_saving").click(function(event) {
             console.log("Abandoned changes!");
-            self._opened = self._openedhash = null;
-            self._nodetree.clearScript();            
+            self.state.clear();
             self._dialog.dialog("close");
             if (self._continueaction)
                 self._continueaction();
@@ -262,7 +191,8 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         });
     },
 
-    showNewPresetDialog: function() {
+    showCreatePresetDialog: function() {
+        console.log("Showing create preset dialog...");
         var self = this;        
         var tb = $(this.parent);        
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
@@ -273,8 +203,8 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this._dialog.find("#submit_create_new").click(function(event) {
             event.preventDefault();
             event.stopPropagation();
-            var currdata = self._nodetree.buildScript();
-            self.saveNewPreset(
+            var currdata = self.state.getTreeScript();
+            self.saveCreatedPreset(
                 self._dialog.find("#id_name").val(),
                 self._dialog.find("#id_tags").val(),
                 self._dialog.find("#id_description").val(),
@@ -329,7 +259,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         });                
     },
 
-    saveNewPreset: function(name, tags, description, private, script, successfunc, errorfunc) {
+    saveCreatedPreset: function(name, tags, description, private, script, successfunc, errorfunc) {
         if (!script || $.map(script, function(k,v){ return k;}).length == 0)
             throw "Attempt to save new preset with no data! " + name;            
         $.ajax({

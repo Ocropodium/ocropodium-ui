@@ -16,17 +16,8 @@ var presetmanager = null;
 var guimanager = null;
 var resultcache = {};
 var statusbar = null;
+var statemanager = null;
 
-function saveState() {
-    presetmanager.saveState();
-    nodetree.saveState();
-}
-
-
-function loadState() {
-    presetmanager.loadState();
-    nodetree.loadState();
-}
 
 $(function() {
 
@@ -270,7 +261,7 @@ $(function() {
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
         try {
-            saveState();
+            statemanager.save();
         } catch (msg) {
             alert(msg);
         }
@@ -394,7 +385,8 @@ $(function() {
     nodetree = new OCRJS.Nodetree.Tree($("#node_canvas"), cmdstack);
     nodeparams = new OCRJS.Nodetree.Parameters($("#parameters").get(0));
     nodemenu = new OCRJS.Nodetree.ContextMenu($("#body").get(0), $("#node_canvas").get(0));
-    presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), nodetree);
+    statemanager = new OCRJS.Nodetree.StateManager($("#current_preset_name").get(0), nodetree);
+    presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), statemanager);
 
     statusbar.addListeners({
         cancel: function() {
@@ -498,7 +490,7 @@ $(function() {
         },                          
         ready: function() {
             // load state stored from last time
-            loadState();
+            statemanager.load();
             var node = nodetree.getFocussedNode();
             if (!node)
                 guimanager.tearDownGui();                
