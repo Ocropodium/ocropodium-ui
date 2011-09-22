@@ -44,12 +44,10 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         
         $("#save_script, #save_script_button").click(function(event) {
             if (self.state.getOpen()) {
-                var name = $("#current_preset_name").text();
                 self.saveExistingPreset(self.state.getOpen(),
                     self.state.getTreeScript(), function(data) {
                         self.setCurrentOpenPreset(self.state.getOpen(), name, data, false);
                     });
-                $("#preset_unsaved").hide();
             } else {
                 self.showCreatePresetDialog();
             }
@@ -86,8 +84,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this.callListeners("newPreset");
         this.state.clear();
         this._continueaction = null;
-        $("#current_preset_name").text("Untitled");
-        $("#preset_unsaved").toggle(false);                         
     },                   
 
     setCurrentOpenPreset: function(slug, name, data, reload) {
@@ -95,7 +91,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         if (reload) {
             this.state.setScript(data);        
         }
-        $("#current_preset_name").text(name);
     },                              
 
     showOpenPresetDialog: function() {
@@ -143,7 +138,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 self.setCurrentOpenPreset(slug, $.trim(item.text()), data, true);
                 self._dialog.dialog("close");
                 self._continueaction = null;
-                $("#preset_unsaved").hide();
             }, OCRJS.ajaxErrorHandler);
             event.preventDefault();
             event.stopPropagation();
@@ -159,11 +153,9 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         this._dialog.find("#submit_save_script").attr("disabled", saveas);
         this._dialog.find("#submit_save_script").click(function(event) {
             var data = self.state.getTreeScript();
-            var name = $("#current_preset_name").text();
             self.saveExistingPreset(self._opened, data, function(data) {
                 self.setCurrentOpenPreset(self._opened, name, data, false);
                 self._dialog.dialog("close");
-                $("#preset_unsaved").toggle(false);   
                 if (self._continueaction)
                     self._continueaction()
             }, OCRJS.ajaxErrorHandler);
@@ -214,7 +206,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                     self.setCurrentOpenPreset(data, 
                             self._dialog.find("#id_name").val(), currdata, false)
                     self._dialog.dialog("close");
-                    $("#preset_unsaved").toggle(false);                         
                     if (self._continueaction)
                         self._continueaction();
                 },
