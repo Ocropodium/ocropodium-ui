@@ -2,15 +2,16 @@
 Object representation of a Node script.
 """
 
-import node
-import manager as stdmanager
+from __future__ import absolute_import
+
+from . import node, registry
 
 
 class Script(object):
     """
     Object describing the OCR pipeline.
     """
-    def __init__(self, script, manager=None, nodekwargs=None):
+    def __init__(self, script, nodekwargs=None):
         """
         Initialiser.
         """
@@ -21,8 +22,6 @@ class Script(object):
         self._tree = {}
         self._meta = []
         self._nodemeta = {}
-        self._manager = manager if manager is not None \
-                else stdmanager.ModuleManager()
         self._build_tree()
 
     def _build_tree(self):
@@ -36,8 +35,7 @@ class Script(object):
             for attr, val in n.iteritems():
                 if attr.startswith("__"):
                     self._nodemeta[name] = (attr, val)
-            self._tree[name] = self._manager.get_new_node(
-                    n["type"], name, n["params"], **self._nodekwargs)
+            self._tree[name] = self._fetch_node(n["type"], name, n["params"])
             self._tree[name].ignored = n.get("ignored", False)
         for name, n in self._script.iteritems():
             if name.startswith("__"):
@@ -45,11 +43,9 @@ class Script(object):
             for i in range(len(n["inputs"])):
                 self._tree[name].set_input(i, self._tree.get(n["inputs"][i]))
 
-    def add_node(self, type, label, params): 
-        self._tree[label] = self._manager.get_new_node(type, label=label,
-                params=params, **self._nodekwargs)
+    def add_node(self, type, label, params):
+        self._tree[label] = self._fetch_node(type, label, params)
         return self._tree[label]
-
 
     def get_node(self, name):
         """
@@ -100,5 +96,12 @@ class Script(object):
             if meta is not None:
                 out[name][meta[0]] = meta[1]
         return out            
+
+    def _fetch_node(self, type, label, params):
+        cls = registry.nodes[type]
+        n = cls(label=label, **self._nodekwargs)
+        for p, v in params:
+            n.set_param(p, v)
+        return n
 
 
