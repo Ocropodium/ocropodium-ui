@@ -8,10 +8,12 @@ import os
 import codecs
 import json
 from ocradmin import plugins
-from .. import stages, types, utils
 from nodetree import node, writable_node
 import ocrolib
 from PIL import Image
+
+from .. import stages, types, utils
+
 
 class ExternalToolError(StandardError):
     pass

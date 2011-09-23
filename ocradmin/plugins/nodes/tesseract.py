@@ -9,7 +9,7 @@ import shutil
 import tempfile
 import subprocess as sp
 
-from nodetree import node
+from nodetree import node, utils
 from ocradmin import plugins
 
 from . import generic
@@ -25,6 +25,7 @@ class TesseractRecognizer(generic.CommandLineRecognizerNode):
     stage = stages.RECOGNIZE
     binary = "tesseract"    
 
+    @utils.ClassProperty
     @classmethod
     def parameters(cls):
         return [

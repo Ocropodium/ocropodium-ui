@@ -9,7 +9,7 @@ import sys
 import json
 
 from ocradmin import plugins
-from nodetree import node, writable_node
+from nodetree import node, utils, writable_node
 
 import ocrolib
 from ocradmin.ocrmodels.models import OcrModel
@@ -33,7 +33,6 @@ def makesafe(val):
     return val
 
 
-
 class GrayFileIn(generic.ImageGeneratorNode,
             generic.FileNode, generic.GrayPngWriterMixin):
     """
@@ -42,7 +41,7 @@ class GrayFileIn(generic.ImageGeneratorNode,
     stage = stages.INPUT
     intypes = []
     outtype = ocrolib.numpy.ndarray
-    _parameters = [dict(name="path", value="", type="filepath")]
+    parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
         if not os.path.exists(self._params.get("path", "")):
@@ -57,7 +56,7 @@ class Crop(node.Node, generic.BinaryPngWriterMixin):
     stage = stages.FILTER_BINARY
     intypes = [ocrolib.numpy.ndarray]
     outtype = ocrolib.numpy.ndarray
-    _parameters = [
+    parameters = [
         dict(name="x0", value=-1),
         dict(name="y0", value=-1),
         dict(name="x1", value=-1),
@@ -135,6 +134,7 @@ class OcropusBase(node.Node):
             if self._inputs[i] is None:
                 raise node.ValidationError(self, "missing input '%d'" % i)
 
+    @utils.ClassProperty
     @classmethod
     def parameters(cls):
         """
@@ -269,6 +269,7 @@ class OcropusRecognizer(generic.LineRecognizerNode):
     Ocropus Native text recogniser.
     """
 
+    @utils.ClassProperty
     @classmethod
     def parameters(cls):
         return [

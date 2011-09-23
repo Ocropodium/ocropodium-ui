@@ -109,7 +109,7 @@ class FindReplace(node.Node, generic.TextWriterMixin):
     stage = stages.UTILS
     intypes = [types.HocrString]
     outtype = types.HocrString
-    _parameters = [
+    parameters = [
         dict(name="find", value=""),
         dict(name="replace", value=""),
     ]
@@ -153,7 +153,7 @@ class HocrToText(node.Node, generic.TextWriterMixin):
     stage = stages.UTILS
     intypes = [unicode]
     outtype = unicode
-    _parameters = []
+    parameters = []
 
     def _eval(self):
         input = self.eval_input(0)
@@ -168,7 +168,7 @@ class TextFileIn(generic.FileNode, generic.TextWriterMixin):
     stage = stages.INPUT
     intypes = []
     outtype = unicode
-    _parameters = [dict(name="path", value="", type="filepath")]
+    parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
         with open(self._params.get("path"), "r") as fh:
@@ -181,7 +181,7 @@ class Switch(node.Node, writable_node.WritableNodeMixin):
     """
     stage = stages.UTILS
     outtype = type(None)
-    _parameters = [dict(name="input", value=0, type="switch")]
+    parameters = [dict(name="input", value=0, type="switch")]
 
     def __init__(self, *args, **kwargs):
         self.arity = kwargs.get("arity", 2)
@@ -241,7 +241,7 @@ class FileOut(node.Node, writable_node.WritableNodeMixin):
     """
     stage = stages.OUTPUT
     outtype = type(None)
-    _parameters = [
+    parameters = [
             dict(name="path", value="", type="filepath"),
             dict(name="create_dir", value=False, type="bool"),
     ]
@@ -312,7 +312,7 @@ class TextEvaluation(node.Node, generic.TextWriterMixin):
     stage = stages.UTILS
     intypes = [unicode, unicode]
     outtype = unicode
-    _parameters = []
+    parameters = []
 
     def _eval(self):
         intext = self.eval_input(0)
@@ -336,7 +336,7 @@ class TextDiff(node.Node, generic.TextWriterMixin):
     stage = stages.UTILS
     intypes = [unicode, unicode]
     outtype = unicode
-    _parameters = [dict(name="format", value="normal",
+    parameters = [dict(name="format", value="normal",
         choices=("normal", "side-by-side", "rcs"))]
 
     def _eval(self):
@@ -362,7 +362,7 @@ class AbbyyXmlToHocr(node.Node, generic.TextWriterMixin):
     stage = stages.UTILS
     intypes = [unicode]
     outtype = unicode
-    _parameters = []
+    parameters = []
 
     def _eval(self):
         intext = self.eval_input(0)

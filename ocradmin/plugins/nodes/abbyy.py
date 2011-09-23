@@ -23,7 +23,7 @@ class AbbyyRecognizer(generic.CommandLineRecognizerNode):
     """
     binary = "abbyyocr"
     stage = stages.RECOGNIZE
-    _parameters = [
+    parameters = [
         dict(name="single_column", type="bool", value=False),
         dict(name="invert_image", type="bool", value=False),
         dict(name="no_despeckle", type="bool", value=False),

@@ -32,7 +32,7 @@ class MashapeProcessing(BaseWebService):
     """
     stage = stages.POST
     baseurl = "http://text-processing.com/api/"
-    _parameters = [
+    parameters = [
         dict(name="extract", value="phrases", choices=["phrases", "sentiment"]),
     ]
 
@@ -68,7 +68,7 @@ class DBPediaAnnotate(BaseWebService):
     """
     stage = stages.POST
     baseurl = "http://spotlight.dbpedia.org/rest/annotate/"
-    _parameters = [
+    parameters = [
         dict(name="confident", value=0.2),
         dict(name="support", value=20),
     ]
@@ -101,7 +101,7 @@ class OpenCalais(BaseWebService):
     """
     stage = stages.POST
     baseurl =  "http://api.opencalais.com/tag/rs/enrich"
-    _parameters = [
+    parameters = [
     ]
 
     def _eval(self):
