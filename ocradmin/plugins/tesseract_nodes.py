@@ -24,14 +24,19 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
     description = "Tesseract Native Text Recognizer"
     stage = stages.RECOGNIZE
     binary = "tesseract"
-    _parameters = [
-        dict(
-            name="language_model",
-            value="Tesseract Default Lang",
-            choices=[m.name for m in \
-                    OcrModel.objects.filter(app="tesseract", type="lang")],
-        )
-    ]
+    _parameters = []
+
+    def __init__(self, *args, **kwargs):
+        self._parameters = [
+            dict(
+                name="language_model",
+                value="Tesseract Default Lang",
+                choices=[m.name for m in \
+                        OcrModel.objects.filter(app="tesseract", type="lang")],
+            )
+        ]
+        super(self.__class__, self).__init__(*args, **kwargs)
+
 
     def _validate(self):
         """

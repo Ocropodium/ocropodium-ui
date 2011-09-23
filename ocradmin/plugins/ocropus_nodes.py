@@ -273,19 +273,23 @@ class OcropusRecognizerNode(generic_nodes.LineRecognizerNode):
     """
     name = "Ocropus::OcropusRecognizer"
     description = "Ocropus Native Text Recognizer"
-    _parameters = [
-        dict(
-            name="character_model",
-            value="Ocropus Default Char",
-            choices=[m.name for m in \
-                    OcrModel.objects.filter(app="ocropus", type="char")],
-        ), dict(
-            name="language_model",
-            value="Ocropus Default Lang",
-            choices=[m.name for m in \
-                    OcrModel.objects.filter(app="ocropus", type="lang")],
-        )
-    ]
+    _parameters = []
+
+    def __init__(self, *args, **kwargs):
+        self._parameters = [
+            dict(
+                name="character_model",
+                value="Ocropus Default Char",
+                choices=[m.name for m in \
+                        OcrModel.objects.filter(app="ocropus", type="char")],
+            ), dict(
+                name="language_model",
+                value="Ocropus Default Lang",
+                choices=[m.name for m in \
+                        OcrModel.objects.filter(app="ocropus", type="lang")],
+            )
+        ]
+        super(OcropusRecognizerNode, self).__init__(*args, **kwargs)
 
     def _validate(self):
         """
