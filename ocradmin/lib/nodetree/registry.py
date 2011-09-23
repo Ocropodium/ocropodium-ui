@@ -2,24 +2,18 @@
 Registry class and global node registry.
 """
 
+import inspect
+
 class NotRegistered(KeyError):
     pass
-
-
-__all__ = ["NodeRegistry", "nodes"]
 
 
 class NodeRegistry(dict):
     NotRegistered = NotRegistered
 
     def register(self, node):
-        """Register a node in the node registry.
-
-        The node will be automatically instantiated if not already an
-        instance.
-
-        """
-        self[node.name] = inspect.isclass(node) and node() or node
+        """Register a node class in the node registry."""
+        self[node.name] = inspect.isclass(node) and node or node.__class__
 
     def unregister(self, name):
         """Unregister node by name."""
@@ -30,10 +24,15 @@ class NodeRegistry(dict):
             pass
         self.pop(name)
 
-    def filter_types(self, type):
-        """Return all nodes of a specific type."""
-        return dict((name, node) for name, node in self.iteritems()
-                                    if node.type == type)
+    def get_by_attr(self, attr, value=None):
+        """Return all nodes of a specific type that have a matching attr.
+        If `value` is given, only return nodes where the attr value matches."""
+        ret = {}
+        for name, node in self.iteritems():
+            if hasattr(node, attr) and value is None\
+                    or hasattr(node, name) and getattr(node, name) == value:
+                ret[name] = node
+        return ret                
 
     def __getitem__(self, key):
         try:
