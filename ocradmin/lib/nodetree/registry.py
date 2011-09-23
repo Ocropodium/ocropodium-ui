@@ -1,5 +1,7 @@
 """
 Registry class and global node registry.
+
+This class was adapted from the Celery Project's task registry.
 """
 
 import inspect
