@@ -10,7 +10,7 @@
                 "/foo/bar/doesnotexist.png"
             ]
         ], 
-        "type": "Ocropus::GrayFileIn", 
+        "type": "ocropus.GrayFileIn", 
         "inputs": []
     }, 
     "DeskewPageByRAST1": {
@@ -20,7 +20,7 @@
                 10000
             ]
         ], 
-        "type": "Ocropus::DeskewPageByRAST", 
+        "type": "ocropus.DeskewPageByRAST", 
         "inputs": [
             "BinarizeBySauvola1"
         ]
@@ -36,7 +36,7 @@
                 4
             ]
         ], 
-        "type": "Ocropus::RmHalftone", 
+        "type": "ocropus.RmHalftone", 
         "inputs": [
             "DeskewPageByRAST1"
         ]
@@ -52,7 +52,7 @@
                 40
             ]
         ], 
-        "type": "Ocropus::BinarizeBySauvola", 
+        "type": "ocropus.BinarizeBySauvola", 
         "inputs": [
             "filein1"
         ]
@@ -68,7 +68,7 @@
                 10
             ]
         ], 
-        "type": "Ocropus::SegmentPageByRAST", 
+        "type": "ocropus.SegmentPageByRAST", 
         "inputs": [
             "RmHalftone1"
         ]
@@ -84,7 +84,7 @@
                 "Ocropus Default Lang"
             ]
         ], 
-        "type": "Ocropus::OcropusRecognizer", 
+        "type": "ocropus.OcropusRecognizer", 
         "inputs": [
             "RmHalftone1", 
             "SegmentPageByRAST1"

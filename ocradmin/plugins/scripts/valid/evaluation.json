@@ -5,7 +5,7 @@
 		"tags": "evaluation test"
 	},
 	"filein1": {
-		"type": "Ocropus::GrayFileIn",
+		"type": "ocropus.GrayFileIn",
 		"stage": "input",
 		"inputs": [],
 		"params": [
@@ -22,7 +22,7 @@
 		}
 	},
 	"DeskewPageByRAST1": {
-		"type": "Ocropus::DeskewPageByRAST",
+		"type": "ocropus.DeskewPageByRAST",
 		"stage": "filter_binary",
 		"inputs": [
 			"BinarizeBySauvola1"
@@ -41,7 +41,7 @@
 		}
 	},
 	"RmHalftone1": {
-		"type": "Ocropus::RmHalftone",
+		"type": "ocropus.RmHalftone",
 		"stage": "filter_binary",
 		"inputs": [
 			"DeskewPageByRAST1"
@@ -68,7 +68,7 @@
 		}
 	},
 	"BinarizeBySauvola1": {
-		"type": "Ocropus::BinarizeBySauvola",
+		"type": "ocropus.BinarizeBySauvola",
 		"stage": "binarize",
 		"inputs": [
 			"filein1"
@@ -91,7 +91,7 @@
 		}
 	},
 	"TesseractRecognizer1": {
-		"type": "Tesseract::TesseractRecognizer",
+		"type": "tesseract.TesseractRecognizer",
 		"stage": "recognize",
 		"inputs": [
 			"RmHalftone1",
@@ -111,7 +111,7 @@
 		}
 	},
 	"HocrToText1": {
-		"type": "Utils::HocrToText",
+		"type": "utils.HocrToText",
 		"stage": "utils",
 		"inputs": [
 			"TesseractRecognizer1"
@@ -125,7 +125,7 @@
 		}
 	},
 	"TextFileIn1": {
-		"type": "Utils::TextFileIn",
+		"type": "utils.TextFileIn",
 		"stage": "input",
 		"inputs": [],
 		"params": [
@@ -142,7 +142,7 @@
 		}
 	},
 	"TextEvaluation1": {
-		"type": "Utils::TextEvaluation",
+		"type": "utils.TextEvaluation",
 		"stage": "utils",
 		"inputs": [
 			"HocrToText1",
@@ -157,7 +157,7 @@
 		}
 	},
 	"SegmentPageByRAST1": {
-		"type": "Ocropus::SegmentPageByRAST",
+		"type": "ocropus.SegmentPageByRAST",
 		"stage": "page_segment",
 		"inputs": [
 			"RmHalftone1"
@@ -192,7 +192,7 @@
 		}
 	},
 	"Switch1": {
-		"type": "Utils::Switch",
+		"type": "utils.Switch",
 		"stage": "utils",
 		"inputs": [
 			"SegmentPageByRAST1",
@@ -212,7 +212,7 @@
 		}
 	},
 	"SegmentPageByXYCUTS1": {
-		"type": "Ocropus::SegmentPageByXYCUTS",
+		"type": "ocropus.SegmentPageByXYCUTS",
 		"stage": "page_segment",
 		"inputs": [
 			"RmHalftone1"

@@ -5,7 +5,7 @@
 		"tags": "ocropus segmentation test"
 	},
 	"FileIn1": {
-		"type": "Ocropus::GrayFileIn",
+		"type": "ocropus.GrayFileIn",
 		"stage": "input",
 		"inputs": [],
 		"params": [
@@ -22,7 +22,7 @@
 		}
 	},
 	"DeskewPageByRAST1": {
-		"type": "Ocropus::DeskewPageByRAST",
+		"type": "ocropus.DeskewPageByRAST",
 		"stage": "filter_binary",
 		"inputs": [
 			"FileIn1"
@@ -41,7 +41,7 @@
 		}
 	},
 	"BinarizeBySauvola1": {
-		"type": "Ocropus::BinarizeBySauvola",
+		"type": "ocropus.BinarizeBySauvola",
 		"stage": "binarize",
 		"inputs": [
 			"DeskewPageByRAST1"
@@ -64,7 +64,7 @@
 		}
 	},
 	"SegmentPageByRAST1": {
-		"type": "Ocropus::SegmentPageByRAST",
+		"type": "ocropus.SegmentPageByRAST",
 		"stage": "page_segment",
 		"inputs": [
 			"BinarizeBySauvola1"
