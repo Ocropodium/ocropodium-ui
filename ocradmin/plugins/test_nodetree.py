@@ -9,18 +9,17 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'ocradmin.settings'
 
 sys.path.insert(0, "lib")
 
-from nodetree import script
-from nodetree.manager import ModuleManager
+from ocradmin.plugins import nodes as nodetree_nodes
+
+from nodetree import script, registry
+
 
 def run(nodelist, outpath):
-    manager = ModuleManager()
-    manager.register_paths(glob.glob("plugins/*_nodes.py"), root="ocradmin")
-
-    s = script.Script(nodelist, manager=manager)
+    s = script.Script(nodelist)
     term = s.get_terminals()[0]
     print "Rendering to %s" % outpath
     os.environ["NODETREE_WRITE_FILEOUT"] = "1"
-    out = manager.get_new_node("Utils::FileOut", label="Output",
+    out = s.add_node("util.FileOut", "Output",
             params=[("path", os.path.abspath(outpath))])
     out.set_input(0, term)
     out.eval()
