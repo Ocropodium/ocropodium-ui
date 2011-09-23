@@ -9,7 +9,7 @@ import sys
 import json
 
 from ocradmin import plugins
-from nodetree import node, writable_node, manager
+from nodetree import node, writable_node
 
 import ocrolib
 from ocradmin.ocrmodels.models import OcrModel

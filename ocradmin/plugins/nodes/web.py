@@ -2,16 +2,14 @@
 Nodes that use web services to do something.
 """
 
-NAME = "WebService"
-
-from nodetree import node, manager
-from . import generic
-from .. import stages
-
 import json
 import httplib2
 import urllib
 from BeautifulSoup import BeautifulSoup
+
+from nodetree import node
+from . import generic
+from .. import stages
 
 
 class WebServiceNodeError(node.NodeError):

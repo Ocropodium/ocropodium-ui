@@ -11,7 +11,7 @@ import tempfile
 import subprocess as sp
 from HTMLParser import HTMLParser
 
-from nodetree import node, writable_node, manager
+from nodetree import node, writable_node
 
 from . import generic
 from .. import stages, types, utils
