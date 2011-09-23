@@ -9,7 +9,7 @@ import shutil
 import tempfile
 import subprocess as sp
 
-from nodetree import node, manager
+from nodetree import node
 from ocradmin import plugins
 
 from . import generic
