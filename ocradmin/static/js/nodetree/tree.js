@@ -334,7 +334,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
 
     newNodeName: function(type) {
         var count = 1;
-        var tname = $.trim(type.replace(/^[^:]+::/, ""));
+        var tname = $.trim(type.replace(/^[^\.]+\./, ""));
         var space = type.match(/\d$/) ? "_" : "";
         while (this._usednames[tname + space + count])
             count += 1;

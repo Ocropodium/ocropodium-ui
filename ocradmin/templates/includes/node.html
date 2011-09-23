@@ -6,7 +6,7 @@
 
 <script id="nodeListTmpl" type="application/x-jquery-tmpl">
     <li class="node ${stage} arity${arity} ui-medium-flat" data-stage="${stage}" data-type="${name}" title="${description}">
-        <div class="nodename">${name.replace(/^[^:]+::/, "")}</div>
+        <div class="nodename">${name.replace(/^[^\.]+\./, "")}</div>
     </li>
 </script>
 
@@ -42,7 +42,7 @@
                 <ul class="nodemenu submenu hidden">
                 {% templatetag openvariable %}each(ii,node) stage.nodes{% templatetag closevariable %}    
                     <li data-name="${node.name}">
-                        ${node.name.replace(/^[^:]+::/, "")}
+                        ${node.name.replace(/^[^\.]+./, "")}
                     </li>
                 {% templatetag openvariable %}/each{% templatetag closevariable %}    
                 </ul>

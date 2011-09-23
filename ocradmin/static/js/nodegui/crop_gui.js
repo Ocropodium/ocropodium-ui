@@ -9,7 +9,7 @@ OCRJS.NodeGui.CropGui = OCRJS.NodeGui.BaseGui.extend({
     constructor: function(viewer) {
         this.base(viewer, "cropgui");
 
-        this.nodeclass = "Pil::PilCrop";
+        this.nodeclass = "pil.PilCrop";
         this._coords = {
             x0: -1,
             y0: -1,
