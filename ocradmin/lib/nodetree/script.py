@@ -87,7 +87,6 @@ class Script(object):
         for name, node in self._tree.iteritems():
             out[name] = dict(
                 type=node.name,
-                stage=node.stage,
                 inputs=[n.label if n else n for n in node.inputs()],
                 params=[(p["name"], node._params[p["name"]]) for p \
                     in node.parameters if node._params.get(p["name"])],
