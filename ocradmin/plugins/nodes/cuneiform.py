@@ -26,7 +26,7 @@ class CuneiformRecognizer(generic.CommandLineRecognizerNode):
     binary = "cuneiform"
     stage = stages.RECOGNIZE
     intypes = [numpy.ndarray]
-    _parameters = [
+    parameters = [
             dict(name="single_column", type="bool", value=False)
     ]
 

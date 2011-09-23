@@ -376,7 +376,7 @@ class SegmentPageByHint(node.Node, generic.JSONWriterMixin):
     stage = stages.PAGE_SEGMENT
     intypes = [ocrolib.numpy.ndarray]
     outtype = dict
-    _parameters = [
+    parameters = [
         dict(name="toplines", value="0"),
         dict(name="columns", value="1"),
     ]
@@ -587,7 +587,7 @@ class SegmentPageManual(node.Node, generic.JSONWriterMixin):
     stage = stages.PAGE_SEGMENT
     intypes = [ocrolib.numpy.ndarray]
     outtype = dict
-    _parameters = [
+    parameters = [
         dict(name="boxes", value=""),
     ]
 

@@ -14,7 +14,7 @@ class Rotate90(node.Node, GrayPngWriterMixin):
     stage = stages.FILTER_BINARY
     intypes = [numpy.ndarray]
     outtype = numpy.ndarray
-    _parameters = [{
+    parameters = [{
         "name": "num",
         "value": 1,
     }]

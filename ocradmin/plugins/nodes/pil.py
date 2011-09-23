@@ -38,7 +38,7 @@ class RGBFileInNode(generic.ImageGeneratorNode, generic.BinaryPngWriterMixin):
     stage = stages.INPUT
     intypes = [numpy.ndarray]
     outtype = numpy.ndarray
-    _parameters = [dict(name="path", value="", type="filepath")]
+    parameters = [dict(name="path", value="", type="filepath")]
 
     def _eval(self):
         path = self._params.get("path")
@@ -62,7 +62,7 @@ class PilScaleNode(node.Node, generic.BinaryPngWriterMixin):
     stage = stages.FILTER_GRAY
     intypes = [numpy.ndarray]
     outtype = numpy.ndarray
-    _parameters = [
+    parameters = [
         dict(name="scale", value=1.0),
         dict(name="filter", value="NEAREST", choices=[
             "NEAREST", "BILINEAR", "BICUBIC", "ANTIALIAS"    
@@ -92,7 +92,7 @@ class PilCropNode(node.Node, generic.BinaryPngWriterMixin):
     stage = stages.FILTER_GRAY
     intypes = [numpy.ndarray]
     outtype = numpy.ndarray
-    _parameters = [
+    parameters = [
         dict(name="x0", value=-1),
         dict(name="y0", value=-1),
         dict(name="x1", value=-1),
@@ -139,7 +139,7 @@ class RGB2GrayNode(node.Node, generic.GrayPngWriterMixin):
     stage = stages.FILTER_GRAY
     intypes = [numpy.ndarray]
     outtype = numpy.ndarray
-    _parameters = []
+    parameters = []
 
     def _eval(self):
         pil = Image.fromarray(self.eval_input(0))        
