@@ -2,17 +2,15 @@
 Nodetree test nodes.
 """
 
+from __future__ import absolute_import
+
 import types
 
-import node
-import manager
+from . import node
 
-NAME = "Test"
 
-class NumberNode(node.Node):
+class Number(node.Node):
     """A number constant."""
-    name = "%s::Number" % NAME
-    arity = 0
     intypes = []
     outtype = types.IntType
     _parameters = [
@@ -23,11 +21,8 @@ class NumberNode(node.Node):
         return self._params.get("num")
 
 
-class ArithmeticNode(node.Node):
+class Arithmetic(node.Node):
     """Operate on two numbers"""
-    name = "%s::Arithmetic" % NAME
-    description = "Operate on two numbers"
-    arity = 2
     intypes = [types.IntType, types.IntType]
     outtype = types.IntType
     _parameters = [
@@ -48,21 +43,5 @@ class ArithmeticNode(node.Node):
             return lhs * rhs
         elif op == "/":
             return lhs / rhs
-
-
-class Manager(manager.StandardManager):
-    @classmethod
-    def get_node(self, name, **kwargs):
-        if name.find("::") != -1:
-            name = name.split("::")[-1]
-        g = globals()
-        if g.get(name + "Node"):            
-            return g.get(name + "Node")(**kwargs)
-
-    @classmethod
-    def get_nodes(cls, *oftypes):
-        return super(Manager, cls).get_nodes(
-                *oftypes, globals=globals())
-
 
 

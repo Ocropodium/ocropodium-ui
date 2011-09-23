@@ -15,7 +15,7 @@ import registry
 
 class NodeError(Exception):
     def __init__(self, node, msg):
-        super(NodeError, self).__init__(msg)
+        super(NodeError, self).__init__("%s: %s (arity: %d)" % (node.label, msg, node.arity))
         self.node = node
         self.message = msg
 
@@ -71,29 +71,24 @@ class NodeType(type):
             except KeyError:  # pragma: no cover
                 # Fix for manage.py shell_plus (Issue #366).
                 module_name = node_module
-            attrs["name"] = '.'.join([module_name, name])
+            attrs["name"] = '.'.join([module_name.split(".")[-1], name])
             autoname = True
-
-        if not attrs.get("description"):
-            doc = attrs.get("__doc__") or ""
-            attrs["description"] = textwrap.dedent(doc).strip()
-        if not attrs.get("passthrough"):
-            attrs["passthrough"] = 0
-
-        #if not attrs.get("arity"):
-        #    attrs["arity"] = len(attrs.get("intypes", []))
-        print "Creating new class %s with arity: %s" % (name, attrs.get("arity"))
 
         node_name = attrs["name"]
         if node_name not in registry.nodes:
-            node_cls = new(cls, name, bases, attrs)
-            if autoname and node_module == "__main__" and node_cls.app.main:
-                node_name = node_cls.name = '.'.join([node_cls.app.main, name])
-            registry.nodes.register(node_cls)
+            nodecls = new(cls, name, bases, attrs)
+            nodecls.arity = attrs.get("arity", len(nodecls.intypes))
+
+            if attrs.get("description") is None:
+                doc = attrs.get("__doc__") or ""
+                nodecls.description = textwrap.dedent(doc).strip()
+            if attrs.get("passthrough") is None:
+                nodecls.passthrough = 0
+            registry.nodes.register(nodecls)
         return registry.nodes[node_name]
 
     def __repr__(cls):
-        return "<class Node of %s>" % (cls.app, )
+        return "<class Node %s>" % cls.name
             
 
 
@@ -104,7 +99,7 @@ class Node(object):
     """
 
     __metaclass__ = NodeType
-
+    abstract = True
     intypes = [object]
     outtype = object
     _parameters = [

@@ -2,44 +2,28 @@
 Nodetree test suite.
 """
 
+from __future__ import absolute_import
+
 import unittest
 
-import cache
-import manager
-import node
-import script
-
-import test_nodes
-
-
-class TestManager(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def test_register_module(self):
-        m = manager.ModuleManager()
-        m.register_module("test_nodes")
-        self.assertTrue(len(m.get_nodes()) > 0)        
+from . import node, script, cache, test_nodes
 
 
 class TestScript(unittest.TestCase):
     def setUp(self):
-        self.manager = manager.ModuleManager()
-        self.manager.register_module("test_nodes")
+        pass
 
     def test_create_script(self):
-        s = script.Script({}, manager=self.manager)
+        s = script.Script({})
         self.assertEqual(len(s.serialize()), 0)
 
     def test_script_add_node(self):
-        s = script.Script({}, manager=self.manager)
-        n1 = s.add_node("Test::Number", "Val1", (("num", 2),))
+        s = script.Script({})
+        n1 = s.add_node("test_nodes.Number", "Val1", (("num", 2),))
         self.assertEqual(len(s.serialize()), 1)
 
         nget = s.get_node("Val1")
         self.assertEqual(nget, n1)        
-
-
 
 
 class NodeTests(unittest.TestCase):
@@ -62,18 +46,17 @@ class NodeTests(unittest.TestCase):
         self.assertRaises(node.ValidationError, n.validate)
 
     def _buildTestScript(self):
-        m = manager.ModuleManager()
-        m.register_module("test_nodes")
-
-        s = script.Script({}, manager=m)
-        n1 = s.add_node("Test::Number", "Val1", (("num", 2),))
-        n2 = s.add_node("Test::Number", "Val2", (("num", 3),))
-        n3 = s.add_node("Test::Arithmetic", "Add", (("operator", "+"),))
+        s = script.Script({})
+        n1 = s.add_node("test_nodes.Number", "Val1", (("num", 2),))
+        n2 = s.add_node("test_nodes.Number", "Val2", (("num", 3),))
+        n3 = s.add_node("test_nodes.Arithmetic", "Add", (("operator", "+"),))
         n3.set_input(0, n1)
         n3.set_input(1, n2)
         return s
 
 
 if __name__ == '__main__':
+    import sys
+    print __FILE__
     unittest.main()
 

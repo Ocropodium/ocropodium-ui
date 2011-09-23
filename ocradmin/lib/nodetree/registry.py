@@ -26,13 +26,13 @@ class NodeRegistry(dict):
             pass
         self.pop(name)
 
-    def get_by_attr(self, attr, value=None):
+    def get_by_attr(self, attr, *values):
         """Return all nodes of a specific type that have a matching attr.
         If `value` is given, only return nodes where the attr value matches."""
         ret = {}
         for name, node in self.iteritems():
-            if hasattr(node, attr) and value is None\
-                    or hasattr(node, name) and getattr(node, name) == value:
+            if hasattr(node, attr) and len(values) == 0\
+                    or hasattr(node, name) and getattr(node, name) in values:
                 ret[name] = node
         return ret                
 
