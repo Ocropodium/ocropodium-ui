@@ -90,7 +90,7 @@ class Script(object):
                 stage=node.stage,
                 inputs=[n.label if n else n for n in node.inputs()],
                 params=[(p["name"], node._params[p["name"]]) for p \
-                    in node.parameters() if node._params.get(p["name"])],
+                    in node.parameters if node._params.get(p["name"])],
             )
             meta = self._nodemeta.get(name)
             if meta is not None:
