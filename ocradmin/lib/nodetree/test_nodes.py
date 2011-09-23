@@ -13,7 +13,7 @@ class Number(node.Node):
     """A number constant."""
     intypes = []
     outtype = types.IntType
-    _parameters = [
+    parameters = [
             dict(name="num", value=0),
     ]
 
@@ -25,7 +25,7 @@ class Arithmetic(node.Node):
     """Operate on two numbers"""
     intypes = [types.IntType, types.IntType]
     outtype = types.IntType
-    _parameters = [
+    parameters = [
         dict(name="operator", value="+", choices=[
             "+", "-", "*", "/",    
         ]),
