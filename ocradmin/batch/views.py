@@ -27,11 +27,7 @@ from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.core.views import AppException
 from ocradmin.presets.models import Preset
 from ocradmin.plugins import stages
-from nodetree import script, manager
-
-MANAGER = manager.ModuleManager()
-MANAGER.register_paths(
-                glob.glob("plugins/*_nodes.py"), root="ocradmin")
+from nodetree import script
 
 
 class BatchForm(forms.ModelForm):
@@ -470,7 +466,7 @@ def script_for_page_file(scriptjson, filepath, writepath):
     """
     Modify the given script for a specific file.
     """
-    tree = script.Script(json.loads(scriptjson), manager=MANAGER) 
+    tree = script.Script(json.loads(scriptjson)) 
     # get the input node and replace it with out path
     inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
     if not inputs:
@@ -480,7 +476,7 @@ def script_for_page_file(scriptjson, filepath, writepath):
     # save it as a binary file
     term = tree.get_terminals()[0]
     outpath = ocrutils.get_binary_path(filepath, writepath)
-    outbin = tree.add_node("Utils::FileOut", "OutputBinary",
+    outbin = tree.add_node("util.FileOut", "OutputBinary",
             params=[
                 ("path", os.path.abspath(outpath).encode()),
                 ("create_dir", True)])

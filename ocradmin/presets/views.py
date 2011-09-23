@@ -4,12 +4,12 @@ Interface to interacting with OCR presets.
 
 import os
 import glob
+import json
 
 from django import forms
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
-from django.utils import simplejson as json
 
 from ocradmin.core import generic_views as gv
 from ocradmin.core.decorators import saves_files
@@ -18,12 +18,10 @@ from ocradmin.plugins import graph, cache
 from ocradmin.plugins import utils as pluginutils
 from ocradmin.presets.models import Preset
 
-from nodetree import script, node
-from nodetree.manager import ModuleManager
+from nodetree import script, node, registry
+from nodetree import utils as nodeutils
 
-MANAGER = ModuleManager()
-MANAGER.register_paths(
-                glob.glob("plugins/*_nodes.py"), root="ocradmin")
+from ocradmin.plugins import nodes
 
 
 class PresetForm(forms.ModelForm):
@@ -81,7 +79,6 @@ def createjson(request):
     data = request.POST.copy()
     data.update(dict(user=request.user.pk))
     form = PresetForm(data)
-    print form.is_valid()
     if not form.is_valid():
         return HttpResponse(json.dumps(form.errors),
                 mimetype="application/json")
@@ -149,8 +146,10 @@ def query_nodes(request):
     can be queries when one of them is selected.
     """
     stages = request.GET.getlist("stage")
+    nodes = registry.nodes.get_by_attr("stage", *stages)
     return HttpResponse(
-            MANAGER.get_json(*stages), mimetype="application/json")
+            json.dumps(nodes, cls=nodeutils.NodeEncoder),
+            mimetype="application/json")
 
 
 @saves_files
@@ -161,7 +160,7 @@ def run_preset(request):
     evalnode = request.POST.get("node", "")
     jsondata = request.POST.get("script")
     nodes = json.loads(jsondata)
-    tree = script.Script(nodes, manager=MANAGER)
+    tree = script.Script(nodes)
     errors = tree.validate()
     if errors:
         return HttpResponse(json.dumps(dict(
@@ -288,7 +287,7 @@ def clear_node_cache(request):
     evalnode = request.POST.get("node")
     jsondata = request.POST.get("script")
     nodes = json.loads(jsondata)
-    tree = script.Script(nodes, manager=MANAGER)
+    tree = script.Script(nodes)
     node = tree.get_node(evalnode)
     cacheclass = pluginutils.get_dzi_cacher(settings)
     cacher = cacheclass(

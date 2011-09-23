@@ -11,13 +11,9 @@ from ocradmin.ocrtasks.utils import get_progress_callback, get_abort_callback
 from django.utils import simplejson as json
 
 from nodetree import cache, node, script
-from nodetree.manager import ModuleManager
 from django.conf import settings
-from ocradmin.plugins import ocropus_nodes, stages
+from ocradmin.plugins import stages, nodes
 
-MANAGER = ModuleManager()
-MANAGER.register_paths(
-                glob.glob("plugins/*_nodes.py"), root="ocradmin")
 
 
 @register_handlers
@@ -34,7 +30,7 @@ class BatchScriptTask(AbortableTask):
         abort_handler = get_abort_callback(self.request.id)
         progress_handler(0)
 
-        tree = script.Script(json.loads(scriptjson), manager=MANAGER, 
+        tree = script.Script(json.loads(scriptjson), 
                 nodekwargs=dict(
                     logger=logger,
                     abort_func=abort_handler, 
@@ -50,7 +46,7 @@ class BatchScriptTask(AbortableTask):
             if callback is not None:
                 subtask(callback).delay(result)
             return result
-        except ocropus_nodes.OcropusNodeError, err:
+        except nodes.NodeError, err:
             logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.message)
         except Exception, err:
