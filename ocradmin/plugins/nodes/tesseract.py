@@ -23,20 +23,18 @@ class TesseractRecognizer(generic.CommandLineRecognizerNode):
     Recognize an image using Tesseract.
     """
     stage = stages.RECOGNIZE
-    binary = "tesseract"
-    _parameters = []
+    binary = "tesseract"    
 
-    def __init__(self, *args, **kwargs):
-        self._parameters = [
+    @classmethod
+    def parameters(cls):
+        return [
             dict(
                 name="language_model",
                 value="Tesseract Default Lang",
                 choices=[m.name for m in \
                         OcrModel.objects.filter(app="tesseract", type="lang")],
             )
-        ]
-        super(TesseractRecognizer, self).__init__(*args, **kwargs)
-
+        ]            
 
     def _validate(self):
         """
