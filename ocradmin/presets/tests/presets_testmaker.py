@@ -8,7 +8,7 @@ from django.db.models import get_model
 from django.contrib.auth.models import User
 
 from ocradmin.core.tests import testutils
-from nodetree import script, node, manager
+from nodetree import script, node
 
 class Testmaker(TestCase):
 
@@ -18,9 +18,6 @@ class Testmaker(TestCase):
         """
             Setup OCR tests.  Creates a test user.
         """
-        self.manager = manager.ModuleManager()
-        self.manager.register_paths(
-                glob.glob("plugins/*_nodes.py"), root="ocradmin")
         testutils.symlink_model_fixtures()
         self.testuser = User.objects.create_user("AnonymousUser", "test@testing.com", "testpass")
         self.client = Client()
