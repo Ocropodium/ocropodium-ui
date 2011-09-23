@@ -268,10 +268,10 @@ class OcropusRecognizer(generic.LineRecognizerNode):
     """
     Ocropus Native text recogniser.
     """
-    _parameters = []
 
-    def __init__(self, *args, **kwargs):
-        self._parameters = [
+    @classmethod
+    def parameters(cls):
+        return [
             dict(
                 name="character_model",
                 value="Ocropus Default Char",
@@ -284,7 +284,6 @@ class OcropusRecognizer(generic.LineRecognizerNode):
                         OcrModel.objects.filter(app="ocropus", type="lang")],
             )
         ]
-        super(OcropusRecognizer, self).__init__(*args, **kwargs)
 
     def _validate(self):
         """
