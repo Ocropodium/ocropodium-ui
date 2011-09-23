@@ -5,7 +5,7 @@
         "tags": "basic cuneiform recognize" 
     },
     "filein1": {
-        "type": "Ocropus::GrayFileIn", 
+        "type": "ocropus.GrayFileIn", 
         "params": [
             [
                 "path", 
@@ -15,7 +15,7 @@
         "inputs": []
     }, 
     "DeskewPageByRAST1": {
-        "type": "Ocropus::DeskewPageByRAST", 
+        "type": "ocropus.DeskewPageByRAST", 
         "params": [
             [
                 "max_n", 
@@ -27,7 +27,7 @@
         ]
     }, 
     "RmHalftone1": {
-        "type": "Ocropus::RmHalftone", 
+        "type": "ocropus.RmHalftone", 
         "params": [
             [
                 "factor", 
@@ -43,7 +43,7 @@
         ]
     }, 
     "BinarizeBySauvola1": {
-        "type": "Ocropus::BinarizeBySauvola", 
+        "type": "ocropus.BinarizeBySauvola", 
         "params": [
             [
                 "k", 
@@ -60,7 +60,7 @@
     }, 
     "CuneiformRecognizer1": {
         "params": [], 
-        "type": "Cuneiform::CuneiformRecognizer", 
+        "type": "cuneiform.CuneiformRecognizer", 
         "inputs": [
             "RmHalftone1"
         ]

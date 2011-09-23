@@ -4,7 +4,7 @@
         "description": "Example binarization script"
     },
     "filein1": {
-        "type": "Ocropus::GrayFileIn", 
+        "type": "ocropus.GrayFileIn", 
         "params": [
             [
                 "path", 
@@ -14,7 +14,7 @@
         "inputs": []
     }, 
     "DeskewPageByRAST1": {
-        "type": "Ocropus::DeskewPageByRAST", 
+        "type": "ocropus.DeskewPageByRAST", 
         "params": [
             [
                 "max_n", 
@@ -26,7 +26,7 @@
         ]
     }, 
     "RmHalftone1": {
-        "type": "Ocropus::RmHalftone", 
+        "type": "ocropus.RmHalftone", 
         "params": [
             [
                 "factor", 
@@ -43,7 +43,7 @@
         ]
     }, 
     "Rotate360_1": {
-        "type": "Numpy::Rotate90", 
+        "type": "numpy.Rotate90", 
         "params": [
             [
                 "num", 
@@ -55,7 +55,7 @@
         ]
     }, 
     "BinarizeBySauvola1": {
-        "type": "Ocropus::BinarizeBySauvola", 
+        "type": "ocropus.BinarizeBySauvola", 
         "params": [
             [
                 "k", 
