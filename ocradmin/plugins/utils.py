@@ -53,4 +53,19 @@ def get_dzi_cacher(settings):
     return cacher
 
 
+def fix_preset_db_naming():
+    """Convert old nodetree naming to new scheme."""
+    from ocradmin.presets import models
+    import re
+    regex = "\"([A-Za-z0-9]+)::([A-Za-z0-9]+)\""
+    def repl(match):
+        modname = match.group(1).lower()
+        if modname == "utils":
+            modname = "util"
+        return "\"%s.%s\"" % (modname, match.group(2))
+
+    for p in models.Preset.objects.all():
+        p.data = re.sub(regex, repl, p.data)
+        p.save()
+
 
