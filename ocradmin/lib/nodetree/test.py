@@ -2,11 +2,9 @@
 Nodetree test suite.
 """
 
-from __future__ import absolute_import
-
 import unittest
 
-from . import node, script, cache, test_nodes
+from nodetree import node, script, cache, test_nodes
 
 
 class TestScript(unittest.TestCase):
@@ -56,7 +54,5 @@ class NodeTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    import sys
-    print __FILE__
     unittest.main()
 
