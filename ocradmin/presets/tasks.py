@@ -13,17 +13,11 @@ from django.contrib.auth.models import User
 
 from ocradmin.core import utils
 from ocradmin.ocrtasks.decorators import register_handlers
-from ocradmin.plugins import ocropus_nodes, cache, types
+from ocradmin.plugins import cache, types, nodes
 from ocradmin.plugins import utils as pluginutils
 
 from nodetree import node, script
-from nodetree.manager import ModuleManager
 import numpy
-
-
-MANAGER = ModuleManager()
-MANAGER.register_paths(
-                glob.glob("plugins/*_nodes.py"), root="ocradmin")
 
 
 class UnhandledRunScriptTask(AbortableTask):
@@ -45,7 +39,7 @@ class UnhandledRunScriptTask(AbortableTask):
                 key=cachedir, logger=logger)
         logger.debug("Using cacher: %s, Bases %s", cacher, cacheclass.__bases__)
         try:
-            tree = script.Script(nodelist, manager=MANAGER, 
+            tree = script.Script(nodelist, 
                     nodekwargs=dict(logger=logger, cacher=cacher))
             term = tree.get_node(evalnode)
             if term is None:
