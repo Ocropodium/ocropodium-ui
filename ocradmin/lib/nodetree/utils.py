@@ -23,12 +23,16 @@ class NodeEncoder(json.JSONEncoder):
                 arity=n.arity,
                 stage=n.stage,
                 passthrough=n.passthrough,
-                parameters=n.parameters(),
+                parameters=n.parameters,
                 intypes=[t.__name__ for t in n.intypes],
                 outtype=n.outtype.__name__
             )
         return super(NodeEncoder, self).default(n)            
 
 
+class ClassProperty(property):
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
 
-
+    def __repr__(self):
+        return "<Classproperty object>"
