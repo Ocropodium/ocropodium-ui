@@ -2,6 +2,8 @@
 Ocropus OCR processing nodes.
 """
 
+from __future__ import absolute_import
+
 import os
 import sys
 import json
@@ -12,7 +14,8 @@ from nodetree import node, writable_node, manager
 import ocrolib
 from ocradmin.ocrmodels.models import OcrModel
 
-from ocradmin.plugins import stages, generic_nodes
+from .. import stages
+from . import generic
 
 NAME = "Ocropus"
 
@@ -31,15 +34,12 @@ def makesafe(val):
 
 
 
-class GrayFileInNode(generic_nodes.ImageGeneratorNode,
-            generic_nodes.FileNode, generic_nodes.GrayPngWriterMixin):
+class GrayFileIn(generic.ImageGeneratorNode,
+            generic.FileNode, generic.GrayPngWriterMixin):
     """
     A node that takes a file and returns a numpy object.
     """
-    name = "Ocropus::GrayFileIn"
-    description = "Image file input node"
     stage = stages.INPUT
-    arity = 0
     intypes = []
     outtype = ocrolib.numpy.ndarray
     _parameters = [dict(name="path", value="", type="filepath")]
@@ -50,13 +50,10 @@ class GrayFileInNode(generic_nodes.ImageGeneratorNode,
         return ocrolib.read_image_gray(makesafe(self._params.get("path")))
         
 
-class CropNode(node.Node, generic_nodes.BinaryPngWriterMixin):
+class Crop(node.Node, generic.BinaryPngWriterMixin):
     """
     Crop a PNG input.
     """
-    arity = 1
-    description = "Crop a binary image."
-    name = "Ocropus::Crop"
     stage = stages.FILTER_BINARY
     intypes = [ocrolib.numpy.ndarray]
     outtype = ocrolib.numpy.ndarray
@@ -105,8 +102,8 @@ class OcropusBase(node.Node):
     """
     Wrapper around Ocropus component interface.
     """
+    abstract = True
     _comp = None
-    name = "base"
 
     def __init__(self, **kwargs):
         """
@@ -157,11 +154,11 @@ class OcropusBase(node.Node):
         return p            
 
 
-class OcropusBinarizeBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
+class OcropusBinarizeBase(OcropusBase, generic.BinaryPngWriterMixin):
     """
     Binarize an image with an Ocropus component.
     """
-    arity = 1
+    abstract = True
     stage = stages.BINARIZE
     intypes = [ocrolib.numpy.ndarray]
     outtype = ocrolib.numpy.ndarray
@@ -184,11 +181,11 @@ class OcropusBinarizeBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
         return out
 
 
-class OcropusSegmentPageBase(OcropusBase, generic_nodes.JSONWriterMixin):
+class OcropusSegmentPageBase(OcropusBase, generic.JSONWriterMixin):
     """
     Segment an image using Ocropus.
     """
-    arity = 1
+    abstract = True
     stage = stages.PAGE_SEGMENT
     intypes = [ocrolib.numpy.ndarray]
     outtype = dict
@@ -230,11 +227,11 @@ class OcropusSegmentPageBase(OcropusBase, generic_nodes.JSONWriterMixin):
         return out
 
 
-class OcropusGrayscaleFilterBase(OcropusBase, generic_nodes.GrayPngWriterMixin):
+class OcropusGrayscaleFilterBase(OcropusBase, generic.GrayPngWriterMixin):
     """
     Filter a binary image.
     """
-    arity = 1
+    abstract = True
     stage = stages.FILTER_GRAY
     intypes = [ocrolib.numpy.ndarray]
     outtype = ocrolib.numpy.ndarray
@@ -249,11 +246,11 @@ class OcropusGrayscaleFilterBase(OcropusBase, generic_nodes.GrayPngWriterMixin):
 
 
 
-class OcropusBinaryFilterBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
+class OcropusBinaryFilterBase(OcropusBase, generic.BinaryPngWriterMixin):
     """
     Filter a binary image.
     """
-    arity = 1
+    abstract = True
     stage = stages.FILTER_BINARY
     intypes = [ocrolib.numpy.ndarray]
     outtype = ocrolib.numpy.ndarray
@@ -267,12 +264,10 @@ class OcropusBinaryFilterBase(OcropusBase, generic_nodes.BinaryPngWriterMixin):
         return out
 
 
-class OcropusRecognizerNode(generic_nodes.LineRecognizerNode):
+class OcropusRecognizer(generic.LineRecognizerNode):
     """
-    Recognize an image using Ocropus.
+    Ocropus Native text recogniser.
     """
-    name = "Ocropus::OcropusRecognizer"
-    description = "Ocropus Native Text Recognizer"
     _parameters = []
 
     def __init__(self, *args, **kwargs):
@@ -289,13 +284,13 @@ class OcropusRecognizerNode(generic_nodes.LineRecognizerNode):
                         OcrModel.objects.filter(app="ocropus", type="lang")],
             )
         ]
-        super(OcropusRecognizerNode, self).__init__(*args, **kwargs)
+        super(OcropusRecognizer, self).__init__(*args, **kwargs)
 
     def _validate(self):
         """
         Check we're in a good state.
         """
-        super(OcropusRecognizerNode, self)._validate()
+        super(OcropusRecognizer, self)._validate()
         if self._params.get("character_model", "").strip() == "":
             raise node.ValidationError(self, "no character model given.")
         if self._params.get("language_model", "").strip() == "":
@@ -331,9 +326,7 @@ class OcropusRecognizerNode(generic_nodes.LineRecognizerNode):
         out, _ = ocrolib.beam_search_simple(fst, self._lmodel, 1000)
         return out
 
-
-
-class Manager(manager.StandardManager):
+class Manager(object):
     """
     Interface to ocropus.
     """
@@ -376,10 +369,6 @@ class Manager(manager.StandardManager):
         if name.find("::") != -1:
             name = name.split("::")[-1]
 
-        g = globals()
-        if g.get(name + "Node"):            
-            return g.get(name + "Node")
-        
         # FIXME: This clearly sucks
         comp = None
         if comps is not None:
@@ -406,26 +395,20 @@ class Manager(manager.StandardManager):
         # this is a bit weird
         # create a new class with the name '<OcropusComponentName>Node'
         # and the component as the inner _comp attribute
-        return type("%sNode" % comp.__class__.__name__,
-                    (base,), 
-                    dict(_comp=comp, description=comp.description(),
-                        name="Ocropus::%s" % comp.__class__.__name__))
+        return type("%s" % comp.__class__.__name__, (base,), dict(
+            _comp=comp,
+            __module__=__name__
+        ))
 
     @classmethod
     def get_nodes(cls, *oftypes, **kwargs):
         """
         Get nodes of the given type.
         """
-        kwargs.update(dict(globals=globals()))
-        nodes = super(Manager, cls).get_nodes(*oftypes, **kwargs)
         rawcomps = cls.get_components(oftypes=cls._use_types, exclude=cls._ignored)
-        for comp in rawcomps:
-            n = cls.get_node_class(comp.__class__.__name__, comps=rawcomps)
-            if len(oftypes) > 0:
-                if n.stage not in oftypes:
-                    continue
-            nodes.append(n)
-        return nodes
+        return [cls.get_node_class(comp.__class__.__name__, comps=rawcomps) \
+                for comp in rawcomps]
+
 
 
     @classmethod
@@ -458,4 +441,10 @@ class Manager(manager.StandardManager):
                 continue
             out.append(comp)
         return out
+
+
+# dynamically generate new nodes classes
+Manager.get_nodes()
+
+
 

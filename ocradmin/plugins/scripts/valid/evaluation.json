@@ -111,7 +111,7 @@
 		}
 	},
 	"HocrToText1": {
-		"type": "utils.HocrToText",
+		"type": "util.HocrToText",
 		"stage": "utils",
 		"inputs": [
 			"TesseractRecognizer1"
@@ -125,7 +125,7 @@
 		}
 	},
 	"TextFileIn1": {
-		"type": "utils.TextFileIn",
+		"type": "util.TextFileIn",
 		"stage": "input",
 		"inputs": [],
 		"params": [
@@ -142,7 +142,7 @@
 		}
 	},
 	"TextEvaluation1": {
-		"type": "utils.TextEvaluation",
+		"type": "util.TextEvaluation",
 		"stage": "utils",
 		"inputs": [
 			"HocrToText1",
@@ -192,7 +192,7 @@
 		}
 	},
 	"Switch1": {
-		"type": "utils.Switch",
+		"type": "util.Switch",
 		"stage": "utils",
 		"inputs": [
 			"SegmentPageByRAST1",

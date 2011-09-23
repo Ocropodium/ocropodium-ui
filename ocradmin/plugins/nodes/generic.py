@@ -2,12 +2,13 @@
 Generic base classes for other nodes.
 """
 
+from __future__ import absolute_import
+
 import os
 import codecs
 import json
 from ocradmin import plugins
-from ocradmin.plugins import stages, types
-from ocradmin.plugins import utils
+from .. import stages, types, utils
 from nodetree import node, writable_node
 import ocrolib
 from PIL import Image
@@ -76,7 +77,7 @@ class GrayPngWriterMixin(BinaryPngWriterMixin):
     """
     Functions for reading and writing a node's data in binary PNG.
     """
-    pass
+    abstract = True
 
 
 class LineRecognizerNode(node.Node, TextWriterMixin):
@@ -85,10 +86,9 @@ class LineRecognizerNode(node.Node, TextWriterMixin):
     recognises text one line at a time.
     """
     stage = stages.RECOGNIZE
-    arity = 2
     intypes = [ocrolib.numpy.ndarray, dict]
     outtype = types.HocrString
-    passthrough = 1
+    abstract = True
 
     def init_converter(self):
         raise NotImplementedError
@@ -146,6 +146,7 @@ class CommandLineRecognizerNode(LineRecognizerNode):
     Generic recogniser based on a command line tool.
     """
     binary = "unimplemented"
+    abstract = True
 
     def _validate(self):
         super(CommandLineRecognizerNode, self)._validate()
@@ -217,7 +218,7 @@ class ImageGeneratorNode(node.Node):
     """
     Node which takes no input and returns an image.
     """
-    arity = 0
+    abstract = True
 
     def null_data(self):
         """
@@ -230,6 +231,8 @@ class FileNode(node.Node):
     """
     Node which reads or writes to a file path.
     """
+    abstract = True
+
     def _validate(self):
         super(FileNode, self)._validate()
         if self._params.get("path") is None:

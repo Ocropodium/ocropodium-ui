@@ -2,26 +2,26 @@
 Tesseract Recogniser
 """
 
-from nodetree import node, manager
-from ocradmin import plugins
-from ocradmin.plugins import stages, generic_nodes
+from __future__ import absolute_import
 
 import os
 import shutil
 import tempfile
 import subprocess as sp
 
+from nodetree import node, manager
+from ocradmin import plugins
+
+from . import generic
+from .. import stages
+
 from ocradmin.ocrmodels.models import OcrModel
 
 
-NAME = "Tesseract"
-
-class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
+class TesseractRecognizer(generic.CommandLineRecognizerNode):
     """
     Recognize an image using Tesseract.
     """
-    name = "Tesseract::TesseractRecognizer"
-    description = "Tesseract Native Text Recognizer"
     stage = stages.RECOGNIZE
     binary = "tesseract"
     _parameters = []
@@ -35,14 +35,14 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
                         OcrModel.objects.filter(app="tesseract", type="lang")],
             )
         ]
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(TesseractRecognizer, self).__init__(*args, **kwargs)
 
 
     def _validate(self):
         """
         Check we're in a good state.
         """
-        super(TesseractRecognizerNode, self)._validate()
+        super(TesseractRecognizer, self)._validate()
         if self._params.get("language_model", "").strip() == "":
             raise node.ValidationError(self, "no language model given: %s" % self._params)
 
@@ -139,29 +139,4 @@ class TesseractRecognizerNode(generic_nodes.CommandLineRecognizerNode):
             except OSError, (errno, strerr):
                 self.logger.error(
                     "RmTree raised error: %s, %s" % (errno, strerr))
-
-
-class Manager(manager.StandardManager):
-    """
-    Handle Tesseract nodes.
-    """
-    @classmethod
-    def get_node(self, name, **kwargs):
-        if name.find("::") != -1:
-            name = name.split("::")[-1]
-        g = globals()
-        if g.get(name + "Node"):            
-            return g.get(name + "Node")(**kwargs)
-
-    @classmethod
-    def get_nodes(cls, *oftypes):
-        return super(Manager, cls).get_nodes(
-                *oftypes, globals=globals())
-
-
-if __name__ == "__main__":
-    for n in Manager.get_nodes():
-        print n
-
-
 
