@@ -102,9 +102,7 @@ class Node(object):
     abstract = True
     intypes = [object]
     outtype = object
-    _parameters = [
-
-    ]
+    parameters = []
 
     def __init__(self, label=None, abort_func=None, 
                 cacher=None,
@@ -127,10 +125,6 @@ class Node(object):
         self._inputdata = [None for n in range(self.arity)]
         self.logger.debug("Initialised %s with cacher: %s" % (self.label, self._cacher))
         self.ignored = ignored
-
-    @classmethod
-    def parameters(cls):
-        return cls._parameters
 
     def set_param(self, param, name):
         """
@@ -264,7 +258,7 @@ class Node(object):
 
     def _validate_parameters(self):
         """Ensure parameters are sane."""
-        for p in self._parameters:
+        for p in self.parameters:
             choices = p.get("choices")
             if choices is None:
                 continue
