@@ -2,17 +2,21 @@
 Nodes to perform random things.
 """
 
+from __future__ import absolute_import
+
 import os
 import re
 import codecs
 import tempfile
 import subprocess as sp
-from nodetree import node, writable_node, manager
-from ocradmin.plugins import stages, generic_nodes, types, utils
-
-NAME = "Utils"
-
 from HTMLParser import HTMLParser
+
+from nodetree import node, writable_node, manager
+
+from . import generic
+from .. import stages, types, utils
+
+
 
 class HTMLContentHandler(HTMLParser):
     def __init__(self):
@@ -60,7 +64,7 @@ class HTMLContentHandler(HTMLParser):
         self._data.append("</%s>" % tag)
 
 
-class HocrToText(HTMLParser):
+class HocrToTextHelper(HTMLParser):
     """
     Get text from a HOCR document.
     """
@@ -96,18 +100,13 @@ class HocrToText(HTMLParser):
 
     def handle_endtag(self, tag):
         self._gotline = False
-            
-        
 
 
-class FindReplaceNode(node.Node, generic_nodes.TextWriterMixin):
+class FindReplace(node.Node, generic.TextWriterMixin):
     """
     Find an replace stuff in input with output.
     """
     stage = stages.UTILS
-    name = "Utils::FindReplace"
-    description = "Find and replace string in HOCR documents"
-    arity = 1
     intypes = [types.HocrString]
     outtype = types.HocrString
     _parameters = [
@@ -116,12 +115,12 @@ class FindReplaceNode(node.Node, generic_nodes.TextWriterMixin):
     ]
 
     def __init__(self, *args, **kwargs):
-        super(FindReplaceNode, self).__init__(*args, **kwargs)
+        super(FindReplace, self).__init__(*args, **kwargs)
         self._findre = None
         self._replace = None
 
     def _validate(self):
-        super(FindReplaceNode, self)._validate()
+        super(FindReplace, self)._validate()
         try:
             re.compile(self._params.get("find"))
         except Exception, err:
@@ -147,33 +146,26 @@ class FindReplaceNode(node.Node, generic_nodes.TextWriterMixin):
         return parser.parse(xml)
 
 
-class HocrToTextNode(node.Node, generic_nodes.TextWriterMixin):
+class HocrToText(node.Node, generic.TextWriterMixin):
     """
     Convert HOCR to text.
     """
     stage = stages.UTILS
-    name = "Utils::HocrToText"
-    description = "Find and replace string in HOCR documents"
-    arity = 1
     intypes = [unicode]
     outtype = unicode
     _parameters = []
 
     def _eval(self):
         input = self.eval_input(0)
-        parser = HocrToText()
+        parser = HocrToTextHelper()
         return parser.parse(input)
 
 
-class TextFileInNode(generic_nodes.FileNode, generic_nodes.TextWriterMixin):
+class TextFileIn(generic.FileNode, generic.TextWriterMixin):
     """
     Read a text file.  That's it.
     """
-    stage = stages.UTILS
-    name = "Utils::TextFileIn"
-    description = "Read a text file"
     stage = stages.INPUT
-    arity = 0
     intypes = []
     outtype = unicode
     _parameters = [dict(name="path", value="", type="filepath")]
@@ -183,21 +175,19 @@ class TextFileInNode(generic_nodes.FileNode, generic_nodes.TextWriterMixin):
             return self.reader(fh)
 
 
-class SwitchNode(node.Node, writable_node.WritableNodeMixin):
+class Switch(node.Node, writable_node.WritableNodeMixin):
     """
     Node which passes through its selected input.
     """
-    name = "Utils::Switch"
-    description = "Switch between multiple inputs"
     stage = stages.UTILS
-    arity = 2
+    outtype = type(None)
     _parameters = [dict(name="input", value=0, type="switch")]
 
     def __init__(self, *args, **kwargs):
-        super(SwitchNode, self).__init__(*args, **kwargs)
         self.arity = kwargs.get("arity", 2)
         self.intypes = [object for i in range(self.arity)]
         self.outtype = object
+        super(Switch, self).__init__(*args, **kwargs)
 
     def _eval(self):
         """
@@ -211,7 +201,7 @@ class SwitchNode(node.Node, writable_node.WritableNodeMixin):
         Override the base set input to dynamically change our
         in and out types.
         """
-        super(SwitchNode, self).set_input(num, n)
+        super(Switch, self).set_input(num, n)
         input = int(self._params.get("input", 0))
         if input == num:
             self.outtype = self._inputs[input].outtype
@@ -245,14 +235,12 @@ class SwitchNode(node.Node, writable_node.WritableNodeMixin):
             return self.input(input).reader(fh)
         
 
-class FileOutNode(node.Node, writable_node.WritableNodeMixin):
+class FileOut(node.Node, writable_node.WritableNodeMixin):
     """
     A node that writes a file to disk.
     """
-    name = "Utils::FileOut"
-    description = "File output node"
-    arity = 1
     stage = stages.OUTPUT
+    outtype = type(None)
     _parameters = [
             dict(name="path", value="", type="filepath"),
             dict(name="create_dir", value=False, type="bool"),
@@ -270,7 +258,7 @@ class FileOutNode(node.Node, writable_node.WritableNodeMixin):
         Override the base set input to dynamically change our
         in and out types.
         """
-        super(FileOutNode, self).set_input(num, n)
+        super(FileOut, self).set_input(num, n)
         self.outtype = self._inputs[num].outtype
 
     def null_data(self):
@@ -317,14 +305,11 @@ class FileOutNode(node.Node, writable_node.WritableNodeMixin):
         return input
 
 
-class TextEvaluationNode(node.Node, generic_nodes.TextWriterMixin):
+class TextEvaluation(node.Node, generic.TextWriterMixin):
     """
     Evaluate two text inputs with ISRI accuracy program.
     """
-    name = "Utils::TextEvaluation"
-    description = "Evaluate two text inputs with ISRI accuracy."
     stage = stages.UTILS
-    arity = 2
     intypes = [unicode, unicode]
     outtype = unicode
     _parameters = []
@@ -344,14 +329,11 @@ class TextEvaluationNode(node.Node, generic_nodes.TextWriterMixin):
         return unicode(report, "utf8", "replace")
 
 
-class TextDiffNode(node.Node, generic_nodes.TextWriterMixin):
+class TextDiff(node.Node, generic.TextWriterMixin):
     """
     Do a side-by-side.
     """
-    name = "Utils::TextDiff"
-    description = "Diff two text inputs."
     stage = stages.UTILS
-    arity = 2
     intypes = [unicode, unicode]
     outtype = unicode
     _parameters = [dict(name="format", value="normal",
@@ -373,14 +355,11 @@ class TextDiffNode(node.Node, generic_nodes.TextWriterMixin):
         return unicode(report, "utf8", "replace")
 
 
-class AbbyyXmlToHocrNode(node.Node, generic_nodes.TextWriterMixin):
+class AbbyyXmlToHocr(node.Node, generic.TextWriterMixin):
     """
     Convert Abbyy XML to HOCR.
     """
-    name = "Utils::AbbyyXmlToHocr"
-    description = "Convert Abbyy XML to HOCR"
     stage = stages.UTILS
-    arity = 1
     intypes = [unicode]
     outtype = unicode
     _parameters = []
@@ -394,30 +373,4 @@ class AbbyyXmlToHocrNode(node.Node, generic_nodes.TextWriterMixin):
             out = utils.hocr_from_abbyy(t1.name)
             os.unlink(t1.name)
         return out            
-
-
-    
-class Manager(manager.StandardManager):
-    """
-    Handle Tesseract nodes.
-    """
-    @classmethod
-    def get_node(self, name, **kwargs):
-        if name.find("::") != -1:
-            name = name.split("::")[-1]
-        g = globals()
-        if g.get(name + "Node"):            
-            return g.get(name + "Node")(**kwargs)
-
-    @classmethod
-    def get_nodes(cls, *oftypes):
-        return super(Manager, cls).get_nodes(
-                *oftypes, globals=globals())
-
-if __name__ == "__main__":
-    for n in Manager.get_nodes():
-        print n
-
-
-
 

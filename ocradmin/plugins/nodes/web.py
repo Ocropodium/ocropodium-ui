@@ -5,7 +5,8 @@ Nodes that use web services to do something.
 NAME = "WebService"
 
 from nodetree import node, manager
-from ocradmin.plugins import generic_nodes, stages
+from . import generic
+from .. import stages
 
 import json
 import httplib2
@@ -17,23 +18,21 @@ class WebServiceNodeError(node.NodeError):
     pass
 
 
-class BaseWebService(node.Node, generic_nodes.TextWriterMixin):
+class BaseWebService(node.Node, generic.TextWriterMixin):
     """
     Base class for web service nodes.
     """
+    abstract = True
     stage = stages.POST
-    arity = 1
     intypes = [unicode]
     outtype = unicode
 
 
-class MashapeProcessingNode(BaseWebService):
+class MashapeProcessing(BaseWebService):
     """
     Mashape entity extraction.
     """
     stage = stages.POST
-    name = "%s::MashapeProcessing" % NAME
-    description = "Perform phrase or sentiment extraction"
     baseurl = "http://text-processing.com/api/"
     _parameters = [
         dict(name="extract", value="phrases", choices=["phrases", "sentiment"]),
@@ -65,13 +64,11 @@ class MashapeProcessingNode(BaseWebService):
         return out
 
 
-class DBPediaAnnotateNode(BaseWebService):
+class DBPediaAnnotate(BaseWebService):
     """
     Mashape entity extraction.
     """
     stage = stages.POST
-    name = "%s::DBPediaAnnotate" % NAME
-    description = "Find links to DBPedia content"
     baseurl = "http://spotlight.dbpedia.org/rest/annotate/"
     _parameters = [
         dict(name="confident", value=0.2),
@@ -100,13 +97,11 @@ class DBPediaAnnotateNode(BaseWebService):
         return out
 
 
-class OpenCalaisNode(BaseWebService):
+class OpenCalais(BaseWebService):
     """
     OpenCalias sematic markup.
     """
     stage = stages.POST
-    name = "%s::OpenCalais" % NAME
-    description = "OpenCalais Semantic Markup"
     baseurl =  "http://api.opencalais.com/tag/rs/enrich"
     _parameters = [
     ]
@@ -130,34 +125,5 @@ class OpenCalaisNode(BaseWebService):
         if request["status"] != "200":
             raise WebServiceNodeError(self, "A web service error occured.  Status: %s" % request["status"])
         return content.decode("utf8")
-
-
-
-
-
-
-
-class Manager(manager.StandardManager):
-    """
-    Handle Webservice.
-    """
-    @classmethod
-    def get_node(self, name, **kwargs):
-        if name.find("::") != -1:
-            name = name.split("::")[-1]
-        g = globals()
-        if g.get(name + "Node"):            
-            return g.get(name + "Node")(**kwargs)
-
-    @classmethod
-    def get_nodes(cls, *oftypes):
-        return super(Manager, cls).get_nodes(
-                *oftypes, globals=globals())
-
-if __name__ == "__main__":
-    for n in Manager.get_nodes():
-        print n
-
-
 
 

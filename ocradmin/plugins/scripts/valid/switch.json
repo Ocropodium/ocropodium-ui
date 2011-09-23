@@ -160,7 +160,7 @@
 		}
 	},
 	"Switch1": {
-		"type": "utils.Switch",
+		"type": "util.Switch",
 		"stage": "utils",
 		"inputs": [
 			"SegmentPageByXYCUTS1",

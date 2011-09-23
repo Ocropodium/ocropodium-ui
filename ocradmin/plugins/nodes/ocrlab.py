@@ -2,12 +2,16 @@
 Experimental segmentation nodes.
 """
 
-from nodetree import node, writable_node, manager
-from ocradmin.plugins import stages, generic_nodes
+from __future__ import absolute_import
+
+
+from nodetree import node, writable_node
 import ocrolib
 from ocrolib import iulib, numpy
 
-NAME = "Ocrlab"
+from . import generic
+from .. import stages
+
 
 class Rectangle(object):
     """
@@ -366,13 +370,9 @@ def trimmed_mean(numpy_arr, lperc=0, hperc=0):
 
 
 
-class SegmentPageByHintNode(node.Node, generic_nodes.JSONWriterMixin):
-    """
-    Segment an image using a hint.
-    """
-    name = "Ocrlab::SegmentPageByHint"
-    description = "Segment a page using toplines and column hints"
-    arity = 1
+class SegmentPageByHint(node.Node, generic.JSONWriterMixin):
+    """Segment a page using toplines and column hints"""
+
     stage = stages.PAGE_SEGMENT
     intypes = [ocrolib.numpy.ndarray]
     outtype = dict
@@ -582,13 +582,8 @@ class SegmentPageByHintNode(node.Node, generic_nodes.JSONWriterMixin):
             self.textlines.extend(clines)
 
 
-class SegmentPageManualNode(node.Node, generic_nodes.JSONWriterMixin):
-    """
-    Segment an image using column boxes.
-    """
-    name = "Ocrlab::SegmentPageManual"
-    description = "Segment a page using manual column definitions"
-    arity = 1
+class SegmentPageManual(node.Node, generic.JSONWriterMixin):
+    """Segment a page using manual column definitions."""
     stage = stages.PAGE_SEGMENT
     intypes = [ocrolib.numpy.ndarray]
     outtype = dict
@@ -707,31 +702,4 @@ class SegmentPageManualNode(node.Node, generic_nodes.JSONWriterMixin):
                     (regions.y0(i)) + dy, regions.x1(i) + dx,
                     (regions.y1(i)) + dy))
         return out
-
-
-
-class Manager(manager.StandardManager):
-    """
-    Handle Ocrlab nodes.
-    """
-    @classmethod
-    def get_node(self, name, **kwargs):
-        if name.find("::") != -1:
-            name = name.split("::")[-1]
-        g = globals()
-        if g.get(name + "Node"):            
-            return g.get(name + "Node")(**kwargs)
-
-    @classmethod
-    def get_nodes(cls, *oftypes):
-        return super(Manager, cls).get_nodes(
-                *oftypes, globals=globals())
-
-
-if __name__ == "__main__":
-    for n in Manager.get_nodes():
-        print n
-
-
-
 

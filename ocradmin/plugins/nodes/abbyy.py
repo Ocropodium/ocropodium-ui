@@ -2,28 +2,27 @@
 Cuneiform Recogniser
 """
 
-from nodetree import node, manager
-from ocradmin import plugins
-from ocradmin.plugins import utils, stages, generic_nodes
-from ocradmin.core import utils as ocrutils
-import types
+from __future__ import absolute_import
 
 import os
 import shutil
 import tempfile
 import subprocess as sp
 
-NAME = "Abbyy"
+from nodetree import node, manager
+from ocradmin import plugins
+from ocradmin.core import utils as ocrutils
 
-class AbbyyRecognizerNode(generic_nodes.CommandLineRecognizerNode):
+from . import generic
+from .. import utils, stages, types
+
+
+class AbbyyRecognizer(generic.CommandLineRecognizerNode):
     """
-    Recognize an image using Cuneiform.
+    Recognize an image using Abbyy Finereader.
     """
-    name = "Abbyy::AbbyyRecognizer"
-    description = "Abbyy Native Text Recognizer"
     binary = "abbyyocr"
     stage = stages.RECOGNIZE
-    arity = 1
     _parameters = [
         dict(name="single_column", type="bool", value=False),
         dict(name="invert_image", type="bool", value=False),
@@ -79,27 +78,3 @@ class AbbyyRecognizerNode(generic_nodes.CommandLineRecognizerNode):
             os.unlink(btmp.name)
         plugins.set_progress(self.logger, self.progress_func, 100, 100)
         return hocr
-
-
-class Manager(manager.StandardManager):
-    """
-    Handle Tesseract nodes.
-    """
-    @classmethod
-    def get_node(self, name, **kwargs):
-        if name.find("::") != -1:
-            name = name.split("::")[-1]
-        g = globals()
-        if g.get(name + "Node"):            
-            return g.get(name + "Node")(**kwargs)
-
-    @classmethod
-    def get_nodes(cls, *oftypes):
-        return super(Manager, cls).get_nodes(
-                *oftypes, globals=globals())
-
-if __name__ == "__main__":
-    for n in Manager.get_nodes():
-        print n
-
-

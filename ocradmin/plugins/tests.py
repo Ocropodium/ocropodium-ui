@@ -9,7 +9,7 @@ from django.conf import settings
 
 from ocradmin.core.tests import testutils
 
-from nodetree import script, node, manager
+from nodetree import script, node
 import numpy
 
 VALID_SCRIPTDIR = "plugins/scripts/valid"
@@ -23,9 +23,6 @@ class ScriptsTest(TestCase):
         """
             Setup OCR tests.  These run directly, not via views.
         """
-        self.manager = manager.ModuleManager()
-        self.manager.register_paths(
-                glob.glob("plugins/*_nodes.py"), root="ocradmin")
         testutils.symlink_model_fixtures()
         self.validscripts = {}
         self.invalidscripts = {}
@@ -51,7 +48,7 @@ class ScriptsTest(TestCase):
         for name, nodes in self.validscripts.iteritems():
             if name.startswith("invalid"):
                 continue
-            s = script.Script(nodes, manager=self.manager)
+            s = script.Script(nodes)
             terms = s.get_terminals()
             self.assertTrue(len(terms) > 0, msg="No terminal nodes found.")
 
@@ -69,7 +66,7 @@ class ScriptsTest(TestCase):
         for name, nodes in self.invalidscripts.iteritems():
             if not name.startswith("invalid"):
                 continue
-            s = script.Script(nodes, manager=self.manager)
+            s = script.Script(nodes)
             terms = s.get_terminals()
             self.assertTrue(len(terms) > 0, msg="No terminal nodes found.")
             # check we get an expected type from evaling the nodes
