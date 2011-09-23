@@ -39,7 +39,7 @@ $(document).ready(function(){
                     "Expected nodetree to be initially empty");
 
                 // create a test node
-                var testtype = "Ocropus::GrayFileIn";
+                var testtype = "ocropus.GrayFileIn";
                 var name = nodetree.newNodeName(testtype);
                 nodetree.cmdCreateNode(name, testtype, {x: 100, y: 100});
                 equal(nodetree.nodeCount(), 1,
@@ -56,7 +56,7 @@ $(document).ready(function(){
                     "After redo, expected number of nodes in the tree to be");
 
                 // create a second node
-                var testtype2 = "Utils::FileOut";
+                var testtype2 = "util.FileOut";
                 var name2 = nodetree.newNodeName(testtype2);          
                 nodetree.cmdCreateNode(name2, testtype2, {x: 100, y: 200});
                 equal(nodetree.nodeCount(), 2,

@@ -9,7 +9,7 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
     constructor: function(viewer) {
         this.base(viewer, "manualseggui");
 
-        this.nodeclass = "Ocrlab::SegmentPageManual";
+        this.nodeclass = "ocrlab.SegmentPageManual";
         this._coords = [];
         this.registerListener("onCanvasChanged");
         this._node = null;

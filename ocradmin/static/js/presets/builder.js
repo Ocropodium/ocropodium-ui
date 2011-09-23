@@ -605,9 +605,13 @@ $(function() {
     $(window).resize();
 
     // Initialise nodetree!    
-    $.getJSON("/presets/query/", function(data) {
-        nodetree.init(data);
-        nodemenu.init(data);
+    $.ajax({
+        url: "/presets/query/",
+        success: function(data) {
+            nodetree.init(data);
+            nodemenu.init(data);
+        },
+        error: OCRJS.ajaxErrorHandler,
     });
 });
 
