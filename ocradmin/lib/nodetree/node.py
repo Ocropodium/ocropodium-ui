@@ -1,6 +1,9 @@
 """
 Base class for OCR nodes.
 """
+
+import sys
+import textwrap
 import logging
 FORMAT = '%(levelname)-5s %(module)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -8,6 +11,7 @@ LOGGER = logging.getLogger("Node")
 LOGGER.setLevel(logging.INFO)
 
 import cache
+import registry
 
 class NodeError(Exception):
     def __init__(self, node, msg):
@@ -45,16 +49,62 @@ def noop_progress_func(*args):
     pass
 
 
+class NodeType(type):
+    """Meta class for nodes.  Automatically registers
+    the node with the node registry, and if necessary
+    generates name, arity, description, and passthrough
+    class-level attributes."""
+
+    def __new__(cls, name, bases, attrs):
+        new = super(NodeType, cls).__new__
+        node_module = attrs.get("__module__") or "__main__"
+
+         # Abstract class: abstract attribute should not be inherited.
+        if attrs.pop("abstract", None) or not attrs.get("autoregister", True):
+            return new(cls, name, bases, attrs)
+
+        # Automatically generate missing/empty name, description, arity.
+        autoname = False
+        if not attrs.get("name"):
+            try:
+                module_name = sys.modules[node_module].__name__
+            except KeyError:  # pragma: no cover
+                # Fix for manage.py shell_plus (Issue #366).
+                module_name = node_module
+            attrs["name"] = '.'.join([module_name, name])
+            autoname = True
+
+        if not attrs.get("description"):
+            doc = attrs.get("__doc__") or ""
+            attrs["description"] = textwrap.dedent(doc).strip()
+        if not attrs.get("passthrough"):
+            attrs["passthrough"] = 0
+
+        #if not attrs.get("arity"):
+        #    attrs["arity"] = len(attrs.get("intypes", []))
+        print "Creating new class %s with arity: %s" % (name, attrs.get("arity"))
+
+        node_name = attrs["name"]
+        if node_name not in registry.nodes:
+            node_cls = new(cls, name, bases, attrs)
+            if autoname and node_module == "__main__" and node_cls.app.main:
+                node_name = node_cls.name = '.'.join([node_cls.app.main, name])
+            registry.nodes.register(node_cls)
+        return registry.nodes[node_name]
+
+    def __repr__(cls):
+        return "<class Node of %s>" % (cls.app, )
+            
+
+
 class Node(object):
     """
     Node object.  Evaluates some input and
     return the output.    
     """
-    name = "Base::None"
-    description = "Base node"
-    arity = 1       # number of inputs
-    passthrough = 0 # input to pass through if node ignored
-    stage = "general"
+
+    __metaclass__ = NodeType
+
     intypes = [object]
     outtype = object
     _parameters = [
