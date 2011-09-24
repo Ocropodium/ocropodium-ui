@@ -178,6 +178,7 @@ class Switch(node.Node, writable_node.WritableNodeMixin):
     Node which passes through its selected input.
     """
     stage = stages.UTILS
+    intypes = [object, object]
     outtype = type(None)
     parameters = [dict(name="input", value=0, type="switch")]
 
