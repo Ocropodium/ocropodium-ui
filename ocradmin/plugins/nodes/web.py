@@ -8,7 +8,7 @@ import urllib
 from BeautifulSoup import BeautifulSoup
 
 from nodetree import node
-from . import generic
+from . import base
 from .. import stages
 
 
@@ -16,7 +16,7 @@ class WebServiceNodeError(node.NodeError):
     pass
 
 
-class BaseWebService(node.Node, generic.TextWriterMixin):
+class BaseWebService(node.Node, base.TextWriterMixin):
     """
     Base class for web service nodes.
     """
@@ -36,9 +36,7 @@ class MashapeProcessing(BaseWebService):
         dict(name="extract", value="phrases", choices=["phrases", "sentiment"]),
     ]
 
-    def _eval(self):
-        input = self.eval_input(0)
-        
+    def process(self, input):
         http = httplib2.Http()
         headers = {}
         body = dict(text=input[:10000].encode("utf8", "replace"))
@@ -73,9 +71,7 @@ class DBPediaAnnotate(BaseWebService):
         dict(name="support", value=20),
     ]
 
-    def _eval(self):
-        input = self.eval_input(0)
-        
+    def process(self, input):
         http = httplib2.Http()
         headers = {}
         body = dict(
@@ -104,9 +100,7 @@ class OpenCalais(BaseWebService):
     parameters = [
     ]
 
-    def _eval(self):
-        input = self.eval_input(0)
-        
+    def process(self, input):
         http = httplib2.Http()
         headers = {
                 "x-calais-licenseID": "dsza6q6zwa9nzvz9wbz7f6y5",

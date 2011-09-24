@@ -13,13 +13,12 @@ import subprocess as sp
 import numpy
 
 from nodetree import node
-from ocradmin import plugins
 
-from . import generic
-from .. import stages, types
+from . import base
+from .. import stages, types, utils
 
 
-class CuneiformRecognizer(generic.CommandLineRecognizerNode):
+class CuneiformRecognizer(base.CommandLineRecognizerNode):
     """
     Recognize an image using Cuneiform.
     """
@@ -39,11 +38,10 @@ class CuneiformRecognizer(generic.CommandLineRecognizerNode):
             args.extend(["--singlecolumn"])
         return args + [image]
 
-    def _eval(self):
+    def process(self, binary):
         """
         Convert a full page.
         """
-        binary = self.get_input_data(0)
         hocr = None
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.close()
@@ -62,7 +60,7 @@ class CuneiformRecognizer(generic.CommandLineRecognizerNode):
                     hocr = tread.read()
             os.unlink(tmp.name)
             os.unlink(btmp.name)
-        plugins.set_progress(self.logger, self.progress_func, 100, 100)
+        utils.set_progress(self.logger, self.progress_func, 100, 100)
         return hocr
 
 

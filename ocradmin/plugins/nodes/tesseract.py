@@ -9,23 +9,22 @@ import shutil
 import tempfile
 import subprocess as sp
 
-from nodetree import node, utils
-from ocradmin import plugins
+from nodetree import node, utils as nodeutils
 
-from . import generic
-from .. import stages
+from . import base
+from .. import stages, utils, exceptions
 
 from ocradmin.ocrmodels.models import OcrModel
 
 
-class TesseractRecognizer(generic.CommandLineRecognizerNode):
+class TesseractRecognizer(base.CommandLineRecognizerNode):
     """
     Recognize an image using Tesseract.
     """
     stage = stages.RECOGNIZE
     binary = "tesseract"    
 
-    @utils.ClassProperty
+    @nodeutils.ClassProperty
     @classmethod
     def parameters(cls):
         return [
@@ -51,12 +50,12 @@ class TesseractRecognizer(generic.CommandLineRecognizerNode):
         cleaned up in the destructor.
         """
         if not hasattr(self, "_tessdata") is None:
-            modpath = plugins.lookup_model_file(self._params["language_model"])
+            modpath = utils.lookup_model_file(self._params["language_model"])
             self.unpack_tessdata(modpath)
-        self._tesseract = plugins.get_binary("tesseract")
+        self._tesseract = utils.get_binary("tesseract")
         self.logger.debug("Using Tesseract: %s" % self._tesseract)
 
-    @plugins.check_aborted
+    @utils.check_aborted
     def get_transcript(self, line):
         """
         Recognise each individual line by writing it as a temporary
@@ -67,7 +66,7 @@ class TesseractRecognizer(generic.CommandLineRecognizerNode):
         with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
             tmp.close()
             self.write_binary(tmp.name, line)
-            tiff = plugins.convert_to_temp_image(tmp.name, "tif")
+            tiff = utils.convert_to_temp_image(tmp.name, "tif")
             text = self.process_line(tiff)
             os.unlink(tmp.name)
             os.unlink(tiff)
@@ -95,7 +94,7 @@ class TesseractRecognizer(generic.CommandLineRecognizerNode):
         # this DOESN'T include the "tessdata" part
         os.environ["TESSDATA_PREFIX"] = self._tessdata
 
-    @plugins.check_aborted
+    @utils.check_aborted
     def process_line(self, imagepath):
         """
         Run Tesseract on the TIFF image, using YET ANOTHER temporary

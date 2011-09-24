@@ -9,7 +9,7 @@ from nodetree import node, writable_node
 import ocrolib
 from ocrolib import iulib, numpy
 
-from . import generic
+from . import base
 from .. import stages
 
 
@@ -370,7 +370,7 @@ def trimmed_mean(numpy_arr, lperc=0, hperc=0):
 
 
 
-class SegmentPageByHint(node.Node, generic.JSONWriterMixin):
+class SegmentPageByHint(node.Node, base.JSONWriterMixin):
     """Segment a page using toplines and column hints"""
 
     stage = stages.PAGE_SEGMENT
@@ -387,7 +387,7 @@ class SegmentPageByHint(node.Node, generic.JSONWriterMixin):
         """
         return dict(columns=[], lines=[], paragraphs=[])
 
-    def _eval(self):
+    def process(self, input):
         """
         Segment a binary image.
 
@@ -398,7 +398,6 @@ class SegmentPageByHint(node.Node, generic.JSONWriterMixin):
             columns
             images
         """
-        input = self.get_input_data(0)
         self.inarray = ocrolib.numpy2narray(input, type='B')
         self.init()
 
@@ -582,7 +581,7 @@ class SegmentPageByHint(node.Node, generic.JSONWriterMixin):
             self.textlines.extend(clines)
 
 
-class SegmentPageManual(node.Node, generic.JSONWriterMixin):
+class SegmentPageManual(node.Node, base.JSONWriterMixin):
     """Segment a page using manual column definitions."""
     stage = stages.PAGE_SEGMENT
     intypes = [ocrolib.numpy.ndarray]
@@ -602,7 +601,7 @@ class SegmentPageManual(node.Node, generic.JSONWriterMixin):
         """
         return dict(columns=[], lines=[], paragraphs=[])
 
-    def _eval(self):
+    def process(self, binary):
         """
         Segment a binary image.
 
@@ -613,18 +612,17 @@ class SegmentPageManual(node.Node, generic.JSONWriterMixin):
             columns
             images
         """
-        page_bin = self.get_input_data(0)
         coords = self.get_coords();
         if len(coords) == 0:
             coords.append(Rectangle(0, 0, 
-                page_bin.shape[1] - 1, page_bin.shape[0] - 1))
-        self.sanitise_coords(coords, page_bin.shape[1], page_bin.shape[0]);            
-        height = page_bin.shape[1]
+                binary.shape[1] - 1, binary.shape[0] - 1))
+        self.sanitise_coords(coords, binary.shape[1], binary.shape[0]);            
+        height = binary.shape[1]
         boxes = {}
         for rect in coords:
             points = rect.points()
             col = ocrolib.iulib.bytearray()
-            ocrolib.iulib.extract_subimage(col, ocrolib.numpy2narray(page_bin), *points)
+            ocrolib.iulib.extract_subimage(col, ocrolib.numpy2narray(binary), *points)
             pout = self.segment_portion(col, height, points[0], points[1])
             for key, rects in pout.iteritems():
                 if boxes.get(key) is not None:
