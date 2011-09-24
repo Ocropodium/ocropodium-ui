@@ -13,7 +13,7 @@ from HTMLParser import HTMLParser
 
 from nodetree import node, writable_node
 
-from . import generic
+from . import base
 from .. import stages, types, utils
 
 
@@ -102,7 +102,7 @@ class HocrToTextHelper(HTMLParser):
         self._gotline = False
 
 
-class FindReplace(node.Node, generic.TextWriterMixin):
+class FindReplace(node.Node, base.TextWriterMixin):
     """
     Find an replace stuff in input with output.
     """
@@ -130,11 +130,10 @@ class FindReplace(node.Node, generic.TextWriterMixin):
         """Replace all content data."""
         return self._findre.sub(self._replace, data)
 
-    def _eval(self):
+    def process(self, xml):
         """
         Run find/replace on input
         """
-        xml = self.eval_input(0)
         find = self._params.get("find", "")
         replace = self._params.get("replace", "")
         if find.strip() == "" or replace.strip() == "":
@@ -146,7 +145,7 @@ class FindReplace(node.Node, generic.TextWriterMixin):
         return parser.parse(xml)
 
 
-class HocrToText(node.Node, generic.TextWriterMixin):
+class HocrToText(node.Node, base.TextWriterMixin):
     """
     Convert HOCR to text.
     """
@@ -155,13 +154,12 @@ class HocrToText(node.Node, generic.TextWriterMixin):
     outtype = unicode
     parameters = []
 
-    def _eval(self):
-        input = self.eval_input(0)
+    def process(self, input):
         parser = HocrToTextHelper()
         return parser.parse(input)
 
 
-class TextFileIn(generic.FileNode, generic.TextWriterMixin):
+class TextFileIn(base.FileNode, base.TextWriterMixin):
     """
     Read a text file.  That's it.
     """
@@ -170,7 +168,7 @@ class TextFileIn(generic.FileNode, generic.TextWriterMixin):
     outtype = unicode
     parameters = [dict(name="path", value="", type="filepath")]
 
-    def _eval(self):
+    def process(self):
         with open(self._params.get("path"), "r") as fh:
             return self.reader(fh)
 
@@ -189,7 +187,7 @@ class Switch(node.Node, writable_node.WritableNodeMixin):
         self.outtype = object
         super(Switch, self).__init__(*args, **kwargs)
 
-    def _eval(self):
+    def early_eval(self):
         """
         Pass through the selected input.
         """
@@ -288,11 +286,10 @@ class FileOut(node.Node, writable_node.WritableNodeMixin):
         if self.input(0):
             return self.input(0).reader(fh)
         
-    def _eval(self):
+    def process(self, input):
         """
         Write the input to the given path.
         """
-        input = self.eval_input(0)
         if input is None:
             return
         if not os.environ.get("NODETREE_WRITE_FILEOUT"):
@@ -305,7 +302,7 @@ class FileOut(node.Node, writable_node.WritableNodeMixin):
         return input
 
 
-class TextEvaluation(node.Node, generic.TextWriterMixin):
+class TextEvaluation(node.Node, base.TextWriterMixin):
     """
     Evaluate two text inputs with ISRI accuracy program.
     """
@@ -314,9 +311,7 @@ class TextEvaluation(node.Node, generic.TextWriterMixin):
     outtype = unicode
     parameters = []
 
-    def _eval(self):
-        intext = self.eval_input(0)
-        gttext = self.eval_input(1)
+    def process(self, intext, gttext):
         with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
             with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t2:
                 self.writer(t1, gttext)
@@ -329,7 +324,7 @@ class TextEvaluation(node.Node, generic.TextWriterMixin):
         return unicode(report, "utf8", "replace")
 
 
-class TextDiff(node.Node, generic.TextWriterMixin):
+class TextDiff(node.Node, base.TextWriterMixin):
     """
     Do a side-by-side.
     """
@@ -339,9 +334,7 @@ class TextDiff(node.Node, generic.TextWriterMixin):
     parameters = [dict(name="format", value="normal",
         choices=("normal", "side-by-side", "rcs"))]
 
-    def _eval(self):
-        intext = self.eval_input(0)
-        gttext = self.eval_input(1)
+    def process(self, intext, gttext):
         format = self._params.get("format", "normal")
         with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
             with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t2:
@@ -355,7 +348,7 @@ class TextDiff(node.Node, generic.TextWriterMixin):
         return unicode(report, "utf8", "replace")
 
 
-class AbbyyXmlToHocr(node.Node, generic.TextWriterMixin):
+class AbbyyXmlToHocr(node.Node, base.TextWriterMixin):
     """
     Convert Abbyy XML to HOCR.
     """
@@ -364,8 +357,7 @@ class AbbyyXmlToHocr(node.Node, generic.TextWriterMixin):
     outtype = unicode
     parameters = []
 
-    def _eval(self):
-        intext = self.eval_input(0)
+    def process(self, intext):
         out = ""
         with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
             self.writer(t1, intext)

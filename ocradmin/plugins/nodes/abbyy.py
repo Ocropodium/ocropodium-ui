@@ -13,11 +13,11 @@ from nodetree import node
 from ocradmin import plugins
 from ocradmin.core import utils as ocrutils
 
-from . import generic
+from . import base
 from .. import utils, stages, types
 
 
-class AbbyyRecognizer(generic.CommandLineRecognizerNode):
+class AbbyyRecognizer(base.CommandLineRecognizerNode):
     """
     Recognize an image using Abbyy Finereader.
     """
@@ -53,11 +53,10 @@ class AbbyyRecognizer(generic.CommandLineRecognizerNode):
                 "-density", "300", image, image])
         return p.wait()
 
-    def _eval(self):
+    def process(self, binary):
         """
         Convert a full page.
         """
-        binary = self.get_input_data(0)
         hocr = ""
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.close()

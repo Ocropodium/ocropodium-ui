@@ -8,20 +8,21 @@ import os
 import sys
 import json
 
-from ocradmin import plugins
-from nodetree import node, utils, writable_node
+from nodetree import node, writable_node
+from nodetree import utils as nodeutils
 
 import ocrolib
 from ocradmin.ocrmodels.models import OcrModel
 
-from .. import stages
-from . import generic
+from . import base
+from .. import stages, utils
 
-NAME = "Ocropus"
 
 class UnknownOcropusNodeType(Exception):
     pass
 
+class NoSuchNodeException(Exception):
+    pass
 
 class OcropusNodeError(node.NodeError):
     pass
@@ -33,8 +34,8 @@ def makesafe(val):
     return val
 
 
-class GrayFileIn(generic.ImageGeneratorNode,
-            generic.FileNode, generic.GrayPngWriterMixin):
+class GrayFileIn(base.ImageGeneratorNode,
+            base.FileNode, base.GrayPngWriterMixin):
     """
     A node that takes a file and returns a numpy object.
     """
@@ -43,13 +44,13 @@ class GrayFileIn(generic.ImageGeneratorNode,
     outtype = ocrolib.numpy.ndarray
     parameters = [dict(name="path", value="", type="filepath")]
 
-    def _eval(self):
+    def process(self):
         if not os.path.exists(self._params.get("path", "")):
             return self.null_data()
         return ocrolib.read_image_gray(makesafe(self._params.get("path")))
         
 
-class Crop(node.Node, generic.BinaryPngWriterMixin):
+class Crop(node.Node, base.BinaryPngWriterMixin):
     """
     Crop a PNG input.
     """
@@ -63,13 +64,12 @@ class Crop(node.Node, generic.BinaryPngWriterMixin):
         dict(name="y1", value=-1),
     ]
 
-    def _eval(self):
+    def process(self, input):
         """
         Crop an image, using IULIB.  If any of
         the parameters are -1 or less, use the
         outer dimensions.
         """
-        input = self.get_input_data(0)
         x0, y0 = 0, 0
         y1, x1 = input.shape
         try:
@@ -134,7 +134,7 @@ class OcropusBase(node.Node):
             if self._inputs[i] is None:
                 raise node.ValidationError(self, "missing input '%d'" % i)
 
-    @utils.ClassProperty
+    @nodeutils.ClassProperty
     @classmethod
     def parameters(cls):
         """
@@ -154,7 +154,7 @@ class OcropusBase(node.Node):
         return p            
 
 
-class OcropusBinarizeBase(OcropusBase, generic.BinaryPngWriterMixin):
+class OcropusBinarizeBase(OcropusBase, base.BinaryPngWriterMixin):
     """
     Binarize an image with an Ocropus component.
     """
@@ -163,7 +163,7 @@ class OcropusBinarizeBase(OcropusBase, generic.BinaryPngWriterMixin):
     intypes = [ocrolib.numpy.ndarray]
     outtype = ocrolib.numpy.ndarray
 
-    def _eval(self):
+    def process(self, input):
         """
         Perform binarization on an image.
         
@@ -173,7 +173,6 @@ class OcropusBinarizeBase(OcropusBase, generic.BinaryPngWriterMixin):
         # NB. The Ocropus binarize function
         # returns a tuple: (binary, gray)
         # we ignore the latter.
-        input = self.get_input_data(0)
         try:
             out = self._comp.binarize(input, type="B")[0]
         except (IndexError, TypeError, ValueError), err:
@@ -181,7 +180,7 @@ class OcropusBinarizeBase(OcropusBase, generic.BinaryPngWriterMixin):
         return out
 
 
-class OcropusSegmentPageBase(OcropusBase, generic.JSONWriterMixin):
+class OcropusSegmentPageBase(OcropusBase, base.JSONWriterMixin):
     """
     Segment an image using Ocropus.
     """
@@ -196,7 +195,7 @@ class OcropusSegmentPageBase(OcropusBase, generic.JSONWriterMixin):
         """
         return dict(columns=[], lines=[], paragraphs=[])
 
-    def _eval(self):
+    def process(self, input):
         """
         Segment a binary image.
 
@@ -207,7 +206,6 @@ class OcropusSegmentPageBase(OcropusBase, generic.JSONWriterMixin):
             columns
             images
         """
-        input = self.get_input_data(0)
         out = dict(bbox=[0, 0, input.shape[1], input.shape[0]],
                 columns=[], lines=[], paragraphs=[])
         try:
@@ -227,7 +225,7 @@ class OcropusSegmentPageBase(OcropusBase, generic.JSONWriterMixin):
         return out
 
 
-class OcropusGrayscaleFilterBase(OcropusBase, generic.GrayPngWriterMixin):
+class OcropusGrayscaleFilterBase(OcropusBase, base.GrayPngWriterMixin):
     """
     Filter a binary image.
     """
@@ -236,8 +234,7 @@ class OcropusGrayscaleFilterBase(OcropusBase, generic.GrayPngWriterMixin):
     intypes = [ocrolib.numpy.ndarray]
     outtype = ocrolib.numpy.ndarray
 
-    def _eval(self):
-        input = self.get_input_data(0)
+    def process(self, input):
         try:
             out = self._comp.cleanup_gray(input, type="B")
         except (IndexError, TypeError, ValueError), err:
@@ -246,7 +243,7 @@ class OcropusGrayscaleFilterBase(OcropusBase, generic.GrayPngWriterMixin):
 
 
 
-class OcropusBinaryFilterBase(OcropusBase, generic.BinaryPngWriterMixin):
+class OcropusBinaryFilterBase(OcropusBase, base.BinaryPngWriterMixin):
     """
     Filter a binary image.
     """
@@ -255,8 +252,7 @@ class OcropusBinaryFilterBase(OcropusBase, generic.BinaryPngWriterMixin):
     intypes = [ocrolib.numpy.ndarray]
     outtype = ocrolib.numpy.ndarray
 
-    def _eval(self):
-        input = self.get_input_data(0)
+    def process(self, input):
         try:
             out = self._comp.cleanup(input, type="B")
         except (IndexError, TypeError, ValueError), err:
@@ -264,12 +260,12 @@ class OcropusBinaryFilterBase(OcropusBase, generic.BinaryPngWriterMixin):
         return out
 
 
-class OcropusRecognizer(generic.LineRecognizerNode):
+class OcropusRecognizer(base.LineRecognizerNode):
     """
     Ocropus Native text recogniser.
     """
 
-    @utils.ClassProperty
+    @nodeutils.ClassProperty
     @classmethod
     def parameters(cls):
         return [
@@ -303,17 +299,17 @@ class OcropusRecognizer(generic.LineRecognizerNode):
         """
         try:
             self._linerec = ocrolib.RecognizeLine()
-            cmodpath = plugins.lookup_model_file(self._params["character_model"])
+            cmodpath = utils.lookup_model_file(self._params["character_model"])
             self.logger.debug("Loading char mod file: %s" % cmodpath)
             self._linerec.load_native(cmodpath)
             self._lmodel = ocrolib.OcroFST()
-            lmodpath = plugins.lookup_model_file(self._params["language_model"])
+            lmodpath = utils.lookup_model_file(self._params["language_model"])
             self.logger.debug("Loading lang mod file: %s" % lmodpath)
             self._lmodel.load(lmodpath)
         except (StandardError, RuntimeError):
             raise
 
-    @plugins.check_aborted
+    @utils.check_aborted
     def get_transcript(self, line):        
         """
         Run line-recognition on an ocrolib.iulib.bytearray images of a
@@ -379,7 +375,7 @@ class Manager(object):
         else:
             comp = getattr(ocrolib, name)()
         if node is None:
-            raise plugins.NoSuchNodeException(name)
+            raise NoSuchNodeException(name)
 
         base = OcropusBase
         if comp.interface() == "IBinarize":

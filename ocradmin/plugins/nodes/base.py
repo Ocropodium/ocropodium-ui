@@ -7,7 +7,8 @@ from __future__ import absolute_import
 import os
 import codecs
 import json
-from ocradmin import plugins
+import subprocess as sp
+
 from nodetree import node, writable_node
 import ocrolib
 from PIL import Image
@@ -98,15 +99,13 @@ class LineRecognizerNode(node.Node, TextWriterMixin):
     def get_transcript(self):
         raise NotImplementedError
 
-    def _eval(self):
+    def process(self, binary, boxes):
         """
         Recognize page text.
 
         input: tuple of binary, input boxes
         return: page data
         """
-        binary = self.get_input_data(0)
-        boxes = self.get_input_data(1)
         pageheight, pagewidth = binary.shape
         iulibbin = ocrolib.numpy2narray(binary)
         out = dict(bbox=[0, 0, pagewidth, pageheight], lines=[])
@@ -173,7 +172,7 @@ class CommandLineRecognizerNode(LineRecognizerNode):
         """
         ocrolib.iulib.write_image_packed(path.encode(), ocrolib.pseg2narray(data))
 
-    @plugins.check_aborted
+    @utils.check_aborted
     def get_transcript(self, line):
         """
         Recognise each individual line by writing it as a temporary
@@ -186,7 +185,7 @@ class CommandLineRecognizerNode(LineRecognizerNode):
             os.unlink(tmp.name)
             return text
 
-    @plugins.check_aborted
+    @utils.check_aborted
     def process_line(self, imagepath):
         """
         Run OCR on image, using YET ANOTHER temporary

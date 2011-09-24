@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 
 from nodetree import node, writable_node
-from .generic import GrayPngWriterMixin
+from .base import GrayPngWriterMixin
 from .. import stages
 import numpy
 
@@ -28,8 +28,7 @@ class Rotate90(node.Node, GrayPngWriterMixin):
         except ValueError:
             raise node.ValidationError(self, "'num' must be an integer")
 
-    def _eval(self):
-        image = self.get_input_data(0)
+    def process(self, image):
         return numpy.rot90(image, int(self._params.get("num", 1)))
 
 

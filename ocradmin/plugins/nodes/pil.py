@@ -9,7 +9,7 @@ from nodetree import node
 import numpy
 from PIL import Image
 
-from . import generic
+from . import base
 from .. import stages
 
 
@@ -33,14 +33,14 @@ def array2image(a):
     return Image.fromstring(mode, (a.shape[1], a.shape[0]), a.tostring())
 
 
-class RGBFileInNode(generic.ImageGeneratorNode, generic.BinaryPngWriterMixin):
+class RGBFileInNode(base.ImageGeneratorNode, base.BinaryPngWriterMixin):
     """Read a file with PIL."""
     stage = stages.INPUT
-    intypes = [numpy.ndarray]
+    intypes = []
     outtype = numpy.ndarray
     parameters = [dict(name="path", value="", type="filepath")]
 
-    def _eval(self):
+    def process(self):
         path = self._params.get("path")
         if not os.path.exists(path):
             return self.null_data()
@@ -57,7 +57,7 @@ class RGBFileInNode(generic.ImageGeneratorNode, generic.BinaryPngWriterMixin):
         return path
 
 
-class PilScaleNode(node.Node, generic.BinaryPngWriterMixin):
+class PilScaleNode(node.Node, base.BinaryPngWriterMixin):
     """Scale an image with PIL"""
     stage = stages.FILTER_GRAY
     intypes = [numpy.ndarray]
@@ -78,16 +78,16 @@ class PilScaleNode(node.Node, generic.BinaryPngWriterMixin):
         except ValueError:
             raise node.ValidationError(self, "'float' must be a float")
     
-    def _eval(self):
+    def process(self, image):
         """Scale image."""
         scale = float(self._params.get("scale"))
-        pil = Image.fromarray(self.get_input_data(0))
+        pil = Image.fromarray(image)
         dims = [int(dim * scale) for dim in pil.size]
         scaled = pil.resize(tuple(dims), getattr(Image, self._params.get("filter")))
         return numpy.asarray(scaled.convert("L"))
 
 
-class PilCropNode(node.Node, generic.BinaryPngWriterMixin):
+class PilCropNode(node.Node, base.BinaryPngWriterMixin):
     """Crop an image with PIL."""
     stage = stages.FILTER_GRAY
     intypes = [numpy.ndarray]
@@ -99,13 +99,12 @@ class PilCropNode(node.Node, generic.BinaryPngWriterMixin):
         dict(name="y1", value=-1),
     ]
 
-    def _eval(self):
+    def process(self, input):
         """
         Crop an image, using IULIB.  If any of
         the parameters are -1 or less, use the
         outer dimensions.
         """
-        input = self.get_input_data(0)
         x0, y0 = 0, 0
         y1, x1 = input.shape
         try:
@@ -132,7 +131,7 @@ class PilCropNode(node.Node, generic.BinaryPngWriterMixin):
         return n
 
 
-class RGB2GrayNode(node.Node, generic.GrayPngWriterMixin):    
+class RGB2GrayNode(node.Node, base.GrayPngWriterMixin):    
     """
     Convert (roughly) between a color image and BW.
     """
@@ -141,8 +140,8 @@ class RGB2GrayNode(node.Node, generic.GrayPngWriterMixin):
     outtype = numpy.ndarray
     parameters = []
 
-    def _eval(self):
-        pil = Image.fromarray(self.eval_input(0))        
+    def process(self, image):
+        pil = Image.fromarray(image)        
         return numpy.asarray(pil.convert("L"))
 
 
@@ -155,10 +154,10 @@ class PilTestNode(node.Node):
     def _validate(self):
         super(PilTestNode, self)._validate()
 
-    def _eval(self):
+    def process(self, image):
         """
         No-op, for now.
         """
-        return self.get_input_data(0)
+        return image
 
 
