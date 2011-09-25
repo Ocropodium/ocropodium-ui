@@ -188,11 +188,21 @@ class Switch(node.Node, writable_node.WritableNodeMixin):
         self.outtype = object
         super(Switch, self).__init__(*args, **kwargs)
 
+    def active_input(self):
+        """The active child node."""
+        input = int(self._params.get("input", 0))
+        return self._inputs[input]
+
+    def validate_all(self):
+        """Only validate active input."""
+        active = self.active_input()
+        if active is not None:
+            active.validate_all()
+        self.validate()
+
     def early_eval(self):
-        """
-        Pass through the selected input.
-        """
-        input = int(self._params.get("input", 0))        
+        """Pass through the selected input."""
+        input = int(self._params.get("input", 0))
         return self.eval_input(input)
 
     def set_input(self, num, n):
