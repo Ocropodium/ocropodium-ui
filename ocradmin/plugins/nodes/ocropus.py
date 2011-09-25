@@ -124,12 +124,12 @@ class OcropusBase(node.Node):
         """
         return super(OcropusBase, self).__dict__
 
-    def _validate(self):
+    def validate(self):
         """
         Check state of the inputs.
         """
         self.logger.debug("%s: validating...", self)
-        super(OcropusBase, self)._validate()
+        super(OcropusBase, self).validate()
         for i in range(len(self._inputs)):
             if self._inputs[i] is None:
                 raise node.ValidationError(self, "missing input '%d'" % i)
@@ -282,11 +282,11 @@ class OcropusRecognizer(base.LineRecognizerNode):
             )
         ]
 
-    def _validate(self):
+    def validate(self):
         """
         Check we're in a good state.
         """
-        super(OcropusRecognizer, self)._validate()
+        super(OcropusRecognizer, self).validate()
         if self._params.get("character_model", "").strip() == "":
             raise node.ValidationError(self, "no character model given.")
         if self._params.get("language_model", "").strip() == "":

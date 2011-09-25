@@ -69,8 +69,8 @@ class PilScaleNode(node.Node, base.BinaryPngWriterMixin):
         ]),
     ]
 
-    def _validate(self):
-        super(PilScaleNode, self)._validate()
+    def validate(self):
+        super(PilScaleNode, self).validate()
         if not self._params.get("scale"):
             raise node.ValidationError(self, "'scale' is not set")
         try:
@@ -151,8 +151,8 @@ class PilTestNode(node.Node):
     """
     stage = stages.FILTER_BINARY
 
-    def _validate(self):
-        super(PilTestNode, self)._validate()
+    def validate(self):
+        super(PilTestNode, self).validate()
 
     def process(self, image):
         """

@@ -119,8 +119,8 @@ class FindReplace(node.Node, base.TextWriterMixin):
         self._findre = None
         self._replace = None
 
-    def _validate(self):
-        super(FindReplace, self)._validate()
+    def validate(self):
+        super(FindReplace, self).validate()
         try:
             re.compile(self._params.get("find"))
         except Exception, err:
@@ -245,7 +245,7 @@ class FileOut(node.Node, writable_node.WritableNodeMixin):
             dict(name="create_dir", value=False, type="bool"),
     ]
 
-    def _validate(self):
+    def validate(self):
         """
         Check params are OK.
         """

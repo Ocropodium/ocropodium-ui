@@ -149,8 +149,8 @@ class CommandLineRecognizerNode(LineRecognizerNode):
     binary = "unimplemented"
     abstract = True
 
-    def _validate(self):
-        super(CommandLineRecognizerNode, self)._validate()
+    def validate(self):
+        super(CommandLineRecognizerNode, self).validate()
 
     def get_command(self, *args, **kwargs):
         """
@@ -234,8 +234,8 @@ class FileNode(node.Node):
     """
     abstract = True
 
-    def _validate(self):
-        super(FileNode, self)._validate()
+    def validate(self):
+        super(FileNode, self).validate()
         if self._params.get("path") is None:
             raise node.ValidationError(self, "'path' not set")
         if not os.path.exists(self._params.get("path", "")):

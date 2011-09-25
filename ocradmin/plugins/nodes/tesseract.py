@@ -36,11 +36,11 @@ class TesseractRecognizer(base.CommandLineRecognizerNode):
             )
         ]            
 
-    def _validate(self):
+    def validate(self):
         """
         Check we're in a good state.
         """
-        super(TesseractRecognizer, self)._validate()
+        super(TesseractRecognizer, self).validate()
         if self._params.get("language_model", "").strip() == "":
             raise node.ValidationError(self, "no language model given: %s" % self._params)
 
