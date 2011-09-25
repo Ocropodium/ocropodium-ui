@@ -19,8 +19,8 @@ class Rotate90(node.Node, GrayPngWriterMixin):
         "value": 1,
     }]
                     
-    def _validate(self):
-        super(Rotate90, self)._validate()
+    def validate(self):
+        super(Rotate90, self).validate()
         if not self._params.get("num"):
             raise node.ValidationError(self, "'num' is not set")
         try:
