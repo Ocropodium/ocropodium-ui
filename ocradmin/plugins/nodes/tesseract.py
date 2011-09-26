@@ -9,7 +9,7 @@ import shutil
 import tempfile
 import subprocess as sp
 
-from nodetree import node, utils as nodeutils
+from nodetree import node, exceptions, utils as nodeutils
 
 from . import base
 from .. import stages, utils, exceptions
@@ -42,7 +42,7 @@ class TesseractRecognizer(base.CommandLineRecognizerNode):
         """
         super(TesseractRecognizer, self).validate()
         if self._params.get("language_model", "").strip() == "":
-            raise node.ValidationError(self, "no language model given: %s" % self._params)
+            raise exceptions.ValidationError("no language model given: %s" % self._params, self)
 
     def init_converter(self):
         """

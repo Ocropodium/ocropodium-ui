@@ -9,7 +9,7 @@ import codecs
 import json
 import subprocess as sp
 
-from nodetree import node, writable_node
+from nodetree import node, writable_node, exceptions
 import ocrolib
 from PIL import Image
 
@@ -237,8 +237,8 @@ class FileNode(node.Node):
     def validate(self):
         super(FileNode, self).validate()
         if self._params.get("path") is None:
-            raise node.ValidationError(self, "'path' not set")
+            raise exceptions.ValidationError("'path' not set", self)
         if not os.path.exists(self._params.get("path", "")):
-            raise node.ValidationError(self, "'path': file not found")
+            raise exceptions.ValidationError("'path': file not found", self)
 
 
