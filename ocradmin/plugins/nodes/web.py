@@ -7,12 +7,12 @@ import httplib2
 import urllib
 from BeautifulSoup import BeautifulSoup
 
-from nodetree import node
+from nodetree import node, exceptions
 from . import base
 from .. import stages
 
 
-class WebServiceNodeError(node.NodeError):
+class WebServiceNodeError(exceptions.NodeError):
     pass
 
 
@@ -43,9 +43,9 @@ class MashapeProcessing(BaseWebService):
         url = "%s/%s/" % (self.baseurl, self._params.get("extract", "phrases"))
         request, content = http.request(url, "POST", headers=headers, body=urllib.urlencode(body))
         if request["status"] == "503":
-            raise WebServiceNodeError(self, "Daily limit exceeded")
+            raise WebServiceNodeError("Daily limit exceeded", self)
         elif request["status"] == "400":
-            raise WebServiceNodeError(self, "No text, limit exceeded, or incorrect language")
+            raise WebServiceNodeError("No text, limit exceeded, or incorrect language", self)
         out = u""
         try:
             data = json.loads(content)
@@ -82,7 +82,7 @@ class DBPediaAnnotate(BaseWebService):
         url = "%s?%s" % (self.baseurl, urllib.urlencode(body))
         request, content = http.request(url, "GET", headers=headers)
         if request["status"] != "200":
-            raise WebServiceNodeError(self, "A web service error occured.  Status: %s" % request["status"])
+            raise WebServiceNodeError("A web service error occured.  Status: %s" % request["status"], self)
         out = u""
         soup = BeautifulSoup(content)
         for ref in soup.findAll("a"):
@@ -115,7 +115,7 @@ class OpenCalais(BaseWebService):
                 body=input.encode("utf8")
         )
         if request["status"] != "200":
-            raise WebServiceNodeError(self, "A web service error occured.  Status: %s" % request["status"])
+            raise WebServiceNodeError("A web service error occured.  Status: %s" % request["status"], self)
         return content.decode("utf8")
 
 

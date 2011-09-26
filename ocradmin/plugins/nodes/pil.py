@@ -5,7 +5,7 @@ Image transformation nodes based on the Python Image Library (PIL).
 from __future__ import absolute_import
 
 import os
-from nodetree import node
+from nodetree import node, exceptions
 import numpy
 from PIL import Image
 
@@ -72,11 +72,11 @@ class PilScaleNode(node.Node, base.BinaryPngWriterMixin):
     def validate(self):
         super(PilScaleNode, self).validate()
         if not self._params.get("scale"):
-            raise node.ValidationError(self, "'scale' is not set")
+            raise exceptions.ValidationError("'scale' is not set", self)
         try:
             num = float(self._params.get("scale"))
         except ValueError:
-            raise node.ValidationError(self, "'float' must be a float")
+            raise exceptions.ValidationError("'float' must be a float", self)
     
     def process(self, image):
         """Scale image."""

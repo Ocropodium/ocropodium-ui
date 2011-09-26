@@ -9,7 +9,7 @@ from django.conf import settings
 
 from ocradmin.core.tests import testutils
 
-from nodetree import script, node
+from nodetree import script, node, exceptions
 import numpy
 
 VALID_SCRIPTDIR = "plugins/scripts/valid"
@@ -71,7 +71,8 @@ class ScriptsTest(TestCase):
             self.assertTrue(len(terms) > 0, msg="No terminal nodes found.")
             # check we get an expected type from evaling the nodes
             for n in terms:
-                self.assertRaises(node.ValidationError, n.eval)
+                self.assertRaises(exceptions.ValidationError, n.eval)
+
 
 
         

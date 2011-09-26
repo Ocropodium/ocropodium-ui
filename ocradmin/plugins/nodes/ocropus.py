@@ -8,7 +8,7 @@ import os
 import sys
 import json
 
-from nodetree import node, writable_node
+from nodetree import node, writable_node, exceptions
 from nodetree import utils as nodeutils
 
 import ocrolib
@@ -24,7 +24,7 @@ class UnknownOcropusNodeType(Exception):
 class NoSuchNodeException(Exception):
     pass
 
-class OcropusNodeError(node.NodeError):
+class OcropusNodeError(exceptions.NodeError):
     pass
 
 
@@ -132,7 +132,7 @@ class OcropusBase(node.Node):
         super(OcropusBase, self).validate()
         for i in range(len(self._inputs)):
             if self._inputs[i] is None:
-                raise node.ValidationError(self, "missing input '%d'" % i)
+                raise exceptions.ValidationError("missing input '%d'" % i, self)
 
     @nodeutils.ClassProperty
     @classmethod
@@ -176,7 +176,7 @@ class OcropusBinarizeBase(OcropusBase, base.BinaryPngWriterMixin):
         try:
             out = self._comp.binarize(input, type="B")[0]
         except (IndexError, TypeError, ValueError), err:
-            raise OcropusNodeError(self, err.message)
+            raise OcropusNodeError(err.message, self)
         return out
 
 
@@ -211,7 +211,7 @@ class OcropusSegmentPageBase(OcropusBase, base.JSONWriterMixin):
         try:
             page_seg = self._comp.segment(input)
         except (IndexError, TypeError, ValueError), err:
-            raise OcropusNodeError(self, err.message)
+            raise OcropusNodeError(err.message, self)
         regions = ocrolib.RegionExtractor()
         exfuncs = dict(lines=regions.setPageLines,
                 paragraphs=regions.setPageParagraphs)
@@ -238,7 +238,7 @@ class OcropusGrayscaleFilterBase(OcropusBase, base.GrayPngWriterMixin):
         try:
             out = self._comp.cleanup_gray(input, type="B")
         except (IndexError, TypeError, ValueError), err:
-            raise OcropusNodeError(self, err.message)
+            raise OcropusNodeError(err.message, self)
         return out
 
 
@@ -256,7 +256,7 @@ class OcropusBinaryFilterBase(OcropusBase, base.BinaryPngWriterMixin):
         try:
             out = self._comp.cleanup(input, type="B")
         except (IndexError, TypeError, ValueError), err:
-            raise OcropusNodeError(self, err.message)
+            raise OcropusNodeError(err.message, self)
         return out
 
 
@@ -288,9 +288,9 @@ class OcropusRecognizer(base.LineRecognizerNode):
         """
         super(OcropusRecognizer, self).validate()
         if self._params.get("character_model", "").strip() == "":
-            raise node.ValidationError(self, "no character model given.")
+            raise exceptions.ValidationError("no character model given.", self)
         if self._params.get("language_model", "").strip() == "":
-            raise node.ValidationError(self, "no language model given: %s" % self._params)
+            raise exceptions.ValidationError("no language model given: %s" % self._params, self)
 
 
     def init_converter(self):

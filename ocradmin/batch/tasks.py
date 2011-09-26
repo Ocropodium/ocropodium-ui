@@ -10,7 +10,7 @@ from ocradmin.ocrtasks.decorators import register_handlers
 from ocradmin.ocrtasks.utils import get_progress_callback, get_abort_callback
 from django.utils import simplejson as json
 
-from nodetree import cache, node, script
+from nodetree import cache, node, script, exceptions
 from django.conf import settings
 from ocradmin.plugins import stages, nodes
 
@@ -46,7 +46,7 @@ class BatchScriptTask(AbortableTask):
             if callback is not None:
                 subtask(callback).delay(result)
             return result
-        except nodes.NodeError, err:
+        except exceptions.NodeError, err:
             logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.message)
         except Exception, err:

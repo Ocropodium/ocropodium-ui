@@ -11,7 +11,7 @@ import tempfile
 import subprocess as sp
 from HTMLParser import HTMLParser
 
-from nodetree import node, writable_node
+from nodetree import node, writable_node, exceptions
 
 from . import base
 from .. import stages, types, utils
@@ -124,7 +124,7 @@ class FindReplace(node.Node, base.TextWriterMixin):
         try:
             re.compile(self._params.get("find"))
         except Exception, err:
-            raise node.ValidationError(self, "find: regular expression error: %s" % err)
+            raise exceptions.ValidationError("find: regular expression error: %s" % err, self)
 
     def content_data(self, data, tag, attrs):
         """Replace all content data."""
@@ -260,7 +260,7 @@ class FileOut(node.Node, writable_node.WritableNodeMixin):
         Check params are OK.
         """
         if self._params.get("path") is None:
-            raise node.ValidationError(self, "'path' not set")
+            raise exceptions.ValidationError("'path' not set", self)
 
     def set_input(self, num, n):
         """

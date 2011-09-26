@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 
 from ocradmin.core import utils
 from ocradmin.ocrtasks.decorators import register_handlers
-from ocradmin.plugins import cache, types, nodes
+from ocradmin.plugins import cache, types, nodes, exceptions
 from ocradmin.plugins import utils as pluginutils
 
 from nodetree import node, script
@@ -45,7 +45,7 @@ class UnhandledRunScriptTask(AbortableTask):
             if term is None:
                 term = tree.get_terminals()[0]
             result = term.eval()
-        except node.NodeError, err:
+        except exceptions.NodeError, err:
             logger.error("Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.message)
 
