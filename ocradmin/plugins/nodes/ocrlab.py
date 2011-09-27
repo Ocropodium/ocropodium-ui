@@ -591,7 +591,7 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
     ]
 
     def __init__(self, *args, **kwargs):
-        super(SegmentPageManualNode, self).__init__(*args, **kwargs)
+        super(SegmentPageManual, self).__init__(*args, **kwargs)
         self._regions = ocrolib.RegionExtractor()
         self._segmenter = ocrolib.SegmentPageByRAST1()
 
