@@ -27,7 +27,6 @@ class JSONResponseMixin(object):
 
     def convert_context_to_json(self, context):
         "Convert the context dictionary into a JSON object"
-
         objects = context.get("object_list")
         if objects is None and context.get("object"):
             objects = [context.get("object")]
@@ -71,6 +70,10 @@ class GenericListView(HybridListView):
     def get_queryset(self):
         order = self.request.GET.get("order", self.fields[0])
         tag = self.request.GET.get("tag")
+        try:
+            self.paginate_by = max(int(self.request.GET.get("paginate_by", self.paginate_by)), 0)
+        except ValueError:
+            pass
         # if there's a tag present search by tagged item
         if tag:
             return TaggedItem.objects.get_by_model(
