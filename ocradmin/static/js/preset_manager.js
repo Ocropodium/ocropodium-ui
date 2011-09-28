@@ -117,7 +117,11 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 self.callListeners("openDialogClose");    
             },
         });
-        $.getJSON("/presets/list/", {format: "json"}, function(data) {
+        $.getJSON("/presets/list/", {
+                format: "json",
+                paginate_by: -1,
+            }, function(data) {
+            console.log("Preset data", data);
             $.each(data, function(i, preset) {
                 $("#open_preset_list", self._dialog).append(
                     $.tmpl(self._opentmplitem, preset)
