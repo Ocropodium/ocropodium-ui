@@ -517,15 +517,13 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
 
     cmdSetNodeViewing: function(node) {
         var self = this;                           
-        this._undostack.beginMacro("Set Viewing Output");
         if (!node.isViewing()) {
             $.each(this._usednames, function(name, other) {
                 if (node.name != other.name && other.isViewing())
-                    self._undostack.push(new NT.ViewNodeCommand(self, other.name));
+                    other.setViewing(false);
             });
         }
-        this._undostack.push(new NT.ViewNodeCommand(this, node.name));
-        this._undostack.endMacro();
+        node.setViewing(!node.isViewing());
     },
 
     cmdSetNodeIgnored: function(node) {
