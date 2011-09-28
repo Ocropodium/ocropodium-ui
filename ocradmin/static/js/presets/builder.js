@@ -376,13 +376,13 @@ $(function() {
         dashboard: false,
     });
     statusbar = new OCRJS.StatusBar($("#status_bar").get(0));    
-    guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
     hocrviewer = new OCRJS.HocrViewer($("#hocrviewer_1").get(0));
     textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
     reshandler = new OCRJS.ResultHandler();
     formatter = new OCRJS.LineFormatter();
     cmdstack = new OCRJS.UndoStack(this, {max: 50});
     nodetree = new OCRJS.Nodetree.Tree($("#node_canvas"), cmdstack);
+    guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
     nodeparams = new OCRJS.Nodetree.Parameters($("#parameters").get(0));
     nodemenu = new OCRJS.Nodetree.ContextMenu($("#body").get(0), $("#node_canvas").get(0));
     statemanager = new OCRJS.Nodetree.StateManager($("#current_preset_name").get(0), nodetree);
