@@ -33,7 +33,7 @@ def array2image(a):
     return Image.fromstring(mode, (a.shape[1], a.shape[0]), a.tostring())
 
 
-class RGBFileInNode(base.ImageGeneratorNode, base.BinaryPngWriterMixin):
+class RGBFileIn(base.ImageGeneratorNode, base.BinaryPngWriterMixin):
     """Read a file with PIL."""
     stage = stages.INPUT
     intypes = []
@@ -57,7 +57,7 @@ class RGBFileInNode(base.ImageGeneratorNode, base.BinaryPngWriterMixin):
         return path
 
 
-class PilScaleNode(node.Node, base.BinaryPngWriterMixin):
+class PilScale(node.Node, base.BinaryPngWriterMixin):
     """Scale an image with PIL"""
     stage = stages.FILTER_GRAY
     intypes = [numpy.ndarray]
@@ -70,7 +70,7 @@ class PilScaleNode(node.Node, base.BinaryPngWriterMixin):
     ]
 
     def validate(self):
-        super(PilScaleNode, self).validate()
+        super(PilScale, self).validate()
         if not self._params.get("scale"):
             raise exceptions.ValidationError("'scale' is not set", self)
         try:
@@ -87,7 +87,7 @@ class PilScaleNode(node.Node, base.BinaryPngWriterMixin):
         return numpy.asarray(scaled.convert("L"))
 
 
-class PilCropNode(node.Node, base.BinaryPngWriterMixin):
+class PilCrop(node.Node, base.BinaryPngWriterMixin):
     """Crop an image with PIL."""
     stage = stages.FILTER_GRAY
     intypes = [numpy.ndarray]
@@ -131,7 +131,7 @@ class PilCropNode(node.Node, base.BinaryPngWriterMixin):
         return n
 
 
-class RGB2GrayNode(node.Node, base.GrayPngWriterMixin):    
+class RGB2Gray(node.Node, base.GrayPngWriterMixin):    
     """
     Convert (roughly) between a color image and BW.
     """
@@ -145,14 +145,14 @@ class RGB2GrayNode(node.Node, base.GrayPngWriterMixin):
         return numpy.asarray(pil.convert("L"))
 
 
-class PilTestNode(node.Node):
+class PilTest(node.Node):
     """
     Test PIL OPs.
     """
     stage = stages.FILTER_BINARY
 
     def validate(self):
-        super(PilTestNode, self).validate()
+        super(PilTest, self).validate()
 
     def process(self, image):
         """
