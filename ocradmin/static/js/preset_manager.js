@@ -117,6 +117,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 self.callListeners("openDialogClose");    
             },
         });
+
         $.getJSON("/presets/list/", {
                 format: "json",
                 paginate_by: -1,
@@ -132,21 +133,29 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 selected: function(event, ui) {
                     self.validateOpenSelection();
                 },    
+            }).find("li").dblclick(function(event) {
+                self._openPresetFromList($(this));
             });
         });            
         this._dialog.find("input[type='submit']").click(function(event) {
             var item =  self._dialog.find(".preset_item.ui-selected").first();
-            var slug = item.data("slug");
-            self.openPreset(slug, function(data) {
-                self.callListeners("openPreset");
-                self.setCurrentOpenPreset(slug, $.trim(item.text()), data, true);
-                self._dialog.dialog("close");
-                self._continueaction = null;
-            }, OCRJS.ajaxErrorHandler);
-            event.preventDefault();
-            event.stopPropagation();
+            self._openPresetFromList(item);
         });
     },
+
+    _openPresetFromList: function(item) {
+        var self = this;                             
+        var slug = item.data("slug");
+        console.log("Opening preset", item);
+        this.openPreset(slug, function(data) {
+            self.callListeners("openPreset");
+            self.setCurrentOpenPreset(slug, $.trim(item.text()), data, true);
+            self._dialog.dialog("close");
+            self._continueaction = null;
+        }, OCRJS.ajaxErrorHandler);
+        event.preventDefault();
+        event.stopPropagation();
+    },            
 
     showUnsavedPresetDialog: function(saveas) {
         console.log("Showing unsaved preset dialog...");
