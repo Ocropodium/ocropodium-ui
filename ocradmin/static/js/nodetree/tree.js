@@ -377,19 +377,10 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 self.cmdSetNodeIgnored(node);
             },
             "toggleFocussed.tree": function() {
-                if (!self._multiselect) {
-                    $.each(self._nodes, function(i, other) {
-                        if (node != other)
-                            other.setFocussed(false);
-                    });
-                    node.setFocussed(true);
-                    self.callListeners("nodeFocussed", node);        
-                } else {
-                    node.setFocussed(!node.isFocussed());    
-                }
+                self.setNodeFocussed(node);
             },
             "toggleViewing.tree": function() {
-                self.cmdSetNodeViewing(node);
+                self.setNodeViewing(node);
             },
             "moved.tree": function(dx, dy) {
                 var nodes = [];
@@ -517,17 +508,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
 
     cmdConnectPlugs: function(src, dst) {
         this._undostack.push(new NT.ConnectPlugsCommand(this, src.name, dst.name));
-    },
-
-    cmdSetNodeViewing: function(node) {
-        var self = this;                           
-        if (!node.isViewing()) {
-            $.each(this._usednames, function(name, other) {
-                if (node.name != other.name && other.isViewing())
-                    other.setViewing(false);
-            });
-        }
-        node.setViewing(!node.isViewing());
     },
 
     cmdSetNodeIgnored: function(node) {
@@ -878,6 +858,30 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             n.setFocussed(true);
         });
     },    
+
+    setNodeViewing: function(node) {
+        if (!node.isViewing()) {
+            $.each(this._nodes, function(i, other) {
+                if (node != other && other.isViewing())
+                    other.setViewing(false);
+            });
+            node.setViewing(!node.isViewing());
+            this.callListeners("nodeViewing", node);        
+        }
+    },
+
+    setNodeFocussed: function(node) {
+        if (!this._multiselect) {
+            $.each(this._nodes, function(i, other) {
+                if (node != other && other.isFocussed())
+                    other.setFocussed(false);
+            });
+            node.setFocussed(true);
+            this.callListeners("nodeFocussed", node);        
+        } else {
+            node.setFocussed(!node.isFocussed());    
+        }
+    },
 
     populateCanvas: function() {
         var self = this;                        
