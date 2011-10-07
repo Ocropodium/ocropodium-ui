@@ -197,7 +197,12 @@ NT.MoveNodesCommand = OCRJS.UndoCommand.extend({
 NT.Tree = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, cmdstack, options) {
         this.base(parent, options);
+        this.parent = parent;
 
+        // shared command stack object
+        this._undostack = cmdstack;
+
+        // events        
         this._listeners = {
             onUpdateStarted: [],
             registerUploader: [],
@@ -212,20 +217,22 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             ready: [],
         };
 
-        this.parent = parent;
         this.svg = null;
 
+        // node tracking data structures
         this._nodes = [];
         this._nodedata = {};
         this._nodetypes = {};
         this._usednames = {};
 
+        // state maintaining instance vars
         this._dragcable = null;
         this._multiselect = false;
+
+        // random constants
         this._minzoom = 0.1;
         this._maxzoom = 7;
         this._plugre = /^(.*?)_(input|output)(\d*)$/;
-        this._undostack = cmdstack;
     },
 
 
@@ -552,19 +559,24 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         var srcpos = src.position(),
             dstpos = dst.position();
 
-        this._undostack.beginMacro("Replace Node");                        
+        this._undostack.beginMacro("Replace Node");
+        // get all the nodes which connect to this node's inputs
+        // and detach them
         var outs = [];
-        for (var i in src.inputs())
-            if (src.input(i).isAttached())
-                outs.push(src.input(i).cable().start);
-        var ins = this.attachedInputs(src.output());
         for (var i in src.inputs()) {
-            if (src.input(i).isAttached())
+            if (src.input(i).isAttached()) {
+                outs.push(src.input(i).cable().start);
                 this.cmdDetachPlug(src.input(i));
+            }
         }
+        // Get all the nodes which connect to it's outputs
+        // and detach them
+        var ins = this.attachedInputs(src.output());
         for (var i in ins)
             this.cmdDetachPlug(ins[i]);
         // src node is now  fully detached, hopefully
+        // connect all the outputs to the dst input
+        // and the inputs to the dst output
         for (var i in outs)
             if (dst.input(i))
                 this.cmdConnectPlugs(outs[i], dst.input(i));
@@ -757,15 +769,18 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             if (!event.shiftKey)
                 self.deselectAll();
         });
-
+        // zoom with "="(+), and "-" keys...
         function nodeCmd(event) {
             if (event.which == 61 || event.which == 45) {                    
                 self.keyZoom(event.which == 61 ? 1.5 : 0.75);
             }
         }
+        // ... and with mouse wheel
         $(self.parent).bind("mousewheel.zoomcanvas", function(event, delta) {
             self.mouseZoom(event, delta);
         });
+        // when the canvas is dragged and shift is down, pan the canvas
+        // when shift ISN'T down, drag-select
         $(this.parent).bind("mousedown", function(event) {
             if (event.button == 1 || event.button == 0 && event.shiftKey && event.ctrlKey) {
                 self.panContainer(event);
@@ -775,7 +790,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 self.lassoSelect(event);    
             }                
         });
-
+        // enable certain key events only when the mouse is in the parent element
         $(self.parent).bind("mouseenter", function(mvevent) {
             $(document).unbind("keypress.nodecmd").bind("keypress.nodecmd", function(event) {
                 nodeCmd(event);
@@ -1092,6 +1107,9 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         if (sx < this._minzoom || sx > this._maxzoom)
             return false;
 
+        // this appears to be the correct formula for translating
+        // the canvas so the point under the mouse stays the same
+        // when zoomed...
         var shiftx = (point.x - trans.x) * (1 - factor) + trans.x,
             shifty = (point.y - trans.y) * (1 - factor) + trans.y;
         SvgHelper.updateTransform(this.group(), shiftx, shifty, sx);
