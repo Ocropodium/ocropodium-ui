@@ -499,7 +499,10 @@ $(function() {
                 }
             }
             nodeparams.resetParams(node);
-        },                          
+        },
+        nodeViewing: function(node) {
+            stackChanged();
+        },                         
         ready: function() {
             // load state stored from last time
             statemanager.load();
