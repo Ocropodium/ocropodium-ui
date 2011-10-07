@@ -222,7 +222,6 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
 
         this._dragcable = null;
         this._multiselect = false;
-        this._menucontext = null;
         this._minzoom = 0.1;
         this._maxzoom = 7;
         this._plugre = /^(.*?)_(input|output)(\d*)$/;
@@ -402,8 +401,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 self.callListeners("clicked", event);
             },
             "rightClicked.tree": function(event) {
-                self._menucontext = node;
-                self.callListeners("rightClicked", event, self._menucontext);
+                self.callListeners("rightClicked", event, node);
             },
             "inputAttached.tree": function(plug) {
                 self.handlePlug(plug);
@@ -415,8 +413,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
                 self.handlePlugHover(plug);
             },
             "plugRightClicked.tree": function(plug, event) {
-                self._menucontext = plug;
-                self.callListeners("rightClicked", event, self._menucontext);
+                self.callListeners("rightClicked", event, plug);
             },                                  
         });
     },
@@ -751,8 +748,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
     setupEvents: function() {
         var self = this;                     
         $(self.parent).noContext().rightClick(function(event) {
-            self._menucontext = null;
-            self.callListeners("rightClicked", event, self._menucontext);
+            self.callListeners("rightClicked", event, null);
         });
 
         // enable clicking on the canvas to deselect nodes
