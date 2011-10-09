@@ -53,7 +53,8 @@ class CuneiformRecognizer(base.CommandLineRecognizerNode):
                 proc = sp.Popen(args, stderr=sp.PIPE)
                 err = proc.stderr.read()
                 if proc.wait() != 0:
-                    return "!!! %s CONVERSION ERROR %d: %s !!!" % (
+                    print err
+                    return u"!!! %s CONVERSION ERROR %d: %s !!!" % (
                             os.path.basename(self.binary).upper(),
                             proc.returncode, err)
                 with codecs.open(tmp.name, "r", "utf8") as tread:
