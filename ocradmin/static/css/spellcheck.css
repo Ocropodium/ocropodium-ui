@@ -1,0 +1,106 @@
+
+.badspell {
+    background-color: #FFDDDD;
+}
+
+
+.suggestion_window {
+    max-height: 300px;
+    overflow: auto;
+    float: right;
+    position: absolute;
+    background-color: #FFF;
+    width: 200px;
+    margin: 0px;
+    padding: 0px;
+}
+
+    <link rel="stylesheet" href="/static/css/standard.css" type="text/css" media="screen" />
+.suggestion_window ul {
+    margin: 0px;
+    padding: 0px;
+}
+
+.suggestion_window ul li {
+    list-style: none;
+    margin: 0px;
+    padding: 5px 10px;
+}
+
+.suggestion {
+    text-decoration: none;
+    color: blue;
+}
+
+.suggestion.hover {
+    background-color: #BBBBFF;
+}
+
+.spellword {
+    margin-bottom: 20px;
+}
+
+
+#sp_container {
+    overflow: auto;
+    padding: 10px;    
+}
+
+#sp_buttoncontainer {
+    float: right;
+}
+
+#sp_buttoncontainer {
+    width: 120px;
+}
+
+#sp_buttoncontainer input[type=button] {
+    width: 100%;
+}
+
+#sp_textcontainer {
+    margin-right: 130px;
+}
+
+#sp_textcontainer input {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+#sp_suggestionlist {
+    min-height: 100px;
+    max-height: 100px;
+    overflow: auto;
+    padding: 5px;
+    background-color: #FFF;
+    border: 1px solid #999;
+}
+
+#sp_suggestionlist.disabled {
+    background-color: inherit;
+}
+
+#sp_suggestionlist.focus {
+    outline: 5px auto -webkit-focus-ring-color;
+}
+
+#sp_linecontainer {
+    overflow: none;
+}
+
+.spell_line {
+    border: 1px solid #999;
+    overflow: none;
+}
+
+.active_word {
+    background-color: #FFAAAA;
+}
+
+#sp_lineedit {
+    font-size: 1.2em;
+}
+
+.badspell.current {
+    background-color: #FF8888;
+}

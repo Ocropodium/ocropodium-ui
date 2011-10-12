@@ -1,0 +1,102 @@
+
+#filter_head.waiting {
+    padding-right: 20px;
+    background-image: url("/static/ajax-loader-hz2.gif"),
+    background-position: right center;
+    background-repeat: no-repeat;
+}
+
+#task_list_controls {
+    font-size: 0.9em;
+    color: #999999;
+    height: 30px;
+    padding: 5px 5px 0px 5px;
+}
+
+#task_list_controls_right {
+    float: right;
+    overflow: auto;
+}
+
+#task_list_controls input[type="text"] {
+    width: 20px;
+    border: 1px solid #999999;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    background-color: #FDFDFF;
+} 
+
+#task_list_controls input[type="text"]:disabled {
+    background-color: #FCFCFC;
+}
+
+#task_list_controls input[type="button"] {
+    height: 20px;
+    font-size: 10px;
+}
+
+#task_list tr td.success {
+    color: #0B3B0B;
+    background-color: #CEF6CE;
+}
+
+#task_list tr td.running {
+    color: #B45F04;
+    background-color: #FBF5EF;
+}
+
+#task_list tr td.error {
+    color: #8A0808; 
+    background-color: #F8E0E0;
+}
+
+#task_list tr td.done {
+    color: #084B8A;
+    background-color: #CEE3F6;
+}
+
+.task_item.odd {
+    background-color: #F3F3F3;
+}
+
+.task_item.todelete {
+    background-color: #F0F0F0;
+}
+
+.table_form input[type="checkbox"] {
+    margin-left: 0px;
+    margin-right: 10px;
+}
+
+.paginators {
+    padding: 5px 10px 0px 10px;
+    overflow: auto;
+}
+
+.pagination {
+    height: 30px;
+    float: right;
+    overflow: auto;
+}
+
+.pagination a {
+    margin: 0px 5px 0px 5px;
+}
+
+a.sort_table {
+    padding-right: 12px;
+}
+
+a.order {
+    background-image: url("/static/icons/arrow_up.gif");
+    background-position: right;
+    background-repeat: no-repeat;
+}
+
+
+a.order_desc {
+    background-image: url("/static/icons/arrow_down.gif");
+    background-position: right;
+    background-repeat: no-repeat;
+}
+
