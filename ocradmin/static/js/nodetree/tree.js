@@ -744,10 +744,13 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
         });
 
         // enable clicking on the canvas to deselect nodes
-        $(this.parent).unbind("click.deselectall")
-                .bind("click.deselectall", function(event) {
-            if (!event.shiftKey)
+        $(this.parent).unbind("mousedown.deselectall")
+                .bind("mousedown.deselectall", function(event) {
+            if (event.button == 0 && !event.shiftKey) {
                 self.deselectAll();
+                event.stopPropagation();
+                event.preventDefault();
+            }
         });
         // zoom with "="(+), and "-" keys...
         function nodeCmd(event) {
@@ -851,6 +854,7 @@ NT.Tree = OCRJS.OcrBaseWidget.extend({
             n.setFocussed(false);
         });
         this.callListeners("nodeFocussed", null);
+        console.log("deselected all");
     },
 
     selectAll: function() {
