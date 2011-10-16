@@ -371,7 +371,7 @@ $(function() {
 
 
     // Initialise objects
-    sdviewer = new OCRJS.ImageViewer($("#imageviewer_1").get(0), {
+    sdviewer = new DziViewer.Viewer($("#imageviewer_1").get(0), {
         numBuffers: 2,
         dashboard: false,
     });
