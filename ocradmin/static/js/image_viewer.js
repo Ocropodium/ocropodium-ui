@@ -6,8 +6,8 @@ if (OCRJS === undefined) {
     var OCRJS = {};
 }
 
-Seadragon.Config.blendTime = 0;
-Seadragon.Config.animationTime = 0;
+//Seadragon.Config.blendTime = 0;
+//Seadragon.Config.animationTime = 0;
 
 OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, options) {
@@ -69,7 +69,7 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
                 .attr("id", pid)
                 .appendTo(this._portalholder);
             this._portals.push(portal); 
-            this._buffers.push(new Seadragon.Viewer(pid));
+            this._buffers.push(new DziViewer.Viewer(portal));
             this._rects.push(null);
         }
 
@@ -367,7 +367,7 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         if (!this._buffers[bufnum].source)
             throw "Buffer " + bufnum + " has no source loaded";        
         var src = this._buffers[bufnum].source.dimensions;
-        var sd = new Seadragon.Rect(x0 / src.x, y0 / src.x, (x1 - x0) / src.x, (y1 - y0) / src.x);
+        var sd = new DziViewer.Rect(x0 / src.x, y0 / src.x, (x1 - x0) / src.x, (y1 - y0) / src.x);
         return sd;
     },                         
 });
