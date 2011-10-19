@@ -360,7 +360,6 @@ COMPRESS_JS = {
     "viewers": {
         "source_filenames": (
 #            "js/seadragon/seadragon-min.js",
-            #"js/image_viewer.js",
             "js/dziviewer/base.js",
             "js/dziviewer/point.js",
             "js/dziviewer/size.js",
@@ -371,6 +370,7 @@ COMPRESS_JS = {
             "js/dziviewer/cache.js",
             "js/dziviewer/viewport.js",
             "js/dziviewer/viewer.js",
+            "js/image_viewer.js",
             "js/hocr_utils.js",
             "js/text_viewer.js",
             "js/hocr_viewer.js",
