@@ -41,6 +41,7 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
         var coords = []; 
         $.each(node.parameters, function(i, param) {
             if (param.name == "boxes") {
+                console.debug("Parsing boxes...", param.value);
                 var coordarray = param.value.split("~");
                 $.each(coordarray, function(n, coordstr) {
                     var match = coordstr.match(self._paramre);
@@ -83,9 +84,16 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
     draggedRect: function(rect) {
         var self = this;
         this.addColumnBox(rect);
-        setTimeout(function() {
+      //  console.log("Dragged rect, going to update node params", rect, this._rects);
+      //  setTimeout(function() {
+      //  $.each(self._rects, function(i, r) {
+      //      console.log("Rect", $(r).offset().left, $(r).offset().top, $(r).width(), $(r).height());
+      //  });
+      //  }, 1000);
+        console.log("Setting timeout when rects are", this._rects);
+        //setTimeout(function() {
             self.updateNodeParameters();
-        });
+        //}, 100);
     },
 
     addColumnBox: function(box) {
@@ -100,7 +108,10 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
             borderColor: this._colors[colorindex][1],
         });
 
-        var rect = this.addTransformableRect(box, css, function(newpos) {
+        var rect = this.addTransformableRect(box, css, function(elem, newpos) {            
+            var obj = self.getRectObjectFromElement(elem);
+            console.log("Updating", obj.order, newpos.x0);
+            obj.box = newpos;
             self.updateNodeParameters();
         });
 
@@ -121,44 +132,59 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
         }).bind("mouseleave", function(leaveevent) {
             $(window).unbind("keydown.mousehandle");
         });
-        this._rects.push(rect);
+        this._rects.push({
+            elem: rect,
+            box: box,
+            order: this._rects.length - 1,
+        });
+        //console.debug("Added column rect", box);
     },
+
+    getRectObjectFromElement: function(elem) {
+        for (var i in this._rects) {
+            if (this._rects[i].elem === elem)
+                return elem;
+        }
+    },                       
 
     sortRectsByOrder: function() {
         this._rects.sort(function(a, b) {
-            return parseInt($(".layout_rect_label", a).text()) -
-                parseInt($(".layout_rect_label", b).text());
+            return a.order - b.order;
         });
     },                   
 
     setRectOrder: function(elem, num) {
-        console.log("Setting rect order", elem, num);                      
+        var obj = this.getRectObjectFromElement(elem);
         if (num > this._rects.length)
             return;            
-        var curr = parseInt($(elem).text());                       
+        var curr = obj.order;                       
         for (var i in this._rects) {
-            if (this._rects[i] !== elem &&
-                    parseInt($(this._rects[i]).text()) == num) {
-                $(".layout_rect_label", this._rects[i]).text(curr);
+            if (this._rects[i].elem !== elem &&
+                    this._rects[i].order == num) {
+                this._rects[i].order = curr;
+                $(".layout_rect_label", this._rects[i].elem).text(curr);
             }
         }
         $(".layout_rect_label", elem).text(num);
+        obj.order = num;
         this.sortRectsByOrder();
         this.updateNodeParameters();
     },
 
     deleteRect: function(elem) {
-        var pos = $.inArray(elem, this._rects);
+        var obj = this.getRectObjectFromElement(elem);
+        var pos = $.inArray(obj, this._rects);
         console.assert(pos > -1, "Attempt to delete untracked rect", elem, this._rects);
         this._rects.splice(pos, 1);        
-        var next = parseInt($(".layout_rect_label", elem).text());
+        var next = obj.order;
         for (var i in this._rects) {
-            if (parseInt($(".layout_rect_label", this._rects[i]).text()) > next) {
-                $(".layout_rect_label", this._rects[i]).text(next);
+            if (this._rects[i].order > next) {
+                this._rects[i].order = next;
+                $(".layout_rect_label", this._rects[i].elem).text(next);
                 next++;
             }
         }            
-        this.removeTransformableRect(elem);
+        this.removeTransformableRect(obj.elem);
         this.sortRectsByOrder();
         this.updateNodeParameters();
     },                    
@@ -169,13 +195,21 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
         this.base();
         var self = this;
         this._node = node;        
-        console.log("Setting up crop GUI");
+        console.log("Setting up manual seg GUI");
         var rects = this.readNodeData(node);
 
         $.each(rects, function(i, box) {
             self.addColumnBox(box);
         });
     },
+
+    updateElement: function(element, src) {
+        this.super(element, src);
+        var obj = this.getRectObjectFromElement(element);
+        obj.box = src;
+        console.log("Updating node params!");
+        this.updateNodeParameters();
+    },                       
 
     update: function() {
         var node = this._node;
@@ -187,7 +221,7 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
         this.base();                   
         console.log("Tearing down manual seg gui");                  
         for (var i in this._rects)
-            this.removeTransformableRect(this._rects[i]);
+            this.removeTransformableRect(this._rects[i].elem);
         this._rects = [];
         this._node = null;              
     },
@@ -200,13 +234,12 @@ OCRJS.NodeGui.ManualSegGui = OCRJS.NodeGui.BaseGui.extend({
     updateNodeParameters: function() {
         var self = this;        
         var rects = [];
+        console.log("Updating rects", this._rects);
         $.each(this._rects, function(i, rect) {
-            var pos = rect.offset();
-            var src = self.getSourceRect(pos.left, pos.top, 
-                    pos.left + rect.width(), pos.top + rect.height());
-            var out = self.sanitiseOutputCoords(src);
+            var out = self.sanitiseOutputCoords(rect.box);
             rects.push([out.x0, out.y0, out.x1, out.y1].join(","));
         });
+     //   console.log("Updating rects", rects.join("~"));
         this.callListeners("parametersSet", this._node, {
             boxes: rects.join("~")
         });

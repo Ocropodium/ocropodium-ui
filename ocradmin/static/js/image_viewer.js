@@ -8,6 +8,8 @@ if (OCRJS === undefined) {
 
 Seadragon.Config.blendTime = 0;
 Seadragon.Config.animationTime = 0;
+Seadragon.Config.springStiffness = 0;
+Seadragon.Config.imagePath = "/static/js/seadragon/img/";
 
 OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
     constructor: function(parent, options) {
@@ -313,7 +315,7 @@ OCRJS.ImageViewer = OCRJS.OcrBaseWidget.extend({
         //this._logger("Syncing others to: " + this._cbuf);                            
         var active = this._buffers[this._cbuf];
         for (i in this._buffers) {
-            if (i != this._cbuf) {
+            if (i != this._cbuf && this._buffers[i].viewport && active.viewport) {
                 this._buffers[i].viewport.zoomTo(active.viewport.getZoom(), true);
                 this._buffers[i].viewport.panTo(active.viewport.getCenter(), true);
             }
