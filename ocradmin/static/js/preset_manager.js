@@ -153,8 +153,6 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             self._dialog.dialog("close");
             self._continueaction = null;
         }, OCRJS.ajaxErrorHandler);
-        event.preventDefault();
-        event.stopPropagation();
     },            
 
     showUnsavedPresetDialog: function(saveas) {
