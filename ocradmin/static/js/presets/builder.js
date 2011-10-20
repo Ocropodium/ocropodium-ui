@@ -325,6 +325,7 @@ $(function() {
             var active = sdviewer.activeBuffer();
             sdviewer.setBufferPath(active^1, data.result.dzi);
             setTimeout(function() {
+                sdviewer.syncToActiveBuffer();
                 sdviewer.setActiveBuffer(active^1);
                 guimanager.refreshGui();
             }, 150);
@@ -354,6 +355,7 @@ $(function() {
     }
 
     function runScript() {
+        console.log("RUNNING SCRIPT", (new Date()).getTime());
         if (nodetree.hasNodes()) {
             var nodename = nodetree.getEvalNode();
             var node = nodetree.getNode(nodename);
@@ -425,6 +427,7 @@ $(function() {
 
     function stackChanged() {
         if (UPDATE) {
+            console.log("UPDATE", cmdstack.undoText());
             $("#undo_command")
                 .text(cmdstack.undoText())
                 .button({disabled: !cmdstack.canUndo()})
@@ -461,6 +464,7 @@ $(function() {
 
     guimanager.addListeners({
         parametersSet: function(node, paramvals) {
+            console.log("Parameter Set from GUI", node, paramvals);
             nodetree.cmdSetMultipleNodeParameters(node, paramvals);
         },
         interacting: function(bool) {
