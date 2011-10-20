@@ -113,7 +113,7 @@ $(function() {
     });
 
     $("#image_zoomin").click(function(event) {
-        sdviewer.zoomBy(2);        
+        sdviewer.viewport.zoomIn(2);        
     }).button({
         text: false,
         icons: {
@@ -121,7 +121,7 @@ $(function() {
         }
     });
     $("#image_zoomout").click(function(event) {
-        sdviewer.zoomBy(0.5);    
+        sdviewer.viewport.zoomOut(0.5);    
     }).button({
         text: false,
         icons: {
@@ -162,8 +162,7 @@ $(function() {
     });
 
     $("#refresh").click(function(event) {
-        var active = sdviewer.activeBuffer();
-        sdviewer.setBufferPath(active, sdviewer.bufferPath(active));    
+        sdviewer.refresh();
     }).button({
         text: false,
         icons: {
@@ -269,11 +268,7 @@ $(function() {
 
     $("#viewertabs").tabs({
         select: function(event, ui) {
-            // ensure we refresh the buffer when switching
-            // back to an image tab, otherwise the viewer
-            // loses its images...
-            sdviewer.setBufferPath(sdviewer.activeBuffer(),
-                sdviewer.activeBufferPath());
+            sdviewer.refresh();
         },
     });
 
@@ -322,12 +317,8 @@ $(function() {
             // new data in the back buffer and switching them after a delay
             // TODO: Find if we can subscript to an event to tell us exactly
             // when it's safe to switch.  ATM just using a 200ms delay.
-            var active = sdviewer.activeBuffer();
-            sdviewer.setBufferPath(active^1, data.result.dzi);
-            setTimeout(function() {
-                sdviewer.setActiveBuffer(active^1);
-                guimanager.refreshGui();
-            }, 150);
+            sdviewer.openDzi(data.result.dzi);
+            guimanager.refreshGui();
             
             var overlays = {};
             if (data.result.type == "pseg") {
@@ -339,7 +330,7 @@ $(function() {
                     }
                 });
             }
-            sdviewer.setBufferOverlays(overlays, 0);
+           // sdviewer.setBufferOverlays(overlays, 0);
             $("#viewertabs").tabs("select", 0);
         } else if (data.result.type == "hocr") {
             hocrviewer.setData(data.result.data);
@@ -371,7 +362,7 @@ $(function() {
 
 
     // Initialise objects
-    sdviewer = new OCRJS.ImageViewer($("#imageviewer_1").get(0), {
+    sdviewer = new DziViewer.Viewer($("#imageviewer_1").get(0), {
         numBuffers: 2,
         dashboard: false,
     });
@@ -493,7 +484,7 @@ $(function() {
             if (!node)
                 guimanager.tearDownGui();                
             else {
-                if (sdviewer.activeViewer()) {
+                if (sdviewer.isOpen()) {
                     console.log("Setting GUI for", node.name);
                     guimanager.setupGui(node);
                 }
@@ -510,7 +501,7 @@ $(function() {
             if (!node)
                 guimanager.tearDownGui();                
             else {
-                if (sdviewer.activeViewer()) {
+                if (sdviewer.isOpen()) {
                     console.log("Setting GUI for", node.name);
                     guimanager.setupGui(node);
                 }
