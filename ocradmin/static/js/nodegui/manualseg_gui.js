@@ -40,19 +40,24 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
 
     readNodeData: function() {
         var self = this;
-        this._rects = [];        
+        this._rects = [];
+        console.log("Refreshing from node data");
         $.each(this.node.parameters, function(i, param) {
             if (param.name == "boxes") {
                 var coordarray = param.value.split("~");
                 $.each(coordarray, function(n, coordstr) {
                     var match = coordstr.match(self._paramre);
                     if (match) {
-                        self._rects.push(new DziViewer.Rect(
+                        var r = new DziViewer.Rect(
                             parseInt(RegExp.$1),
                             parseInt(RegExp.$2),
                             parseInt(RegExp.$3),
                             parseInt(RegExp.$4)
-                        ));
+                        );
+                        // reset the current node, if there is one...
+                        if (self._current && r.isSameAs(self._current))
+                            self._current = r;
+                        self._rects.push(r);
                     } else if ($.trim(coordstr) != "") {
                         console.error("Invalid box string:",  coordstr);
                     }
@@ -186,15 +191,15 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
     },      
 
     handleNumber: function(event) {
-        var idx = event.which - 49;
-        if (this._current) {
-            if (idx < this._rects.length) {
-                var curr = this._rects.indexOf(this._current);
-                this._rects.splice(curr, 1);
-                this._rects.splice(idx, 0, this._current);
-                this.update();
-                return true;
-            }
+        var idx = event.which - 49; // zero index
+        if (this._current && idx < this._rects.length) {
+            var curr = this._rects.indexOf(this._current);
+            if (curr == -1)
+                throw "Unable to find 'current' node in rect array!";
+            this._rects.splice(curr, 1);
+            this._rects.splice(idx, 0, this._current);
+            this.update();
+            return true;
         }
         return false;
     },
