@@ -69,11 +69,6 @@ OCRJS.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
         this._rects = [coords];
     },                      
 
-    update: function() {
-        this.updateNodeParameters();
-        this.trigger("update");
-    },
-
     handleClick: function(event) {
         if (this._super(event)) {
             return true;
@@ -128,5 +123,19 @@ OCRJS.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
             x1: Math.round(self._rects[0].x1),        
             y1: Math.round(self._rects[0].y1),        
         });
-    },                             
+    },
+
+    handleWheel: function(event, delta) {
+        return false;
+    },
+
+    handleKeyDown: function(event) {
+        return false;
+    },
+
+    update: function() {
+        this.updateNodeParameters();
+        this.trigger("update");
+    },
+
 });
