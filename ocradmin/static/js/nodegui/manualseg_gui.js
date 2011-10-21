@@ -17,7 +17,7 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
             ["rgba(187,187,255,0.7)", "rgba(187,187,255,0.2)"],
             ["rgba(153,102,204,0.7)", "rgba(153,102,204,0.2)"],
             ["rgba(255,255,136,0.7)", "rgba(255,255,136,0.2)"],
-            ["rgba(102,187,0,0.7)", "rgba(102,187,0,0.2)"],
+            ["rgba(102,187,0,0.7)",   "rgba(102,187,0,0.2)"],
             ["rgba(247,190,129,0.7)", "rgba(247,190,129,0.2)"],
             ["rgba(208,169,245,0.7)", "rgba(208,169,245,0.2)"],
             ["rgba(169,245,242,0.7)", "rgba(169,245,242,0.2)"],
@@ -30,12 +30,12 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
         this.registerListener("parametersSet");
         
         this.readNodeData();
-        this.viewport.trigger("update");
+        this.trigger("update");
     },
 
     refresh: function() {
         this.readNodeData();
-        this.viewport.trigger("update");
+        this.trigger("update");
     },                 
 
     readNodeData: function() {
@@ -63,11 +63,15 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
 
     render: function(context) {
         context.save();
-        context.lineWidth = 2;
         context.font = String(Math.ceil(Math.max(10, 60 * this.viewport.scale))) + "pt Arial";
         context.textBaseline = "top";
         context.clearRect(0, 0, this.viewport.width, this.viewport.height);
 
+        context.strokeStyle = "rgba(15,80,120,0.5)";
+        context.lineWidth = 10;
+        context.strokeRect(0, 0, this.viewport.width, this.viewport.height);
+
+        context.lineWidth = 2;
         var ci = 0;
         for (var i = 0; i < this._rects.length; i++) {
             var r = this._rects[i];
@@ -85,14 +89,14 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
                 (r.y * this.viewport.scale) + this.viewport.translate.y, 
                 r.width * this.viewport.scale, r.height * this.viewport.scale,
                 5);
-            context.fillStyle = "#666";
+            context.fillStyle = "rgba(255,255,255,0.6)";
             context.fillText(String(i + 1),
                     ((r.x + 5) * this.viewport.scale) + this.viewport.translate.x,
                     ((r.y + 5) * this.viewport.scale) + this.viewport.translate.y);
-
             ci++;
         }
 
+        // draw the drag box if it exists...
         if (this._outline !== null) {
             context.lineWidth = 2;
             context.strokeStyle = "#000";
@@ -191,7 +195,7 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
     },
 
     update: function() {
-        this.viewport.trigger("update");
+        this.trigger("update");
         this.updateNodeParameters();
     },
 
