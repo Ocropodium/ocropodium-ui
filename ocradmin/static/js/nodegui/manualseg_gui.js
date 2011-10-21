@@ -89,7 +89,7 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
                 (r.y * this.viewport.scale) + this.viewport.translate.y, 
                 r.width * this.viewport.scale, r.height * this.viewport.scale,
                 5);
-            context.fillStyle = "rgba(255,255,255,0.6)";
+            context.fillStyle = "rgba(0,0,0,0.5)";
             context.fillText(String(i + 1),
                     ((r.x + 5) * this.viewport.scale) + this.viewport.translate.x,
                     ((r.y + 5) * this.viewport.scale) + this.viewport.translate.y);
@@ -144,8 +144,13 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
             if (self._outline !== null && self._outline.area() > 50)
                 self._rects.push(self._outline.normalize().clone());
             self._outline = null;
-            self.trigger("interactingStop");
+
+            // NB: The order of these operations is important
+            // if we stop interaction before update(), the
+            // GUI will be forced to update from the existing
+            // node data and the rect values get overwritten
             self.update();
+            self.trigger("interactingStop");
         });        
 
         return true;
@@ -195,8 +200,8 @@ OCRJS.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
     },
 
     update: function() {
-        this.trigger("update");
         this.updateNodeParameters();
+        this.trigger("update");
     },
 
     updateNodeParameters: function() {
