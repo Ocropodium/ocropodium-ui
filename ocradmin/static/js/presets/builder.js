@@ -426,7 +426,7 @@ $(function() {
                 .button("refresh");
             $("#preset_unsaved").toggle(statemanager.isDirty());                         
 
-            guimanager.updateGui();
+            guimanager.refreshGui();
             runScript();
         } else {
             console.log("Stack changed but not updating", cmdstack.index);
