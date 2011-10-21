@@ -360,6 +360,7 @@ COMPRESS_JS = {
     "viewers": {
         "source_filenames": (
             "js/dziviewer/base.js",
+            "js/dziviewer/plugin.js",
             "js/dziviewer/point.js",
             "js/dziviewer/size.js",
             "js/dziviewer/rect.js",
