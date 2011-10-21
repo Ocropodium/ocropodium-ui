@@ -19,28 +19,11 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
             parametersSet: [],
             interacting: [],
         };
-        this.registerGuis();
     },
 
     hasCurrent: function() {
         return Boolean(this._current);
     },        
-
-    registerGuis: function() {
-        var self = this;                      
-        if (!OCRJS.NodeGui)
-            throw "No gui container namespace found."
-
-        $.each(OCRJS.NodeGui, function(name, klass) {
-            var obj = new klass(self._viewer);
-            if (obj.nodeclass) {
-                console.log("Registering", obj.nodeclass);
-                self._types[obj.nodeclass] = obj;
-            } else {
-                obj = null;
-            }
-        });
-    },
 
     updateGui: function() {
         if (this._current && this._currentgui)
@@ -49,8 +32,7 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
 
     refreshGui: function() {
         if (this._current && this._currentgui) {
-            this._currentgui.tearDown();
-            this._currentgui.setup(this._current);
+            this._currentgui.refresh();
         } else {
             this.tearDownGui();
         }
@@ -61,9 +43,12 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
         if (this._current && this._current != node)
             this.tearDownGui();            
         this._current = node;
-        this._currentgui = this._types[node.type];
-        if (this._currentgui) {
-            this._currentgui.setup(node);
+
+        var type = node.type.replace(/^[^\.]+\./, "") + "Gui";
+        var klass = OCRJS.NodeGui[type];
+        if (klass) {
+            this._currentgui = new klass(this._viewer.viewport, node);
+            this._viewer.addOverlayPlugin(this._currentgui);
             this._currentgui.addListener("parametersSet.nodegui", function(n, pd) {                
                 self.callListeners("parametersSet", n, pd); 
             });
@@ -74,14 +59,16 @@ OCRJS.Nodetree.GuiManager = OCRJS.OcrBase.extend({
                 self.callListeners("interacting", false); 
             });
             this.callListeners("setupGui");
+            this._currentgui.refresh();
         } else {
             console.log("No current node", node.type, this._types);
         }        
     },                  
 
-    tearDownGui: function() {
+    tearDownGui: function() {                     
         if (this._currentgui) {
-            this._currentgui.tearDown();
+            console.log("tear down gui");
+            this._viewer.removeOverlayPlugin(this._currentgui);
             this._currentgui.removeListeners(".nodegui");
             this.callListeners("tearDownGui");
             this._currentgui = null;
