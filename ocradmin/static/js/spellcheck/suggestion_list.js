@@ -1,6 +1,6 @@
 // Spellcheck widget suggestion list
 
-OCRJS.SuggestionList = OCRJS.OcrBase.extend({
+OcrJs.SuggestionList = OcrJs.Base.extend({
     constructor: function(parent, options) {
         this.base(options);
         this.parent = parent;

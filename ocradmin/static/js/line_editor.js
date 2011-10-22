@@ -1,8 +1,8 @@
 // Make a span editable.  Second attempt
 
 
-if (OCRJS === undefined) {
-    var OCRJS = {};
+if (OcrJs === undefined) {
+    var OcrJs = {};
 }
 
 
@@ -26,7 +26,7 @@ jQuery.fn.extend({
  *
  */
 
-var InsertCommand = OCRJS.UndoCommand.extend({
+var InsertCommand = OcrJs.UndoCommand.extend({
     constructor: function(editor, chars, curr) {
         this.base("typing");
         this.editor = editor;
@@ -57,7 +57,7 @@ var InsertCommand = OCRJS.UndoCommand.extend({
     },
 });
 
-var DeleteCommand = OCRJS.UndoCommand.extend({
+var DeleteCommand = OcrJs.UndoCommand.extend({
     constructor: function(editor, elems, nexts, back) {
         this.base("delete");
         this.editor = editor;
@@ -88,7 +88,7 @@ var DeleteCommand = OCRJS.UndoCommand.extend({
 
 
 const LONGKEY = 500;
-OCRJS.LineEditor = OCRJS.OcrBase.extend({
+OcrJs.LineEditor = OcrJs.Base.extend({
     constructor: function(options) {
         this.base();
         this.options = {log: false};
@@ -111,7 +111,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         this._blinktimer = -1;      // timer for cursor flashing
         this._dragpoint = null;     // the point dragging started
         this._editing = false;      // we're currently doing something 
-        this._undostack = new OCRJS.UndoStack(this); // undo stack object
+        this._undostack = new OcrJs.UndoStack(this); // undo stack object
         this._notemptyre = new RegExp("\S"); 
         this._cursor = $("<div></div>") // cursor element
                 .addClass("editcursor")
@@ -166,7 +166,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         this._initialiseCursor();
         if (event && event.type.match(/click/))
             this._selectCharUnderPoint(event);
-        this.callListeners("onEditingStarted", elem);
+        this.trigger("onEditingStarted", elem);
     },
 
 
@@ -186,7 +186,7 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
         }
         this.teardownEvents();
         this._editing = false;
-        this.callListeners("onEditingFinished", 
+        this.trigger("onEditingFinished", 
             this._e,
             this._inittext,
             withtext ? withtext : endtext
@@ -572,8 +572,8 @@ OCRJS.LineEditor = OCRJS.OcrBase.extend({
             case KC_TAB: // finish and go to next
                 this.finishEditing();
                 event.shiftKey 
-                    ? this.callListeners("onEditPrevElement")
-                    : this.callListeners("onEditNextElement");
+                    ? this.trigger("onEditPrevElement")
+                    : this.trigger("onEditNextElement");
                 break;
             default:
                 // char handlers - only use keypress for this                

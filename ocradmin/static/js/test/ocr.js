@@ -22,8 +22,8 @@ $(document).ready(function(){
         var parent = $("<div></div>")
             .attr("id", "nodetree_canvas")
             .appendTo("body");
-        var cmdstack = new OCRJS.UndoStack(this); 
-        var nodetree = new OCRJS.Nodetree.Tree(parent, cmdstack);
+        var cmdstack = new OcrJs.UndoStack(this); 
+        var nodetree = new OcrJs.Nodetree.Tree(parent, cmdstack);
 
 
         // Initialise nodetree!    

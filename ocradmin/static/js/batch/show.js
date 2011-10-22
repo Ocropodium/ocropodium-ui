@@ -17,7 +17,7 @@ $(function() {
         //    url: "/batch/list?order_by=-created_on",
         //    data: {},
         //    dataType: "json",
-        //    error: OCRJS.ajaxErrorHandler,
+        //    error: OcrJs.ajaxErrorHandler,
         //    success: function(data) {
         //        populateBatchList(data);
         //        header.text("Recent Batches");
@@ -102,7 +102,7 @@ $(function() {
     //});
 
     if ($("#batch_id").length) {
-        batch = new OCRJS.BatchWidget(
+        batch = new OcrJs.BatchWidget(
                 document.getElementById("batchcontainer"),
                 $("#batch").data("index"));
         batch.addListeners({

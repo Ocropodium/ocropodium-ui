@@ -2,7 +2,7 @@
 // but it allows multiple files to be uploaded at once.
 
 
-OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
+OcrJs.AjaxUploader = OcrJs.Base.extend({
     constructor: function(target, url, options) {
         this.target = target;
         this.url = url;
@@ -123,7 +123,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
     },         
 
     uploadPost: function(files) {
-        this.callListeners("onUploadsStarted");
+        this.trigger("onUploadsStarted");
 
         // chuck away all but the first file if not
         // in multi mode
@@ -145,7 +145,7 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
                 
     postNextItem: function() {
         if (!this._queue.length) {
-            this.callListeners("onUploadsFinished");
+            this.trigger("onUploadsFinished");
             return false;
         }
 
@@ -154,14 +154,14 @@ OCRJS.AjaxUploader = OCRJS.OcrBase.extend({
         var xhr = new XMLHttpRequest();
         xhr.onload = function(event) {
             self.postNextItem();
-            self.callListeners("onXHRLoad", event);        
+            self.trigger("onXHRLoad", event);        
         };
         xhr.onerror = this.options.errorhandler;
 
         var params = this.parameters();
         params["inlinefile"] = file.fileName;
         var urlstring = this.getQueryString(params);
-        this.callListeners("onUploadStart");
+        this.trigger("onUploadStart");
         xhr.open("POST", urlstring, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.setRequestHeader('content-type', file.type); 

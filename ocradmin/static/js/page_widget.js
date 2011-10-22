@@ -2,9 +2,9 @@
 // Page widget for viewing one-shot OCR conversions...
 //
 
-var OCRJS = OCRJS || {};
+var OcrJs = OcrJs || {};
 
-OCRJS.PageWidget = OCRJS.OcrBaseWidget.extend({
+OcrJs.PageWidget = OcrJs.BaseWidget.extend({
     constructor: function(parent, pagename, tid, options) {
         this.base(parent, options);
         this._tid = tid;

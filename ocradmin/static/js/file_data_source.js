@@ -105,10 +105,10 @@ var FileDataSource = AbstractDataSource.extend({
             dataType: "json",
             data: "dir=" + self._dir,
             beforeSend: function(e) {
-                self.callListeners("startRefresh");
+                self.trigger("startRefresh");
             },
             complete: function(e) {
-                self.callListeners("endRefresh");
+                self.trigger("endRefresh");
             },
             success: function(data) {
                 if (data.error) {
@@ -122,7 +122,7 @@ var FileDataSource = AbstractDataSource.extend({
                 self._data = data;
                 self.sort();
             },
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
         });
     },
 });

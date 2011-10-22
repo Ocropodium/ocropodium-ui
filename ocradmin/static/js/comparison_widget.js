@@ -3,7 +3,7 @@
 // and individually restarted/aborted.
 
 
-OCRJS.ComparisonWidget = OCRJS.BatchWidget.extend({
+OcrJs.ComparisonWidget = OcrJs.BatchWidget.extend({
     constructor: function(parent, batch_id, initial, options) {
         this.base(parent, batch_id, initial, options);
         this._batchclass = "compare";

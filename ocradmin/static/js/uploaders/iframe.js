@@ -3,7 +3,7 @@
 // pain to debug, since JS errors disappear into the iframe ether.
 
 
-OCRJS.IframeUploader = OCRJS.AjaxUploader.extend({
+OcrJs.IframeUploader = OcrJs.AjaxUploader.extend({
     constructor: function(target, url, options) {
         this.base();
         this.url = url;

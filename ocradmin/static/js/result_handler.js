@@ -2,9 +2,9 @@
 // Handler an queue for Async node evaluation tasks.
 // 
 
-OCRJS = OCRJS || {};
+OcrJs = OcrJs || {};
 
-OCRJS.ResultHandler = OCRJS.OcrBase.extend({
+OcrJs.ResultHandler = OcrJs.Base.extend({
     constructor: function(parent) {
         this.base(parent);
         this.parent = parent;
@@ -44,13 +44,13 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         if (this._pending) {
             $.ajax({
                 url: "/presets/abort/" + this._pending,
-                error: OCRJS.ajaxErrorHandler,
+                error: OcrJs.ajaxErrorHandler,
                 success: function(ndata) {
                     console.log("ABORT DATA", ndata);
                     if (self._timer)
                         clearTimeout(self._timer);
                         self._timer = null;
-                        self.callListeners("resultDone",
+                        self.trigger("resultDone",
                                     self._tasknodes[self._pending], {status: "ABORT"}); 
                         self._pending = null;
                 },
@@ -67,14 +67,14 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
                 script: JSON.stringify(script),
                 node: nodename,
             },
-            error: OCRJS.ajaxErrorHandler,            
+            error: OcrJs.ajaxErrorHandler,            
             success: function(data) {
                 if (data.status == "NOSCRIPT")
                     console.log("Server said 'Nothing to do'")
                 else if (data.status == "VALIDATION") {
-                    self.callListeners("validationErrors", data.errors);
+                    self.trigger("validationErrors", data.errors);
                 } else {
-                    self.callListeners("resultPending");
+                    self.trigger("resultPending");
                     self.watchNode(nodename, data);
                 }
             },
@@ -90,7 +90,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
         this._timer = setTimeout(function() {
             $.ajax({
                 url: "/presets/results/" + self._pending,
-                error: OCRJS.ajaxErrorHandler,
+                error: OcrJs.ajaxErrorHandler,
                 success: function(ndata) {
                     $.each(ndata, function(i, data) {
                         if (!self._pending)
@@ -98,7 +98,7 @@ OCRJS.ResultHandler = OCRJS.OcrBase.extend({
                         if (data.status == "PENDING") {                        
                             self.pollForResults();
                         } else {
-                            self.callListeners("resultDone", 
+                            self.trigger("resultDone", 
                                     self._tasknodes[data.task_id], data);
                             clearTimeout(self._timer);
                             self._timer = null;

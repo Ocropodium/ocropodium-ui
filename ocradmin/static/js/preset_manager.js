@@ -3,9 +3,9 @@
 // preset and manages saving, updating, or clearing it.
 //
 
-var OCRJS = OCRJS || {};
+var OcrJs = OcrJs || {};
 
-OCRJS.PresetManager = OCRJS.OcrBase.extend({
+OcrJs.PresetManager = OcrJs.Base.extend({
     constructor: function(parent, state) {
         this.base(parent);
         this.parent = parent;
@@ -81,7 +81,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             this.showUnsavedPresetDialog(!this._opened);
             return;
         }
-        this.callListeners("newPreset");
+        this.trigger("newPreset");
         this.state.clear();
         this._continueaction = null;
     },                   
@@ -114,7 +114,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             modal: true,
             close: function(e, ui) {
                 self._dialog.children().remove();
-                self.callListeners("openDialogClose");    
+                self.trigger("openDialogClose");    
             },
         });
 
@@ -148,11 +148,11 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
         var slug = item.data("slug");
         console.log("Opening preset", item);
         this.openPreset(slug, function(data) {
-            self.callListeners("openPreset");
+            self.trigger("openPreset");
             self.setCurrentOpenPreset(slug, $.trim(item.text()), data, true);
             self._dialog.dialog("close");
             self._continueaction = null;
-        }, OCRJS.ajaxErrorHandler);
+        }, OcrJs.ajaxErrorHandler);
     },            
 
     showUnsavedPresetDialog: function(saveas) {
@@ -169,7 +169,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                 self._dialog.dialog("close");
                 if (self._continueaction)
                     self._continueaction()
-            }, OCRJS.ajaxErrorHandler);
+            }, OcrJs.ajaxErrorHandler);
         });
         this._dialog.find("#submit_save_script_as").click(function(event) {
             self.showCreatePresetDialog();
@@ -189,7 +189,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             width: tb.width(),
             close: function(e, ui) {
                 self._dialog.children().remove();
-                self.callListeners("saveDialogClose");    
+                self.trigger("saveDialogClose");    
             },
         });
     },
@@ -220,7 +220,7 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
                     if (self._continueaction)
                         self._continueaction();
                 },
-                OCRJS.ajaxErrorHandler
+                OcrJs.ajaxErrorHandler
             );
         });
 
@@ -231,10 +231,10 @@ OCRJS.PresetManager = OCRJS.OcrBase.extend({
             width: tb.width(),
             close: function(e, ui) {
                 self._dialog.children().remove();
-                self.callListeners("saveDialogClose");    
+                self.trigger("saveDialogClose");    
             },
         });
-        this.callListeners("saveDialogOpen");
+        this.trigger("saveDialogOpen");
     },
 
     validateOpenSelection: function() {

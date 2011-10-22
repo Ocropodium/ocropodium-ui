@@ -1,6 +1,6 @@
 // Editing window for transcript texts
 
-OCRJS.EditCommand = OCRJS.UndoCommand.extend({
+OcrJs.EditCommand = OcrJs.UndoCommand.extend({
     constructor: function(editor, elem, origtext, newtext) {
         this.base("Edit text");
         this.redo = function() {
@@ -16,7 +16,7 @@ OCRJS.EditCommand = OCRJS.UndoCommand.extend({
 });
 
 
-OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
+OcrJs.TranscriptEditor = OcrJs.BaseWidget.extend({
     constructor: function(parent, options) {
         this.base(parent, options);
         this.options = {
@@ -39,9 +39,9 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._task_pk = null;
         this._bboxre = /bbox\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/;
         this._indexre = /(\d+)$/;
-        this._editor = new OCRJS.LineEditor(); // line editor widget
-        this._speller = new OCRJS.Spellchecker(".ocr_line", {log: true}); // spell check widget
-        this._undostack = new OCRJS.UndoStack(this);
+        this._editor = new OcrJs.LineEditor(); // line editor widget
+        this._speller = new OcrJs.Spellchecker(".ocr_line", {log: true}); // spell check widget
+        this._undostack = new OcrJs.UndoStack(this);
 
         this._spellchecking = false;    // are we currently spell checking?...
         this._textbuffer = null;        // initial state of the text buffer
@@ -56,8 +56,8 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this.resetSize();
 
         // convenience functions
-        this.parseBbox = OCRJS.Hocr.parseBbox;
-        this.parseIndex = OCRJS.Hocr.parseIndex;
+        this.parseBbox = OcrJs.Hocr.parseBbox;
+        this.parseIndex = OcrJs.Hocr.parseIndex;
     },
 
 
@@ -89,7 +89,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         });
 
         $(".ocr_line").live("mouseover.selectline", function(event) {
-            self.callListeners("onHoverPosition", self.parseBbox($(this)));
+            self.trigger("onHoverPosition", self.parseBbox($(this)));
         });
     },
 
@@ -239,7 +239,7 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
     replaceLineText: function(element, origtext, newtext) {
         if (origtext != newtext) {
             this._undostack.push(
-                    new OCRJS.EditCommand(this, element, origtext, newtext));
+                    new OcrJs.EditCommand(this, element, origtext, newtext));
             this._textChanged(); 
         }           
     },
@@ -267,14 +267,14 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         this._pagediv.load("/ocr/task_transcript/" + self._task_pk + " .ocr_page:first", 
                 null, function(text) {
                     self.setWaiting(false);
-                    self.callListeners("onTaskLoad");
+                    self.trigger("onTaskLoad");
                     self.setPageLines();
         });
     },
 
     setPageLines: function() {
         this._textbuffer = this._pagediv.text();
-        this.callListeners("onLinesReady");
+        this.trigger("onLinesReady");
     },
 
     getData: function() {
@@ -299,8 +299,8 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
         if (pos != 0) {
             line.get(0).scrollIntoView(pos == -1);
         }        
-        this.callListeners("onClickPosition", this.parseBbox(line));
-        this.callListeners("onLineSelected", line.get(0).tagName.toLowerCase());
+        this.trigger("onClickPosition", this.parseBbox(line));
+        this.trigger("onLineSelected", line.get(0).tagName.toLowerCase());
     },
                  
 
@@ -323,6 +323,6 @@ OCRJS.TranscriptEditor = OCRJS.OcrBaseWidget.extend({
 
     _textChanged: function() {
         this._haschanges = true;
-        this.callListeners("onTextChanged");
+        this.trigger("onTextChanged");
     },                      
 });

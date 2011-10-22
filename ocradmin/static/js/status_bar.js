@@ -2,9 +2,9 @@
 // Status bar widget
 //
 
-var OCRJS = OCRJS || {};
+var OcrJs = OcrJs || {};
 
-OCRJS.StatusBar = OCRJS.OcrBase.extend({
+OcrJs.StatusBar = OcrJs.Base.extend({
     constructor: function(parent, options) {
         this.parent = parent;
         this._default = "Welcome to OWP";
@@ -22,7 +22,7 @@ OCRJS.StatusBar = OCRJS.OcrBase.extend({
 
         var self = this;
         this._cancel.bind("click", function(event) {
-            self.callListeners("cancel");            
+            self.trigger("cancel");            
         }).bind("mouseenter", function(event) {
             $(this).addClass("hover");    
         }).bind("mouseleave", function(event) {

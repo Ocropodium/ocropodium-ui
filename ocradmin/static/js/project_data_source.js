@@ -74,12 +74,12 @@ var ProjectDataSource = AbstractDataSource.extend({
             url: "/projects/open",
             data: self.params(),
             dataType: "json",
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
             beforeSend: function(e) {
-                self.callListeners("startRefresh");
+                self.trigger("startRefresh");
             },
             complete: function(e) {
-                self.callListeners("endRefresh");
+                self.trigger("endRefresh");
             },
             success: function(data) {
                 if (data.error) {
@@ -87,7 +87,7 @@ var ProjectDataSource = AbstractDataSource.extend({
                     return;
                 }
                 self._data = data;
-                self.callListeners("dataChanged");
+                self.trigger("dataChanged");
             },
         });        
     },

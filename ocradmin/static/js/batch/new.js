@@ -143,7 +143,7 @@ $(function() {
     // it places the overlay button after the page
     // layout has been done
     setTimeout(function() {
-        uploader  = new OCRJS.AjaxUploader($("#upload").get(0), "/batch/upload_files/");
+        uploader  = new OcrJs.AjaxUploader($("#upload").get(0), "/batch/upload_files/");
         uploader.addListener("onXHRLoad", onXHRLoad);
     }, 100);
 

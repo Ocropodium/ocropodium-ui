@@ -184,7 +184,7 @@ $(function() {
             success: function(data) {
                 nodetree.cmdLayoutNodes(data);
             },
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
         });
         event.preventDefault();
         event.stopPropagation();
@@ -195,7 +195,7 @@ $(function() {
             url: "/presets/clear_cache/",
             type: "POST",            
             dataType: "JSON",
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
             success: function(data) {
                 if (data && data.ok)
                     alert("Cache cleared");
@@ -216,7 +216,7 @@ $(function() {
             },
             type: "POST",            
             dataType: "JSON",
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
             success: function(data) {
                 if (data && data.ok)
                     alert("Cache cleared");
@@ -252,10 +252,10 @@ $(function() {
     });
 
     // initialise the uploader...
-    uploader  = new OCRJS.AjaxUploader(
+    uploader  = new OcrJs.AjaxUploader(
         null,
         "/presets/upload/", 
-        { multi: false, errorhandler: OCRJS.ajaxErrorHandler, }
+        { multi: false, errorhandler: OcrJs.ajaxErrorHandler, }
     );
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
@@ -366,18 +366,18 @@ $(function() {
         numBuffers: 2,
         dashboard: false,
     });
-    statusbar = new OCRJS.StatusBar($("#status_bar").get(0));    
-    hocrviewer = new OCRJS.HocrViewer($("#hocrviewer_1").get(0));
-    textviewer = new OCRJS.TextViewer($("#textviewer_1").get(0));
-    reshandler = new OCRJS.ResultHandler();
-    formatter = new OCRJS.LineFormatter();
-    cmdstack = new OCRJS.UndoStack(this, {max: 50});
-    nodetree = new OCRJS.Nodetree.Tree($("#node_canvas"), cmdstack);
-    guimanager = new OCRJS.Nodetree.GuiManager(sdviewer);    
-    nodeparams = new OCRJS.Nodetree.Parameters($("#parameters").get(0));
-    nodemenu = new OCRJS.Nodetree.ContextMenu($("#body").get(0), $("#node_canvas").get(0));
-    statemanager = new OCRJS.Nodetree.StateManager($("#current_preset_name").get(0), nodetree);
-    presetmanager = new OCRJS.PresetManager($("#script_toolbar").get(0), statemanager);
+    statusbar = new OcrJs.StatusBar($("#status_bar").get(0));    
+    hocrviewer = new OcrJs.HocrViewer($("#hocrviewer_1").get(0));
+    textviewer = new OcrJs.TextViewer($("#textviewer_1").get(0));
+    reshandler = new OcrJs.ResultHandler();
+    formatter = new OcrJs.LineFormatter();
+    cmdstack = new OcrJs.UndoStack(this, {max: 50});
+    nodetree = new OcrJs.Nodetree.Tree($("#node_canvas"), cmdstack);
+    guimanager = new OcrJs.Nodetree.GuiManager(sdviewer);    
+    nodeparams = new OcrJs.Nodetree.Parameters($("#parameters").get(0));
+    nodemenu = new OcrJs.Nodetree.ContextMenu($("#body").get(0), $("#node_canvas").get(0));
+    statemanager = new OcrJs.Nodetree.StateManager($("#current_preset_name").get(0), nodetree);
+    presetmanager = new OcrJs.PresetManager($("#script_toolbar").get(0), statemanager);
 
     statusbar.addListeners({
         cancel: function() {
@@ -605,7 +605,7 @@ $(function() {
             nodetree.init(data);
             nodemenu.init(data);
         },
-        error: OCRJS.ajaxErrorHandler,
+        error: OcrJs.ajaxErrorHandler,
     });
 });
 
