@@ -2,9 +2,9 @@
 // Page widget for viewing one-shot OCR conversions...
 //
 
-var OCRJS = OCRJS || {};
+var OcrJs = OcrJs || {};
 
-OCRJS.HocrViewer = OCRJS.TextViewer.extend({
+OcrJs.HocrViewer = OcrJs.TextViewer.extend({
     constructor: function(parent, options) {
         this.base(parent, options);                     
     },

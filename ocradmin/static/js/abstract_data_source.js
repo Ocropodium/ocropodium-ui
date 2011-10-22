@@ -1,6 +1,6 @@
 
 
-var AbstractDataSource = OCRJS.OcrBase.extend({
+var AbstractDataSource = OcrJs.Base.extend({
     constructor: function() {
         this._sortcol =  0;
         this._desc = false;
@@ -178,7 +178,7 @@ var AbstractDataSource = OCRJS.OcrBase.extend({
             if (typeof self._headers[col].sortAs == "function")
                 return self._headers[col].sortAs(a[self.c2d(col)], b[self.c2d(col)]);
         });
-        self.callListeners("dataChanged");        
+        self.trigger("dataChanged");        
     },
 
     preSort: function(a, b) {
@@ -213,20 +213,20 @@ var AbstractDataSource = OCRJS.OcrBase.extend({
     // Callbacks
 
     refreshData: function(params) {
-        this.callListeners("dataChanged");
+        this.trigger("dataChanged");
         return this._data;
     },
 
     onRefreshStarted: function(params) {
-        this.callListeners("startRefresh");
+        this.trigger("startRefresh");
     },
 
     onRefreshComplete: function(params) {
-        this.callListeners("endRefresh");
+        this.trigger("endRefresh");
     },
 
     onDataChanged: function(params) {
-        this.callListeners("dataChanged");
+        this.trigger("dataChanged");
     },
 
     // Style stuff...
@@ -252,7 +252,7 @@ var TestDataSource = AbstractDataSource.extend({
     refreshData: function(params) {
         var self = this;
         return setTimeout(function() {
-            self.callListeners("dataChanged");
+            self.trigger("dataChanged");
             return this._data;
         }, 2000);
     }

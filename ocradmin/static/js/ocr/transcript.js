@@ -48,7 +48,7 @@ function pollForResults(data, polltime) {
                     pollForResults(data, polltime);
                 }, polltime);        
             },
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
         });
     } else if (data.status == "SUCCESS") {
         $(sdviewer).data("binpath", data.results.out);
@@ -87,7 +87,7 @@ function reconvertLines(lines) {
                 $("#save_data").button({disabled: false});                    
             });
         },
-        error: OCRJS.ajaxErrorHandler,
+        error: OcrJs.ajaxErrorHandler,
     });
 }
 
@@ -226,7 +226,7 @@ $(function() {
     
             
     // initialise the transcript editor
-    transcript = new OCRJS.TranscriptEditor(document.getElementById("transcript"));    
+    transcript = new OcrJs.TranscriptEditor(document.getElementById("transcript"));    
     transcript.onTaskChange = function() {
         var ismax = $("#page_slider").slider("option", "value") 
                 == $("#batchsize").val() - 1;
@@ -296,7 +296,7 @@ $(function() {
                     }
                     pollForResults(data, 300);
                 },
-                error: OCRJS.ajaxErrorHandler,
+                error: OcrJs.ajaxErrorHandler,
             })
         },
         onTextChanged: function() {
@@ -355,7 +355,7 @@ $(function() {
             },
             dataType: "json",
             type: "POST",
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
             success: function(data) {
                 if (data && data.ok) {
                     transcript.setCleanState();
@@ -382,7 +382,7 @@ $(function() {
             },
             complete: function() {
             },
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
         });
     });
 
@@ -429,10 +429,10 @@ $(function() {
     });
     
     // line formatter object
-    formatter = new OCRJS.LineFormatter();
+    formatter = new OcrJs.LineFormatter();
     
     // viewer object
-    sdviewer = new OCRJS.ImageViewer($("#viewer").get(0), {
+    sdviewer = new OcrJs.ImageViewer($("#viewer").get(0), {
         numBuffers: 1,
         height: 300,
         dashboard: false,                     

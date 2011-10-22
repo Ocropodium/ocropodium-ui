@@ -3,7 +3,7 @@
 // and individually restarted/aborted.
 
 
-OCRJS.ExportWidget = OCRJS.BatchWidget.extend({
+OcrJs.ExportWidget = OcrJs.BatchWidget.extend({
     constructor: function(parent, batch_id, initial, options) {
         this.base(parent, batch_id, initial, options);
         this._batchclass = "fedora";

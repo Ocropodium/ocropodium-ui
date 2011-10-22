@@ -1,7 +1,7 @@
 // Spellcheck widget
 
 
-var ReplaceCommand = OCRJS.UndoCommand.extend({
+var ReplaceCommand = OcrJs.UndoCommand.extend({
     constructor: function(checker, cidx, elems, back, newelem, oldelem) {
         this.newelem = newelem;
         this.oldelem = oldelem;
@@ -20,7 +20,7 @@ var ReplaceCommand = OCRJS.UndoCommand.extend({
 
 
 
-OCRJS.Spellchecker = OCRJS.OcrBase.extend({
+OcrJs.Spellchecker = OcrJs.Base.extend({
 
     constructor: function(parent, options) {
         this.base(options);
@@ -33,8 +33,8 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
         this._data = {};    // spellcheck data
         this._elements = [];   // highlighted element refs
         this._celement = -1;
-        this._suggestions = new OCRJS.SuggestionList();
-        this._undostack = new OCRJS.UndoStack();
+        this._suggestions = new OcrJs.SuggestionList();
+        this._undostack = new OcrJs.UndoStack();
         this._lineedit = $("<input></input>")
                 .attr("type", "text")
                 .addClass("spell_line")
@@ -181,7 +181,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
             type: "POST",
             data: { data: JSON.stringify(text) },
             dataType: "json",
-            error: OCRJS.ajaxErrorHandler,
+            error: OcrJs.ajaxErrorHandler,
             success: function(data) {
                 if (data == null)
                     return;
@@ -274,7 +274,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
         this._lineedit.val($(element).text());
         this._lineedit.focus();
         this.updateSuggestions();
-        this.callListeners("onWordHighlight", element);
+        this.trigger("onWordHighlight", element);
     },
 
 
@@ -306,7 +306,7 @@ OCRJS.Spellchecker = OCRJS.OcrBase.extend({
                 )
             );
             //correctelem.replaceWith(replacenode);
-            this.callListeners("onWordCorrection");
+            this.trigger("onWordCorrection");
         } else {
             this.setNextSpellcheckWord(shiftback);
         }

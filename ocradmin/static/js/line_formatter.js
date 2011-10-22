@@ -2,11 +2,11 @@
 // on an .ocr_page div, containing .ocr_line spans.
 
 
-OCRJS.LineFormatter = OCRJS.OcrBase.extend({
+OcrJs.LineFormatter = OcrJs.Base.extend({
     constructor: function(options) {
         this.base();
-        this.parseBbox = OCRJS.Hocr.parseBbox;
-        this.parseIndex = OCRJS.Hocr.parseIndex;
+        this.parseBbox = OcrJs.Hocr.parseBbox;
+        this.parseIndex = OcrJs.Hocr.parseIndex;
     },
 
     // Fudgy function to insert line breaks (<br />) in places

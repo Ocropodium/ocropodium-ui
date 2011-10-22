@@ -2,9 +2,9 @@
 // Misc functions for use with HOCR
 //
 
-var OCRJS = OCRJS || {};
+var OcrJs = OcrJs || {};
 
-OCRJS.Hocr = new function() {
+OcrJs.Hocr = new function() {
 
     var bboxre = /bbox\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/;
     var indexre = /(\d+)$/;

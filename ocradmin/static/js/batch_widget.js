@@ -1,6 +1,6 @@
 // Replacement batch widget
 
-OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
+OcrJs.BatchWidget = OcrJs.BaseWidget.extend({
     constructor: function(parent, batch_id, options) {
         this.base(parent, options);
         this.options = {
@@ -45,10 +45,10 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
             if (!$(this).hasClass("current")) {
                 $(".batch_task").removeClass("current");
                 $(this).addClass("current");
-                self.callListeners("onTaskSelected", index, pk);
+                self.trigger("onTaskSelected", index, pk);
             } else {
                 $(this).removeClass("current");
-                self.callListeners("onTaskDeselected", index, pk);
+                self.trigger("onTaskDeselected", index, pk);
             }
         });
              
@@ -100,7 +100,7 @@ OCRJS.BatchWidget = OCRJS.OcrBaseWidget.extend({
                     }
                     self.setTaskWaiting($(this).parent(), true);
                 },
-                error: OCRJS.ajaxErrorHandler,
+                error: OcrJs.ajaxErrorHandler,
                 complete: function(e) {
                     self.setTaskWaiting($(this).parent(), false);
                 },
