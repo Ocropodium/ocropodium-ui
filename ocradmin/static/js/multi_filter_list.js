@@ -1,7 +1,7 @@
 
 
-var MultiFilterList = Base.extend({
-    constructor: function(name, states, includeall) {
+var MultiFilterList = Class.extend({
+    init: function(name, states, includeall) {
         this.name = name;
         this.states = states;
         this.includeall = includeall;        

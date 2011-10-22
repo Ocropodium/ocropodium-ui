@@ -2,7 +2,7 @@
 
 
 var ReplaceCommand = OcrJs.UndoCommand.extend({
-    constructor: function(checker, cidx, elems, back, newelem, oldelem) {
+    init: function(checker, cidx, elems, back, newelem, oldelem) {
         this.newelem = newelem;
         this.oldelem = oldelem;
         this.undo = function() {
@@ -22,8 +22,8 @@ var ReplaceCommand = OcrJs.UndoCommand.extend({
 
 OcrJs.Spellchecker = OcrJs.Base.extend({
 
-    constructor: function(parent, options) {
-        this.base(options);
+    init: function(parent, options) {
+        this._super(options);
         this._listeners = {
             onWordCorrection: [],
             onWordHighlight: [],
@@ -45,13 +45,13 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
     },
 
 
-    init: function(parent) {
+    startup: function(parent) {
         this.buildUi();
         return this._container;
     },          
 
 
-    _setupEvents: function() {
+    setupEvents: function() {
         var self = this;                     
         
         $("#sp_next, #sp_prev", this._container).bind("click", function(event) {
@@ -108,7 +108,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         }
     },
 
-    _teardownEvents: function() {
+    teardownEvents: function() {
         $("#sp_next, #sp_prev", this._container).unbind("click");
         this._lineedit.unbind("keydown.navsuggestion");
         this._lineedit.unbind("focus");
@@ -116,13 +116,13 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
 
     show: function() {
         this._container.show();
-        this._setupEvents();
+        this.setupEvents();
     },
 
     hide: function() {
         this._container.hide();
         this.reset();
-        this._teardownEvents();
+        this.teardownEvents();
     },
 
     reset: function() {
@@ -239,7 +239,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         if (this._celement < 0) {
             this.setNextSpellcheckWord();
         } else {
-            this._logger("Setting current element!" + this._celement);
+            console.log("Setting current element!" + this._celement);
             this.setCurrentElement(this._celement);
         }
     },
@@ -252,19 +252,19 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
                 curr = curr == 0
                     ? this._elements.length - 1
                     : curr - 1;
-                this._logger("Decrementing celement" + curr);
+                console.log("Decrementing celement" + curr);
             } else {
                 curr = curr == this._elements.length - 1
                     ? 0
                     : curr + 1;
-                this._logger("Incrementing celement" + curr);
+                console.log("Incrementing celement" + curr);
             }
             this.setCurrentElement(curr);
         }
     },
 
     setCurrentElement: function(index) {
-        //this._logger("Setting current index: " + index);                                  
+        //console.log("Setting current index: " + index);                                  
         this._celement = index;
         var element = this._elements[this._celement];                                  
         $(this._elements).removeClass("current");
@@ -314,14 +314,14 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
 
     takeFocus: function(lines) {                           
         this._suggestions.enable();
-        this._setupEvents();
+        this.setupEvents();
         this._lineedit.focus().select();
         this._container.find("*").attr("disabled", false);
     },
 
     looseFocus: function(lines) {                    
         this._suggestions.disable();
-        this._teardownEvents();
+        this.teardownEvents();
         this._lineedit.blur();        
         this._container.find("*").attr("disabled", true);
     },               

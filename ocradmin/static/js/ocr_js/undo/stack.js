@@ -1,12 +1,9 @@
 // Undo stack
 
-if (OcrJs === undefined) {
-    OcrJs = {};
-}
-
+var OcrJs = OcrJs || {};
 
 OcrJs.UndoStack = OcrJs.Base.extend({
-    constructor: function(context, options) {
+    init: function(context, options) {
         this.options = {
             levels: -1,
             compress: true,

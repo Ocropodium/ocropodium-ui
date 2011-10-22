@@ -301,7 +301,7 @@ COMPRESS_JS = {
     "global": {
         "source_filenames": (
             "js/appmenu.js",
-            "js/global.js",
+            "js/ocr_js/global.js",
             "js/status_bar.js",
         ),
         "output_filename": "js/global_compress.js",

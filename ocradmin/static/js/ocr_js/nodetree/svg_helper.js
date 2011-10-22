@@ -7,8 +7,8 @@ OcrJs.Nodetree = OcrJs.Nodetree || {};
 
 
 OcrJs.Nodetree.SvgHelper = OcrJs.Base.extend({
-    constructor: function() {
-        this.base();                 
+    init: function() {
+        this._super();                 
     },
     translatere: /translate\(([-\d\.]+)(\s*,\s*([-\d\.]+))?\)/,
     scalere: /scale\(([-\d\.]+)(\s*,\s*([-\d\.]+)\))?/,

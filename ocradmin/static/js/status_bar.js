@@ -5,7 +5,7 @@
 var OcrJs = OcrJs || {};
 
 OcrJs.StatusBar = OcrJs.Base.extend({
-    constructor: function(parent, options) {
+    init: function(parent, options) {
         this.parent = parent;
         this._default = "Welcome to OWP";
 

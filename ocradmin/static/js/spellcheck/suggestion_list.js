@@ -1,8 +1,8 @@
 // Spellcheck widget suggestion list
 
 OcrJs.SuggestionList = OcrJs.Base.extend({
-    constructor: function(parent, options) {
-        this.base(options);
+    init: function(parent, options) {
+        this._super(options);
         this.parent = parent;
 
         this._focus = false;
@@ -12,7 +12,7 @@ OcrJs.SuggestionList = OcrJs.Base.extend({
     },
 
 
-    _setupEvents: function() {
+    setupEvents: function() {
         var self = this;
 
         // events
@@ -26,16 +26,16 @@ OcrJs.SuggestionList = OcrJs.Base.extend({
     },
 
 
-    _teardownEvents: function() {
+    teardownEvents: function() {
         $(".sp_suggestion", this._container)
             .die("click")
             .die("dblclick");
     },                 
 
 
-    init: function(parent) {
+    startup: function(parent) {
         this.parent = parent;
-        this._setupEvents();            
+        this.setupEvents();            
         this._container.appendTo($(this.parent));
     },
           
@@ -133,12 +133,12 @@ OcrJs.SuggestionList = OcrJs.Base.extend({
     },
 
     disable: function() {
-        this._teardownEvents();                 
+        this.teardownEvents();                 
         this._container.addClass("disabled")
     },
 
     enable: function() {
-        this._setupEvents();
+        this.setupEvents();
         this._container.removeClass("disabled");
     },             
 

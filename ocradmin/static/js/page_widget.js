@@ -4,9 +4,9 @@
 
 var OcrJs = OcrJs || {};
 
-OcrJs.PageWidget = OcrJs.BaseWidget.extend({
-    constructor: function(parent, pagename, tid, options) {
-        this.base(parent, options);
+OcrJs.PageWidget = OcrJs.Base.extend({
+    init: function(parent, pagename, tid, options) {
+        this._super(parent, options);
         this._tid = tid;
         this._pagename = pagename;
         this._done = false;

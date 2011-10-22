@@ -1,7 +1,7 @@
 
 var FileListWidget = AbstractListWidget.extend({
-    constructor: function(parent, datasource, options) {
-        this.base(parent, datasource, options);
+    init: function(parent, datasource, options) {
+        this._super(parent, datasource, options);
     },
 
     files: function() {
@@ -11,7 +11,7 @@ var FileListWidget = AbstractListWidget.extend({
     },
 
     setupEvents: function() {
-        this.base();
+        this._super();
         var self = this;
         $(window).bind("keydown.dirnav", function(event) {
             if (event.keyCode == KC_BACKSPACE) {
@@ -34,7 +34,7 @@ var FileListWidget = AbstractListWidget.extend({
     buildUi: function() {
         // add a couple of buttons at the botton of the window
         var container = $("<div></div>")
-            .append(this.base())  // append base class UI
+            .append(this._super())  // append base class UI
             .append(
                 $("<div></div>")
                     .addClass("buttoncontrols")
@@ -56,7 +56,7 @@ var FileListWidget = AbstractListWidget.extend({
     },
 
     rowDoubleClicked: function(event, row) {
-        this.base();                          
+        this._super();                          
         var row = $(event.target).parent();
         if (row.data("type") == "dir") {
             this.dataSource().setCwd(row.data("name"));
@@ -67,7 +67,7 @@ var FileListWidget = AbstractListWidget.extend({
     },
 
     rowClicked: function(event, row) {
-        this.base();
+        this._super();
         $("#fbopenbutton").attr(
                 "disabled", $(".ui-selected.file", this.parent).length == 0);
     },

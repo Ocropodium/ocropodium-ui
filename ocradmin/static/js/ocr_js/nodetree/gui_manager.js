@@ -7,8 +7,8 @@ OcrJs.Nodetree = OcrJs.Nodetree || {};
 
 
 OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
-    constructor: function(viewer) {
-        this.base();
+    init: function(viewer) {
+        this._super();
         this._viewer = viewer;
         this._types = {};
         this._current = null;

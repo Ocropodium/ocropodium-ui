@@ -3,10 +3,10 @@
 
 
 OcrJs.AjaxUploader = OcrJs.Base.extend({
-    constructor: function(target, url, options) {
+    init: function(target, url, options) {
         this.target = target;
         this.url = url;
-        this.base();
+        this._super();
         this.options = {
             log: true,      // whether to, uh, log
             multi: true,    // whether to accept multiple files

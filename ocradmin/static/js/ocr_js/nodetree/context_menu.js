@@ -5,7 +5,7 @@ var NT = OcrJs.Nodetree || {};
 
 
 OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
-    constructor: function(parent, canvas) {
+    init: function(parent, canvas) {
         this.parent = parent;
         this.canvas = canvas;
         this._menutemplate = $.template($("#nodeMenuTmpl"));
@@ -16,7 +16,7 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
         };
     },
 
-    init: function(data) {
+    startup: function(data) {
         this.buildNodeMenu(data);
     },
 

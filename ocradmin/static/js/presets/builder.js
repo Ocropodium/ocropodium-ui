@@ -602,8 +602,8 @@ $(function() {
     $.ajax({
         url: "/presets/query/",
         success: function(data) {
-            nodetree.init(data);
-            nodemenu.init(data);
+            nodetree.startup(data);
+            nodemenu.startup(data);
         },
         error: OcrJs.ajaxErrorHandler,
     });

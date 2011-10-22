@@ -4,8 +4,8 @@
 
 
 OcrJs.IframeUploader = OcrJs.AjaxUploader.extend({
-    constructor: function(target, url, options) {
-        this.base();
+    init: function(target, url, options) {
+        this._super();
         this.url = url;
         $.extend(this.options, options);
 

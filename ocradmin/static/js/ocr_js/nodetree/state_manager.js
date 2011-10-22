@@ -3,7 +3,7 @@
 var OcrJs = OcrJs || {};
 
 OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
-    constructor: function(parent, tree) {
+    init: function(parent, tree) {
         this.parent = parent;
         this.tree = tree;
 

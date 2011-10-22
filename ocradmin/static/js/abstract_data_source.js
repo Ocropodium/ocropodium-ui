@@ -1,7 +1,7 @@
 
 
 var AbstractDataSource = OcrJs.Base.extend({
-    constructor: function() {
+    init: function() {
         this._sortcol =  0;
         this._desc = false;
         this._page =  0;
@@ -242,7 +242,7 @@ var AbstractDataSource = OcrJs.Base.extend({
 
 
 var TestDataSource = AbstractDataSource.extend({
-    constructor: function() {
+    init: function() {
         this._data = [
             ["bibble", 12343, "arse"],
             ["bolly", 3244, "wally"],

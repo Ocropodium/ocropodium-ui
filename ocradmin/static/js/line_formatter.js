@@ -3,8 +3,8 @@
 
 
 OcrJs.LineFormatter = OcrJs.Base.extend({
-    constructor: function(options) {
-        this.base();
+    init: function(options) {
+        this._super();
         this.parseBbox = OcrJs.Hocr.parseBbox;
         this.parseIndex = OcrJs.Hocr.parseIndex;
     },

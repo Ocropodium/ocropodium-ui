@@ -4,7 +4,7 @@
 
 var DziViewer = DziViewer || {};
 
-DziViewer.Viewer = DziViewer.Base.extend({
+DziViewer.Viewer = OcrJs.Base.extend({
     init: function(parent, options) {
         this._super();
         this.parent = $(parent);
@@ -72,12 +72,14 @@ DziViewer.Viewer = DziViewer.Base.extend({
     },                             
 
     update: function(buffered) {
+        console.log("call update", this.viewport, this.source, this.loader, buffered);
         if (this.source !== null)                
             this.drawer.drawTiles(
                     this.viewport, this.source, this.loader, buffered);
     },                  
 
     load: function(path) {
+        console.log("Loading", path);
         var self = this;              
         this._path = path;
         $.ajax({
@@ -91,6 +93,7 @@ DziViewer.Viewer = DziViewer.Base.extend({
                             self.source.height
                     ), true);
                 }
+
                 // update with buffering
                 self.update(true);
             },
@@ -133,13 +136,26 @@ DziViewer.Viewer = DziViewer.Base.extend({
     },        
 
     close: function() {
-        this.drawer.clearCanvas();
+        var self = this;
+        $.each([this.canvas, this.overlay, this.buffer], function(i, c) {
+            self.drawer.clearCanvas(c.get(0).getContext("2d"),
+                self.viewport.width, self.viewport.height);        
+        });
+        
         this.source = null;
     },
 
     isOpen: function() {
         return this.source !== null;
     },
+
+    isReady: function() {
+        return this.isOpen();
+    },                 
+
+    setWaiting: function(wait) {
+
+    },                    
 });    
 
 

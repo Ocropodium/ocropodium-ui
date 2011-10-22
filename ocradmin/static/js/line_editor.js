@@ -27,8 +27,8 @@ jQuery.fn.extend({
  */
 
 var InsertCommand = OcrJs.UndoCommand.extend({
-    constructor: function(editor, chars, curr) {
-        this.base("typing");
+    init: function(editor, chars, curr) {
+        this._super("typing");
         this.editor = editor;
         this.curr = curr;
         this.chars = chars;
@@ -58,8 +58,8 @@ var InsertCommand = OcrJs.UndoCommand.extend({
 });
 
 var DeleteCommand = OcrJs.UndoCommand.extend({
-    constructor: function(editor, elems, nexts, back) {
-        this.base("delete");
+    init: function(editor, elems, nexts, back) {
+        this._super("delete");
         this.editor = editor;
         this.elems = elems;
         this.nexts = nexts;
@@ -89,8 +89,8 @@ var DeleteCommand = OcrJs.UndoCommand.extend({
 
 const LONGKEY = 500;
 OcrJs.LineEditor = OcrJs.Base.extend({
-    constructor: function(options) {
-        this.base();
+    init: function(options) {
+        this._super();
         this.options = {log: false};
         $.extend(this.options, options);
 
@@ -202,8 +202,8 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         this._c = charelem;
         this._mungeSpaces();
         this.positionCursorTo(this._c);
-        //this._logger("Current char: " + $(this._c).text() + " Full: " + $(this._e).text());
-        //this._logger("Current char: " + $(this._c).text());
+        //console.log("Current char: " + $(this._c).text() + " Full: " + $(this._e).text());
+        //console.log("Current char: " + $(this._c).text());
     },
 
 
@@ -340,7 +340,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
     },
 
     moveCursorToStart: function() {
-        this._logger($(this._e).text());
+        console.log($(this._e).text());
         var char = $(this._e).children().first().get(0);
         if (!char)
             throw "First child of elem is null: " + this._e.firstChild + "  (" + this._e + ")";        
@@ -537,7 +537,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         if (event.ctrlKey) {
             switch (event.which) {
                 case 90: // Z-key, for undo/redo
-                    this._logger("Undo for line editor");
+                    console.log("Undo for line editor");
                     event.shiftKey
                         ? this._undostack.redo()
                         : this._undostack.undo();
@@ -633,7 +633,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
 
 
     _charClicked: function(event) {
-        this._logger("Char clicked: " + $(event.target).text());
+        console.log("Char clicked: " + $(event.target).text());
         var elem = event.target;
         var offset = $(elem).offset();            
         var mid = $(elem).width() / 2;
@@ -682,7 +682,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             }
             var poffset = $(prev).offset();
             if (poffset.top >= mintop) {
-                this._logger("Got pos off previous: '" + $(prev).text() + "'");
+                console.log("Got pos off previous: '" + $(prev).text() + "'");
                 return {top: poffset.top, left: poffset.left + (back * $(prev).width())};
             }
         }
@@ -698,7 +698,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             }
             var poffset = $(next).offset();
             if (poffset.top >= mintop) {
-                this._logger("Got pos off next: '" + $(next).text() + "'");
+                console.log("Got pos off next: '" + $(next).text() + "'");
                 return {top: poffset.top, left: poffset.left};
             }
         }
@@ -707,7 +707,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         if (parentoffset.top >= mintop) {
             return {top: parentoffset.top, left: parentoffset.left};
         }
-        this._logger("Failed to get top & left for element: " + $(elem));
+        console.log("Failed to get top & left for element: " + $(elem));
         throw "Unable to get usable position for elem: " 
             + $(elem) + " (" + $(elem).text() + ")"; 
     },                  

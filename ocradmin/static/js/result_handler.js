@@ -5,8 +5,8 @@
 OcrJs = OcrJs || {};
 
 OcrJs.ResultHandler = OcrJs.Base.extend({
-    constructor: function(parent) {
-        this.base(parent);
+    init: function(parent) {
+        this._super(parent);
         this.parent = parent;
 
         this._timer = null;

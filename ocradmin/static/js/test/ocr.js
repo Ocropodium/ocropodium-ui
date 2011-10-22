@@ -29,7 +29,7 @@ $(document).ready(function(){
         // Initialise nodetree!    
         stop();
         $.getJSON("/presets/query/", function(data) {
-            nodetree.init(data);
+            nodetree.startup(data);
         });
 
         nodetree.addListeners({

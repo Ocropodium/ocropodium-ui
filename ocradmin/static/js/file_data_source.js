@@ -2,8 +2,8 @@
 
 
 var FileDataSource = AbstractDataSource.extend({
-    constructor: function() {
-        this.base();
+    init: function() {
+        this._super();
         this._data = [];
         this._lsurl = "/filebrowser/ls";
         this._dir = "";
