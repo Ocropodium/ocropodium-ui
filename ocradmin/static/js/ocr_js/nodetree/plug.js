@@ -3,8 +3,8 @@
 //
 
 OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
-    constructor: function(node, name, datatype) {
-        this.base();
+    init: function(node, name, datatype) {
+        this._super();
 
         this.node = node;
         this.name = name;
@@ -173,8 +173,8 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
 
 
 OcrJs.Nodetree.InPlug = OcrJs.Nodetree.BasePlug.extend({
-    constructor: function(node, name, datatype) {
-        this.base(node, name, datatype);
+    init: function(node, name, datatype) {
+        this._super(node, name, datatype);
         this.type = "input";
         this._gradient = "url(#InPlugGradient)";
         this._cable = null;
@@ -205,7 +205,7 @@ OcrJs.Nodetree.InPlug = OcrJs.Nodetree.BasePlug.extend({
     },
 
     draw: function(svg, parent, x, y) {              
-        this.base(svg, parent, x, y);
+        this._super(svg, parent, x, y);
         var func = this["drawDatatype_" + this.dtype];
         if (func)
             this._label = func.call(this, this._group, x, y - (this._ph / 5));
@@ -222,8 +222,8 @@ OcrJs.Nodetree.InPlug = OcrJs.Nodetree.BasePlug.extend({
 });
 
 OcrJs.Nodetree.OutPlug = OcrJs.Nodetree.BasePlug.extend({
-    constructor: function(node, name, datatype) {
-        this.base(node, name, datatype);
+    init: function(node, name, datatype) {
+        this._super(node, name, datatype);
         this.type = "output";
         this._gradient = "url(#OutPlugGradient)";
     },
@@ -233,7 +233,7 @@ OcrJs.Nodetree.OutPlug = OcrJs.Nodetree.BasePlug.extend({
     },
 
     draw: function(svg, parent, x, y) {
-        this.base(svg, parent, x, y);    
+        this._super(svg, parent, x, y);    
 
         var func = this["drawDatatype_" + this.dtype];
         if (func)

@@ -1,8 +1,8 @@
 // Data source for project list widget
 
 var ProjectDataSource = AbstractDataSource.extend({
-    constructor: function() {
-        this.base();
+    init: function() {
+        this._super();
         this._data = [];
         this._headers = [{
                 name: "Name",

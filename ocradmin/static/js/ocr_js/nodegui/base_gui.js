@@ -19,8 +19,8 @@ var OcrJs = OcrJs || {};
 OcrJs.NodeGui = OcrJs.NodeGui || {}
 
 OcrJs.NodeGui.BaseGui = OcrJs.Base.extend({
-    constructor: function(viewer, id) {
-        this.base();
+    init: function(viewer, id) {
+        this._super();
         this.idgui = id;
         this._viewer = viewer;
         this._trackrects = [];

@@ -1,8 +1,8 @@
 // Project list widget
 
 var ProjectListWidget = AbstractListWidget.extend({
-    constructor: function(parent, datasource, options) {
-        this.base(parent, datasource, options);
+    init: function(parent, datasource, options) {
+        this._super(parent, datasource, options);
     },
 
     project: function() {
@@ -10,7 +10,7 @@ var ProjectListWidget = AbstractListWidget.extend({
     },
 
     setupEvents: function() {
-        this.base();
+        this._super();
         var self = this;
 
         $(window).bind("keydown.enteropen", function(event) {
@@ -35,13 +35,13 @@ var ProjectListWidget = AbstractListWidget.extend({
     teardownEvents: function() {
         $(window).unbind("keydown.enteropen");
         $("#fbopenbutton, #fbclosebutton").unbind("click");
-        this.base();
+        this._super();
     },
 
     buildUi: function() {
         // add a couple of buttons at the botton of the window
         var container = $("<div></div>")
-            .append(this.base())  // append base class UI
+            .append(this._super())  // append base class UI
             .append(
                 $("<div></div>")
                     .addClass("buttoncontrols")
@@ -63,13 +63,13 @@ var ProjectListWidget = AbstractListWidget.extend({
     },
 
     rowDoubleClicked: function(event, row) {
-        this.base();                          
+        this._super();                          
         var row = $(event.target).parent();
         $("#fbopenbutton").click();           
     },
 
     rowClicked: function(event, row) {
-        this.base();
+        this._super();
         $("#fbopenbutton").attr(
                 "disabled", $(".ui-selected", this.parent).length == 0);
     },

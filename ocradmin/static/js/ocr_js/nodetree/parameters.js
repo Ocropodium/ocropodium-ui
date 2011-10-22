@@ -8,8 +8,8 @@ OcrJs.Nodetree = OcrJs.Nodetree || {};
 var NT = OcrJs.Nodetree;
 
 NT.TextParam = OcrJs.Base.extend({
-    constructor: function(node, param, options) {
-        this.base(node, param, options);
+    init: function(node, param, options) {
+        this._super(node, param, options);
         this.node = node;
         this.data = param;
         this.name = node.name + param.name;
@@ -96,7 +96,7 @@ NT.BooleanParam = NT.TextParam.extend({
 
 NT.FileParam = NT.TextParam.extend({
     _initCtrl: function() {
-        this.base();
+        this._super();
         this.ctrl
             .addClass("dropzone")
             .attr("disabled", true);
@@ -147,8 +147,8 @@ NT.SwitchParam = NT.TextParam.extend({
 
 
 NT.Parameters = OcrJs.Base.extend({
-    constructor: function(parent, options) {
-        this.base(options);
+    init: function(parent, options) {
+        this._super(options);
         this.parent = parent;
 
         this._paramtmpl = $.template($("#paramTmpl"));

@@ -6,8 +6,8 @@
 var OcrJs = OcrJs || {};
 
 OcrJs.PresetManager = OcrJs.Base.extend({
-    constructor: function(parent, state) {
-        this.base(parent);
+    init: function(parent, state) {
+        this._super(parent);
         this.parent = parent;
 
         this.state = state;

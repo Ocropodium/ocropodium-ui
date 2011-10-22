@@ -51,7 +51,7 @@ CanvasRenderingContext2D.prototype.dashedRect = function(x, y, width, height, da
 var DziViewer = DziViewer || {};
 DziViewer.Plugin = DziViewer.Plugin || {};
 
-DziViewer.Plugin.Base = DziViewer.Base.extend({
+DziViewer.Plugin.Base = OcrJs.Base.extend({
 
 
     init: function(viewport) {

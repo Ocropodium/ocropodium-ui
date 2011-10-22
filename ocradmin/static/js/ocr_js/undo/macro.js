@@ -6,8 +6,8 @@ if (OcrJs === undefined) {
 
 
 OcrJs.UndoMacro = OcrJs.UndoCommand.extend({
-    constructor: function(text, options) {
-        this.base(text, options);                     
+    init: function(text, options) {
+        this._super(text, options);                     
         this._stack = [];
         return this;
     },

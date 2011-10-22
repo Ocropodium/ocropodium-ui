@@ -1,8 +1,8 @@
 // class for browsing and selecting files on the server
 
 var AbstractListWidget = OcrJs.Base.extend({
-    constructor: function(parent, datasource, options) {
-        this.base();
+    init: function(parent, datasource, options) {
+        this._super();
         this.parent = parent;   
         this.data = datasource;
         this.options = {

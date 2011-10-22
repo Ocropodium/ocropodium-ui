@@ -86,10 +86,4 @@ $(function() {
     $("input.ground_truth_enabled").change(updateButtons);
 
     updateButtons();
-
-    $(".option_box").each(function(i, elem) {
-        pbuilders[i] = new OcrJs.ParameterBuilder(elem);
-        pbuilders[i].init();
-    });
-
 });

@@ -8,8 +8,8 @@ var SvgHelper = SvgHelper || new OcrJs.Nodetree.SvgHelper();
 
 
 NT.AddNodeCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, name, type, atpoint, context) {
-        this.base("Add Node");
+    init: function(tree, name, type, atpoint, context) {
+        this._super("Add Node");
         var self = this;
         this.redo = function() {
             var node = tree.createNode(name, tree._nodetypes[type]);
@@ -28,8 +28,8 @@ NT.AddNodeCommand = OcrJs.UndoCommand.extend({
 });
 
 NT.DeleteNodeCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, name) {
-        this.base("Delete Node: " + name);
+    init: function(tree, name) {
+        this._super("Delete Node: " + name);
         var data = tree.getNode(name).serialize();
         this.redo = function() {
             var node = tree.getNode(name);
@@ -45,8 +45,8 @@ NT.DeleteNodeCommand = OcrJs.UndoCommand.extend({
 });    
 
 NT.ConnectPlugsCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, srcname, dstname) {
-        this.base("Connect Plugs");
+    init: function(tree, srcname, dstname) {
+        this._super("Connect Plugs");
         //console.assert(dst instanceof NT.InPlug, "Destination is not an input plug.");
         var self = this;
         this.redo = function() {
@@ -63,8 +63,8 @@ NT.ConnectPlugsCommand = OcrJs.UndoCommand.extend({
 });
 
 NT.DetachPlugCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, plugname) {
-        this.base("Detach Plug");
+    init: function(tree, plugname) {
+        this._super("Detach Plug");
         var self = this;
         //console.assert(plug.isAttached(), "Plug is not attached.");
         //console.assert(plug instanceof NT.InPlug, "Attempt to detach a non-input plug.");
@@ -79,8 +79,8 @@ NT.DetachPlugCommand = OcrJs.UndoCommand.extend({
 });
 
 NT.IgnoreNodeCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, nodename) {
-        this.base("Ignore Node: " + nodename);
+    init: function(tree, nodename) {
+        this._super("Ignore Node: " + nodename);
         var self = this;
         this.redo = function() {
             var node = tree.getNode(nodename);
@@ -94,8 +94,8 @@ NT.IgnoreNodeCommand = OcrJs.UndoCommand.extend({
 });    
                    
 NT.ViewNodeCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, nodename) {
-        this.base("View Output for Node: " + nodename);
+    init: function(tree, nodename) {
+        this._super("View Output for Node: " + nodename);
         var self = this;
         this.redo = function() {
             var node = tree.getNode(nodename);
@@ -109,8 +109,8 @@ NT.ViewNodeCommand = OcrJs.UndoCommand.extend({
 });    
                    
 NT.SetNodeParameterCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, nodename, param, oldvalue, value) {
-        this.base("Set Parameter: " + nodename + "." + param); // + " (" + oldvalue + " -> " + value + ")");
+    init: function(tree, nodename, param, oldvalue, value) {
+        this._super("Set Parameter: " + nodename + "." + param); // + " (" + oldvalue + " -> " + value + ")");
         var self = this;
         this.ts = (new Date()).getTime();
         this.node = nodename;
@@ -137,8 +137,8 @@ NT.SetNodeParameterCommand = OcrJs.UndoCommand.extend({
 });
 
 NT.SetMultipleNodeParametersCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, nodename, paramvals) {
-        this.base("Set Multiple Parameters: " + nodename);
+    init: function(tree, nodename, paramvals) {
+        this._super("Set Multiple Parameters: " + nodename);
         this.ts = (new Date()).getTime();
         this.node = nodename;
         this.paramvals = paramvals;
@@ -169,8 +169,8 @@ NT.SetMultipleNodeParametersCommand = OcrJs.UndoCommand.extend({
 });
 
 NT.MoveNodesCommand = OcrJs.UndoCommand.extend({
-    constructor: function(tree, nodes, x, y) {
-        this.base("Move Node" + (nodes.length > 1 ? "s" : ""));                     
+    init: function(tree, nodes, x, y) {
+        this._super("Move Node" + (nodes.length > 1 ? "s" : ""));                     
         var self = this;
         this.nodes = nodes;
         this.x = x, this.y = y;
@@ -194,9 +194,9 @@ NT.MoveNodesCommand = OcrJs.UndoCommand.extend({
 
 
 
-NT.Tree = OcrJs.BaseWidget.extend({
-    constructor: function(parent, cmdstack, options) {
-        this.base(parent, options);
+NT.Tree = OcrJs.Base.extend({
+    init: function(parent, cmdstack, options) {
+        this._super(parent, options);
         this.parent = parent;
 
         // shared command stack object
@@ -236,7 +236,7 @@ NT.Tree = OcrJs.BaseWidget.extend({
     },
 
 
-    init: function(data) {
+    startup: function(data) {
         var self = this;
         $.each(data, function(i, nodeinfo) {
             if (!self._nodedata[nodeinfo.stage])
@@ -1035,7 +1035,7 @@ NT.Tree = OcrJs.BaseWidget.extend({
     },
 
     saveState: function() {
-        this.base();
+        this._super();
         var transform = $(this.group()).attr("transform");
         $.cookie("canvaspos", transform);
     },                   

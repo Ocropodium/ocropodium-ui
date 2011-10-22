@@ -4,8 +4,8 @@
 
 
 OcrJs.ExportWidget = OcrJs.BatchWidget.extend({
-    constructor: function(parent, batch_id, initial, options) {
-        this.base(parent, batch_id, initial, options);
+    init: function(parent, batch_id, initial, options) {
+        this._super(parent, batch_id, initial, options);
         this._batchclass = "fedora";
         this._viewurl = null;
         this._viewtext = "View Objects";

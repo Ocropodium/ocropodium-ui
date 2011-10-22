@@ -5,7 +5,7 @@
 
 var DziViewer = DziViewer || {};
 
-DziViewer.ViewPort = DziViewer.Base.extend({
+DziViewer.ViewPort = OcrJs.Base.extend({
     init: function(parent, options) {
         this._super();
         this.options = {
@@ -16,7 +16,7 @@ DziViewer.ViewPort = DziViewer.Base.extend({
         $.extend(this.options, options);    
 
         this.parent = $(parent);             
-        this.scale = 1;
+        this._scale = 1;
         this.translate = new DziViewer.Point(0, 0);
         self.interacted = false;
         this.width = $(parent).width();
@@ -29,6 +29,14 @@ DziViewer.ViewPort = DziViewer.Base.extend({
         this.registerListener("update");
         this.registerListener("panned");
         this.registerListener("zoomed");
+
+        this.__defineGetter__("scale", function() {
+            return this._scale;
+        });
+
+        this.__defineSetter__("scale", function(s) {
+            this._scale = Math.max(this.options.minzoom, s);
+        });
     },
 
     resetSize: function() {

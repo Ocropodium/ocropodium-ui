@@ -109,7 +109,7 @@ $(function() {
             onTaskSelected: loadTaskDetails,
             onTaskDeselected: loadBatchList,
             onUpdate: hashNavigate,                                
-        }).init();
+        }).startup();
 
         $(".submit_update").live("click", function(event) {
             var button = $(this);

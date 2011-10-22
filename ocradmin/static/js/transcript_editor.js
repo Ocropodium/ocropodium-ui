@@ -1,14 +1,14 @@
 // Editing window for transcript texts
 
 OcrJs.EditCommand = OcrJs.UndoCommand.extend({
-    constructor: function(editor, elem, origtext, newtext) {
-        this.base("Edit text");
+    init: function(editor, elem, origtext, newtext) {
+        this._super("Edit text");
         this.redo = function() {
             $(elem).html(newtext);
             editor.setCurrentLine(elem);
         };
         this.undo = function() {
-            editor._logger("Undo for transcript editor");
+            console.log("Undo for transcript editor");
             $(elem).html(origtext);
             editor.setCurrentLine(elem);
         };
@@ -16,9 +16,9 @@ OcrJs.EditCommand = OcrJs.UndoCommand.extend({
 });
 
 
-OcrJs.TranscriptEditor = OcrJs.BaseWidget.extend({
-    constructor: function(parent, options) {
-        this.base(parent, options);
+OcrJs.TranscriptEditor = OcrJs.Base.extend({
+    init: function(parent, options) {
+        this._super(parent, options);
         this.options = {
             log: false,
         },
@@ -49,7 +49,7 @@ OcrJs.TranscriptEditor = OcrJs.BaseWidget.extend({
         this._currentline = null;       // store the current line
         this._haschanges = false;       // unsaved pending changes
 
-        this.init();
+        this.startup();
         this.setupMouseEvents();
         this.setupKeyEvents();
         this.setupCallbacks();        
@@ -61,7 +61,7 @@ OcrJs.TranscriptEditor = OcrJs.BaseWidget.extend({
     },
 
 
-    init: function() {
+    startup: function() {
         // UI bits it's useful to keep a reference to:
         this._scrollcontainer = $("<div></div>")
             .attr("id", "innerscroll");
@@ -72,7 +72,7 @@ OcrJs.TranscriptEditor = OcrJs.BaseWidget.extend({
         $(this.parent)
             .append(this._scrollcontainer.append(
                 this._pagediv))
-            .append(this._speller.init().hide());
+            .append(this._speller.startup().hide());
     },
 
     setupMouseEvents: function() {

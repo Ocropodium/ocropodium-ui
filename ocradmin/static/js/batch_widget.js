@@ -1,8 +1,8 @@
 // Replacement batch widget
 
-OcrJs.BatchWidget = OcrJs.BaseWidget.extend({
-    constructor: function(parent, batch_id, options) {
-        this.base(parent, options);
+OcrJs.BatchWidget = OcrJs.Base.extend({
+    init: function(parent, batch_id, options) {
+        this._super(parent, options);
         this.options = {
             log: true,
         },
@@ -25,7 +25,7 @@ OcrJs.BatchWidget = OcrJs.BaseWidget.extend({
 
     },
 
-    init: function() {
+    startup: function() {
         var self = this;
         this.setupEvents();
         this.refreshTasks();

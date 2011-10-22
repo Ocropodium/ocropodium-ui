@@ -6,9 +6,12 @@
 
 var DziViewer = DziViewer || {};
 
-DziViewer.TileSource = DziViewer.Base.extend({
+DziViewer.TileSource = OcrJs.Base.extend({
     init: function(path, xml) {
         this._super();
+
+        console.log("Loading", xml);
+        
 
         this._tilebase = path.replace(/\.dzi$/, "_files")
         this.format = xml.find("Image").attr("Format");
@@ -24,6 +27,7 @@ DziViewer.TileSource = DziViewer.Base.extend({
         this._listeners = {
             loaded: [],
         };
+
     },
         
     numLevels: function() {
@@ -67,7 +71,7 @@ DziViewer.TileSource = DziViewer.Base.extend({
 
     getScale: function(level) {
         /* Scale of a pyramid level. */
-        console.assert(0 <= level && level < this.numLevels(), "Invalid pyramid level");
+        this._checkLevel(level);
         var max_level = this.numLevels() - 1;
         return Math.pow(0.5, max_level - level);
     },
@@ -87,7 +91,7 @@ DziViewer.TileSource = DziViewer.Base.extend({
 
     getDimensions: function(level) {
         /* Dimensions of level (width, height) */
-        console.assert(0 <= level && level < this.numLevels(), "Invalid pyramid level");
+        this._checkLevel(level);
         var scale = this.getScale(level);
         return new DziViewer.Size(
             Math.ceil(this.width * scale),
@@ -118,7 +122,7 @@ DziViewer.TileSource = DziViewer.Base.extend({
 
     getNumTiles: function(level) {
         /* Number of tiles (columns, rows) */
-        console.assert(0 <= level && level < this.numLevels(), "Invalid pyramid level");
+        this._checkLevel(level);
         var dims = this.getDimensions(level);
         return [Math.ceil(dims.width / this.tilesize),
                 Math.ceil(dims.height / this.tilesize)];
@@ -143,5 +147,10 @@ DziViewer.TileSource = DziViewer.Base.extend({
     getSize: function() {
         return new DziViewer.Size(this.width, this.height);
     },
+
+    _checkLevel: function(level) {
+        if (level < 0 && level >= this.numLevels())
+            throw "Invalid level " + level + " NumLevels: " + this.numLevels();
+    },                     
 });
 

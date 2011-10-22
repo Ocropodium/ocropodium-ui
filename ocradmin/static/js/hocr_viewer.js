@@ -5,8 +5,8 @@
 var OcrJs = OcrJs || {};
 
 OcrJs.HocrViewer = OcrJs.TextViewer.extend({
-    constructor: function(parent, options) {
-        this.base(parent, options);                     
+    init: function(parent, options) {
+        this._super(parent, options);                     
     },
 
     setData: function(results) {

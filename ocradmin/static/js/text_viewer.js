@@ -5,8 +5,8 @@
 var OcrJs = OcrJs || {};
 
 OcrJs.TextViewer = OcrJs.Base.extend({
-    constructor: function(parent, options) {
-        this.base(parent, options);
+    init: function(parent, options) {
+        this._super(parent, options);
         this._div = $("<div></div>")
             .addClass("textcontainer")
             .css("height", "500px")

@@ -10,8 +10,8 @@ OcrJs.Nodetree = OcrJs.Nodetree || {};
 var SvgHelper = SvgHelper || new OcrJs.Nodetree.SvgHelper;
 
 OcrJs.Nodetree.Node = OcrJs.Base.extend({
-    constructor: function(name, classdata, id) {
-        this.base(name, classdata, id);
+    init: function(name, classdata, id) {
+        this._super(name, classdata, id);
         this.name = name;
         this.type = classdata.name;
         this.arity = classdata.arity;

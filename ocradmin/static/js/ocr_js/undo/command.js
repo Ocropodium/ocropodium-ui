@@ -5,8 +5,8 @@ if (OcrJs === undefined) {
 }
 
 
-OcrJs.UndoCommand = Base.extend({
-    constructor: function(text, options) {
+OcrJs.UndoCommand = Class.extend({
+    init: function(text, options) {
         this.text = text || "";
         $.extend(this, options);
         return this;

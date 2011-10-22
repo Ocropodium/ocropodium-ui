@@ -3,8 +3,8 @@
 //
 
 OcrJs.Nodetree.BaseCable = OcrJs.Base.extend({
-    constructor: function() {
-        this.base();
+    init: function() {
+        this._super();
         this._listeners = {
             cableRemoved: [],
         };
@@ -38,8 +38,8 @@ OcrJs.Nodetree.BaseCable = OcrJs.Base.extend({
 });
 
 OcrJs.Nodetree.Cable = OcrJs.Nodetree.BaseCable.extend({
-    constructor: function(startplug, endplug) {
-        this.base();
+    init: function(startplug, endplug) {
+        this._super();
         this.start = startplug;
         this.end = endplug;
         // the input (end of cable) owns the cable
@@ -66,8 +66,8 @@ OcrJs.Nodetree.Cable = OcrJs.Nodetree.BaseCable.extend({
 
 
 OcrJs.Nodetree.DragCable = OcrJs.Nodetree.BaseCable.extend({
-    constructor: function(startplug) {
-        this.base()                     
+    init: function(startplug) {
+        this._super()                     
         this.start = startplug;
     },                     
 

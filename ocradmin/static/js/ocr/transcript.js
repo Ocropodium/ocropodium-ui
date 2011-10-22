@@ -25,6 +25,7 @@ function loadState() {
 
 
 function pollForResults(data, polltime) {
+    console.log("Result", data);
     if (data == null) {
         alert("Return data is null!");
     } else if (data.error) {
@@ -52,7 +53,7 @@ function pollForResults(data, polltime) {
         });
     } else if (data.status == "SUCCESS") {
         $(sdviewer).data("binpath", data.results.out);
-        sdviewer.setBufferPath(0, data.results.dst);
+        sdviewer.openDzi(data.results.dst);
         sdviewer.setWaiting(false);
     }
 }
@@ -167,7 +168,7 @@ $(function() {
     });
 
     $("#image_zoomin").click(function(event) {
-        sdviewer.zoomBy(2);        
+        sdviewer.viewport.zoomIn(2);        
     }).button({
         text: false,
         icons: {
@@ -175,7 +176,7 @@ $(function() {
         }
     });
     $("#image_zoomout").click(function(event) {
-        sdviewer.zoomBy(0.5);    
+        sdviewer.viewport.zoomOut(0.5);    
     }).button({
         text: false,
         icons: {
@@ -200,8 +201,7 @@ $(function() {
     });
 
     $("#refresh").click(function(event) {
-        var active = sdviewer.activeBuffer();
-        sdviewer.setBufferPath(active, sdviewer.bufferPath(active));    
+        sdviewer.refresh(); 
     }).button({
         text: false,
         icons: {
@@ -282,11 +282,12 @@ $(function() {
             $("#edit_task").attr("href",
                     "/presets/builder/" + task_pk + "?ref="
                     + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
+            console.log("Submitting ajax for binary");
             $.ajax({
                 url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
                 dataType: "json",
                 beforeSend: function(e) {
-                    sdviewer.close();
+                    //sdviewer.close();
                     sdviewer.setWaiting(true);
                 },
                 success: function(data) {
@@ -317,12 +318,12 @@ $(function() {
 
     var positionViewer = function(position) {
         // ensure the given line is centred in the viewport
-        sdviewer.setBufferOverlays({
-            "current": [position],
-        });
-        if ($("#link_viewers").prop("checked")) {
-            sdviewer.fitBounds(position, true); 
-        }
+        //sdviewer.setBufferOverlays({
+        //    "current": [position],
+        //});
+        //if ($("#link_viewers").prop("checked")) {
+        //    sdviewer.fitBounds(position, true); 
+        //}
     }
 
     transcript.addListener("onHoverPosition", function(position) {
@@ -432,7 +433,7 @@ $(function() {
     formatter = new OcrJs.LineFormatter();
     
     // viewer object
-    sdviewer = new OcrJs.ImageViewer($("#viewer").get(0), {
+    sdviewer = new DziViewer.Viewer($("#viewer").get(0), {
         numBuffers: 1,
         height: 300,
         dashboard: false,                     
@@ -464,15 +465,15 @@ $(function() {
 
     hsplitL.options.center.onresize_end = function() {
         setTimeout(function() {
+            sdviewer.resetSize();
             transcript.resetSize();
             $("input[name=format]:checked").click();
         });
     };
     hsplitR.options.center.onresize_end = function() {
         setTimeout(function() {
-            var active = sdviewer.activeBuffer();
-            sdviewer.setBufferPath(active, sdviewer.bufferPath(active));
             sdviewer.resetSize();
+            transcript.resetSize();
             $("input[name=format]:checked").click();
         });
     };
@@ -482,6 +483,7 @@ $(function() {
     });
 
     $(window).resize();
+    sdviewer.resetSize();
 
     loadState();
 });        

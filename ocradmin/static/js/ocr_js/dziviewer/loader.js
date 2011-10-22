@@ -4,7 +4,7 @@
 
 var DziViewer = DziViewer || {};
 
-DziViewer.Loader = DziViewer.Base.extend({
+DziViewer.Loader = OcrJs.Base.extend({
     init: function(options) {
         this._super();
         this.options = {
