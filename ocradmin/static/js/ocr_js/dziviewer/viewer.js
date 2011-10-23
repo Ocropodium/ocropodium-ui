@@ -17,6 +17,8 @@ DziViewer.Viewer = OcrJs.Base.extend({
         };
         $.extend(this.options, options);
 
+        this._highlights = [];
+
         this.buffer = $("<canvas></canvas>")
             .prop("width", this.parent.width())
             .prop("height", this.parent.height())
@@ -69,13 +71,55 @@ DziViewer.Viewer = OcrJs.Base.extend({
         plug.removeListeners("update");
         this.overlay.get(0).getContext("2d").clearRect(
                 0, 0, this.viewport.width, this.viewport.height);
-    },                             
+    },   
+
+    addHighlight: function(rect, strokestyle, fillstyle) {
+        var strokestyle = strokestyle || "rgba(255,255,0,0.3)";
+        var fillstyle = fillstyle || "rgba(255,255,0,0.3)";
+        this._highlights.push({
+            rect: rect,
+            strole: strokestyle,
+            fill: fillstyle,
+        });
+        this.update();
+    },
+
+    clearHighlights: function() {
+        this._highlights = [];
+    },                        
+
+    removeHighlight: function(rect) {
+        for (var i in this._highlights) {
+            if (rect.isSameAs(this._highlights[i].rect)) {
+                this._highlights.splice(i, 1);            
+                return true;
+            }
+        }            
+        console.error("Unable to remove requested highlight", rect);
+    },                         
+
+    drawHighlights: function() {
+        var ctx = this.overlay.get(0).getContext("2d");
+        ctx.clearRect(0, 0, this.viewport.width, this.viewport.height);
+        ctx.save();
+        for (var i in this._highlights) {                        
+            var rect = this._highlights[i].rect;
+            ctx.strokeStyle = this._highlights[i].stroke;
+            ctx.fillStyle = this._highlights[i].fill;
+            ctx.fillRect(
+                    rect.x * this.viewport.scale + this.viewport.translate.x,
+                    rect.y * this.viewport.scale + this.viewport.translate.y,
+                    rect.width * this.viewport.scale, rect.height * this.viewport.scale);
+        }
+        ctx.restore();
+    },                        
 
     update: function(buffered) {
-        console.log("call update", this.viewport, this.source, this.loader, buffered);
-        if (this.source !== null)                
+        if (this.source !== null) {
             this.drawer.drawTiles(
                     this.viewport, this.source, this.loader, buffered);
+            this.drawHighlights();
+        }
     },                  
 
     load: function(path) {
@@ -109,9 +153,19 @@ DziViewer.Viewer = OcrJs.Base.extend({
                         this.source.width, this.source.height));
     },    
 
+    fitBounds: function(rect) {
+        if (self.source === null)
+            return;
+
+        this.viewport.centerOn(rect.getSize(), true);
+        this.viewport.translate.x -= rect.x * this.viewport.scale;
+        this.viewport.translate.y -= rect.y * this.viewport.scale;
+        this.viewport.trigger("zoomed");
+    },                   
+
     refresh: function() {
         this.update();
-    },                 
+    },
 
     resetSize: function() {
         this.viewport.resetSize();

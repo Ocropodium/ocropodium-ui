@@ -171,7 +171,7 @@ DziViewer.ViewPort = OcrJs.Base.extend({
 
     getSize: function() {
         return new DziViewer.Size(this.width, this.height);
-    },                 
+    },
 
     getRect: function() {
         return new DziViewer.Rect(
