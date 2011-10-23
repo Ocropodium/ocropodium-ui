@@ -10,8 +10,7 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
     init: function(viewer) {
         this._super();
         this._viewer = viewer;
-        this._types = {};
-        this._current = null;
+        this._node = null;
 
         this._listeners = {
             setupGui: [],
@@ -22,17 +21,17 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
     },
 
     hasCurrent: function() {
-        return Boolean(this._current);
+        return this._node !== null;
     },        
 
     updateGui: function() {
-        if (this._current && this._currentgui)
-            this._currentgui.update();
+        if (this._node && this._gui)
+            this._gui.update();
     },                   
 
     refreshGui: function() {
-        if (this._current && this._currentgui) {
-            this._currentgui.refresh();
+        if (this._node && this._gui) {
+            this._gui.refresh();
         } else {
             this.tearDownGui();
         }
@@ -40,39 +39,37 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
 
     setupGui: function(node) {
         var self = this;
-        if (this._current && this._current != node)
-            this.tearDownGui();            
-        this._current = node;
 
+        if (this._node && this._node != node)
+            this.tearDownGui();            
+
+        // GUI classes should be named with the unqualified type of the
+        // node plus 'Gui', i.e. pil.PilCrop -> PilCropGui
         var type = node.type.replace(/^[^\.]+\./, "") + "Gui";
         var klass = OcrJs.NodeGui[type];
         if (klass) {
-            this._currentgui = new klass(this._viewer.viewport, node);
-            this._viewer.addOverlayPlugin(this._currentgui);
-            this._currentgui.addListener("parametersSet.nodegui", function(n, pd) {                
-                self.trigger("parametersSet", n, pd); 
+            this._node = node;
+            this._gui = new klass(this._viewer.viewport, node);
+            this._viewer.addOverlayPlugin(this._gui);
+            this._gui.addListeners({
+                parametersSet: function(n, pd) {                
+                    self.trigger("parametersSet", n, pd); 
+                },
+                interactingStart: function() {
+                    self.trigger("interacting", true); 
+                },
+                interactingStop: function() {
+                    self.trigger("interacting", false); 
+                },
             });
-            this._currentgui.addListener("interactingStart.nodegui", function() {
-                self.trigger("interacting", true); 
-            });
-            this._currentgui.addListener("interactingStop.nodegui", function() {
-                self.trigger("interacting", false); 
-            });
+            this._gui.refresh();
             this.trigger("setupGui");
-            this._currentgui.refresh();
-        } else {
-            console.log("No current node", node.type, this._types);
-        }        
+        }       
     },                  
 
     tearDownGui: function() {                     
         this._viewer.clearOverlayPlugins();
-        if (this._currentgui) {
-            console.log("tear down gui");
-            this._currentgui.removeListeners(".nodegui");
-            this.trigger("tearDownGui");
-            this._currentgui = null;
-            this._current = null;
-        }
+        this._gui = this._node = null;
+        this.trigger("tearDownGui");
     },
 });
