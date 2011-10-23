@@ -25,8 +25,6 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
         var textbox = this._getTextBbox(pagebox, lineboxes);        
         var scalefactor = (pagediv.width() - (2 * margin)) / textbox.width;
         // fudge to account for a scroll bar
-        //if (pagebox.height * scalefactor > pagediv.height())
-        //    margin -= 10;
         var spanboxes = $.map(lineboxes, function(linebox, i) {
             return [new DziViewer.Rect(
                     (linebox.x0 - textbox.x0) * scalefactor,
@@ -74,23 +72,17 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
             count = 0,
             cfs;
         if (iheight < targetheight && iheight) {
-            while (iheight < targetheight && iwidth < targetwidth) {
+            while (iheight < targetheight && iwidth < targetwidth && count++ < 50) {
                 cfs = parseInt(span.css("fontSize").replace("px", ""));
                 span = span.css("fontSize", (cfs + 1));
                 iheight = span.height();
                 iwidth = span.width();
-                count++;
-                if (count > 50)
-                    break;
             }
         } else if (iheight > targetheight) {
-            while (iheight && iheight > targetheight) {
+            while (iheight && iheight > targetheight && count++ < 50) {
                 cfs = parseInt(span.css("fontSize").replace("px", ""));
                 span = span.css("fontSize", (cfs - 1));
                 iheight = span.height();
-                count++;
-                if (count > 50)
-                    break;
             }
         }
     },
