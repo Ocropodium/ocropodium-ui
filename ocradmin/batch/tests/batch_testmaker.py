@@ -72,10 +72,10 @@ class Testmaker(TestCase):
         r = self.client.get('/ocr/transcript/10/', {})
         self.assertEqual(r.status_code, 302)
     def test_staticjsundocommandjs_13101700053(self):
-        r = self.client.get('/static/js/undo/command.js', {})
+        r = self.client.get('/static/js/ocr_js/undo/command.js', {})
         self.assertEqual(r.status_code, 200)
     def test_staticjsundostackjs_131017000533(self):
-        r = self.client.get('/static/js/undo/stack.js', {})
+        r = self.client.get('/static/js/ocr_js/undo/stack.js', {})
         self.assertEqual(r.status_code, 200)
     def test_staticjsline_editorjs_131017000534(self):
         r = self.client.get('/static/js/line_editor.js', {})
