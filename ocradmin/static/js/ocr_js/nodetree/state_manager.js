@@ -82,7 +82,7 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         this._hash = this.getTreeHash();        
     },              
 
-    save: function() {
+    saveCookieData: function() {
         var presetdata = {
             open: this._open,
             name: this._name,
@@ -108,9 +108,23 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         }
         console.log("Loading data", data);
         return data;
-    },                       
+    },
 
-    load: function() {
+    loadTaskData: function() {
+        var page = $("#edit_task_page").val(),
+            batch = $("#edit_task_batch").val(),
+            jsondata = $("#edit_task_script").val();
+        if (!jsondata) {
+            throw "Error loading data.  No JSON found.";
+        }
+        this.tree.loadScript(JSON.parse(jsondata));
+        this._hash = this.getTreeHash();
+        this._name = batch + ": " + page;
+        this._open = page;
+        this.trigger("opened", this.getCurrentName());
+    },                     
+
+    loadCookieData: function() {
         var data = this.getCookieData();              
         this.tree.loadScript(data.script);
         this._open = data.open;

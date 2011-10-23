@@ -266,7 +266,8 @@ $(function() {
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
         try {
-            statemanager.save();
+            if (!$("#edit_task_pk").val())
+                statemanager.saveCookieData();
         } catch (msg) {
             alert(msg);
         }
@@ -510,7 +511,10 @@ $(function() {
         },                         
         ready: function() {
             // load state stored from last time
-            statemanager.load();
+            if ($("#edit_task_pk").val())
+                statemanager.loadTaskData();
+            else
+                statemanager.loadCookieData();
             var node = nodetree.getFocussedNode();
             if (!node)
                 guimanager.tearDownGui();                
