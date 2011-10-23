@@ -125,13 +125,15 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
     },                     
 
     loadCookieData: function() {
-        var data = this.getCookieData();              
-        this.tree.loadScript(data.script);
-        this._open = data.open;
-        this._name = data.name;
-        this._hash = data.hash;
-        if (data.treehash != this.getTreeHash())
-            throw "Error loading data.  Loaded tree hash does not match stored.";        
-        this.trigger("opened", this.getCurrentName());
+        var data = this.getCookieData();
+        if (data && data.script) {
+            this.tree.loadScript(data.script);
+            this._open = data.open;
+            this._name = data.name;
+            this._hash = data.hash;
+            if (data.treehash != this.getTreeHash())
+                throw "Error loading data.  Loaded tree hash does not match stored.";        
+            this.trigger("opened", this.getCurrentName());
+        }
     }    
 });
