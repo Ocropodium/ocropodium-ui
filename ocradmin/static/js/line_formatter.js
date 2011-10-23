@@ -21,47 +21,47 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
         var margin = 50;
         var pagebox = this.parseBbox($(".ocr_page", pagediv).first());
         var textbox = this._getTextBbox(pagediv, pagebox);    
-        var scalefactor = (pagediv.width() - (2 * margin)) / (textbox[2] - textbox[0]);
+        var scalefactor = (pagediv.width() - (2 * margin)) / textbox.width;
         var lineboxes = $(".ocr_line", pagediv).map(function(i, elem) {
             var linebox = self.parseBbox($(elem));
-            return [[(linebox[0] - textbox[0]) * scalefactor,
-                    (linebox[1] - textbox[1]) * scalefactor,
-                    (linebox[2] - linebox[0]) * scalefactor,
-                    (linebox[3] - linebox[1]) * scalefactor]];
+            return [new DziViewer.Rect((linebox.x0 - textbox.x0) * scalefactor,
+                    (linebox.y0 - textbox.y0) * scalefactor,
+                    linebox.x1 * scalefactor,
+                    linebox.y1 * scalefactor)];
         });
         var stats = new Stats($.map(lineboxes, function(b) {
-            return b[3];
+            return b.height;
         }));
         // now stick a position attribute on everything
         $(".ocr_line", pagediv).each(function(i, elem) {
             $(elem).css({
                 position: "absolute",
-                left: lineboxes[i][0] + margin,
-                top: lineboxes[i][1] + margin
+                left: lineboxes[i].x0 + margin,
+                top: lineboxes[i].y0 + margin
             });
-            var th = (lineboxes[i][3] / stats.median - 1) < 0.5
+            var th = (lineboxes[i].height / stats.median - 1) < 0.5
                 ? stats.median
-                : lineboxes[i][3];
-            self._resizeToTarget($(elem), lineboxes[i][2], th);
+                : lineboxes[i].height;
+            self._resizeToTarget($(elem), lineboxes[i].width, th);
         }); 
     },
 
     _getTextBbox: function(pagediv, pagebox) {
         var self = this;                      
-        var minx0 = pagebox[2],
-            miny0 = pagebox[3],
-            minx1 = pagebox[0],
-            miny1 = pagebox[1];
+        var minx0 = pagebox.x1,
+            miny0 = pagebox.y1,
+            minx1 = pagebox.x0,
+            miny1 = pagebox.y0;
 
         var linebox;
         $(".ocr_line", pagediv).each(function(i, elem) {
             linebox = self.parseBbox($(elem));
-            minx0 = Math.min(minx0, linebox[0]);
-            miny0 = Math.min(miny0, linebox[1]);
-            minx1 = Math.max(minx1, linebox[2]);
-            miny1 = Math.max(miny1, linebox[3]);    
+            minx0 = Math.min(minx0, linebox.x0);
+            miny0 = Math.min(miny0, linebox.y0);
+            minx1 = Math.max(minx1, linebox.x1);
+            miny1 = Math.max(miny1, linebox.y1);    
         });
-        return [minx0, miny0, minx1, miny1];
+        return new DziViewer.Rect(minx0, miny0, minx1, miny1);
     },                      
 
     _resizeToTarget: function(span, targetwidth, targetheight) {
