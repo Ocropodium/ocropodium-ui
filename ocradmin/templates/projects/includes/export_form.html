@@ -1,0 +1,30 @@
+<form method="POST" id="export_form" action="/projects/ingest/{{project.pk}}/">
+    <div class="form_body">
+        <fieldset>
+            <legend>Export Options:</legend>
+            {% for field in exportform %}
+                <div class="field_wrapper">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+        </fieldset>
+
+        <fieldset>
+            <legend>Dublin Core Metadata:</legend>
+            {% for field in dcform %}
+            <div class="field_wrapper">
+                {{ field.label_tag }}
+                {{ field }}
+            </div>
+            {% endfor %}                
+        </fieldset>
+    </div>
+    <div class="form_footer ui-helper-clearfix">
+        <div class="form_submit_buttons">
+            <input type="submit" id="export" value="Export" />
+        </div>
+    </div>
+</form>        
+

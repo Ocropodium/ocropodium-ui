@@ -1,0 +1,14 @@
+[
+    {
+        "pk": 1, 
+        "model": "batch.batch", 
+        "fields": {
+            "created_on": "2010-06-22 11:23:36",
+            "name": "Test Task", 
+            "task_type" : "run.batchitem",
+            "user": 1,
+            "script": "",
+            "project": 1
+        }
+    }
+]

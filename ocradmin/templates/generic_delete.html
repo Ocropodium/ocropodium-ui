@@ -1,0 +1,13 @@
+{% extends "generic.html" %}
+
+{% block bodycontent %}
+    <div id="object_form">
+        <form id="delete_object_form" action="{{model.get_delete_url}}" method="POST">
+            {% include "includes/generic_delete_body.html" %}
+            <div class="object_detail_footer form_footer ui-helper-clearfix">
+                <input type="submit" value="Submit" id="submit_delete_form" />
+                <a href="{{object.get_absolute_url}}">Cancel</a>
+            </div>        
+        </form>
+    </div>
+{% endblock %}

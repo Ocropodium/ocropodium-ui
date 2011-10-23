@@ -1,0 +1,9 @@
+The OCRopodium web app is an experimental Django front-end for developing OCR workflows using open-source and
+commercial tools.  It is currently in a pre-alpha state and obviously comes with no warrantly of any kind.  The code is
+under the Apache 2.0 license and can be downloaded from:
+
+http://code.google.com/p/ocropodium
+
+Documentation is currently rather scarce but a wiki guide for setting up the application can be found here:
+
+http://code.google.com/p/ocropodium/wiki/OcropodiumWebAppSetup

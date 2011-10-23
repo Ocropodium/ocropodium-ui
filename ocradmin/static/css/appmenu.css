@@ -1,0 +1,133 @@
+/* Borrowed from 
+ * http://www.seoconsultants.com/css/menus/horizontal/css/menuh.css
+ */
+
+.appmenu {
+    /* top margin is to prevent glitchy hovers to the child
+     * elements when the browser is temporarily unaware of 
+     * the position of the mouse (i.e. when closing select
+     * menus. */
+    color: #060606;
+    width: 100%;
+    float: left;
+    vertical-align: middle;
+    background-color: #F0F0F0;
+    text-align: left;
+    clear: both;
+    z-index:400;
+    background: #fafafa;
+    background: -moz-linear-gradient(top, #fafafa 0%, #fafafa 25%, #f0f0f0 75%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fafafa), color-stop(25%,#fafafa), color-stop(75%,#f0f0f0));
+    background: -webkit-linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);
+    background: -o-linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);
+    background: -ms-linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#f0f0f0',GradientType=0 );
+    background: linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);    
+}
+
+.appmenu ul {
+    cursor: pointer;
+}
+
+.appmenu a {
+    display: block;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.appmenu h3 {
+    display: block;
+    white-space: nowrap;
+    margin: 2px;;
+    padding: 5px 20px 5px 5px;
+    font-weight: normal;
+}
+
+.appmenu ul ul a, .disabled_option {
+    padding: 5px 40px 5px 5px;
+    font-size: 1.1em;
+}
+
+.appmenu h3.top {
+    background-image: url("/static/hz_scroll_down.gif");
+    background-repeat: no-repeat;
+    background-position: center right;
+}
+
+.appmenu ul {
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+}
+
+.appmenu ul.ui-selected {
+    color: #FFF;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    -moz-border-radius-topleft: 3px;
+    -moz-border-radius-topright: 3px;
+    border-right: 1px solid #4B6E99;
+    border-left: 1px solid #4B6E99;
+}
+
+.appmenu h3.right {
+    background-image: url("/static/vt_scroll_right.gif");
+    background-repeat: no-repeat;
+    background-position: center right;
+}
+
+.appmenu a {
+    text-decoration: none;
+}
+
+.appmenu ul a, .appmenu a:visited {
+    color: #060606;
+}
+
+.appmenu a:active {
+}
+
+.appmenu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    float: left;
+}
+
+.appmenu li {
+    position: relative;
+}
+
+.appmenu ul ul {
+    position: absolute;
+    z-index: 500;
+    top: auto;
+    display: none;
+    background-color: #FEFEFE;
+    box-shadow: 2px 3px 3px #919598;
+    -webkit-box-shadow: 2px 3px 3px #919598;
+    -moz-box-shadow: 2px 3px 3px #919598;
+}
+
+.appmenu ul ul ul {
+    top: 0;
+    left: 100%;
+}
+
+.appmenu ul ul li {
+    border: 1px solid transparent;
+}
+
+.appmenu ul ul li.ui-selected {
+    border: 1px solid #4B6E99;
+}
+
+.appmenu ul ul li.ui-selected a {
+    color: #FFF;
+}
+
+.disabled_option {
+    color: #BBB;
+    background: inherit;
+    cursor: auto;
+}
+
