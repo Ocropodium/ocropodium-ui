@@ -49,8 +49,18 @@ class UnhandledRunScriptTask(AbortableTask):
             logger.error("Node Error (%s): %s", err.node, err.message)
             return dict(type="error", node=err.node.label, error=err.message)
 
+        return self.handle_output(term, cacher, result)
+
+
+    def handle_output(self, term, cacher, result):
+
+        # special case for switches
+        if term.__class__.__name__ == "Switch":
+            return self.handle_output(term.first_active(), cacher, result)
+
         path = cacher.get_path(term.first_active())
         filename = term.first_active().get_file_name()
+
         if term.outtype == numpy.ndarray:
             dzi = "%s.dzi" % os.path.splitext(filename)[0]
             return dict(
