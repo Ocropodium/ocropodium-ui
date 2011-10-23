@@ -496,8 +496,9 @@ $(function() {
             console.log("Script changed:", what);
         },
         nodeFocussed: function(node) {
+            console.log("Node focussed!", node);
             if (!node)
-                guimanager.tearDownGui();                
+                guimanager.tearDownGui();
             else {
                 if (sdviewer.isOpen()) {
                     console.log("Setting GUI for", node.name);
