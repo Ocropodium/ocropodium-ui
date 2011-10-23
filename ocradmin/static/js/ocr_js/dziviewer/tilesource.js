@@ -10,9 +10,6 @@ DziViewer.TileSource = OcrJs.Base.extend({
     init: function(path, xml) {
         this._super();
 
-        console.log("Loading", xml);
-        
-
         this._tilebase = path.replace(/\.dzi$/, "_files")
         this.format = xml.find("Image").attr("Format");
         this.tilesize = parseInt(xml.find("Image").attr("TileSize"));
@@ -130,7 +127,6 @@ DziViewer.TileSource = OcrJs.Base.extend({
 
     getTileBounds: function(level, column, row) {
         /* Bounding box of the tile (x1, y1, x2, y2) */
-        console.assert(0 <= level && level < this.numLevels(), "Invalid pyramid level");
         var offset_x = column == 0 ? 0 : this.overlap,
             offset_y = row    == 0 ? 0 : this.overlap,
             x0 = (column * this.tilesize) - offset_x,

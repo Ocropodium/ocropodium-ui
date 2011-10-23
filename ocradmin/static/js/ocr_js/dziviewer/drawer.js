@@ -100,8 +100,6 @@ DziViewer.Drawer = OcrJs.Base.extend({
 
         if (buffer) {
             loader.addListener("loadedAll.buffer", function() {
-                console.log("Loading buffer with width", self.buffer.prop("width"));
-                console.log("Loading buffer with height", self.buffer.prop("height"));
                 var img = self._buf.getImageData(
                     0, 0, self.buffer.prop("width"), self.buffer.prop("height"));
                 self._ctx.putImageData(img, 0, 0);
