@@ -251,6 +251,12 @@ $(function() {
         $("#task_update_form").submit();
     });
 
+    var hlcolors = {
+        lines: ["rgba(255,34,34,0.2)", "rgba(255,34,34,0.1)"],
+        paragraphs: ["rgba(34,34,255,0.2)", "rgba(34,34,255,0.1)"],
+        columns: ["rgba(255,255,34,0.2)", "rgba(255,255,34,0.1)"],
+    };
+
     // initialise the uploader...
     uploader  = new OcrJs.AjaxUploader(
         null,
@@ -289,7 +295,22 @@ $(function() {
         return false;
         event.stopPropagation();
         event.preventDefault();
-    });    
+    });
+
+    function highlightComponents(data) {
+        var overlays = {};
+        $.each(["columns", "paragraphs", "lines"], function(i, klass) {
+            if (data[klass]) {
+                var colors = hlcolors[klass];
+                $.each(data[klass], function(i, box) {
+                    sdviewer.addHighlight(
+                        new DziViewer.Rect(box[0], box[1], box[2], box[3]),
+                            colors[0], colors[1]);
+                });
+            }
+        });
+        sdviewer.update();
+    }
 
     function handleResult(nodename, data, cached) {
         console.log("Data:", data);
@@ -324,23 +345,7 @@ $(function() {
             var overlays = {};
             if (data.result.type == "pseg") {
                 console.log("Result:", data.result);
-                var overlays = {};
-                var hlcolors = {
-                    lines: ["rgba(255,34,34,0.5)", "rgba(255,34,34,0.1)"],
-                    paragraphs: ["rgba(34,34,255,0.5)", "rgba(34,34,255,0.1)"],
-                    columns: ["rgba(255,255,34,0.5)", "rgba(255,255,34,0.1)"],
-                };
-                $.each(["columns", "paragraphs", "lines"], function(i, klass) {
-                    if (data.result[klass]) {
-                        var colors = hlcolors[klass];
-                        $.each(data.result[klass], function(i, box) {
-                            sdviewer.addHighlight(
-                                new DziViewer.Rect(box[0], box[1], box[2], box[3]),
-                                    colors[0], colors[1]);
-                        });
-                    }
-                });
-                sdviewer.update();
+                highlightComponents(data.result);
             }
            // sdviewer.setBufferOverlays(overlays, 0);
             $("#viewertabs").tabs("select", 0);
