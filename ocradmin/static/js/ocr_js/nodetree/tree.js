@@ -1034,17 +1034,24 @@ NT.Tree = OcrJs.Base.extend({
         return script;
     },
 
-    saveState: function() {
-        this._super();
-        var transform = $(this.group()).attr("transform");
-        $.cookie("canvaspos", transform);
-    },                   
+    getState: function() {
+        return {
+            x: SvgHelper.getTranslate(this.group()).x,
+            y: SvgHelper.getTranslate(this.group()).y,
+            scale: SvgHelper.getScale(this.group()),
+        };
+    },                  
 
-    loadState: function() {
-        //var transform = $.cookie("canvaspos");
-        //if (transform) {
-        //    $(this.group()).attr("transform", transform);
-        //}
+    loadState: function(state) {
+        var x = parseInt(state.x),
+            y = parseInt(state.y),
+            scale = parseFloat(state.scale);
+        SvgHelper.updateTransform(
+                this.group(),
+                isNaN(x) ? 0 : x,
+                isNaN(y) ? 0 : y,
+                isNaN(scale) ? 1 : Math.max(0.1, scale)
+        );
     },
 
     drawTree: function() {

@@ -89,6 +89,7 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
             hash: this._hash,
             script: this.tree.buildScript(),
             treehash: this.getTreeHash(),
+            state: this.tree.getState(),
         };
         console.log("Saving preset data", presetdata);
         $.cookie("presetdata", JSON.stringify(presetdata));
@@ -128,9 +129,10 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         var data = this.getCookieData();
         if (data && data.script) {
             this.tree.loadScript(data.script);
+            this.tree.loadState(data.state ? data.state : {x:0,y:0,scale:1});
             this._open = data.open;
             this._name = data.name;
-            this._hash = data.hash;
+            this._hash = data.hash;            
             if (data.treehash != this.getTreeHash())
                 throw "Error loading data.  Loaded tree hash does not match stored.";        
             this.trigger("opened", this.getCurrentName());
