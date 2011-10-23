@@ -318,17 +318,29 @@ $(function() {
             // TODO: Find if we can subscript to an event to tell us exactly
             // when it's safe to switch.  ATM just using a 200ms delay.
             sdviewer.openDzi(data.result.dzi);
+            sdviewer.clearHighlights();
             guimanager.refreshGui();
             
             var overlays = {};
             if (data.result.type == "pseg") {
                 console.log("Result:", data.result);
                 var overlays = {};
-                $.each(["lines", "paragraphs", "columns"], function(i, klass) {
+                var hlcolors = {
+                    lines: ["rgba(255,34,34,0.5)", "rgba(255,34,34,0.1)"],
+                    paragraphs: ["rgba(34,34,255,0.5)", "rgba(34,34,255,0.1)"],
+                    columns: ["rgba(255,255,34,0.5)", "rgba(255,255,34,0.1)"],
+                };
+                $.each(["columns", "paragraphs", "lines"], function(i, klass) {
                     if (data.result[klass]) {
-                        overlays[klass] = data.result[klass];
+                        var colors = hlcolors[klass];
+                        $.each(data.result[klass], function(i, box) {
+                            sdviewer.addHighlight(
+                                new DziViewer.Rect(box[0], box[1], box[2], box[3]),
+                                    colors[0], colors[1]);
+                        });
                     }
                 });
+                sdviewer.update();
             }
            // sdviewer.setBufferOverlays(overlays, 0);
             $("#viewertabs").tabs("select", 0);
