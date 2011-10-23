@@ -313,7 +313,6 @@ $(function() {
     }
 
     function handleResult(nodename, data, cached) {
-        console.log("Data:", data);
         if (!data.result || !data.result.type) {
             console.error("Unexpected process result: ", data);
             return;
@@ -342,9 +341,7 @@ $(function() {
             sdviewer.clearHighlights();
             guimanager.refreshGui();
             
-            var overlays = {};
             if (data.result.type == "pseg") {
-                console.log("Result:", data.result);
                 highlightComponents(data.result);
             }
            // sdviewer.setBufferOverlays(overlays, 0);
