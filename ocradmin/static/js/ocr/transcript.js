@@ -25,7 +25,6 @@ function loadState() {
 
 
 function pollForResults(data, polltime) {
-    console.log("Result", data);
     if (data == null) {
         alert("Return data is null!");
     } else if (data.error) {
@@ -282,7 +281,6 @@ $(function() {
             $("#edit_task").attr("href",
                     "/presets/builder/" + task_pk + "?ref="
                     + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
-            console.log("Submitting ajax for binary");
             $.ajax({
                 url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
                 dataType: "json",
@@ -324,7 +322,8 @@ $(function() {
         if ($("#link_viewers").prop("checked")) {
             sdviewer.fitBounds(position.dilate(20), true);
             sdviewer.clearHighlights();
-            sdviewer.addHighlight(position); 
+            sdviewer.addHighlight(position);
+            sdviewer.update(); 
         }
     }
 
@@ -350,7 +349,7 @@ $(function() {
         }
     });
 
-    $("#save_data").click(function(event) {
+    function saveTranscript(fun, funargs) {
         $.ajax({
             url: "/ocr/save/" + transcript.taskId() + "/",
             data: {
@@ -365,11 +364,16 @@ $(function() {
                     $("#save_data").button({
                         disabled: true,
                     });
+                    fun.apply(this, funargs);
                 } else {
                     console.error(data);
                 }
             },
         });
+    };        
+
+    $("#save_data").click(function(event) {
+        saveTranscript();
     });
 
     $("#save_training_data").click(function(event) {
@@ -408,14 +412,19 @@ $(function() {
             if (transcript.hasUnsavedChanges()) {
                 if (!unsavedPrompt()) {
                     $("#page_slider").slider({value: orig});
-                    return;
                 } else {
-                    transcript.save();
+                    saveTranscript(function() {
+                        sdviewer.clearHighlights(); 
+                        window.location.hash = "#!/" + diff;
+                        $("input[name=format]:checked").click();
+                        updateNavButtons();
+                    });
                 }
-            } 
+                return;
+            }
+            sdviewer.clearHighlights(); 
             window.location.hash = "#!/" + diff;
-            
-            // set the buttons accordingly
+            $("input[name=format]:checked").click();
             updateNavButtons();
         },
     });

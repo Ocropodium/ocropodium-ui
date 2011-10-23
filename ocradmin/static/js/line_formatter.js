@@ -1,5 +1,4 @@
 // Object to hold various formatting functions that operate 
-// on an .ocr_page div, containing .ocr_line spans.
 
 
 OcrJs.LineFormatter = OcrJs.Base.extend({
@@ -22,12 +21,17 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
         var pagebox = this.parseBbox($(".ocr_page", pagediv).first());
         var textbox = this._getTextBbox(pagediv, pagebox);    
         var scalefactor = (pagediv.width() - (2 * margin)) / textbox.width;
+        // fudge to account for a scroll bar
+        if (pagebox.height * scalefactor > pagediv.height())
+            margin -= 10;
         var lineboxes = $(".ocr_line", pagediv).map(function(i, elem) {
             var linebox = self.parseBbox($(elem));
-            return [new DziViewer.Rect((linebox.x0 - textbox.x0) * scalefactor,
+            return [new DziViewer.Rect(
+                    (linebox.x0 - textbox.x0) * scalefactor,
                     (linebox.y0 - textbox.y0) * scalefactor,
                     linebox.x1 * scalefactor,
-                    linebox.y1 * scalefactor)];
+                    linebox.y1 * scalefactor)
+            ];
         });
         var stats = new Stats($.map(lineboxes, function(b) {
             return b.height;
@@ -36,8 +40,8 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
         $(".ocr_line", pagediv).each(function(i, elem) {
             $(elem).css({
                 position: "absolute",
-                left: lineboxes[i].x0 + margin,
-                top: lineboxes[i].y0 + margin
+                left: Math.round(lineboxes[i].x0) + margin,
+                top: Math.round(lineboxes[i].y0) + margin
             });
             var th = (lineboxes[i].height / stats.median - 1) < 0.5
                 ? stats.median
@@ -80,7 +84,7 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
                     break;
             }
         } else if (iheight > targetheight) {
-            while (iheight && iheight > targetheight) {
+            while (iheight && iheight > targetheight && iwidth < targetwidth) {
                 cfs = parseInt(span.css("fontSize").replace("px", ""));
                 span = span.css("fontSize", (cfs - 1));
                 iheight = span.height();
