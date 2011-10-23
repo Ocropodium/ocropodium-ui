@@ -73,7 +73,12 @@ DziViewer.Viewer = OcrJs.Base.extend({
         plug.addListener("update", function() {
             plug.render(self.overlay.get(0).getContext("2d"));
         });
-    },     
+    },
+
+    clearOverlayPlugins: function() {
+        this.viewport.clearEventFilters();
+        this.loader.removeListeners(".plugdraw");
+    },                             
 
     removeOverlayPlugin: function(plug) {
         this.viewport.removeEventFilter(plug);

@@ -53,6 +53,10 @@ DziViewer.ViewPort = OcrJs.Base.extend({
     removeEventFilter: function(filter) {
         this._eventfilters.splice(
                 this._eventfilters.indexOf(filter), 1);
+    },
+
+    clearEventFilters: function() {
+        this._eventfilters = [];
     },                           
 
     setupEvents: function() {
