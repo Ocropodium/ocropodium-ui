@@ -219,13 +219,13 @@ DziViewer.Plugin.RectManager = DziViewer.Plugin.Base.extend({
                             rect.y1 = Math.max(npoint.y, rect.y0 + self.MINSIZE);
                             break;
                         case self.LEFT:
-                            rect.x0 = Math.min(npoint.x, rect.y1 - self.MINSIZE);
+                            rect.x0 = Math.min(npoint.x, rect.x1 - self.MINSIZE);
                             break;
                         case self.TOP:
                             rect.y0 = Math.min(npoint.y, rect.y1 - self.MINSIZE);
                             break;
                         case self.TOPLEFT:
-                            rect.x0 = Math.min(npoint.x, rect.y1 - self.MINSIZE);
+                            rect.x0 = Math.min(npoint.x, rect.x1 - self.MINSIZE);
                             rect.y0 = Math.min(npoint.y, rect.y1 - self.MINSIZE);
                             break;
                         case self.TOPRIGHT:
@@ -237,7 +237,7 @@ DziViewer.Plugin.RectManager = DziViewer.Plugin.Base.extend({
                             rect.y1 = Math.max(npoint.y, rect.y0 + self.MINSIZE);
                             break;
                         case self.BOTTOMLEFT:
-                            rect.x0 = Math.min(npoint.x, rect.y1 - self.MINSIZE);
+                            rect.x0 = Math.min(npoint.x, rect.x1 - self.MINSIZE);
                             rect.y1 = Math.max(npoint.y, rect.y0 + self.MINSIZE);
                             break;
                         default:
