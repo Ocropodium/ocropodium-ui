@@ -88,7 +88,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
         var fillstyle = fillstyle || "rgba(255,255,0,0.3)";
         this._highlights.push({
             rect: rect,
-            strole: strokestyle,
+            stroke: strokestyle,
             fill: fillstyle,
         });
     },
@@ -112,8 +112,13 @@ DziViewer.Viewer = OcrJs.Base.extend({
         ctx.save();
         for (var i in this._highlights) {                        
             var rect = this._highlights[i].rect;
+            ctx.lineWidth = 1;
             ctx.strokeStyle = this._highlights[i].stroke;
             ctx.fillStyle = this._highlights[i].fill;
+            ctx.strokeRect(
+                    rect.x * this.viewport.scale + this.viewport.translate.x,
+                    rect.y * this.viewport.scale + this.viewport.translate.y,
+                    rect.width * this.viewport.scale, rect.height * this.viewport.scale);
             ctx.fillRect(
                     rect.x * this.viewport.scale + this.viewport.translate.x,
                     rect.y * this.viewport.scale + this.viewport.translate.y,
