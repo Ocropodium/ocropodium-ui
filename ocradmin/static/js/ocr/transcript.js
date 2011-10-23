@@ -321,9 +321,11 @@ $(function() {
         //sdviewer.setBufferOverlays({
         //    "current": [position],
         //});
-        //if ($("#link_viewers").prop("checked")) {
-        //    sdviewer.fitBounds(position, true); 
-        //}
+        if ($("#link_viewers").prop("checked")) {
+            sdviewer.fitBounds(position.dilate(20), true);
+            sdviewer.clearHighlights();
+            sdviewer.addHighlight(position); 
+        }
     }
 
     transcript.addListener("onHoverPosition", function(position) {
