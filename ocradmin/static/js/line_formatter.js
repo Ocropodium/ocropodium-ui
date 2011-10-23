@@ -84,7 +84,7 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
                     break;
             }
         } else if (iheight > targetheight) {
-            while (iheight && iheight > targetheight && iwidth < targetwidth) {
+            while (iheight && iheight > targetheight) {
                 cfs = parseInt(span.css("fontSize").replace("px", ""));
                 span = span.css("fontSize", (cfs - 1));
                 iheight = span.height();
