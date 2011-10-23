@@ -143,7 +143,7 @@ class MongoDBCacher(PersistantFileCacher):
     @contextmanager
     def get_write_handle(self, filepath):
         try:
-            h = self._fs.new_file(filename=filepath)
+            h = self._fs.new_file(filename=filepath, encoding="utf-8")
             yield h
         finally:
             h.close()
