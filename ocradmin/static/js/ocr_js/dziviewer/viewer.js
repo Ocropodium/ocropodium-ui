@@ -81,7 +81,6 @@ DziViewer.Viewer = OcrJs.Base.extend({
             strole: strokestyle,
             fill: fillstyle,
         });
-        this.update();
     },
 
     clearHighlights: function() {
@@ -95,7 +94,6 @@ DziViewer.Viewer = OcrJs.Base.extend({
                 return true;
             }
         }            
-        console.error("Unable to remove requested highlight", rect);
     },                         
 
     drawHighlights: function() {
@@ -123,7 +121,6 @@ DziViewer.Viewer = OcrJs.Base.extend({
     },                  
 
     load: function(path) {
-        console.log("Loading", path);
         var self = this;              
         this._path = path;
         $.ajax({
