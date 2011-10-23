@@ -314,12 +314,12 @@ def high_pass_median(numpy_arr, medscale):
     return numpy.vectorize(hp)(numpy_arr, median * medscale) 
 
 
-def get_lines_by_projection(narray):
+def get_lines_by_projection(narray, highpass=0.001):
     """
     Extract regions of blackness.
     """
     hpr = iulib.numpy(narray).sum(axis=0)
-    hps = high_pass_max(hpr, 0.001)
+    hps = high_pass_max(hpr, highpass)
 
     regions = []
     gotline = None
@@ -377,8 +377,9 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
     intypes = [ocrolib.numpy.ndarray]
     outtype = dict
     parameters = [
-        dict(name="toplines", value="0"),
-        dict(name="columns", value="1"),
+        dict(name="toplines", value=0),
+        dict(name="columns", value=1),
+        dict(name="highpass", value=0.001, type="float"),
     ]
 
     def null_data(self):
@@ -406,9 +407,12 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
         self.columns.append(Rectangle.union_of(*self.textlines))
         self.find_columns()
         self.find_lines()
+        
+        def flipud(r):
+            return [r.x0, input.shape[0] - r.y1, r.x1, input.shape[0] - r.y0] 
         return dict(
-                lines=[r.points() for r in self.textlines],
-                columns=[r.points() for r in self.columns]
+                lines=[flipud(r) for r in self.textlines],
+                columns=[flipud(r) for r in self.columns],
         )
 
     def init(self):
@@ -551,11 +555,11 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
                 continue
             portion = iulib.bytearray()
             iulib.extract_subimage(portion, self.inverted, *newrect.points())
-            regions = get_lines_by_projection(portion)
+            regions = get_lines_by_projection(portion, float(self._params.get("highpass")))
             plines = []
             for bottom, top in regions:
                 height = top - bottom
-                if height - self.avgheight < self.avgheight / 2:
+                if height - self.avgheight < self.avgheight / 3:
                     continue
                 plines.append(Rectangle(colrect.x0, bottom, colrect.x1, top))
 
