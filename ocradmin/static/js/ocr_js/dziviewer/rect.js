@@ -60,6 +60,15 @@ DziViewer.Rect.prototype.isSameAs = function(other) {
             && this.x1 == other.x1 && this.y1 == other.y1;    
 }
 
+DziViewer.Rect.prototype.dilate = function(amount) {
+    return new DziViewer.Rect(
+            this.x0 - amount,
+            this.y0 - amount,
+            this.x1 + amount,
+            this.y1 + amount
+    );            
+}    
+
 DziViewer.Rect.prototype.aspect = function() {
     if (this.empty())
         return 1;
