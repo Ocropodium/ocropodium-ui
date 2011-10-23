@@ -66,9 +66,9 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
     },                  
 
     tearDownGui: function() {                     
+        this._viewer.clearOverlayPlugins();
         if (this._currentgui) {
             console.log("tear down gui");
-            this._viewer.removeOverlayPlugin(this._currentgui);
             this._currentgui.removeListeners(".nodegui");
             this.trigger("tearDownGui");
             this._currentgui = null;
