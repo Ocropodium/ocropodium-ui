@@ -82,6 +82,10 @@
         </div>
         <div id="script_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
             <span class="buttons_left">
+                {% if task %}
+                <button id="save_task_preset">Save</button>
+                <button id="cancel_task_preset">Cancel</button>
+                {% else %}
                 <div class="appmenu dropdown">
                     <ul class="top">
                         <li>
@@ -97,6 +101,7 @@
                         </li>
                     </ul>
                 </div>
+                {% endif %}
                 <span>&nbsp;&nbsp;&nbsp;</span>
                 <button id="undo_command" disabled="disabled">Undo</button>
                 <button id="redo_command" disabled="disabled">Redo</button>
@@ -107,12 +112,6 @@
                 <button id="clear_cache">Clear Cache</button>
                 <button id="focus_dummy"></button>
             </span>
-            {% if task %}
-            <span class="buttons_right">
-                <button id="save_task_preset">Save &amp; Rerun Task</button>
-                <button id="cancel_task_preset">Cancel</button>
-            </span>
-            {% endif %}
             <div id="dialog"></div>
         </div>                
     </div>
