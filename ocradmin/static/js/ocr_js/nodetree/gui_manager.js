@@ -11,6 +11,7 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
         this._super();
         this._viewer = viewer;
         this._node = null;
+        this._gui = null;
 
         this._listeners = {
             setupGui: [],
@@ -40,8 +41,7 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
     setupGui: function(node) {
         var self = this;
 
-        if (this._node && this._node != node)
-            this.tearDownGui();            
+        this.tearDownGui();            
 
         // GUI classes should be named with the unqualified type of the
         // node plus 'Gui', i.e. pil.PilCrop -> PilCropGui
@@ -68,7 +68,8 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
     },                  
 
     tearDownGui: function() {                     
-        this._viewer.clearOverlayPlugins();
+        if (this._gui)
+            this._viewer.removeOverlayPlugin(this._gui)
         this._gui = this._node = null;
         this.trigger("tearDownGui");
     },
