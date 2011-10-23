@@ -19,47 +19,47 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
         var self = this;                      
         var margin = 50;
         var pagebox = this.parseBbox($(".ocr_page", pagediv).first());
-        var textbox = this._getTextBbox(pagediv, pagebox);    
+        var lineboxes = $(".ocr_line", pagediv).map(function(i, elem) {
+            return [self.parseBbox($(elem))];
+        });
+        var textbox = this._getTextBbox(pagebox, lineboxes);        
         var scalefactor = (pagediv.width() - (2 * margin)) / textbox.width;
         // fudge to account for a scroll bar
-        if (pagebox.height * scalefactor > pagediv.height())
-            margin -= 10;
-        var lineboxes = $(".ocr_line", pagediv).map(function(i, elem) {
-            var linebox = self.parseBbox($(elem));
+        //if (pagebox.height * scalefactor > pagediv.height())
+        //    margin -= 10;
+        var spanboxes = $.map(lineboxes, function(linebox, i) {
             return [new DziViewer.Rect(
                     (linebox.x0 - textbox.x0) * scalefactor,
                     (linebox.y0 - textbox.y0) * scalefactor,
-                    linebox.x1 * scalefactor,
-                    linebox.y1 * scalefactor)
+                    (linebox.x1 - textbox.x0) * scalefactor,
+                    (linebox.y1 - textbox.y0) * scalefactor)
             ];
         });
-        var stats = new Stats($.map(lineboxes, function(b) {
+        var stats = new Stats($.map(spanboxes, function(b) {
             return b.height;
         }));
         // now stick a position attribute on everything
         $(".ocr_line", pagediv).each(function(i, elem) {
             $(elem).css({
                 position: "absolute",
-                left: Math.round(lineboxes[i].x0) + margin,
-                top: Math.round(lineboxes[i].y0) + margin
+                left: Math.round(spanboxes[i].x0) + margin,
+                top: Math.round(spanboxes[i].y0) + margin
             });
-            var th = (lineboxes[i].height / stats.median - 1) < 0.5
+            var th = (spanboxes[i].height / stats.median - 1) < 0.5
                 ? stats.median
-                : lineboxes[i].height;
-            self._resizeToTarget($(elem), lineboxes[i].width, th);
+                : spanboxes[i].height;
+            self._resizeToTarget($(elem), spanboxes[i].width, th);
         }); 
     },
 
-    _getTextBbox: function(pagediv, pagebox) {
+    _getTextBbox: function(pagebox, lineboxes) {
         var self = this;                      
         var minx0 = pagebox.x1,
             miny0 = pagebox.y1,
             minx1 = pagebox.x0,
             miny1 = pagebox.y0;
 
-        var linebox;
-        $(".ocr_line", pagediv).each(function(i, elem) {
-            linebox = self.parseBbox($(elem));
+        $.each(lineboxes, function(i, linebox) {
             minx0 = Math.min(minx0, linebox.x0);
             miny0 = Math.min(miny0, linebox.y0);
             minx1 = Math.max(minx1, linebox.x1);
