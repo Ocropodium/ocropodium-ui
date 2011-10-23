@@ -28,6 +28,16 @@ DziViewer.Viewer = OcrJs.Base.extend({
             .prop("width", this.parent.width())
             .prop("height", this.parent.height())
             .appendTo(this.parent);
+        this.highlight = $("<canvas></canvas>")
+            .prop("width", this.parent.width())
+            .prop("height", this.parent.height())
+            .css({
+                position: "fixed",
+                zIndex: 9,
+                top: this.parent.offset().top,
+                left: this.parent.offset().left,                
+            })
+            .appendTo(this.parent);
         this.overlay = $("<canvas></canvas>")
             .prop("width", this.parent.width())
             .prop("height", this.parent.height())
@@ -97,7 +107,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
     },                         
 
     drawHighlights: function() {
-        var ctx = this.overlay.get(0).getContext("2d");
+        var ctx = this.highlight.get(0).getContext("2d");
         ctx.clearRect(0, 0, this.viewport.width, this.viewport.height);
         ctx.save();
         for (var i in this._highlights) {                        
@@ -172,6 +182,13 @@ DziViewer.Viewer = OcrJs.Base.extend({
         this.buffer
             .prop("width", this.viewport.width)
             .prop("height", this.viewport.height);
+        this.highlight
+            .prop("width", this.viewport.width)
+            .prop("height", this.viewport.height)
+            .css({
+                top: this.parent.offset().top,
+                left: this.parent.offset().left
+            });
         this.overlay
             .prop("width", this.viewport.width)
             .prop("height", this.viewport.height)
