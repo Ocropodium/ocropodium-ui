@@ -9,8 +9,8 @@
 
 
 {% block content %}
-<div class="ui-widget ui-corner-top">
-    <div class="ui-widget-header ui-corner-top ui-layout-header">{{page_name}}</div>
+<div class="ui-widget">
+    <div class="ui-widget-header ui-layout-header">{{page_name}}</div>
     <div class="ui-widget-content">
         {% include "includes/messages.html" %}
         {% block bodycontent %}
@@ -21,8 +21,8 @@
 
 
 {% block sidebar %}
-<div class="ui-widget ui-corner-top">
-    <div class="ui-widget-header ui-corner-top ui-layout-header">Item Tags</div>
+<div class="ui-widget">
+    <div class="ui-widget-header ui-layout-header">Item Tags</div>
     <div class="ui-widget-content">
         <div id="tag_list">
             <ul class="taglist">

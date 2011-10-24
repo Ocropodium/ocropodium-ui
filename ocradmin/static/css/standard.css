@@ -188,23 +188,6 @@ a.button:hover {
     
 }
 
-.viewer_highlight.lines {
-    background-color: #FF2222;
-    opacity: 0.2;
-}
-
-.viewer_highlight.paragraphs {
-    border: 5px solid #2222FF;
-    opacity: 0.5;
-    border-radius: 3px;
-}
-
-.viewer_highlight.columns {
-    background-color: #FFFF22;
-    opacity: 0.2;
-}
-
-
 .reference_set_list {
     min-height: 400px;
     overflow: auto;
@@ -286,20 +269,3 @@ a.button:hover {
     );
 }
 
-#logwin {
-    opacity: 0.5;
-    background-color: #000;
-    font-size: 2em;
-    border-radius: 4px;
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    float: left;
-    color: #FFF;
-}
-
-.debugwindow {
-    border: none;
-    width: 100%;
-    height: 100%;
-}
