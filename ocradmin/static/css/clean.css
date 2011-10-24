@@ -318,6 +318,12 @@ a.button:hover {
     border: none !important;
 }
 
+.ui-tabs, .ui-tabs-nav {
+    border-radius: 0px;
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+}
+
 .ui-header-tabs .ui-tabs-nav li a {
     padding: 0.2em !important;
 }
