@@ -10,9 +10,8 @@ import tempfile
 import subprocess as sp
 
 from nodetree import node
-from ocradmin import plugins
-from ocradmin.core import utils as ocrutils
 
+import numpy
 from . import base
 from .. import utils, stages, types
 
@@ -23,6 +22,7 @@ class AbbyyRecognizer(base.CommandLineRecognizerNode):
     """
     binary = "abbyyocr"
     stage = stages.RECOGNIZE
+    intypes = [numpy.ndarray]
     parameters = [
         dict(name="single_column", type="bool", value=False),
         dict(name="invert_image", type="bool", value=False),
@@ -75,5 +75,5 @@ class AbbyyRecognizer(base.CommandLineRecognizerNode):
                 hocr = utils.hocr_from_abbyy(tmp.name)
             os.unlink(tmp.name)
             os.unlink(btmp.name)
-        plugins.set_progress(self.logger, self.progress_func, 100, 100)
+        utils.set_progress(self.logger, self.progress_func, 100, 100)
         return hocr
