@@ -605,6 +605,10 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
         """
         return dict(columns=[], lines=[], paragraphs=[])
 
+    def flip_coord(self, rect, height):
+        return Rectangle(rect.x0, height - rect.y1, 
+                    rect.x1, height - rect.y0)
+
     def process(self, binary):
         """
         Segment a binary image.
@@ -616,31 +620,33 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
             columns
             images
         """
-        coords = self.get_coords();
+        height = binary.shape[0]
+        coords = [self.flip_coord(r, height) for r in self.get_coords()]
         if len(coords) == 0:
             coords.append(Rectangle(0, 0, 
                 binary.shape[1] - 1, binary.shape[0] - 1))
         self.sanitise_coords(coords, binary.shape[1], binary.shape[0]);            
-        height = binary.shape[1]
         boxes = {}
         for rect in coords:
             points = rect.points()
             col = ocrolib.iulib.bytearray()
             ocrolib.iulib.extract_subimage(col, ocrolib.numpy2narray(binary), *points)
-            pout = self.segment_portion(col, height, points[0], points[1])
+            pout = self.segment_portion(col, points[0], points[1], points[3] - points[1])
             for key, rects in pout.iteritems():
                 if boxes.get(key) is not None:
-                    boxes.get(key).extend([r.points() for r in rects])
+                    boxes.get(key).extend(rects)
                 else:
-                    boxes[key] = [r.points() for r in rects]
+                    boxes[key] = rects
+        for key, rects in boxes.iteritems():
+            boxes[key] = [self.flip_coord(r, height).points() for r in rects]
         return boxes
 
-    def segment_portion(self, portion, height, dx, dy):
+    def segment_portion(self, portion, dx, dy, pheight):
         """
         Segment a single-column chunk.
         """
         page_seg = self._segmenter.segment(ocrolib.narray2numpy(portion))
-        return self.extract_boxes(self._regions, page_seg, height, dx, dy)
+        return self.extract_boxes(self._regions, page_seg, dx, dy, pheight)
 
     def get_coords(self):
         """
@@ -687,7 +693,7 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
             rectlist[i] = rect
 
     @classmethod
-    def extract_boxes(cls, regions, page_seg, height, dx, dy):
+    def extract_boxes(cls, regions, page_seg, dx, dy, pheight):
         """
         Extract line/paragraph geoocrolib.metry info.
         """
@@ -701,7 +707,7 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
             func(page_seg)
             for i in range(1, regions.length()):
                 out[box].append(Rectangle(regions.x0(i) + dx,
-                    (regions.y0(i)) + dy, regions.x1(i) + dx,
-                    (regions.y1(i)) + dy))
+                    (pheight - regions.y1(i)) + dy, regions.x1(i) + dx,
+                    (pheight - regions.y0(i)) + dy))
         return out
 
