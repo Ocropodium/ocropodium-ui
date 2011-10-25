@@ -463,6 +463,14 @@ $(function() {
                     JSON.parse(data.target.response).file);
             });
         },
+        renamedNode: function(node, name) {
+            if (nodetree.isValidNodeName(name, node.name)) {
+                nodetree.renameNode(node, name);
+                nodeparams.setNodeNameValid();
+            } else {
+                nodeparams.setNodeNameInvalid();
+            } 
+        },                         
     });
 
     guimanager.addListeners({

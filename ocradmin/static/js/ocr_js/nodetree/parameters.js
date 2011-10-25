@@ -159,6 +159,7 @@ NT.Parameters = OcrJs.Base.extend({
         this._listeners = {
             parameterSet: [],
             registerUploader: [],
+            renamedNode: [],
         };
     },
 
@@ -193,6 +194,7 @@ NT.Parameters = OcrJs.Base.extend({
             node = this._node;
 
         this._params = [];
+        $(".nameedit", this.parent).unbind(".editname");
         $(this.parent).html("").append(
             $.tmpl(this._paramtmpl, {
                 nodename: node.name
@@ -204,8 +206,28 @@ NT.Parameters = OcrJs.Base.extend({
             this._params.push(p);
             tab.append(p.buildHtml());
             this.setupParameterEvents(p);
-        }            
+        }
+        this.setupEvents();        
     },
+
+    setupEvents: function() {
+        var self = this;
+        $(".nameedit", this.parent).bind("change.editname", function(event) {
+            self.trigger("renamedNode", self._node, $(this).val());                        
+        });            
+    },
+
+    setNodeNameInvalid: function() {
+        $(".nameedit", this.parent).css({
+            backgroundColor: "#FDD",
+        });
+    },
+
+    setNodeNameValid: function() {
+        $(".nameedit", this.parent).css({
+            backgroundColor: "#FFF", 
+        });
+    },                          
 
     clearParams: function() {
         $(this.parent).html("");
