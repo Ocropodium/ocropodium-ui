@@ -779,17 +779,41 @@ NT.Tree = OcrJs.Base.extend({
                 nodeCmd(event);
             });
             $(document).unbind("keydown.nodecmd").bind("keydown.nodecmd", function(event) {
-                if (event.which == KC_DELETE)
-                    self.cmdDeleteSelected();
-                else if (event.which == KC_SHIFT)
-                   self._multiselect = true;
-                else if (event.which == KC_HOME)
-                    self.centreTree();
-                else if (event.ctrlKey && event.which == 65) { // 'A' key                 
-                    self.selectAll(); 
-                    event.preventDefault();
-                    event.stopPropagation();
+                var movediff = event.ctrlKey ? 5 : 20;
+                switch(event.which) {
+                    case KC_SHIFT:
+                        self._multiselect = true;
+                        break;
+                    case KC_DELETE:
+                        self.cmdDeleteSelected();
+                        break;
+                    case KC_HOME:
+                        self.centreTree();
+                        break;
+                    case 65: // 'A'
+                        if (event.ctrlKey) {
+                            self.selectAll();
+                            break;
+                        }
+                    case KC_UP:
+                        self.cmdMoveNodesBy(self.selectedNodes(), 0, -movediff);
+                        break;
+                    case KC_DOWN:
+                        self.cmdMoveNodesBy(self.selectedNodes(), 0, movediff);
+                        break;
+                    case KC_LEFT:
+                        self.cmdMoveNodesBy(self.selectedNodes(), -movediff, 0);
+                        break;
+                    case KC_RIGHT:
+                        self.cmdMoveNodesBy(self.selectedNodes(), movediff, 0);
+                        break;
+                    default:
+                        // if we get here, return before preventing default
+                        return;
                 }
+                // this should only happen for events we've actually handled
+                event.preventDefault();
+                event.stopPropagation();
             });
             $(document).unbind("keyup.nodecmd").bind("keyup.nodecmd", function(event) {
                 if (event.which == KC_SHIFT)
@@ -847,7 +871,13 @@ NT.Tree = OcrJs.Base.extend({
 
         SvgHelper.updateScale(this.group(), usedscale, usedscale);
         SvgHelper.updateTranslate(this.group(), transx, transy);
-    },                    
+    },
+
+    selectedNodes: function() {
+        return this._nodes.filter(function(n) {
+            return n.isFocussed();
+        });
+    },                       
 
     deselectAll: function() {
         $.map(this._nodes, function(n) {
