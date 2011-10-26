@@ -19,7 +19,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
         this.stage = classdata.stage;
         this.intypes = classdata.intypes;
         this.outtype = classdata.outtype;
-        this.passthough = classdata.passthrough;
+        this.passthrough = classdata.passthrough;
         this.parameters = $.extend(true, [], classdata.parameters);
         this._ignored = false;
         this._focussed = false;
@@ -157,10 +157,10 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
     },
 
     hashValue: function() {
-        var inputs = this.getInputNodes();                   
+        var inputs = this.getInputNodes();
         if (this.arity > 0 && this.isIgnored()) {
-            if (inputs[this.passthrough])                
-                return inputs[this.passthrough].hash_value()
+            if (inputs[this.passthrough])
+                return inputs[this.passthrough].hashValue()
             else
                 return "";
         }
