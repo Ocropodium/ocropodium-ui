@@ -16,7 +16,7 @@ from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.plugins import graph, cache
 from ocradmin.plugins import utils as pluginutils
-from ocradmin.presets.models import Preset
+from ocradmin.presets.models import Preset, Profile
 
 from nodetree import script, node, registry
 from nodetree import utils as nodeutils
@@ -41,6 +41,22 @@ class PresetForm(forms.ModelForm):
         widgets = dict(
                 user=forms.HiddenInput()
         )
+
+
+class ProfileForm(forms.ModelForm):
+    """
+        Base profile form
+    """
+    def __init__(self, *args, **kwargs):
+        super(ProfileForm, self).__init__(*args, **kwargs)
+        # change a widget attribute:
+        self.fields['description'].widget.attrs["rows"] = 2
+        self.fields['description'].widget.attrs["cols"] = 40        
+
+    class Meta:
+        model = Profile
+        fields = ["name", "tags", "description", "data"]
+        exclude = ["created_on", "updated_on"]
 
 
 presetlist = gv.GenericListView.as_view(
@@ -72,6 +88,37 @@ presetdelete = gv.GenericDeleteView.as_view(
         model=Preset,
         page_name="Delete OCR Preset",
         success_url="/presets/list/",)
+
+
+profilelist = gv.GenericListView.as_view(
+        model=Profile,
+        page_name="OCR Profiles",
+        fields=["name", "description", "user", "created_on"],)
+
+
+profilecreate = gv.GenericCreateView.as_view(
+        model=Profile,
+        form_class=ProfileForm,
+        page_name="New OCR Profile",)
+
+
+profiledetail = gv.GenericDetailView.as_view(
+        model=Profile,
+        page_name="OCR Profile",
+        fields=["name", "description", "user", "public", "tags", "created_on",
+            "updated_on",])
+
+
+profileedit = gv.GenericEditView.as_view(
+        model=Profile,
+        form_class=ProfileForm,
+        page_name="Edit OCR Profile",)
+
+
+profiledelete = gv.GenericDeleteView.as_view(
+        model=Profile,
+        page_name="Delete OCR Profile",
+        success_url="/profiles/list/",)
 
 
 def createjson(request):
