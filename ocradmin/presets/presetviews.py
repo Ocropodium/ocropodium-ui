@@ -140,8 +140,8 @@ def builder(request):
     print request.session
     context = dict(
             form=PresetForm(initial=dict(user=request.user)),
-            presets=Preset.objects.all(),
-            profiles=Preset.objects.all(),
+            presets=Preset.objects.order_by("name"),
+            profiles=Preset.objects.order_by("name"),
     )
     return render(request, "presets/builder.html", context)
 
@@ -153,8 +153,8 @@ def builder_task_edit(request, task_pk):
     """
     context = dict(
             form=PresetForm(initial=dict(user=request.user)),
-            presets=Preset.objects.all(),
-            profiles=Preset.objects.all(),
+            presets=Preset.objects.order_by("name"),
+            profiles=Preset.objects.order_by("name"),
             task=get_object_or_404(OcrTask, pk=task_pk),
             ref=request.GET.get("ref", "/batch/show/%d/" % task.batch.pk)
     )
