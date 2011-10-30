@@ -1,6 +1,7 @@
 //
 // Preset manager class.  Holds a reference to the current
 // preset and manages saving, updating, or clearing it.
+// This is trickier than it sounds due to all the Async-ness.
 //
 
 // shortcut function for clearing form
@@ -26,7 +27,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         this.parent = parent;
 
         this.state = state;
-
+        this._presetitem = $.template("#openDialogItem");
         this._dialog = $("#dialog", this.parent);
         this._listeners = {
             saveDialogOpen: [],
@@ -38,8 +39,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         };
 
         // flag telling us we should continue to
-        // offer the open dialog after the current
-        // save dialog
+        // do something after the current dialog
         this._continueaction = null;
 
         this.setupEvents();
@@ -64,7 +64,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
             }
         });        
         
-        $("#save_script_as").click(function(event) {
+        $("#save_script_as, #submit_save_script_as").click(function(event) {
             self.showCreatePresetDialog();
         });        
         
@@ -97,35 +97,39 @@ OcrJs.PresetManager = OcrJs.Base.extend({
                     user: self._dialog.find("#id_user").val(),
                     public: self._dialog.find("#id_public").prop("checked"),
                     profile: self._dialog.find("#id_profile").val(),
-                    data: JSON.stringify(self.state.getTreeScript(), null, 2),
+                    data: JSON.stringify(currdata, null, 2),
             }, function(data) {
                     self.setCurrentOpenPreset(data, 
                             self._dialog.find("#id_name").val(), currdata, false);                    
-                    // TODO: Append the new preset to the open-preset list!
-                    // this will unfortunately be fiddly
-                    self._dialog.dialog("close");
-                    if (self._continueaction)
-                        self._continueaction();
+                    self.refreshPresetList(function(data) {
+                        self._dialog.dialog("close");
+                        if (self._continueaction)
+                            self._continueaction();
+                    });
                 },
                 OcrJs.ajaxErrorHandler
             );
         });
-        $("#unsaved_preset").find("#submit_save_script").click(function(event) {
+        $("#submit_save_script").click(function(event) {
             var data = self.state.getTreeScript();
             self.saveExistingPreset(self.state.getOpen(), data, function(data) {
                 self.setCurrentOpenPreset(self.state.getOpen(), self.state.getName(), data, false);
                 self._dialog.dialog("close");
                 if (self._continueaction)
-                    self._continueaction()
+                    self._continueaction.apply(self)
             }, OcrJs.ajaxErrorHandler);
-        }).end().find("#submit_save_script_as").click(function(event) {
+        });
+        
+        $("#submit_save_script_as").click(function(event) {
             self.showCreatePresetDialog();
-        }).end().find("#submit_close_without_saving").click(function(event) {
+        });
+        
+        $("#submit_close_without_saving").click(function(event) {
             console.log("Abandoned changes!");
             self.state.clear();
             self._dialog.dialog("close");
             if (self._continueaction)
-                self._continueaction();
+                self._continueaction.apply(self);
         });
 
         $("#open_preset_list").selectable({
@@ -142,11 +146,32 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         });
     },
 
+    refreshPresetList: function(successfunc) {
+        var self = this;
+        $.ajax({
+            url: "/presets/list/?format=json",
+            dataType: "json",
+            data: {format: "json", paginate_by: -1},
+            success: function(data) {
+                var list = $("#open_preset_list");
+                list.children().remove();
+                $.each(data, function(i, preset) {
+                    list.append($.tmpl(self._presetitem, {
+                        fields: preset.fields,
+                        num: i+1,
+                    }));
+                });
+                successfunc.apply(self, [data]);
+            },
+            error: OcrJs.ajaxErrorHandler,
+        });
+    },                           
+
     newPreset: function() {
         console.log("New preset...");                   
         if (this.state.isDirty()) {
             this._continueaction = this.newPreset;
-            this.showUnsavedPresetDialog(!this.state.getOpen());
+            this.showUnsavedPresetDialog(this.state.getOpen() == null);
             return;
         }
         this.trigger("newPreset");
@@ -167,7 +192,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
 
         if (this.state.isDirty()) {
             this._continueaction = this.showOpenPresetDialog;
-            this.showUnsavedPresetDialog(!this.state.getOpen());
+            this.showUnsavedPresetDialog(this.state.getOpen() == null);
             return;
         }
         this._openDialog($("#open_preset"));
@@ -210,7 +235,8 @@ OcrJs.PresetManager = OcrJs.Base.extend({
 
     showCreatePresetDialog: function() {
         console.log("Showing create preset dialog...");
-        this._openDialog($("#create_preset").clearForm());
+        $("#new_preset_form").clearForm();
+        this._openDialog($("#create_preset"));
         this.trigger("saveDialogOpen");
     },
 
@@ -231,7 +257,9 @@ OcrJs.PresetManager = OcrJs.Base.extend({
             throw "Attempt to save existing preset with no data! " + slug;            
         $.ajax({
             url: "/presets/update_data/" + slug,
-            data: {data: JSON.stringify(script, null, 2)},
+            data: {
+                data: JSON.stringify(script, null, 2),
+            },
             type: "POST",
             error: errorfunc,
             success: successfunc,

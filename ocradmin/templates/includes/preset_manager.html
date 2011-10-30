@@ -1,63 +1,7 @@
-<script id="updateDialog" type="application/x-jquery-tmpl">
-    <div class="preset_dialog"  id="open_preset">    
-        <div>Do you want to update '${scriptname}' or save under a different name?</div>
-        <div class="buttons">
-            <button id="submit_close_without_saving">Discard</button>
-            <button id="submit_save_script">Save Changes</button>
-            <button id="submit_save_script_as">Save Script as...</button>
-        </div>
-    </div>
-</script>
 
 <script id="openDialogItem" type="application/x-jquery-tmpl">
-    <li class="preset_item" id="preset_${fields.slug}" title="${fields.description}" data-slug="${fields.slug}" data-tags="${fields.tags}">
+    <li class="preset_item" id="preset_${num}" title="${fields.description}" data-slug="${fields.slug}" data-tags="${fields.tags}">
         ${fields.name}
     </li>
 </script>    
-
-<script id="openDialog" type="application/x-jquery-tmpl">
-    <div class="preset_dialog"  id="open_preset">    
-        <div id="filter_box" class="field_wrapper">
-            <label for="filter_presets">Filter</label>
-            <input type="text" id="filter_presets" />
-        </div>
-        <ul id="open_preset_list"></ul>
-        <div class="buttons">
-            <button id="cancel_dialog">Cancel</button>
-            <input type="submit" disabled="disabled" id="submit_open_preset" value="Open" />
-        </div>
-    </div>
-</script>    
-
-<script id="createDialog" type="application/x-jquery-tmpl">
-    <div class="preset_dialog" id="create_preset">    
-        <form method="POST" action="/presets/create/" id="new_script_form">
-            <fieldset>
-                <legend>New OCR Preset</legend>
-                <div class="field_wrapper">
-                    <label for="id_name">Name</label>
-                    <input id="id_name" type="text" name="name" maxlength="100" />
-                </div>
-                <div class="field_wrapper">
-                    <label for="id_tags">Tags</label>
-                    <input id="id_tags" type="text" name="tags" maxlength="255" />
-                </div>
-                <div class="field_wrapper">
-                    <label for="id_public">Public</label>
-                    <input type="checkbox" id="id_public" name="public" />
-                </div>
-                <div class="field_wrapper">
-                    <label for="id_description">Description</label>
-                    <textarea id="id_description" rows="2" cols="40" name="description"></textarea>
-                </div>
-            </fieldset>
-            <div class="buttons">
-                <button id="cancel_dialog">Cancel</button>
-                <input type="submit" disabled="disabled" id="submit_create_new" value="Save" />
-            </div>
-        </form>
-    </div>
-</script>
-
-
 
