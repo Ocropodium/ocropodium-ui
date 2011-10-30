@@ -219,7 +219,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
 
     close: function() {
         var self = this;
-        $.each([this.canvas, this.overlay, this.buffer], function(i, c) {
+        $.each([this.canvas, this.overlay, this.buffer, this.highlight], function(i, c) {
             self.drawer.clearCanvas(c.get(0).getContext("2d"),
                 self.viewport.width, self.viewport.height);        
         });
