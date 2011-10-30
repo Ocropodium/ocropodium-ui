@@ -10,6 +10,7 @@ from django import forms
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.core.exceptions import ValidationError
 
 from ocradmin.core import generic_views as gv
 from ocradmin.core.decorators import saves_files
@@ -24,6 +25,7 @@ from nodetree import utils as nodeutils
 from ocradmin.plugins import nodes
 
 
+
 class PresetForm(forms.ModelForm):
     """
         Base preset form
@@ -32,31 +34,27 @@ class PresetForm(forms.ModelForm):
         super(PresetForm, self).__init__(*args, **kwargs)
         # change a widget attribute:
         self.fields['description'].widget.attrs["rows"] = 2
-        self.fields['description'].widget.attrs["cols"] = 40        
+        self.fields['description'].widget.attrs["cols"] = 40
+
+    def clean_data(self):
+        try:
+            data = json.loads(self.cleaned_data["data"])
+        except ValueError:
+            raise ValidationError("Preset data must be valid JSON")
+        profile = self.cleaned_data["profile"]
+        if profile is not None:
+            errors = profile.validate_preset(data)
+            if errors:
+                raise ValidationError("Data does not fit preset profile: %s" % errors)
+        return self.cleaned_data["data"]
 
     class Meta:
         model = Preset
-        fields = ["name", "tags", "description", "public", "user", "data"]
+        fields = ["name", "tags", "description", "public", "profile", "user", "data"]
         exclude = ["created_on", "updated_on"]
         widgets = dict(
                 user=forms.HiddenInput()
         )
-
-
-class ProfileForm(forms.ModelForm):
-    """
-        Base profile form
-    """
-    def __init__(self, *args, **kwargs):
-        super(ProfileForm, self).__init__(*args, **kwargs)
-        # change a widget attribute:
-        self.fields['description'].widget.attrs["rows"] = 2
-        self.fields['description'].widget.attrs["cols"] = 40        
-
-    class Meta:
-        model = Profile
-        fields = ["name", "tags", "description", "data"]
-        exclude = ["created_on", "updated_on"]
 
 
 presetlist = gv.GenericListView.as_view(
@@ -74,7 +72,7 @@ presetcreate = gv.GenericCreateView.as_view(
 presetdetail = gv.GenericDetailView.as_view(
         model=Preset,
         page_name="OCR Preset",
-        fields=["name", "description", "user", "public", "tags", "created_on",
+        fields=["name", "description", "user", "public", "profile", "tags", "created_on",
             "updated_on",])
 
 
@@ -88,37 +86,6 @@ presetdelete = gv.GenericDeleteView.as_view(
         model=Preset,
         page_name="Delete OCR Preset",
         success_url="/presets/list/",)
-
-
-profilelist = gv.GenericListView.as_view(
-        model=Profile,
-        page_name="OCR Profiles",
-        fields=["name", "description", "user", "created_on"],)
-
-
-profilecreate = gv.GenericCreateView.as_view(
-        model=Profile,
-        form_class=ProfileForm,
-        page_name="New OCR Profile",)
-
-
-profiledetail = gv.GenericDetailView.as_view(
-        model=Profile,
-        page_name="OCR Profile",
-        fields=["name", "description", "user", "public", "tags", "created_on",
-            "updated_on",])
-
-
-profileedit = gv.GenericEditView.as_view(
-        model=Profile,
-        form_class=ProfileForm,
-        page_name="Edit OCR Profile",)
-
-
-profiledelete = gv.GenericDeleteView.as_view(
-        model=Profile,
-        page_name="Delete OCR Profile",
-        success_url="/profiles/list/",)
 
 
 def createjson(request):
