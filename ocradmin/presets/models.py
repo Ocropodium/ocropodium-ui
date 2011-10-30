@@ -10,6 +10,18 @@ from tagging.fields import TagField
 import tagging
 import autoslug
 
+
+class JsonTextField(models.TextField):
+    def to_python(self, value):
+        return value
+
+    def validate(self, value, *args, **kwargs):
+        super(models.TextField, self).validate(value, *args, **kwargs)
+        try:
+            json.loads(value)
+        except ValueError:
+            raise models.exceptions.ValidationError("Data must be valid JSON")
+
 class Preset(models.Model):
     user = models.ForeignKey(User, related_name="presets")
     tags = tagging.fields.TagField()
@@ -19,7 +31,7 @@ class Preset(models.Model):
     public = models.BooleanField(default=True)
     created_on = models.DateField(editable=False)
     updated_on = models.DateField(editable=False, null=True, blank=True)
-    data = models.TextField()
+    data = JsonTextField()
     profile = models.ForeignKey("Profile", related_name="presets",
             null=True, blank=True)
 
@@ -69,7 +81,7 @@ class Profile(models.Model):
     description = models.TextField(blank=True)
     created_on = models.DateField(editable=False)
     updated_on = models.DateField(editable=False, null=True, blank=True)
-    data = models.TextField()
+    data = JsonTextField()
 
     def __unicode__(self):
         """
@@ -95,8 +107,7 @@ class Profile(models.Model):
 
     def validate_predicate(self, predicate, data):
         # FIXME: Stub
-        if name is not None:
-            return []
+        return []
 
     def get_absolute_url(self):
         """URL to view an object detail"""

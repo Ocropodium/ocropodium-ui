@@ -30,7 +30,7 @@ class ProfileForm(forms.ModelForm):
 profilelist = gv.GenericListView.as_view(
         model=Profile,
         page_name="OCR Profiles",
-        fields=["name", "description", "user", "created_on"],)
+        fields=["name", "description", "created_on"],)
 
 
 profilecreate = gv.GenericCreateView.as_view(
@@ -42,7 +42,7 @@ profilecreate = gv.GenericCreateView.as_view(
 profiledetail = gv.GenericDetailView.as_view(
         model=Profile,
         page_name="OCR Profile",
-        fields=["name", "description", "user", "public", "tags", "created_on",
+        fields=["name", "description", "tags", "created_on",
             "updated_on",])
 
 
