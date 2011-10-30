@@ -90,9 +90,7 @@ presetdelete = gv.GenericDeleteView.as_view(
 
 def createjson(request):
     """Create a preset and return JSON data"""
-    data = request.POST.copy()
-    data.update(dict(user=request.user.pk))
-    form = PresetForm(data)
+    form = PresetForm(request.POST)
     if not form.is_valid():
         return HttpResponse(json.dumps(form.errors),
                 mimetype="application/json")
@@ -139,7 +137,13 @@ def builder(request):
     """
     Show the preset builder.
     """
-    return render(request, "presets/builder.html", {})
+    print request.session
+    context = dict(
+            form=PresetForm(initial=dict(user=request.user)),
+            presets=Preset.objects.all(),
+            profiles=Preset.objects.all(),
+    )
+    return render(request, "presets/builder.html", context)
 
 
 @saves_files
@@ -147,11 +151,14 @@ def builder_task_edit(request, task_pk):
     """
     Show the preset builder for a specific task.
     """
-    from ocradmin.ocrtasks.models import OcrTask
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    path, script, outdir = task.args
-    ref = request.GET.get("ref", "/batch/show/%d/" % task.batch.pk)
-    return render(request, "presets/builder.html", dict(task=task, ref=ref))
+    context = dict(
+            form=PresetForm(initial=dict(user=request.user)),
+            presets=Preset.objects.all(),
+            profiles=Preset.objects.all(),
+            task=get_object_or_404(OcrTask, pk=task_pk),
+            ref=request.GET.get("ref", "/batch/show/%d/" % task.batch.pk)
+    )
+    return render(request, "presets/builder.html", context)
 
 
 def query_nodes(request):
