@@ -13,6 +13,8 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
 
         this._listeners = {
             newNodeClicked: [],
+            nodeDelete: [],
+            nodeRefresh: [],
         };
     },
 
@@ -36,6 +38,14 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
             }
         );
 
+        this._menu.find("#delete_node").click(function(event) {
+            self.trigger("nodeDelete", self._context);
+            self.hideContextMenu();
+        });
+        this._menu.find("#refresh_node").click(function(event) {
+            self.trigger("nodeRefresh", self._context);
+            self.hideContextMenu();
+        });
         this._menu.find(".topmenu").find("li").click(function(event) {
             self.trigger("newNodeClicked", event, $(this).data("name"),
                     self._context);
@@ -48,6 +58,7 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
     showContextMenu: function(event, context) {
         var self = this;
         this._context = context;
+        this._menu.find("#node_context").toggle(context instanceof NT.Node);
         this._menu.show();
         var maxx = $(this.canvas).offset().left + $(this.canvas).width();
         var left = event.pageX;
@@ -120,6 +131,4 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
         $(this.canvas).after(this._menu);
         this.setupMenuEvents();
     },    
-
-
 });
