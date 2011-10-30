@@ -587,7 +587,14 @@ NT.Tree = OcrJs.Base.extend({
             self._undostack.push(new NT.DeleteNodeCommand(self, n.name));
         });
         this._undostack.endMacro();
-    },                        
+    },
+
+    cmdDeleteNode: function(node) {
+        this._undostack.beginMacro("Delete " + node.name);
+        this.cmdDisconnectNode(node);
+        this._undostack.push(new NT.DeleteNodeCommand(this, node.name));
+        this._undostack.endMacro();
+    },                       
 
     cmdCreateReplacementNode: function(type, replace, atpoint) {
         var name = this.newNodeName(type);

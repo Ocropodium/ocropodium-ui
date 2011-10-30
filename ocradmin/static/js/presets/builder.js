@@ -298,6 +298,28 @@ $(function() {
         event.preventDefault();
     });
 
+    function clearNodeCache(node, donefunc) {
+        resultcache = {};
+        $.ajax({
+            url: "/presets/clear_node_cache/",
+            data: {
+                node: node.name,
+                script: JSON.stringify(nodetree.buildScript()),
+            },
+            type: "POST",            
+            dataType: "JSON",
+            error: OcrJs.ajaxErrorHandler,
+            success: function(data) {
+                if (data && data.ok)
+                    donefunc(node);
+                else
+                    console.error("Unexpect result on cache clear", data);
+            },
+        });
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
     function highlightComponents(data) {
         var overlays = {};
         $.each(["columns", "paragraphs", "lines"], function(i, klass) {
@@ -487,6 +509,17 @@ $(function() {
         newNodeClicked: function(event, typename, context) {
             nodetree.createNodeWithContextFromEvent(typename, event, context);
         },
+        nodeDelete: function(node) {
+            if (node.isFocussed())
+                nodetree.cmdDeleteSelected();
+            else
+                nodetree.cmdDeleteNode(node);
+        },
+        nodeRefresh: function(node) {
+            clearNodeCache(node, function() {
+                console.log("Cleared cache for", node.name);
+            });
+        },                         
     });                        
 
     cmdstack.addListeners({
