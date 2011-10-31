@@ -320,7 +320,10 @@ class TextEvaluation(node.Node, base.TextWriterMixin):
     stage = stages.UTILS
     intypes = [unicode, unicode]
     outtype = unicode
-    parameters = []
+    parameters = [
+        dict(name="method", value="character",
+                choices=["character", "word"]),
+    ]
 
     def process(self, intext, gttext):
         with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
@@ -328,7 +331,9 @@ class TextEvaluation(node.Node, base.TextWriterMixin):
                 self.writer(t1, gttext)
                 self.writer(t2, intext)
         writer = codecs.getwriter("utf8")(sp.PIPE)
-        p = sp.Popen(["accuracy", t1.name, t2.name], stdout=writer)
+        method = self._params.get("method", "character")
+        bin = "accuracy" if method == "character" else "wordacc"
+        p = sp.Popen([bin, t1.name, t2.name], stdout=writer)
         report = p.communicate()[0]
         os.unlink(t1.name)
         os.unlink(t2.name)
