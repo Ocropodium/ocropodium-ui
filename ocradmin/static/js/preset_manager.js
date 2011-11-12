@@ -86,19 +86,15 @@ OcrJs.PresetManager = OcrJs.Base.extend({
 
         $("#create_preset").find("input[type='text']").keyup(function(event) {
             self.validateNewForm();
-        }).end().find("#submit_create_new").click(function(event) {
+        });
+        
+        $("#submit_create_new").click(function(event) {
             event.preventDefault();
             event.stopPropagation();
             var currdata = self.state.getTreeScript();
-            self.saveCreatedPreset({
-                    name: self._dialog.find("#id_name").val(),
-                    tags: self._dialog.find("#id_tags").val(),
-                    description: self._dialog.find("#id_description").val(),
-                    user: self._dialog.find("#id_user").val(),
-                    public: self._dialog.find("#id_public").prop("checked"),
-                    profile: self._dialog.find("#id_profile").val(),
-                    data: JSON.stringify(currdata, null, 2),
-            }, function(data) {
+            self.saveCreatedPreset(
+                self.getPresetData(),
+                function(data) {
                     self.setCurrentOpenPreset(data,
                             self._dialog.find("#id_name").val(), currdata, false);
                     self.refreshPresetList(function(data) {
@@ -110,6 +106,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
                 OcrJs.ajaxErrorHandler
             );
         });
+
         $("#submit_save_script").click(function(event) {
             var data = self.state.getTreeScript();
             self.saveExistingPreset(self.state.getOpen(), data, function(data) {
@@ -146,6 +143,19 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         });
     },
 
+    getPresetData: function() {
+         var form = $("#new_preset_form");
+         return {
+            name: form.find("#id_name").val(),
+            tags: form.find("#id_tags").val(),
+            description: form.find("#id_description").val(),
+            user: form.find("#id_user").val(),
+            public: form.find("#id_public").prop("checked"),
+            profile: form.find("#id_profile").val(),
+            data: this.state.getTreeJSON(),
+        };
+    },                       
+
     refreshPresetList: function(successfunc) {
         var self = this;
         $.ajax({
@@ -179,10 +189,10 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         this._continueaction = null;
     },
 
-    setCurrentOpenPreset: function(slug, name, data, reload) {
+    setCurrentOpenPreset: function(slug, name, scriptdata, reload) {
         this.state.setOpen(slug, name);
         if (reload) {
-            this.state.setScript(data);
+            this.state.setScript(scriptdata);        
         }
     },
 
@@ -202,9 +212,9 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         var self = this;
         var slug = item.data("slug");
         console.log("Opening preset", item);
-        this.openPreset(slug, function(data) {
+        this.openPreset(slug, function(scriptdata) {
             self.trigger("openPreset");
-            self.setCurrentOpenPreset(slug, $.trim(item.text()), data, true);
+            self.setCurrentOpenPreset(slug, $.trim(item.text()), scriptdata, true);
             self._dialog.dialog("close");
             self._continueaction = null;
         }, OcrJs.ajaxErrorHandler);
@@ -252,13 +262,11 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         submit.attr("disabled", $.trim(namefield.val()) == "");
     },
 
-    saveExistingPreset: function(slug, script, successfunc, errorfunc) {
-        if (!script || $.map(script, function(k,v){ return k;}).length == 0)
-            throw "Attempt to save existing preset with no data! " + slug;
+    saveExistingPreset: function(slug, data, successfunc, errorfunc) {
         $.ajax({
             url: "/presets/update_data/" + slug,
             data: {
-                data: JSON.stringify(script, null, 2),
+                data: JSON.stringify(data, null, 2),
             },
             type: "POST",
             error: errorfunc,
