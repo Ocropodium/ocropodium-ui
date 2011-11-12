@@ -137,7 +137,6 @@ def builder(request):
     """
     Show the preset builder.
     """
-    print request.session
     context = dict(
             form=PresetForm(initial=dict(user=request.user)),
             presets=Preset.objects.order_by("name"),
