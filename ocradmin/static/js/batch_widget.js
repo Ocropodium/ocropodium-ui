@@ -36,7 +36,7 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
 
         this._container.scroll(function(event) {
             if ($(".batch_task.empty").length > 0 || !self.isComplete())
-                self.triggerRefresh(100);            
+                self.triggerRefresh(100);
         });
 
         this._tasks.bind("click", function(event) {
@@ -71,7 +71,7 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
                     },
                 });
             event.preventDefault();
-            event.stopPropagation();            
+            event.stopPropagation();
         });
 
         $(".ui-icon", this.parent).bind("mouseover mouseout", function(event) {
@@ -84,11 +84,11 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
 
         $(".retry_task, .abort_task, .retry_batch, .retry_errored, .abort_batch")
                 .click(function(event) {
-            var elem = this;                        
+            var elem = this;
             var action = $(this).attr("title").toLowerCase();
             var pk = $(this).data("pk");
             if (pk == undefined)
-                return false;                
+                return false;
             $.ajax({
                 url: $(this).attr("href"),
                 type: "POST",
@@ -111,7 +111,7 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
                 },
             });
             event.preventDefault();
-            event.stopPropagation();    
+            event.stopPropagation();
         });
 
         $("#status_filter", this.parent).click(function(event) {
@@ -128,18 +128,18 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
             if ($(".filter_type:checked").length == 0 && !$(this).prop("checked"))
                 $(this).prop("checked", true);
             else
-                self.triggerRefresh(1); 
+                self.triggerRefresh(1);
         });
 
-        $(".filter_type").click(function(event) {           
-            $(".filter_none").prop("checked",  
+        $(".filter_type").click(function(event) {
+            $(".filter_none").prop("checked",
                 $(".filter_type:checked").length == 0);
-            self.triggerRefresh(1); 
+            self.triggerRefresh(1);
         });
 
         $("#text_filter").keyup(function(event) {
             $(".toggle_button").toggleClass("filtered", self.isFiltered());
-            self.triggerRefresh(50); 
+            self.triggerRefresh(50);
         });
 
         $(".filter_none, .filter_type").change(function(event) {
@@ -151,10 +151,10 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
         // FIXME: Need to determine correct
         // css margin.  For the moment, assume
         // top and bottom margin are each 10px,
-        // so outer is 20px                     
+        // so outer is 20px
         this._container
             .css(
-                "height", 
+                "height",
                 this._container.height()
             );
     },
@@ -162,15 +162,15 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
     isFiltered: function() {
         return !($(".filter_type:checked").length == 0
                         && $.trim($("#text_filter").val()) == "");
-    },                 
+    },
 
     setTaskWaiting: function(task, waiting) {
-        task.find(".progressbar_container").toggleClass("waiting", waiting);        
+        task.find(".progressbar_container").toggleClass("waiting", waiting);
     },
     
-    topVisibleTask: function(scroll) {                                
+    topVisibleTask: function(scroll) {
         if (this._tasks.length == 0)
-            return 0;            
+            return 0;
         var top = this._container.scrollTop(),
             margin = parseInt(this._tasks.css("marginBottom").replace(/px/, ""));
         return Math.floor(top / (this._tasks.outerHeight() + margin));
@@ -178,7 +178,7 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
 
     visibleTaskCount: function(scroll) {
         if (this._tasks.length < 10)
-            return 50;            
+            return 50;
         var windowheight = this._container.height(),
             tasks = $(".batch_task", scroll),
             margin = parseInt(this._tasks.css("marginBottom").replace(/px/, ""));
@@ -187,12 +187,12 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
 
     updateBatchData: function() {
         this.setProgressStatus(
-                $("#batch"), 
-                this._batchdata.extras.estimate_progress);        
-    },                      
+                $("#batch"),
+                this._batchdata.extras.estimate_progress);
+    },
 
     updateTaskData: function(from, to) {
-        var self = this;                        
+        var self = this;
         var taskdata = self._batchdata.fields.tasks;
 
         // if we don't have the same amount of tasks
@@ -236,7 +236,7 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
                     .attr("title", progress + "%")
                     .end();
                 self.setProgressStatus($(elem), progress, status);
-            }       
+            }
         });
     },
 
@@ -244,18 +244,18 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
         if (this._tasks.length < this._taskcount) {
             for (var i = this._tasks.length; i < this._taskcount; i++) {
                 var row = $.tmpl(this._rowtemplate, {
-                    index: i                    
+                    index: i
                 });
                 console.log(row);
                 $(".task_list", this._container).append(row);
             }
         } else
             this._tasks.slice(this._taskcount, this._tasks.length).remove();
-        this._tasks = $(".batch_task", this._container);        
-    },                    
+        this._tasks = $(".batch_task", this._container);
+    },
 
     refreshTasks: function() {
-        var self = this;                      
+        var self = this;
         var first = Math.max(0, this.topVisibleTask() - 5)
             count = this.visibleTaskCount() + 10;
         var statuses = $(".filter_type").filter(function(i, e) {
@@ -290,7 +290,7 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
 
     triggerRefresh: function(delay) {
         var self = this;
-        var delay = delay || this._polltime;        
+        var delay = delay || this._polltime;
         if (this._refreshtimer != -1)
             clearTimeout(this._refreshtimer);
         this._refreshtimer = setTimeout(function() {
@@ -309,7 +309,7 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
             task.find(".progressbar").attr("class", "progressbar success");
         } else {
             task.find(".progressbar").attr("class", "progressbar started");
-        }       
+        }
     },
                     
     // check whether all tasks are complete

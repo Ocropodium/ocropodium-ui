@@ -1,4 +1,4 @@
-// 
+//
 // Point class
 //
 
@@ -17,6 +17,6 @@ DziViewer.Point.prototype.clone = function() {
 DziViewer.Point.prototype.shiftBy = function(p) {
     return new DziViewer.Point(
             this.x + p.x,
-            this.y + p.y 
+            this.y + p.y
     );
 }

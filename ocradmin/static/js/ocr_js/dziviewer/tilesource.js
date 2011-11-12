@@ -1,4 +1,4 @@
-// 
+//
 // Imageviewer tilesource.  This class is pretty much
 // a straight port of the DeepZoomDescriptor class in
 // deepzoom.py
@@ -44,27 +44,27 @@ DziViewer.TileSource = OcrJs.Base.extend({
 
         var colrows = this.getNumTiles(level),
             columns = colrows[0],
-            rows = colrows[1]; 
+            rows = colrows[1];
         this._enumerate[level] = [];
         for (var i = 0; i < columns; i++) {
             for (var j = 0; j < rows; j++)
                 this._enumerate[level].push([i, j]);
         }
         return this._enumerate[level];
-    },                   
+    },
 
     load: function(path, xmldata) {
     },
 
     toString: function() {
-        return "<TileSource: " + this.format 
+        return "<TileSource: " + this.format
                 + " (" + this.tilesize + ") "
                 + this.width + "x" + this.height + ">";
     },
 
     getPath: function(level, col, row) {
         return [this._tilebase, "/", level, "/", col, "_", row, ".", this.format].join("");
-    },                 
+    },
 
     getScale: function(level) {
         /* Scale of a pyramid level. */
@@ -74,7 +74,7 @@ DziViewer.TileSource = OcrJs.Base.extend({
     },
 
     getNearestLevel: function(scale) {
-        var max_level = this.numLevels() - 1;                         
+        var max_level = this.numLevels() - 1;
         return Math.min(max_level, max_level - Math.floor(Math.log(scale) / Math.log(0.5)));
     },
 
@@ -82,9 +82,9 @@ DziViewer.TileSource = OcrJs.Base.extend({
         // calculate the difference factor to convert an image at
         // the given scale, to one at the given level
         // i.e. if scale 1/1 is level 13, and given scale 8
-        // the factor would be 0.125                              
+        // the factor would be 0.125
         return scale / this.getScale(level);
-    },                       
+    },
 
     getDimensions: function(level) {
         /* Dimensions of level (width, height) */
@@ -98,11 +98,11 @@ DziViewer.TileSource = OcrJs.Base.extend({
 
     getAspect: function() {
         return this.width / this.height;
-    },                   
+    },
 
     getLevelToFit: function(width, height) {
-        var aspect = width / height;        
-        var scale = aspect > this.getAspect() 
+        var aspect = width / height;
+        var scale = aspect > this.getAspect()
                 ? height / this.height
                 : width / this.width;
         if (scale > 1)
@@ -111,11 +111,11 @@ DziViewer.TileSource = OcrJs.Base.extend({
     },
 
     getScaleToFit: function(width, height) {
-        var aspect = width / height;        
-        return aspect > this.getAspect() 
+        var aspect = width / height;
+        return aspect > this.getAspect()
                 ? height / this.height
                 : width / this.width;
-    },                       
+    },
 
     getNumTiles: function(level) {
         /* Number of tiles (columns, rows) */
@@ -123,7 +123,7 @@ DziViewer.TileSource = OcrJs.Base.extend({
         var dims = this.getDimensions(level);
         return [Math.ceil(dims.width / this.tilesize),
                 Math.ceil(dims.height / this.tilesize)];
-    },    
+    },
 
     getTileBounds: function(level, column, row) {
         /* Bounding box of the tile (x1, y1, x2, y2) */
@@ -147,6 +147,6 @@ DziViewer.TileSource = OcrJs.Base.extend({
     _checkLevel: function(level) {
         if (level < 0 && level >= this.numLevels())
             throw "Invalid level " + level + " NumLevels: " + this.numLevels();
-    },                     
+    },
 });
 

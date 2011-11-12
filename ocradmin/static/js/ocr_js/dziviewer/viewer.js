@@ -1,4 +1,4 @@
-// 
+//
 // Main imageviewer object.
 //
 
@@ -35,7 +35,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
                 position: "fixed",
                 zIndex: 9,
                 top: this.parent.offset().top,
-                left: this.parent.offset().left,                
+                left: this.parent.offset().left,
             })
             .appendTo(this.parent);
         this.overlay = $("<canvas></canvas>")
@@ -45,7 +45,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
                 position: "fixed",
                 zIndex: 10,
                 top: this.parent.offset().top,
-                left: this.parent.offset().left,                
+                left: this.parent.offset().left,
             })
             .appendTo(this.parent);
 
@@ -79,7 +79,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
         this.viewport.clearEventFilters();
         this.loader.removeListeners(".plugdraw");
         this.update();
-    },                             
+    },
 
     removeOverlayPlugin: function(plug) {
         this.viewport.removeEventFilter(plug);
@@ -88,7 +88,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
         plug.removeListeners("update");
         this.overlay.get(0).getContext("2d").clearRect(
                 0, 0, this.viewport.width, this.viewport.height);
-    },   
+    },
 
     addHighlight: function(rect, strokestyle, fillstyle) {
         var strokestyle = strokestyle || "rgba(255,255,0,0.3)";
@@ -102,22 +102,22 @@ DziViewer.Viewer = OcrJs.Base.extend({
 
     clearHighlights: function() {
         this._highlights = [];
-    },                        
+    },
 
     removeHighlight: function(rect) {
         for (var i in this._highlights) {
             if (rect.isSameAs(this._highlights[i].rect)) {
-                this._highlights.splice(i, 1);            
+                this._highlights.splice(i, 1);
                 return true;
             }
-        }            
-    },                         
+        }
+    },
 
     drawHighlights: function() {
         var ctx = this.highlight.get(0).getContext("2d");
         ctx.clearRect(0, 0, this.viewport.width, this.viewport.height);
         ctx.save();
-        for (var i in this._highlights) {                        
+        for (var i in this._highlights) {
             var rect = this._highlights[i].rect;
             ctx.lineWidth = 1;
             ctx.strokeStyle = this._highlights[i].stroke;
@@ -132,7 +132,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
                     rect.width * this.viewport.scale, rect.height * this.viewport.scale);
         }
         ctx.restore();
-    },                        
+    },
 
     update: function(buffered) {
         if (this.source !== null) {
@@ -140,10 +140,10 @@ DziViewer.Viewer = OcrJs.Base.extend({
                     this.viewport, this.source, this.loader, buffered);
             this.drawHighlights();
         }
-    },                  
+    },
 
     load: function(path) {
-        var self = this;              
+        var self = this;
         this._path = path;
         $.ajax({
             url: path,
@@ -162,8 +162,8 @@ DziViewer.Viewer = OcrJs.Base.extend({
             },
             error: function(xhr, status, errorThrown) {
                 console.error("XHR Error:", status, errorThrown);
-            }, 
-        });        
+            },
+        });
     },
 
     goHome: function() {
@@ -172,7 +172,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
                         this.source.width, this.source.height));
             this.viewport.interacted = false;
         }
-    },    
+    },
 
     fitBounds: function(rect) {
         if (self.source === null)
@@ -182,7 +182,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
         this.viewport.translate.x -= rect.x * this.viewport.scale;
         this.viewport.translate.y -= rect.y * this.viewport.scale;
         this.viewport.trigger("zoomed");
-    },                   
+    },
 
     refresh: function() {
         this.update();
@@ -211,17 +211,17 @@ DziViewer.Viewer = OcrJs.Base.extend({
                 left: this.parent.offset().left
             });
         this.update();
-    },             
+    },
 
     openDzi: function(dzipath) {
         this.load(dzipath, true);
-    },        
+    },
 
     close: function() {
         var self = this;
         $.each([this.canvas, this.overlay, this.buffer, this.highlight], function(i, c) {
             self.drawer.clearCanvas(c.get(0).getContext("2d"),
-                self.viewport.width, self.viewport.height);        
+                self.viewport.width, self.viewport.height);
         });
         
         this.source = null;
@@ -233,11 +233,11 @@ DziViewer.Viewer = OcrJs.Base.extend({
 
     isReady: function() {
         return this.isOpen();
-    },                 
+    },
 
     setWaiting: function(wait) {
 
-    },                    
-});    
+    },
+});
 
 

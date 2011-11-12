@@ -16,7 +16,7 @@ var FileDataSource = AbstractDataSource.extend({
             }, {
                 name: "Modified",
                 sortAs: "num",
-            }, 
+            },
         ]
     },
 
@@ -60,7 +60,7 @@ var FileDataSource = AbstractDataSource.extend({
     },
 
     cellClassNames: function(row, col) {
-        if (col == 0)    
+        if (col == 0)
             return ["n"];
         return [];
     },
@@ -82,9 +82,9 @@ var FileDataSource = AbstractDataSource.extend({
     },
 
     backDir: function() {
-        if (this._dir.match(/(.*)\/[^\/]+$/)) 
+        if (this._dir.match(/(.*)\/[^\/]+$/))
             this._dir = RegExp.$1;
-        else 
+        else
             this._dir = "";
         this.refreshData();
     },

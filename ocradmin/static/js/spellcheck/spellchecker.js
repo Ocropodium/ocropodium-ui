@@ -14,7 +14,7 @@ var ReplaceCommand = OcrJs.UndoCommand.extend({
             elems.splice(cidx, 1);
             $(oldelem).replaceWith(newelem);
             checker.setCurrentElement(back ? cidx - 1 : cidx);
-        };    
+        };
     },
 });
 
@@ -27,7 +27,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         this._listeners = {
             onWordCorrection: [],
             onWordHighlight: [],
-        };        
+        };
         this.parent = parent;
         this._wordindex = 0;
         this._data = {};    // spellcheck data
@@ -48,14 +48,14 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
     startup: function(parent) {
         this.buildUi();
         return this._container;
-    },          
+    },
 
 
     setupEvents: function() {
-        var self = this;                     
+        var self = this;
         
         $("#sp_next, #sp_prev", this._container).bind("click", function(event) {
-            self.setNextSpellcheckWord($(this).attr("id") == "sp_prev");    
+            self.setNextSpellcheckWord($(this).attr("id") == "sp_prev");
         });
 
         this._lineedit.bind("focus", function(event){
@@ -94,7 +94,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
             this._suggestions.looseFocus();
         }
 
-        // replace the current lineedit word with 
+        // replace the current lineedit word with
         // that selected
         this._suggestions.suggestionSelected = function(word) {
             self._lineedit.val(word).focus().select();
@@ -112,7 +112,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         $("#sp_next, #sp_prev", this._container).unbind("click");
         this._lineedit.unbind("keydown.navsuggestion");
         this._lineedit.unbind("focus");
-    },                 
+    },
 
     show: function() {
         this._container.show();
@@ -129,7 +129,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         this._elements = [];
         this._celement = -1;
         this._undostack.clear();
-    },          
+    },
                      
     buildUi: function(parent) {
         var buttoncontainer = $("<div></div>")
@@ -165,7 +165,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
     },
 
 
-    widgetHeight: function() {                              
+    widgetHeight: function() {
         return this._container.is(":visible")
             ? this._container.outerHeight(true)
             : 0;
@@ -200,7 +200,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         lines.each(function(i, elem) {
             var badcount = 0;
             var nodes = [];
-            var partial = document.createTextNode();            
+            var partial = document.createTextNode();
             $.each($(elem).text().split(/\b/), function(i, word) {
                 if (self._data[word]) {
                     badcount++;
@@ -215,16 +215,16 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
                     nodes.push(spellelem.get(0));
                 } else {
                     if (partial.textContent == "undefined") {
-                        partial.textContent = word;                      
+                        partial.textContent = word;
                     } else {
                         partial.textContent = partial.textContent + word;
                     }
-                }        
+                }
             });
             if (partial.textContent != "undefined") {
                 nodes.push(partial);
             }
-            // FIXME: This is very inefficient because it 
+            // FIXME: This is very inefficient because it
             // rebuilds the nodes from scratch, while they're
             // live in the DOM.  Need to figure out a way of
             // doing it offline whilst maintaining a reference
@@ -264,9 +264,9 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
     },
 
     setCurrentElement: function(index) {
-        //console.log("Setting current index: " + index);                                  
+        //console.log("Setting current index: " + index);
         this._celement = index;
-        var element = this._elements[this._celement];                                  
+        var element = this._elements[this._celement];
         $(this._elements).removeClass("current");
         $(element).addClass("current");
         element.scrollIntoView(false);
@@ -285,10 +285,10 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         } else {
             this._suggestions.clear();
         }
-    },                           
+    },
                               
 
-    doReplacement: function(shiftback) {                           
+    doReplacement: function(shiftback) {
         // confirm a replacement
         var correctidx = this._celement;
         var correctelem = this._elements[this._celement];
@@ -310,19 +310,19 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         } else {
             this.setNextSpellcheckWord(shiftback);
         }
-    },                           
+    },
 
-    takeFocus: function(lines) {                           
+    takeFocus: function(lines) {
         this._suggestions.enable();
         this.setupEvents();
         this._lineedit.focus().select();
         this._container.find("*").attr("disabled", false);
     },
 
-    looseFocus: function(lines) {                    
+    looseFocus: function(lines) {
         this._suggestions.disable();
         this.teardownEvents();
-        this._lineedit.blur();        
+        this._lineedit.blur();
         this._container.find("*").attr("disabled", true);
-    },               
+    },
 });

@@ -8,7 +8,7 @@ $(function() {
     var header = $(".widget_header", $("#sidebar"));
 
     //$(".recent_batch_link").live("click", function(event) {
-    //    batch.setBatchId($(this).data("pk"));    
+    //    batch.setBatchId($(this).data("pk"));
     //    event.preventDefault();
     //});
 
@@ -28,7 +28,7 @@ $(function() {
     function populateBatchList(data) {
         var list = $("<div></div>").addClass("recent_batches");
         var tbatch = $("<div></div>").addClass("recent_batch");
-        var titem = $("<span></span>"); 
+        var titem = $("<span></span>");
         var tlink = $("<a></a>").addClass("recent_batch_link");
         var ttran = $("<a></a>").addClass("button");
         $.each(data.object_list, function(i, batch) {
@@ -44,7 +44,7 @@ $(function() {
                 .text("Transcript");
             list
                 .append(tbatch.clone().append(span.append(trans).append(link)))
-                .textOverflow("...");        
+                .textOverflow("...");
         });
         sidebar.html(list);
     }
@@ -78,7 +78,7 @@ $(function() {
                             active: parseInt(selectedtab),
                             change: function(event, ui) {
                                 selectedtab = ui.options.active;
-                                $.cookie("selectedtab", selectedtab); 
+                                $.cookie("selectedtab", selectedtab);
                             },
                         });
                     loaded = true;
@@ -98,7 +98,7 @@ $(function() {
     //    },
     //    stop: function(event, ui) {
     //        batch.refreshTasks();
-    //    }        
+    //    }
     //});
 
     if ($("#batch_id").length) {
@@ -108,7 +108,7 @@ $(function() {
         batch.addListeners({
             onTaskSelected: loadTaskDetails,
             onTaskDeselected: loadBatchList,
-            onUpdate: hashNavigate,                                
+            onUpdate: hashNavigate,
         }).startup();
 
         $(".submit_update").live("click", function(event) {
@@ -127,7 +127,7 @@ $(function() {
                         $.post("/ocrtasks/retry/" + pk + "/");
                         batch.triggerRefresh();
                     }
-                },                                
+                },
             });
             return false;
         });
@@ -135,7 +135,7 @@ $(function() {
         if (document.location.hash.match(/^(#task(\d+))/)) {
             var selector = RegExp.$1;
             console.log("Selecting")
-            $(selector).click();                        
+            $(selector).click();
         } else {
             loadBatchList();
         }
@@ -147,7 +147,7 @@ $(function() {
             resizable: false,
             closable: false,
             slidable: false,
-            spacing_open: 0, 
+            spacing_open: 0,
         },
     });
 
@@ -157,7 +157,7 @@ $(function() {
             resizable: false,
             closable: false,
             slidable: false,
-            spacing_open: 0, 
+            spacing_open: 0,
         },
     });
 
@@ -178,6 +178,6 @@ $(function() {
 
     $(window).resize();
 
-});        
+});
 
 

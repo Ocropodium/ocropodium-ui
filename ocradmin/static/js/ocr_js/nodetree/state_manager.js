@@ -26,7 +26,7 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         if (this.isDirty())
             return this.getOpen() ? this.OPEN_DIRTY : this.NEW_DIRTY;
         return this.getOpen() ? this.OPEN_CLEAN : this.NEW_CLEAN;
-    },        
+    },
 
     getOpen: function() {
         return this._open;
@@ -34,12 +34,12 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
 
     getName: function() {
         return this._name;
-    },                 
+    },
 
     setOpen: function(slug, name) {
         this._open = slug;
         this._name = name;
-        this._hash = this.getTreeHash();        
+        this._hash = this.getTreeHash();
         this.trigger("opened", this.getCurrentName());
     },
 
@@ -61,10 +61,10 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
 
     getCurrentName: function() {
         return this.getName() || "Untitled";
-    },                        
+    },
 
     getTreeHash: function() {
-        return hex_md5(bencode(this.tree.buildScript())); 
+        return hex_md5(bencode(this.tree.buildScript()));
     },
 
     getTreeJSON: function() {
@@ -79,8 +79,8 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         this.tree.clearScript();
         this.tree.loadScript(data);
         this.tree.scriptChanged("Loaded script");
-        this._hash = this.getTreeHash();        
-    },              
+        this._hash = this.getTreeHash();
+    },
 
     saveCookieData: function() {
         var presetdata = {
@@ -105,7 +105,7 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         var expect = ["open", "hash", "script", "treehash"];
         for (var i in expect) {
             if (!expect[i] in data)
-                throw "Error loading data.  Field: " + expect[i] + " not in unflattened cookie data";            
+                throw "Error loading data.  Field: " + expect[i] + " not in unflattened cookie data";
         }
         console.log("Loading data", data);
         return data;
@@ -123,7 +123,7 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         this._name = batch + ": " + page;
         this._open = page;
         this.trigger("opened", this.getCurrentName());
-    },                     
+    },
 
     loadCookieData: function() {
         var data = this.getCookieData();
@@ -132,10 +132,10 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
             this.tree.loadState(data.state ? data.state : {x:0,y:0,scale:1});
             this._open = data.open;
             this._name = data.name;
-            this._hash = data.hash;            
+            this._hash = data.hash;
             if (data.treehash != this.getTreeHash())
-                throw "Error loading data.  Loaded tree hash does not match stored.";        
+                throw "Error loading data.  Loaded tree hash does not match stored.";
             this.trigger("opened", this.getCurrentName());
         }
-    }    
+    }
 });

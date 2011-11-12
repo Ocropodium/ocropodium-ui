@@ -39,10 +39,10 @@ NT.DeleteNodeCommand = OcrJs.UndoCommand.extend({
         this.undo = function() {
             var newnode = tree.createNode(name, tree._nodetypes[data.type]);
             newnode.deserialize(data);
-            tree.registerNode(newnode);            
-        };            
-    },                     
-});    
+            tree.registerNode(newnode);
+        };
+    },
+});
 
 NT.ConnectPlugsCommand = OcrJs.UndoCommand.extend({
     init: function(tree, srcname, dstname) {
@@ -58,7 +58,7 @@ NT.ConnectPlugsCommand = OcrJs.UndoCommand.extend({
             var dst = tree.getPlug(dstname);
             dst.detach();
         };
-    },        
+    },
 
 });
 
@@ -74,7 +74,7 @@ NT.DetachPlugCommand = OcrJs.UndoCommand.extend({
         };
         this.undo = function() {
             tree.connectPlugs(tree.getPlug(originname), tree.getPlug(plugname));
-        };            
+        };
     },
 });
 
@@ -89,9 +89,9 @@ NT.IgnoreNodeCommand = OcrJs.UndoCommand.extend({
         this.undo = function() {
             var node = tree.getNode(nodename);
             node.setIgnored(!node.isIgnored());
-        };        
+        };
     },
-});    
+});
                    
 NT.ViewNodeCommand = OcrJs.UndoCommand.extend({
     init: function(tree, nodename) {
@@ -104,9 +104,9 @@ NT.ViewNodeCommand = OcrJs.UndoCommand.extend({
         this.undo = function() {
             var node = tree.getNode(nodename);
             node.setViewing(!node.isViewing());
-        };        
+        };
     },
-});    
+});
                    
 NT.SetNodeParameterCommand = OcrJs.UndoCommand.extend({
     init: function(tree, nodename, param, oldvalue, value) {
@@ -124,7 +124,7 @@ NT.SetNodeParameterCommand = OcrJs.UndoCommand.extend({
             tree.getNode(nodename).setParameter(param, self.oldvalue, false);
         };
         this.mergeWith = function(other) {
-            // only merge numerical values that occur within 
+            // only merge numerical values that occur within
             // a certain time-span
             if (self.ts - other.ts > 200) {
                 console.log("Not merging, diff", self.ts - other.ts);
@@ -132,7 +132,7 @@ NT.SetNodeParameterCommand = OcrJs.UndoCommand.extend({
             }
             self.oldvalue = other.oldvalue;
             return true;
-        };            
+        };
     },
 });
 
@@ -154,7 +154,7 @@ NT.SetMultipleNodeParametersCommand = OcrJs.UndoCommand.extend({
             });
         };
         this.mergeWith = function(other) {
-            // only merge numerical values that occur within 
+            // only merge numerical values that occur within
             // a certain time-span
             if (self.ts - other.ts > 200) {
                 console.log("Not merging, diff", self.ts - other.ts);
@@ -164,13 +164,13 @@ NT.SetMultipleNodeParametersCommand = OcrJs.UndoCommand.extend({
                 self.paramvals[param][1] = other.paramvals[param][1];
             });
             return true;
-        };            
+        };
     },
 });
 
 NT.MoveNodesCommand = OcrJs.UndoCommand.extend({
     init: function(tree, nodes, x, y) {
-        this._super("Move Node" + (nodes.length > 1 ? "s" : ""));                     
+        this._super("Move Node" + (nodes.length > 1 ? "s" : ""));
         var self = this;
         this.nodes = nodes;
         this.x = x, this.y = y;
@@ -187,10 +187,10 @@ NT.MoveNodesCommand = OcrJs.UndoCommand.extend({
                 return false;
             self.x += other.x;
             self.y += other.y;
-            return true; 
+            return true;
         }
     },
-});    
+});
 
 
 
@@ -202,7 +202,7 @@ NT.Tree = OcrJs.Base.extend({
         // shared command stack object
         this._undostack = cmdstack;
 
-        // events        
+        // events
         this._listeners = {
             onUpdateStarted: [],
             registerUploader: [],
@@ -251,15 +251,15 @@ NT.Tree = OcrJs.Base.extend({
         for (var i in this._nodes) {
             if (this._nodes[i].isViewing())
                 return this._nodes[i].name;
-        }    
+        }
         for (var i in this._nodes) {
             if (this._nodes[i].isFocussed())
                 return this._nodes[i].name;
-        }    
+        }
         for (var i in this._nodes) {
             if (this._nodes[i].stage == "recognize")
                 return this._nodes[i].name;
-        }    
+        }
         // fall back on the last node in the list
         var last = this._nodes[this._nodes.length - 1];
         if (last)
@@ -273,7 +273,7 @@ NT.Tree = OcrJs.Base.extend({
                 focussed.push(n);
         });
         return focussed[0]; // might be null!
-    },        
+    },
 
     getNode: function(nodename) {
         if (!this._usednames[nodename])
@@ -282,41 +282,41 @@ NT.Tree = OcrJs.Base.extend({
     },
 
     getPlug: function(plugname) {
-        var match = plugname.match(this._plugre);                 
+        var match = plugname.match(this._plugre);
         if (!match)
             throw "Invalid plug name: " + plugname;
         var node = this._usednames[match[1]];
         switch (match[2]) {
-            case "input": 
-                return node.input(parseInt(match[3], 10));                          
+            case "input":
+                return node.input(parseInt(match[3], 10));
             case "output":
                 return node.output();
             default:
                 throw "Unexpected plug name: " + plugname;
-        }                
-    },                 
+        }
+    },
 
     clearScript: function() {
         var self = this;
         $.each(this._nodes, function(i, n) {
             n.removeNode(true);
         });
-        this._usednames = {};        
+        this._usednames = {};
         this._nodes = [];
         this.trigger("scriptCleared");
-    },               
+    },
 
-    resetSize: function() {                           
+    resetSize: function() {
         var svg = $(this.parent).find("svg");
         svg
             .attr("width", Math.max($(this.parent).width(), svg.attr("width")))
             .attr("height", Math.max($(this.parent).height(), svg.attr("height")));
-    },                   
+    },
 
     clearErrors: function() {
         $.map(this._nodes, function(n) {
             n.setErrored(false);
-        });            
+        });
     },
 
     hasNodes: function() {
@@ -330,13 +330,13 @@ NT.Tree = OcrJs.Base.extend({
     selectedNodeCount: function() {
         return this._nodes.filter(function(n) {
             return n.isFocussed();
-        }).length;    
+        }).length;
     },
 
     setNodeErrored: function(nodename, error) {
         if (this._usednames[nodename])
             this._usednames[nodename].setErrored(true, error);
-    },                        
+    },
 
     newNodeName: function(type) {
         var count = 1;
@@ -349,7 +349,7 @@ NT.Tree = OcrJs.Base.extend({
 
     isValidNodeName: function(name, original) {
         if (name == original)
-            return true;        
+            return true;
         if (name == "" || ~name.search(/\s/))
             return false;
         return !Boolean(this._usednames[name]);
@@ -358,20 +358,20 @@ NT.Tree = OcrJs.Base.extend({
     renameNode: function(node, name) {
         this._usednames[name] = this._usednames[node.name];
         delete this._usednames[node.name];
-        node.setName(name);        
-    },                    
+        node.setName(name);
+    },
 
     group: function() {
         return this._group;
-    },        
+    },
 
     scriptChanged: function(what) {
-        console.log("running script");      
+        console.log("running script");
         this.trigger("scriptChanged", what);
     },
 
     setupNodeListeners: function(node) {
-        var self = this;                            
+        var self = this;
         node.addListeners({
             "toggleIgnored.tree": function(ig) {
                 self.cmdSetNodeIgnored(node);
@@ -403,7 +403,7 @@ NT.Tree = OcrJs.Base.extend({
             },
             "inputAttached.tree": function(plug) {
                 self.handlePlug(plug);
-            },                               
+            },
             "outputAttached.tree": function(plug) {
                 self.handlePlug(plug);
             },
@@ -412,13 +412,13 @@ NT.Tree = OcrJs.Base.extend({
             },
             "plugRightClicked.tree": function(plug, event) {
                 self.trigger("rightClicked", event, plug);
-            },                                  
+            },
         });
     },
 
     teardownNodeListeners: function(node) {
         node.removeListeners(".tree");
-    },                               
+    },
 
     removeDragCable: function() {
         if (this._dragcable) {
@@ -447,8 +447,8 @@ NT.Tree = OcrJs.Base.extend({
                     self.cmdConnectPlugs(self._dragcable.start, plug);
                 this._undostack.endMacro();
             }
-            self.removeDragCable();    
-        }            
+            self.removeDragCable();
+        }
     },
 
     handlePlugHover: function(plug) {
@@ -462,11 +462,11 @@ NT.Tree = OcrJs.Base.extend({
             }
         } else {
             plug.setAcceptingState();
-        }            
-    },                         
+        }
+    },
 
     startCableDrag: function(plug) {
-        var self = this;                        
+        var self = this;
         var cable = new NT.DragCable(plug);
         var point = SvgHelper.denorm(plug.centre(), plug.group(), self.group());
         cable.draw(self.svg, self._cablegroup, point, point);
@@ -476,7 +476,7 @@ NT.Tree = OcrJs.Base.extend({
             var npoint = SvgHelper.denorm(plug.centre(), plug.group(), self.group());
             var nmp = SvgHelper.mouseCoord(self.parent, event);
             cable.update(npoint, self.relativePoint(nmp));
-        }); 
+        });
         $(self.parent).bind("click.dropcable", function(event) {
             self.removeDragCable();
         });
@@ -486,14 +486,14 @@ NT.Tree = OcrJs.Base.extend({
         this._undostack.push(new NT.MoveNodesCommand(this, nodes.map(function(n) {
             return n.name;
         }), x, y));
-    },                        
+    },
 
     cmdDetachPlug: function(plug) {
         this._undostack.push(new NT.DetachPlugCommand(this, plug.name));
-    },                    
+    },
 
     cmdSetNodeParameter: function(node, param, value) {
-        var oldval = node.getParameter(param);                             
+        var oldval = node.getParameter(param);
         this._undostack.push(new NT.SetNodeParameterCommand(this, node.name, param, oldval, value));
     },
 
@@ -512,13 +512,13 @@ NT.Tree = OcrJs.Base.extend({
 
     cmdSetNodeIgnored: function(node) {
         this._undostack.push(new NT.IgnoreNodeCommand(this, node.name));
-    },                           
+    },
 
     cmdDisconnectNode: function(node) {
         // when we're about to delete a node, clean
         // up its cables
-        // check if we've got an input                
-        var self = this;                        
+        // check if we've got an input
+        var self = this;
         var outplug = node.output();
         this._undostack.beginMacro("Disconnect Node");
         var referencees = self.attachedInputs(outplug);
@@ -570,7 +570,7 @@ NT.Tree = OcrJs.Base.extend({
     },
 
     cmdDeleteSelected: function() {
-        var self = this;                        
+        var self = this;
         // have to watch out we don't barf the _nodes index
         var togo = [];
         for (var i in this._nodes) {
@@ -594,7 +594,7 @@ NT.Tree = OcrJs.Base.extend({
         this.cmdDisconnectNode(node);
         this._undostack.push(new NT.DeleteNodeCommand(this, node.name));
         this._undostack.endMacro();
-    },                       
+    },
 
     cmdCreateReplacementNode: function(type, replace, atpoint) {
         var name = this.newNodeName(type);
@@ -603,12 +603,12 @@ NT.Tree = OcrJs.Base.extend({
                 new NT.AddNodeCommand(this, name, type, atpoint));
         var node = this.getNode(name);
         this.cmdReplaceNode(replace, node);
-        this._undostack.endMacro();        
+        this._undostack.endMacro();
     },
 
     cmdCreateNode: function(name, type, atpoint) {
         this._undostack.push(new NT.AddNodeCommand(this, name, type, atpoint));
-    },                       
+    },
 
     cmdLayoutNodes: function(data) {
         var self = this;
@@ -618,7 +618,7 @@ NT.Tree = OcrJs.Base.extend({
         $.each(data, function(name, value) {
             console.log("Laying out", name, value);
             var node = self.getNode(name);
-            var pos = node.position();            
+            var pos = node.position();
             self.cmdMoveNodesBy(
                 [node],
                 value[0] - pos.x,
@@ -632,7 +632,7 @@ NT.Tree = OcrJs.Base.extend({
     createNodeWithContextFromEvent: function(type, event, context) {
         var atpoint = SvgHelper.mouseCoord(this.parent, event);
         this.createNodeWithContext(type, atpoint, context);
-    },                                        
+    },
 
     createNodeWithContext: function(type, atpoint, context) {
         var self = this;
@@ -642,7 +642,7 @@ NT.Tree = OcrJs.Base.extend({
             return this.cmdCreateReplacementNode(type, context, atpoint);
 
         // otherwise, create a temporary node and defer the
-        // actual creation until it is "dropped" somewhere 
+        // actual creation until it is "dropped" somewhere
         // on the canvas.
         var node = this.createNode(name, this._nodetypes[type]);
         var point = this.relativePoint(atpoint);
@@ -666,7 +666,7 @@ NT.Tree = OcrJs.Base.extend({
             self.deleteNode(n);
             if (plug && cable)
                 cable.remove();
-        };            
+        };
 
         var doNodeCreation = function(atpoint) {
             self._undostack.beginMacro("Create Node");
@@ -679,7 +679,7 @@ NT.Tree = OcrJs.Base.extend({
             }
             self.deselectAll();
             self.getNode(name).setFocussed(true);
-            self._undostack.endMacro();        
+            self._undostack.endMacro();
         };
 
         $(document).bind("keydown.dropnode", function(event) {
@@ -692,7 +692,7 @@ NT.Tree = OcrJs.Base.extend({
                 doNodeCreation({
                     x: p.x + (node.width / 2),
                     y: p.y + (node.height / 2),
-                });    
+                });
             }
         });
         $(this.parent).bind("mousemove.dropnode", function(event) {
@@ -709,8 +709,8 @@ NT.Tree = OcrJs.Base.extend({
             var p = self.relativePoint(SvgHelper.mouseCoord(self.parent, event));
             removeDragProxies(this);
             doNodeCreation(p);
-        });        
-    },                    
+        });
+    },
 
     connectPlugs: function(src, dst) {
         var self = this;
@@ -720,12 +720,12 @@ NT.Tree = OcrJs.Base.extend({
         src.addListener("moved", function() {
             var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
             var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
-            cable.update(m1, m2);            
+            cable.update(m1, m2);
         });
         dst.addListener("moved", function() {
             var m1 = SvgHelper.denorm(src.centre(), src.group(), self.group());
             var m2 = SvgHelper.denorm(dst.centre(), dst.group(), self.group());
-            cable.update(m1, m2);                    
+            cable.update(m1, m2);
         });
         cable.draw(this.svg, this._cablegroup, p1, p2);
     },
@@ -733,19 +733,19 @@ NT.Tree = OcrJs.Base.extend({
     attachedInputs: function(outplug) {
         // since output plugs have no knowledge of what's
         // attached to them we have to search all the nodes
-        // to find any that reference a given output.                        
+        // to find any that reference a given output.
         var inplugs = [];
         $.each(this._nodes, function(ni, node) {
             $.each(node.inputs(), function(i, input) {
                 if (input.isAttached() && input.cable().start == outplug)
                     inplugs.push(input);
-            });                
-        });            
+            });
+        });
         return inplugs;
     },
 
     setupEvents: function() {
-        var self = this;                     
+        var self = this;
         $(self.parent).noContext().rightClick(function(event) {
             self.trigger("rightClicked", event, null);
         });
@@ -761,7 +761,7 @@ NT.Tree = OcrJs.Base.extend({
         });
         // zoom with "="(+), and "-" keys...
         function nodeCmd(event) {
-            if (event.which == 61 || event.which == 45) {                    
+            if (event.which == 61 || event.which == 45) {
                 self.keyZoom(event.which == 61 ? 1.5 : 0.75);
             }
         }
@@ -777,8 +777,8 @@ NT.Tree = OcrJs.Base.extend({
                 event.stopPropagation();
                 event.preventDefault();
             } else if (event.button == 0) {
-                self.lassoSelect(event);    
-            }                
+                self.lassoSelect(event);
+            }
         });
         // enable certain key events only when the mouse is in the parent element
         $(self.parent).bind("mouseenter", function(mvevent) {
@@ -826,7 +826,7 @@ NT.Tree = OcrJs.Base.extend({
                 if (event.which == KC_SHIFT)
                    self._multiselect = false;
             });
-        });        
+        });
         $(self.parent).bind("mouseleave", function(mvevent) {
             $(document).unbind(".nodecmd");
             $(document).unbind("mousewheel.zoomcanvas");
@@ -842,16 +842,16 @@ NT.Tree = OcrJs.Base.extend({
                 l = trans.x;
                 t = trans.y;
                 r = trans.x + node.width;
-                b = trans.y + node.height;    
+                b = trans.y + node.height;
             } else {
                 l = Math.min(l, trans.x);
                 t = Math.min(t, trans.y);
                 r = Math.max(r, trans.x + node.width);
-                b = Math.max(b, trans.y + node.height);        
-            }                
+                b = Math.max(b, trans.y + node.height);
+            }
         });
         return {l: l, t: t, r: r, b: b};
-    },                       
+    },
 
     centreTree: function() {
         // centre the tree in the viewport
@@ -864,7 +864,7 @@ NT.Tree = OcrJs.Base.extend({
         var ctrans = SvgHelper.getTranslate(this.group());
         var bounds = this.getTreeBounds();
 
-        // now determine what zoom/translate we need to 
+        // now determine what zoom/translate we need to
         // centre l, t, r & b
         var w = (bounds.r - bounds.l), h = (bounds.b - bounds.t);
         var tscalex = tw / w, tscaley = th / h;
@@ -872,7 +872,7 @@ NT.Tree = OcrJs.Base.extend({
 
         // now determine where to translate the canvas to centre the tree
         var xrealpos = (tw - w * usedscale) / 2;
-        var yrealpos = (th - h * usedscale) / 2;            
+        var yrealpos = (th - h * usedscale) / 2;
         transx = border + (xrealpos - (bounds.l * usedscale));
         transy = border + (yrealpos - (bounds.t * usedscale));
 
@@ -884,7 +884,7 @@ NT.Tree = OcrJs.Base.extend({
         return this._nodes.filter(function(n) {
             return n.isFocussed();
         });
-    },                       
+    },
 
     deselectAll: function() {
         $.map(this._nodes, function(n) {
@@ -898,7 +898,7 @@ NT.Tree = OcrJs.Base.extend({
         $.map(this._nodes, function(n) {
             n.setFocussed(true);
         });
-    },    
+    },
 
     setNodeViewing: function(node) {
         if (!node.isViewing()) {
@@ -907,7 +907,7 @@ NT.Tree = OcrJs.Base.extend({
                     other.setViewing(false);
             });
             node.setViewing(!node.isViewing());
-            this.trigger("nodeViewing", node);        
+            this.trigger("nodeViewing", node);
         }
     },
 
@@ -918,15 +918,15 @@ NT.Tree = OcrJs.Base.extend({
                     other.setFocussed(false);
             });
             node.setFocussed(true);
-            this.trigger("nodeFocussed", node);        
+            this.trigger("nodeFocussed", node);
         } else {
-            node.setFocussed(!node.isFocussed());    
+            node.setFocussed(!node.isFocussed());
         }
     },
 
     populateCanvas: function() {
-        var self = this;                        
-        $(this.parent).svg({                    
+        var self = this;
+        $(this.parent).svg({
             onLoad: function(svg) {
                 self.svg = svg;
                 self.drawTree();
@@ -959,9 +959,9 @@ NT.Tree = OcrJs.Base.extend({
         });
         this.connectNodes(script);
         this.trigger("scriptLoaded");
-    },                    
+    },
 
-    createNode: function(name, typedata) {                         
+    createNode: function(name, typedata) {
         var id = $.map(this._usednames, function(){return true;}).length;
         var node = new NT.Node(name, typedata, id);
         node.draw(this.svg, this._group, 0, 0);
@@ -972,7 +972,7 @@ NT.Tree = OcrJs.Base.extend({
         this.setupNodeListeners(node);
         this._usednames[node.name] = node;
         this._nodes.push(node);
-    },                      
+    },
 
     unregisterNode: function(node) {
         this.teardownNodeListeners(node);
@@ -980,9 +980,9 @@ NT.Tree = OcrJs.Base.extend({
         var i = this._nodes.indexOf(node);
         console.assert(i > -1, "Node", node.name, "not found in self._nodes");
         this._nodes.splice(i, 1);
-    },                        
+    },
 
-    lassoSelect: function(event) {                             
+    lassoSelect: function(event) {
         var self = this;
         var trans = SvgHelper.getTranslate(self.group());
         var scale = SvgHelper.getScale(self.group());
@@ -994,11 +994,11 @@ NT.Tree = OcrJs.Base.extend({
                     SvgHelper.mouseCoord(self.parent, mevent));
             var rect = SvgHelper.rectFromPoints(start, end);
             if (!lasso && Math.sqrt(rect.width^2 + rect.height^2) > 5) {
-                lasso = self.svg.rect(self.group(), rect.x, rect.y, 
+                lasso = self.svg.rect(self.group(), rect.x, rect.y,
                             rect.width, rect.height, 0, 0, {
                         fill: "none",
                         stroke: "#000",
-                        strokeWidth: 1 / scale, 
+                        strokeWidth: 1 / scale,
                         strokeDashArray: (2 / scale) + "," + (2 / scale),
                 });
             }
@@ -1026,7 +1026,7 @@ NT.Tree = OcrJs.Base.extend({
             $(document).unbind(".lasso");
             event.stopPropagation();
             event.preventDefault();
-        });        
+        });
     },
 
     lassoNodes: function(lasso) {
@@ -1043,12 +1043,12 @@ NT.Tree = OcrJs.Base.extend({
             })) nodes.push(node);
         });
         console.log("Lassood", nodes.length, "nodes");
-        return nodes;        
+        return nodes;
     },
 
     unfocusAllNodes: function() {
         $.map(this._nodes, function(n) { n.setFocussed(false); });
-    },                         
+    },
 
     relativePoint: function(point) {
         var scale = SvgHelper.getScale(this.group());
@@ -1057,14 +1057,14 @@ NT.Tree = OcrJs.Base.extend({
             x: (point.x - trans.x) / scale,
             y: (point.y - trans.y) / scale
         };
-    },    
+    },
 
     deleteNode: function(node, alert) {
         node.removeNode(alert);
-    },                    
+    },
 
     buildScript: function() {
-        var script = {};                     
+        var script = {};
         $.each(this._nodes, function(i, n) {
             script[n.name] = n.serialize();
         });
@@ -1077,7 +1077,7 @@ NT.Tree = OcrJs.Base.extend({
             y: SvgHelper.getTranslate(this.group()).y,
             scale: SvgHelper.getScale(this.group()),
         };
-    },                  
+    },
 
     loadState: function(state) {
         var x = parseInt(state.x),
@@ -1101,7 +1101,7 @@ NT.Tree = OcrJs.Base.extend({
     },
 
     connectNodes: function(treenodes) {
-        var self = this;                      
+        var self = this;
         $.each(treenodes, function(name, node) {
             $.each(node.inputs, function(i, input) {
                 console.log("Connecting:", input, name);
@@ -1109,12 +1109,12 @@ NT.Tree = OcrJs.Base.extend({
                 var n2 = self._usednames[name];
                 self.connectPlugs(n1.output(), n2.input(i));
             });
-        });    
-    },                      
+        });
+    },
 
     resetCanvas: function() {
         SvgHelper.updateTransform(this.group(), 0, 0, 1);
-    },                     
+    },
 
     panContainer: function(event) {
         var dragstart = {
@@ -1124,7 +1124,7 @@ NT.Tree = OcrJs.Base.extend({
         var self = this;
         var trans = SvgHelper.getTranslate(this.group());
         $(document).bind("mousemove.pancanvas", function(moveevent) {
-            SvgHelper.updateTranslate(self.group(), 
+            SvgHelper.updateTranslate(self.group(),
                 trans.x + (moveevent.pageX - dragstart.x),
                 trans.y + (moveevent.pageY - dragstart.y)
             );
@@ -1142,7 +1142,7 @@ NT.Tree = OcrJs.Base.extend({
             y: $(this.parent).height() / 2,
         };
         this.zoomAtPoint(point, factor);
-    },                 
+    },
 
     mouseZoom: function(event, delta) {
         // ensure the point under the mouse stays under
@@ -1152,7 +1152,7 @@ NT.Tree = OcrJs.Base.extend({
         this.zoomAtPoint(point, factor);
     },
 
-    zoomAtPoint: function(point, factor) {                           
+    zoomAtPoint: function(point, factor) {
         var scale = SvgHelper.getScale(this.group());
         var trans = SvgHelper.getTranslate(this.group());
         var sx = scale * factor;
@@ -1165,29 +1165,29 @@ NT.Tree = OcrJs.Base.extend({
         var shiftx = (point.x - trans.x) * (1 - factor) + trans.x,
             shifty = (point.y - trans.y) * (1 - factor) + trans.y;
         SvgHelper.updateTransform(this.group(), shiftx, shifty, sx);
-    },                   
+    },
 
-    defineGradients: function() {                         
+    defineGradients: function() {
         var defs = this.svg.defs(this._group);
-        this.svg.linearGradient(defs, "NodeGradient", 
+        this.svg.linearGradient(defs, "NodeGradient",
             [["0%", "#f8f8f8"], ["100%", "#ebebeb"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "FocusGradient", 
+        this.svg.linearGradient(defs, "FocusGradient",
             [["0%", "#f9fcf7"], ["100%", "#f5f9f0"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "ErrorGradient", 
+        this.svg.linearGradient(defs, "ErrorGradient",
             [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "ViewingGradient", 
+        this.svg.linearGradient(defs, "ViewingGradient",
             [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "IgnoreGradient", 
+        this.svg.linearGradient(defs, "IgnoreGradient",
             [["0%", "#ffffcf"], ["100%", "#ffffad"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "InPlugGradient", 
+        this.svg.linearGradient(defs, "InPlugGradient",
             [["0%", "#d8d8d8"], ["100%", "#dbdbdb"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "OutPlugGradient", 
+        this.svg.linearGradient(defs, "OutPlugGradient",
             [["0%", "#dbdbdb"], ["100%", "#d8d8d8"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "PlugAccept", 
+        this.svg.linearGradient(defs, "PlugAccept",
             [["0%", "#dbf0ca"], ["100%", "#d3e7c3"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "PlugReject", 
+        this.svg.linearGradient(defs, "PlugReject",
             [["0%", "#fdedef"], ["100%", "#f9d9dc"]], "0%", "0%", "0%", "100%");
-        this.svg.linearGradient(defs, "PlugDragging", 
+        this.svg.linearGradient(defs, "PlugDragging",
             [["0%", "#a9cae5"], ["100%", "#6ea2cc"]], "0%", "0%", "0%", "100%");
     },
 });

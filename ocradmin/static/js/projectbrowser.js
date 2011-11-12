@@ -13,7 +13,7 @@ $(function() {
             .attr("id", "project_dialog")
             .appendTo($("body"));
         pbrowser = new ProjectListWidget(
-            dialog.get(0), 
+            dialog.get(0),
             new ProjectDataSource(),
             {multiselect: false}
         );
@@ -30,13 +30,13 @@ $(function() {
             minHeight: 300,
             resize: function(e, ui) {
                 pbrowser.resized(e);
-                pbrowser.setHeight($(this).height());   
+                pbrowser.setHeight($(this).height());
             },
             close: function(e) {
                 pbrowser.teardownEvents();
                 pbrowser = null;
                 dialog.remove();
-            },            
+            },
             modal: true,
         });
         event.preventDefault();
@@ -58,7 +58,7 @@ $(function() {
             }).append(
                 $("<form></form>")
                     .attr("method", "POST")
-                    .attr("action", "/projects/create")                        
+                    .attr("action", "/projects/create")
             .load("/projects/create/", function() {
                 $(this).append(
                     $("<div></div>").addClass("form_footer")

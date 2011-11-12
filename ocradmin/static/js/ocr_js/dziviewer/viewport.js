@@ -1,4 +1,4 @@
-// 
+//
 // Viewport object
 //
 
@@ -13,9 +13,9 @@ DziViewer.ViewPort = OcrJs.Base.extend({
             maxzoom: 10,
             zoomstep: 0.1,
         };
-        $.extend(this.options, options);    
+        $.extend(this.options, options);
 
-        this.parent = $(parent);             
+        this.parent = $(parent);
         this._scale = 1;
         this.translate = new DziViewer.Point(0, 0);
         self.interacted = false;
@@ -42,7 +42,7 @@ DziViewer.ViewPort = OcrJs.Base.extend({
     resetSize: function() {
         this.width = this.parent.width();
         this.height = this.parent.height();
-    },             
+    },
 
     addEventFilter: function(filter) {
         console.assert(this._eventfilters.indexOf(filter) == -1,
@@ -57,7 +57,7 @@ DziViewer.ViewPort = OcrJs.Base.extend({
 
     clearEventFilters: function() {
         this._eventfilters = [];
-    },                           
+    },
 
     setupEvents: function() {
         var self = this;
@@ -75,13 +75,13 @@ DziViewer.ViewPort = OcrJs.Base.extend({
                     kevent.preventDefault();
                 }
             });
-        });        
+        });
         self.parent.bind("mouseleave", function(event) {
             $(document).unbind("keydown.viewerkey");
         });
 
         self.parent.bind("mousedown", function(event) {
-            if (self._checkIntercepted("mousedown", event) 
+            if (self._checkIntercepted("mousedown", event)
                 || event.button == 2)
                 return;
 
@@ -126,7 +126,7 @@ DziViewer.ViewPort = OcrJs.Base.extend({
 
     getCenter: function() {
         return this.translate.clone();
-    },        
+    },
 
     zoomTo: function(scale, dontupdate) {
         this.scale = scale;
@@ -137,14 +137,14 @@ DziViewer.ViewPort = OcrJs.Base.extend({
     zoomIn: function(factor, dontupdate) {
         var factor = factor || 1.2;
         this.zoomAtPoint(this.getCenter(), factor, dontupdate);
-    },               
+    },
 
     zoomOut: function(factor, dontupdate) {
         var factor = factor || 0.8;
         this.zoomAtPoint(this.getCenter(), factor, dontupdate);
-    },                 
+    },
 
-    zoomAtPoint: function(point, factor, dontupdate) {                           
+    zoomAtPoint: function(point, factor, dontupdate) {
         var sx = this.scale * factor;
         if (sx < this.options.minzoom || sx > this.options.maxzoom)
             return false;
@@ -160,12 +160,12 @@ DziViewer.ViewPort = OcrJs.Base.extend({
     },
      
     getScaleToFit: function(size) {
-        return size.getAspect() < this.getSize().getAspect() 
+        return size.getAspect() < this.getSize().getAspect()
                 ? this.height / size.height
                 : this.width / size.width;
     },
 
-    centerOn: function(size, dontupdate) {                  
+    centerOn: function(size, dontupdate) {
         this.scale = this.getScaleToFit(size);
         this.translate.x = Math.ceil((this.width - (size.width * this.scale)) / 2);
         this.translate.y = Math.ceil((this.height - (size.height * this.scale)) / 2);

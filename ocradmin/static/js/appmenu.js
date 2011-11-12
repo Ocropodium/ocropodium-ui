@@ -8,10 +8,10 @@ $(function() {
             .unbind("click.menuclose")
             .find("ul").hide();
         $("div.appmenu ul.top").unbind("mouseenter.menuover");
-        $(window).unbind("click.menuclose");        
-        $(window).unbind("keydown.menuclose");        
+        $(window).unbind("click.menuclose");
+        $(window).unbind("keydown.menuclose");
         $(menu).bind("click.menuopen", function(event) {
-            activateMenu(this);        
+            activateMenu(this);
         });
     }
 
@@ -28,9 +28,9 @@ $(function() {
                 deactivateMenu(menu);
             }).find("ul").show()
             .find("li").not(".separator").bind("mouseenter", function(event) {
-                $(this).addClass("ui-selected");    
+                $(this).addClass("ui-selected");
             }).bind("mouseleave", function(event) {
-                $(this).removeClass("ui-selected");    
+                $(this).removeClass("ui-selected");
             });
         $(window)
             .bind("keydown.menuclose", function(event) {
@@ -46,7 +46,7 @@ $(function() {
                     if (menu.nextElementSibling) {
                         activateMenu(menu.nextElementSibling);
                     }
-                } 
+                }
             }).bind("click.menuclose", function(event) {
                 if (event.pageX > $(menu).offset().left &&
                     event.pageX < $(menu).offset().left +
@@ -56,7 +56,7 @@ $(function() {
                         $(menu).height()) {
                     return true;
                 }
-                deactivateMenu(menu);            
+                deactivateMenu(menu);
             });
     }
 

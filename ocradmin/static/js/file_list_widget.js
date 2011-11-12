@@ -6,7 +6,7 @@ var FileListWidget = AbstractListWidget.extend({
 
     files: function() {
         return $.map($(".ui-selected.file"), function(elem, i) {
-            return $(elem).data("value");    
+            return $(elem).data("value");
         });
     },
 
@@ -15,7 +15,7 @@ var FileListWidget = AbstractListWidget.extend({
         var self = this;
         $(window).bind("keydown.dirnav", function(event) {
             if (event.keyCode == KC_BACKSPACE) {
-                self.dataSource().backDir();                
+                self.dataSource().backDir();
                 event.preventDefault();
             } else {
                 return true;
@@ -28,7 +28,7 @@ var FileListWidget = AbstractListWidget.extend({
 
         $("#fbclosebutton").click(function() {
             self.close();
-        });        
+        });
     },
 
     buildUi: function() {
@@ -56,13 +56,13 @@ var FileListWidget = AbstractListWidget.extend({
     },
 
     rowDoubleClicked: function(event, row) {
-        this._super();                          
+        this._super();
         var row = $(event.target).parent();
         if (row.data("type") == "dir") {
             this.dataSource().setCwd(row.data("name"));
             this.clearSelection();
         } else {
-            $("#fbopenbutton").click();           
+            $("#fbopenbutton").click();
         }
     },
 
@@ -78,7 +78,7 @@ var FileListWidget = AbstractListWidget.extend({
 
     close: function(event) {
     
-    },               
+    },
 });
 
 

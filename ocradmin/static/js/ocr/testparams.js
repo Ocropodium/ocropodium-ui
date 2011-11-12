@@ -5,7 +5,7 @@ $(function() {
         //applyDefaultStyles: true,
         center: {
             resizable: false,
-            closable: false, 
+            closable: false,
         },
     });
 
@@ -15,11 +15,11 @@ $(function() {
             resizable: false,
             closable: false,
             slidable: false,
-            spacing_open: 0, 
+            spacing_open: 0,
         },
         east: {
             size: 400,
-        }        
+        }
     });
 
     var hsplit = $("#sidebar").layout({
@@ -28,11 +28,11 @@ $(function() {
             resizable: false,
             closable: false,
             slidable: false,
-            spacing_open: 0, 
+            spacing_open: 0,
         },
         south: {
             size: 200,
-        },                   
+        },
 
 
     });

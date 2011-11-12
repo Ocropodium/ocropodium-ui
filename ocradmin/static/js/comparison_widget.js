@@ -1,5 +1,5 @@
 // Widget representing a single OCR batch.  Displays a lazy
-// loading scrollable list of tasks which can be filtered 
+// loading scrollable list of tasks which can be filtered
 // and individually restarted/aborted.
 
 

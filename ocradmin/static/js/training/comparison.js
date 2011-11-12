@@ -19,7 +19,7 @@ $(function() {
             .attr("id", "dialog")
             .appendTo($("body"))
             .load($(this).attr("href"), function() {
-                $("#scoretabs", dialog).tabs();    
+                $("#scoretabs", dialog).tabs();
             })
             .dialog({
                 width: 600,
@@ -49,5 +49,5 @@ $(function() {
         }
     });
 
-    refreshData();    
+    refreshData();
 });

@@ -36,7 +36,7 @@ OcrJs.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
     refresh: function() {
         this.readNodeData();
         this.trigger("update");
-    },                 
+    },
 
     readNodeData: function() {
         var self = this;
@@ -64,7 +64,7 @@ OcrJs.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
                 });
             }
         });
-    },                      
+    },
 
     render: function(context) {
         context.save();
@@ -87,11 +87,11 @@ OcrJs.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
             context.fillStyle = this._colors[ci][1];
             context.fillRect(
                 (r.x * this.viewport.scale) + this.viewport.translate.x,
-                (r.y * this.viewport.scale) + this.viewport.translate.y, 
+                (r.y * this.viewport.scale) + this.viewport.translate.y,
                 r.width * this.viewport.scale, r.height * this.viewport.scale);
             context.strokeRect(
                 (r.x * this.viewport.scale) + this.viewport.translate.x,
-                (r.y * this.viewport.scale) + this.viewport.translate.y, 
+                (r.y * this.viewport.scale) + this.viewport.translate.y,
                 r.width * this.viewport.scale, r.height * this.viewport.scale,
                 5);
             context.fillStyle = "rgba(0,0,0,0.5)";
@@ -108,7 +108,7 @@ OcrJs.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
             context.fillStyle = "transparent";
             context.dashedRect(
                 (this._outline.x * this.viewport.scale) + this.viewport.translate.x,
-                (this._outline.y * this.viewport.scale) + this.viewport.translate.y, 
+                (this._outline.y * this.viewport.scale) + this.viewport.translate.y,
                 this._outline.width * this.viewport.scale,
                 this._outline.height * this.viewport.scale);
         }
@@ -156,27 +156,27 @@ OcrJs.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
             // node data and the rect values get overwritten
             self.update();
             self.trigger("interactingStop");
-        });        
+        });
 
         return true;
     },
 
     handleKeyDown: function(event) {
-        switch (event.keyCode) {                       
+        switch (event.keyCode) {
             case 46: // delete
                 return this.handleDelete(event);
-            case 49: 
-            case 50: 
-            case 51: 
-            case 52: 
-            case 53: 
-            case 54: 
-            case 55: 
-            case 56: 
-            case 57: 
-            case 58: 
+            case 49:
+            case 50:
+            case 51:
+            case 52:
+            case 53:
+            case 54:
+            case 55:
+            case 56:
+            case 57:
+            case 58:
             case 59:
-               return this.handleNumber(event); 
+               return this.handleNumber(event);
         }
         return false;
     },
@@ -188,7 +188,7 @@ OcrJs.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
             return true;
         }
         return false;
-    },      
+    },
 
     handleNumber: function(event) {
         var idx = event.which - 49; // zero index
@@ -210,17 +210,17 @@ OcrJs.NodeGui.SegmentPageManualGui = DziViewer.Plugin.RectManager.extend({
     },
 
     updateNodeParameters: function() {
-        var self = this;        
+        var self = this;
         var rects = [];
         $.each(this._rects, function(i, r) {
             rects.push([
-                Math.round(r.x0), Math.round(r.y0), 
+                Math.round(r.x0), Math.round(r.y0),
                 Math.round(r.x1), Math.round(r.y1)].join(","));
         });
         this.trigger("parametersSet", this.node, {
             boxes: rects.join("~")
         });
-    },                             
-});    
+    },
+});
 
 
