@@ -1,6 +1,6 @@
-// 
+//
 // Base class, with event handling functions, built
-// on John Resig's class system. 
+// on John Resig's class system.
 //
 
 
@@ -27,7 +27,7 @@
     // Copy the properties over onto the new prototype
     for (var name in prop) {
       // Check if we're overwriting an existing function
-      prototype[name] = typeof prop[name] == "function" && 
+      prototype[name] = typeof prop[name] == "function" &&
         typeof _super[name] == "function" && fnTest.test(prop[name]) ?
         (function(name, fn){
           return function() {
@@ -39,7 +39,7 @@
             
             // The method only need to be bound temporarily, so we
             // remove it when we're done executing
-            var ret = fn.apply(this, arguments);        
+            var ret = fn.apply(this, arguments);
             this._super = tmp;
             
             return ret;
@@ -80,13 +80,13 @@ OcrJs.Base = Class.extend({
         if (this._listeners[key] != undefined)
             throw "Listener already registered: '" + key + "'";
         this._listeners[key] = [];
-        return this;        
+        return this;
     },
 
     addListener: function(key, func, prepend) {
         if (!func)
-            console.error("Adding null function listener for", key);            
-        var namespace = null;                     
+            console.error("Adding null function listener for", key);
+        var namespace = null;
         if (key.match(/^(.+)\.([^\.]+)$/))
             key = RegExp.$1, namespace = RegExp.$2;
         if (namespace) {
@@ -105,10 +105,10 @@ OcrJs.Base = Class.extend({
         var self = this;
         $.each(obj, function(k, v) { self.addListener(k, v, prepend) });
         return this;
-    },                 
+    },
 
     trigger: function() {
-        var self = this;                       
+        var self = this;
         var args = Array.prototype.slice.call(arguments);
         var key = args.shift();
         if (this._listeners[key] == undefined)
@@ -120,7 +120,7 @@ OcrJs.Base = Class.extend({
     },
 
     removeListeners: function(key, func) {
-        var namespace = null;                     
+        var namespace = null;
         if (key.match(/^(.*)\.([^\.]+)$/))
             key = RegExp.$1, namespace = RegExp.$2;
         if (key != "" && this._listeners[key] === undefined) {
@@ -140,12 +140,12 @@ OcrJs.Base = Class.extend({
                             console.error("Function is null!", k, namespace);
                         if (!f.__namespace || f.__namespace != namespace) {
                             temp.push(f);
-                        }    
-                    });   
+                        }
+                    });
                     self._listeners[k] = temp;
                 }
             });
-        }            
+        }
     },
 });
 

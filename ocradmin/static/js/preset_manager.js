@@ -50,27 +50,27 @@ OcrJs.PresetManager = OcrJs.Base.extend({
 
         $("#new_script, #new_script_button").click(function(event) {
             self.newPreset();
-        });        
+        });
         
         $("#save_script, #save_script_button").click(function(event) {
             if (self.state.getOpen()) {
                 self.saveExistingPreset(self.state.getOpen(),
                     self.state.getTreeScript(), function(data) {
-                        self.setCurrentOpenPreset(self.state.getOpen(), 
+                        self.setCurrentOpenPreset(self.state.getOpen(),
                                 self.state.getName(), data, false);
                     });
             } else {
                 self.showCreatePresetDialog();
             }
-        });        
+        });
         
         $("#save_script_as, #submit_save_script_as").click(function(event) {
             self.showCreatePresetDialog();
-        });        
+        });
         
         $("#open_script").click(function(event) {
             self.showOpenPresetDialog();
-        });        
+        });
         
         $("#download_script").click(function(event) {
             $("#fetch_script_slug").val(self.state.getCurrentSlug());
@@ -99,8 +99,8 @@ OcrJs.PresetManager = OcrJs.Base.extend({
                     profile: self._dialog.find("#id_profile").val(),
                     data: JSON.stringify(currdata, null, 2),
             }, function(data) {
-                    self.setCurrentOpenPreset(data, 
-                            self._dialog.find("#id_name").val(), currdata, false);                    
+                    self.setCurrentOpenPreset(data,
+                            self._dialog.find("#id_name").val(), currdata, false);
                     self.refreshPresetList(function(data) {
                         self._dialog.dialog("close");
                         if (self._continueaction)
@@ -135,7 +135,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         $("#open_preset_list").selectable({
             selected: function(event, ui) {
                 self.validateOpenSelection();
-            },    
+            },
         }).find("li").textOverflow("...", true).dblclick(function(event) {
             self._openPresetFromList($(this));
         });
@@ -165,10 +165,10 @@ OcrJs.PresetManager = OcrJs.Base.extend({
             },
             error: OcrJs.ajaxErrorHandler,
         });
-    },                           
+    },
 
     newPreset: function() {
-        console.log("New preset...");                   
+        console.log("New preset...");
         if (this.state.isDirty()) {
             this._continueaction = this.newPreset;
             this.showUnsavedPresetDialog(this.state.getOpen() == null);
@@ -177,14 +177,14 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         this.trigger("newPreset");
         this.state.clear();
         this._continueaction = null;
-    },                   
+    },
 
     setCurrentOpenPreset: function(slug, name, data, reload) {
         this.state.setOpen(slug, name);
         if (reload) {
-            this.state.setScript(data);        
+            this.state.setScript(data);
         }
-    },                              
+    },
 
     showOpenPresetDialog: function() {
         var self = this;
@@ -199,7 +199,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
     },
 
     _openPresetFromList: function(item) {
-        var self = this;                             
+        var self = this;
         var slug = item.data("slug");
         console.log("Opening preset", item);
         this.openPreset(slug, function(data) {
@@ -214,7 +214,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         var self = this;
         this._dialog.dialog("close");
         this._dialog = elem;
-        var tb = $(this.parent);        
+        var tb = $(this.parent);
         var pos = [tb.offset().left, tb.offset().top + tb.height()];
         this._dialog.dialog({
             dialogClass: "preset_manager_dialog",
@@ -222,10 +222,10 @@ OcrJs.PresetManager = OcrJs.Base.extend({
             position: pos,
             width: tb.width(),
             close: function(e, ui) {
-                self.trigger("saveDialogClose");    
+                self.trigger("saveDialogClose");
             },
         });
-    },    
+    },
 
     showUnsavedPresetDialog: function(saveas) {
         console.log("Showing unsaved preset dialog...");
@@ -244,7 +244,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         var selection = this._dialog.find(".preset_item.ui-selected");
         var submit = this._dialog.find("#submit_open_preset");
         submit.attr("disabled", selection.length != 1);
-    },                               
+    },
 
     validateNewForm: function() {
         var namefield = this._dialog.find("#id_name");
@@ -254,7 +254,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
 
     saveExistingPreset: function(slug, script, successfunc, errorfunc) {
         if (!script || $.map(script, function(k,v){ return k;}).length == 0)
-            throw "Attempt to save existing preset with no data! " + slug;            
+            throw "Attempt to save existing preset with no data! " + slug;
         $.ajax({
             url: "/presets/update_data/" + slug,
             data: {
@@ -263,17 +263,17 @@ OcrJs.PresetManager = OcrJs.Base.extend({
             type: "POST",
             error: errorfunc,
             success: successfunc,
-        });                
+        });
     },
 
     saveCreatedPreset: function(formdata, successfunc, errorfunc) {
         if (!formdata.data || $.map(formdata.data, function(k,v){ return k;}).length == 0)
-            throw "Attempt to save new preset with no data! " + formdata.name;            
+            throw "Attempt to save new preset with no data! " + formdata.name;
         $.ajax({
             url: "/presets/createjson/",
             type: "POST",
             data: formdata,
-            error: errorfunc, 
+            error: errorfunc,
             statusCode: {
                 200: function(errdata) {
                     console.error("200", errdata);
@@ -290,7 +290,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
             url: "/presets/data/" + slug,
             data: {format: "json"},
             success: successfunc,
-            error: errorfunc, 
+            error: errorfunc,
         });
-    },                    
+    },
 });

@@ -51,9 +51,9 @@ function setupForm () {
         icons: {
             primary: "ui-icon-plus",
         },
-        text: false,        
+        text: false,
     }).live("click", function(event) {
-        copyParameterSet($(this).parent());    
+        copyParameterSet($(this).parent());
     });
 
     $(".del_paramset").button({
@@ -61,9 +61,9 @@ function setupForm () {
             primary: "ui-icon-minus",
         },
         text: false,
-        disabled: true,        
+        disabled: true,
     }).live("click", function(event) {
-        removeParameterSet($(this).parent());    
+        removeParameterSet($(this).parent());
     });
 }
 

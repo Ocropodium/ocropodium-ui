@@ -25,12 +25,12 @@ var AbstractDataSource = OcrJs.Base.extend({
             }, {
                 name: "Col4",
                 sortAs: "str",
-            }, 
+            },
         ];
 
         this._data = [
             [0, "data0", true,  "a"],
-            [1, "data1", false, "b"],        
+            [1, "data1", false, "b"],
             [2, "data2", true,  "c"],
             [3, "data3", false, "d"],
             [4, "data4", true,  "e"],
@@ -178,7 +178,7 @@ var AbstractDataSource = OcrJs.Base.extend({
             if (typeof self._headers[col].sortAs == "function")
                 return self._headers[col].sortAs(a[self.c2d(col)], b[self.c2d(col)]);
         });
-        self.trigger("dataChanged");        
+        self.trigger("dataChanged");
     },
 
     preSort: function(a, b) {
@@ -189,7 +189,7 @@ var AbstractDataSource = OcrJs.Base.extend({
         if (!this._desc)
             return a - b;
         else
-            return b - a;    
+            return b - a;
     },
 
     stringSort: function(a, b) {
@@ -197,7 +197,7 @@ var AbstractDataSource = OcrJs.Base.extend({
             return a < b ? -1 : 1;
         else
             return b < a ? -1 : 1;
-        return 0; 
+        return 0;
     },
 
     booleanSort: function(a, b) {

@@ -19,7 +19,7 @@ OcrJs.UndoStack = OcrJs.Base.extend({
             indexChanged: [],
             stateChanged: [],
             undoStateChanged: [],
-            redoStateChanged: [],            
+            redoStateChanged: [],
         };
     },
 
@@ -39,9 +39,9 @@ OcrJs.UndoStack = OcrJs.Base.extend({
         if (this._macros.length > 0) {
             if (macro.size() > 0)
                 this._macros[this._macros.length - 1].push(macro);
-        } else        
+        } else
             this.push(macro);
-    },                  
+    },
 
     push: function(cmd) {
         if (this._macros.length > 0) {
@@ -49,7 +49,7 @@ OcrJs.UndoStack = OcrJs.Base.extend({
             cmd.redo.call(this._context);
             this.trigger("stateChanged");
             return;
-        } 
+        }
 
         while (this._stack.length > this.index) {
             this._stack.pop();
@@ -77,19 +77,19 @@ OcrJs.UndoStack = OcrJs.Base.extend({
             return "Undo " + this._stack[this.index - 1].text;
         }
         return "Nothing to undo";
-    },    
+    },
 
     redoText: function() {
         if (this.canRedo()) {
             return "Redo " + this._stack[this.index].text;
         }
         return "Nothing to redo";
-    },    
+    },
 
     undo: function() {
         if (!this.canUndo())
             return;
-        this._stack[this.index - 1].undo();    
+        this._stack[this.index - 1].undo();
         this.index--;
         this.trigger("undoStateChanged");
     },
@@ -104,13 +104,13 @@ OcrJs.UndoStack = OcrJs.Base.extend({
 
     canUndo: function() {
         if (this._macros.length)
-            return false;            
-        return this.index > 0;    
+            return false;
+        return this.index > 0;
     },
 
     canRedo: function() {
         if (this._macros.length)
-            return false;            
+            return false;
         return this._stack.length > this.index;
     },
 
@@ -131,6 +131,6 @@ OcrJs.UndoStack = OcrJs.Base.extend({
                 this.index--;
             }
         }
-    }                
+    }
 });
 

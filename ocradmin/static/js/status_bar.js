@@ -22,26 +22,26 @@ OcrJs.StatusBar = OcrJs.Base.extend({
 
         var self = this;
         this._cancel.bind("click", function(event) {
-            self.trigger("cancel");            
+            self.trigger("cancel");
         }).bind("mouseenter", function(event) {
-            $(this).addClass("hover");    
+            $(this).addClass("hover");
         }).bind("mouseleave", function(event) {
-            $(this).removeClass("hover");    
+            $(this).removeClass("hover");
         });
 
-        this._right.css("visibility", "visible");        
+        this._right.css("visibility", "visible");
     },
 
     setStatus: function(string) {
         this._left.text(string).css({
             color: "#333",
-        });                    
+        });
     },
 
     clearStatus: function() {
         this._left.text(this._default).css(
-            "color", this._left.css("backgroundColor"));        
-    },                  
+            "color", this._left.css("backgroundColor"));
+    },
 
     setProgress: function(percent) {
         
@@ -49,6 +49,6 @@ OcrJs.StatusBar = OcrJs.Base.extend({
 
     setWorking: function(bool) {
         this._progress.add(this._cancel).toggleClass("working", bool);
-    },                    
+    },
 
 });

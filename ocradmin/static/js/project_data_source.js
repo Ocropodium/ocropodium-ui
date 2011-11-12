@@ -29,8 +29,8 @@ var ProjectDataSource = AbstractDataSource.extend({
     params: function() {
         return {
             format: "json",
-            order: this._desc 
-                ? "-" + this._sortby 
+            order: this._desc
+                ? "-" + this._sortby
                 : this._sortby,
         };
     },
@@ -89,7 +89,7 @@ var ProjectDataSource = AbstractDataSource.extend({
                 self._data = data;
                 self.trigger("dataChanged");
             },
-        });        
+        });
     },
 });
 

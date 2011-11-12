@@ -1,4 +1,4 @@
-// Object to hold various formatting functions that operate 
+// Object to hold various formatting functions that operate
 
 
 OcrJs.LineFormatter = OcrJs.Base.extend({
@@ -16,13 +16,13 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
     },
 
     columnLayout: function(pagediv) {
-        var self = this;                      
+        var self = this;
         var margin = 50;
         var pagebox = this.parseBbox($(".ocr_page", pagediv).first());
         var lineboxes = $(".ocr_line", pagediv).map(function(i, elem) {
             return [self.parseBbox($(elem))];
         });
-        var textbox = this._getTextBbox(pagebox, lineboxes);       
+        var textbox = this._getTextBbox(pagebox, lineboxes);
         var scalefactor = (pagediv.width() - (2 * margin)) / textbox.width;
         // fudge to account for a scroll bar
         var spanboxes = $.map(lineboxes, function(linebox, i) {
@@ -47,11 +47,11 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
                 ? stats.median
                 : spanboxes[i].height;
             self._resizeToTarget($(elem), spanboxes[i].width, th);
-        }); 
+        });
     },
 
     _getTextBbox: function(pagebox, lineboxes) {
-        var self = this;                      
+        var self = this;
         var minx0 = pagebox.x1,
             miny0 = pagebox.y1,
             minx1 = pagebox.x0,
@@ -62,11 +62,11 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
                 minx0 = Math.min(minx0, linebox.x0);
                 miny0 = Math.min(miny0, linebox.y0);
                 minx1 = Math.max(minx1, linebox.x1);
-                miny1 = Math.max(miny1, linebox.y1);    
+                miny1 = Math.max(miny1, linebox.y1);
             }
         });
         return new DziViewer.Rect(minx0, miny0, minx1, miny1);
-    },                      
+    },
 
     _resizeToTarget: function(span, targetwidth, targetheight) {
         var iheight = span.height(),

@@ -31,55 +31,55 @@ $(function() {
         icons: {
             primary: "ui-icon-document",
             secondary: "ui-icon-carat-1-s",
-        }        
+        }
     });
     $("#undo_command").button({
         text: false,
         disabled: true,
         icons: {
             primary: "ui-icon-arrowreturnthick-1-w",
-        }        
+        }
     });
     $("#redo_command").button({
         text: false,
         disabled: true,
         icons: {
             primary: "ui-icon-arrowreturnthick-1-e",
-        }        
+        }
     });
     $("#stop_refresh").button({
         text: false,
         icons: {
             primary: "ui-icon-refresh",
-        }        
+        }
     });
     $("#focus_script").button({
         text: false,
         icons: {
             primary: "ui-icon-home",
-        }        
+        }
     });
     $("#layout_nodes").button({
         text: false,
         icons: {
             primary: "ui-icon-grip-dotted-vertical",
-        }        
+        }
     });
     $("#clear_cache").button({
         text: false,
         icons: {
             primary: "ui-icon-suitcase",
-        }        
+        }
     });
     $("#save_task_preset").button({
         icons: {
             primary: "ui-icon-arrowreturnthick-1-w",
-        }        
+        }
     });
     $("#cancel_task_preset").button({
         icons: {
             primary: "ui-icon-cancel",
-        }        
+        }
     });
 
 
@@ -113,7 +113,7 @@ $(function() {
     });
 
     $("#image_zoomin").click(function(event) {
-        sdviewer.viewport.zoomIn(2);        
+        sdviewer.viewport.zoomIn(2);
     }).button({
         text: false,
         icons: {
@@ -121,7 +121,7 @@ $(function() {
         }
     });
     $("#image_zoomout").click(function(event) {
-        sdviewer.viewport.zoomOut(0.5);    
+        sdviewer.viewport.zoomOut(0.5);
     }).button({
         text: false,
         icons: {
@@ -129,7 +129,7 @@ $(function() {
         }
     });
     $("#centre").click(function(event) {
-        sdviewer.goHome();    
+        sdviewer.goHome();
     }).button({
         text: false,
         icons: {
@@ -137,7 +137,7 @@ $(function() {
         }
     });
     $("#fullscreen").click(function(event) {
-        sdviewer.setFullPage(true);    
+        sdviewer.setFullPage(true);
     }).button({
         text: false,
         icons: {
@@ -176,8 +176,8 @@ $(function() {
         event.stopPropagation();
     });
     $("#layout_nodes").click(function(event) {
-        var self = this;                
-        $.ajax({            
+        var self = this;
+        $.ajax({
             url: "/presets/layout_graph",
             type: "POST",
             data: {script: JSON.stringify(nodetree.buildScript())},
@@ -193,7 +193,7 @@ $(function() {
         resultcache = {};
         $.ajax({
             url: "/presets/clear_cache/",
-            type: "POST",            
+            type: "POST",
             dataType: "JSON",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
@@ -214,7 +214,7 @@ $(function() {
                 node: nodetree.getEvalNode(),
                 script: JSON.stringify(nodetree.buildScript()),
             },
-            type: "POST",            
+            type: "POST",
             dataType: "JSON",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
@@ -238,13 +238,13 @@ $(function() {
             event.shiftKey ? cmdstack.redo() : cmdstack.undo();
             event.stopPropagation();
             event.preventDefault();
-        } 
+        }
     });
 
     $("#save_task_preset").click(function(event) {
         $("#task_update_script").val(
            JSON.stringify(nodetree.buildScript(), null, '\t'));
-        $("#task_update_form").submit(); 
+        $("#task_update_form").submit();
     });
     $("#cancel_task_preset").click(function(event) {
         $("#task_update_script").val("");
@@ -260,7 +260,7 @@ $(function() {
     // initialise the uploader...
     uploader  = new OcrJs.AjaxUploader(
         null,
-        "/presets/upload/", 
+        "/presets/upload/",
         { multi: false, errorhandler: OcrJs.ajaxErrorHandler, }
     );
     // save state on leaving the page... at least try to...
@@ -288,7 +288,7 @@ $(function() {
         }
         event.stopPropagation();
         event.preventDefault();
-    });        
+    });
 
     $("#optionsform").submit(function(event) {
         //nodetree.scriptChanged();
@@ -306,7 +306,7 @@ $(function() {
                 node: node.name,
                 script: JSON.stringify(nodetree.buildScript()),
             },
-            type: "POST",            
+            type: "POST",
             dataType: "JSON",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
@@ -394,8 +394,8 @@ $(function() {
                 } else
                     reshandler.runScript(nodename, nodetree.buildScript());
             }
-        }            
-    }    
+        }
+    }
 
 
     // Initialise objects
@@ -403,14 +403,14 @@ $(function() {
         numBuffers: 2,
         dashboard: false,
     });
-    statusbar = new OcrJs.StatusBar($("#status_bar").get(0));    
+    statusbar = new OcrJs.StatusBar($("#status_bar").get(0));
     hocrviewer = new OcrJs.HocrViewer($("#hocrviewer_1").get(0));
     textviewer = new OcrJs.TextViewer($("#textviewer_1").get(0));
     reshandler = new OcrJs.ResultHandler();
     formatter = new OcrJs.LineFormatter();
     cmdstack = new OcrJs.UndoStack(this, {max: 50});
     nodetree = new OcrJs.Nodetree.Tree($("#node_canvas"), cmdstack);
-    guimanager = new OcrJs.Nodetree.GuiManager(sdviewer);    
+    guimanager = new OcrJs.Nodetree.GuiManager(sdviewer);
     nodeparams = new OcrJs.Nodetree.Parameters($("#parameters").get(0));
     nodemenu = new OcrJs.Nodetree.ContextMenu($("#body").get(0), $("#node_canvas").get(0));
     statemanager = new OcrJs.Nodetree.StateManager($("#current_preset_name").get(0), nodetree);
@@ -436,20 +436,20 @@ $(function() {
             hocrviewer.clearData();
             sdviewer.close();
             nodeparams.resetParams();
-            guimanager.tearDownGui();                
-        },    
+            guimanager.tearDownGui();
+        },
     });
 
     statemanager.addListeners({
         opened: function(name) {
             $("#current_preset_name").text(name);
-            $("#preset_unsaved").toggle(statemanager.isDirty());                         
+            $("#preset_unsaved").toggle(statemanager.isDirty());
         },
         cleared: function() {
             $("#current_preset_name").text(statemanager.getCurrentName());
-            $("#preset_unsaved").hide();                         
-        },                     
-    });        
+            $("#preset_unsaved").hide();
+        },
+    });
 
     function stackChanged() {
         if (UPDATE) {
@@ -461,7 +461,7 @@ $(function() {
                 .text(cmdstack.redoText())
                 .button({disabled: !cmdstack.canRedo()})
                 .button("refresh");
-            $("#preset_unsaved").toggle(statemanager.isDirty());                         
+            $("#preset_unsaved").toggle(statemanager.isDirty());
 
             guimanager.refreshGui();
             runScript();
@@ -481,7 +481,7 @@ $(function() {
             uploader.setTarget(elem);
             // FIXME: No error handling
             uploader.addListener("onXHRLoad.setfilepath", function(data) {
-                nodetree.cmdSetNodeParameter(nodetree.getNode(name), "path", 
+                nodetree.cmdSetNodeParameter(nodetree.getNode(name), "path",
                     JSON.parse(data.target.response).file);
             });
         },
@@ -491,8 +491,8 @@ $(function() {
                 nodeparams.setNodeNameValid();
             } else {
                 nodeparams.setNodeNameInvalid();
-            } 
-        },                         
+            }
+        },
     });
 
     guimanager.addListeners({
@@ -502,7 +502,7 @@ $(function() {
         interacting: function(bool) {
             UPDATE = !bool;
             stackChanged();
-        },        
+        },
     });
 
     nodemenu.addListeners({
@@ -519,8 +519,8 @@ $(function() {
             clearNodeCache(node, function() {
                 console.log("Cleared cache for", node.name);
             });
-        },                         
-    });                        
+        },
+    });
 
     cmdstack.addListeners({
         undoStateChanged: stackChanged,
@@ -550,7 +550,7 @@ $(function() {
         },
         nodeViewing: function(node) {
             stackChanged();
-        },                         
+        },
         ready: function() {
             // load state stored from last time
             if ($("#edit_task_pk").val())
@@ -559,7 +559,7 @@ $(function() {
                 statemanager.loadCookieData();
             var node = nodetree.getFocussedNode();
             if (!node)
-                guimanager.tearDownGui();                
+                guimanager.tearDownGui();
             else {
                 if (sdviewer.isOpen()) {
                     console.log("Setting GUI for", node.name);
@@ -570,10 +570,10 @@ $(function() {
         },
         clicked: function(event) {
             nodemenu.hideContextMenu();
-        },        
+        },
         rightClicked: function(event, context) {
             nodemenu.showContextMenu(event, context);
-        },                          
+        },
     });
 
     reshandler.addListeners({
@@ -581,7 +581,7 @@ $(function() {
             $("#stop_refresh").button({
                 text: false,
                 icons: {
-                    primary: "ui-icon-cancel",    
+                    primary: "ui-icon-cancel",
                 }
             });
             //showPending();
@@ -593,7 +593,7 @@ $(function() {
             $("#stop_refresh").button({
                 text: false,
                 icons: {
-                    primary: "ui-icon-refresh",    
+                    primary: "ui-icon-refresh",
                 }
             });
             nodetree.clearErrors();
@@ -603,18 +603,18 @@ $(function() {
             // clear the client-size cache
             resultcache = {};
         },
-        resultDone: function(node, data) {                                
+        resultDone: function(node, data) {
             //clearTimeout(reftimer);
             $("#stop_refresh").button({
                 text: false,
                 icons: {
-                    primary: "ui-icon-refresh",    
+                    primary: "ui-icon-refresh",
                 }
             });
             statusbar.setWorking(false);
             if (data.status != "ABORT" && data.status != "FAILURE")
                handleResult(node, data, false);
-        }        
+        }
     });
 
     var hsplit = $("#sidebar").layout({
@@ -623,7 +623,7 @@ $(function() {
             resizable: false,
             closable: false,
             slidable: false,
-            spacing_open: 0, 
+            spacing_open: 0,
         },
         south: {
             size: 200,
@@ -637,7 +637,7 @@ $(function() {
                     nodetree.resetSize();
                 });
             },
-        },                   
+        },
     });
 
     vsplit.options.east.onresize_end = function() {
@@ -653,12 +653,12 @@ $(function() {
         var iv = $("#imageviewer_1");
             mc = $("#maincontent");
         iv.height((mc.height() + mc.offset().top) - (iv.offset().top));
-        sdviewer.resetSize();            
+        sdviewer.resetSize();
     };
 
     $(window).resize();
 
-    // Initialise nodetree!    
+    // Initialise nodetree!
     $.ajax({
         url: "/presets/query/",
         success: function(data) {

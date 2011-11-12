@@ -34,7 +34,7 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
                 self.showSubContextMenu(this, event);
             },
             function(event) {
-                $(this).find("ul").delay(1000).hide();            
+                $(this).find("ul").delay(1000).hide();
             }
         );
 
@@ -67,7 +67,7 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
         this._menu.css({
             position: "fixed",
             top: event.pageY,
-            left: left,    
+            left: left,
         });
         // NB: The setTimeout here is a hacky workaround for an
         // additional click event being fired in Firefox.  I think
@@ -75,13 +75,13 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
         // http://stackoverflow.com/questions/1489817/jquery-liveclick-firing-for-right-click
         setTimeout(function() {
             $(document).bind("click.menuhide", function(event) {
-                self.hideContextMenu();            
+                self.hideContextMenu();
                 $(document).unbind("click.menuhide");
                 event.stopPropagation();
                 event.preventDefault();
             });
         });
-    },                         
+    },
 
     showSubContextMenu: function(menu, event) {
         var pos = $(menu).position();
@@ -99,7 +99,7 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
     hideContextMenu: function(event) {
         this._menu.hide();
         this._context = null;
-    },                         
+    },
 
     buildNodeMenu: function(data) {
         var self = this;
@@ -130,5 +130,5 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
         }).hide();
         $(this.canvas).after(this._menu);
         this.setupMenuEvents();
-    },    
+    },
 });

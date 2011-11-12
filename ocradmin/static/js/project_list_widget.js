@@ -63,9 +63,9 @@ var ProjectListWidget = AbstractListWidget.extend({
     },
 
     rowDoubleClicked: function(event, row) {
-        this._super();                          
+        this._super();
         var row = $(event.target).parent();
-        $("#fbopenbutton").click();           
+        $("#fbopenbutton").click();
     },
 
     rowClicked: function(event, row) {
@@ -80,7 +80,7 @@ var ProjectListWidget = AbstractListWidget.extend({
 
     close: function(event) {
     
-    },               
+    },
 });
 
 

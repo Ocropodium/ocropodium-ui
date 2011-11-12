@@ -24,7 +24,7 @@ OcrJs.ajaxErrorHandler = function(xhr, status, errorThrown) {
         close: function(e) {
             errdiv.remove();
         },
-    });                        
+    });
     var iframedoc = iframe.contentWindow.document;
     iframedoc.open();
     iframedoc.write(xhr.responseText);

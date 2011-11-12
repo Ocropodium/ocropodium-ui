@@ -51,11 +51,11 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
 
         this._setBaseGradient(this._focussed);
 
-        // dynamically set up callbacks for when this node's parameters are 
+        // dynamically set up callbacks for when this node's parameters are
         // updates via a third party
         for (var i in this.parameters) {
             this.registerListener("parameterUpdated_" + this.parameters[i].name);
-        }    
+        }
     },
 
     // class-level dimension attributes
@@ -72,10 +72,10 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
                 return this.parameters[i].value;
         }
         throw "Unknown node parameter: " + this.name + ": " + name;
-    },                      
+    },
 
     setParameter: function(name, value, emit) {
-        var set = false;                      
+        var set = false;
         for(var i in this.parameters) {
             if (this.parameters[i].name == name) {
                 this.parameters[i].value = value;
@@ -85,13 +85,13 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
                             + this.parameters[i].name, value);
                     console.log("PARAMETER UPDATED!!!");
                 }
-                break;                
+                break;
             }
-        }            
+        }
         if (!set)
-            throw "Attempt to set non-existent parameter on " 
-                + node.name + ": '" + name + "' = '" + value + "'"; 
-    },                      
+            throw "Attempt to set non-existent parameter on "
+                + node.name + ": '" + name + "' = '" + value + "'";
+    },
 
     getToolTip: function() {
         var tip = this.name + "\n\n"
@@ -99,9 +99,9 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
         if (this.description && this.description != "")
             tip += "\n\n" + this.description + "\n";
         if (this._error && this._error != "")
-            tip += "\n\nError: " + this._error;        
+            tip += "\n\nError: " + this._error;
         return tip;
-    },                    
+    },
 
     toString: function() {
         return "<Node: " + this.name + ">";
@@ -118,11 +118,11 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
 
     isFocussed: function() {
         return this._focussed;
-    },                    
+    },
 
     isViewing: function() {
         return this._viewing;
-    },                    
+    },
 
     setIgnored: function(ignored) {
         this._ignored = Boolean(ignored);
@@ -150,7 +150,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
 
     inputs: function() {
         return this._inplugs;
-    },        
+    },
 
     output: function() {
         return this._outplug;
@@ -173,10 +173,10 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
                     return n.hashValue();
             }),
         };
-    },                   
+    },
 
     setupPlugListeners: function(plug) {
-        var self = this;                            
+        var self = this;
         plug.addListeners({
             attachCable: function() {
                 self.trigger(plug.type + "Attached", plug);
@@ -188,7 +188,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
                 self.trigger("plugRightClicked", plug, event);
             },
         });
-    },                            
+    },
 
     draw: function(svg, parent, x, y) {
         var self = this;
@@ -208,7 +208,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
             this.setupPlugListeners(plug);
         }
         
-        // draw the bottom plug            
+        // draw the bottom plug
         this._outplug = new OcrJs.Nodetree.OutPlug(
                 this, this.name + "_output", this.outtype);
         this._outplug.draw(svg, g, x  + (this.width / 2), y + this.height + 1);
@@ -221,7 +221,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
             stroke: "#BBB",
             strokeWidth: 1,
         });
-        this._tooltip = svg.title(g, this.getToolTip());        
+        this._tooltip = svg.title(g, this.getToolTip());
         this._viewbutton = svg.rect(
                 g,
                 x + strokewidth,
@@ -239,8 +239,8 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
                 buttonwidth, this.height - (2*strokewidth), 1, 1, {
             fill: "url(#NodeGradient)",
             stroke: "none",
-            strokeWidth: 0,            
-        });         
+            strokeWidth: 0,
+        });
         // add the dividers between button and body
         svg.line(g,
                 x + buttonwidth + 1,
@@ -272,10 +272,10 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
     setName: function(name) {
         this.name = name;
         $(this._textlabel).text(name);
-    },                 
+    },
 
     setupEvents: function() {
-        var self = this;                     
+        var self = this;
         $(this._ignorebutton).click(function(event) {
             if (self._dragging) {
                 self._dragging = false;
@@ -298,7 +298,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
 
         $([this._rect, this._textlabel]).noContext().rightClick(function(event) {
             self.trigger("rightClicked", event);
-        });            
+        });
 
         $([this._rect, this._textlabel]).click(function(event) {
             event.stopPropagation();
@@ -323,7 +323,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
     },
 
     getInputNodes: function() {
-        var inputs = [];                       
+        var inputs = [];
         $.each(this._inplugs, function(i, plug) {
             if (!plug.isAttached()) {
                 inputs.push(null);
@@ -336,7 +336,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
             }
         });
         return inputs;
-    },                       
+    },
 
     serialize: function() {
         var self = this;
@@ -353,7 +353,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
         var out = {
             type: this.type,
             stage: this.stage,
-            inputs: inputs,                    
+            inputs: inputs,
             params: params,
         };
         if (this.isIgnored()) {
@@ -366,7 +366,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
     },
 
     deserialize: function(data) {
-        var self = this;                     
+        var self = this;
         this.type = data.type;
         this.stage = data.stage;
         $.each(data.params, function(i, kv) {
@@ -379,7 +379,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
             this.setFocussed(data.__meta.focussed);
             this.setViewing(data.__meta.viewing);
         }
-    },                     
+    },
 
     removeNode: function(skipcleanup) {
         for (var i in this._inplugs)
@@ -395,17 +395,17 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
 
     _toggleIgnored: function(bool) {
         var gradient = bool ? "url(#IgnoreGradient)" : this._gradient;
-        this.svg.change(this._ignorebutton, {fill: gradient});        
+        this.svg.change(this._ignorebutton, {fill: gradient});
     },
 
     _toggleViewing: function(bool) {
         var gradient = bool ? "url(#ViewingGradient)" : this._gradient;
-        this.svg.change(this._viewbutton, {fill: gradient});        
+        this.svg.change(this._viewbutton, {fill: gradient});
     },
 
     _toggleFocussed: function(bool) {
-        this._setBaseGradient(bool);                         
-        this.svg.change(this._rect, {fill: this._gradient});        
+        this._setBaseGradient(bool);
+        this.svg.change(this._rect, {fill: this._gradient});
         if (!this.isIgnored())
             this.svg.change(this._ignorebutton, {fill: this._gradient});
         if (!this.isViewing())
@@ -416,7 +416,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
         var stroke = bool ? "#F99" : "#BBB";
         this.svg.change(this._rect, {stroke: stroke});
         this.svg.change(this._centre, {stroke: stroke});
-        $(this._tooltip).text(this.getToolTip());            
+        $(this._tooltip).text(this.getToolTip());
     },
 
     _setBaseGradient: function(focussed) {
@@ -425,7 +425,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
 
     x: function() {
         return SvgHelper.getTranslate(this.group()).x;
-    },           
+    },
 
     y: function() {
         return SvgHelper.getTranslate(this.group()).y;
@@ -433,7 +433,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
 
     position: function() {
         return SvgHelper.getTranslate(this.group());
-    },        
+    },
 
     move: function(event, element) {
         var self = this;
@@ -447,10 +447,10 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
         $(document).bind("mousemove.dragelem", function(moveevent) {
             moved = true;
             self.trigger(
-                "moved", 
+                "moved",
                 ((moveevent.pageX - start.x) / scale),
                 ((moveevent.pageY - start.y) / scale)
-            ); 
+            );
             start.x = moveevent.pageX;
             start.y = moveevent.pageY;
         });
@@ -468,7 +468,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
         var trans = SvgHelper.getTranslate(this.group());
         SvgHelper.updateTranslate(this.group(), trans.x + x, trans.y + y);
         this._notifyMove();
-    },                
+    },
 
     moveTo: function(x, y) {
         SvgHelper.updateTranslate(this.group(), x, y);
@@ -477,8 +477,8 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
 
     _notifyMove: function() {
         $.each(this._inplugs, function(i, plug) {
-            plug.trigger("moved");                
+            plug.trigger("moved");
         });
         this._outplug.trigger("moved");
-    }                     
+    }
 });
