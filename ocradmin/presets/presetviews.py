@@ -151,11 +151,12 @@ def builder_task_edit(request, task_pk):
     """
     Show the preset builder for a specific task.
     """
+    task=get_object_or_404(OcrTask, pk=task_pk)
     context = dict(
             form=PresetForm(initial=dict(user=request.user)),
             presets=Preset.objects.order_by("name"),
-            profiles=Preset.objects.order_by("name"),
-            task=get_object_or_404(OcrTask, pk=task_pk),
+            profiles=Profile.objects.order_by("name"),
+            task=task,
             ref=request.GET.get("ref", "/batch/show/%d/" % task.batch.pk)
     )
     return render(request, "presets/builder.html", context)
