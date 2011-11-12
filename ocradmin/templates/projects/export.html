@@ -1,0 +1,21 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+
+    <link rel="stylesheet" href="/static/css/table.css" type="text/css" media="screen" />
+    <script type="text/javascript" src="/static/js/projects/export.js"></script>
+{% endblock %}
+
+
+{% block content %}
+<div class="batch ui-layout-north" id="batch" data-index="{{batch.pk}}">
+    <div class="ui-widget-header ui-layout-header">
+        {{project.name}}
+    </div>    
+    <div class="ui-widget-content">
+        {% include "projects/includes/export_form.html" %}
+    </div>
+</div>
+
+
+{% endblock %}

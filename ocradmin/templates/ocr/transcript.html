@@ -1,0 +1,75 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - {{batch.name}} Transcript {% endblock %}
+
+{% block headerscript %}
+    {% load compressed %}
+    {% compressed_js 'undostack' %}
+    {% compressed_js 'viewers' %}
+    {% compressed_js 'transcript_edit' %}
+    <script type='application/javascript' src='/static/js/ocr/transcript.js'></script>
+
+    {% compressed_css 'viewers' %}
+    {% compressed_css 'transcript_edit' %}
+{% endblock %}
+
+
+{% block content %}
+
+    <div class="ui-layout-north toolbar_container">
+        <div class="ui-widget-header ui-layout-header">Transcript</div>
+        <div id="transcript_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
+            <input type="checkbox" id="link_viewers" checked="checked" />
+            <label for="link_viewers">Centre viewer on current line</label>
+            <span id="vlink">
+                <input type="radio" id="vlink_click" name="vlink" value="click" checked="checked" />
+                <label for="vlink_click">click</label>  
+                <input type="radio" id="vlink_hover" name="vlink" value="hover"  />
+                <label for="vlink_hover">Hover</label>  
+            </span>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <span id="format">
+                <input type="radio" id="format_block" name="format" checked="checked" />
+                <label for="format_block">Block</label>
+                <input type="radio" id="format_column" name="format" />
+                <label for="format_column">Column</label>
+            </span>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <input type="checkbox" id="spellcheck" />
+            <label for="spellcheck">Spellcheck</label>
+
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <div id="page_slider"></div>
+            <button id="prev_page">Previous</button>
+            <button id="next_page">Next</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <button id="save_data">Save Text</button>
+            <button id="save_training_data">Save Training Page</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <a href="/presets/builder/{{task.pk}}" id="edit_task">Edit</a>
+            
+            <input type="hidden" name="batchoffset" value="{{batchoffset|default_if_none:0}}" id="batchoffset" />
+            <input type="hidden" name="batchsize" value="{{batchsize|default_if_none:0}}" id="batchsize" />
+            <input type="hidden" name="task_pk" value="{{task.pk|default_if_none:0}}" id="task_pk" />
+        </div>
+    </div>
+    <div id="transcript" class="ui-layout-center"></div>
+
+{% endblock %}
+
+{% block sidebar %}
+
+    <div class="ui-layout-north toolbar_container">
+        <div class="ui-widget-header ui-layout-header">Viewer</div>
+        <div id="viewer_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
+            <button class="tbbutton" id="image_zoomout">Zoom Out</button>
+            <button class="tbbutton" id="image_zoomin">Zoom In</button>
+            <button class="tbbutton" id="centre">Centre</button>
+            <button class="tbbutton" id="fullscreen">Full Screen</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <button class="tbbutton" id="refresh">Refresh</button>
+        </div>
+    </div>        
+    <div id="viewer" class="imageviewer ui-layout-center ui-background-flat"></div>
+
+{% endblock %}

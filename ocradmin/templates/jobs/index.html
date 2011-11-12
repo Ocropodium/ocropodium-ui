@@ -1,0 +1,121 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+
+
+{% endblock %}
+
+{% block content %}
+    <script type="application/javascript">
+//        $(document).ajaxError(function(event, request, settings, exception) {
+//            alert("Error: ");
+//        });
+
+//        $(document).ready(function() {
+//                $.getJSON("/jobs/proxy/disco/ctrl/joblist", function(data) {
+//                        alert(data);                        
+//                  });
+//        });
+
+    $(document).ready(function() {
+        $(".infolink").live("click", showInfo);
+        $(".dellink").live("click", checkDelete);
+        $("#jobfilter").bind("change", filterJobs);
+        $.getJSON("/jobs/proxy/disco/ctrl/joblist",  listJobsWithRepeat);
+    });            
+
+
+    function filterJobs() {
+        var filter = $("#jobfilter").val().trim(); 
+        $(".jobitem").map(function(index, item) {
+            if (filter != "" && $(item).attr("id").indexOf(filter) != -1) {
+                $(item).hide();
+            } else {
+                $(item).show();
+            }
+        });
+    }
+
+    function checkDelete(item) {
+        var name = $(this).attr("id").substr(4);
+
+        if (!confirm("Kill job " + name + "?")) {
+            return false;
+        }
+                
+        $.post("/jobs/purge", { job_id: name}, function() {
+            $.getJSON("/jobs/proxy/disco/ctrl/joblist", listJobs); 
+        });
+
+        return false;        
+    }
+
+    function showInfo(item) {
+        alert("Info! " + item);
+        return false;
+    }
+
+
+    function makeInfoLink(name) {
+        var link = $("<a href='#'>Info</a>")
+            .addClass("infolink")
+            .attr("id", "info_" + name)
+            .attr("rel", "Job Info");
+
+        return $("<div>").append(link.clone()).remove().html();
+    }
+
+
+    function makeDeleteLink(name) {
+        var link =  $("<a href='#'>Kill</a>")
+            .addClass("dellink")
+            .attr("id", "del_" + name)
+            .attr("rel", "Kill Job");
+
+        return $("<div>").append(link.clone()).remove().html();
+    }
+
+
+    function listJobsWithRepeat(jobs) {
+        listJobs(jobs);
+        setTimeout(function(){
+            $.getJSON("/jobs/proxy/disco/ctrl/joblist", listJobsWithRepeat);
+        },  5000); 
+    }
+
+    function listJobs(jobs) {
+        var filter = $("#jobfilter").val().trim();
+        $(".jobitem").remove();
+        $.each(jobs, function(index, data) {                  
+            var row = $("<tr></tr>")
+                    .addClass("jobitem")
+                    .attr("id", "job" + data[2])
+                    .append("<td>" + data[0] + "</td>")
+                    .append("<td>" + data[2] + "</td>")
+                    .append("<td>" + data[1] + "</td>")
+                    .append("<td>" + makeInfoLink(data[2]) + "</td>")
+                    .append("<td>" + makeDeleteLink(data[2]) + "</td>");
+             $("#joblist").append(row);
+
+             if (filter != "" && data[2].indexOf(filter) != -1) {
+                row.hide();
+             }
+        });
+    }
+
+
+    </script>
+
+    Filter job names: <input id="jobfilter" value="" name="jobfilter" />
+
+    <table id="joblist" class="infotable">
+        <tr class="infoheadrow">
+            <th class="infoheader">Priority</th>
+            <th class="infoheader">Name</th>
+            <th class="infoheader">Status</th>
+            <th class="infoheader">Info</th> 
+            <th class="infoheader">Delete</th>
+        </tr>
+    </table>        
+
+{% endblock %}                      

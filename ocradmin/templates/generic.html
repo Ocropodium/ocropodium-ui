@@ -1,0 +1,40 @@
+{% extends "standard.html" %}
+{% load tagging_tags %}
+
+
+{% block title %} {{page_name}} {% endblock %}
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
+{% endblock %}
+
+
+{% block content %}
+<div class="ui-widget">
+    <div class="ui-widget-header ui-layout-header">{{page_name}}</div>
+    <div class="ui-widget-content">
+        {% include "includes/messages.html" %}
+        {% block bodycontent %}
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+
+{% block sidebar %}
+<div class="ui-widget">
+    <div class="ui-widget-header ui-layout-header">Item Tags</div>
+    <div class="ui-widget-content">
+        <div id="tag_list">
+            <ul class="taglist">
+            {% for tagitem in tags %}
+            <li class="tagitem"><a class="taglink {% if tag == tagitem.name %}current{% endif %}"
+                href="{{model.get_list_url}}?{% if tag != tagitem.name %}tag={{ tagitem.name }}{% endif %}{% if order %}&order={{order}}{% endif %}{% if page %}&page={{page}}{% endif %}">
+                {{tagitem.name}}{% if tagitem.count %} ({{tagitem.count}}){% endif %}</a></li>
+            {% empty %}
+                No tags found
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>    
+{% endblock %}

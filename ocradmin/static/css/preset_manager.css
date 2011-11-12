@@ -1,0 +1,52 @@
+.preset_dialog .loading {
+    background-image: url("/static/ajax-loader-large.gif");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.preset_dialog .buttons {
+    float: right;
+    padding: 5px 0px;
+}
+
+.preset_manager_dialog .ui-dialog-titlebar {
+    display: none;
+}
+
+.preset_manager_dialog {
+    box-shadow: 5px 6px 14px rgba(0, 0, 0, 0.26);
+    -moz-box-shadow: 5px 6px 14px rgba(0, 0, 0, 0.26);
+    -webkit-box-shadow: 5px 6px 14px rgba(0, 0, 0, 0.26);
+}
+
+#open_preset_list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    height: 300px;
+    overflow: auto;    
+}
+
+
+#open_preset_list .ui-selecting {
+    color: #FFF;
+    background-color: #A7C7DC;
+    background-color: -moz-linear-gradient(top, #A7C7DC 0%, #85B2D3 100%);
+    background-color: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#A7C7DC), color-stop(100%,#85B2D3));
+    background-color: -webkit-linear-gradient(top, #A7C7DC 0%,#85B2D3 100%);
+    background-color: -o-linear-gradient(top, #A7C7DC 0%,#85B2D3 100%);
+    background-color: -ms-linear-gradient(top, #A7C7DC 0%,#85B2D3 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a7c7dc', endColorstr='#85b2d3',GradientType=0 );
+    background: linear-gradient(top, #A7C7DC 0%,#85B2D3 100%);
+}
+
+#open_preset_list li {
+    margin: 3px;
+    padding: 0.4em;
+    font-size: 1.4em;
+    height: 18px;
+    cursor: pointer;
+    border-top: 1px solid #DDD;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}    
