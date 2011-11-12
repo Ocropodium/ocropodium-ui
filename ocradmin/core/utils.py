@@ -16,6 +16,8 @@ from django.conf import settings
 from HTMLParser import HTMLParser
 from xml.parsers import expat
 
+from ocradmin.plugins.utils import HocrToTextHelper
+
 
 class HocrParser(HTMLParser):
     def __init__(self):
@@ -85,6 +87,7 @@ class HocrParser(HTMLParser):
             self.linecnt += 1
             self.data["lines"].append(self.currline.copy())
             self.currline = None
+
 
 class FinereaderXmlParser():
     """
@@ -332,8 +335,7 @@ def output_to_text(hocrdata):
     Convert page json to plain text.
     """
     # FIXME: Import
-    from ocradmin.plugins.util_nodes import HocrToText
-    parser = HocrToText()
+    parser = HocrToTextHelper()
     return parser.parse(hocrdata)
 
 

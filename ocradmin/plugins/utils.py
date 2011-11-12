@@ -9,8 +9,93 @@ import re
 import tempfile
 import subprocess as sp
 from lxml import etree
+from HTMLParser import HTMLParser
 
 from . import cache, exceptions
+
+
+class HTMLContentHandler(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self._data = []
+        self._ctag = None
+        self._cattrs = None
+
+    def data(self):
+        return "".join(self._data)
+
+    def content_data(self, data, tag, attrs):
+        """ABC method.  Does nothing by default."""
+        return data
+
+    def parsefile(self, filename):
+        with open(filename, "r") as f:
+            for line in f.readlines():
+                self.feed(line)
+        return self.data()
+
+    def parse(self, string):
+        self._data = []
+        self.feed(string)
+        return self.data()
+
+    def handle_decl(self, decl):
+        self._data.append("<!%s>" % decl)
+
+    def handle_comment(self, comment):
+        self._data.append("<!-- %s -->" % comment)
+
+    def handle_starttag(self, tag, attrs):
+        """Simple add the tag to the data stack."""
+        self._ctag = tag
+        self._cattrs = attrs
+        self._data.append(
+                "<%s %s>" % (tag, " ".join(["%s='%s'" % a for a in attrs])))
+
+    def handle_data(self, data):
+        self._data.append(self.content_data(
+                data, self._ctag, self._cattrs))
+
+    def handle_endtag(self, tag):
+        self._data.append("</%s>" % tag)
+
+
+class HocrToTextHelper(HTMLParser):
+    """
+    Get text from a HOCR document.
+    """
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self._text = []
+        self._gotline = False
+
+    def parsefile(self, filename):
+        self._text = []
+        with open(filename, "r") as f:
+            for line in f.readlines():
+                self.feed(line)
+        return "\n".join(self._text)
+
+    def parse(self, string):
+        self._text = []
+        self.feed(string)
+        return "\n".join(self._text)
+
+    def handle_starttag(self, tag, attrs):
+        for name, val in attrs:
+            if name == "class" and val.find("ocr_line") != -1:
+                self._gotline = True
+        if tag.lower() == "br":
+            self._text.append("\n")
+        elif tag.lower() == "p":
+            self._text.append("\n\n")
+
+    def handle_data(self, data):
+        if self._gotline:
+            self._text.append(data)
+
+    def handle_endtag(self, tag):
+        self._gotline = False
 
 
 def hocr_from_data(pagedata):
