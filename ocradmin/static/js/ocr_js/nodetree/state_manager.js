@@ -82,6 +82,10 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         this._hash = this.getTreeHash();
     },
 
+    setScriptJSON: function(json) {
+        this.setScript(JSON.parse(json));
+    },                       
+
     saveCookieData: function() {
         var presetdata = {
             open: this._open,
