@@ -120,7 +120,7 @@ class PersistantFileCacher(BaseCacher):
             for file in files:
                 filename = os.path.join(path, file)
                 size += os.path.getsize(filename)
-        return size            
+        return size
 
 
 class MongoDBCacher(PersistantFileCacher):
@@ -181,7 +181,7 @@ class DziFileCacher(PersistantFileCacher):
             creator.create(fh, "%s.dzi" % os.path.splitext(filepath)[0])
 
     def clear_cache(self, n):
-        super(DziFileCacher, self).clear_cache(n)                    
+        super(DziFileCacher, self).clear_cache(n)
         if self.has_cache(n):
             path = self.get_path(n)
             fpath = os.path.join(path, n.get_file_name())

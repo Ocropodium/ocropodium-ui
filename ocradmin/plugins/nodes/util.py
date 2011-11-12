@@ -139,7 +139,7 @@ class FindReplace(node.Node, base.TextWriterMixin):
         if find.strip() == "" or replace.strip() == "":
             return xml
         self._findre = re.compile(find)
-        self._replace = replace        
+        self._replace = replace
         parser = HTMLContentHandler()
         parser.content_data = self.content_data
         return parser.parse(xml)
@@ -349,7 +349,7 @@ class TextDiff(node.Node, base.TextWriterMixin):
         format = self._params.get("format", "normal")
         with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
             with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t2:
-                self.writer(t1, gttext)                                               
+                self.writer(t1, gttext)
                 self.writer(t2, intext)
         writer = codecs.getwriter("utf8")(sp.PIPE)
         p = sp.Popen(["diff", "--%s" % format, t1.name, t2.name], stdout=writer)
@@ -375,5 +375,5 @@ class AbbyyXmlToHocr(node.Node, base.TextWriterMixin):
             t1.close()
             out = utils.hocr_from_abbyy(t1.name)
             os.unlink(t1.name)
-        return out            
+        return out
 

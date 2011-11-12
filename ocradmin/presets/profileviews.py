@@ -19,7 +19,7 @@ class ProfileForm(forms.ModelForm):
         super(ProfileForm, self).__init__(*args, **kwargs)
         # change a widget attribute:
         self.fields['description'].widget.attrs["rows"] = 2
-        self.fields['description'].widget.attrs["cols"] = 40        
+        self.fields['description'].widget.attrs["cols"] = 40
 
     class Meta:
         model = Profile

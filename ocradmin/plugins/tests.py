@@ -55,7 +55,7 @@ class ScriptsTest(TestCase):
             # check we get an expected type from evaling the nodes
             for n in terms:
                 out = n.eval()
-                self.assertIn(type(out), (unicode, dict, list, numpy.ndarray), 
+                self.assertIn(type(out), (unicode, dict, list, numpy.ndarray),
                         msg="Unexpected output type for node %s: %s" % (
                             n.name, type(out)))
 

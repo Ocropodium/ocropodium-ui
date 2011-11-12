@@ -47,7 +47,7 @@ class ReferencePage(models.Model):
         """
         Path to where the thumbnail should be.
         """
-        return "%s.thumb.jpg" % os.path.splitext(self.source_image.path)[0] 
+        return "%s.thumb.jpg" % os.path.splitext(self.source_image.path)[0]
 
     def thumbnail_url(self):
         """

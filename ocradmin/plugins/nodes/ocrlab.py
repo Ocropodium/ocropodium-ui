@@ -103,7 +103,7 @@ class Rectangle(object):
             self.y1 = max(self.y1, rect.y1)
 
     def grow(self, dx, dy):
-        return Rectangle(self.x0 - dx, self.y0 - dy, 
+        return Rectangle(self.x0 - dx, self.y0 - dy,
                 self.x1 + dx, self.y1 + dy)
 
     def overlaps(self, rect):
@@ -131,7 +131,7 @@ class Rectangle(object):
                 max(self.y0, rect.y0),
                 min(self.x1, rect.x1),
                 min(self.y1, rect.y1)
-        )                
+        )
 
     def inclusion(self, rect):
         if self.empty():
@@ -141,7 +141,7 @@ class Rectangle(object):
                 min(self.y0, rect.y0),
                 max(self.x1, rect.x1),
                 max(self.y1, rect.y1)
-        ) 
+        )
     
     def fraction_covered_by(self, rect):
         isect = self.intersection(rect)
@@ -155,7 +155,7 @@ class Rectangle(object):
         r = Rectangle(0, 0, 0, 0)
         for arg in args:
             r.include(arg)
-        return r            
+        return r
 
 
 
@@ -171,12 +171,12 @@ def smooth(x,window_len=11,window='hanning'):
     """smooth the data using a window with requested size.
     
     This method is based on the convolution of a scaled window with the signal.
-    The signal is prepared by introducing reflected copies of the signal 
+    The signal is prepared by introducing reflected copies of the signal
     (with the window size) in both ends so that transient parts are minimized
     in the begining and end part of the output signal.
     
     input:
-        x: the input signal 
+        x: the input signal
         window_len: the dimension of the smoothing window; should be an odd integer
         window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
             flat window will produce a moving average smoothing.
@@ -190,12 +190,12 @@ def smooth(x,window_len=11,window='hanning'):
     x=sin(t)+randn(len(t))*0.1
     y=smooth(x)
     
-    see also: 
+    see also:
     
     numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
     scipy.signal.lfilter
  
-    TODO: the window parameter could be the window itself if an array instead of a string   
+    TODO: the window parameter could be the window itself if an array instead of a string
     """
 
     if x.ndim != 1:
@@ -246,7 +246,7 @@ def get_average_line_height(top_bottoms):
     """
     Tricksy - get height of median line?
     """
-    lheights = [b - t for t, b in top_bottoms] 
+    lheights = [b - t for t, b in top_bottoms]
     lhm = numpy.max(lheights)
     def weight(val):
         return 0 if val < (lhm / 2) else 1
@@ -257,7 +257,7 @@ def get_average_line_height(top_bottoms):
 def remove_border(narray, average_char_height):
     """
     Try and remove anything that's in a likely
-    border region and return the subimage.    
+    border region and return the subimage.
     """
     na = iulib.numpy(narray)
     hpr = na.sum(axis=0)
@@ -299,7 +299,7 @@ def high_pass_max(numpy_arr, maxscale):
     max = numpy.max(numpy_arr)
     def hp(x, m):
         return 0 if x < m else x
-    return numpy.vectorize(hp)(numpy_arr, max * maxscale) 
+    return numpy.vectorize(hp)(numpy_arr, max * maxscale)
 
 
 def high_pass_median(numpy_arr, medscale):
@@ -311,7 +311,7 @@ def high_pass_median(numpy_arr, medscale):
     median = numpy.median(numpy_arr)
     def hp(x, m):
         return 0 if x < m else x
-    return numpy.vectorize(hp)(numpy_arr, median * medscale) 
+    return numpy.vectorize(hp)(numpy_arr, median * medscale)
 
 
 def get_lines_by_projection(narray, highpass=0.001):
@@ -327,13 +327,13 @@ def get_lines_by_projection(narray, highpass=0.001):
     for val in hps:
         if val != 0:
             if gotline is None:
-                gotline = count                
+                gotline = count
         else:
             if not gotline is None:
                 regions.append((gotline, count))
                 gotline = None
         count += 1
-    return regions                
+    return regions
 
 
 def large_or_odd(rect, avg):
@@ -355,7 +355,7 @@ def strip_non_chars(narray, bboxes, average_height, inverted=True):
             iulib.fill_rect(narray, box.x0, box.y0, box.x1, box.y1, color)
         else:
             outboxes.append(box)
-    return outboxes            
+    return outboxes
     
 
 def trimmed_mean(numpy_arr, lperc=0, hperc=0):
@@ -409,7 +409,7 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
         self.find_lines()
         
         def flipud(r):
-            return [r.x0, input.shape[0] - r.y1, r.x1, input.shape[0] - r.y0] 
+            return [r.x0, input.shape[0] - r.y1, r.x1, input.shape[0] - r.y0]
         return dict(
                 lines=[flipud(r) for r in self.textlines],
                 columns=[flipud(r) for r in self.columns],
@@ -425,7 +425,7 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
         
         # obtain an inverted version of the array
         self.inverted = iulib.bytearray()
-        self.inverted.copy(self.inarray)        
+        self.inverted.copy(self.inarray)
         iulib.binary_invert(self.inverted)
         self.calc_bounding_boxes()
 
@@ -460,7 +460,7 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
         """
         Get character boxes.
         """
-        return [b for b in boxes if not not_char(b)] 
+        return [b for b in boxes if not not_char(b)]
 
     def get_header_line(self):
         """
@@ -486,7 +486,7 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
         while maxcnt < 200 and (len(overlaps) < 2 \
                 or line.height() < (self.avgheight * 1.5)):
             overlaps = horizontal_overlaps(
-                    boxes[maxcnt], boxes, sorted=False) 
+                    boxes[maxcnt], boxes, sorted=False)
             line = Rectangle.union_of(*overlaps)
             maxcnt += 1
 
@@ -507,7 +507,7 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
                 regions.append(Rectangle(gotcol, 0, count, self.topptr))
             elif val != 0:
                 if gotcol is None:
-                    gotcol = count                
+                    gotcol = count
             else:
                 if not gotcol is None:
                     regions.append(Rectangle(gotcol, 0, count, self.topptr))
@@ -530,7 +530,7 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
             best.append(col)
             if len(best) == target:
                 break
-        return best            
+        return best
 
     def find_columns(self):
         """
@@ -538,7 +538,7 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
         """
 
         portion = iulib.bytearray()
-        iulib.extract_subimage(portion, self.inverted, 0, 0, 
+        iulib.extract_subimage(portion, self.inverted, 0, 0,
                 self.inverted.dim(0), self.topptr)
         projection = high_pass_median(iulib.numpy(portion).sum(axis=1), 0.20)
         posscols = self.get_possible_columns(projection)
@@ -606,7 +606,7 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
         return dict(columns=[], lines=[], paragraphs=[])
 
     def flip_coord(self, rect, height):
-        return Rectangle(rect.x0, height - rect.y1, 
+        return Rectangle(rect.x0, height - rect.y1,
                     rect.x1, height - rect.y0)
 
     def process(self, binary):
@@ -623,9 +623,9 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
         height = binary.shape[0]
         coords = [self.flip_coord(r, height) for r in self.get_coords()]
         if len(coords) == 0:
-            coords.append(Rectangle(0, 0, 
+            coords.append(Rectangle(0, 0,
                 binary.shape[1] - 1, binary.shape[0] - 1))
-        self.sanitise_coords(coords, binary.shape[1], binary.shape[0]);            
+        self.sanitise_coords(coords, binary.shape[1], binary.shape[0]);
         boxes = {}
         for rect in coords:
             points = rect.points()
@@ -689,7 +689,7 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
             if rect.x1 > width:
                 rect.x1 = width
             if rect.y1 > height:
-                rect.y1 = height            
+                rect.y1 = height
             rectlist[i] = rect
 
     @classmethod

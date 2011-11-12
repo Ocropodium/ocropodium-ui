@@ -31,7 +31,7 @@ class UnhandledCreateDzi(AbortableTask):
                     image_quality=1, resize_filter="nearest")
             logger.debug("Creating DZI path: %s", path)
             creator.create(filepath, path)
-        return dict(out=utils.media_path_to_url(filepath), 
+        return dict(out=utils.media_path_to_url(filepath),
                 dst=utils.media_path_to_url(path))
 
 

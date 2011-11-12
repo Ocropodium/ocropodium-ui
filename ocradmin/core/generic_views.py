@@ -78,14 +78,14 @@ class GenericListView(HybridListView):
         if tag:
             return TaggedItem.objects.get_by_model(
                     self.model, tag).order_by(order)
-        return self.model.objects.all().order_by(order)    
+        return self.model.objects.all().order_by(order)
 
     def get_template_names(self):
         names = [self.template_name] if self.template_name is not None \
                 else []
         names.append("generic_list.html" if not self.request.is_ajax() \
                 else "includes/generic_list_body.html")
-        return tuple(names)                
+        return tuple(names)
 
     def get_context_data(self, **kwargs):
         context = super(GenericListView, self).get_context_data(**kwargs)
@@ -100,7 +100,7 @@ class GenericListView(HybridListView):
         return context
 
 
-class GenericDetailView(HybridDetailView, generic.detail.BaseDetailView):    
+class GenericDetailView(HybridDetailView, generic.detail.BaseDetailView):
     """
     Generic detail view class.  Subclasses must supply
     both 'model' and 'fields'.
@@ -113,7 +113,7 @@ class GenericDetailView(HybridDetailView, generic.detail.BaseDetailView):
                 else []
         names.append("generic_detail.html" if not self.request.is_ajax() \
                 else "includes/generic_detail_body.html")
-        return tuple(names)                
+        return tuple(names)
 
     def get_context_data(self, **kwargs):
         context = super(GenericDetailView, self).get_context_data(**kwargs)
@@ -139,7 +139,7 @@ class GenericCreateView(generic.CreateView):
                 else []
         names.append("generic_create.html" if not self.request.is_ajax() \
                 else "includes/generic_create_body.html")
-        return tuple(names)                
+        return tuple(names)
 
     def get_initial(self, *args, **kwargs):
         initial = super(GenericCreateView, self).get_initial(*args, **kwargs)
@@ -154,7 +154,7 @@ class GenericCreateView(generic.CreateView):
         context = super(GenericCreateView, self).get_context_data(**kwargs)
         context.update(
             page_name=self.page_name,
-            model=self.model, 
+            model=self.model,
             enctype=self.enctype
         )
         return context
@@ -173,7 +173,7 @@ class GenericEditView(generic.UpdateView):
                 else []
         names.append("generic_edit.html" if not self.request.is_ajax() \
                 else "includes/generic_edit_body.html")
-        return tuple(names)                
+        return tuple(names)
 
     def get_initial(self, *args, **kwargs):
         initial = super(GenericEditView, self).get_initial(*args, **kwargs)
@@ -184,7 +184,7 @@ class GenericEditView(generic.UpdateView):
         context = super(GenericEditView, self).get_context_data(**kwargs)
         context.update(
             page_name=self.page_name,
-            model=self.model, 
+            model=self.model,
             tags=Tag.objects.get_for_object(self.object),
             enctype=self.enctype
         )
@@ -203,7 +203,7 @@ class GenericDeleteView(generic.DeleteView):
                 else []
         names.append("generic_delete.html" if not self.request.is_ajax() \
                 else "includes/generic_delete_body.html")
-        return tuple(names)                
+        return tuple(names)
 
     def get_context_data(self, **kwargs):
         context = super(GenericDeleteView, self).get_context_data(**kwargs)

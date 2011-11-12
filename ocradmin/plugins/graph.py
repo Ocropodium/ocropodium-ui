@@ -34,7 +34,7 @@ def get_node_positions(nodedict):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".dot") as t:
         g.write_dot(t.name)
     g = pydot.graph_from_dot_file(t.name)
-    os.unlink(t.name)                    
+    os.unlink(t.name)
 
     out = {}
     for name, node in nodedict.iteritems():

@@ -22,7 +22,7 @@ class TesseractRecognizer(base.CommandLineRecognizerNode):
     Recognize an image using Tesseract.
     """
     stage = stages.RECOGNIZE
-    binary = "tesseract"    
+    binary = "tesseract"
 
     @nodeutils.ClassProperty
     @classmethod
@@ -34,7 +34,7 @@ class TesseractRecognizer(base.CommandLineRecognizerNode):
                 choices=[m.name for m in \
                         OcrModel.objects.filter(app="tesseract", type="lang")],
             )
-        ]            
+        ]
 
     def validate(self):
         """

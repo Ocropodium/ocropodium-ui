@@ -30,12 +30,12 @@ class BatchScriptTask(AbortableTask):
         abort_handler = get_abort_callback(self.request.id)
         progress_handler(0)
 
-        tree = script.Script(json.loads(scriptjson), 
+        tree = script.Script(json.loads(scriptjson),
                 nodekwargs=dict(
                     logger=logger,
-                    abort_func=abort_handler, 
+                    abort_func=abort_handler,
                     progress_func=progress_handler))
-        logger.debug("Running tree: %s", json.dumps(tree.serialize(), indent=2))                
+        logger.debug("Running tree: %s", json.dumps(tree.serialize(), indent=2))
         term = [t for t in tree.get_terminals() if t.label != "OutputBinary"][0]
         outbin = tree.get_node("OutputBinary")
         try:

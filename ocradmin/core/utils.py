@@ -17,7 +17,7 @@ from HTMLParser import HTMLParser
 from xml.parsers import expat
 
 
-class HocrParser(HTMLParser):    
+class HocrParser(HTMLParser):
     def __init__(self):
         HTMLParser.__init__(self)
         self.data = {}
@@ -32,7 +32,7 @@ class HocrParser(HTMLParser):
         with open(filename, "r") as f:
             for line in f.readlines():
                 self.feed(line)
-        return self.data                
+        return self.data
 
     def parse(self, string):
         self.data = {}
@@ -52,7 +52,7 @@ class HocrParser(HTMLParser):
                         boxmatch = self.boxre.match(attr[1])
                         if boxmatch:
                             dims = [int(i) for i in boxmatch.groups()]
-                            self.data.update(bbox=[dims[0], dims[1],                           
+                            self.data.update(bbox=[dims[0], dims[1],
                                     dims[2], dims[3]])
                         namematch = re.match("image \"([^\"]+)", attr[1])
                         if namematch:
@@ -104,10 +104,10 @@ class FinereaderXmlParser():
     def parsefile(self, filename):
         with open(filename, "r") as fh:
             self.parser.ParseFile(fh)
-        return self.data            
+        return self.data
                     
     def _attrs_to_box(self, attrs):
-        return [int(attrs["l"]), int(attrs["t"]), 
+        return [int(attrs["l"]), int(attrs["t"]),
                 int(attrs["r"]) - int(attrs["l"]),
                 int(attrs["b"]) - int(attrs["t"])]
 
@@ -130,7 +130,7 @@ class FinereaderXmlParser():
             self.currline["text"] = data
 
     def handle_endtag(self, tag):
-        """Handle tag end"""        
+        """Handle tag end"""
         if tag == "line" and self.currline is not None \
                 and self.currline.get("text"):
             self.linecnt += 1
@@ -170,7 +170,7 @@ def get_binary_path(filename, targetdir):
 def save_ocr_images(images, path):
     """
     Save OCR images to the media directory...
-    """                         
+    """
     paths = []
     if not os.path.exists(path):
         os.makedirs(path, 0777)
@@ -196,14 +196,14 @@ def get_media_output_path(inpath, type, ext=".png"):
     """
     Get an output path for a given type of input file.
     """
-    base = os.path.splitext(inpath)[0] 
-    return  "%s_%s%s" % (base, type, ext)    
+    base = os.path.splitext(inpath)[0]
+    return  "%s_%s%s" % (base, type, ext)
 
 
 def get_ab_output_path(inpath):
     """
     Get an output path appended with either _a or _b depending
-    on what the given input, output paths are.  This is so we 
+    on what the given input, output paths are.  This is so we
     can switch between two temp paths (and also to prevent
     the SeaDragon viewer from caching images.
     TODO: Make this work less horribly.
@@ -241,8 +241,8 @@ def find_unscaled_path(path, strip_ab=False):
     uspath = os.path.abspath(path.replace("_scaled", "", 1))
     uspath = os.path.abspath(path.replace(".dzi", ".png", 1))
     if strip_ab:
-        uspath = os.path.abspath(path.replace("_a.png", ".png", 1)) 
-        uspath = os.path.abspath(path.replace("_b.png", ".png", 1)) 
+        uspath = os.path.abspath(path.replace("_a.png", ".png", 1))
+        uspath = os.path.abspath(path.replace("_b.png", ".png", 1))
     if not os.path.exists(uspath):
         uspath = find_file_with_basename(
                 os.path.splitext(uspath)[0])
@@ -297,7 +297,7 @@ def make_png(inpath, outdir=None):
     fname = os.path.basename(inpath)
     outpath = "%s/%s.png" % (outdir, os.path.splitext(fname)[0])
     if not os.path.exists(outpath):
-        sp.call(["convert", inpath, outpath]) 
+        sp.call(["convert", inpath, outpath])
     return outpath
 
 def get_dzi_path(filepath):
@@ -314,7 +314,7 @@ def media_url_to_path(url):
     """
     if url:
         url = os.path.abspath(url)
-        url = url.replace(settings.MEDIA_URL, settings.MEDIA_ROOT + "/", 1) 
+        url = url.replace(settings.MEDIA_URL, settings.MEDIA_ROOT + "/", 1)
         return os.path.abspath(url)
 
 
@@ -324,7 +324,7 @@ def media_path_to_url(path):
     """
     if path:
         path = os.path.abspath(path)
-        return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)    
+        return path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL, 1)
 
 
 def output_to_text(hocrdata):

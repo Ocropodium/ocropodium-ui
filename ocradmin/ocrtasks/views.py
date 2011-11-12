@@ -26,7 +26,7 @@ taskdetail = gv.GenericDetailView.as_view(
         model=OcrTask,
         page_name="OCR Task",
         fields=["id", "page_name", "lines", "user", "batch", "created_on",
-            "updated_on", "status", "progress"])        
+            "updated_on", "status", "progress"])
 
 
 def show(request, pk):

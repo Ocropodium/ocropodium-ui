@@ -28,7 +28,7 @@ def on_task_prerun(**kwargs):
 
 def on_task_postrun(**kwargs):
     """
-    Update the database when a task is finished.  Create a new 
+    Update the database when a task is finished.  Create a new
     transcript entry with the retval of the task.
     """
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))

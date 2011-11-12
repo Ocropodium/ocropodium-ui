@@ -295,14 +295,14 @@ def clear_cache(request):
     """
     cacheclass = pluginutils.get_dzi_cacher(settings)
     cacher = cacheclass(
-            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH),
             key=_cache_name(request))
     cacher.clear()
-    return HttpResponse(json.dumps({"ok": True}), 
+    return HttpResponse(json.dumps({"ok": True}),
             mimetype="application/json")
 
 
-def clear_node_cache(request):    
+def clear_node_cache(request):
     """
     Clear the preset cache for a single node.
     """
@@ -313,10 +313,10 @@ def clear_node_cache(request):
     node = tree.get_node(evalnode)
     cacheclass = pluginutils.get_dzi_cacher(settings)
     cacher = cacheclass(
-            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH),
             key=_cache_name(request))
     cacher.clear_cache(node)
-    return HttpResponse(json.dumps({"ok": True}), 
+    return HttpResponse(json.dumps({"ok": True}),
             mimetype="application/json")
 
 
