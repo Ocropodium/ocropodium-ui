@@ -88,7 +88,7 @@ def create(request):
     # get the subject file paths from comma seperated POST data
     paths = _get_batch_file_paths(request)
     preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))
-    form = BatchForm(request.POST)    
+    form = BatchForm(request.POST)
     if not request.method == "POST" or not form.is_valid() or not paths:
         return render(request, "batch/new.html", dict(
             form=form, paths=paths,
@@ -377,7 +377,7 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):
     if statuses:
         taskqset = batch.tasks.filter(status__in=statuses)
     if name:
-        taskqset = taskqset.filter(page_name__icontains=name)    
+        taskqset = taskqset.filter(page_name__icontains=name)
     task_count = taskqset.count()
     pyserializer = serializers.get_serializer("python")()
     batchsl = pyserializer.serialize(
@@ -407,7 +407,7 @@ def _new_batch_context(request, tasktype):
     project = request.session["project"]
     batchname = "%s - Batch %d" % (project.name,
             project.batches.count() + 1)
-    form = BatchForm(initial=dict(name=batchname, 
+    form = BatchForm(initial=dict(name=batchname,
             user=request.user, project=project, task_type=tasktype))
     return dict(form=form, presets=Preset.objects.all().order_by("name"))
 
@@ -466,7 +466,7 @@ def script_for_page_file(scriptjson, filepath, writepath):
     """
     Modify the given script for a specific file.
     """
-    tree = script.Script(json.loads(scriptjson)) 
+    tree = script.Script(json.loads(scriptjson))
     # get the input node and replace it with out path
     inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
     if not inputs:

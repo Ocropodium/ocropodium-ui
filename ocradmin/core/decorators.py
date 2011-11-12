@@ -37,10 +37,10 @@ def saves_files(func):
                 request.user.username,
                 datetime.now().strftime("%Y%m%d%H%M%S")
             )
-        else:            
+        else:
             output_path = os.path.join(
                 settings.MEDIA_ROOT,
-                settings.USER_FILES_PATH, 
+                settings.USER_FILES_PATH,
                 project.slug
             )
         request.__class__.output_path = output_path

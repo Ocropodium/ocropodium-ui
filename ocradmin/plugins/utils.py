@@ -48,12 +48,12 @@ def get_cacher(settings):
 
 
 def get_dzi_cacher(settings):
-    try:            
+    try:
         cachebase = get_cacher(settings)
         cacher = cache.DziFileCacher
         cacher.__bases__ = (cachebase,)
     except ImportError:
-        raise exceptions.ImproperlyConfigured(                    
+        raise exceptions.ImproperlyConfigured(
                 "Error importing base cache module '%s'" % settings.NODETREE_PERSISTANT_CACHER)
     return cacher
 
@@ -74,13 +74,13 @@ def get_binary(binname):
     """
     Try and find where Tesseract is installed.
     """
-    bin = sp.Popen(["which", binname], 
+    bin = sp.Popen(["which", binname],
             stdout=sp.PIPE).communicate()[0].strip()
     if bin and os.path.exists(bin):
         return bin
 
     for path in ["/usr/local/bin", "/usr/bin"]:
-        binpath = os.path.join(path, binname) 
+        binpath = os.path.join(path, binname)
         if os.path.exists(binpath):
             return binpath
     # fallback...
@@ -125,7 +125,7 @@ def convert_to_temp_image(imagepath, suffix="tif"):
         retcode = sp.call(["convert", imagepath, tmp.name])
         if not retcode == 0:
             raise ExternalToolError(
-                "convert failed to create TIFF file with errno %d" % retcode) 
+                "convert failed to create TIFF file with errno %d" % retcode)
         return tmp.name
 
 def fix_preset_db_naming():

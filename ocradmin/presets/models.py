@@ -72,7 +72,7 @@ class Preset(models.Model):
 
 
 class Profile(models.Model):
-    """Preset profile.  This defines a class of 
+    """Preset profile.  This defines a class of
     presets to which the information in the preset
     must conform."""
     name = models.CharField(max_length=255)

@@ -32,7 +32,7 @@ class LineTrainTask(AbortableTask):
         """
         datasets = ReferencePage.objects.filter(pk__in=dataset_ids)
         cmodel = OcrModel.objects.get(pk=cmodel_id)
-        outmodel=os.path.join(outdir, 
+        outmodel=os.path.join(outdir,
             os.path.basename(cmodel.file.path.encode())),
         paramdict = dict(
             cmodel=cmodel.file.path.encode(),
@@ -45,12 +45,12 @@ class LineTrainTask(AbortableTask):
             os.makedirs(outdir)
             os.chmod(outdir, 0777)
 
-        trainer = PluginManager.get_trainer("ocropus", logger=logger, 
+        trainer = PluginManager.get_trainer("ocropus", logger=logger,
                 abort_func=get_abort_callback(self.request.id),
                 params=paramdict)
         for pagedata in datasets:
             trainer.load_training_binary(pagedata.binary_image.path.encode())
-            # we've got a Training page.  Go through it, and 
+            # we've got a Training page.  Go through it, and
             # train on each line
             for line in pagedata.data["lines"]:
                 trainer.train_line(line["box"], line["text"])
@@ -69,7 +69,7 @@ class LineTrainTask(AbortableTask):
             public=cmodel.public,
             type=cmodel.type,
             app=cmodel.app,
-            file=File(fhdl),             
+            file=File(fhdl),
         )
         newmodel.save()
         fhdl.close()
@@ -78,7 +78,7 @@ class LineTrainTask(AbortableTask):
 
 class ComparisonTask(AbortableTask):
     """
-    Run a comparison of a given model on a 
+    Run a comparison of a given model on a
     binarized image and compare output to
     a ground-truth.
     """
@@ -93,7 +93,7 @@ class ComparisonTask(AbortableTask):
         groundtruth = ReferencePage.objects.get(pk=gtid)
         task = OcrTask.objects.get(task_id=tid)
         accuracy, details = utils.isri_accuracy(
-                logger, 
+                logger,
                 ocrutils.output_to_text(groundtruth.data),
                 ocrutils.output_to_text(outdata))
         # there's be no details if something went wrong

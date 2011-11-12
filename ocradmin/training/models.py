@@ -17,10 +17,10 @@ class Score(models.Model):
     A record of a job scoring a model on a given
     ground truth.
     """
-    comparison = models.ForeignKey("Comparison", 
+    comparison = models.ForeignKey("Comparison",
             related_name="parameter_scores")
     name = models.CharField(max_length=255)
-    task  = models.OneToOneField(OcrTask, related_name="parameter_score") 
+    task  = models.OneToOneField(OcrTask, related_name="parameter_score")
     ground_truth = models.ForeignKey(ReferencePage, related_name="parameter_scores")
     score = models.FloatField(null=True, blank=True)
     score_internals = models.TextField(blank=True)

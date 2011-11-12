@@ -94,7 +94,7 @@ class Crop(node.Node, base.BinaryPngWriterMixin):
         iulibbin = ocrolib.numpy2narray(input)
         out = ocrolib.iulib.bytearray()
         ocrolib.iulib.extract_subimage(out, iulibbin, x0, iy0, x1, iy1)
-        return ocrolib.narray2numpy(out)            
+        return ocrolib.narray2numpy(out)
 
 
 class OcropusBase(node.Node):
@@ -106,7 +106,7 @@ class OcropusBase(node.Node):
 
     def __init__(self, **kwargs):
         """
-        Initialise with the ocropus component.  
+        Initialise with the ocropus component.
         """
         super(OcropusBase, self).__init__(**kwargs)
 
@@ -151,7 +151,7 @@ class OcropusBase(node.Node):
                 name=n,
                 value=makesafe(cls._comp.pget(n)),
             ))
-        return p            
+        return p
 
 
 class OcropusBinarizeBase(OcropusBase, base.BinaryPngWriterMixin):
@@ -310,11 +310,11 @@ class OcropusRecognizer(base.LineRecognizerNode):
             raise
 
     @utils.check_aborted
-    def get_transcript(self, line):        
+    def get_transcript(self, line):
         """
         Run line-recognition on an ocrolib.iulib.bytearray images of a
         single line.
-        """        
+        """
         if not hasattr(self, "_lmodel"):
             self.init_converter()
         fst = self._linerec.recognizeLine(line)
