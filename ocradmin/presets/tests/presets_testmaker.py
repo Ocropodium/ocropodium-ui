@@ -12,7 +12,10 @@ from nodetree import script, node
 
 class Testmaker(TestCase):
 
-    fixtures = ["presets/fixtures/test_fixtures.json"]
+    fixtures = [
+            "presets/fixtures/profile_fixtures.json",
+            "presets/fixtures/test_fixtures.json"
+    ]
     
     def setUp(self):
         """
