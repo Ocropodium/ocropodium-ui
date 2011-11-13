@@ -36,17 +36,21 @@ class PresetForm(forms.ModelForm):
         self.fields['description'].widget.attrs["rows"] = 2
         self.fields['description'].widget.attrs["cols"] = 40
 
-    def clean_data(self):
+    def clean(self):
+        cleaned_data = self.cleaned_data
         try:
             data = json.loads(self.cleaned_data["data"])
         except ValueError:
-            raise ValidationError("Preset data must be valid JSON")
+            msg = u"Preset data must be valid JSON"
+            self._errors["data"] = self.error_class([msg])
+            del cleaned_data["data"]            
         profile = self.cleaned_data["profile"]
         if profile is not None:
             errors = profile.validate_preset(data)
             if errors:
-                raise ValidationError("Data does not fit preset profile: %s" % errors)
-        return self.cleaned_data["data"]
+                self._errors["profile"] = self.error_class(errors)
+            del cleaned_data["profile"]
+        return cleaned_data
 
     class Meta:
         model = Preset
@@ -92,7 +96,8 @@ def createjson(request):
     """Create a preset and return JSON data"""
     form = PresetForm(request.POST)
     if not form.is_valid():
-        return HttpResponse(json.dumps(form.errors),
+        return HttpResponse(json.dumps(
+            dict(description="Invalid preset", errors=form.errors)),
                 mimetype="application/json")
     form.save()
     return HttpResponse(json.dumps(form.instance.slug),
