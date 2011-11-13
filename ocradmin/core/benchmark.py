@@ -27,7 +27,7 @@ def test_sp_binarize():
 if __name__ == "__main__":
     
     simple = sum([test_simple_binarize() for i in range(0, 5)]) / 5.0
-    bespoke = sum([test_sp_binarize() for i in range(0, 5)]) / 5.0 
+    bespoke = sum([test_sp_binarize() for i in range(0, 5)]) / 5.0
 
     print "Simple:  %03f secs" % simple
     print "Bespoke: %03f secs" % bespoke

@@ -9,6 +9,7 @@ from django.test.client import Client
 from django.contrib.auth.models import User
 from django.conf import settings
 
+from ocradmin.presets.models import Preset
 from ocradmin.batch.models import Batch
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.reference_pages.models import ReferencePage
@@ -157,6 +158,7 @@ class BatchTest(TestCase):
         """
         Testing actually OCRing a file.
         """
+        preset = Preset.objects.filter(profile__isnull=False)[0]
         if params is None:
             params = dict(
                     name="Test Batch",
@@ -164,7 +166,7 @@ class BatchTest(TestCase):
                     project=1,
                     task_type="run.batchitem",
                     files=os.path.join("test-project-2", os.path.basename(TESTFILE)),
-                    preset=1,
+                    preset=preset.id,
             )
         r = self._get_batch_response(params, headers)
         # check the POST redirected as it should

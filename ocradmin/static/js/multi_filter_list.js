@@ -4,7 +4,7 @@ var MultiFilterList = Class.extend({
     init: function(name, states, includeall) {
         this.name = name;
         this.states = states;
-        this.includeall = includeall;        
+        this.includeall = includeall;
     },
 
     ui: function() {
@@ -95,7 +95,7 @@ var MultiFilterList = Class.extend({
                 vals.push($(elem).attr("name").replace(self.name + "_", ""));
             }
         });
-        return vals;    
+        return vals;
     },
 
     onChange: function() {

@@ -54,7 +54,7 @@ $(function() {
     });
 
     $("#image_zoomin").click(function(event) {
-        sdviewer.viewport.zoomIn(2);        
+        sdviewer.viewport.zoomIn(2);
     }).button({
         text: false,
         icons: {
@@ -62,7 +62,7 @@ $(function() {
         }
     });
     $("#image_zoomout").click(function(event) {
-        sdviewer.viewport.zoomOut(0.5);    
+        sdviewer.viewport.zoomOut(0.5);
     }).button({
         text: false,
         icons: {
@@ -70,7 +70,7 @@ $(function() {
         }
     });
     $("#centre").click(function(event) {
-        sdviewer.goHome();    
+        sdviewer.goHome();
     }).button({
         text: false,
         icons: {
@@ -78,7 +78,7 @@ $(function() {
         }
     });
     $("#fullscreen").click(function(event) {
-        sdviewer.setFullPage(true);    
+        sdviewer.setFullPage(true);
     }).button({
         text: false,
         icons: {
@@ -87,7 +87,7 @@ $(function() {
     });
 
     $("#refresh").click(function(event) {
-        sdviewer.refresh(); 
+        sdviewer.refresh();
     }).button({
         text: false,
         icons: {
@@ -114,10 +114,10 @@ $(function() {
     function saveState() {
         var view = {
             follow: $("input[name='vlink']:checked").attr("id"),
-            format: $("input[name='format']:checked").attr("id"), 
+            format: $("input[name='format']:checked").attr("id"),
         };
         $.cookie("transcript_view", JSON.stringify(view));
-    }    
+    }
 
     function loadState() {
         var viewcookie = $.cookie("transcript_view");
@@ -141,7 +141,7 @@ $(function() {
                     sdviewer.setWaiting(true);
                 },
                 complete: function(e) {
-                    sdviewer.setWaiting(false);  
+                    sdviewer.setWaiting(false);
                 },
                 success: function(data) {
                     if (polltimeout != -1) {
@@ -150,7 +150,7 @@ $(function() {
                     }
                     polltimeout = setTimeout(function() {
                         pollForResults(data, polltime);
-                    }, polltime);        
+                    }, polltime);
                 },
                 error: OcrJs.ajaxErrorHandler,
             });
@@ -180,10 +180,10 @@ $(function() {
     }
 
     function updateNavButtons() {
-        var ismax = $("#page_slider").slider("option", "value") 
+        var ismax = $("#page_slider").slider("option", "value")
                 == $("#page_slider").slider("option", "max");
-        var ismin = $("#page_slider").slider("option", "value") == 0; 
-        $("#next_page").button({disabled: ismax});         
+        var ismin = $("#page_slider").slider("option", "value") == 0;
+        $("#next_page").button({disabled: ismax});
         $("#prev_page").button({disabled: ismin});
         $("#heading").button({disabled: true});
     }
@@ -197,23 +197,23 @@ $(function() {
             sdviewer.fitBounds(position.dilate(20), true);
             sdviewer.clearHighlights();
             sdviewer.addHighlight(position);
-            sdviewer.update(); 
+            sdviewer.update();
         }
     }
 
 
     // initialise the transcript editor
-    transcript = new OcrJs.TranscriptEditor(document.getElementById("transcript"));    
+    transcript = new OcrJs.TranscriptEditor(document.getElementById("transcript"));
     // When a page loads, read the data and request the source
     // image is rebinarized so we can view it in the viewer
     // This is likely to be horribly inefficient, at least
     // at first...
     transcript.addListeners({
         onTaskChange: function() {
-            var ismax = $("#page_slider").slider("option", "value") 
+            var ismax = $("#page_slider").slider("option", "value")
                     == $("#batchsize").val() - 1;
-            var ismin = $("#page_slider").slider("option", "value") == 0; 
-            $("#next_page").button({disabled: ismax});         
+            var ismin = $("#page_slider").slider("option", "value") == 0;
+            $("#next_page").button({disabled: ismax});
             $("#prev_page").button({disabled: ismin});
             $("#heading").button({disabled: true});
         },
@@ -262,13 +262,13 @@ $(function() {
             $("input[name=format]:checked").click();
         },
         onHoverPosition: function(position) {
-            if (!($("input[name=vlink]:checked").val() == "hover" 
+            if (!($("input[name=vlink]:checked").val() == "hover"
                     && sdviewer.isReady()))
             return;
             positionViewer(position);
         },
         onClickPosition: function(position) {
-            if (!($("input[name=vlink]:checked").val() == "click" 
+            if (!($("input[name=vlink]:checked").val() == "click"
                         && sdviewer.isReady()))
                 return;
             positionViewer(position);
@@ -298,13 +298,14 @@ $(function() {
                     $("#save_data").button({
                         disabled: true,
                     });
-                    fun.apply(this, funargs);
+                    if (fun)
+                        fun.apply(this, funargs);
                 } else {
                     console.error(data);
                 }
             },
         });
-    };        
+    };
 
     $("#save_data").click(function(event) {
         saveTranscript();
@@ -328,10 +329,10 @@ $(function() {
     });
 
     $("#page_slider").slider({
-        change: function(e, ui) {            
+        change: function(e, ui) {
             var val = $("#page_slider").slider("value");
             var diff = val - parseInt($("#batchoffset").val());
-            var batchoffset = parseInt($("#batchoffset").val());            
+            var batchoffset = parseInt($("#batchoffset").val());
             var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
             if (isNaN(hashoffset))
                 hashoffset = 0;
@@ -343,11 +344,11 @@ $(function() {
                 return;
 
             function updatePage() {
-                sdviewer.clearHighlights(); 
+                sdviewer.clearHighlights();
                 window.location.hash = "#!/" + diff;
                 $("input[name=format]:checked").click();
                 updateNavButtons();
-            }                
+            }
 
             // check for unsaved changes
             if (transcript.hasUnsavedChanges()) {
@@ -363,14 +364,14 @@ $(function() {
     });
 
     $("#prev_page").click(function(event) {
-        $("#page_slider").slider("option", "value", 
-            $("#page_slider").slider("option", "value") - 1);    
+        $("#page_slider").slider("option", "value",
+            $("#page_slider").slider("option", "value") - 1);
     });
         
 
     $("#next_page").click(function(event) {
-        $("#page_slider").slider("option", "value", 
-            $("#page_slider").slider("option", "value") + 1);    
+        $("#page_slider").slider("option", "value",
+            $("#page_slider").slider("option", "value") + 1);
     });
     
     // line formatter object
@@ -380,8 +381,8 @@ $(function() {
     sdviewer = new DziViewer.Viewer($("#viewer").get(0), {
         numBuffers: 1,
         height: 300,
-        dashboard: false,                     
-    }); 
+        dashboard: false,
+    });
     
     updateTask();
     updateNavButtons();
@@ -393,7 +394,7 @@ $(function() {
             resizable: false,
             closable: false,
             slidable: false,
-            spacing_open: 0, 
+            spacing_open: 0,
         },
     });
 
@@ -403,7 +404,7 @@ $(function() {
             resizable: false,
             closable: false,
             slidable: false,
-            spacing_open: 0, 
+            spacing_open: 0,
         },
     });
 
@@ -430,5 +431,5 @@ $(function() {
     sdviewer.resetSize();
 
     loadState();
-});        
+});
 

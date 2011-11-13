@@ -22,7 +22,8 @@ from ocradmin.plugins import cache
 
 
 class ViewsTest(TestCase):
-    fixtures = ["presets/fixtures/test_fixtures.json",
+    fixtures = [
+            "presets/fixtures/test_fixtures.json",
             "ocrmodels/fixtures/test_fixtures.json"]
 
     def setUp(self):
@@ -98,7 +99,7 @@ class ViewsTest(TestCase):
         for field in ["status", "errors"]:
             self.assertIn(field, content, "No '%s' field in content" % field)
         expectedstatus = "VALIDATION"
-        self.assertEqual(expectedstatus, 
+        self.assertEqual(expectedstatus,
                 content["status"], "Status field is not '%s'" % expectedstatus)
         self.assertIn("filein1", content["errors"], "'filein1' not in errors field" )
 
@@ -113,11 +114,11 @@ class ViewsTest(TestCase):
         content = json.loads(r.content)
         for field in ["status", "task_id", "results"]:
             self.assertIn(field, content, "No '%s' field in content" % field)
-        self.assertEqual(expectedstatus, 
+        self.assertEqual(expectedstatus,
                 content["status"], "Status field is not '%s'" % expectedstatus)
         for field in ["type"]:
             self.assertIn(field, content["results"], "No '%s' field in content results" % field)
-        self.assertEqual(expectedtype, 
+        self.assertEqual(expectedtype,
                 content["results"]["type"], "Type field is not '%s'" % expectedtype)
         for field in expecteddatafields:
             self.assertIn(field, content["results"], "No '%s' field in content results" % field)

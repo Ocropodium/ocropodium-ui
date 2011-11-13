@@ -52,7 +52,7 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
         this.startup();
         this.setupMouseEvents();
         this.setupKeyEvents();
-        this.setupCallbacks();        
+        this.setupCallbacks();
         this.resetSize();
 
         // convenience functions
@@ -97,13 +97,13 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
     setupKeyEvents: function() {
         var self = this;
         
-        $(window).bind("keydown.tabshift", function(event) {        
+        $(window).bind("keydown.tabshift", function(event) {
             var first = self.parseIndex($(".ocr_line", self._pagediv).first()),
                 last = self.parseIndex($(".ocr_line", self._pagediv).last());
             if (!self._spellchecking && event.keyCode == KC_TAB) {
                 var elem;
                 if (self._currentline) {
-                    var index = self.parseIndex(self._currentline);                    
+                    var index = self.parseIndex(self._currentline);
                     elem = event.shiftKey
                         ? $("#line_" + (index - 1))
                         : $("#line_" + (index + 1));
@@ -114,8 +114,8 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
                     }
                 } else {
                     elem = event.shiftKey
-                        ? $(".ocr_line", self._pagediv).last()                
-                        : $(".ocr_line", self._pagediv).first();    
+                        ? $(".ocr_line", self._pagediv).last()
+                        : $(".ocr_line", self._pagediv).first();
                 }
                 self.setCurrentLine(elem);
                 return false;
@@ -135,14 +135,14 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
                 if (self._spellchecking)
                     self.endSpellcheck();
                 else
-                    self.startSpellcheck();            
+                    self.startSpellcheck();
             }
             //else if (event.keyCode == KC_ESCAPE) {
             //    if (self._spellchecking)
             //        self.endSpellcheck();
             //}
         });
-    },                 
+    },
 
     teardownMouseEvents: function() {
         $(".ocr_line")
@@ -155,7 +155,7 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
         $(window)
             .unbind("keyup.lineedit")
             .unbind("keydown.tabshift");
-    },                 
+    },
 
     disable: function() {
         this.teardownMouseEvents();
@@ -165,7 +165,7 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
     enable: function() {
         this.setupMouseEvents();
         this.setupKeyEvents();
-    },             
+    },
 
     setupCallbacks: function() {
         var self = this;
@@ -204,14 +204,14 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
         });
         this._speller.addListener("onWordHighlight", function(element) {
             self.setCurrentLine($(element).parent());
-        });        
-    },                 
+        });
+    },
 
     resetSize: function() {
         this._scrollcontainer
             .css(
-                "height", 
-                $(this.parent).height() 
+                "height",
+                $(this.parent).height()
                 - this._speller.widgetHeight()
             );
     },
@@ -234,19 +234,19 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
 
     hasUnsavedChanges: function() {
         return this._haschanges;
-    },        
+    },
 
     replaceLineText: function(element, origtext, newtext) {
         if (origtext != newtext) {
             this._undostack.push(
                     new OcrJs.EditCommand(this, element, origtext, newtext));
-            this._textChanged(); 
-        }           
+            this._textChanged();
+        }
     },
 
     taskId: function() {
         return this._task_pk;
-    },                
+    },
 
     setTaskId: function(task_pk) {
         this._task_pk = task_pk;
@@ -260,11 +260,11 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
 
     taskData: function() {
         return this._task_pk;
-    },                  
+    },
 
     refresh: function() {
-        var self = this;                 
-        this._pagediv.load("/ocr/task_transcript/" + self._task_pk + " .ocr_page:first", 
+        var self = this;
+        this._pagediv.load("/ocr/task_transcript/" + self._task_pk + " .ocr_page:first",
                 null, function(text) {
                     self.setWaiting(false);
                     self.trigger("onTaskLoad");
@@ -288,17 +288,17 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
     setCleanState: function() {
         this._textbuffer = this._pagediv.text();
         this._haschanges = false;
-    },                       
+    },
 
     setCurrentLine: function(line) {
-        line = $(line);                        
+        line = $(line);
         this._currentline = line;
         $(".ocr_line", this._pagediv).removeClass("hover");
         line.addClass("hover");
         var pos = this.isScrolledIntoView(line.get(0));
         if (pos != 0) {
             line.get(0).scrollIntoView(pos == -1);
-        }        
+        }
         this.trigger("onClickPosition", this.parseBbox(line));
         this.trigger("onLineSelected", line.get(0).tagName.toLowerCase());
     },
@@ -308,14 +308,14 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
     // is above the viewport, 0 if visible, 1 if below
     isScrolledIntoView: function(elem) {
         if (!elem)
-            return 0;            
+            return 0;
         var docviewtop = this._scrollcontainer.scrollTop();
         var docviewbottom = docviewtop + this._scrollcontainer.height();
         var elemtop = $(elem).offset().top;
         var elembottom = elemtop + $(elem).height();
-        if (elembottom > docviewbottom) 
+        if (elembottom > docviewbottom)
             return 1;
-        if (elemtop < docviewtop) 
+        if (elemtop < docviewtop)
             return -1;
         return 0;
     },
@@ -324,5 +324,5 @@ OcrJs.TranscriptEditor = OcrJs.Base.extend({
     _textChanged: function() {
         this._haschanges = true;
         this.trigger("onTextChanged");
-    },                      
+    },
 });

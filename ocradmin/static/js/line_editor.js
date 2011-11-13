@@ -7,15 +7,15 @@ if (OcrJs === undefined) {
 
 
 // Jquery, disallow selection
-jQuery.fn.extend({ 
-    allowSelection : function(allow) { 
-        this.each(function() { 
-            this.onselectstart = function() { return allow; }; 
-            this.unselectable = allow ? "" : "on"; 
-            jQuery(this).css('-moz-user-select', allow ?  null : 'none'); 
+jQuery.fn.extend({
+    allowSelection : function(allow) {
+        this.each(function() {
+            this.onselectstart = function() { return allow; };
+            this.unselectable = allow ? "" : "on";
+            jQuery(this).css('-moz-user-select', allow ?  null : 'none');
         });
-        return this; 
-    } 
+        return this;
+    }
 });
 
 
@@ -36,14 +36,14 @@ var InsertCommand = OcrJs.UndoCommand.extend({
         this.redo = function() {
             
             $(self.chars).insertBefore(self.curr);
-            // hack around Chrome not doing a reflow when inserting 
+            // hack around Chrome not doing a reflow when inserting
             // after a breaking element - toggle overflow to force it
-            if ($.browser.webkit && self.editor.isWrapping()) {                
+            if ($.browser.webkit && self.editor.isWrapping()) {
                 $(self.curr).css("overflow", "auto");
                 setTimeout(function() {
                     $(self.curr).css("overflow", null);
                 }, 0);
-            } 
+            }
             self.editor.setCurrentChar(self.curr);
         };
         this.undo = function() {
@@ -51,8 +51,8 @@ var InsertCommand = OcrJs.UndoCommand.extend({
             self.editor.setCurrentChar(self.curr);
         };
         this.mergeWith = function(other) {
-            self.chars = $(self.chars).add(other.chars).get();                    
-            return true;                
+            self.chars = $(self.chars).add(other.chars).get();
+            return true;
         };
     },
 });
@@ -72,7 +72,7 @@ var DeleteCommand = OcrJs.UndoCommand.extend({
         this.undo = function() {
             for (var i in self.elems) {
                 $(self.elems[i]).insertBefore(self.nexts[i]);
-                self.editor.setCurrentChar(self.back 
+                self.editor.setCurrentChar(self.back
                         ? self.elems[i].nextElementSibling : self.elems[i]);
             }
         };
@@ -81,7 +81,7 @@ var DeleteCommand = OcrJs.UndoCommand.extend({
                 self.elems.push(other.elems[i]);
                 self.nexts.push(other.nexts[i]);
             }
-            return true;    
+            return true;
         };
     },
 });
@@ -101,22 +101,22 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             onEditingFinished: [],
         };
 
-        this._e = null;          // the element we're operating on 
+        this._e = null;          // the element we're operating on
         this._c = null;          // the current character in front of the cursor
         this._top = null;         // reference to initial top of elem
-        this._left = null;        // reference to initial left of elem 
-        this._selectstart = null;   // selection start & end  
-        this._inittext = null;      // initial text of selected element 
-        this._keyevent = null;      // capture the last key event 
+        this._left = null;        // reference to initial left of elem
+        this._selectstart = null;   // selection start & end
+        this._inittext = null;      // initial text of selected element
+        this._keyevent = null;      // capture the last key event
         this._blinktimer = -1;      // timer for cursor flashing
         this._dragpoint = null;     // the point dragging started
-        this._editing = false;      // we're currently doing something 
+        this._editing = false;      // we're currently doing something
         this._undostack = new OcrJs.UndoStack(this); // undo stack object
-        this._notemptyre = new RegExp("\S"); 
+        this._notemptyre = new RegExp("\S");
         this._cursor = $("<div></div>") // cursor element
                 .addClass("editcursor")
                 .text("").get(0);
-        this._endmarker = $("<div></div>")  // anchor for the end of the line 
+        this._endmarker = $("<div></div>")  // anchor for the end of the line
                 .addClass("endmarker").get(0);
         this._keyhacks = {
             190: [62, 46],
@@ -128,7 +128,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         }
 
 
-    },    
+    },
 
     /*
      * Setup and teardown functions
@@ -137,11 +137,11 @@ OcrJs.LineEditor = OcrJs.Base.extend({
 
     edit: function(elem, event) {
         if (this._editing)
-            this.finishEditing();                
+            this.finishEditing();
         if (!elem)
             throw "Attempt to edit null element";
         this._e = elem;
-        this._inittext = $(elem).text();        
+        this._inittext = $(elem).text();
         this._editing = true;
 
         this.setupEvents()
@@ -176,8 +176,8 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             .removeClass("ui-selected")
             .removeClass("editing")
             .allowSelection(true)
-            .html(this._inittext);        
-        this._selectstart = null;        
+            .html(this._inittext);
+        this._selectstart = null;
         $(this._cursor).detach();
         this._undostack.clear();
         if (this._blinktimer != -1) {
@@ -186,7 +186,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         }
         this.teardownEvents();
         this._editing = false;
-        this.trigger("onEditingFinished", 
+        this.trigger("onEditingFinished",
             this._e,
             this._inittext,
             withtext ? withtext : endtext
@@ -209,7 +209,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
 
     element: function() {
         return this._e;
-    },        
+    },
 
 
     setupEvents: function() {
@@ -217,7 +217,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         var elem = this._e;
 
         // set up a click handler for the window
-        // if we click outside the current element, 
+        // if we click outside the current element,
         // close the editor and unbind the click
         $(window).bind("click.editorblur", function(event) {
             var left = $(elem).offset().left;
@@ -225,7 +225,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             var width = $(elem).outerWidth();
             var height = $(elem).outerHeight();
 
-            if (!(event.pageX >= left 
+            if (!(event.pageX >= left
                     && event.pageX <= (left + $(elem).width())
                     && event.pageY >= top
                     && event.pageY <= (top + $(elem).height()))) {
@@ -234,7 +234,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         });
 
         $(window).bind("keydown.editortype", function(event) {
-            self.blinkCursor(false);    
+            self.blinkCursor(false);
             if (self._handleKeyEvent(event)) {
                 event.preventDefault();
                 return false;
@@ -243,14 +243,14 @@ OcrJs.LineEditor = OcrJs.Base.extend({
 
         $(window).bind("keypress.editortype", function(event) {
             if (self._handleKeyEvent(event)) {
-                //self.blinkCursor(false);    
+                //self.blinkCursor(false);
                 event.preventDefault();
                 return false;
             }
         });
 
         $(window).bind("keyup.editortype", function(event) {
-            if (self._blinktimer == -1) {                
+            if (self._blinktimer == -1) {
                 self._blinktimer = setTimeout(function() {
                     self.blinkCursor(true);
                 }, 2 * LONGKEY);
@@ -279,8 +279,8 @@ OcrJs.LineEditor = OcrJs.Base.extend({
                 $(self._e).unbind("mousemove.selecttext");
                 $(window).unbind("mouseup.selecttext");
                 self._dragpoint = null;
-            });            
-        });        
+            });
+        });
     },
 
 
@@ -302,26 +302,26 @@ OcrJs.LineEditor = OcrJs.Base.extend({
 
 
     /*
-     * Cursor navigation and positioning functions                    
+     * Cursor navigation and positioning functions
      *
      */
 
     // when at the end of the line, the current
     // char is the endmarker div.  This should
-    // never be deleted                    
+    // never be deleted
     isAtEnd: function() {
         return this._c.tagName == "DIV";
     },
 
     // determine if the line is wrapping.  Assumes
-    // there are a least 2 chars (+ the endmarker)             
+    // there are a least 2 chars (+ the endmarker)
     isWrapping: function() {
         if (this._e.children < 3)
             return false;
         var first = $(this._e).children().first().get(0);
         var last = this._endmarker.previousElementSibling;
         return $(first).offset().top != $(last).offset().top;
-    },             
+    },
                     
     moveCursorLeft: function() {
         // check if we're at the end
@@ -343,9 +343,9 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         console.log($(this._e).text());
         var char = $(this._e).children().first().get(0);
         if (!char)
-            throw "First child of elem is null: " + this._e.firstChild + "  (" + this._e + ")";        
+            throw "First child of elem is null: " + this._e.firstChild + "  (" + this._e + ")";
         this.setCurrentChar(char);
-    },                   
+    },
 
     moveCursorToEnd: function() {
         this.setCurrentChar(this._endmarker);
@@ -358,10 +358,10 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         if (elem.tagName == "DIV") {
             if (elem.previousElementSibling) {
                 var neartext = $(elem).prevAll().filter(function(index) {
-                    return $(this).text() != " ";                            
+                    return $(this).text() != " ";
                 }).first();
                 if (neartext.length) {
-                    os.top = neartext.offset().top;               
+                    os.top = neartext.offset().top;
                 } else {
                     os.top = this._elementPos(this._e).top;
                 }
@@ -380,7 +380,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         if (blink) {
             $(self._cursor).toggleClass("blinkoff");
             self._blinktimer = setTimeout(function() {
-                self.blinkCursor(true);        
+                self.blinkCursor(true);
             }, LONGKEY);
         } else {
             $(self._cursor).removeClass("blinkoff");
@@ -403,16 +403,16 @@ OcrJs.LineEditor = OcrJs.Base.extend({
     },
 
     updateSelection: function(start, end) {
-        // FIXME: the element is weirdly borked the first time it's 
-        // accessed (childElementCount and the children array don't 
-        // work.  Hack around this by resetting it...???                         
+        // FIXME: the element is weirdly borked the first time it's
+        // accessed (childElementCount and the children array don't
+        // work.  Hack around this by resetting it...???
         this._e = $(this._e).get(0);
         if (start == end) {
             $(this._e).children().removeClass("sl");
             return;
         }
         var gotstart = false;
-        for (var i = 0; i < $(this._e).children().length; i++) {         
+        for (var i = 0; i < $(this._e).children().length; i++) {
             if (this._e.children[i] == start || this._e.children[i] == end) {
                 gotstart = !gotstart;
             }
@@ -445,7 +445,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
 
         var next = back ? this._c : this._c.nextElementSibling;
         var curr = back
-            ? this._c.previousElementSibling 
+            ? this._c.previousElementSibling
             : this._c;
         if (!curr)
             return;
@@ -482,7 +482,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
 
                       
     insertChar: function(event) {
-        this.eraseSelection(); 
+        this.eraseSelection();
 
         // FIXME: Hack for converting webkit keypress
         // deletes into periods, and adjusting the charcode
@@ -508,11 +508,11 @@ OcrJs.LineEditor = OcrJs.Base.extend({
      */
 
     // handle key event - return true IF the event
-    // IS handled                       
+    // IS handled
     _handleKeyEvent: function(event) {
         console.log(event.keyCode);
         // BROWSER HACK - FIXME: Firefox only receives
-        // repeat key events for keypress, but ALSO 
+        // repeat key events for keypress, but ALSO
         // fires keydown for non-char keys
         if (!$.browser.webkit) {
             if (!event.ctrlKey && event.type == "keydown")
@@ -563,20 +563,20 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             case KC_RETURN: // accept changes
                 this.finishEditing();
                 break;
-            case KC_CAPSLOCK:   // produces funny chars on Mozilla                
+            case KC_CAPSLOCK:   // produces funny chars on Mozilla
                 break;
-            case KC_DELETE: 
+            case KC_DELETE:
             case KC_BACKSPACE: // delete or backspace
                 this.deleteChar(event.keyCode == KC_BACKSPACE);
                 break;
             case KC_TAB: // finish and go to next
                 this.finishEditing();
-                event.shiftKey 
+                event.shiftKey
                     ? this.trigger("onEditPrevElement")
                     : this.trigger("onEditNextElement");
                 break;
             default:
-                // char handlers - only use keypress for this                
+                // char handlers - only use keypress for this
                 if (event.type == "keydown")
                     return false;
                 this.insertChar(event);
@@ -586,9 +586,9 @@ OcrJs.LineEditor = OcrJs.Base.extend({
     },
 
     _initialiseCursor: function(clickevent) {
-        // find the first letter in the series (ignore spaces)        
+        // find the first letter in the series (ignore spaces)
         this._c = $(this._e).find("span").filter(function(index) {
-            return $(this).text() != " ";                            
+            return $(this).text() != " ";
         }).get(0);
         $(this._cursor).css("height", $(this._c).height());
         this.positionCursorTo(this._c);
@@ -605,7 +605,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         // either deselect all, or set the start of a selection
         if (event.shiftKey) {
             if (!this._selectstart) {
-                this._selectstart = this._c; 
+                this._selectstart = this._c;
             }
         } else {
             this.deselectAll();
@@ -624,7 +624,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             case KC_END:
                 this.moveCursorToEnd();
                 break;
-            default:                
+            default:
         }
         if (event.shiftKey) {
             this.updateSelection(this._selectstart, this._c);
@@ -635,7 +635,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
     _charClicked: function(event) {
         console.log("Char clicked: " + $(event.target).text());
         var elem = event.target;
-        var offset = $(elem).offset();            
+        var offset = $(elem).offset();
         var mid = $(elem).width() / 2;
         var atend = $(elem).next().length == 0;
 
@@ -643,7 +643,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         // cursor, set the start marker
         if (!elem.previousElementSibling) {
             this.setCurrentChar(elem);
-            return;    
+            return;
         }
 
         // if we click on latter half of the last element
@@ -653,7 +653,7 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         }
 
         // otherwise, we're in the middle somewhere
-        if (event.pageX >= (offset.left + mid)) 
+        if (event.pageX >= (offset.left + mid))
             elem = elem.nextElementSibling;
         this.setCurrentChar(elem);
     },
@@ -708,13 +708,13 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             return {top: parentoffset.top, left: parentoffset.left};
         }
         console.log("Failed to get top & left for element: " + $(elem));
-        throw "Unable to get usable position for elem: " 
-            + $(elem) + " (" + $(elem).text() + ")"; 
-    },                  
+        throw "Unable to get usable position for elem: "
+            + $(elem) + " (" + $(elem).text() + ")";
+    },
 
     // ensure that is the last char in the line is a space
     // that it's a non-breaking one.  Otherwise ensure that
-    // all spaces are breaking entities.                 
+    // all spaces are breaking entities.
     _mungeSpaces: function(event) {
         var self = this;
         if (this._endmarker.previousElementSibling) {
@@ -727,18 +727,18 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             if ($(this).text() == "\u00a0") {
                 if ($(this).next().text().match(/\S/)
                         && $(this).prev().text() != " ") {
-                    return true;                    
+                    return true;
                 }
             }
         }).each(function(i, elem) {
-            $(elem).text(" ");    
+            $(elem).text(" ");
         });
         // replace a first breaking space with a hard breaking one
         var firstelem = $(this._e).children().first();
         if (firstelem.length && firstelem.text() == " ") {
-            firstelem.text("\u00a0");    
+            firstelem.text("\u00a0");
         }
-    },                  
+    },
 
 
     _selectCurrentWord: function(event) {
@@ -747,11 +747,11 @@ OcrJs.LineEditor = OcrJs.Base.extend({
         if (!event.shiftDown)
             this.deselectAll();
         var startchar = this._c;
-        while (startchar.previousElementSibling 
+        while (startchar.previousElementSibling
                 && startchar.previousElementSibling.textContent.match(/^\w$/)) {
             startchar = startchar.previousElementSibling;
         }
-        var endchar = this._c;        
+        var endchar = this._c;
         while (endchar && endchar != this._endmarker
                 && endchar.textContent.match(/^\w$/)) {
             endchar = endchar.nextElementSibling;
@@ -789,5 +789,5 @@ OcrJs.LineEditor = OcrJs.Base.extend({
             this.updateSelection(this._selectstart, this._c);
         }
         this.positionCursorTo(this._c);
-    },                          
+    },
 });

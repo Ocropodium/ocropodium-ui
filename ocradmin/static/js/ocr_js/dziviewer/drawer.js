@@ -1,4 +1,4 @@
-// 
+//
 // Draw a tile source to the canvas
 //
 
@@ -33,7 +33,7 @@ DziViewer.Drawer = OcrJs.Base.extend({
     },
 
     getRenderCallback: function(tilesource, viewport, level, rect, context) {
-        var self = this;    
+        var self = this;
         return function(p, img) {
             self._cache.set(level, p, img);
             var adjust = tilesource.getAdjustmentFactor(viewport.scale, level);
@@ -50,10 +50,10 @@ DziViewer.Drawer = OcrJs.Base.extend({
 
     getContext: function() {
         return this._ctx;
-    },    
+    },
 
     drawTiles: function(viewport, tilesource, loader, buffer) {
-        var self = this;              
+        var self = this;
         var toplevel = tilesource.getNearestLevel(viewport.scale);
 
         var context = buffer ? this._buf : this._ctx;
@@ -61,18 +61,18 @@ DziViewer.Drawer = OcrJs.Base.extend({
         this.clearCanvas(context, this.canvas.width(), this.canvas.height());
 
         // FIXME: currently we draw all previous levels that have an
-        // appropriate image in order of resolution.  This is very 
+        // appropriate image in order of resolution.  This is very
         // inefficient, but it avoids doing tricky stuff figuring
         // out the nearest level prior to the active one that has
         // an appropriate tile already loaded.  There's probably a
-        // an optimisation here, though FWIT, I haven't noticed any 
+        // an optimisation here, though FWIT, I haven't noticed any
         // performance issues caused by the current behaviour.
         var pathcbs = [];
 
         for (var level = startlevel; level <= toplevel; level++) {
             // the adjust factor is the diff between the current level
             // and the requested scale
-            var adjust = tilesource.getAdjustmentFactor(viewport.scale, level);            
+            var adjust = tilesource.getAdjustmentFactor(viewport.scale, level);
             var all = tilesource.enumerate(level);
             for (var i in all) {
                 var col = all[i][0], row = all[i][1];
@@ -94,7 +94,7 @@ DziViewer.Drawer = OcrJs.Base.extend({
                             callback: callback,
                         });
                     }
-                }                
+                }
             }
         }
 
@@ -108,6 +108,6 @@ DziViewer.Drawer = OcrJs.Base.extend({
         }
         loader.loadImages(pathcbs);
 
-        this.trigger("initialDraw");        
+        this.trigger("initialDraw");
     },
-});    
+});

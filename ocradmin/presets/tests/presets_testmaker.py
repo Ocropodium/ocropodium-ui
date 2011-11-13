@@ -12,7 +12,10 @@ from nodetree import script, node
 
 class Testmaker(TestCase):
 
-    fixtures = ["presets/fixtures/test_fixtures.json"]
+    fixtures = [
+            "presets/fixtures/profile_fixtures.json",
+            "presets/fixtures/test_fixtures.json"
+    ]
     
     def setUp(self):
         """
@@ -75,7 +78,7 @@ class Testmaker(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(unicode(r.context["media"]), u"""screen""")
         self.assertEqual(unicode(r.context["csrf_token"]), u"""NOTPROVIDED""")
-        self.assertEqual(unicode(r.context["fields"]), u"""['name', 'description', 'user', 'public', 'tags', 'created_on', 'updated_on']""")
+        self.assertEqual(unicode(r.context["fields"]), u"""['name', 'description', 'user', 'public', 'profile', 'tags', 'created_on', 'updated_on']""")
         self.assertEqual(unicode(r.context["object"]), u"""CuneiformBasic""")
         self.assertEqual(unicode(r.context["LANGUAGES"]), u"""(('ar', 'Arabic'), ('az', 'Azerbaijani'), ('bg', 'Bulgarian'), ('bn', 'Bengali'), ('bs', 'Bosnian'), ('ca', 'Catalan'), ('cs', 'Czech'), ('cy', 'Welsh'), ('da', 'Danish'), ('de', 'German'), ('el', 'Greek'), ('en', 'English'), ('en-gb', 'British English'), ('es', 'Spanish'), ('es-ar', 'Argentinian Spanish'), ('es-mx', 'Mexican Spanish'), ('es-ni', 'Nicaraguan Spanish'), ('et', 'Estonian'), ('eu', 'Basque'), ('fa', 'Persian'), ('fi', 'Finnish'), ('fr', 'French'), ('fy-nl', 'Frisian'), ('ga', 'Irish'), ('gl', 'Galician'), ('he', 'Hebrew'), ('hi', 'Hindi'), ('hr', 'Croatian'), ('hu', 'Hungarian'), ('id', 'Indonesian'), ('is', 'Icelandic'), ('it', 'Italian'), ('ja', 'Japanese'), ('ka', 'Georgian'), ('km', 'Khmer'), ('kn', 'Kannada'), ('ko', 'Korean'), ('lt', 'Lithuanian'), ('lv', 'Latvian'), ('mk', 'Macedonian'), ('ml', 'Malayalam'), ('mn', 'Mongolian'), ('nl', 'Dutch'), ('no', 'Norwegian'), ('nb', 'Norwegian Bokmal'), ('nn', 'Norwegian Nynorsk'), ('pa', 'Punjabi'), ('pl', 'Polish'), ('pt', 'Portuguese'), ('pt-br', 'Brazilian Portuguese'), ('ro', 'Romanian'), ('ru', 'Russian'), ('sk', 'Slovak'), ('sl', 'Slovenian'), ('sq', 'Albanian'), ('sr', 'Serbian'), ('sr-latn', 'Serbian Latin'), ('sv', 'Swedish'), ('ta', 'Tamil'), ('te', 'Telugu'), ('th', 'Thai'), ('tr', 'Turkish'), ('uk', 'Ukrainian'), ('ur', 'Urdu'), ('vi', 'Vietnamese'), ('zh-cn', 'Simplified Chinese'), ('zh-tw', 'Traditional Chinese'))""")
         self.assertEqual(unicode(r.context["preset"]), u"""CuneiformBasic""")
@@ -91,7 +94,7 @@ class Testmaker(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(unicode(r.context["media"]), u"""screen""")
         self.assertEqual(unicode(r.context["csrf_token"]), u"""NOTPROVIDED""")
-        self.assertEqual(unicode(r.context["fields"]), u"""['name', 'description', 'user', 'public', 'tags', 'created_on', 'updated_on']""")
+        self.assertEqual(unicode(r.context["fields"]), u"""['name', 'description', 'user', 'public', 'profile', 'tags', 'created_on', 'updated_on']""")
         self.assertEqual(unicode(r.context["object"]), u"""CuneiformBasic""")
         self.assertEqual(unicode(r.context["LANGUAGES"]), u"""(('ar', 'Arabic'), ('az', 'Azerbaijani'), ('bg', 'Bulgarian'), ('bn', 'Bengali'), ('bs', 'Bosnian'), ('ca', 'Catalan'), ('cs', 'Czech'), ('cy', 'Welsh'), ('da', 'Danish'), ('de', 'German'), ('el', 'Greek'), ('en', 'English'), ('en-gb', 'British English'), ('es', 'Spanish'), ('es-ar', 'Argentinian Spanish'), ('es-mx', 'Mexican Spanish'), ('es-ni', 'Nicaraguan Spanish'), ('et', 'Estonian'), ('eu', 'Basque'), ('fa', 'Persian'), ('fi', 'Finnish'), ('fr', 'French'), ('fy-nl', 'Frisian'), ('ga', 'Irish'), ('gl', 'Galician'), ('he', 'Hebrew'), ('hi', 'Hindi'), ('hr', 'Croatian'), ('hu', 'Hungarian'), ('id', 'Indonesian'), ('is', 'Icelandic'), ('it', 'Italian'), ('ja', 'Japanese'), ('ka', 'Georgian'), ('km', 'Khmer'), ('kn', 'Kannada'), ('ko', 'Korean'), ('lt', 'Lithuanian'), ('lv', 'Latvian'), ('mk', 'Macedonian'), ('ml', 'Malayalam'), ('mn', 'Mongolian'), ('nl', 'Dutch'), ('no', 'Norwegian'), ('nb', 'Norwegian Bokmal'), ('nn', 'Norwegian Nynorsk'), ('pa', 'Punjabi'), ('pl', 'Polish'), ('pt', 'Portuguese'), ('pt-br', 'Brazilian Portuguese'), ('ro', 'Romanian'), ('ru', 'Russian'), ('sk', 'Slovak'), ('sl', 'Slovenian'), ('sq', 'Albanian'), ('sr', 'Serbian'), ('sr-latn', 'Serbian Latin'), ('sv', 'Swedish'), ('ta', 'Tamil'), ('te', 'Telugu'), ('th', 'Thai'), ('tr', 'Turkish'), ('uk', 'Ukrainian'), ('ur', 'Urdu'), ('vi', 'Vietnamese'), ('zh-cn', 'Simplified Chinese'), ('zh-tw', 'Traditional Chinese'))""")
         self.assertEqual(unicode(r.context["preset"]), u"""CuneiformBasic""")
@@ -107,7 +110,7 @@ class Testmaker(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(unicode(r.context["media"]), u"""screen""")
         self.assertEqual(unicode(r.context["csrf_token"]), u"""NOTPROVIDED""")
-        self.assertEqual(unicode(r.context["fields"]), u"""['name', 'description', 'user', 'public', 'tags', 'created_on', 'updated_on']""")
+        self.assertEqual(unicode(r.context["fields"]), u"""['name', 'description', 'user', 'public', 'profile', 'tags', 'created_on', 'updated_on']""")
         self.assertEqual(unicode(r.context["object"]), u"""CuneiformBasic""")
         self.assertEqual(unicode(r.context["LANGUAGES"]), u"""(('ar', 'Arabic'), ('az', 'Azerbaijani'), ('bg', 'Bulgarian'), ('bn', 'Bengali'), ('bs', 'Bosnian'), ('ca', 'Catalan'), ('cs', 'Czech'), ('cy', 'Welsh'), ('da', 'Danish'), ('de', 'German'), ('el', 'Greek'), ('en', 'English'), ('en-gb', 'British English'), ('es', 'Spanish'), ('es-ar', 'Argentinian Spanish'), ('es-mx', 'Mexican Spanish'), ('es-ni', 'Nicaraguan Spanish'), ('et', 'Estonian'), ('eu', 'Basque'), ('fa', 'Persian'), ('fi', 'Finnish'), ('fr', 'French'), ('fy-nl', 'Frisian'), ('ga', 'Irish'), ('gl', 'Galician'), ('he', 'Hebrew'), ('hi', 'Hindi'), ('hr', 'Croatian'), ('hu', 'Hungarian'), ('id', 'Indonesian'), ('is', 'Icelandic'), ('it', 'Italian'), ('ja', 'Japanese'), ('ka', 'Georgian'), ('km', 'Khmer'), ('kn', 'Kannada'), ('ko', 'Korean'), ('lt', 'Lithuanian'), ('lv', 'Latvian'), ('mk', 'Macedonian'), ('ml', 'Malayalam'), ('mn', 'Mongolian'), ('nl', 'Dutch'), ('no', 'Norwegian'), ('nb', 'Norwegian Bokmal'), ('nn', 'Norwegian Nynorsk'), ('pa', 'Punjabi'), ('pl', 'Polish'), ('pt', 'Portuguese'), ('pt-br', 'Brazilian Portuguese'), ('ro', 'Romanian'), ('ru', 'Russian'), ('sk', 'Slovak'), ('sl', 'Slovenian'), ('sq', 'Albanian'), ('sr', 'Serbian'), ('sr-latn', 'Serbian Latin'), ('sv', 'Swedish'), ('ta', 'Tamil'), ('te', 'Telugu'), ('th', 'Thai'), ('tr', 'Turkish'), ('uk', 'Ukrainian'), ('ur', 'Urdu'), ('vi', 'Vietnamese'), ('zh-cn', 'Simplified Chinese'), ('zh-tw', 'Traditional Chinese'))""")
         self.assertEqual(unicode(r.context["preset"]), u"""CuneiformBasic""")
@@ -137,7 +140,7 @@ class Testmaker(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(unicode(r.context["media"]), u"""screen""")
         self.assertEqual(unicode(r.context["csrf_token"]), u"""NOTPROVIDED""")
-        self.assertEqual(unicode(r.context["fields"]), u"""['name', 'description', 'user', 'public', 'tags', 'created_on', 'updated_on']""")
+        self.assertEqual(unicode(r.context["fields"]), u"""['name', 'description', 'user', 'public', 'profile', 'tags', 'created_on', 'updated_on']""")
         self.assertEqual(unicode(r.context["object"]), u"""CuneiformBasic""")
         self.assertEqual(unicode(r.context["LANGUAGES"]), u"""(('ar', 'Arabic'), ('az', 'Azerbaijani'), ('bg', 'Bulgarian'), ('bn', 'Bengali'), ('bs', 'Bosnian'), ('ca', 'Catalan'), ('cs', 'Czech'), ('cy', 'Welsh'), ('da', 'Danish'), ('de', 'German'), ('el', 'Greek'), ('en', 'English'), ('en-gb', 'British English'), ('es', 'Spanish'), ('es-ar', 'Argentinian Spanish'), ('es-mx', 'Mexican Spanish'), ('es-ni', 'Nicaraguan Spanish'), ('et', 'Estonian'), ('eu', 'Basque'), ('fa', 'Persian'), ('fi', 'Finnish'), ('fr', 'French'), ('fy-nl', 'Frisian'), ('ga', 'Irish'), ('gl', 'Galician'), ('he', 'Hebrew'), ('hi', 'Hindi'), ('hr', 'Croatian'), ('hu', 'Hungarian'), ('id', 'Indonesian'), ('is', 'Icelandic'), ('it', 'Italian'), ('ja', 'Japanese'), ('ka', 'Georgian'), ('km', 'Khmer'), ('kn', 'Kannada'), ('ko', 'Korean'), ('lt', 'Lithuanian'), ('lv', 'Latvian'), ('mk', 'Macedonian'), ('ml', 'Malayalam'), ('mn', 'Mongolian'), ('nl', 'Dutch'), ('no', 'Norwegian'), ('nb', 'Norwegian Bokmal'), ('nn', 'Norwegian Nynorsk'), ('pa', 'Punjabi'), ('pl', 'Polish'), ('pt', 'Portuguese'), ('pt-br', 'Brazilian Portuguese'), ('ro', 'Romanian'), ('ru', 'Russian'), ('sk', 'Slovak'), ('sl', 'Slovenian'), ('sq', 'Albanian'), ('sr', 'Serbian'), ('sr-latn', 'Serbian Latin'), ('sv', 'Swedish'), ('ta', 'Tamil'), ('te', 'Telugu'), ('th', 'Thai'), ('tr', 'Turkish'), ('uk', 'Ukrainian'), ('ur', 'Urdu'), ('vi', 'Vietnamese'), ('zh-cn', 'Simplified Chinese'), ('zh-tw', 'Traditional Chinese'))""")
         self.assertEqual(unicode(r.context["preset"]), u"""CuneiformBasic""")
@@ -182,3 +185,5 @@ class Testmaker(TestCase):
     def test_presetsdatacuneiformbasic_131016880844(self):
         r = self.client.get('/presets/data/cuneiformbasic', {'format': 'json', })
         self.assertEqual(r.status_code, 200)
+
+        

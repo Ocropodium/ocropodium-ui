@@ -1,6 +1,6 @@
 //
 // Handler an queue for Async node evaluation tasks.
-// 
+//
 
 OcrJs = OcrJs || {};
 
@@ -37,7 +37,7 @@ OcrJs.ResultHandler = OcrJs.Base.extend({
 
     isPending: function() {
         return Boolean(this._pending);
-    },        
+    },
 
     abort: function() {
         var self = this;
@@ -51,15 +51,15 @@ OcrJs.ResultHandler = OcrJs.Base.extend({
                         clearTimeout(self._timer);
                         self._timer = null;
                         self.trigger("resultDone",
-                                    self._tasknodes[self._pending], {status: "ABORT"}); 
+                                    self._tasknodes[self._pending], {status: "ABORT"});
                         self._pending = null;
                 },
             });
         }
-    },               
+    },
 
     runScript: function(nodename, script) {
-        var self = this;                   
+        var self = this;
         $.ajax({
             url: "/presets/run",
             type: "POST",
@@ -67,7 +67,7 @@ OcrJs.ResultHandler = OcrJs.Base.extend({
                 script: JSON.stringify(script),
                 node: nodename,
             },
-            error: OcrJs.ajaxErrorHandler,            
+            error: OcrJs.ajaxErrorHandler,
             success: function(data) {
                 if (data.status == "NOSCRIPT")
                     console.log("Server said 'Nothing to do'")
@@ -95,19 +95,19 @@ OcrJs.ResultHandler = OcrJs.Base.extend({
                     $.each(ndata, function(i, data) {
                         if (!self._pending)
                             return;
-                        if (data.status == "PENDING") {                        
+                        if (data.status == "PENDING") {
                             self.pollForResults();
                         } else {
-                            self.trigger("resultDone", 
+                            self.trigger("resultDone",
                                     self._tasknodes[data.task_id], data);
                             clearTimeout(self._timer);
                             self._timer = null;
                             self._pending = null;
-                        } 
+                        }
                     });
                 }
             });
-        }, 200);        
+        }, 200);
     },
 
 });

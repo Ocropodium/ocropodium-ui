@@ -18,7 +18,7 @@ class Aspell(object):
         """
         pass
 
-    def spellcheck(self, data):        
+    def spellcheck(self, data):
         """
         Spellcheck some data.
         """
@@ -60,8 +60,8 @@ class Aspell(object):
         """
         Open an aspell command.
         """
-        return sp.Popen(["aspell %s" % options], shell=True, 
-                stdout=sp.PIPE, stdin=sp.PIPE, close_fds=True) 
+        return sp.Popen(["aspell %s" % options], shell=True,
+                stdout=sp.PIPE, stdin=sp.PIPE, close_fds=True)
 
 
 

@@ -44,7 +44,7 @@ class OcrModelForm(forms.ModelForm):
                         ", ".join(self.ALLOWED_FILE_TYPES)))
         return data
 
-    class Meta:        
+    class Meta:
         model = OcrModel
         fields = ["name", "file", "description",
                 "public", "app", "type", "tags", "user"]
@@ -83,7 +83,7 @@ modelcreate = gv.GenericCreateView.as_view(
 modeldetail = gv.GenericDetailView.as_view(
         model=OcrModel,
         page_name="OCR Model",
-        fields=["name", "description", "type", "app", "user", "public", 
+        fields=["name", "description", "type", "app", "user", "public",
             "file", "derived_from", "tags", "created_on",
             "updated_on",])
 

@@ -30,12 +30,12 @@ OcrJs.SuggestionList = OcrJs.Base.extend({
         $(".sp_suggestion", this._container)
             .die("click")
             .die("dblclick");
-    },                 
+    },
 
 
     startup: function(parent) {
         this.parent = parent;
-        this.setupEvents();            
+        this.setupEvents();
         this._container.appendTo($(this.parent));
     },
           
@@ -46,7 +46,7 @@ OcrJs.SuggestionList = OcrJs.Base.extend({
             var tsugg = $("<div></div>")
                 .addClass("sp_suggestion");
             for (var i in suggestions) {
-                this._container.append(                        
+                this._container.append(
                     tsugg.clone().text(suggestions[i])
                 );
             }
@@ -84,7 +84,7 @@ OcrJs.SuggestionList = OcrJs.Base.extend({
                 }
                 this.selectSuggestion(sel);
                 break;
-            case KC_UP:                                      
+            case KC_UP:
                 var sel = $(".ui-selected", this._container).prev();
                 if (sel.length == 0) {
                     this.looseFocus();
@@ -117,7 +117,7 @@ OcrJs.SuggestionList = OcrJs.Base.extend({
 
     looseFocus: function() {
         this._focus = false;
-        $(".ui-selected", this._container).removeClass("ui-selected");         
+        $(".ui-selected", this._container).removeClass("ui-selected");
         this._container.removeClass("focus");
         this.focusLost();
     },
@@ -133,14 +133,14 @@ OcrJs.SuggestionList = OcrJs.Base.extend({
     },
 
     disable: function() {
-        this.teardownEvents();                 
+        this.teardownEvents();
         this._container.addClass("disabled")
     },
 
     enable: function() {
         this.setupEvents();
         this._container.removeClass("disabled");
-    },             
+    },
 
     suggestionChosen: function(word) {
         // typically overridden...

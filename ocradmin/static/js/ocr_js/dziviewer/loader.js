@@ -1,4 +1,4 @@
-// 
+//
 // Image loader class.
 //
 
@@ -10,7 +10,7 @@ DziViewer.Loader = OcrJs.Base.extend({
         this.options = {
             delay: null,
         };
-        $.extend(this.options, options); 
+        $.extend(this.options, options);
 
         this._waiting = 0;
 
@@ -20,8 +20,8 @@ DziViewer.Loader = OcrJs.Base.extend({
         };
     },
     
-    loadImage: function(path, callback) {                    
-        var self = this;    
+    loadImage: function(path, callback) {
+        var self = this;
 
         var img = new Image();
         img.onload = function(e) {
@@ -54,9 +54,9 @@ DziViewer.Loader = OcrJs.Base.extend({
                     self.trigger("loadedImage", img, obj.path);
                     if (self._waiting == 0)
                         self.trigger("loadedAll");
-                }, self.options.delay);                    
+                }, self.options.delay);
             }
             img.src = obj.path;
         });
-    },                    
-});    
+    },
+});

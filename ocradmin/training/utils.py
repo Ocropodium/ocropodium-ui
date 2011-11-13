@@ -30,7 +30,7 @@ def isri_accuracy(logger, gttext, text):
                     score, re.MULTILINE)
             if pmatch:
                 return float(pmatch.groups("percent")[0]), smart_str(score)
-            return err, None    
+            return err, None
                 
 
 

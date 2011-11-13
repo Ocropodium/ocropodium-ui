@@ -76,7 +76,59 @@
     <!-- NB. This is lower down in the DOM than the parameters, despite
      being positioned above.  It is so the menu overlaps the params
      where necessary -->
-    <div class="ui-layout-north toolbar_container" id="script_toolbar_container">
+     <div class="ui-layout-north toolbar_container" id="script_toolbar_container">
+         <div class="ui-helper-hidden-accessible" id="preset_dialogs">
+            <div class="preset_error" id="preset_error">
+                <ul id="preset_errors">
+                </ul>
+            </div>
+            <div class="preset_dialog" id="create_preset">    
+                <form method="POST" action="/presets/create/" id="new_preset_form">
+                    <fieldset>
+                        <legend>New OCR Preset</legend>
+                        {% for field in form.visible_fields %}
+                            <div class="field_wrapper">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {{ field.errors}}
+                            </div>
+                        {% endfor %}
+                        {% for field in form.hidden_fields %}
+                            {{ field }}
+                        {% endfor %}
+                    </fieldset>
+                    <div class="buttons">
+                        <button id="cancel_dialog">Cancel</button>
+                        <input type="submit" disabled="disabled" id="submit_create_new" value="Save" />
+                    </div>
+                </form>
+            </div>
+            <div class="preset_dialog"  id="open_preset">    
+                <div id="filter_box" class="field_wrapper">
+                    <input type="text" id="filter_presets" />
+                </div>
+                <ul id="open_preset_list">
+                    {% for preset in presets %}
+                    <li class="preset_item" id="preset_{{forloop.counter}}" title="{{preset.description}}"
+                            data-slug="{{preset.slug}}" data-tags="{{preset.tags}}">
+                        {{preset.name}}
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="buttons">
+                    <button id="cancel_dialog">Cancel</button>
+                    <input type="submit" disabled="disabled" id="submit_open_preset" value="Open" />
+                </div>
+            </div>
+            <div class="preset_dialog"  id="unsaved_preset">    
+                <div>Do you want to update this preset or save under a different name?</div>
+                <div class="buttons">
+                    <button id="submit_close_without_saving">Discard</button>
+                    <button id="submit_save_script">Save Changes</button>
+                    <button id="submit_save_script_as">Save Script as...</button>
+                </div>
+            </div>
+        </div>
         <div id="preset_toolbar_header" class="ui-widget-header ui-layout-header">Preset Editor -
             <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved">*</span>
         </div>

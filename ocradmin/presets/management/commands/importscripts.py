@@ -70,7 +70,7 @@ class Command(BaseCommand):
                         description = meta.get("description", options.get("description"))
                         tags = meta.get("tags", tags)
                 except json.JSONDecodeError, err:
-                    raise CommandError("Invalid script: JSON data could not be decoded.") 
+                    raise CommandError("Invalid script: JSON data could not be decoded.")
                 p = Preset(
                         name=name,
                         user=adminuser,

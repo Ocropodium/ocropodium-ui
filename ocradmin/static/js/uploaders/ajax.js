@@ -14,7 +14,7 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         };
         $.extend(this.options, options);
 
-        this._listeners = {            
+        this._listeners = {
             onXHRLoad: [],
             onUploadStart: [],
             onUploadEnd: [],
@@ -42,7 +42,7 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
             .height($(this.target).outerHeight())
             .css({
                 position: "fixed",
-                opacity: 0,                
+                opacity: 0,
                 top: $(this.target).offset().top + "px",
                 left: $(this.target).offset().left + "px",
             }).insertAfter(this.target);
@@ -57,30 +57,30 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
 
         this._cnt.addEventListener("drop", function(event) {
             try {
-                self.uploadPost(event.dataTransfer.files);            
+                self.uploadPost(event.dataTransfer.files);
             } catch(err) {
                 alert("Error occurred: " + err);
             }
-            $(self.target).removeClass("hover"); 
+            $(self.target).removeClass("hover");
             event.stopPropagation();
             event.preventDefault();
         }, false);
 
         this._cnt.addEventListener("dragenter", function(event) {
-            $(self.target).addClass("hover"); 
+            $(self.target).addClass("hover");
         }, false);
 
-        this._cnt.addEventListener("dragexit", function(event) { 
-            $(self.target).removeClass("hover"); 
+        this._cnt.addEventListener("dragexit", function(event) {
+            $(self.target).removeClass("hover");
         }, false);
 
-        this._cnt.addEventListener("dragover", function(event) { 
-            event.preventDefault(); 
+        this._cnt.addEventListener("dragover", function(event) {
+            event.preventDefault();
         }, false);
 
-        this._cnt.addEventListener("dragleave", function(event) { 
-            $(self.target).removeClass("hover"); 
-            event.preventDefault(); 
+        this._cnt.addEventListener("dragleave", function(event) {
+            $(self.target).removeClass("hover");
+            event.preventDefault();
         }, false);
 
         
@@ -104,7 +104,7 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
 
     registerTextParameter: function(element) {
         if (!$(element).attr("name"))
-            throw "Text parameter: '" + $(element).attr("id") 
+            throw "Text parameter: '" + $(element).attr("id")
                         + "' has no 'name' attribute (required)";
         this._params.push(element);
         $.unique(this._params);
@@ -115,12 +115,12 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         $.each(this._params, function(i, elem) {
             params[$(elem).attr("name")] = $(elem).val();
         });
-        return params;    
+        return params;
     },
 
     clearParameters: function() {
         this._params = [];
-    },         
+    },
 
     uploadPost: function(files) {
         this.trigger("onUploadsStarted");
@@ -141,7 +141,7 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
             this._queue.push(files[i]);
         }
         this.postNextItem();
-    },                    
+    },
                 
     postNextItem: function() {
         if (!this._queue.length) {
@@ -149,12 +149,12 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
             return false;
         }
 
-        var self = this;                      
+        var self = this;
         var file = this._queue.shift();
         var xhr = new XMLHttpRequest();
         xhr.onload = function(event) {
             self.postNextItem();
-            self.trigger("onXHRLoad", event);        
+            self.trigger("onXHRLoad", event);
         };
         xhr.onerror = this.options.errorhandler;
 
@@ -164,14 +164,14 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         this.trigger("onUploadStart");
         xhr.open("POST", urlstring, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader('content-type', file.type); 
+        xhr.setRequestHeader('content-type', file.type);
         xhr.send(file);
     },
 
     getQueryString: function(params) {
         var p = [];
         $.each(params, function(k, v) {
-            p.push(k + "=" + v);            
+            p.push(k + "=" + v);
         });
         return (this.url + "?" + p.join("&")).replace(/\?$/, "");
     },

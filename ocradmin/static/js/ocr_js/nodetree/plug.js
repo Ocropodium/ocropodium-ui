@@ -19,18 +19,18 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
             hoverIn: [],
             hoverOut: [],
             rightClicked: [],
-        };        
+        };
     },
 
     group: function() {
         return this._group;
-    },        
+    },
 
     draw: function(svg, parent, x, y) {
         var self = this;
         self.svg = svg;
-        self._group = svg.group(parent, self.name);                
-        self._rect = svg.rect(this._group, 
+        self._group = svg.group(parent, self.name);
+        self._rect = svg.rect(this._group,
                 x - (this._pw / 2), y - (this._ph / 2), this._pw, this._ph, 5, 5, {
             fill: this._gradient,
             stroke: "#BBB",
@@ -39,7 +39,7 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
     },
 
     drawDatatype_ndarray: function(parent, x, y) {
-        var radius = this._ph / 4;                              
+        var radius = this._ph / 4;
         var dtype = this.svg.circle(parent, x, y, radius, {
             fill: "#FFF",
             strokeWidth: 0.5,
@@ -54,12 +54,12 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
             .close();
         this.svg.path(parent, path.path(), {
             fill: "#666",
-        }); 
+        });
         return dtype;
-    },                             
+    },
 
     drawDatatype_HocrString: function(parent, x, y) {
-        var radius = this._ph / 4;                              
+        var radius = this._ph / 4;
         //this.svg.circle(parent, x, y, radius, {
         //    fill: "#F5F6CE",
         //    strokeWidth: 0.5,
@@ -73,10 +73,10 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
                 fontWeight: "bold",
             }
         );
-    },                             
+    },
 
     drawDatatype_unicode: function(parent, x, y) {
-        var radius = this._ph / 4;                              
+        var radius = this._ph / 4;
         //this.svg.circle(parent, x, y, radius, {
         //    fill: "#FDFDFD",
         //    strokeWidth: 0.5,
@@ -91,10 +91,10 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
                 fontWeight: "bold",
             }
         );
-    },                             
+    },
 
     drawDatatype_dict: function(parent, x, y) {
-        var radius = this._ph / 4;                              
+        var radius = this._ph / 4;
         var start = (y + 1) - radius;
         for (var i = 0; i < 3; i++) {
             this.svg.rect(parent, x - radius, start + (i * ((radius / 3) + 1)), radius * 2, radius / 3, 0, 0, {
@@ -102,8 +102,8 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
                 stroke: "#888",
                 fill: "#FFF",
             });
-        } 
-   },                             
+        }
+   },
 
     wouldAccept: function(other) {
         if (other == this)
@@ -115,7 +115,7 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
         if (other.node == this.node)
             return false;
         return true;
-    },              
+    },
 
     setAcceptingState: function() {
         this.svg.change(this._rect, {fill: "url(#PlugAccept)"});
@@ -127,19 +127,19 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
 
     setDefaultState: function() {
         this.svg.change(this._rect, {fill: this._gradient});
-    },                         
+    },
 
     setDraggingState: function() {
-        this._dragging = true;                          
+        this._dragging = true;
         this.svg.change(this._rect, {fill: "url(#PlugDragging)"});
-    },                         
+    },
 
     setupEvents: function() {
         var self = this;
 
         $(this._group).noContext().rightClick(function(event) {
             self.trigger("rightClicked", event);
-        });            
+        });
 
         $(this._group).bind("click.attachcable", function(event) {
             self.trigger("attachCable", self);
@@ -147,10 +147,10 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
             event.preventDefault();
         }).hover(function(event) {
             self.trigger("hoverIn", self);
-            //self.setAcceptingState(); 
+            //self.setAcceptingState();
         }, function(event) {
             self.trigger("hoverOut", self);
-            self.setDefaultState();    
+            self.setDefaultState();
         });
     },
 
@@ -168,7 +168,7 @@ OcrJs.Nodetree.BasePlug = OcrJs.Base.extend({
 
     isInput: function() {
         return this.type == "input";
-    },        
+    },
 });
 
 
@@ -182,7 +182,7 @@ OcrJs.Nodetree.InPlug = OcrJs.Nodetree.BasePlug.extend({
 
     toString: function() {
         return "<InPlug: " + this.name + ">";
-    },                  
+    },
 
     attach: function(cable) {
         if (this._cable)
@@ -194,7 +194,7 @@ OcrJs.Nodetree.InPlug = OcrJs.Nodetree.BasePlug.extend({
         if (this._cable)
             this._cable.remove();
         this._cable = null;
-    },                
+    },
     
     cable: function() {
         return this._cable;
@@ -204,7 +204,7 @@ OcrJs.Nodetree.InPlug = OcrJs.Nodetree.BasePlug.extend({
         return Boolean(this._cable);
     },
 
-    draw: function(svg, parent, x, y) {              
+    draw: function(svg, parent, x, y) {
         this._super(svg, parent, x, y);
         var func = this["drawDatatype_" + this.dtype];
         if (func)
@@ -218,7 +218,7 @@ OcrJs.Nodetree.InPlug = OcrJs.Nodetree.BasePlug.extend({
             );
         }
         this.setupEvents();
-    },        
+    },
 });
 
 OcrJs.Nodetree.OutPlug = OcrJs.Nodetree.BasePlug.extend({
@@ -233,7 +233,7 @@ OcrJs.Nodetree.OutPlug = OcrJs.Nodetree.BasePlug.extend({
     },
 
     draw: function(svg, parent, x, y) {
-        this._super(svg, parent, x, y);    
+        this._super(svg, parent, x, y);
 
         var func = this["drawDatatype_" + this.dtype];
         if (func)

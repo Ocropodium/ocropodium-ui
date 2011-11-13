@@ -148,7 +148,12 @@
 			"HocrToText1",
 			"TextFileIn1"
 		],
-		"params": [],
+		"params": [
+            [
+                "method",
+                "character"
+            ]
+        ],
 		"__meta": {
 			"x": 323,
 			"y": 503,

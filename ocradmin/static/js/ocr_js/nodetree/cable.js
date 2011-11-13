@@ -14,12 +14,12 @@ OcrJs.Nodetree.BaseCable = OcrJs.Base.extend({
         return this._group;
     },
 
-    update: function(p1, p2) {                     
+    update: function(p1, p2) {
         $(this._path).attr("d", this.getPath(p1, p2).path());
     },
 
     getPath: function(p1, p2) {
-        // get the cable arc between two points...                      
+        // get the cable arc between two points...
         var path = this.svg.createPath();
         var mp = {
             x: p1.x > p2.x ? p1.x + ((p2.x - p1.x) / 2) : p2.x + ((p1.x - p2.x) / 2),
@@ -34,7 +34,7 @@ OcrJs.Nodetree.BaseCable = OcrJs.Base.extend({
     remove: function() {
         this.svg.remove(this._group);
         this.trigger("cableRemoved");
-    },                
+    },
 });
 
 OcrJs.Nodetree.Cable = OcrJs.Nodetree.BaseCable.extend({
@@ -51,8 +51,8 @@ OcrJs.Nodetree.Cable = OcrJs.Nodetree.BaseCable.extend({
     },
 
     draw: function(svg, parent, p1, p2) {
-        this.svg = svg;        
-        this._group = svg.group(parent, "cable_" + this.start.name + "_" + this.end.name);      
+        this.svg = svg;
+        this._group = svg.group(parent, "cable_" + this.start.name + "_" + this.end.name);
         this._path = this.svg.path(this._group, this.getPath(p1, p2), {
             fill: "none", stroke: "#666", strokeWidth: 1,
         });
@@ -61,26 +61,26 @@ OcrJs.Nodetree.Cable = OcrJs.Nodetree.BaseCable.extend({
 
     update: function(p1, p2) {
         $(this._path).attr("d", this.getPath(p1, p2).path());
-    },                
-});    
+    },
+});
 
 
 OcrJs.Nodetree.DragCable = OcrJs.Nodetree.BaseCable.extend({
     init: function(startplug) {
-        this._super()                     
+        this._super()
         this.start = startplug;
-    },                     
+    },
 
     draw: function(svg, parent, p1, p2) {
         var self = this;
-        this.svg = svg;        
+        this.svg = svg;
               
-        this._group = svg.group(parent);      
+        this._group = svg.group(parent);
         this._path = this.svg.path(this._group, this.getPath(p1, p2), {
             fill: "none", stroke: "black", strokeWidth: 1,
             strokeDashArray: "2,2",
         });
-    },              
+    },
 });
 
 

@@ -35,11 +35,11 @@ class UnhandledRunScriptTask(AbortableTask):
         logger = self.get_logger()
         cacheclass = pluginutils.get_dzi_cacher(settings)
         cacher = cacheclass(
-                path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+                path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH),
                 key=cachedir, logger=logger)
         logger.debug("Using cacher: %s, Bases %s", cacher, cacheclass.__bases__)
         try:
-            tree = script.Script(nodelist, 
+            tree = script.Script(nodelist,
                     nodekwargs=dict(logger=logger, cacher=cacher))
             term = tree.get_node(evalnode)
             if term is None:
@@ -75,7 +75,7 @@ class UnhandledRunScriptTask(AbortableTask):
             dzipath=utils.media_path_to_url(os.path.join(path, dzi))
             result.update(type="pseg", dzi=dzipath)
             return result
-        elif term.outtype == types.HocrString: 
+        elif term.outtype == types.HocrString:
             return dict(type="hocr", data=result)
         elif issubclass(term.outtype, basestring):
             return dict(type="text", data=result)
@@ -108,7 +108,7 @@ class PruneCacheTask(PeriodicTask):
         for user in User.objects.all():
             cachedir = "cache_%s" % user.username
             cacher = cacheclass(
-                    path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+                    path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH),
                     key=cachedir, logger=logger)
             logger.debug("Using cacher: %s, Bases %s", cacher, cacheclass.__bases__)
 
