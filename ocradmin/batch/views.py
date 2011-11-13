@@ -473,14 +473,17 @@ def script_for_page_file(scriptjson, filepath, writepath):
         raise IndexError("No input stages found in script")
     inputs[0].set_param("path", filepath)
     # attach a fileout node to the binary input of the recognizer and
-    # save it as a binary file
-    term = tree.get_terminals()[0]
+    # save it as a binary file    
+    recs = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)
+    if not recs:
+        raise IndexError("No recognize stages found in script")
+    rec = recs[0]
     outpath = ocrutils.get_binary_path(filepath, writepath)
     outbin = tree.add_node("util.FileOut", "OutputBinary",
             params=[
                 ("path", os.path.abspath(outpath).encode()),
                 ("create_dir", True)])
-    outbin.set_input(0, term.input(0))
+    outbin.set_input(0, rec.input(0))
     return json.dumps(tree.serialize(), indent=2)
 
 
