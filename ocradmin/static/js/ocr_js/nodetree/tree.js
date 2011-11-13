@@ -524,12 +524,14 @@ NT.Tree = OcrJs.Base.extend({
         var referencees = self.attachedInputs(outplug);
         for (var i in referencees)
             this.cmdDetachPlug(referencees[i]);
-        var input = node.input(0);
-        if (input && input.isAttached()) {
-            var srcplug = input.cable().start;
-            this.cmdDetachPlug(input);
-            for (var i in referencees) {
-                self.cmdConnectPlugs(srcplug, referencees[i]);
+        for (var i in node.inputs()) {
+            var input = node.input(i);
+            if (input && input.isAttached()) {
+                var srcplug = input.cable().start;
+                this.cmdDetachPlug(input);
+                for (var j in referencees) {
+                    self.cmdConnectPlugs(srcplug, referencees[j]);
+                }
             }
         }
         this._undostack.endMacro();
