@@ -14,7 +14,9 @@ from ocradmin.core.tests import testutils
 
 
 class BuilderTest(TestCase):
-    fixtures = ["presets/fixtures/test_fixtures.json",
+    fixtures = [
+            "presets/fixtures/profile_fixtures.json",
+            "presets/fixtures/test_fixtures.json",
             "ocrmodels/fixtures/test_fixtures.json"
             "projects/fixtures/test_fixtures.json",
             "batch/fixtures/test_batch.json",
