@@ -143,6 +143,30 @@ OcrJs.PresetManager = OcrJs.Base.extend({
         });
     },
 
+    showErrors: function(error) {
+       $("#preset_errors").children().remove();
+       $.each(error.errors, function(field, errorstr) {
+        $("#preset_errors").append(
+            $("<li></li>")
+                .append($("<strong>" + field + ":  </strong>"))
+                .append($("<span>" + errorstr + "</span>"))
+        );
+       });
+       var dialog = $("#preset_error").dialog({
+            title: "Error: " + error.description,
+            dialogClass: "ui-state-error",
+            modal: true,
+            buttons: {
+                "Okay": function() {
+                    $(this).dialog("close");
+                },
+            },
+        });
+        $("#dismiss_error").click(function() {
+           dialog.dialog("close");
+        }); 
+    },                    
+
     getPresetData: function() {
          var form = $("#new_preset_form");
          return {
@@ -275,6 +299,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
     },
 
     saveCreatedPreset: function(formdata, successfunc, errorfunc) {
+        var self = this;
         if (!formdata.data || $.map(formdata.data, function(k,v){ return k;}).length == 0)
             throw "Attempt to save new preset with no data! " + formdata.name;
         $.ajax({
@@ -284,7 +309,8 @@ OcrJs.PresetManager = OcrJs.Base.extend({
             error: errorfunc,
             statusCode: {
                 200: function(errdata) {
-                    console.error("200", errdata);
+                    console.log("Errors", errdata);
+                    self.showErrors(errdata);
                 },
                 201: function() {
                     successfunc.apply(null, arguments);
