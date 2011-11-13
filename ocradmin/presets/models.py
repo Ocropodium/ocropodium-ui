@@ -10,6 +10,8 @@ from tagging.fields import TagField
 import tagging
 import autoslug
 
+from nodetree import script
+
 
 class JsonTextField(models.TextField):
     def to_python(self, value):
@@ -21,6 +23,7 @@ class JsonTextField(models.TextField):
             json.loads(value)
         except ValueError:
             raise models.exceptions.ValidationError("Data must be valid JSON")
+
 
 class Preset(models.Model):
     user = models.ForeignKey(User, related_name="presets")
@@ -70,6 +73,16 @@ class Preset(models.Model):
         """URL to create a new object"""
         return "/presets/create/"
 
+TEST_PROFILE = {
+    "must_exist" : [
+        {
+            "attr": "stage",
+            "value": "recognize",
+            "unique": False,
+        },
+    ],
+}
+
 
 class Profile(models.Model):
     """Preset profile.  This defines a class of
@@ -98,16 +111,27 @@ class Profile(models.Model):
 
     def validate_preset(self, data):
         this = json.loads(self.data)
+        tree = script.Script(data)
         errors = []
-        for p in this:
-            perrors = self.validate_predicate(p, data)
-            if perrors:
-                errors.extend(perrors)
+        for name, preds in this.iteritems():
+            for pred in preds:
+                perrors = self.validate_predicate(name, pred, tree)
+                if perrors:
+                    errors.extend(perrors)
         return errors
 
-    def validate_predicate(self, predicate, data):
-        # FIXME: Stub
-        return []
+    def validate_predicate(self, name, pred, tree):
+        errors = []
+        if name == "must_exist":
+            attr = pred.get("attr")
+            value = pred.get("value")
+            unique = pred.get("unique")
+            nodes = tree.get_nodes_by_attr(attr, value)
+            if not nodes:
+                errors.append("A node with attr '%s'='%s' must exist" % (attr, value))
+            elif len(nodes) > 1:
+                errors.append("Node with attr '%s'='%s' must be unique" % (attr, value))
+        return errors
 
     def get_absolute_url(self):
         """URL to view an object detail"""
