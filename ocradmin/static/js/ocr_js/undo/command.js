@@ -22,11 +22,11 @@ OcrJs.UndoCommand = Class.extend({
     },
 
     undo: function() {
-        throw "Unimplemented undo: " + this.text;        
+        throw "Unimplemented undo: " + this.text;
     },
 
     redo: function() {
-        throw "Unimplemented redo: " + this.text;        
+        throw "Unimplemented redo: " + this.text;
     },
 
     mergeWith: function(other) {
@@ -35,8 +35,8 @@ OcrJs.UndoCommand = Class.extend({
     },
 
     debug: function(indent, curr) {
-        var pad = indent ? Array(indent + 1).join("  ") : "";               
+        var pad = indent ? Array(indent + 1).join("  ") : "";
         console.log((new Date).getTime() + (curr ? " --> " : "     ") + pad + " C " + this.text);
-    },               
+    },
 });
 

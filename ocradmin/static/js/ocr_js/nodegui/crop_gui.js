@@ -24,7 +24,7 @@ OcrJs.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
     refresh: function() {
         this.readNodeData();
         this.trigger("update");
-    },                 
+    },
 
     render: function(context) {
         context.save();
@@ -40,7 +40,7 @@ OcrJs.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
             var r = this._rects[i];
             context.clearRect(
                 (r.x * this.viewport.scale) + this.viewport.translate.x,
-                (r.y * this.viewport.scale) + this.viewport.translate.y, 
+                (r.y * this.viewport.scale) + this.viewport.translate.y,
                 r.width * this.viewport.scale, r.height * this.viewport.scale);
         }
 
@@ -51,7 +51,7 @@ OcrJs.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
             context.fillStyle = "transparent";
             context.dashedRect(
                 (this._outline.x * this.viewport.scale) + this.viewport.translate.x,
-                (this._outline.y * this.viewport.scale) + this.viewport.translate.y, 
+                (this._outline.y * this.viewport.scale) + this.viewport.translate.y,
                 this._outline.width * this.viewport.scale,
                 this._outline.height * this.viewport.scale);
         }
@@ -60,14 +60,14 @@ OcrJs.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
 
     readNodeData: function() {
         console.log("Reading node data");
-        var coords = this._coords;                      
+        var coords = this._coords;
         $.each(this.node.parameters, function(i, param) {
             if (coords[param.name])
-                coords[param.name] = parseInt(param.value);            
+                coords[param.name] = parseInt(param.value);
         });
 
         this._rects = [coords];
-    },                      
+    },
 
     handleClick: function(event) {
         if (this._super(event)) {
@@ -110,7 +110,7 @@ OcrJs.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
             // node data and the rect values get overwritten
             self.update();
             self.trigger("interactingStop");
-        });        
+        });
 
         return true;
     },
@@ -118,10 +118,10 @@ OcrJs.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
     updateNodeParameters: function() {
         var self = this;
         this.trigger("parametersSet", this.node, {
-            x0: Math.round(self._rects[0].x0),        
-            y0: Math.round(self._rects[0].y0),        
-            x1: Math.round(self._rects[0].x1),        
-            y1: Math.round(self._rects[0].y1),        
+            x0: Math.round(self._rects[0].x0),
+            y0: Math.round(self._rects[0].y0),
+            x1: Math.round(self._rects[0].x1),
+            y1: Math.round(self._rects[0].y1),
         });
     },
 

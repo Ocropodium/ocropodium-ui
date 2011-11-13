@@ -1,14 +1,14 @@
 
-$(document).ready(function(){  
+$(document).ready(function(){
 
     module("OCR Page Object Test");
 
     test("Initialisation test", function() {
-        expect(1);  
+        expect(1);
         
         var testdiv = $("<div></div>").attr("id", "test_div");
         $("body").append(testdiv);
-        same($("#test_div").attr("id"), testdiv.attr("id"), 
+        same($("#test_div").attr("id"), testdiv.attr("id"),
             "Document insertion test failed: expected " + testdiv.attr("id"),
             $("test_div").attr("id"));
 
@@ -22,11 +22,11 @@ $(document).ready(function(){
         var parent = $("<div></div>")
             .attr("id", "nodetree_canvas")
             .appendTo("body");
-        var cmdstack = new OcrJs.UndoStack(this); 
+        var cmdstack = new OcrJs.UndoStack(this);
         var nodetree = new OcrJs.Nodetree.Tree(parent, cmdstack);
 
 
-        // Initialise nodetree!    
+        // Initialise nodetree!
         stop();
         $.getJSON("/presets/query/", function(data) {
             nodetree.startup(data);
@@ -57,7 +57,7 @@ $(document).ready(function(){
 
                 // create a second node
                 var testtype2 = "util.FileOut";
-                var name2 = nodetree.newNodeName(testtype2);          
+                var name2 = nodetree.newNodeName(testtype2);
                 nodetree.cmdCreateNode(name2, testtype2, {x: 100, y: 200});
                 equal(nodetree.nodeCount(), 2,
                         "Created another node, expected number of nodes in the tree to be");
@@ -75,6 +75,6 @@ $(document).ready(function(){
                 equal(nodetree.selectedNodeCount(), nodetree.nodeCount(),
                         "SelectAll, expected number of selected nodes to be");
             },
-        });            
-    });        
-});  
+        });
+    });
+});

@@ -9,97 +9,12 @@ import re
 import codecs
 import tempfile
 import subprocess as sp
-from HTMLParser import HTMLParser
 
 from nodetree import node, writable_node, exceptions
 
 from . import base
 from .. import stages, types, utils
 
-
-
-class HTMLContentHandler(HTMLParser):
-    def __init__(self):
-        HTMLParser.__init__(self)
-        self._data = []
-        self._ctag = None
-        self._cattrs = None
-
-    def data(self):
-        return "".join(self._data)
-
-    def content_data(self, data, tag, attrs):
-        """ABC method.  Does nothing by default."""
-        return data
-
-    def parsefile(self, filename):
-        with open(filename, "r") as f:
-            for line in f.readlines():
-                self.feed(line)
-        return self.data()
-
-    def parse(self, string):
-        self._data = []
-        self.feed(string)
-        return self.data()
-
-    def handle_decl(self, decl):
-        self._data.append("<!%s>" % decl)
-
-    def handle_comment(self, comment):
-        self._data.append("<!-- %s -->" % comment)
-
-    def handle_starttag(self, tag, attrs):
-        """Simple add the tag to the data stack."""
-        self._ctag = tag
-        self._cattrs = attrs
-        self._data.append(
-                "<%s %s>" % (tag, " ".join(["%s='%s'" % a for a in attrs])))
-
-    def handle_data(self, data):
-        self._data.append(self.content_data(
-                data, self._ctag, self._cattrs))
-
-    def handle_endtag(self, tag):
-        self._data.append("</%s>" % tag)
-
-
-class HocrToTextHelper(HTMLParser):
-    """
-    Get text from a HOCR document.
-    """
-    def __init__(self):
-        HTMLParser.__init__(self)
-        self._text = []
-        self._gotline = False
-
-    def parsefile(self, filename):
-        self._text = []
-        with open(filename, "r") as f:
-            for line in f.readlines():
-                self.feed(line)
-        return "\n".join(self._text)
-
-    def parse(self, string):
-        self._text = []
-        self.feed(string)
-        return "\n".join(self._text)
-
-    def handle_starttag(self, tag, attrs):
-        for name, val in attrs:
-            if name == "class" and val.find("ocr_line") != -1:
-                self._gotline = True
-        if tag.lower() == "br":
-            self._text.append("\n")
-        elif tag.lower() == "p":
-            self._text.append("\n\n")
-
-    def handle_data(self, data):
-        if self._gotline:
-            self._text.append(data)
-
-    def handle_endtag(self, tag):
-        self._gotline = False
 
 
 class FindReplace(node.Node, base.TextWriterMixin):
@@ -139,8 +54,8 @@ class FindReplace(node.Node, base.TextWriterMixin):
         if find.strip() == "" or replace.strip() == "":
             return xml
         self._findre = re.compile(find)
-        self._replace = replace        
-        parser = HTMLContentHandler()
+        self._replace = replace
+        parser = utils.HTMLContentHandler()
         parser.content_data = self.content_data
         return parser.parse(xml)
 
@@ -155,7 +70,7 @@ class HocrToText(node.Node, base.TextWriterMixin):
     parameters = []
 
     def process(self, input):
-        parser = HocrToTextHelper()
+        parser = utils.HocrToTextHelper()
         return parser.parse(input)
 
 
@@ -320,7 +235,10 @@ class TextEvaluation(node.Node, base.TextWriterMixin):
     stage = stages.UTILS
     intypes = [unicode, unicode]
     outtype = unicode
-    parameters = []
+    parameters = [
+        dict(name="method", value="character",
+                choices=["character", "word"]),
+    ]
 
     def process(self, intext, gttext):
         with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
@@ -328,7 +246,9 @@ class TextEvaluation(node.Node, base.TextWriterMixin):
                 self.writer(t1, gttext)
                 self.writer(t2, intext)
         writer = codecs.getwriter("utf8")(sp.PIPE)
-        p = sp.Popen(["accuracy", t1.name, t2.name], stdout=writer)
+        method = self._params.get("method", "character")
+        bin = "accuracy" if method == "character" else "wordacc"
+        p = sp.Popen([bin, t1.name, t2.name], stdout=writer)
         report = p.communicate()[0]
         os.unlink(t1.name)
         os.unlink(t2.name)
@@ -349,7 +269,7 @@ class TextDiff(node.Node, base.TextWriterMixin):
         format = self._params.get("format", "normal")
         with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t1:
             with tempfile.NamedTemporaryFile(delete=False, mode="wb") as t2:
-                self.writer(t1, gttext)                                               
+                self.writer(t1, gttext)
                 self.writer(t2, intext)
         writer = codecs.getwriter("utf8")(sp.PIPE)
         p = sp.Popen(["diff", "--%s" % format, t1.name, t2.name], stdout=writer)
@@ -375,5 +295,5 @@ class AbbyyXmlToHocr(node.Node, base.TextWriterMixin):
             t1.close()
             out = utils.hocr_from_abbyy(t1.name)
             os.unlink(t1.name)
-        return out            
+        return out
 

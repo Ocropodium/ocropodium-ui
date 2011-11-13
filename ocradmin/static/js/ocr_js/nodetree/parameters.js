@@ -21,7 +21,7 @@ NT.TextParam = OcrJs.Base.extend({
         this._listeners = {
             change: [],
         };
-    },      
+    },
 
     _initCtrl: function() {
         this.ctrl = $("<input type='text'></input>");
@@ -31,37 +31,37 @@ NT.TextParam = OcrJs.Base.extend({
     },
 
     _bindCtrl: function() {
-        var self = this;                   
+        var self = this;
         this.ctrl.bind("change.paramupdate", function(event) {
-            self.trigger("change", self.getValue());            
-        });            
-    },                   
+            self.trigger("change", self.getValue());
+        });
+    },
 
     setValue: function(val) {
         this.ctrl.val(val);
-    },                  
+    },
 
     getValue: function() {
         return this.ctrl.val();
-    },                  
+    },
 
     getLabel: function() {
         return $("<label></label>")
             .attr("for", this.name)
             .text(this.data.name);
-    },                  
+    },
 
     buildHtml: function() {
         return $("<tr></tr>")
             .addClass("node_parameter")
             .append($("<td></td>").append(this.getLabel()))
-            .append($("<td></td>").append(this.ctrl));                        
-    }                   
+            .append($("<td></td>").append(this.ctrl));
+    }
 });
 
 NT.ChoiceParam = NT.TextParam.extend({
     _initCtrl: function() {
-        var self = this;                   
+        var self = this;
         this.ctrl = $("<select></select");
         $.each(this.data.choices, function(i, choice) {
             var opt = $("<option></option>")
@@ -70,11 +70,11 @@ NT.ChoiceParam = NT.TextParam.extend({
             if (choice == self.data.value)
                 opt.attr("selected", "selected");
             self.ctrl.append(opt);
-        }); 
+        });
         this.ctrl
             .attr("id", this.name);
         this.setValue(this.data.value);
-    },              
+    },
 });
 
 NT.BooleanParam = NT.TextParam.extend({
@@ -83,7 +83,7 @@ NT.BooleanParam = NT.TextParam.extend({
         this.ctrl
             .attr("id", this.name);
         this.setValue(this.data.value);
-    },                   
+    },
 
     setValue: function(val) {
         this.ctrl.prop("checked", val);
@@ -91,7 +91,7 @@ NT.BooleanParam = NT.TextParam.extend({
 
     getValue: function() {
         return this.ctrl.prop("checked");
-    },                  
+    },
 });
 
 NT.FileParam = NT.TextParam.extend({
@@ -105,12 +105,12 @@ NT.FileParam = NT.TextParam.extend({
     setValue: function(val) {
         this.ctrl
             .data("val", val)
-            .val(val.match(/.*?([^\/]+)?$/)[1]);            
+            .val(val.match(/.*?([^\/]+)?$/)[1]);
     },
 
     getValue: function() {
         return this.ctrl.data("val");
-    },                  
+    },
 });
 
 NT.SwitchParam = NT.TextParam.extend({
@@ -128,13 +128,13 @@ NT.SwitchParam = NT.TextParam.extend({
     },
 
     _bindCtrl: function() {
-        var self = this;                   
+        var self = this;
         this.ctrl.slider({
             stop: function(event, ui) {
-                self.trigger("change", self.getValue());            
+                self.trigger("change", self.getValue());
             },
         });
-    },                   
+    },
 
     setValue: function(val) {
         this.ctrl.slider("value", val);
@@ -142,8 +142,8 @@ NT.SwitchParam = NT.TextParam.extend({
 
     getValue: function() {
         return this.ctrl.slider("value");
-    },                  
-});    
+    },
+});
 
 
 NT.Parameters = OcrJs.Base.extend({
@@ -168,26 +168,26 @@ NT.Parameters = OcrJs.Base.extend({
             case "switch": return new NT.SwitchParam(this._node, data);
             case "bool": return new NT.BooleanParam(this._node, data);
             case "filepath": return new NT.FileParam(this._node, data);
-            default: 
+            default:
                 if (data.choices)
                     return new NT.ChoiceParam(this._node, data);
                 else
                     return new NT.TextParam(this._node, data);
-        }                                             
-    },                  
+        }
+    },
 
     setupParameterEvents: function(param) {
-        var self = this;                              
+        var self = this;
         param.addListeners({
             change: function(val) {
                 self.trigger("parameterSet", self._node, param.data.name, val);
             },
-        });        
+        });
 
         // FIXME: Hack to wire in uploader events to file path controls
         if (param.data.type == "filepath")
             this.trigger("registerUploader", this._node.name, param.ctrl);
-    },                              
+    },
 
     buildParams: function() {
         var self = this,
@@ -207,14 +207,14 @@ NT.Parameters = OcrJs.Base.extend({
             tab.append(p.buildHtml());
             this.setupParameterEvents(p);
         }
-        this.setupEvents();        
+        this.setupEvents();
     },
 
     setupEvents: function() {
         var self = this;
         $(".nameedit", this.parent).bind("change.editname", function(event) {
-            self.trigger("renamedNode", self._node, $(this).val());                        
-        });            
+            self.trigger("renamedNode", self._node, $(this).val());
+        });
     },
 
     setNodeNameInvalid: function() {
@@ -225,9 +225,9 @@ NT.Parameters = OcrJs.Base.extend({
 
     setNodeNameValid: function() {
         $(".nameedit", this.parent).css({
-            backgroundColor: "#FFF", 
+            backgroundColor: "#FFF",
         });
-    },                          
+    },
 
     clearParams: function() {
         $(this.parent).html("");
@@ -237,7 +237,7 @@ NT.Parameters = OcrJs.Base.extend({
     updateParams: function() {
         for (var i in this._node.parameters)
             this._params[i].setValue(this._node.parameters[i].value);
-    },                      
+    },
 
     resetParams: function(node) {
         if (!node) {

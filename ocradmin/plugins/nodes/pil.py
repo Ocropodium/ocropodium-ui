@@ -65,7 +65,7 @@ class PilScale(node.Node, base.BinaryPngWriterMixin):
     parameters = [
         dict(name="scale", value=1.0),
         dict(name="filter", value="NEAREST", choices=[
-            "NEAREST", "BILINEAR", "BICUBIC", "ANTIALIAS"    
+            "NEAREST", "BILINEAR", "BICUBIC", "ANTIALIAS"
         ]),
     ]
 
@@ -131,7 +131,7 @@ class PilCrop(node.Node, base.BinaryPngWriterMixin):
         return n
 
 
-class RGB2Gray(node.Node, base.GrayPngWriterMixin):    
+class RGB2Gray(node.Node, base.GrayPngWriterMixin):
     """
     Convert (roughly) between a color image and BW.
     """
@@ -141,7 +141,7 @@ class RGB2Gray(node.Node, base.GrayPngWriterMixin):
     parameters = []
 
     def process(self, image):
-        pil = Image.fromarray(image)        
+        pil = Image.fromarray(image)
         return numpy.asarray(pil.convert("L"))
 
 

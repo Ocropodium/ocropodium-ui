@@ -49,7 +49,7 @@ class AbbyyRecognizer(base.CommandLineRecognizerNode):
         prevent FR from using up thousands of pages of license
         if there's no resolution header available.
         """
-        p = sp.Popen(["convert", "-units", "PixelsPerInch", 
+        p = sp.Popen(["convert", "-units", "PixelsPerInch",
                 "-density", "300", image, image])
         return p.wait()
 

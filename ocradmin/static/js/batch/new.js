@@ -24,7 +24,7 @@ $(function() {
         if (!filebrowser) {
             $("#file_browser").hide();
             filebrowser = new FileListWidget(
-                $("#file_browser").get(0), 
+                $("#file_browser").get(0),
                 new FileDataSource(),
                 {multiselect: true}
             );
@@ -42,18 +42,18 @@ $(function() {
             minHeight: 300,
             resize: function(e, ui) {
                 filebrowser.resized(e);
-                filebrowser.setHeight($(this).height());   
+                filebrowser.setHeight($(this).height());
             },
             close: function(e) {
                 filebrowser.clearSelection();
-            },            
+            },
             modal: true,
         });
         event.preventDefault();
     });
 
     // HACK!  Can't work how to achieve these styling
-    // bits without munging the dialog content css 
+    // bits without munging the dialog content css
     // directly.  Obviously this is fragile
     $(".ui-dialog-content")
         .css("padding", "5px 2px 10px 2px")
@@ -104,7 +104,7 @@ $(function() {
         if (event.keyCode == 46) {
             removeSelectedBatchFiles();
             updateButtons();
-        } 
+        }
     });
 
     // disallow text selection of file_items
@@ -126,10 +126,10 @@ $(function() {
         var xhr = event.target;
         if (!xhr.responseText) {
             return;
-        }                
+        }
         if (xhr.status != 200) {
             return alert("Error: " + xhr.responseText + "  Status: " + xhr.status);
-        } 
+        }
         var data = $.parseJSON(xhr.responseText);
         if (data.error) {
             alert("Error: " + data.error + "\n\n" + data.trace);

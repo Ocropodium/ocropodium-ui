@@ -3,10 +3,10 @@
 var AbstractListWidget = OcrJs.Base.extend({
     init: function(parent, datasource, options) {
         this._super();
-        this.parent = parent;   
+        this.parent = parent;
         this.data = datasource;
         this.options = {
-            multiselect: true,                     
+            multiselect: true,
         };
         $.extend(this.options, options);
 
@@ -17,7 +17,7 @@ var AbstractListWidget = OcrJs.Base.extend({
 
         var self = this;
         this.data.addListener("dataChanged", function() {
-            self.refreshEntries(); 
+            self.refreshEntries();
         });
         $(this.parent).html("");
         $(this.parent).append(this.buildUi());
@@ -28,7 +28,7 @@ var AbstractListWidget = OcrJs.Base.extend({
 
     dataSource: function() {
         return this.data;
-    },    
+    },
 
     container: function() {
         return $(this.parent);
@@ -57,7 +57,7 @@ var AbstractListWidget = OcrJs.Base.extend({
         // re-sort the list when the user clicks a column header
         $("th", self.parent).bind("click.headsort", headSort);
 
-        // we don't want to sort the headers 
+        // we don't want to sort the headers
         $(".header_drag", self.parent).bind("mouseover.sizenter mouseout.sizeleave", function(event) {
             if (event.type == "mouseover") {
                 $("th", self.parent).unbind("click.headsort");
@@ -83,8 +83,8 @@ var AbstractListWidget = OcrJs.Base.extend({
                     .unbind("mousemove.headsize")
                     .unbind("mouseup.headsize")
                     .css("cursor", "auto");
-            }); 
-            $(document).bind("mousemove.headsize", function(moveevent) {            
+            });
+            $(document).bind("mousemove.headsize", function(moveevent) {
                 var celldiff = cell.outerWidth(true) - cell.width();
                 cell.width(moveevent.pageX - leftpos - celldiff);
                 self.syncHeadWidths();
@@ -111,8 +111,8 @@ var AbstractListWidget = OcrJs.Base.extend({
         // handle task selection and multiselection
         $(".entry", self.parent).live("click.entryselect", function(event) {
             // if ctrl is down TOGGLE selection, else select item
-            self.selectEntry(this, event.ctrlKey 
-                ? !$(this).hasClass("ui-selected") 
+            self.selectEntry(this, event.ctrlKey
+                ? !$(this).hasClass("ui-selected")
                 : true
             );
 
@@ -125,21 +125,21 @@ var AbstractListWidget = OcrJs.Base.extend({
                 // one we've just clicked on, select everything in between
                 if (self._current && self._current != this) {
                     var traverser = parseInt($(self._current).data("row")) >
-                        parseInt($(this).data("row")) 
+                        parseInt($(this).data("row"))
                         ? "prevUntil"
                         : "nextUntil";
                     $(self._current)[traverser]("#" + this.id).each(function(i, elem) {
-                        self.selectEntry(elem, true);                        
+                        self.selectEntry(elem, true);
                     });
                 }
-            // if ctrl is down, don't clear the last selection 
+            // if ctrl is down, don't clear the last selection
             } else if (!self.options.multiselect || !event.ctrlKey) {
                 var id = this.id;
                 $(".ui-selected", self.parent).each(function(i, entry) {
                     if (entry.id != id) {
                         self.selectEntry(entry, false);
                     }
-                });                                          
+                });
             }
             // store the selector of the current element
             // to use when selecting a range
@@ -173,10 +173,10 @@ var AbstractListWidget = OcrJs.Base.extend({
         $(".entry", this.parent).die("click.entryselect");
         $("th", this.parent).die("mousedown.headclick");
         $(".header_drag", this.parent).unbind("mousedown.headsize");
-        $(".header_drag", this.parent).unbind("mouseover mouseout");             
+        $(".header_drag", this.parent).unbind("mouseover mouseout");
         $("th", this.parent).unbind("click.headsort");
-        $(".header_drag", this.parent).unbind("mouseover.sizenter mouseout.sizeleave");            
-    },                      
+        $(".header_drag", this.parent).unbind("mouseover.sizenter mouseout.sizeleave");
+    },
 
     onClose: function(event) {
 
@@ -243,7 +243,7 @@ var AbstractListWidget = OcrJs.Base.extend({
                 });
                 $.each(data.cellClassNames(row, col), function(i, v) {
                     cell.addClass(v);
-                }); 
+                });
             }
             // if the data source defines a usable key, re-select
             // those elements that might've been selected before
@@ -258,7 +258,7 @@ var AbstractListWidget = OcrJs.Base.extend({
 
     clearSelection: function() {
         this._selected = {};
-        $(".entrylist", this.parent).find(".entry.ui-selected").removeClass("ui-selected");        
+        $(".entrylist", this.parent).find(".entry.ui-selected").removeClass("ui-selected");
     },
 
     // sync the header table's columns with the file list's widths
@@ -354,7 +354,7 @@ var AbstractListWidget = OcrJs.Base.extend({
 
     buildPaginators: function() {
         var data = this.data;
-        var container = $("<div></div>").addClass("paginators"); 
+        var container = $("<div></div>").addClass("paginators");
         var pag = $("<div></div>")
             .addClass("pagination")
             .addClass("step_links")
@@ -363,7 +363,7 @@ var AbstractListWidget = OcrJs.Base.extend({
                 .text("Page " + data.page() + " of " + data.numPages()));
         if (data.hasPrev()) {
             pag.prepend(
-                $("<a></a>")                
+                $("<a></a>")
                     .attr("href", data.url() + "?page=" + data.prevPage())
                     .addClass("page_link")
                     .data("page", data.prevPage())
@@ -376,7 +376,7 @@ var AbstractListWidget = OcrJs.Base.extend({
                     .attr("href", data.url() + "?page=" + data.nextPage())
                     .addClass("page_link")
                     .data("page", data.nextPage())
-                    .text("Next")                
+                    .text("Next")
             );
         }
         return container.append(pag);

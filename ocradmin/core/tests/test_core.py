@@ -59,7 +59,7 @@ class CoreTest(TestCase):
         """
         Make sure numpy >= 1.4 is available.
         """
-        from numpy import version        
+        from numpy import version
         version = [int(v) for v in version.version.split(".")]
         self.assertGreaterEqual(version[1], 4)
 

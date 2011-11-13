@@ -71,7 +71,7 @@ class OcrTask(models.Model):
 
     def run(self, task_name=None, asyncronous=True, untracked=False, **kwargs):
         """
-        Run the task in a blocking manner and return 
+        Run the task in a blocking manner and return
         the sync object.
         """
         tname = task_name if task_name is not None else self.task_name
@@ -152,7 +152,7 @@ class OcrTask(models.Model):
         (uses the same celery publisher.)
         """
         if len(tasks) == 0:
-            return []        
+            return []
         celerytask = celery.registry.tasks[taskname]
         publisher = celerytask.get_publisher(connect_timeout=5)
         func = celerytask.apply_async if kwargs.get("asyncronous", True) \

@@ -13,7 +13,7 @@ OcrJs.Hocr = new function() {
         if (elem.attr("title").match(bboxre)) {
             return new DziViewer.Rect(parseInt(RegExp.$1), parseInt(RegExp.$2),
                 parseInt(RegExp.$3), parseInt(RegExp.$4));
-        }        
+        }
         console.error("No BBox match:", elem);
         return new DziViewer.Rect(0,0,0,0);
     };
@@ -24,5 +24,5 @@ OcrJs.Hocr = new function() {
         }
         console.error("No Index match:", elem);
         return -1;
-    };        
+    };
 };

@@ -2,7 +2,7 @@ $(document).ready(function() {
     $("li.success").slideDown(3000).delay(1000).fadeOut();
     // filter table by tags
     $(".sort_table").live("click", function(e) {
-        $("#comparisonlist").load($(this).attr("href")); 
+        $("#comparisonlist").load($(this).attr("href"));
         return false;
     });
 
@@ -17,7 +17,7 @@ $(document).ready(function() {
 //                    $("#dialog_box").html("");
 //                }
 //            }).load($(this).attr("href"), function() {
-//                $("#tabs").tabs(); 
+//                $("#tabs").tabs();
 //            });
 //            return false;
 //    });

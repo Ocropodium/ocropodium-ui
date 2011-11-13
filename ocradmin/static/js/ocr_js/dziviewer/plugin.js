@@ -1,4 +1,4 @@
-// 
+//
 // DziViewer plugin base classes
 //
 
@@ -43,7 +43,7 @@ CanvasRenderingContext2D.prototype.dashedRect = function(x, y, width, height, da
     this.dashedLine(x + width, y, x + width, y + height, dashLen);
     this.dashedLine(x + width, y + height, x, y + height, dashLen);
     this.dashedLine(x, y + height, x, y, dashLen);
-};    
+};
 
 
 
@@ -75,7 +75,7 @@ DziViewer.Plugin.Base = OcrJs.Base.extend({
 
     handleEvent: function(name, event) {
         switch (name) {
-            case "mousedown": 
+            case "mousedown":
                 return this.handleClick(event);
             case "mousemove":
                 return this.handleMove(event);
@@ -83,7 +83,7 @@ DziViewer.Plugin.Base = OcrJs.Base.extend({
                 return this.handleKeyDown(event);
             default:
                 return false;
-        }    
+        }
     },
 
     handleClick: function(event) {
@@ -96,7 +96,7 @@ DziViewer.Plugin.Base = OcrJs.Base.extend({
 
     handleKeyDown: function(event) {
         throw new NotImplementedError("keyDown");
-    },                       
+    },
 
     handleMove: function(event) {
         throw new NotImplementedError("handleMove");
@@ -104,7 +104,7 @@ DziViewer.Plugin.Base = OcrJs.Base.extend({
 
     update: function() {
         this.trigger("update");
-    },                
+    },
 });
 
 
@@ -113,13 +113,13 @@ DziViewer.Plugin.RectManager = DziViewer.Plugin.Base.extend({
         this._super(viewport);
 
         this._current = null;
-    },              
+    },
 
     // sensitivity to edges
     DISTANCE: 5,
     MINSIZE: 100,
 
-    // 
+    //
     NOEDGE: 0,
     TOPLEFT: 1,
     TOP: 2,
@@ -188,7 +188,7 @@ DziViewer.Plugin.RectManager = DziViewer.Plugin.Base.extend({
                     default:
                         cursor = "move";
                 }
-            } 
+            }
         }
         this.viewport.parent.css({cursor: cursor});
         return false;
@@ -251,7 +251,7 @@ DziViewer.Plugin.RectManager = DziViewer.Plugin.Base.extend({
                     self.trigger("interactingStop");
                     $(document).unbind(".trackme");
                 });
-                return true;    
+                return true;
             }
         }
         return false;

@@ -10,18 +10,20 @@ from django import forms
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.core.exceptions import ValidationError
 
 from ocradmin.core import generic_views as gv
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.plugins import graph, cache
 from ocradmin.plugins import utils as pluginutils
-from ocradmin.presets.models import Preset
+from ocradmin.presets.models import Preset, Profile
 
 from nodetree import script, node, registry
 from nodetree import utils as nodeutils
 
 from ocradmin.plugins import nodes
+
 
 
 class PresetForm(forms.ModelForm):
@@ -32,11 +34,27 @@ class PresetForm(forms.ModelForm):
         super(PresetForm, self).__init__(*args, **kwargs)
         # change a widget attribute:
         self.fields['description'].widget.attrs["rows"] = 2
-        self.fields['description'].widget.attrs["cols"] = 40        
+        self.fields['description'].widget.attrs["cols"] = 40
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        try:
+            data = json.loads(self.cleaned_data["data"])
+        except ValueError:
+            msg = u"Preset data must be valid JSON"
+            self._errors["data"] = self.error_class([msg])
+            del cleaned_data["data"]            
+        profile = self.cleaned_data["profile"]
+        if profile is not None:
+            errors = profile.validate_preset(data)
+            if errors:
+                self._errors["profile"] = self.error_class(errors)
+            del cleaned_data["profile"]
+        return cleaned_data
 
     class Meta:
         model = Preset
-        fields = ["name", "tags", "description", "public", "user", "data"]
+        fields = ["name", "tags", "description", "public", "profile", "user", "data"]
         exclude = ["created_on", "updated_on"]
         widgets = dict(
                 user=forms.HiddenInput()
@@ -58,7 +76,7 @@ presetcreate = gv.GenericCreateView.as_view(
 presetdetail = gv.GenericDetailView.as_view(
         model=Preset,
         page_name="OCR Preset",
-        fields=["name", "description", "user", "public", "tags", "created_on",
+        fields=["name", "description", "user", "public", "profile", "tags", "created_on",
             "updated_on",])
 
 
@@ -76,11 +94,10 @@ presetdelete = gv.GenericDeleteView.as_view(
 
 def createjson(request):
     """Create a preset and return JSON data"""
-    data = request.POST.copy()
-    data.update(dict(user=request.user.pk))
-    form = PresetForm(data)
+    form = PresetForm(request.POST)
     if not form.is_valid():
-        return HttpResponse(json.dumps(form.errors),
+        return HttpResponse(json.dumps(
+            dict(description="Invalid preset", errors=form.errors)),
                 mimetype="application/json")
     form.save()
     return HttpResponse(json.dumps(form.instance.slug),
@@ -125,7 +142,12 @@ def builder(request):
     """
     Show the preset builder.
     """
-    return render(request, "presets/builder.html", {})
+    context = dict(
+            form=PresetForm(initial=dict(user=request.user)),
+            presets=Preset.objects.order_by("name"),
+            profiles=Preset.objects.order_by("name"),
+    )
+    return render(request, "presets/builder.html", context)
 
 
 @saves_files
@@ -133,11 +155,15 @@ def builder_task_edit(request, task_pk):
     """
     Show the preset builder for a specific task.
     """
-    from ocradmin.ocrtasks.models import OcrTask
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    path, script, outdir = task.args
-    ref = request.GET.get("ref", "/batch/show/%d/" % task.batch.pk)
-    return render(request, "presets/builder.html", dict(task=task, ref=ref))
+    task=get_object_or_404(OcrTask, pk=task_pk)
+    context = dict(
+            form=PresetForm(initial=dict(user=request.user)),
+            presets=Preset.objects.order_by("name"),
+            profiles=Profile.objects.order_by("name"),
+            task=task,
+            ref=request.GET.get("ref", "/batch/show/%d/" % task.batch.pk)
+    )
+    return render(request, "presets/builder.html", context)
 
 
 def query_nodes(request):
@@ -274,14 +300,14 @@ def clear_cache(request):
     """
     cacheclass = pluginutils.get_dzi_cacher(settings)
     cacher = cacheclass(
-            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH),
             key=_cache_name(request))
     cacher.clear()
-    return HttpResponse(json.dumps({"ok": True}), 
+    return HttpResponse(json.dumps({"ok": True}),
             mimetype="application/json")
 
 
-def clear_node_cache(request):    
+def clear_node_cache(request):
     """
     Clear the preset cache for a single node.
     """
@@ -292,10 +318,10 @@ def clear_node_cache(request):
     node = tree.get_node(evalnode)
     cacheclass = pluginutils.get_dzi_cacher(settings)
     cacher = cacheclass(
-            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH), 
+            path=os.path.join(settings.MEDIA_ROOT, settings.TEMP_PATH),
             key=_cache_name(request))
     cacher.clear_cache(node)
-    return HttpResponse(json.dumps({"ok": True}), 
+    return HttpResponse(json.dumps({"ok": True}),
             mimetype="application/json")
 
 

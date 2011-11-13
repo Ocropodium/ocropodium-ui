@@ -1,5 +1,5 @@
 // useful key codes
-const 
+const
 KC_ESCAPE = 27,
 KC_RETURN = 13,
 KC_UP = 38,

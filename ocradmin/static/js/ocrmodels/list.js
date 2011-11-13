@@ -2,17 +2,17 @@ $(document).ready(function() {
     $("li.success").slideDown(3000).delay(1000).fadeOut();
     $(".delete_model_link").live("click", function(e) {
         return confirm("Are you sure you want to delete this model?");
-    }); 
+    });
     
     // filter table by tags
     $(".model_tag_link").live("click", function(e) {
         $("#modellist").load($(this).attr("href"));
-        return false;            
+        return false;
     });
 
     // sort table on headers
     $(".sort_table").live("click", function(e) {
-        $("#modellist").load($(this).attr("href")); 
+        $("#modellist").load($(this).attr("href"));
         return false;
     });
 
@@ -30,7 +30,7 @@ $(document).ready(function() {
             return false;
     });
 
-    // Ajaxify cancel button    
+    // Ajaxify cancel button
     $("#cancel_new_model_form, #cancel_edit_model_form").live("click", function(e) {
         $("#dialog_box").dialog("destroy");
         return false;

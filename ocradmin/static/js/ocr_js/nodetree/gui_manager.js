@@ -1,4 +1,4 @@
-// 
+//
 // Class to handle GUIs for nodes.
 //
 
@@ -23,12 +23,12 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
 
     hasCurrent: function() {
         return this._node !== null;
-    },        
+    },
 
     updateGui: function() {
         if (this._node && this._gui)
             this._gui.update();
-    },                   
+    },
 
     refreshGui: function() {
         if (this._node && this._gui) {
@@ -36,12 +36,12 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
         } else {
             this.tearDownGui();
         }
-    },                    
+    },
 
     setupGui: function(node) {
         var self = this;
 
-        this.tearDownGui();            
+        this.tearDownGui();
 
         // GUI classes should be named with the unqualified type of the
         // node plus 'Gui', i.e. pil.PilCrop -> PilCropGui
@@ -52,22 +52,22 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
             this._gui = new klass(this._viewer.viewport, node);
             this._viewer.addOverlayPlugin(this._gui);
             this._gui.addListeners({
-                parametersSet: function(n, pd) {                
-                    self.trigger("parametersSet", n, pd); 
+                parametersSet: function(n, pd) {
+                    self.trigger("parametersSet", n, pd);
                 },
                 interactingStart: function() {
-                    self.trigger("interacting", true); 
+                    self.trigger("interacting", true);
                 },
                 interactingStop: function() {
-                    self.trigger("interacting", false); 
+                    self.trigger("interacting", false);
                 },
             });
             this._gui.refresh();
             this.trigger("setupGui");
-        }       
-    },                  
+        }
+    },
 
-    tearDownGui: function() {                     
+    tearDownGui: function() {
         if (this._gui)
             this._viewer.removeOverlayPlugin(this._gui)
         this._gui = this._node = null;

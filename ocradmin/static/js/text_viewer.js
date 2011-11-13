@@ -1,4 +1,4 @@
-// 
+//
 // Page widget for viewing one-shot OCR conversions...
 //
 
@@ -35,7 +35,7 @@ OcrJs.TextViewer = OcrJs.Base.extend({
 
     container: function() {
         return this._div;
-    },        
+    },
 
     clearData: function() {
         var self = this;

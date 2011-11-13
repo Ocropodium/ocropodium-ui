@@ -139,7 +139,7 @@ def set_progress(logger, progress_func, step, end, granularity=5):
     if step != end and step % granularity != 0:
         return
     perc = min(100.0, round(float(step) / float(end), 2) * 100)
-    progress_func(perc, end)    
+    progress_func(perc, end)
 
 
 class CommandLineRecognizerNode(LineRecognizerNode):
