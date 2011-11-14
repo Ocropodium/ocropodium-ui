@@ -195,6 +195,7 @@ def ingest(request, project_pk):
     dcform = DublinCoreForm(request.POST)
     if not request.method == "POST" or not exportform.is_valid() \
             or not dcform.is_valid():
+        print "ERROR:", exportform.errors, dcform.errors
         context = dict(exportform=exportform, dcform=dcform,
                 project=project)
         return render_to_response(template, context,
@@ -213,11 +214,12 @@ def ingest(request, project_pk):
     )
     batch.save()
 
+    options = dict(loglevel=60, retries=2)
     ingesttasks = []
     for rset in project.reference_sets.all():
         tid = OcrTask.get_new_task_id()
         args = (rset.pk, exportform.cleaned_data, dc)
-        kwargs = dict(task_id=tid, queue="interactive")
+        kwargs = dict()
         task = OcrTask(
             task_id=tid,
             user=request.user,
@@ -232,9 +234,14 @@ def ingest(request, project_pk):
         task.save()
         ingesttasks.append(task)
 
-    # launch all the tasks
-    OcrTask.run_celery_task_multiple(taskname, ingesttasks)
-    return HttpResponseRedirect("/batch/show/%d/" % batch.pk)
+    try:
+        # ignoring the result for now
+        OcrTask.run_celery_task_multiple(taskname, ingesttasks, **options)
+    except StandardError:
+        transaction.rollback()
+        raise
+    transaction.commit()
+    return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
 
 
 def _get_default_export_forms(request, project):
