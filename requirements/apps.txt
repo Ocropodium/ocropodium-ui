@@ -14,3 +14,4 @@ pymongo
 -e git+https://github.com/lamby/django-lint.git#egg=django-lint
 -e git+https://github.com/ericholscher/django-test-utils#egg=django-test-utils
 -e git+https://github.com/mikesname/python-nodetree#egg=python-nodetree
+-e git+https://github.com/emory-libraries/eulfedora.git#egg=eulfedora
