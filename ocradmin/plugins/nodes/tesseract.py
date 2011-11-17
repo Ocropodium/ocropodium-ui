@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import os
 import shutil
+import codecs
 import tempfile
 import subprocess as sp
 
@@ -15,6 +16,8 @@ from . import base
 from .. import stages, utils, exceptions
 
 from ocradmin.ocrmodels.models import OcrModel
+
+from ocrolib import numpy
 
 
 class TesseractRecognizer(base.CommandLineRecognizerNode):
@@ -44,7 +47,7 @@ class TesseractRecognizer(base.CommandLineRecognizerNode):
         if self._params.get("language_model", "").strip() == "":
             raise exceptions.ValidationError("no language model given: %s" % self._params, self)
 
-    def init_converter(self):
+    def prepare(self):
         """
         Extract the lmodel to a temporary directory.  This is
         cleaned up in the destructor.
@@ -109,7 +112,8 @@ class TesseractRecognizer(base.CommandLineRecognizerNode):
         lines = []
         with tempfile.NamedTemporaryFile() as tmp:
             tmp.close()
-            tessargs = [self._tesseract, imagepath, tmp.name]
+            # args with page-seg mode: 5=line
+            tessargs = [self._tesseract, imagepath, tmp.name, "-psm", "7"]
             if self._lang is not None:
                 tessargs.extend(["-l", self._lang])
             proc = sp.Popen(tessargs, stderr=sp.PIPE)
@@ -125,7 +129,7 @@ class TesseractRecognizer(base.CommandLineRecognizerNode):
                 os.unlink(txt.name)
         return " ".join(lines)
 
-    def __del__(self):
+    def cleanup(self):
         """
         Cleanup temporarily-extracted lmodel directory.
         """
@@ -137,4 +141,66 @@ class TesseractRecognizer(base.CommandLineRecognizerNode):
             except OSError, (errno, strerr):
                 self.logger.error(
                     "RmTree raised error: %s, %s" % (errno, strerr))
+
+
+class TesseractPageSeg(TesseractRecognizer):
+    """
+    Recognize an image using Tesseract, including segmentation.
+    """
+    intypes = [numpy.ndarray]
+
+    def __init__(self, *args, **kwargs):
+        super(TesseractPageSeg, self).__init__(*args, **kwargs)
+        self._configtmp = None
+
+    def get_command(self, outfile, image):
+        """Simple tesseract command line"""
+        args = [self.binary, image, os.path.splitext(outfile)[0]]
+        if self._lang is not None:
+            args.extend(["-l", self._lang])
+        args.append(self._configtmp)
+        return args
+
+    def prepare(self):
+        super(TesseractPageSeg, self).prepare()
+        # write a temp config file specifying the output format
+        configtmp = tempfile.NamedTemporaryFile(delete=False)
+        configtmp.write("tessedit_create_hocr\t\t1")
+        configtmp.close()
+        self._configtmp = configtmp.name
+
+    def cleanup(self):
+        super(TesseractPageSeg, self).prepare()
+        os.unlink(self._configtmp)
+
+    def process(self, binary):
+        """
+        Convert a full page.
+        """
+
+        self.prepare()
+
+        hocr = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp:
+            tmp.close()
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as btmp:
+                btmp.close()
+                self.write_binary(btmp.name, binary)
+                args = self.get_command(tmp.name, btmp.name)
+                self.logger.debug("Running: '%s'", " ".join(args))
+                proc = sp.Popen(args, stderr=sp.PIPE)
+                err = proc.stderr.read()
+                if proc.wait() != 0:
+                    print err
+                    return u"!!! %s TESSERACT ERROR %d: %s !!!" % (
+                            os.path.basename(self.binary).upper(),
+                            proc.returncode, err)
+                with codecs.open(tmp.name, "r", "utf8") as tread:
+                    hocr = tread.read()
+            os.unlink(tmp.name)
+            os.unlink(btmp.name)
+        utils.set_progress(self.logger, self.progress_func, 100, 100)
+        self.cleanup()
+        return hocr
+
 
