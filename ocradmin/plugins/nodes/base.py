@@ -99,6 +99,12 @@ class LineRecognizerNode(node.Node, TextWriterMixin):
     def get_transcript(self):
         raise NotImplementedError
 
+    def cleanup(self):
+        pass
+
+    def prepare(self):
+        pass
+
     def process(self, binary, boxes):
         """
         Recognize page text.
@@ -106,6 +112,7 @@ class LineRecognizerNode(node.Node, TextWriterMixin):
         input: tuple of binary, input boxes
         return: page data
         """
+        self.prepare()
         pageheight, pagewidth = binary.shape
         iulibbin = ocrolib.numpy2narray(binary)
         out = dict(bbox=[0, 0, pagewidth, pageheight], lines=[])
@@ -124,6 +131,7 @@ class LineRecognizerNode(node.Node, TextWriterMixin):
                     text=self.get_transcript(ocrolib.narray2numpy(lineimage)),
             ))
         set_progress(self.logger, self.progress_func, numlines, numlines)
+        self.cleanup()
         return utils.hocr_from_data(out)
 
 def set_progress(logger, progress_func, step, end, granularity=5):
