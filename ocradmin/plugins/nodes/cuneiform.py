@@ -33,7 +33,7 @@ class CuneiformRecognizer(base.CommandLineRecognizerNode):
         """
         Cuneiform command line.  Simplified for now.
         """
-        args = [self.binary, "-o", outfile]
+        args = [self.binary, "-f", "hocr", "-o", outfile]
         if self._params.get("single_column", False):
             args.extend(["--singlecolumn"])
         return args + [image]
@@ -48,7 +48,7 @@ class CuneiformRecognizer(base.CommandLineRecognizerNode):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as btmp:
                 btmp.close()
                 self.write_binary(btmp.name, binary)
-                args = [self.binary, "-f", "hocr", "-o", tmp.name, btmp.name]
+                args = self.get_command(tmp.name, btmp.name)
                 self.logger.debug("Running: '%s'", " ".join(args))
                 proc = sp.Popen(args, stderr=sp.PIPE)
                 err = proc.stderr.read()
