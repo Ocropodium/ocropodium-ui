@@ -13,8 +13,8 @@
 
 .nodemenu {
     position: absolute;
-    border: 1px solid #999;
-    padding: 3px;
+    border: 1px solid #BBB;
+    padding: 0px;
     z-index: 1000;
     background-color: #FFF;
 }
@@ -29,19 +29,17 @@
 
 .nodemenu ul {
     list-style-type: none;
-    margin: 0px 2px 0px 10px;
+    margin: 3px 0px 3px 0px;
     padding-left: 0px;
     cursor: default;
-    padding: 0px 3px;
+    padding: 0px 0px;
     font-size: 1.1em;
 }
 
 .nodemenu li {
     color: #000;
     display: block;
-    padding: 2px;
-    padding-right: 15px;
-    padding-left: 5px;
+    padding: 5px 15px;
 }
 
 .nodemenu li.topmenu {
