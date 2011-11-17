@@ -12,15 +12,11 @@
 }
 
 .nodemenu {
-    box-shadow: 2px 3px 3px #919598;
-    -webkit-box-shadow: 2px 3px 3px #919598;
-    -moz-box-shadow: 2px 3px 3px #919598;
     position: absolute;
     border: 1px solid #999;
     padding: 3px;
     z-index: 1000;
     background-color: #FFF;
-    opacity: 0.95;
 }
 
 .nodemenu h4 {
@@ -33,9 +29,11 @@
 
 .nodemenu ul {
     list-style-type: none;
-    margin-left: 5px;
+    margin: 0px 2px 0px 10px;
     padding-left: 0px;
     cursor: default;
+    padding: 0px 3px;
+    font-size: 1.1em;
 }
 
 .nodemenu li {
