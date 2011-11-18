@@ -40,7 +40,7 @@ HE.Editor = OcrJs.Base.extend({
             onLineSelected: [],
             onLineDeselected: [],
             onEditLine: [],
-        };
+       };
         this._undostack = cmdstack;
 
         this._hocr = new HE.HocrDoc(parent);
