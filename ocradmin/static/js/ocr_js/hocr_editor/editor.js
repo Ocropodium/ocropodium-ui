@@ -45,7 +45,21 @@ HE.Editor = OcrJs.Base.extend({
 
         this._hocr = new HE.HocrDoc(parent);
 
+        this._currentline = null;
+
         this.setupEvents();
+    },
+
+    currentLine: function() {
+        return this._currentline;
+    },
+
+    getData: function() {
+        var hover = $(".ocr_line.hover", this._pagediv);
+        hover.removeClass("hover");
+        var data = $("#transcript").html();
+        hover.addClass("hover");
+        return data;
     },
 
     resetSize: function() {
@@ -58,17 +72,6 @@ HE.Editor = OcrJs.Base.extend({
 
     setupEvents: function() {
         var self = this;
-
-        $(window).bind("keydown.tabshift", function(event) {
-            if (!self._spellchecking && event.keyCode == KC_TAB) {
-                console.log("Called forward");
-                event.shiftKey ? self.backward() : self.forward();
-                event.stopPropagation();
-                event.preventDefault();
-            } else if (self._currentline && event.keyCode == KC_F2) {
-                self.trigger("onEditLine", self._currentline);
-            } 
-        });
 
         $(".ocr_line").live("dblclick.editline", function(event) {
             self.trigger("onEditLine", this);

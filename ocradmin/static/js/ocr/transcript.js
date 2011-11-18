@@ -118,13 +118,27 @@ $(function() {
     $("#redo_command").click(function(event) {
         cmdstack.redo();
     });
-    $(window).bind("keydown.keycmd", function(event) {
-        if (event.ctrlKey && event.keyCode == 90) {
-            event.shiftKey ? cmdstack.redo() : cmdstack.undo();
-            event.stopPropagation();
-            event.preventDefault();
-        }
+
+    // hotkets setup
+    $(document).bind("keydown.keycmd", "ctrl+z", function(event) {
+        cmdstack.undo();
+    }).bind("keydown", "ctrl+shift+z", function(event) {
+        cmdstack.redo();    
+    }).bind("keydown", "ctrl+shift+s", function(event) {
+        $("#spellcheck").click();
+    }).bind("keydown", "tab", function(event) {
+        transcript.forward();
+    }).bind("keydown", "shift+tab", function(event) {
+        transcript.backward();
+    }).bind("keydown", "alt+ctrl+s", function(event) {
+        console.log("Saving transcript");
+        saveTranscript();
+        return false; 
+    }).bind("keydown", "f2", function(event) {
+        transcript.trigger("onEditLine", transcript.currentLine());    
     });
+
+
     
 
     function saveState() {
@@ -312,12 +326,7 @@ $(function() {
             transcript.setCurrentLine($(element).closest(".ocr_line"));
         },
     });
-
-    $(window).bind("keydown.spellcheck", function(event) {
-        if (event.shiftKey && event.ctrlKey && event.keyCode == 83) { // 's'
-            $("#spellcheck").click();
-        } 
-    })
+    
     // When a page loads, read the data and request the source
     // image is rebinarized so we can view it in the viewer
     // This is likely to be horribly inefficient, at least
@@ -379,7 +388,7 @@ $(function() {
 
     function saveTranscript(fun, funargs) {
         $.ajax({
-            url: "/ocr/save/" + transcript.taskId() + "/",
+            url: "/ocr/save/" + getTaskPk() + "/",
             data: {
                 data: transcript.getData()
             },
@@ -388,7 +397,6 @@ $(function() {
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
                 if (data && data.ok) {
-                    transcript.setCleanState();
                     $("#save_data").button({
                         disabled: true,
                     });
@@ -406,7 +414,7 @@ $(function() {
     });
 
     $("#save_training_data").click(function(event) {
-        var pk = transcript.taskId();
+        var pk = getTaskPk();
         $.ajax({
             url: "/reference_pages/create_from_task/" + pk + "/",
             dataType: "json",
