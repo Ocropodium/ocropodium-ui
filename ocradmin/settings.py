@@ -289,6 +289,7 @@ COMPRESS_JS = {
             "js/jquery/jquery.mousewheel.min.js",
             "js/jquery/jquery.layout-latest.js",
         	"js/jquery/jquery.hoverIntent.min.js",
+        	"js/jquery/jquery.hotkeys.js",
         ),
         "output_filename": "js/jquery_compress.js",
     },
