@@ -278,7 +278,7 @@ COMPRESS_CSS = {
 COMPRESS_JS = {
     "jquery": {
         "source_filenames": (
-            "js/jquery/jquery-1.6.js",
+            "js/jquery/jquery-1.7.min.js",
             "js/jquery/jquery-ui-1.8.4.custom.min.js",
             "js/jquery/jquery.cookie.js",
             "js/jquery/jquery.globalstylesheet.js",
