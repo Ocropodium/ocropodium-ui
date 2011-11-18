@@ -3,6 +3,9 @@ var sdviewer = null;
 var formatter = null;
 var polltimeout = -1;
 var hsplitL, hsplitR;
+var cmdstack = null;
+var lineedit = null;
+var spellcheck = null;
 
 
 
@@ -99,15 +102,28 @@ $(function() {
     $("#vlink").buttonset();
 
     $("#format_block").click(function(event) {
-        formatter.blockLayout($(".transcript_lines"));
+        formatter.blockLayout($("#transcript"));
     });
     $("#format_column").click(function(event) {
-        formatter.columnLayout($(".transcript_lines"));
+        formatter.columnLayout($("#transcript"));
     });
     $("#page_slider").slider({
         min: 0,
         max: $("#batchsize").val() - 1,
         value: $("#batchoffset").val(),
+    });
+    $("#undo_command").click(function(event) {
+        cmdstack.undo();
+    });
+    $("#redo_command").click(function(event) {
+        cmdstack.redo();
+    });
+    $(window).bind("keydown.keycmd", function(event) {
+        if (event.ctrlKey && event.keyCode == 90) {
+            event.shiftKey ? cmdstack.redo() : cmdstack.undo();
+            event.stopPropagation();
+            event.preventDefault();
+        }
     });
     
 
@@ -165,18 +181,31 @@ $(function() {
         return confirm("Save changes to transcript?");
     }
 
+    function getBatchOffset() {
+        var batchoffset = parseInt($("#batchoffset").val());
+        var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
+        if (!isNaN(hashoffset))
+            batchoffset += hashoffset;
+        return batchoffset;
+    }
 
-    function updateTask(event) {
+    function getTaskPk() {
         var abstaskpk = parseInt($("#task_pk").val());
         var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
-        var batchoffset = parseInt($("#batchoffset").val());
-        if (!isNaN(hashoffset)) {
+        if (!isNaN(hashoffset))
             abstaskpk += hashoffset;
-            batchoffset += hashoffset;
-        }
-        transcript.setTaskId(abstaskpk);
-        console.log("Setting page slider to: " + batchoffset + " for task: " + abstaskpk);
-        $("#page_slider").slider({value: batchoffset});
+        return abstaskpk;
+    }
+
+
+    function updateTask(event) {
+        $("#transcript").load("/ocr/task_transcript/" + getTaskPk() + " .ocr_page:first",
+                null, function(text) {
+                    transcript.setWaiting(false);
+                    transcript.refresh();
+                    pageLoaded();
+        });
+        $("#page_slider").slider({value: getBatchOffset()});
     }
 
     function updateNavButtons() {
@@ -201,9 +230,94 @@ $(function() {
         }
     }
 
+    function pageLoaded() {
+        // get should-be-hidden implementation details
+        // i.e. the task id that process the page.  We
+        // want to rebinarize with the same params
+        var task_pk = getTaskPk();
+        $("#edit_task").attr("href",
+                "/presets/builder/" + task_pk + "?ref="
+                + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
+        $.ajax({
+            url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
+            dataType: "json",
+            beforeSend: function(e) {
+                //sdviewer.close();
+                sdviewer.setWaiting(true);
+            },
+            success: function(data) {
+                if (polltimeout != -1) {
+                    clearTimeout(polltimeout);
+                    polltimeout = -1;
+                }
+                pollForResults(data, 300);
+            },
+            error: OcrJs.ajaxErrorHandler,
+        })
+    }
+
+    function stackChanged() {
+        $("#undo_command")
+            .text(cmdstack.undoText())
+            .button({disabled: !cmdstack.canUndo()})
+            .button("refresh");
+        $("#redo_command")
+            .text(cmdstack.redoText())
+            .button({disabled: !cmdstack.canRedo()})
+            .button("refresh");
+        $("#save_data").button({
+            disabled: !cmdstack.canUndo(),
+        });
+    }
+
+    // initialize undo stack
+    cmdstack = new OcrJs.UndoStack(this, {max: 50});
+
+    cmdstack.addListeners({
+        undoStateChanged: stackChanged,
+        redoStateChanged: stackChanged,
+        indexChanged: stackChanged,
+        stateChanged: function() {
+        },
+    });
 
     // initialise the transcript editor
-    transcript = new OcrJs.TranscriptEditor(document.getElementById("transcript"));
+    //transcript = new OcrJs.TranscriptEditor(document.getElementById("transcript"));
+    transcript = new OcrJs.HocrEditor.Editor($("#transcript").get(0), cmdstack);
+
+    lineedit = new OcrJs.LineEditor();
+    lineedit.addListeners({
+        onEditingFinished: function(element, origtext, newtext) {
+            transcript.cmdReplaceLineText(element, origtext, newtext);
+        },
+        //onEditNextElement: function() {
+        //    transcript.forward();
+        //},
+        //onEditPrevElement: function() {
+        //    transcript.backward();
+        //},
+    });
+
+    function showPluginPane(onoff) {
+        hsplitL[onoff ? "show" : "hide"]("south");
+    }
+
+
+    // initialize spellcheck
+    spellcheck = new OcrJs.Spellchecker($("#plugin"), cmdstack);
+    spellcheck.addListeners({
+        onWordCorrection: function() {
+        },
+        onWordHighlight: function(element) {
+            transcript.setCurrentLine($(element).closest(".ocr_line"));
+        },
+    });
+
+    $(window).bind("keydown.spellcheck", function(event) {
+        if (event.shiftKey && event.ctrlKey && event.keyCode == 83) { // 's'
+            $("#spellcheck").click();
+        } 
+    })
     // When a page loads, read the data and request the source
     // image is rebinarized so we can view it in the viewer
     // This is likely to be horribly inefficient, at least
@@ -221,31 +335,6 @@ $(function() {
             $("#heading").button({disabled: false});
             $("#heading").prop("checked", type == "h1")
                 .button("refresh");
-        },
-        onTaskLoad: function() {
-            // get should-be-hidden implementation details
-            // i.e. the task id that process the page.  We
-            // want to rebinarize with the same params
-            var task_pk = transcript.taskId();
-            $("#edit_task").attr("href",
-                    "/presets/builder/" + task_pk + "?ref="
-                    + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
-            $.ajax({
-                url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
-                dataType: "json",
-                beforeSend: function(e) {
-                    //sdviewer.close();
-                    sdviewer.setWaiting(true);
-                },
-                success: function(data) {
-                    if (polltimeout != -1) {
-                        clearTimeout(polltimeout);
-                        polltimeout = -1;
-                    }
-                    pollForResults(data, 300);
-                },
-                error: OcrJs.ajaxErrorHandler,
-            })
         },
         onTextChanged: function() {
             $("#save_data").button({
@@ -273,13 +362,18 @@ $(function() {
                 return;
             positionViewer(position);
         },
+        onEditLine: function(element) {
+            lineedit.edit(element);
+        },
     });
 
     $("#spellcheck").change(function(event) {
         if ($(this).prop("checked")) {
-            transcript.startSpellcheck();
+            showPluginPane(true);
+            spellcheck.spellcheck($(".ocr_line"));
         } else {
-            transcript.endSpellcheck();
+            showPluginPane(false);
+            spellcheck.reset();
         }
     });
 
@@ -351,7 +445,7 @@ $(function() {
             }
 
             // check for unsaved changes
-            if (transcript.hasUnsavedChanges()) {
+            if (cmdstack.canUndo()) {
                 if (!unsavedPrompt()) {
                     $("#page_slider").slider({value: orig});
                 } else {
@@ -395,6 +489,13 @@ $(function() {
             closable: false,
             slidable: false,
             spacing_open: 0,
+        },
+        south: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0,
+            initClosed: true,
         },
     });
 
