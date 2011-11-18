@@ -171,6 +171,11 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         });
     },
 
+    unhighlight: function(lines) {
+        lines.find(".badspell").each(function(i, elem) {
+            $(elem).replaceWith($(elem).text());
+        });
+    },
 
     highlight: function(lines) {
         var self = this;
