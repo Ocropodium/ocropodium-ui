@@ -119,27 +119,41 @@ $(function() {
         cmdstack.redo();
     });
 
-    // hotkets setup
-    $(document).bind("keydown.keycmd", "ctrl+z", function(event) {
-        cmdstack.undo();
-    }).bind("keydown", "ctrl+shift+z", function(event) {
-        cmdstack.redo();    
-    }).bind("keydown", "ctrl+shift+s", function(event) {
-        $("#spellcheck").click();
-    }).bind("keydown", "tab", function(event) {
-        transcript.forward();
-    }).bind("keydown", "shift+tab", function(event) {
-        transcript.backward();
-    }).bind("keydown", "alt+ctrl+s", function(event) {
-        console.log("Saving transcript");
-        saveTranscript();
-        return false; 
-    }).bind("keydown", "f2", function(event) {
-        transcript.trigger("onEditLine", transcript.currentLine());    
+    // map of key commands to functions
+    var cmdmap = {
+        "ctrl+z": function() { 
+            cmdstack.undo();
+        },
+        "ctrl+shift+z": function() {
+            cmdstack.redo();
+        },
+        "ctrl+shift+s": function() { 
+            $("#spellcheck").click();
+        },
+        "alt+ctrl+s": function() {
+            console.log("Saved!");
+            saveTranscript();
+        },
+        "tab": function() {
+            transcript.forward();
+        },
+        "shift+tab": function() {
+            transcript.backward();
+        },
+        "f2": function() {
+             transcript.trigger("onEditLine", transcript.currentLine());
+        },
+    };
+
+    // bind commands to document
+    $.each(cmdmap, function(key, handler) {
+        $(document).bind("keydown", key, function(event) {
+            handler.apply();
+            event.stopPropagation();
+            event.preventDefault();
+        });
     });
 
-
-    
 
     function saveState() {
         var view = {
