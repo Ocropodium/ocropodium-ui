@@ -72,6 +72,10 @@ HE.HocrDoc = OcrJs.Base.extend({
         this._data = $(xmldata);
     },
 
+    setCurrent: function(elem) {
+        this._cline = elem;
+    },
+
     /*
      * The following functions return HTML elements
      */
