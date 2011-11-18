@@ -377,10 +377,11 @@ COMPRESS_JS = {
     },
     "transcript_edit": {
         "source_filenames": (
-            "js/line_editor.js",
-            "js/spellcheck/suggestion_list.js",
-            "js/spellcheck/spellchecker.js",
-            "js/transcript_editor.js",
+            "js/ocr_js/hocr_editor/editor.js",
+            "js/ocr_js/hocr_editor/hocrdoc.js",
+            "js/ocr_js/hocr_editor/line_editor.js",
+            "js/ocr_js/hocr_editor/spellcheck/suggestion_list.js",
+            "js/ocr_js/hocr_editor/spellcheck/spellchecker.js",
         ),
         "output_filename": "js/viewers_compress.js",        
     },
