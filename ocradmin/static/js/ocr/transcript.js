@@ -381,8 +381,8 @@ $(function() {
             showPluginPane(true);
             spellcheck.spellcheck($(".ocr_line"));
         } else {
+            spellcheck.unhighlight($(".ocr_line"));
             showPluginPane(false);
-            spellcheck.reset();
         }
     });
 
