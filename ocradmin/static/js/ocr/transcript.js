@@ -141,18 +141,76 @@ $(function() {
             transcript.backward();
         },
         "f2": function() {
-             transcript.trigger("onEditLine", transcript.currentLine());
+             editLine(transcript.currentLine(), true);
+            console.log("Edit line!", transcript.currentLine().get(0));
         },
     };
 
-    // bind commands to document
-    $.each(cmdmap, function(key, handler) {
-        $(document).bind("keydown", key, function(event) {
-            handler.apply();
-            event.stopPropagation();
-            event.preventDefault();
+    function bindFinishEditingCommands(element, initialcontent) {
+        $(document).bind("keydown.finishedit", "esc", function(event) {
+            finishEditing(element, initialcontent, false);
         });
-    });
+        $(document).bind("keydown.finishedit", "return", function(event) {
+            finishEditing(element, initialcontent, true);
+        });
+        $(document).bind("keydown.finishedit", "shift+tab", function(event) {
+            finishEditing(element, initialcontent, true);
+        });
+        $(document).bind("keydown.finishedit", "tab", function(event) {
+            finishEditing(element, initialcontent, true);
+        });
+        $(element).bind("blur.finishedit", function(event) {
+            finishEditing(element, initialcontent, true);
+        });
+    }
+
+    function setCaretAfter(el) {
+        var sel, range;
+        if (window.getSelection && document.createRange) {
+            range = document.createRange();
+            //range.setStartAfter(el);
+            range.collapse(true);
+            sel = window.getSelection(); 
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else if (document.body.createTextRange) {
+            range = document.body.createTextRange();
+            range.moveToElementText(el);
+            range.collapse(false);
+            range.select();
+        }
+    }
+
+    function finishEditing(element, initialcontent, save) {
+        $(element).removeClass("selectable");
+        $(element).get(0).contentEditable = false;
+        $(document).unbind(".finishedit");
+        $(element).unbind(".finishedit");
+        if (save)
+            transcript.cmdReplaceLineText(element, initialcontent, $(element).html());
+        else
+            $(element).html(initialcontent);
+        unbindKeyCommands();
+        bindKeyCommands();
+        console.log("Finish editing with save", save, element);
+    }
+
+    function bindKeyCommands() {
+        // bind commands to document
+        $.each(cmdmap, function(key, handler) {
+            $(document).bind("keydown.keycmd", key, function(event) {
+                handler.apply();
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        });
+    }
+
+    bindKeyCommands();
+
+    function unbindKeyCommands() {
+        $(document).unbind(".keycmd");
+    }
 
 
     function saveState() {
@@ -330,6 +388,16 @@ $(function() {
         hsplitL[onoff ? "show" : "hide"]("south");
     }
 
+    function editLine(element, andstart) {
+        $(element).addClass("selectable");
+        unbindKeyCommands();
+        //setTimeout(function() {
+            $(element).focus().prop("contentEditable",true).click();
+            bindFinishEditingCommands(element, $(element).html());
+            if (andstart)
+                setCaretAfter(element); 
+        //}, 50);
+    }
 
     // initialize spellcheck
     spellcheck = new OcrJs.Spellchecker($("#plugin"), cmdstack);
@@ -386,7 +454,8 @@ $(function() {
             positionViewer(position);
         },
         onEditLine: function(element) {
-            lineedit.edit(element);
+            //lineedit.edit(element);
+            editLine(element);
         },
     });
 

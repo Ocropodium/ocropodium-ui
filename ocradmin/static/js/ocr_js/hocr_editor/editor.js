@@ -127,6 +127,7 @@ HE.Editor = OcrJs.Base.extend({
     setCurrentLine: function(line) {
         line = $(line);
         this._currentline = line;
+        line.focus();
         this._hocr.setCurrent(line.get(0));
         $(".ocr_line", this._pagediv).removeClass("hover");
         line.addClass("hover");
