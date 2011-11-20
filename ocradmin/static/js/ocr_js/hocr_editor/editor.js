@@ -14,7 +14,6 @@ HE.EditCommand = OcrJs.UndoCommand.extend({
             editor.setCurrentLine(elem);
         };
         this.undo = function() {
-            console.log("Undo for transcript editor");
             $(elem).html(origtext);
             editor.setCurrentLine(elem);
         };
@@ -30,16 +29,12 @@ HE.Editor = OcrJs.Base.extend({
         this.parent = parent;
 
         this._listeners = {
-            onLinesReady: [],
-            onTextChanged: [],
-            onTaskLoad: [],
-            onTaskChange: [],
-            onClickPosition: [],
-            onHoverPosition: [],
-            onSave: [],
-            onLineSelected: [],
-            onLineDeselected: [],
-            onEditLine: [],
+            clickPosition: [],
+            hoverPosition: [],
+            lineSelected: [],
+            lineDeselected: [],
+            startEditing: [],
+            stopEditing: [],
        };
         this._undostack = cmdstack;
 
@@ -74,7 +69,9 @@ HE.Editor = OcrJs.Base.extend({
         var self = this;
 
         $(".ocr_line").live("dblclick.editline", function(event) {
-            self.trigger("onEditLine", this);
+            self._hocr.setCurrent(this);
+            self.setCurrentLine(this);
+            self.editLine(this);
         });
 
         $(".ocr_line").live("click.selectline", function(event) {
@@ -83,7 +80,7 @@ HE.Editor = OcrJs.Base.extend({
         });
 
         $(".ocr_line").live("mouseover.selectline", function(event) {
-            self.trigger("onHoverPosition", self._hocr.parseBbox($(this)));
+            self.trigger("hoverPosition", self._hocr.parseBbox($(this)));
         });
     },
 
@@ -135,11 +132,46 @@ HE.Editor = OcrJs.Base.extend({
         if (pos != 0) {
             line.get(0).scrollIntoView(pos == -1);
         }
-        this.trigger("onClickPosition", this._hocr.parseBbox(line));
-        this.trigger("onLineSelected", line.get(0).tagName.toLowerCase());
+        this.trigger("clickPosition", this._hocr.parseBbox(line));
+        this.trigger("lineSelected");
+    },
+
+    editLine: function(element) {
+        element = element || this._currentline;
+        this.trigger("startEditing", element);
+        $(element).addClass("selectable").focus().prop("contentEditable",true).click();
+    },
+
+    finishEditing: function(element, initialcontent, save) {
+        $(element)
+            .removeClass("selectable")
+            .unbind(".finishedit")
+            .get(0).contentEditable = false;
+        if (save)
+            this.cmdReplaceLineText(element, initialcontent, $(element).html());
+        else
+            $(element).html(initialcontent);
+        this.trigger("stopEditing", element);
     },
 
     refresh: function() {
         this._hocr.reset();
+    },
+
+    _setCaretAfter: function(el) {
+        var sel, range;
+        if (window.getSelection && document.createRange) {
+            range = document.createRange();
+            //range.setStartAfter(el);
+            range.collapse(true);
+            sel = window.getSelection(); 
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else if (document.body.createTextRange) {
+            range = document.body.createTextRange();
+            range.moveToElementText(el);
+            range.collapse(false);
+            range.select();
+        }
     },
 });
