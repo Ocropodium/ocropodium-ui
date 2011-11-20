@@ -69,6 +69,10 @@ h1.ocr_line {
     background-color: #DDDDFF;
 }
 
+.ocr_line.hover.editing {
+    background-color: #FFFFBB;
+}
+
 .viewer_highlight {
     opacity: 0.5;
     background-color: #FFFF66;
