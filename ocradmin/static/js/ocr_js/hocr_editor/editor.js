@@ -131,7 +131,7 @@ HE.Editor = OcrJs.Base.extend({
         line.focus();
         this._hocr.setCurrent(line.get(0));
         $(".ocr_line", this._pagediv).removeClass("hover");
-        line.addClass("hover");
+        line.addClass("hover").focus();
         var pos = this.isScrolledIntoView(line.get(0));
         if (pos != 0) {
             line.get(0).scrollIntoView(pos == -1);
@@ -155,7 +155,7 @@ HE.Editor = OcrJs.Base.extend({
             .find("*").removeClass("selectable").end()
             .removeClass("selectable editing")
             .unbind(".finishedit")
-            .get(0).contentEditable = false;
+            .removeAttr("contentEditable");
         if (save)
             this.cmdReplaceLineText(element, initialcontent, $(element).html());
         else
