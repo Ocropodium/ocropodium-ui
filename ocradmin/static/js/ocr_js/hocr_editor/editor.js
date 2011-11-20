@@ -50,10 +50,14 @@ HE.Editor = OcrJs.Base.extend({
     },
 
     getData: function() {
-        var hover = $(".ocr_line.hover", this._pagediv);
+        var hover = $(".ocr_line.hover"),
+        editing = $(".ocr_line.editing");
         hover.removeClass("hover");
+        editing.removeClass("editing");
+
         var data = $("#transcript").html();
         hover.addClass("hover");
+        editing.addClass("editing");
         return data;
     },
 
@@ -138,13 +142,18 @@ HE.Editor = OcrJs.Base.extend({
 
     editLine: function(element) {
         element = element || this._currentline;
-        this.trigger("startEditing", element);
-        $(element).addClass("selectable").focus().prop("contentEditable",true).click();
+        this.trigger("startEditing", element);        
+        $(element)
+            .find("*").addClass("selectable").end()
+            .addClass("selectable editing")
+            .focus().prop("contentEditable",true).click();
+
     },
 
     finishEditing: function(element, initialcontent, save) {
         $(element)
-            .removeClass("selectable")
+            .find("*").removeClass("selectable").end()
+            .removeClass("selectable editing")
             .unbind(".finishedit")
             .get(0).contentEditable = false;
         if (save)
