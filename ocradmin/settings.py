@@ -380,7 +380,6 @@ COMPRESS_JS = {
         "source_filenames": (
             "js/ocr_js/hocr_editor/editor.js",
             "js/ocr_js/hocr_editor/hocrdoc.js",
-            "js/ocr_js/hocr_editor/line_editor.js",
             "js/ocr_js/hocr_editor/spellcheck/suggestion_list.js",
             "js/ocr_js/hocr_editor/spellcheck/spellchecker.js",
         ),

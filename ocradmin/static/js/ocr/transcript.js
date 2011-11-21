@@ -4,7 +4,6 @@ var formatter = null;
 var polltimeout = -1;
 var hsplitL, hsplitR;
 var cmdstack = null;
-var lineedit = null;
 var spellcheck = null;
 
 
@@ -357,19 +356,6 @@ $(function() {
     // initialise the transcript editor
     //transcript = new OcrJs.TranscriptEditor(document.getElementById("transcript"));
     transcript = new OcrJs.HocrEditor.Editor($("#transcript").get(0), cmdstack);
-
-    lineedit = new OcrJs.LineEditor();
-    lineedit.addListeners({
-        onEditingFinished: function(element, origtext, newtext) {
-            transcript.cmdReplaceLineText(element, origtext, newtext);
-        },
-        //onEditNextElement: function() {
-        //    transcript.forward();
-        //},
-        //onEditPrevElement: function() {
-        //    transcript.backward();
-        //},
-    });
 
     function showPluginPane(onoff) {
         hsplitL[onoff ? "show" : "hide"]("south");
