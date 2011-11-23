@@ -67,7 +67,7 @@ OcrJs.TaskWatcher = OcrJs.Base.extend({
         this._running = false;
     },
 
-    repoll: function(taskid, pdata, meta) {         
+    poll: function(taskid, pdata, meta) {         
         var self = this;
 
         if (this._abort) {
@@ -93,7 +93,6 @@ OcrJs.TaskWatcher = OcrJs.Base.extend({
             dataType: "json",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
-                console.log(data);
                 if (data.error || (data.status && data.status == "ERROR")) {
                     self.trigger("error", data.error, meta);
                 } else if (!data && self._runcount >= 3) {
@@ -105,7 +104,7 @@ OcrJs.TaskWatcher = OcrJs.Base.extend({
                     return;
                 } else if (data.status == "PENDING") {
                     // otherwise, repoll using the Celery task id in `data`
-                    self.repoll(data.task_id, pdata, meta);
+                    self.poll(data.task_id, pdata, meta);
                     return;
                 } else {
                     self.trigger("done", data, meta);
