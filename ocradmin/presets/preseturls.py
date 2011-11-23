@@ -9,7 +9,6 @@ from ocradmin.presets import presetviews as views
 urlpatterns = patterns('',
 	(r'^builder/?$', login_required(views.builder)),
 	(r'^builder/(?P<task_pk>\d+)/?$', login_required(views.builder_task_edit)),
-    (r'^abort/(?P<task_ids>[^\/]+)/?$', login_required(views.abort)),
     (r'^clear_cache/?$', login_required(views.clear_cache)),
     (r'^clear_node_cache/?$', views.clear_node_cache),
     (r'^create/?$', login_required(views.presetcreate)),

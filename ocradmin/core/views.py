@@ -33,6 +33,20 @@ def index(request):
     return HttpResponseRedirect("/presets/builder/")
 
 
+def abort(request, task_id):
+    """
+    Kill a running celery task.
+    """
+    OcrTask.revoke_celery_task(task_id, kill=True)
+    out = dict(
+        task_id=task_id,
+        status="ABORT"
+    )
+    response = HttpResponse(mimetype="application/json")
+    json.dump(out, response, ensure_ascii=False)
+    return response
+
+
 @saves_files
 def update_ocr_task(request, task_pk):
     """
@@ -42,7 +56,6 @@ def update_ocr_task(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     script = request.POST.get("script")
     ref = request.POST.get("ref", "/batch/show/%d/" % task.batch.pk)
-    print "UPDATING WITH REF: %s" % ref
     try:
         json.loads(script)
         task.args = (task.args[0], script, task.args[2])
@@ -118,7 +131,7 @@ def submit_viewer_binarization(request, task_pk):
     dzipath = ocrutils.get_dzi_path(binpath)
     assert os.path.exists(binpath), "Binary path does not exist: %s" % binpath
     async = OcrTask.run_celery_task(taskname, (binpath, dzipath), untracked=True,
-            queue="interactive", asyncronous=True)
+            queue="interactive")
     out = dict(task_id=async.task_id, status=async.status,
         results=async.result)
     return HttpResponse(json.dumps(out), mimetype="application/json")

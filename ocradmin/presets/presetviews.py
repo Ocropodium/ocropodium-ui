@@ -217,21 +217,6 @@ def run_preset(request):
     return response
 
 
-def abort(request, task_ids):
-    """
-    Kill a running task.
-    """
-    out = []
-    for task_id in task_ids.split(","):
-        OcrTask.revoke_celery_task(task_id, kill=True)
-        out.append(dict(
-            task_id=task_id,
-        ))
-    response = HttpResponse(mimetype="application/json")
-    json.dump(out, response, ensure_ascii=False)
-    return response
-
-
 @saves_files
 def upload_file(request):
     """

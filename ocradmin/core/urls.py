@@ -4,6 +4,7 @@ from ocradmin.core import views
 
 urlpatterns = patterns('',
    (r'^/?$', 'ocradmin.core.views.index'),
+    (r'^abort/(?P<task_id>[^\/]+)/?$', login_required(views.abort)),
     (r'^task_transcript/(?P<task_pk>\d+)/?$', login_required(views.task_transcript)),
     (r'^save/(?P<task_pk>\d+)/?$', login_required(views.save_transcript)),
     (r'^submit_viewer_binarization/(?P<task_pk>\d+)/?$', 

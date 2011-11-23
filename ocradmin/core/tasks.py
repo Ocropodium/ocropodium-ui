@@ -21,8 +21,6 @@ class UnhandledCreateDzi(AbortableTask):
         """
         Create a DZI of the given file, as <path>/dzi/<basename>.
         """
-        import time
-        time.sleep(6);
         logger = self.get_logger()
         # find the deepzoom path
         if not os.path.exists(os.path.dirname(path)):
