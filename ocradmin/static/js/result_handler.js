@@ -89,7 +89,7 @@ OcrJs.ResultHandler = OcrJs.Base.extend({
         }
         this._timer = setTimeout(function() {
             $.ajax({
-                url: "/presets/results/" + self._pending,
+                url: "/ocr/results/" + self._pending,
                 error: OcrJs.ajaxErrorHandler,
                 success: function(ndata) {
                     $.each(ndata, function(i, data) {
