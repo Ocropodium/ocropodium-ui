@@ -77,9 +77,6 @@ class Testmaker(TestCase):
     def test_staticjsundostackjs_131017000533(self):
         r = self.client.get('/static/js/ocr_js/undo/stack.js', {})
         self.assertEqual(r.status_code, 200)
-    def test_staticjsline_editorjs_131017000534(self):
-        r = self.client.get('/static/js/line_editor.js', {})
-        self.assertEqual(r.status_code, 200)
     def test_staticjsspellchecksuggestion_listjs_131017000534(self):
         r = self.client.get('/static/js/spellcheck/suggestion_list.js', {})
         self.assertEqual(r.status_code, 200)
@@ -87,16 +84,13 @@ class Testmaker(TestCase):
         r = self.client.get('/static/js/spellcheck/spellchecker.js', {})
         self.assertEqual(r.status_code, 200)
     def test_staticjstranscript_editorjs_131017000536(self):
-        r = self.client.get('/static/js/transcript_editor.js', {})
+        r = self.client.get('/static/js/ocr_js/hocr_editor/editor.js', {})
         self.assertEqual(r.status_code, 200)
     def test_staticjsocrtranscriptjs_131017000537(self):
         r = self.client.get('/static/js/ocr/transcript.js', {})
         self.assertEqual(r.status_code, 200)
     def test_staticcsstranscript_editorcss_131017000538(self):
         r = self.client.get('/static/css/transcript_editor.css', {})
-        self.assertEqual(r.status_code, 200)
-    def test_staticcssline_editorcss_131017000539(self):
-        r = self.client.get('/static/css/line_editor.css', {})
         self.assertEqual(r.status_code, 200)
     def test_staticcssspellcheckcss_13101700054(self):
         r = self.client.get('/static/css/spellcheck.css', {})
