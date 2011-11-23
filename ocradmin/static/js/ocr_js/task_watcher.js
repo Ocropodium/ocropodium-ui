@@ -20,6 +20,8 @@ OcrJs.TaskWatcher = OcrJs.Base.extend({
         this._interval = interval;
         this._timer = null;
         this._runcount = 0;
+        this._abort = false;
+        this._running = false;
 
         this._listeners = {
             start: [],
@@ -29,12 +31,24 @@ OcrJs.TaskWatcher = OcrJs.Base.extend({
         };
     },
 
-    run: function(url) {
+    abort: function() {
+        this._abort = true;
+    },
+
+    isPending: function() {
+        return this._running;
+    },
+
+    // run an Ajax call with POST data `pdata` and
+    // metadata `meta` to be returned with (eventual)
+    // results.
+    run: function(url, pdata, meta) {
         var self = this;
 
         this.cleanup();
-        this.trigger("start");
-        this._run(url);
+        this.preRun();
+        this.trigger("start", meta);
+        this._run(url, pdata, meta);
 
     },
 
@@ -42,41 +56,59 @@ OcrJs.TaskWatcher = OcrJs.Base.extend({
         if (this._timer !== null)
             clearTimeout(this._timer);
         this._runcount = 0;
+        this._abort = false;
+    },
+
+    preRun: function() {
+        this._running = true;
     },
 
     postRun: function() {
+        this._running = false;
     },
 
-    repoll: function(url) {         
+    repoll: function(taskid, pdata, meta) {         
         var self = this;
+
+        if (this._abort) {
+            this.cleanup();
+            self._run("/ocr/abort/" + taskid + "/", pdata, meta);
+            return false;
+        }
+
         if (this._timer !== null)
             clearTimeout(this._timer);
         this._timer = setTimeout(function() {
-            self._run(url);
+            self._run("/ocr/result/" + taskid + "/", pdata, meta);
         }, this._interval);
     },
 
-    _run: function(url) {
+    _run: function(url, pdata, meta) {
         var self = this;
-        this.trigger("poll", this._runcount);
+        this.trigger("poll", this._runcount, meta);
         $.ajax({
             url: url,
+            data: pdata,
+            type: pdata ? "post" : "get",
             dataType: "json",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
+                console.log(data);
                 if (data.error || (data.status && data.status == "ERROR")) {
-                    self.trigger("error", data.error);
-                } else if (data.status == "SUCCESS") {
-                    self.trigger("done", data);
+                    self.trigger("error", data.error, meta);
                 } else if (!data && self._runcount >= 3) {
-                    self.trigger("error", "No data returned from server after 3 tries.");
+                    self.trigger("error", "No data returned from server after 3 tries.", meta);
                 } else if (!data && self._runcount < 3) {
-                    self.repoll(url);
+                    self._timer = setTimeout(function() {
+                        self._run(url, pdata, meta);
+                    }, self._interval);
                     return;
                 } else if (data.status == "PENDING") {
                     // otherwise, repoll using the Celery task id in `data`
-                    self.repoll("/ocr/result/" + data.task_id + "/");
+                    self.repoll(data.task_id, pdata, meta);
                     return;
+                } else {
+                    self.trigger("done", data, meta);
                 }          
                 // this will only get run if we don't
                 // re-poll on 'PENDING'          
