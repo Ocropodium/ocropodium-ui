@@ -1,10 +1,10 @@
 var transcript = null;
 var sdviewer = null;
 var formatter = null;
-var polltimeout = -1;
 var hsplitL, hsplitR;
 var cmdstack = null;
 var spellcheck = null;
+var taskwatcher = null;
 
 
 
@@ -216,39 +216,6 @@ $(function() {
         }
     }
 
-    function pollForResults(data, polltime) {
-        if (data == null) {
-            alert("Return data is null!");
-        } else if (data.error) {
-            alert(data.error);
-        } else if (data.status == "PENDING") {
-            $.ajax({
-                url: "/ocr/viewer_binarization_results/" + data.task_id + "/",
-                dataType: "json",
-                beforeSend: function(e) {
-                    sdviewer.setWaiting(true);
-                },
-                complete: function(e) {
-                    sdviewer.setWaiting(false);
-                },
-                success: function(data) {
-                    if (polltimeout != -1) {
-                        clearTimeout(polltimeout);
-                        polltimeout = -1;
-                    }
-                    polltimeout = setTimeout(function() {
-                        pollForResults(data, polltime);
-                    }, polltime);
-                },
-                error: OcrJs.ajaxErrorHandler,
-            });
-        } else if (data.status == "SUCCESS") {
-            $(sdviewer).data("binpath", data.results.out);
-            sdviewer.openDzi(data.results.dst);
-            sdviewer.setWaiting(false);
-        }
-    }
-
     function unsavedPrompt() {
         return confirm("Save changes to transcript?");
     }
@@ -310,22 +277,8 @@ $(function() {
         $("#edit_task").attr("href",
                 "/presets/builder/" + task_pk + "?ref="
                 + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
-        $.ajax({
-            url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
-            dataType: "json",
-            beforeSend: function(e) {
-                //sdviewer.close();
-                sdviewer.setWaiting(true);
-            },
-            success: function(data) {
-                if (polltimeout != -1) {
-                    clearTimeout(polltimeout);
-                    polltimeout = -1;
-                }
-                pollForResults(data, 300);
-            },
-            error: OcrJs.ajaxErrorHandler,
-        })
+
+        taskwatcher.run("/ocr/submit_viewer_binarization/" + task_pk + "/");
     }
 
     function stackChanged() {
@@ -341,6 +294,25 @@ $(function() {
             disabled: !cmdstack.canUndo(),
         });
     }
+
+    taskwatcher = new OcrJs.TaskWatcher(300); // millisecond delay
+    taskwatcher.addListeners({
+        start: function() {
+            sdviewer.setWaiting(true);
+        },
+        poll: function(count) {
+
+        },
+        error: function(msg) {
+            alert(msg);
+        },
+        done: function(data) {
+            sdviewer.setWaiting(false);
+            $(sdviewer).data("binpath", data.results.out);
+            sdviewer.openDzi(data.results.dst);
+            sdviewer.setWaiting(false);
+        },
+    });
 
     // initialize undo stack
     cmdstack = new OcrJs.UndoStack(this, {max: 50});
@@ -376,14 +348,6 @@ $(function() {
     // This is likely to be horribly inefficient, at least
     // at first...
     transcript.addListeners({
-        //onTaskChange: function() {
-        //    var ismax = $("#page_slider").slider("option", "value")
-        //            == $("#batchsize").val() - 1;
-        //    var ismin = $("#page_slider").slider("option", "value") == 0;
-        //    $("#next_page").button({disabled: ismax});
-        //    $("#prev_page").button({disabled: ismin});
-        //    $("#heading").button({disabled: true});
-        //},
         hoverPosition: function(position) {
             if (!($("input[name=vlink]:checked").val() == "hover"
                     && sdviewer.isReady()))
@@ -433,7 +397,7 @@ $(function() {
                     if (fun)
                         fun.apply(this, funargs);
                 } else {
-                    console.error(data);
+                    alert(data);
                 }
             },
         });
