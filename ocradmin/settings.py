@@ -312,6 +312,7 @@ COMPRESS_JS = {
             "js/ocr_js/base.js",
             "js/ocr_js/helpers.js",
             "js/ocr_js/constants.js",
+            "js/ocr_js/task_watcher.js",
         ),
         "output_filename": "js/ocrjs_compress.js",
     },        
