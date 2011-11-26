@@ -128,7 +128,7 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
         this._menu = $.tmpl(this._menutemplate, {
             stages: stages,
         }).hide();
-        $(this.canvas).after(this._menu);
+        $("body").append(this._menu);
         this.setupMenuEvents();
     },
 });
