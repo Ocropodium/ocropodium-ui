@@ -30,8 +30,12 @@
     font-weight: normal; 
 }
 
+.ocr_page {
+    margin: 20px;
+}
+
 .ocr_line {
-    font-size: 1.1em;
+    font-size: 1.3em;
     border: 1px solid transparent;
     padding: 0px;
     margin: 3px 0px;
