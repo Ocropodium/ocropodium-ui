@@ -26,7 +26,7 @@ from ocradmin.batch.models import Batch
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.core.views import AppException
 from ocradmin.presets.models import Preset
-from ocradmin.plugins import stages
+from ocradmin.nodelib import stages
 from nodetree import script
 
 

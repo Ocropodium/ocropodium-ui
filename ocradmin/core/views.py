@@ -11,7 +11,7 @@ from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson as json
 from ocradmin.core import utils as ocrutils
-from ocradmin.plugins import utils as pluginutils
+from ocradmin.nodelib import utils as pluginutils
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.transcripts.models import Transcript

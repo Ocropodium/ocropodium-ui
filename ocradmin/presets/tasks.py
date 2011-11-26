@@ -13,8 +13,8 @@ from django.contrib.auth.models import User
 
 from ocradmin.core import utils
 from ocradmin.ocrtasks.decorators import register_handlers
-from ocradmin.plugins import cache, types, nodes
-from ocradmin.plugins import utils as pluginutils
+from ocradmin.nodelib import cache, types, nodes
+from ocradmin.nodelib import utils as pluginutils
 
 from nodetree import node, script, exceptions
 import numpy
