@@ -3,7 +3,7 @@ URLConf for OCR presets.
 """
 from django.conf.urls.defaults import *
 from django.contrib.auth.decorators import login_required
-from ocradmin.presets import presetviews as views
+from ocradmin.presets import views
 
 
 urlpatterns = patterns('',
