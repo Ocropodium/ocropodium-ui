@@ -69,6 +69,12 @@ class ViewsTest(TestCase):
         """
         self._run_script("ocropus.json", "SUCCESS", "hocr", ["data"])
 
+    def test_tesseract_native_seg_script(self):
+        """
+        Test a script that should return transcript data.
+        """
+        self._run_script("tesseract_native_seg.json", "SUCCESS", "hocr", ["data"])
+
     def test_tesseract_script(self):
         """
         Test a script that should return transcript data.
