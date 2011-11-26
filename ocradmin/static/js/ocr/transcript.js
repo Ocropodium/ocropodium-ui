@@ -173,13 +173,13 @@ $(function() {
             });
         });
         $(element).bind("blur.editkeycmd", function(event) {
-            transcript.finishEditing(element, initialcontent, true);
+            transcript.finishEditing(element, initialcontent, true, true);
         });
     }
 
     function bindNavKeys() {
         unbindEditKeys();
-        unbindEditKeys();
+        unbindNavKeys();
         $.each(cmdmap, function(key, handler) {
             $(document).bind("keydown.keycmd", key, function(event) {
                 handler.apply();

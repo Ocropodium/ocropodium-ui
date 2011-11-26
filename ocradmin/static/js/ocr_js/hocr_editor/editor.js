@@ -150,12 +150,18 @@ HE.Editor = OcrJs.Base.extend({
 
     },
 
-    finishEditing: function(element, initialcontent, save) {
+    finishEditing: function(element, initialcontent, save, blur) {
         $(element)
             .find("*").removeClass("selectable").end()
             .removeClass("selectable editing")
             .unbind(".finishedit")
             .removeAttr("contentEditable");
+        // if the editing wasn't terminated by a blur of the element,
+        // trigger a blur and way since this seems to be the only
+        // was to force Firefix and Chrome to remove the contentEditable
+        // styling from the line
+        if (!blur)
+            $(element).blur();
         if (save)
             this.cmdReplaceLineText(element, initialcontent, $(element).html());
         else
