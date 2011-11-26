@@ -12,6 +12,7 @@ from ocradmin.core.tests import testutils
 from nodetree import script, node, exceptions
 import numpy
 
+from ocradmin.nodelib import nodes
 
 VALID_SCRIPTDIR = "nodelib/scripts/valid"
 INVALID_SCRIPTDIR = "nodelib/scripts/invalid"
