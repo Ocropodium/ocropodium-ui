@@ -3,7 +3,6 @@ Basic OCR functions.  Submit OCR tasks and retrieve the result.
 """
 
 import os
-from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect, \
         HttpResponseServerError
@@ -27,7 +26,6 @@ class AppException(StandardError):
     pass
 
 
-@login_required
 def index(request):
     """
     OCR index page.
@@ -35,7 +33,20 @@ def index(request):
     return HttpResponseRedirect("/presets/builder/")
 
 
-@login_required
+def abort(request, task_id):
+    """
+    Kill a running celery task.
+    """
+    OcrTask.revoke_celery_task(task_id, kill=True)
+    out = dict(
+        task_id=task_id,
+        status="ABORT"
+    )
+    response = HttpResponse(mimetype="application/json")
+    json.dump(out, response, ensure_ascii=False)
+    return response
+
+
 @saves_files
 def update_ocr_task(request, task_pk):
     """
@@ -45,7 +56,6 @@ def update_ocr_task(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     script = request.POST.get("script")
     ref = request.POST.get("ref", "/batch/show/%d/" % task.batch.pk)
-    print "UPDATING WITH REF: %s" % ref
     try:
         json.loads(script)
         task.args = (task.args[0], script, task.args[2])
@@ -56,7 +66,6 @@ def update_ocr_task(request, task_pk):
     return HttpResponseRedirect(ref)
 
 
-@login_required
 def transcript(request, task_pk):
     """
     View the transcription of a task.
@@ -72,7 +81,6 @@ def transcript(request, task_pk):
             context_instance=RequestContext(request))
 
 
-@login_required
 def save_transcript(request, task_pk):
     """
     Save data for a single page.
@@ -94,7 +102,6 @@ def save_transcript(request, task_pk):
             mimetype="application/json")
 
 
-@login_required
 def task_transcript(request, task_pk):
     """
     Retrieve the results using the previously provided task name.
@@ -103,7 +110,6 @@ def task_transcript(request, task_pk):
     return HttpResponse(task.latest_transcript())
 
 
-@login_required
 def task_config(request, task_pk):
     """
     Get a task config as a set of key/value strings.
@@ -114,7 +120,6 @@ def task_config(request, task_pk):
 
 
 @project_required
-@login_required
 @saves_files
 def submit_viewer_binarization(request, task_pk):
     """
@@ -132,10 +137,9 @@ def submit_viewer_binarization(request, task_pk):
     return HttpResponse(json.dumps(out), mimetype="application/json")
 
 
-@login_required
-def viewer_binarization_results(request, task_id):
+def result(request, task_id):
     """
-    Trigger a re-binarization of the image for viewing purposes.
+    Fetch the result for one Celery task id.
     """
     async = OcrTask.get_celery_result(task_id)
     out = dict(
@@ -143,7 +147,26 @@ def viewer_binarization_results(request, task_id):
         status=async.status,
         results=async.result
     )
-    return HttpResponse(json.dumps(out), mimetype="application/json")
+    response = HttpResponse(mimetype="application/json")
+    json.dump(out, response, ensure_ascii=False)
+    return response
+
+
+def results(request, task_ids):
+    """
+    Fetch the results of several Celery task ids.
+    """
+    out = []
+    for task_id in task_ids.split(","):
+        async = OcrTask.get_celery_result(task_id)
+        out.append(dict(
+            result=_flatten_result(async.result),
+            task_id=task_id,
+            status=async.status,
+        ))
+    response = HttpResponse(mimetype="application/json")
+    json.dump(out, response, ensure_ascii=False)
+    return response
 
 
 def test(request):
@@ -161,5 +184,16 @@ def testparams(request):
     """
 
     return render_to_response("ocr/testparams.html", {})
+
+
+def _flatten_result(result):
+    """
+    Ensure we can serialize a celery result.
+    """
+    if issubclass(type(result), Exception):
+        return result.message
+    else:
+        return result
+
 
 

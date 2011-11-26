@@ -18,7 +18,6 @@ var resultcache = {};
 var statusbar = null;
 var statemanager = null;
 
-
 $(function() {
 
     // we don't want any button to have the default focus,
@@ -335,13 +334,22 @@ $(function() {
         sdviewer.update();
     }
 
-    function handleResult(nodename, data, cached) {
-        if (!data.result || !data.result.type) {
-            console.error("Unexpected process result: ", data);
+    function handleValidationError(errors) {
+        $.each(errors, function(node, error) {
+            nodetree.setNodeErrored(node, error);
+        });
+        // clear the client-size cache
+        resultcache = {};
+    }
+
+    function handleResult(nodename, result, cached) {
+        if (!result || !result.type) {
+            console.error("Unexpected process result: ", result);
             return;
         }
-        if (data.result.type == "error") {
-            console.log("NODE ERROR: ", data.result.node, data.result.error);
+
+        if (result.type == "error") {
+            console.log("NODE ERROR: ", result.node, result.error);
             nodetree.setNodeErrored(data.result.node, data.result.error);
             return;
         }
@@ -351,33 +359,33 @@ $(function() {
             var node = nodetree.getNode(nodename);
             if (node) {
                 var hash = hex_md5(bencode(node.hashValue()));
-                resultcache[hash] = data;
+                resultcache[hash] = result;
             }
         }
 
-        if (data.result.type == "image" || data.result.type == "pseg") {
+        if (result.type == "image" || result.type == "pseg") {
             // this magic hides the buffer loading transition by putting the
             // new data in the back buffer and switching them after a delay
             // TODO: Find if we can subscript to an event to tell us exactly
             // when it's safe to switch.  ATM just using a 200ms delay.
-            sdviewer.openDzi(data.result.dzi);
+            sdviewer.openDzi(result.dzi);
             sdviewer.clearHighlights();
             guimanager.refreshGui();
             
-            if (data.result.type == "pseg") {
-                highlightComponents(data.result);
+            if (result.type == "pseg") {
+                highlightComponents(result);
             }
            // sdviewer.setBufferOverlays(overlays, 0);
             $("#viewertabs").tabs("select", 0);
-        } else if (data.result.type == "hocr") {
-            hocrviewer.setData(data.result.data);
+        } else if (result.type == "hocr") {
+            hocrviewer.setData(result.data);
             $("#viewertabs").tabs("select", 1);
             $("input[name='format']:checked").click();
-        } else if (data.result.type == "text") {
-            textviewer.setData(data.result.data);
+        } else if (result.type == "text") {
+            textviewer.setData(result.data);
             $("#viewertabs").tabs("select", 2);
         } else {
-            throw "Unknown result type: " + data.result.type;
+            throw "Unknown result type: " + result.type;
         }
     }
 
@@ -391,8 +399,14 @@ $(function() {
                 if (resultcache[hash]) {
                     console.log("Found cached result for:", nodename);
                     handleResult(nodename, resultcache[hash], true);
-                } else
-                    reshandler.runScript(nodename, nodetree.buildScript());
+                } else {
+                    reshandler.run("/presets/run/", {
+                        script: JSON.stringify(nodetree.buildScript()),
+                        node: nodename,
+                    }, {
+                        node: nodename,    
+                    });
+                }
             }
         }
     }
@@ -406,7 +420,7 @@ $(function() {
     statusbar = new OcrJs.StatusBar($("#status_bar").get(0));
     hocrviewer = new OcrJs.HocrViewer($("#hocrviewer_1").get(0));
     textviewer = new OcrJs.TextViewer($("#textviewer_1").get(0));
-    reshandler = new OcrJs.ResultHandler();
+    reshandler = new OcrJs.TaskWatcher(200);
     formatter = new OcrJs.LineFormatter();
     cmdstack = new OcrJs.UndoStack(this, {max: 50});
     nodetree = new OcrJs.Nodetree.Tree($("#node_canvas"), cmdstack);
@@ -448,6 +462,43 @@ $(function() {
         cleared: function() {
             $("#current_preset_name").text(statemanager.getCurrentName());
             $("#preset_unsaved").hide();
+        },
+    });
+
+    reshandler.addListeners({
+        start: function() {
+            $("#stop_refresh").button({
+                text: false,
+                icons: {
+                    primary: "ui-icon-cancel",
+                }
+            });
+            //showPending();
+            nodetree.clearErrors();
+            statusbar.setWorking(true);
+        },
+        done: function(data, meta) {
+            $("#stop_refresh").button({
+                text: false,
+                icons: {
+                    primary: "ui-icon-refresh",
+                }
+            });
+            statusbar.setWorking(false);
+            nodetree.clearErrors();
+            if (data.status == "NOSCRIPT")
+                console.log("Server said 'Nothing to do'")
+            else if (data.status == "VALIDATION") {
+                handleValidationError(data.errors);
+            } else {
+                if (data.status != "ABORT" && data.status != "FAILURE")
+                   handleResult(meta.node, data.results, false);
+            }
+
+        },
+        error: function(msg) {
+            statusbar.setWorking(false);
+            alert(msg);
         },
     });
 
@@ -574,47 +625,6 @@ $(function() {
         rightClicked: function(event, context) {
             nodemenu.showContextMenu(event, context);
         },
-    });
-
-    reshandler.addListeners({
-        resultPending: function() {
-            $("#stop_refresh").button({
-                text: false,
-                icons: {
-                    primary: "ui-icon-cancel",
-                }
-            });
-            //showPending();
-            nodetree.clearErrors();
-            statusbar.setWorking(true);
-        },
-        validationErrors: function(nodeerrors) {
-            //clearTimeout(reftimer);
-            $("#stop_refresh").button({
-                text: false,
-                icons: {
-                    primary: "ui-icon-refresh",
-                }
-            });
-            nodetree.clearErrors();
-            $.each(nodeerrors, function(node, error) {
-                nodetree.setNodeErrored(node, error);
-            });
-            // clear the client-size cache
-            resultcache = {};
-        },
-        resultDone: function(node, data) {
-            //clearTimeout(reftimer);
-            $("#stop_refresh").button({
-                text: false,
-                icons: {
-                    primary: "ui-icon-refresh",
-                }
-            });
-            statusbar.setWorking(false);
-            if (data.status != "ABORT" && data.status != "FAILURE")
-               handleResult(node, data, false);
-        }
     });
 
     var hsplit = $("#sidebar").layout({

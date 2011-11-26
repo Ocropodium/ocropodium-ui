@@ -217,38 +217,6 @@ def run_preset(request):
     return response
 
 
-def results(request, task_ids):
-    """
-    Fetch the results of several Celery task ids.
-    """
-    out = []
-    for task_id in task_ids.split(","):
-        async = OcrTask.get_celery_result(task_id)
-        out.append(dict(
-            result=_flatten_result(async.result),
-            task_id=task_id,
-            status=async.status,
-        ))
-    response = HttpResponse(mimetype="application/json")
-    json.dump(out, response, ensure_ascii=False)
-    return response
-
-
-def abort(request, task_ids):
-    """
-    Kill a running task.
-    """
-    out = []
-    for task_id in task_ids.split(","):
-        OcrTask.revoke_celery_task(task_id, kill=True)
-        out.append(dict(
-            task_id=task_id,
-        ))
-    response = HttpResponse(mimetype="application/json")
-    json.dump(out, response, ensure_ascii=False)
-    return response
-
-
 @saves_files
 def upload_file(request):
     """
@@ -275,16 +243,6 @@ def layout_graph(request):
     return HttpResponse(
             json.dumps(graph.get_node_positions(nodes)),
                 mimetype="application/json")
-
-
-def _flatten_result(result):
-    """
-    Ensure we can serialize a celery result.
-    """
-    if issubclass(type(result), Exception):
-        return result.message
-    else:
-        return result
 
 
 def _cache_name(request):
