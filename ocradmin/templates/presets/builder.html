@@ -1,0 +1,189 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - Convert {% endblock %}
+
+{% block headerscript %}
+
+    {% load compressed %}
+    {% compressed_js 'undostack' %}
+    {% compressed_js 'viewers' %}
+    {% compressed_js 'nodetree' %}
+
+	<script type='application/javascript' src='/static/js/presets/builder.js'></script>
+	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+
+    {% compressed_css 'nodetree' %}
+    {% compressed_css 'viewers' %}
+
+{% endblock %}
+
+{% block content %}
+    {% include "includes/node.html" %}
+    {% include "includes/preset_manager.html" %}
+    <div id="tabs_container">
+        <div  id="viewertabs" class="ui-layout-center ui-header-tabs">
+            <ul>
+                <li><a href="#imageviewer_1_container">Image Viewer</a></li>
+                <li><a href="#hocrviewer_1_container">OCR Viewer</a></li>
+                <li><a href="#textviewer_1_container">Text Viewer</a></li>
+            </ul>
+            <div class="ui-layout-content">            
+                <div id="imageviewer_1_container">
+                    <div id="imageviewer_1_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
+                        <button class="tbbutton" id="image_zoomout">Zoom Out</button>
+                        <button class="tbbutton" id="image_zoomin">Zoom In</button>
+                        <button class="tbbutton" id="centre">Centre</button>
+                        <button class="tbbutton" id="fullscreen">Full Screen</button>
+                        <span>&nbsp;&nbsp;&nbsp;</span>
+                        <button class="tbbutton" id="refresh">Refresh</button>
+                    </div>
+                    <div id="imageviewer_1" class="imageviewer ui-background-flat"></div>
+                </div>
+                <div id="hocrviewer_1_container">
+                    <div id="hocrviewer_1_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
+                        <button class="tbbutton" id="hocr_zoomout">Zoom Out</button>
+                        <button class="tbbutton" id="hocr_zoomin">Zoom In</button>
+                        <span>&nbsp;&nbsp;&nbsp;</span>
+                        <span id="format">
+                            <input type="radio" class="tbbutton" id="format_block" name="format" checked="checked" />
+                            <label for="format_block">Block</label>
+                            <input type="radio" class="tbbutton" id="format_column" name="format" />
+                            <label for="format_column">Column</label>
+                        </span>
+                    </div>
+                    <div id="hocrviewer_1" class="textviewer"></div>
+                </div>
+                <div id="textviewer_1_container">
+                    <div id="textviewer_1_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
+                        <button class="tbbutton" id="text_zoomout">Zoom Out</button>
+                        <button class="tbbutton" id="text_zoomin">Zoom In</button>
+                    </div>
+                    <div id="textviewer_1" class="textviewer"></div>
+                </div>
+            </div>
+        </div>            
+    </div>
+{% endblock %}
+{% block sidebar %}
+    <form id="taskdetailsform">
+        <input type="hidden" id="edit_task_pk" name="task_pk" value="{{task.pk}}" />
+        <input type="hidden" id="edit_task_batch" name="task_batch" value="{{task.batch.name}}" />
+        <input type="hidden" id="edit_task_page" name="task_page" value="{{task.page_name}}" />
+        <input type="hidden" id="edit_task_script" name="task_script" value="{{task.args.1}}" />
+    </form>
+
+    <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center ui-background-flat"></div>
+    <!-- NB. This is lower down in the DOM than the parameters, despite
+     being positioned above.  It is so the menu overlaps the params
+     where necessary -->
+     <div class="ui-layout-north toolbar_container" id="script_toolbar_container">
+         <div class="ui-helper-hidden-accessible" id="preset_dialogs">
+            <div class="preset_error" id="preset_error">
+                <ul id="preset_errors">
+                </ul>
+            </div>
+            <div class="preset_dialog" id="create_preset">    
+                <form method="POST" action="/presets/create/" id="new_preset_form">
+                    <fieldset>
+                        <legend>New OCR Preset</legend>
+                        {% for field in form.visible_fields %}
+                            <div class="field_wrapper">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {{ field.errors}}
+                            </div>
+                        {% endfor %}
+                        {% for field in form.hidden_fields %}
+                            {{ field }}
+                        {% endfor %}
+                    </fieldset>
+                    <div class="buttons">
+                        <button id="cancel_dialog">Cancel</button>
+                        <input type="submit" disabled="disabled" id="submit_create_new" value="Save" />
+                    </div>
+                </form>
+            </div>
+            <div class="preset_dialog"  id="open_preset">    
+                <div id="filter_box" class="field_wrapper">
+                    <input type="text" id="filter_presets" />
+                </div>
+                <ul id="open_preset_list">
+                    {% for preset in presets %}
+                    <li class="preset_item" id="preset_{{forloop.counter}}" title="{{preset.description}}"
+                            data-slug="{{preset.slug}}" data-tags="{{preset.tags}}">
+                        {{preset.name}}
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="buttons">
+                    <button id="cancel_dialog">Cancel</button>
+                    <input type="submit" disabled="disabled" id="submit_open_preset" value="Open" />
+                </div>
+            </div>
+            <div class="preset_dialog"  id="unsaved_preset">    
+                <div>Do you want to update this preset or save under a different name?</div>
+                <div class="buttons">
+                    <button id="submit_close_without_saving">Discard</button>
+                    <button id="submit_save_script">Save Changes</button>
+                    <button id="submit_save_script_as">Save Script as...</button>
+                </div>
+            </div>
+        </div>
+        <div id="preset_toolbar_header" class="ui-widget-header ui-layout-header">Preset Editor -
+            <span id="current_preset_name">Untitled 1</span><span id="preset_unsaved">*</span>
+        </div>
+        <div id="script_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
+            <span class="buttons_left">
+                {% if task %}
+                <button id="save_task_preset">Save</button>
+                <button id="cancel_task_preset">Cancel</button>
+                {% else %}
+                <div class="appmenu dropdown">
+                    <ul class="top">
+                        <li>
+                            <a id="show_file_menu" class="ui-helper-clearfix">Hello</a>
+                            <ul id="file_menu" style="display:none">
+                                <li><a href="#" id="new_script">New...</a></li>
+                                <li><a href="#" id="open_script">Open Script</a></li>
+                                <li><a href="#" id="save_script">Save</a></li>
+                                <li><a href="#" id="save_script_as">Save as...</a></li>
+                                <li><a href="#" id="download_script">Export</a></li>
+                                <li><a href="#" id="close_script">Close</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+                <span>&nbsp;&nbsp;&nbsp;</span>
+                <button id="undo_command" disabled="disabled">Undo</button>
+                <button id="redo_command" disabled="disabled">Redo</button>
+                <span>&nbsp;&nbsp;&nbsp;</span>
+                <button id="stop_refresh">Rerun</button>
+                <button id="focus_script">Home</button>
+                <button id="layout_nodes">Cleanup Node Layout</button>
+                <button id="clear_cache">Clear Cache</button>
+                <button id="focus_dummy"></button>
+            </span>
+            <div id="dialog"></div>
+        </div>                
+    </div>
+    <div class="ui-layout-south ui-widget">
+        <form id="optionsform">
+            <div id="parameters" class="node_parameters ui-medium-flat">
+                <h1>No Node Selected</h1>
+            </div>
+        </form>
+    </div>
+    {% if task %}
+    <!-- form for POSTing updated task scripts -->
+    <form id="task_update_form" action="/ocr/update_task/{{task.pk}}/" method="POST">
+        <input type="hidden" id="task_update_script" name="script" value="" />
+        <input type="hidden" id="task_update_ref" name="ref" value="{{ref}}" />
+    </form>
+    {% endif %}
+    <!-- form for downloading scripts... this is a bit of a hack. -->
+    <form id="fetch_script" method="POST" action="/presets/fetch/" >
+        <input name="name" type="hidden" id="fetch_script_slug" />
+        <input name="script" type="hidden" id="fetch_script_data" />
+    </form>
+{% endblock %}

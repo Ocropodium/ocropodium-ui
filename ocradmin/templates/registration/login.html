@@ -1,0 +1,36 @@
+{% extends "standard.html" %}
+
+{% block headerscript %}
+<!-- <link type="text/css" rel="stylesheet" href="/static/css/forms.css" media="screen" /> -->
+
+{% endblock %}
+
+{% block content %}
+<script type="text/javascript">
+    $(document).ready(function(e) {
+            $("#login_dialog").dialog({modal: true, width: 400, title: "Please login..."});
+    });
+</script>
+ 
+<div id="login_dialog">
+    {% if form.errors %}
+        <div class="error">Your username and password didn't match. Please try again.</div>
+    {% endif %}
+
+    <div class="form">
+        <form method="post" action="{% url django.contrib.auth.views.login %}">
+            {% csrf_token %}
+            {{ form.username.label_tag }}<br />
+            {{ form.username }}<br /> 
+            {{ form.password.label_tag }}<br /> 
+            {{ form.password }}<br />  
+            <br />
+            <input type="submit" id="submit_login" value="Submit" /><br /> 
+            <input type="hidden" name="next" value="{{ next }}" />
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}
+ 
