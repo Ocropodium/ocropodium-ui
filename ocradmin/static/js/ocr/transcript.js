@@ -1,8 +1,10 @@
 var transcript = null;
 var sdviewer = null;
 var formatter = null;
-var polltimeout = -1;
 var hsplitL, hsplitR;
+var cmdstack = null;
+var spellcheck = null;
+var taskwatcher = null;
 
 
 
@@ -99,17 +101,103 @@ $(function() {
     $("#vlink").buttonset();
 
     $("#format_block").click(function(event) {
-        formatter.blockLayout($(".transcript_lines"));
+        formatter.blockLayout($("#transcript"));
     });
     $("#format_column").click(function(event) {
-        formatter.columnLayout($(".transcript_lines"));
+        formatter.columnLayout($("#transcript"));
     });
     $("#page_slider").slider({
         min: 0,
         max: $("#batchsize").val() - 1,
         value: $("#batchoffset").val(),
     });
-    
+    $("#undo_command").click(function(event) {
+        cmdstack.undo();
+    });
+    $("#redo_command").click(function(event) {
+        cmdstack.redo();
+    });
+
+    // map of key commands to functions
+    var cmdmap = {
+        "ctrl+z": function() { 
+            cmdstack.undo();
+        },
+        "ctrl+shift+z": function() {
+            cmdstack.redo();
+        },
+        "ctrl+shift+s": function() { 
+            $("#spellcheck").click();
+        },
+        "alt+ctrl+s": function() {
+            saveTranscript();
+        },
+        "tab": function() {
+            transcript.forward();
+        },
+        "shift+tab": function() {
+            transcript.backward();
+        },
+        "f2": function() {
+            transcript.editLine();
+        },
+    };
+
+    var editcmdmap = {
+        "esc": function(element, content) {
+            transcript.finishEditing(element, content, false);
+        },
+        "return": function(element, content) {
+            transcript.finishEditing(element, content, true);
+        },
+        "shift+tab": function(element, content) {
+            transcript.finishEditing(element, content, true);
+            transcript.backward();
+            transcript.editLine();
+        },
+        "tab": function(element, content) {
+            transcript.finishEditing(element, content, true);
+            transcript.forward();
+            transcript.editLine();
+        },
+    };
+
+    function bindEditKeys(element, initialcontent) {
+        unbindEditKeys();
+        unbindNavKeys();
+        $.each(editcmdmap, function(key, handler) {
+            $(document).bind("keydown.editkeycmd", key, function(event) {
+                handler(element, initialcontent);
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        });
+        $(element).bind("blur.editkeycmd", function(event) {
+            transcript.finishEditing(element, initialcontent, true, true);
+        });
+    }
+
+    function bindNavKeys() {
+        unbindEditKeys();
+        unbindNavKeys();
+        $.each(cmdmap, function(key, handler) {
+            $(document).bind("keydown.keycmd", key, function(event) {
+                handler.apply();
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        });
+    }
+
+    function unbindNavKeys() {
+        $(document).unbind(".keycmd");
+    }
+
+    function unbindEditKeys(element) {
+        $(document).unbind(".editkeycmd");
+        $(element).unbind(".editkeycmd");
+    }
+
 
     function saveState() {
         var view = {
@@ -128,55 +216,35 @@ $(function() {
         }
     }
 
-    function pollForResults(data, polltime) {
-        if (data == null) {
-            alert("Return data is null!");
-        } else if (data.error) {
-            alert(data.error);
-        } else if (data.status == "PENDING") {
-            $.ajax({
-                url: "/ocr/viewer_binarization_results/" + data.task_id + "/",
-                dataType: "json",
-                beforeSend: function(e) {
-                    sdviewer.setWaiting(true);
-                },
-                complete: function(e) {
-                    sdviewer.setWaiting(false);
-                },
-                success: function(data) {
-                    if (polltimeout != -1) {
-                        clearTimeout(polltimeout);
-                        polltimeout = -1;
-                    }
-                    polltimeout = setTimeout(function() {
-                        pollForResults(data, polltime);
-                    }, polltime);
-                },
-                error: OcrJs.ajaxErrorHandler,
-            });
-        } else if (data.status == "SUCCESS") {
-            $(sdviewer).data("binpath", data.results.out);
-            sdviewer.openDzi(data.results.dst);
-            sdviewer.setWaiting(false);
-        }
-    }
-
     function unsavedPrompt() {
         return confirm("Save changes to transcript?");
     }
 
+    function getBatchOffset() {
+        var batchoffset = parseInt($("#batchoffset").val());
+        var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
+        if (!isNaN(hashoffset))
+            batchoffset += hashoffset;
+        return batchoffset;
+    }
 
-    function updateTask(event) {
+    function getTaskPk() {
         var abstaskpk = parseInt($("#task_pk").val());
         var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
-        var batchoffset = parseInt($("#batchoffset").val());
-        if (!isNaN(hashoffset)) {
+        if (!isNaN(hashoffset))
             abstaskpk += hashoffset;
-            batchoffset += hashoffset;
-        }
-        transcript.setTaskId(abstaskpk);
-        console.log("Setting page slider to: " + batchoffset + " for task: " + abstaskpk);
-        $("#page_slider").slider({value: batchoffset});
+        return abstaskpk;
+    }
+
+
+    function updateTask(event) {
+        $("#transcript").load("/ocr/task_transcript/" + getTaskPk() + " .ocr_page:first",
+                null, function(text) {
+                    transcript.setWaiting(false);
+                    transcript.refresh();
+                    pageLoaded();
+        });
+        $("#page_slider").slider({value: getBatchOffset()});
     }
 
     function updateNavButtons() {
@@ -201,91 +269,120 @@ $(function() {
         }
     }
 
+    function pageLoaded() {
+        // get should-be-hidden implementation details
+        // i.e. the task id that process the page.  We
+        // want to rebinarize with the same params
+        var task_pk = getTaskPk();
+        $("#edit_task").attr("href",
+                "/presets/builder/" + task_pk + "?ref="
+                + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
+
+        taskwatcher.run("/ocr/submit_viewer_binarization/" + task_pk + "/");
+    }
+
+    function stackChanged() {
+        $("#undo_command")
+            .text(cmdstack.undoText())
+            .button({disabled: !cmdstack.canUndo()})
+            .button("refresh");
+        $("#redo_command")
+            .text(cmdstack.redoText())
+            .button({disabled: !cmdstack.canRedo()})
+            .button("refresh");
+        $("#save_data").button({
+            disabled: !cmdstack.canUndo(),
+        });
+    }
+
+    taskwatcher = new OcrJs.TaskWatcher(300); // millisecond delay
+    taskwatcher.addListeners({
+        start: function() {
+            sdviewer.setWaiting(true);
+        },
+        poll: function(count) {
+
+        },
+        error: function(msg) {
+            alert(msg);
+        },
+        done: function(data) {
+            sdviewer.setWaiting(false);
+            $(sdviewer).data("binpath", data.results.out);
+            sdviewer.openDzi(data.results.dst);
+            sdviewer.setWaiting(false);
+        },
+    });
+
+    // initialize undo stack
+    cmdstack = new OcrJs.UndoStack(this, {max: 50});
+
+    cmdstack.addListeners({
+        undoStateChanged: stackChanged,
+        redoStateChanged: stackChanged,
+        indexChanged: stackChanged,
+        stateChanged: function() {
+        },
+    });
 
     // initialise the transcript editor
-    transcript = new OcrJs.TranscriptEditor(document.getElementById("transcript"));
+    //transcript = new OcrJs.TranscriptEditor(document.getElementById("transcript"));
+    transcript = new OcrJs.HocrEditor.Editor($("#transcript").get(0), cmdstack);
+
+    function showPluginPane(onoff) {
+        hsplitL[onoff ? "show" : "hide"]("south");
+    }
+
+    // initialize spellcheck
+    spellcheck = new OcrJs.Spellchecker($("#plugin"), cmdstack);
+    spellcheck.addListeners({
+        onWordCorrection: function() {
+        },
+        onWordHighlight: function(element) {
+            transcript.setCurrentLine($(element).closest(".ocr_line"));
+        },
+    });
+    
     // When a page loads, read the data and request the source
     // image is rebinarized so we can view it in the viewer
     // This is likely to be horribly inefficient, at least
     // at first...
     transcript.addListeners({
-        onTaskChange: function() {
-            var ismax = $("#page_slider").slider("option", "value")
-                    == $("#batchsize").val() - 1;
-            var ismin = $("#page_slider").slider("option", "value") == 0;
-            $("#next_page").button({disabled: ismax});
-            $("#prev_page").button({disabled: ismin});
-            $("#heading").button({disabled: true});
-        },
-        onLineSelected: function(type) {
-            $("#heading").button({disabled: false});
-            $("#heading").prop("checked", type == "h1")
-                .button("refresh");
-        },
-        onTaskLoad: function() {
-            // get should-be-hidden implementation details
-            // i.e. the task id that process the page.  We
-            // want to rebinarize with the same params
-            var task_pk = transcript.taskId();
-            $("#edit_task").attr("href",
-                    "/presets/builder/" + task_pk + "?ref="
-                    + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
-            $.ajax({
-                url: "/ocr/submit_viewer_binarization/" + task_pk + "/",
-                dataType: "json",
-                beforeSend: function(e) {
-                    //sdviewer.close();
-                    sdviewer.setWaiting(true);
-                },
-                success: function(data) {
-                    if (polltimeout != -1) {
-                        clearTimeout(polltimeout);
-                        polltimeout = -1;
-                    }
-                    pollForResults(data, 300);
-                },
-                error: OcrJs.ajaxErrorHandler,
-            })
-        },
-        onTextChanged: function() {
-            $("#save_data").button({
-                disabled: false,
-            });
-        },
-        onSave: function() {
-            $("#save_data").button({
-                disabled: true,
-            });
-        },
-        onLinesReady: function() {
-            // trigger a reformat
-            $("input[name=format]:checked").click();
-        },
-        onHoverPosition: function(position) {
+        hoverPosition: function(position) {
             if (!($("input[name=vlink]:checked").val() == "hover"
                     && sdviewer.isReady()))
             return;
             positionViewer(position);
         },
-        onClickPosition: function(position) {
+        clickPosition: function(position) {
             if (!($("input[name=vlink]:checked").val() == "click"
                         && sdviewer.isReady()))
                 return;
             positionViewer(position);
         },
+        startEditing: function(element) {
+            unbindNavKeys();
+            bindEditKeys(element, $(element).html());
+        },
+        stopEditing: function(element, content) {
+            unbindEditKeys(element);
+            bindNavKeys();
+        },
     });
 
     $("#spellcheck").change(function(event) {
         if ($(this).prop("checked")) {
-            transcript.startSpellcheck();
+            showPluginPane(true);
+            spellcheck.spellcheck($(".ocr_line"));
         } else {
-            transcript.endSpellcheck();
+            spellcheck.unhighlight($(".ocr_line"));
+            showPluginPane(false);
         }
     });
 
     function saveTranscript(fun, funargs) {
         $.ajax({
-            url: "/ocr/save/" + transcript.taskId() + "/",
+            url: "/ocr/save/" + getTaskPk() + "/",
             data: {
                 data: transcript.getData()
             },
@@ -294,14 +391,13 @@ $(function() {
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
                 if (data && data.ok) {
-                    transcript.setCleanState();
                     $("#save_data").button({
                         disabled: true,
                     });
                     if (fun)
                         fun.apply(this, funargs);
                 } else {
-                    console.error(data);
+                    alert(data);
                 }
             },
         });
@@ -312,7 +408,7 @@ $(function() {
     });
 
     $("#save_training_data").click(function(event) {
-        var pk = transcript.taskId();
+        var pk = getTaskPk();
         $.ajax({
             url: "/reference_pages/create_from_task/" + pk + "/",
             dataType: "json",
@@ -351,7 +447,7 @@ $(function() {
             }
 
             // check for unsaved changes
-            if (transcript.hasUnsavedChanges()) {
+            if (cmdstack.canUndo()) {
                 if (!unsavedPrompt()) {
                     $("#page_slider").slider({value: orig});
                 } else {
@@ -396,6 +492,13 @@ $(function() {
             slidable: false,
             spacing_open: 0,
         },
+        south: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0,
+            initClosed: true,
+        },
     });
 
     hsplitR = $("#sidebar").layout({
@@ -429,6 +532,9 @@ $(function() {
 
     $(window).resize();
     sdviewer.resetSize();
+
+    // set up key commands
+    bindNavKeys();
 
     loadState();
 });

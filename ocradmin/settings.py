@@ -233,7 +233,7 @@ COMPRESS_CSS = {
             "css/messages.css",
             "css/clean.css",
         ),
-        "output_filename": "css/standard_compress.css",
+        "output_filename": "css/min/standard.css",
         "extra_context": {
             "media": "screen",
         }
@@ -243,7 +243,7 @@ COMPRESS_CSS = {
             "css/nodetree.css",
             "css/preset_manager.css",
         ),
-        "output_filename": "css/nodetree_compress.css",
+        "output_filename": "css/min/nodetree.css",
         "extra_context": {
             "media": "screen",
         }
@@ -255,7 +255,7 @@ COMPRESS_CSS = {
             "css/image_viewer.css",
             "css/text_viewer.css",
         ),
-        "output_filename": "css/viewers_compress.css",
+        "output_filename": "css/min/viewers.css",
         "extra_context": {
             "media": "screen",
         }
@@ -268,7 +268,7 @@ COMPRESS_CSS = {
            "css/line_editor.css",
            "css/spellcheck.css",
         ),
-        "output_filename": "css/transcript_edit_compress.css",
+        "output_filename": "css/min/transcript_edit.css",
         "extra_context": {
             "media": "screen",
         }
@@ -278,7 +278,7 @@ COMPRESS_CSS = {
 COMPRESS_JS = {
     "jquery": {
         "source_filenames": (
-            "js/jquery/jquery-1.7.min.js",
+            "js/jquery/jquery-1.7.1.min.js",
             "js/jquery/jquery-ui-1.8.4.custom.min.js",
             "js/jquery/jquery.cookie.js",
             "js/jquery/jquery.globalstylesheet.js",
@@ -286,17 +286,18 @@ COMPRESS_JS = {
             "js/jquery/jquery.titlecase.js",
             "js/jquery/jquery.tmpl.js",
             "js/jquery/jquery.rightClick.js",
-            "js/jquery/jquery.mousewheel.min.js",
+            "js/jquery/jquery.mousewheel.js",
             "js/jquery/jquery.layout-latest.js",
         	"js/jquery/jquery.hoverIntent.min.js",
+        	"js/jquery/jquery.hotkeys.js",
         ),
-        "output_filename": "js/jquery_compress.js",
+        "output_filename": "js/min/jquery-lib.min.js",
     },
     "utils" : {
         "source_filenames": (
             "js/utils/json2.js",
         ),
-        "output_filename": "js/utils_compress.js",
+        "output_filename": "js/min/utils.min.js",
     },
     "global": {
         "source_filenames": (
@@ -304,15 +305,16 @@ COMPRESS_JS = {
             "js/ocr_js/global.js",
             "js/status_bar.js",
         ),
-        "output_filename": "js/global_compress.js",
+        "output_filename": "js/min/global.min.js",
     },
     "ocrjs": {
         "source_filenames": (
             "js/ocr_js/base.js",
             "js/ocr_js/helpers.js",
             "js/ocr_js/constants.js",
+            "js/ocr_js/task_watcher.js",
         ),
-        "output_filename": "js/ocrjs_compress.js",
+        "output_filename": "js/min/ocrjs.min.js",
     },        
     "projectbrowser": {
         "source_filenames": (
@@ -322,7 +324,7 @@ COMPRESS_JS = {
             "js/project_list_widget.js",
             "js/projectbrowser.js",
         ),
-        "output_filename": "js/projectbrowser_compress.js",
+        "output_filename": "js/min/projectbrowser.min.js",
     },        
     "undostack": {
         "source_filenames": (
@@ -330,7 +332,7 @@ COMPRESS_JS = {
             "js/ocr_js/undo/macro.js",
             "js/ocr_js/undo/stack.js",
         ),
-        "output_filename": "js/undostack_compress.js",
+        "output_filename": "js/min/undostack.min.js",
     },        
     "nodetree": {
         "source_filenames": (
@@ -349,11 +351,10 @@ COMPRESS_JS = {
             "js/ocr_js/nodegui/manualseg_gui.js",
             "js/ocr_js/nodetree/cable.js",
             "js/preset_manager.js",
-            "js/result_handler.js",
             "js/crypto/bencode.js",
             "js/crypto/md5.js",
         ),
-        "output_filename": "js/nodetree_compress.js",
+        "output_filename": "js/min/nodetree.min.js",
     },
     "viewers": {
         "source_filenames": (
@@ -373,16 +374,16 @@ COMPRESS_JS = {
 	        "js/utils/stats.js",
             "js/line_formatter.js",
         ),
-        "output_filename": "js/viewers_compress.js",        
+        "output_filename": "js/min/viewers.min.js",        
     },
     "transcript_edit": {
         "source_filenames": (
-            "js/line_editor.js",
-            "js/spellcheck/suggestion_list.js",
-            "js/spellcheck/spellchecker.js",
-            "js/transcript_editor.js",
+            "js/ocr_js/hocr_editor/editor.js",
+            "js/ocr_js/hocr_editor/hocrdoc.js",
+            "js/ocr_js/hocr_editor/spellcheck/suggestion_list.js",
+            "js/ocr_js/hocr_editor/spellcheck/spellchecker.js",
         ),
-        "output_filename": "js/viewers_compress.js",        
+        "output_filename": "js/min/viewers.min.js",        
     },
 }
 

@@ -8,8 +8,8 @@ syntax: glob
 *.swo
 *.pyc
 
-*_compress.css
-*_compress.js
+static/css/min/
+static/js/min/
 ^OLD
 syntax: regexp
 ^release
