@@ -15,14 +15,14 @@ from django.core.exceptions import ValidationError
 from ocradmin.core import generic_views as gv
 from ocradmin.core.decorators import saves_files
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.plugins import graph, cache
-from ocradmin.plugins import utils as pluginutils
+from ocradmin.nodelib import graph, cache
+from ocradmin.nodelib import utils as pluginutils
 from ocradmin.presets.models import Preset, Profile
 
 from nodetree import script, node, registry
 from nodetree import utils as nodeutils
 
-from ocradmin.plugins import nodes
+from ocradmin.nodelib import nodes
 
 
 

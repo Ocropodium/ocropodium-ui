@@ -16,7 +16,7 @@ from django.conf import settings
 from HTMLParser import HTMLParser
 from xml.parsers import expat
 
-from ocradmin.plugins.utils import HocrToTextHelper
+from ocradmin.nodelib.utils import HocrToTextHelper
 
 
 class HocrParser(HTMLParser):

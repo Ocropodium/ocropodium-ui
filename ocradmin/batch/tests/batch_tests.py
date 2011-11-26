@@ -18,8 +18,8 @@ from ocradmin.core.tests import testutils
 from django.utils import simplejson as json
 
 TESTFILE = "etc/simple.png"
-SCRIPT1 = "plugins/scripts/valid/tesseract.json"
-SCRIPT2 = "plugins/scripts/valid/ocropus.json"
+SCRIPT1 = "nodelib/scripts/valid/tesseract.json"
+SCRIPT2 = "nodelib/scripts/valid/ocropus.json"
 
 
 

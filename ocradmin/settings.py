@@ -46,8 +46,8 @@ os.environ["PATH"] = "%s:%s" % (
         os.environ.get("PATH", "")
 )
 
-NODETREE_PERSISTANT_CACHER = "ocradmin.plugins.cache.PersistantFileCacher"
-#NODETREE_PERSISTANT_CACHER = "ocradmin.plugins.cache.MongoDBCacher"
+NODETREE_PERSISTANT_CACHER = "ocradmin.nodelib.cache.PersistantFileCacher"
+#NODETREE_PERSISTANT_CACHER = "ocradmin.nodelib.cache.MongoDBCacher"
 NODETREE_USER_MAX_CACHE = 10 # Maximum cache size, in Megabytes
 
 ADMINS = (
@@ -198,7 +198,7 @@ INSTALLED_APPS = (
     'core',
     'ocrmodels',
     'presets',
-    'plugins',
+    'nodelib',
     'ocrtasks',
     'reference_pages',
     'training',

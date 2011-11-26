@@ -12,7 +12,7 @@ from django.utils import simplejson as json
 
 from nodetree import cache, node, script, exceptions
 from django.conf import settings
-from ocradmin.plugins import stages, nodes
+from ocradmin.nodelib import stages, nodes
 
 
 

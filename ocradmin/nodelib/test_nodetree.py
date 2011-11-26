@@ -9,7 +9,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'ocradmin.settings'
 
 sys.path.insert(0, "lib")
 
-from ocradmin.plugins import nodes as nodetree_nodes
+from ocradmin.nodelib import nodes as nodetree_nodes
 
 from nodetree import script, registry
 

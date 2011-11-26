@@ -15,10 +15,10 @@ from nodetree import script, node
 import numpy
 from mock import patch
 
-VALID_SCRIPTDIR = "plugins/scripts/valid"
-INVALID_SCRIPTDIR = "plugins/scripts/invalid"
+VALID_SCRIPTDIR = "nodelib/scripts/valid"
+INVALID_SCRIPTDIR = "nodelib/scripts/invalid"
 
-from ocradmin.plugins import cache
+from ocradmin.nodelib import cache
 
 
 class ViewsTest(TestCase):
