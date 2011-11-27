@@ -195,6 +195,7 @@ INSTALLED_APPS = (
     'autoslug',
     'djcelery',
     'filebrowser',
+    'documents',
     'batch',
     'core',
     'ocrmodels',
@@ -217,9 +218,9 @@ SERIALIZATION_MODULES = {
 
 
 # Fedora Repository settings
-FEDORA_ROOT = 'https://localhost:8543/fedora/'
+FEDORA_ROOT = 'http://localhost:8080/fedora/'
 FEDORA_USER = 'fedoraAdmin'
-FEDORA_PASSWORD = 'fedoraAdmin'
+FEDORA_PASSWORD = 'fedora'
 FEDORA_PIDSPACE = 'simplerepo'
 FEDORA_IMAGE_NAME = "IMG"
 FEDORA_TRANSCRIPT_NAME = "TRANSCRIPT"
