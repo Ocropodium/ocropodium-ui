@@ -111,13 +111,22 @@ class ProjectsTest(TestCase):
         Insert a post test project view post
         """
         return self.client.post(
-            "/projects/create",
-            dict(
-                tags="test blah",
-                name="Test Project",
-                user=self.testuser.id,
-                description="Testing project creation",
-            ),
+            "/projects/create", { 
+                "0-name"              : "Yet ANother test",
+                "0-description"       : "",
+                "0-storage_backend"   : "FedoraStorage",
+                "0-tags"              : "",
+                "1-context"           : "/fedora",
+                "1-host"              : "localhost",
+                "1-image_name"        : "IMG",
+                "1-password"          : "fedora",
+                "1-namespace"          : "yet-another-test",
+                "1-port"              : "8080",
+                "1-transcript_name"   : "TRANSCRIPT",
+                "1-username"          : "fedoraAdmin",
+                "hash_0"              : "89075382b10c271f10c479251fa68c057242ba40",
+                "wizard_step"         : "1",
+            }
         )
 
     def _update_test_project(self):
@@ -128,8 +137,8 @@ class ProjectsTest(TestCase):
             "/projects/edit/1/",
             dict(
                 name="Test Update Project",
-                user=self.testuser.id,
                 tags="test project update",
+                storage_backend="FileSystemStorage",
                 description="",
             ),
         )

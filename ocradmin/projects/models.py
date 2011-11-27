@@ -10,16 +10,19 @@ import tagging
 import autoslug
 from ocradmin.core import utils as ocrutils
 
+from ocradmin.storage import registry
+
 
 class Project(models.Model):
     """
     OCR Project model.
     """
-    user = models.ForeignKey(User, related_name="projects")
     name = models.CharField(max_length=255, unique=True)
     slug = autoslug.AutoSlugField(populate_from="name", unique=True)
     description = models.TextField(blank=True)
     tags = tagging.fields.TagField()
+    storage_backend = models.CharField(max_length=255, 
+                choices=[(k, k) for k in registry.stores.keys()])
     created_on = models.DateTimeField(editable=False)
     updated_on = models.DateTimeField(blank=True, null=True, editable=False)
 
@@ -57,5 +60,19 @@ class Project(models.Model):
     def get_create_url(cls):
         """URL to create a new object"""
         return "/projects/create/"
+
+
+class ProjectStorageConfig(models.Model):
+    """Project storage config values."""
+    project = models.ForeignKey(Project, related_name="storage_config_values")
+    name = models.CharField(max_length=255)
+    value = models.CharField(max_length=255)
+
+    def __unicode__(self):
+        """
+        String representation.
+        """
+        return u"<%s='%s'>" % (self.name, self.value)
+
 
 
