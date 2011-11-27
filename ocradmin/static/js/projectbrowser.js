@@ -41,38 +41,6 @@ $(function() {
         });
         event.preventDefault();
     });
-
-    $("#new_project").click(function(event) {
-        var dialog = $("<div></div>")
-            .attr("id", "dialog")
-            .css("width", "700px")
-            .css("height", "500px")
-            .dialog({
-                width: 700,
-                height: 500,
-                title: "New Project...",
-                close: function() {
-                    $(this).remove();
-                },
-                modal: true,
-            }).append(
-                $("<form></form>")
-                    .attr("method", "POST")
-                    .attr("action", "/projects/create")
-            .load("/projects/create/", function() {
-                $(this).append(
-                    $("<div></div>").addClass("form_footer")
-                        .append($("<input />")
-                            .attr("id", "submit_new_project_form")
-                            .attr("disabled", true)
-                            .attr("type", "submit").val("Create New Project"))
-                )
-                $("#id_name").live("keyup", function(event) {
-                    validateProjectForm(dialog);
-                });
-            }));
-        event.preventDefault();
-    });
 });
 
 
