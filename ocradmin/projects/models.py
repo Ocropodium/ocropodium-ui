@@ -6,7 +6,7 @@ and presets.
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
-import tagging
+from tagging import fields as taggingfields
 import autoslug
 from ocradmin.core import utils as ocrutils
 
@@ -20,7 +20,7 @@ class Project(models.Model):
     name = models.CharField(max_length=255, unique=True)
     slug = autoslug.AutoSlugField(populate_from="name", unique=True)
     description = models.TextField(blank=True)
-    tags = tagging.fields.TagField()
+    tags = taggingfields.TagField()
     storage_backend = models.CharField(max_length=255, 
                 choices=[(k, k) for k in registry.stores.keys()])
     created_on = models.DateTimeField(editable=False)
@@ -31,6 +31,15 @@ class Project(models.Model):
         String representation.
         """
         return self.name
+
+    def storage_config_dict(self):
+        """Return a dictionary of storage config values."""
+        return dict([(c.name, c.value) \
+                for c in self.storage_config_values.all()])
+
+    def get_storage(self):
+        backend = registry.stores[self.storage_backend]
+        return backend(**self.storage_config_dict())
 
     def save(self):
         if not self.id:
