@@ -21,6 +21,7 @@
             <div id="object_form">
 
                 <form name="batchform" method="POST" action="/batch/create/" id="batchform">
+                    {% csrf_token %}
                     <div class="form_body ui-layout-content">
                         {% include "batch/includes/new_form.html" %}
                     </div>

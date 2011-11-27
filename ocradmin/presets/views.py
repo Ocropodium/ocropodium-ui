@@ -11,6 +11,8 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
+from django.views.decorators.csrf import csrf_exempt
+
 
 from ocradmin.core import generic_views as gv
 from ocradmin.core.decorators import saves_files
@@ -216,7 +218,7 @@ def run_preset(request):
     json.dump(out, response, ensure_ascii=False)
     return response
 
-
+@csrf_exempt
 @saves_files
 def upload_file(request):
     """

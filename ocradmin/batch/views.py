@@ -18,6 +18,7 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import render, get_object_or_404
 from django.utils import simplejson as json
 from django.utils.encoding import smart_str
+from django.views.decorators.csrf import csrf_exempt
 from ocradmin.batch import utils as batchutils
 from ocradmin.core import generic_views as gv
 from ocradmin.core import utils as ocrutils
@@ -207,6 +208,7 @@ def show(request, batch_pk):
     return _show_batch(request, batch)
 
 
+@csrf_exempt
 @project_required
 @saves_files
 def upload_files(request):
@@ -236,7 +238,7 @@ def transcript(request, batch_pk):
     View the transcription of a batch.
     """
     batch = get_object_or_404(Batch, pk=batch_pk)
-    tid = batch.tasks.all()[0]
+    tid = batch.tasks.all().order_by("id")[0]
     return HttpResponseRedirect("/ocr/transcript/%d/" % tid.pk)
 
 

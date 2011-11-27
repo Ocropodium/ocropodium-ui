@@ -74,7 +74,7 @@ def transcript(request, task_pk):
     template = "ocr/transcript.html"
     context = dict(task=task)
     if task.batch:
-        context["batchoffset"] = task.pk - task.batch.tasks.all()[0].pk
+        context["batchoffset"] = task.pk - task.batch.tasks.all().order_by("id")[0].pk
         context["batchsize"] = task.batch.tasks.count()
 
     return render_to_response(template, context,
