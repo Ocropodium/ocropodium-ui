@@ -1,0 +1,12 @@
+{% extends "generic.html" %}
+
+{% block bodycontent %}
+    <div id="object_list">
+        <ul>
+        {% for object in objects %}
+        <li>{{object.dc.content.title}}</li>        
+        {% endfor %}
+        </ul>
+    </div>
+{% endblock %}        
+
