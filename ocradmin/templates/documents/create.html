@@ -1,0 +1,17 @@
+
+{% extends "generic.html" %}
+
+
+{% block bodycontent %}
+    <div id="object_form">
+        <form id="create_object_form" action="/documents/create/" enctype="multipart/form-data" method="POST">
+            {% csrf_token %}
+            {% include "includes/generic_create_body.html" %}
+            <div class="object_detail_footer form_footer ui-helper-clearfix">
+                <input type="submit" value="Submit" id="submit_create_form" />
+                <a href="/document/list/">Back to List</a>
+            </div>        
+        </form>
+    </div>
+{% endblock %}
+

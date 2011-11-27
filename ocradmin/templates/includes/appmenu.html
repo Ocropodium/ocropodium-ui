@@ -29,6 +29,19 @@
     {% if request.session.project %}
     <ul class="top">
         <li> 
+            <h3>Documents</h3>
+            <ul style="display: none;">
+                <li>
+                    <a id="new_doc" href="/documents/create/">New Document</a>
+                </li>
+                <li>
+                    <a id="list_docs" href="/documents/list/">Show Documents</a>
+                </li>
+            </ul>
+        </li> 
+    </ul>
+    <ul class="top">
+        <li> 
             <h3>Batch</h3>
             <ul style="display: none;">
                 <li>
@@ -46,7 +59,7 @@
             </ul>
         </li> 
     </ul>
-    <ul class="top">
+<!--    <ul class="top">
         <li> 
             <h3>Training</h3>
             <ul style="display: none;">
@@ -62,6 +75,7 @@
             </ul>
         </li> 
     </ul>
+-->
     {% endif %}
     <ul class="top">
         <li>
