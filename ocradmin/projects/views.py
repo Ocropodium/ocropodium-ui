@@ -93,7 +93,6 @@ class ProjectWizard(FormWizard):
         super(ProjectWizard, self).__init__(*args, **kwargs)
         self.initial = {                
                 0: {"storage_backend": "FedoraStorage"},
-                1: getattr(settings, "FEDORA_DEFAULT_CONFIG", {}),
         }
 
     def process_step(self, request, form, step):
@@ -104,6 +103,7 @@ class ProjectWizard(FormWizard):
             backend = storage.get_backend(
                     form.cleaned_data["storage_backend"])
             self.form_list[1] = backend.configform
+            self.initial[1] = backend.defaults
             self.initial[1]["namespace"] = slugify(form.cleaned_data["name"])
         return super(ProjectWizard, self).process_step(request, form, step)
 

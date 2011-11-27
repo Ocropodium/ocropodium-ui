@@ -215,15 +215,15 @@ SERIALIZATION_MODULES = {
     'json' : 'wadofstuff.django.serializers.json'
 }
 
-FEDORA_DEFAULT_CONFIG = dict(
-    host="localhost",
-    port=8080,
-    context="/fedora",
-    username="fedoraAdmin",
-    password="fedora",
-    image_name="IMG",
-    transcript_name="TRANSCRIPT"
-)
+
+# Fedora Repository settings
+FEDORA_ROOT = 'https://localhost:8543/fedora/'
+FEDORA_USER = 'fedoraAdmin'
+FEDORA_PASSWORD = 'fedoraAdmin'
+FEDORA_PIDSPACE = 'simplerepo'
+FEDORA_IMAGE_NAME = "IMG"
+FEDORA_TRANSCRIPT_NAME = "TRANSCRIPT"
+
 
 COMPRESS_ROOT = STATIC_ROOT
 COMPRESS_URL = STATIC_URL

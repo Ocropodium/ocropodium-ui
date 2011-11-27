@@ -49,6 +49,9 @@ class BaseStorage(object):
     __metaclass__ = StorageType
     abstract = True
 
+    configform = BaseConfigForm
+    defaults = {}
+
     def __init__(self, *args, **kwargs):
         pass
 
