@@ -159,6 +159,7 @@ TEMPLATE_LOADERS = (
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
@@ -213,6 +214,16 @@ SERIALIZATION_MODULES = {
     'python' : 'wadofstuff.django.serializers.python',
     'json' : 'wadofstuff.django.serializers.json'
 }
+
+FEDORA_DEFAULT_CONFIG = dict(
+    host="localhost",
+    port=8080,
+    context="/fedora",
+    username="fedoraAdmin",
+    password="fedora",
+    image_name="IMG",
+    transcript_name="TRANSCRIPT"
+)
 
 COMPRESS_ROOT = STATIC_ROOT
 COMPRESS_URL = STATIC_URL
