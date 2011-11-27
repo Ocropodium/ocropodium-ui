@@ -5,7 +5,8 @@ Project-related view functions.
 import os
 from datetime import datetime
 from django import forms
-from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.contrib.formtools.wizard import FormWizard
 from django.contrib import messages
 from django.core import serializers
 from django.template.defaultfilters import slugify
@@ -28,6 +29,8 @@ from fedora.adaptor import fcobject
 from ordereddict import OrderedDict
 PER_PAGE = 10
 
+
+from ocradmin import storage
 
 class ExportForm(forms.Form):
     """
@@ -64,9 +67,7 @@ class DublinCoreForm(forms.Form):
 
 
 class ProjectForm(forms.ModelForm):
-    """
-        New project form.
-    """
+    """New project form."""
     def __init__(self, *args, **kwargs):
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
@@ -76,11 +77,59 @@ class ProjectForm(forms.ModelForm):
 
     class Meta:
         model = Project
-        exclude = ["slug", "created_on"]
+        exclude = ["slug", "created_on", "storage_config_values",]
         widgets = dict(
                 user=forms.HiddenInput(),
         )
 
+class DummyStorageForm(forms.Form):
+    """Placeholder for dynamically-generated storage
+    config form."""
+
+
+class ProjectWizard(FormWizard):
+    """Wizard for project creation."""
+    def __init__(self, *args, **kwargs):
+        super(ProjectWizard, self).__init__(*args, **kwargs)
+        self.initial = {                
+                0: {"storage_backend": "FedoraStorage"},
+                1: getattr(settings, "FEDORA_DEFAULT_CONFIG", {}),
+        }
+
+    def process_step(self, request, form, step):
+        """Dynamically configure the storage config form
+        given the storage backend specified in the first
+        wizard page."""
+        if step == 0:
+            backend = storage.get_backend(
+                    form.cleaned_data["storage_backend"])
+            self.form_list[1] = backend.configform
+            self.initial[1]["namespace"] = slugify(form.cleaned_data["name"])
+        return super(ProjectWizard, self).process_step(request, form, step)
+
+    def render_template(self, request, form, previous_fields, step, context=None):
+        self.extra_context.update(
+                model=Project,
+                page_name="New OCR Project: Step %d of %d" % (
+                    step + 1, self.num_steps()    
+                ),
+                success_url="/projects/list/",
+        )
+        return super(ProjectWizard, self).render_template(request, form, previous_fields, step, context)
+
+    def get_template(self, step):
+        """Get project wizard template."""
+        return "projects/create%d.html" % step
+
+    def done(self, request, form_list):
+        """Save all form values and redirect to load page."""
+        project = form_list[0].instance
+        project.save()
+        for field, value in form_list[1].cleaned_data.iteritems():
+            project.storage_config_values.create(name=field, value=value)
+
+        return HttpResponseRedirect("/projects/load/%s/" % project.pk)
+        
 
 projectlist = gv.GenericListView.as_view(
         model=Project,
@@ -95,7 +144,6 @@ projectcreate = gv.GenericCreateView.as_view(
 
 projectdetail = gv.GenericDetailView.as_view(
         model=Project,
-        template_name="projects/show.html",
         page_name="OCR Project",
         fields=["name", "description", "user", "tags", "created_on",
             "updated_on",])
@@ -141,7 +189,6 @@ def project_query(user, order, **params):
         return Project.objects.filter(query).order_by(*order)
 
 
-@login_required
 def load(request, project_pk):
     """
     Open a project (load it in the session).
@@ -162,7 +209,6 @@ def close(request):
     return HttpResponseRedirect("/ocr/")
 
 
-@login_required
 def export(request, project_pk):
     """
     Export a project.
@@ -182,7 +228,6 @@ def export(request, project_pk):
 
 
 @transaction.commit_on_success
-@login_required
 def ingest(request, project_pk):
     """
     Ingest project training data into fedora.

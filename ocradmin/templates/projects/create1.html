@@ -1,0 +1,19 @@
+{% extends "generic.html" %}
+
+
+{% block bodycontent %}
+    <div id="object_form">
+        <form id="create_object_form" action="." method="POST">
+            {% csrf_token %}
+            {% include "includes/generic_create_body.html" %}
+            <input type="hidden" name="{{ step_field }}" value="{{ step0 }}" />
+            <div class="object_detail_footer form_footer ui-helper-clearfix">
+                <input type="submit" value="Submit" id="submit_create_form" />
+                {{ previous_fields|safe }}
+                <a href="{{model.get_list_url}}">Back to List</a>
+            </div>        
+        </form>
+    </div>
+{% endblock %}
+
+
