@@ -53,7 +53,7 @@ class BaseStorage(object):
     defaults = {}
 
     def __init__(self, *args, **kwargs):
-        pass
+        self.namespace = kwargs["namespace"]
 
     def create(self):
         """Get a new document object"""
