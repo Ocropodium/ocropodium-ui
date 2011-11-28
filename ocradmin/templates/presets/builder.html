@@ -177,6 +177,7 @@
     {% if task %}
     <!-- form for POSTing updated task scripts -->
     <form id="task_update_form" action="/ocr/update_task/{{task.pk}}/" method="POST">
+        {{csrf_token}}
         <input type="hidden" id="task_update_script" name="script" value="" />
         <input type="hidden" id="task_update_ref" name="ref" value="{{ref}}" />
     </form>
