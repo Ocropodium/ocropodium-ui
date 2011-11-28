@@ -24,6 +24,11 @@ input, textarea, .selectable {
     -moz-user-select: text;
 }
 
+#mainwidget, #sidebarwidget {
+    height: 100%;
+    overflow: hidden;
+}
+
 div.clear {
     clear: both;
 }

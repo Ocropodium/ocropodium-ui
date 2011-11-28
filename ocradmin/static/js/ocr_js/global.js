@@ -4,7 +4,7 @@
 
 "use strict"
 
-var vsplit, bsplit, defaultlayout;
+var vsplit, bsplit, defaultlayout, widgetlayout;
 $(function() {
     // add csrf protect token, as per:
     // https://docs.djangoproject.com/en/dev/ref/contrib/csrf/
@@ -72,6 +72,17 @@ $(function() {
         }
     };
 
+    widgetlayout = {
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0,
+        },
+    };
+
+
     var loadstate = $.cookie("panels");
     if (loadstate) {
         var state = JSON.parse(loadstate).vsplit;
@@ -80,6 +91,10 @@ $(function() {
     }
 
     vsplit = $("#vsplitter").layout(defaultlayout);
+    setTimeout(function() {
+        $("#mainwidget").layout(widgetlayout);
+        $("#sidebarwidget").layout(widgetlayout);
+    }, 50);
 
     $(window).unload(function() {
         var state = {
@@ -88,6 +103,6 @@ $(function() {
         $.cookie("panels", JSON.stringify(state));
     });
 
-    $(window).resize();
+    //$(window).resize();
 });
 

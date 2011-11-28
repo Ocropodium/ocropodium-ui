@@ -246,6 +246,7 @@ COMPRESS_CSS = {
             "css/list_widget.css",
             "css/messages.css",
             "css/clean.css",
+            "css/documents.css",
         ),
         "output_filename": "css/min/standard.css",
         "extra_context": {

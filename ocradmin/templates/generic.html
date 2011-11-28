@@ -9,9 +9,9 @@
 
 
 {% block content %}
-<div class="ui-widget">
-    <div class="ui-widget-header ui-layout-header">{{page_name}}</div>
-    <div class="ui-widget-content">
+<div class="ui-widget" id="mainwidget">
+    <div class="ui-widget-header ui-layout-header ui-layout-north">{{page_name}}</div>
+    <div class="ui-widget-content ui-helper-clearfix ui-layout-center">
         {% include "includes/messages.html" %}
         {% block bodycontent %}
         {% endblock %}
@@ -21,9 +21,10 @@
 
 
 {% block sidebar %}
-<div class="ui-widget">
-    <div class="ui-widget-header ui-layout-header">Item Tags</div>
-    <div class="ui-widget-content">
+<div class="ui-widget" id="sidebarwidget">
+    <div class="ui-widget-header ui-layout-header ui-layout-north">Item Tags</div>
+    <div class="ui-widget-content ui-helper-clearfix ui-layout-center">
+        {% block sidebarcontent %}
         <div id="tag_list">
             <ul class="taglist">
             {% for tagitem in tags %}
@@ -35,6 +36,7 @@
             {% endfor %}
             </ul>
         </div>
+        {% endblock %}
     </div>
 </div>    
 {% endblock %}

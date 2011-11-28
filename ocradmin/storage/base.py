@@ -150,14 +150,23 @@ class BaseDocument(object):
         and writing all cached datastreams to storage."""                
         self._storage.save_document(self)
 
+    def process_thumbnail(self, pil):
+        """Process thumbnail, padding to a constant size"""
+        size = settings.THUMBNAIL_SIZE
+        pil.thumbnail(settings.THUMBNAIL_SIZE, Image.ANTIALIAS)
+        back = Image.new("RGBA", settings.THUMBNAIL_SIZE)
+        back.paste((255,255,255,0), (0, 0, size[0], size[1]))
+        back.paste(pil, ((size[0] - pil.size[0]) / 2, (size[1] - pil.size[1]) / 2))
+        return back
+
     def make_thumbnail(self):
         """Create a thumbnail of the main image."""
         im = Image.open(self.image_content)
-        im.thumbnail(settings.THUMBNAIL_SIZE, Image.ANTIALIAS)
+        thumb = self.process_thumbnail(im)
         # FIXME: This is NOT elegant... 
         stream = StringIO()
-        im.save(stream, "JPEG")
-        self.thumbnail_mimetype = "image/jpeg"
+        thumb.save(stream, "PNG")
+        self.thumbnail_mimetype = "image/png"
         self.thumbnail_content = stream
         self.save()
 
