@@ -10,6 +10,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson as json
+from django.views.decorators.csrf import csrf_exempt
 from ocradmin.core import utils as ocrutils
 from ocradmin.nodelib import utils as pluginutils
 from ocradmin.core.decorators import saves_files
@@ -46,7 +47,7 @@ def abort(request, task_id):
     json.dump(out, response, ensure_ascii=False)
     return response
 
-
+@csrf_exempt
 @saves_files
 def update_ocr_task(request, task_pk):
     """
@@ -55,6 +56,13 @@ def update_ocr_task(request, task_pk):
     """
     task = get_object_or_404(OcrTask, pk=task_pk)
     script = request.POST.get("script")
+    # try and delete the existing binary path
+    binpath = ocrutils.get_binary_path(task.args[0], request.output_path)
+    dzipath = ocrutils.get_dzi_path(binpath)
+    try:
+        os.unlink(dzipath)
+    except OSError:
+        pass
     ref = request.POST.get("ref", "/batch/show/%d/" % task.batch.pk)
     try:
         json.loads(script)
