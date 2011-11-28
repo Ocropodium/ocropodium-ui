@@ -2,11 +2,16 @@
 
 {% block bodycontent %}
     <div id="object_list">
-        <ul>
+        <table>
         {% for object in objects %}
-        <li>{{object.dc.content.title}}</li>        
+            <tr>
+                <td><img src="{{object.thumbnail_uri}}" alt="Thumbnail" /></td>        
+                <td>{{object.pid}}</td>
+                <td>{{object.label}}</td>
+                <td>{{object.image_mimetype}}</td>
+            </tr>
         {% endfor %}
-        </ul>
+        </table>
     </div>
 {% endblock %}        
 

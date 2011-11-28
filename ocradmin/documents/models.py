@@ -6,33 +6,45 @@ from ocradmin import storage
 from django.conf import settings
 
 
-class Document(object):
-    """Document model."""
-    name = models.CharField(max_length=255)
-    project = models.ForeignKey(Project)
-    created_on = models.DateTimeField(editable=False)
-    updated_on = models.DateTimeField(blank=True, null=True, editable=False)
 
-    def __unicode__(self):
-        """Unicode representation."""
-        return self.name
-
-    def save(self):
-        """Save objects, settings dates if necessary."""
-        if not self.id:
-            self.created_on = datetime.datetime.now()
-        else:
-            self.updated_on = datetime.datetime.now()
-
-    def _set_name(self, name):
-        pass
-
-    def get_datastream_path(self, streamname):
-        """Get a datastream path."""
-        return backend.get_datastream_path(self.storage_id, streamname)
-
-    
-
-
+#class DocumentBase(object):
+#    """Document model abstract class.  Each storage
+#    backend implements its own version of this."""
+#    def __init__(self, label):
+#        """Initialise the Document with an image path/handle."""
+#        self._label = label        
+#
+#    @property
+#    def label(self):
+#        raise NotImplementedError
+#    
+#    def __unicode__(self):
+#        """Unicode representation."""
+#        return self.label
+#
+#    def save(self):
+#        """Save objects, settings dates if necessary
+#        and writing all cached datastreams to storage."""                
+#        raise NotImplementedError
+#
+#    def set_image_content(self, content):
+#        """Set image content."""
+#        raise NotImplementedError
+#
+#    def set_image_mimetype(self, mimetype):
+#        """Set image mimetype."""
+#        raise NotImplementedError
+#
+#    def set_image_label(self, label):
+#        """Set image label."""
+#        raise NotImplementedError
+#
+#    def set_label(self, label):
+#        """Set document label."""
+#        raise NotImplementedError
+#
+#    def set_metadata(self, attr, value):
+#        """Set arbitrary document metadata."""
+#        raise NotImplementedError
 
 

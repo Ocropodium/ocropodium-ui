@@ -47,14 +47,16 @@ def create(request):
     if form.is_valid():
         if not form.cleaned_data["label"]:
             form.cleaned_data["label"] = request.FILES["file"].name 
-        obj = store.create()
-        obj.image.content = request.FILES['file']
-        obj.image.mimetype = request.FILES['file'].content_type
-        obj.image.label = request.FILES['file'].name
-        obj.label = form.cleaned_data['label']
-        obj.dc.content.title = form.cleaned_data['label']
-        obj.dc.content.status = "Draft"
-        obj.save()
+        doc = store.create_document(form.cleaned_data["label"])
+        doc.image_content = request.FILES["file"]
+        doc.image_mimetype = request.FILES["file"].content_type
+        doc.image_label = request.FILES["file"].name
+        doc.add_metadata("title", form.cleaned_data["label"])
+        doc.add_metadata("status", "draft")
+        doc.make_thumbnail()
+        doc.save()
+        # TODO: Make async
+        #doc.save()
     return HttpResponseRedirect("/documents/list")
     
 
