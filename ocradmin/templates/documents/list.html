@@ -1,17 +1,11 @@
 {% extends "generic.html" %}
 
 {% block bodycontent %}
-    <div id="object_list">
-        <table>
-        {% for object in objects %}
-            <tr>
-                <td><img src="{{object.thumbnail_uri}}" alt="Thumbnail" /></td>        
-                <td>{{object.pid}}</td>
-                <td>{{object.label}}</td>
-                <td>{{object.image_mimetype}}</td>
-            </tr>
-        {% endfor %}
-        </table>
-    </div>
+    {% for object in objects %}
+        {% include "documents/includes/document.html" %}
+    {% endfor %}
 {% endblock %}        
 
+{% block sidebarcontent %}
+    <h1>Hello!</h1>
+{% endblock %}

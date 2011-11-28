@@ -26,12 +26,12 @@ class Document(base.BaseDocument):
     def make_thumbnail(self):
         """Create a thumbnail of the main image."""
         im = Image.open(self.image_content)
-        im.thumbnail(settings.THUMBNAIL_SIZE, Image.ANTIALIAS)
+        thumb = self.process_thumbnail(im)
         # FIXME: This is NOT elegant... 
         with io.open(os.path.join(
             self._storage.document_path(self), self._storage.thumbnail_name), "wb") as h:
-            im.save(h, "JPEG")
-        self.thumbnail_mimetype = "image/jpeg"
+            thumb.save(h, "PNG")
+        self.thumbnail_mimetype = "image/png"
         self.save()
 
 
@@ -40,14 +40,10 @@ class FileSystemStorage(base.BaseStorage):
     """Filesystem storage backend.  A document is represented
     as a directory of datastreams, i.e:
         <project-name>:1/
-            IMG   -> simlink to simple_v1.png
-            IMG_Binary.png
-            versions/
-                simple_v1.png
-                transcript-1.html
-                transcript-2.html
-
-       Datastream id is the file basename minus the suffix.
+            IMG
+            THUMBNAIL
+            TRANSCRIPT
+            meta.txt
     """
     configform = ConfigForm
     image_name = "IMG"
@@ -201,6 +197,8 @@ class FileSystemStorage(base.BaseStorage):
 
     def list(self, namespace=None):
         """List documents in the repository."""
+        if not os.path.exists(self.namespace_root):
+            return []
         return [Document(pid, self) for pid in sorted(os.listdir(self.namespace_root)) \
                 if os.path.isdir(os.path.join(self.namespace_root, pid)) and \
                     re.match("^" + self.namespace + ":\d+$", pid)]
