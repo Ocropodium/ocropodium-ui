@@ -1,5 +1,11 @@
 {% extends "generic.html" %}
 
+{% block headerscript %}
+    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
+    
+	<script type='application/javascript' src='/static/js/documents/list.js'></script>
+{% endblock %}
+
 {% block bodycontent %}
     {% for object in objects %}
         {% include "documents/includes/document.html" %}
