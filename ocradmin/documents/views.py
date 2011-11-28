@@ -36,11 +36,13 @@ def edit(request, pid):
 @project_required
 def create(request):
     """Create a new document."""
+    store = request.session["project"].get_storage()
     if not request.method == "POST":
         form = DocumentForm()
-        return render(request, "documents/create.html", dict(form=form))
+        return render(request, "documents/create.html", dict(
+            form=form, page_name="%s: Add document" % store.name)
+        )
 
-    store = request.session["project"].get_storage()
     form = DocumentForm(request.POST, request.FILES)
     if form.is_valid():
         if not form.cleaned_data["label"]:
