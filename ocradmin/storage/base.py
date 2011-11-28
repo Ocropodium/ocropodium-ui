@@ -55,4 +55,20 @@ class BaseStorage(object):
     def __init__(self, *args, **kwargs):
         pass
 
+    def create(self):
+        """Get a new document object"""
+        raise NotImplementedError()
+
+    def get(self, id):
+        """Get an object by id."""
+        raise NotImplementedError()
+
+    def delete(self, pid, msg=None):
+        """Delete an object."""
+        raise NotImplementedError()
+
+    def list(self, namespace=None):
+        """List documents in the repository."""
+        return []
+        
 
