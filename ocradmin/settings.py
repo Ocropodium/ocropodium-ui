@@ -122,6 +122,8 @@ USE_I18N = True
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = "%s/media" % SITE_ROOT if not SERVER else "/media/share"
 
+DOCUMENT_ROOT = "%s/documents" % MEDIA_ROOT
+
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 ADMIN_MEDIA_ROOT = "%s/media" % SITE_ROOT if not SERVER else "/media/share"
