@@ -15,6 +15,7 @@ def project_required(func):
         path = urlquote(request.get_full_path())
         if not request.session.get("project"):
             return HttpResponseRedirect("/projects/list/?next=%s" % path)
+        request.project = request.session.get("project")
         return func(request, *args, **kwargs)
     return wrapper
 
