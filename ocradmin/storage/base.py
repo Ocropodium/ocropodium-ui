@@ -59,7 +59,7 @@ class BaseStorage(object):
     def __init__(self, *args, **kwargs):
         self.namespace = kwargs["namespace"]
 
-    def image_type_uri(self, doc):
+    def attr_uri(self, doc):
         """URI for image datastream."""
         raise NotImplementedError
 
@@ -67,15 +67,15 @@ class BaseStorage(object):
         """Get the document label."""
         raise NotImplementedError
 
-    def document_image_type_label(self, doc, attr):
+    def document_attr_label(self, doc, attr):
         """Get the document image label."""
         raise NotImplementedError
 
-    def document_image_type_mimetype(self, doc, attr):
+    def document_attr_mimetype(self, doc, attr):
         """Get the document image mimetype."""
         raise NotImplementedError
 
-    def document_image_type_content(self, doc, attr):
+    def document_attr_content(self, doc, attr):
         """Get document image content.  Currently
         EULFedora doesn't support a streaming content
         API so we have to load it into an in memory
@@ -87,15 +87,15 @@ class BaseStorage(object):
         just exposes the DC stream attributes."""
         raise NotImplementedError
 
-    def set_document_image_type_content(self, doc, attr, content):
+    def set_document_attr_content(self, doc, attr, content):
         """Set image content."""
         raise NotImplementedError
 
-    def set_document_image_type_mimetype(self, doc, attr, mimetype):
+    def set_document_attr_mimetype(self, doc, attr, mimetype):
         """Set image mimetype."""
         raise NotImplementedError
 
-    def set_document_image_type_label(self, doc, attr, label):
+    def set_document_attr_label(self, doc, attr, label):
         """Set image label."""
         raise NotImplementedError
 
@@ -134,14 +134,14 @@ class BaseDocumentType(type):
     has three image members (image, binary, thumbnail)
     which each have three accessible properties (label,
     content, and mimetype.)  These are all accessed via
-    the backend storage `document_image_type_<attr>`
+    the backend storage `document_attr_<attr>`
     methods."""
     def __new__(cls, name, bases, attrs):
         new = super(BaseDocumentType, cls).__new__
         if attrs.pop("abstract", None):
             return new(cls, name, bases, attrs)
         doccls = new(cls, name, bases, attrs)
-        for obj in ["image", "thumbnail", "binary"]:
+        for obj in ["image", "thumbnail", "binary", "transcript"]:
             for attr in ["label", "mimetype", "content"]:
                 generate_image_attr_accessors(doccls, obj, attr)
         return doccls
@@ -149,14 +149,14 @@ class BaseDocumentType(type):
 
 def generate_image_attr_accessors(cls, objattr, attr):
     def getter(self):
-        meth = getattr(self._storage, "document_image_type_%s" % attr)
+        meth = getattr(self._storage, "document_attr_%s" % attr)
         return meth(self, objattr)
     getter.__doc__ = "Get %s %s" % (objattr, attr)
     getter.__name__ = "get_%s_%s" % (objattr, attr)
     setattr(cls, getter.__name__, getter)
 
     def setter(self, value):
-        meth = getattr(self._storage, "set_document_image_type_%s" % attr)
+        meth = getattr(self._storage, "set_document_attr_%s" % attr)
         meth(self, objattr, value)
     setter.__doc__ = "Set %s %s" % (objattr, attr)
     setter.__name__ = "set_%s_%s" % (objattr, attr)
@@ -210,11 +210,11 @@ class BaseDocument(object):
 
     @property
     def image_uri(self):
-        return self._storage.image_type_uri(self, "image")
+        return self._storage.attr_uri(self, "image")
 
     @property
     def thumbnail_uri(self):
-        return self._storage.image_type_uri(self, "thumbnail")
+        return self._storage.attr_uri(self, "thumbnail")
 
     @property
     def label(self):

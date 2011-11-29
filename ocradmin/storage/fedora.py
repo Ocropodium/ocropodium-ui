@@ -77,7 +77,7 @@ class FedoraStorage(base.BaseStorage):
             }),
         })
 
-    def image_type_uri(self, doc, attr):
+    def attr_uri(self, doc, attr):
         """URI for image datastream."""
         return "%sobjects/%s/datastreams/%s/content" % (
                 self.repo.fedora_root,
@@ -89,15 +89,15 @@ class FedoraStorage(base.BaseStorage):
         """Get the document label."""
         return doc._doc.label
 
-    def document_image_type_label(self, doc, attr):
+    def document_attr_label(self, doc, attr):
         """Get label for an image type attribute."""
         return getattr(doc._doc, attr).label
 
-    def document_image_type_mimetype(self, doc, attr):
+    def document_attr_mimetype(self, doc, attr):
         """Get mimetype for an image type attribute."""
         return getattr(doc._doc, attr).mimetype
 
-    def document_image_type_content(self, doc, attr):
+    def document_attr_content(self, doc, attr):
         """Get content for an image type attribute."""
         return getattr(doc._doc, attr).content
 
@@ -114,15 +114,15 @@ class FedoraStorage(base.BaseStorage):
         #docattr.checksum_type = "MD5"
         docattr.content = content
 
-    def set_document_image_type_content(self, doc, attr, content):
+    def set_document_attr_content(self, doc, attr, content):
         """Set image content."""
         self._set_document_ds_content(doc, attr, content)
 
-    def set_document_image_type_mimetype(self, doc, attr, mimetype):
+    def set_document_attr_mimetype(self, doc, attr, mimetype):
         """Set image mimetype."""
         getattr(doc._doc, attr).mimetype = mimetype
     
-    def set_document_image_type_label(self, doc, attr, label):
+    def set_document_attr_label(self, doc, attr, label):
         """Set image label."""
         getattr(doc._doc, attr).label = label
 

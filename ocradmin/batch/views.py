@@ -64,6 +64,19 @@ def new(request):
     return render(request, template, _new_batch_context(request, tasktype))
 
 
+@login_required
+@project_required
+def new_document_batch(request):
+    """
+    Present a new batch form.
+    """
+    tasktype = "run.docbatchitem"
+    template = "batch/new_doc.html" if not request.is_ajax() \
+        else "batch/includes/new_doc_form.html"
+
+    return render(request, template, _new_batch_context(request, tasktype))
+
+
 batchlist = project_required(gv.GenericListView.as_view(
         model=Batch,
         page_name="OCR Batches",
@@ -135,11 +148,53 @@ def create(request):
 
 
 @project_required
+@transaction.commit_on_success
 def create_document_batch(request):
-    """Create a batch for document files in project storage."""
+    """Create a batch for document files in project storage."""    
+    taskname = "run.docbatchitem"
 
-    preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))
+    preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))    
     pids = request.POST.getlist("pid")
+
+    form = BatchForm(request.POST)
+    if not request.method == "POST" or not form.is_valid() or not pids:
+        return render(request, "batch/new.html", dict(
+            form=form, docs=request.project.get_storage().list(),
+            presets=Preset.objects.all().order_by("name"),
+        ))
+    batch = form.instance
+    batch.script = preset.data
+    batch.save()
+
+    ocrtasks = []
+    options = dict(loglevel=60, retries=2)
+    for pid in pids:
+        docscript = script_for_document(batch.script,
+                request.project, pid)
+        tid = OcrTask.get_new_task_id()
+        args = (request.project.pk, pid, docscript,)
+        kwargs = dict()
+        ocrtask = OcrTask(
+            task_id=tid,
+            user=request.user,
+            batch=batch,
+            project=request.project,
+            page_name=pid, # FIXME: This is wrong
+            task_name=taskname,
+            status="INIT",
+            args=args,
+            kwargs=kwargs,
+        )
+        ocrtask.save()
+        ocrtasks.append(ocrtask)
+    try:
+        # ignoring the result for now
+        OcrTask.run_celery_task_multiple(taskname, ocrtasks, **options)
+    except StandardError:
+        transaction.rollback()
+        raise
+    transaction.commit()
+    return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
 
 
 def results(request, batch_pk):
@@ -419,7 +474,8 @@ def _new_batch_context(request, tasktype):
             project.batches.count() + 1)
     form = BatchForm(initial=dict(name=batchname,
             user=request.user, project=project, task_type=tasktype))
-    return dict(form=form, presets=Preset.objects.all().order_by("name"))
+    docs = project.get_storage().list()
+    return dict(form=form, presets=Preset.objects.all().order_by("name"), docs=docs)
 
 
 def _get_batch_file_paths(request):
@@ -501,28 +557,28 @@ def script_for_document(scriptjson, project, pid):
     tree = script.Script(json.loads(scriptjson))
     validate_batch_script(tree)
 
-    input = tree.new_node("storage.DocImageFileIn", "DocInput", 
+    # get the input node and replace it with out path
+    oldinput = tree.get_nodes_by_attr("stage", stages.INPUT)[0]
+    rec = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)[0]
+    # assume the binary is the first input to the recogniser
+    bin = rec.input(0)
+
+    input = tree.new_node("storage.DocImageFileIn", oldinput.label, 
             params=[("project", project.pk), ("pid", pid)])
-    recout = tree.add_node("storage.DocWriter", "OCR_Out", 
+    recout = tree.add_node("storage.DocWriter", "%s_Out" % rec.label, 
             params=[
                 ("project", project.pk),
                 ("pid", pid),
                 ("attribute", "transcript")])
-    binout = tree.add_node("storage.DocWriter", "OCR_Out", 
+    binout = tree.add_node("storage.DocWriter", "%s_Out" % bin.label, 
             params=[
                 ("project", project.pk),
                 ("pid", pid),
                 ("attribute", "binary")])
 
-    # get the input node and replace it with out path
-    oldinput = tree.get_nodes_by_attr("stage", stages.INPUT)[0]
     tree.replace_node(oldinput, input)
-
-    # attach a fileout node to the binary input of the recognizer and
-    # save it as a binary file    
-    rec = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)[0]
     recout.set_input(0, rec)
-    binout.set_input(0, rec.input(0))
+    binout.set_input(0, bin)
     return json.dumps(tree.serialize(), indent=2)
 
 
