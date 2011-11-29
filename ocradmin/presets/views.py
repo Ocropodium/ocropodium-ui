@@ -51,7 +51,7 @@ class PresetForm(forms.ModelForm):
             errors = profile.validate_preset(data)
             if errors:
                 self._errors["profile"] = self.error_class(errors)
-            del cleaned_data["profile"]
+                del cleaned_data["profile"]
         return cleaned_data
 
     class Meta:
@@ -66,7 +66,7 @@ class PresetForm(forms.ModelForm):
 presetlist = gv.GenericListView.as_view(
         model=Preset,
         page_name="OCR Presets",
-        fields=["name", "description", "user", "created_on"],)
+        fields=["name", "description", "profile", "user", "created_on"],)
 
 
 presetcreate = gv.GenericCreateView.as_view(
