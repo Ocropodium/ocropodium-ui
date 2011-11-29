@@ -4,6 +4,7 @@ syntax: glob
 .svnignore
 *.o
 *.pro.user
+*.swn
 *.swp
 *.swo
 *.pyc
