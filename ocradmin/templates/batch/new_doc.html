@@ -1,0 +1,43 @@
+{% extends "standard.html" %}
+
+{% block title %} OCRopodium - New Batch {% endblock %}
+
+{% block headerscript %}
+	<script type='application/javascript' src='/static/js/file_data_source.js'></script>
+	<script type='application/javascript' src='/static/js/file_list_widget.js'></script>
+	<script type='application/javascript' src='/static/js/batch/new.js'></script>
+	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+    <link rel="stylesheet" href="/static/css/list_widget.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/file_list_widget.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/upload_results.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block content %}
+    <div class="ui-widget">
+        <div class="ui-widget-header ui-layout-header">New Batch</div>
+        <div class="ui-widget-content">
+            {% include "includes/messages.html" %}
+            <div id="object_form">
+
+                <form name="batchform" method="POST" action="/batch/create_document_batch/" id="batchform">
+                    {% csrf_token %}
+                    <div class="form_body ui-layout-content">
+                        {% include "batch/includes/new_doc_form.html" %}
+                    </div>
+                    <div class="object_detail_footer form_footer ui-helper-clearfix">
+                        <input type="submit" disabled="disabled" id="submit_batch" value="Submit Batch" />
+                        <a href="/batch/list">Back to List</a>
+                    </div>
+                </form>
+
+                <div id="file_browser"></div>
+            </div>
+        </div>
+    </div>        
+{% endblock %}
+ 
+{% block sidebar %}
+{% endblock %}
+
+

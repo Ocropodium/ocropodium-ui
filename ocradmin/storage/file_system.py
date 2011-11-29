@@ -125,7 +125,7 @@ class FileSystemStorage(base.BaseStorage):
         """Save document contents."""
         pass
 
-    def image_type_uri(self, doc, attr):
+    def attr_uri(self, doc, attr):
         """URI for image datastream."""
         return media_path_to_url(
                 os.path.join(self.document_path(doc), getattr(self, "%s_name" % attr)))
@@ -134,21 +134,21 @@ class FileSystemStorage(base.BaseStorage):
         """Get the document label."""
         return self.read_metadata(doc).get("label", "")
 
-    def document_image_type_label(self, doc, attr):
+    def document_attr_label(self, doc, attr):
         """Get the document image label."""
         return self.read_metadata(doc).get("%s_label" % attr, "")
 
-    def document_image_type_mimetype(self, doc, attr):
+    def document_attr_mimetype(self, doc, attr):
         """Get the document image mimetype."""
         return self.read_metadata(doc).get("%s_mimetype" % attr, "")
 
-    def document_image_type_content(self, doc, attr):
+    def document_attr_content(self, doc, attr):
         """Get the document image content as a stream."""
         imgpath = os.path.join(self.document_path(doc), getattr(self, "%s_name" % attr))
         if os.path.exists(imgpath):
             return io.open(imgpath, "rb")
 
-    def set_document_image_type_content(self, doc, attr, content):
+    def set_document_attr_content(self, doc, attr, content):
         """Set image content."""
         imgpath = os.path.join(self.document_path(doc), getattr(self, "%s_name" % attr))
         with io.open(imgpath, "wb") as imghandle:
@@ -158,7 +158,7 @@ class FileSystemStorage(base.BaseStorage):
         """Set image mimetype."""
         self.write_metadata(doc, dict(image_mimetype=mimetype))
 
-    def set_document_image_type_label(self, doc, attr, label):
+    def set_document_attr_label(self, doc, attr, label):
         """Set image label."""
         self.write_metadata(doc, {"%s_label" % attr: label})
 
