@@ -11,7 +11,7 @@
     "params": [
       [
         "path",
-        "media/files/test-project/simple.png"
+        "etc/simple.png"
       ]
     ],
     "__meta": {
