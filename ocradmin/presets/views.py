@@ -116,10 +116,23 @@ def update_data(request, slug):
     """Update script data for a given script."""
     preset = get_object_or_404(Preset, slug=slug)
     scriptdata = request.POST.get("data", "")
-    # TODO: Validate script data
+    if preset.profile:
+        errors = {}
+        try:
+            data = json.loads(scriptdata)
+        except ValueError:
+            errors["data"] = [u"Preset data must be valid JSON"]
+        else:
+            proferrors = preset.profile.validate_preset(data)
+            if proferrors:
+                errors["profile"] = proferrors
+        if errors:
+            return HttpResponse(json.dumps(
+                dict(description="Invalid preset", errors=errors)),
+                    mimetype="application/json")
     preset.data = scriptdata
     preset.save()
-    return HttpResponse(preset.data, mimetype="application/json")
+    return HttpResponse(preset.data, status=201, mimetype="application/json")
 
 
 def download(request, slug):
