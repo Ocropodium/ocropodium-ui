@@ -1,5 +1,8 @@
 
-$(document).ready(function() {
+$(function() {
+
+    $(".document-item").draggable();
+    $(".document-list").selectable();
 
     function drop(e) {
         ignoreDrag(e);
@@ -7,8 +10,8 @@ $(document).ready(function() {
         var files = dt.files;
 
         if(dt.files.length > 0){
-            var file = dt.files[0];
-            alert(file.name);
+            for (var i = 0; i < dt.files.length; i++)
+                console.log(dt.files[i]);
         }
     }
 

@@ -43,4 +43,14 @@
 
 .document-list {
     height: 100%;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.document-list .ui-selecting { 
+    background: #FECA40;
+}
+.document-list .ui-selected {
+    background: #F39814; color: white; 
 }
