@@ -154,9 +154,9 @@ class FileSystemStorage(base.BaseStorage):
         with io.open(imgpath, "wb") as imghandle:
             imghandle.write(content.read())
 
-    def set_document_image_mimetype(self, doc, mimetype):
+    def set_document_attr_mimetype(self, doc, attr, mimetype):
         """Set image mimetype."""
-        self.write_metadata(doc, dict(image_mimetype=mimetype))
+        self.write_metadata(doc, {"%s_mimetype" % attr: mimetype})
 
     def set_document_attr_label(self, doc, attr, label):
         """Set image label."""
