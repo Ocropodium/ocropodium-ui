@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from ocradmin.core import utils
 from ocradmin.vendor import deepzoom
+from ocradmin.projects.models import Project
 
 
 class UnhandledCreateDzi(AbortableTask):
@@ -33,6 +34,33 @@ class UnhandledCreateDzi(AbortableTask):
             creator.create(filepath, path)
         return dict(out=utils.media_path_to_url(filepath),
                 dst=utils.media_path_to_url(path))
+
+
+class UnhandledCreateDocDzi(AbortableTask):
+    name = "_create.docdzi"
+
+    def run(self, project_pk, pid, **kwargs):
+        """
+        Create a DZI of the given document, as <path>/dzi/<basename>.
+        """
+        logger = self.get_logger()
+        project = Project.objects.get(pk=project_pk)
+        storage = project.get_storage()
+        path = "%s/files/%s/%s/%s.dzi" % (
+                settings.MEDIA_ROOT,
+                storage.namespace,
+                pid, "BINARY")
+
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
+        if not os.path.exists(path):
+            creator = deepzoom.ImageCreator(tile_size=512,
+                    tile_overlap=2, tile_format="png",
+                    image_quality=1, resize_filter="nearest")
+            logger.debug("Creating DZI path: %s", path)
+            creator.create(storage.get(pid).binary_content, path)
+        return dict(pid=pid, dst=utils.media_path_to_url(path))
+
 
 
 
