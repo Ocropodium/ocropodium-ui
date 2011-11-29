@@ -28,7 +28,7 @@ from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.core.views import AppException
 from ocradmin.presets.models import Preset
 from ocradmin.nodelib import stages
-from nodetree import script
+from nodetree import script, exceptions
 
 
 class BatchForm(forms.ModelForm):
@@ -477,17 +477,13 @@ def script_for_page_file(scriptjson, filepath, writepath):
     Modify the given script for a specific file.
     """
     tree = script.Script(json.loads(scriptjson))
+    validate_batch_script(tree)
     # get the input node and replace it with out path
-    inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
-    if not inputs:
-        raise IndexError("No input stages found in script")
-    inputs[0].set_param("path", filepath)
+    input = tree.get_nodes_by_attr("stage", stages.INPUT)[0]
+    input.set_param("path", filepath)
     # attach a fileout node to the binary input of the recognizer and
     # save it as a binary file    
-    recs = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)
-    if not recs:
-        raise IndexError("No recognize stages found in script")
-    rec = recs[0]
+    rec = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)[0]
     outpath = ocrutils.get_binary_path(filepath, writepath)
     outbin = tree.add_node("util.FileOut", "OutputBinary",
             params=[
@@ -497,29 +493,49 @@ def script_for_page_file(scriptjson, filepath, writepath):
     return json.dumps(tree.serialize(), indent=2)
 
 
-def script_for_document(scriptjson, pid):
+def script_for_document(scriptjson, project, pid):
     """
     Modify the given script for a specific file.
     """
+    storage = project.get_storage()
     tree = script.Script(json.loads(scriptjson))
+    validate_batch_script(tree)
+
+    input = tree.new_node("storage.DocImageFileIn", "DocInput", 
+            params=[("project", project.pk), ("pid", pid)])
+    recout = tree.add_node("storage.DocWriter", "OCR_Out", 
+            params=[
+                ("project", project.pk),
+                ("pid", pid),
+                ("attribute", "transcript")])
+    binout = tree.add_node("storage.DocWriter", "OCR_Out", 
+            params=[
+                ("project", project.pk),
+                ("pid", pid),
+                ("attribute", "binary")])
+
     # get the input node and replace it with out path
-    inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
-    if not inputs:
-        raise IndexError("No input stages found in script")
-    inputs[0].set_param("path", filepath)
+    oldinput = tree.get_nodes_by_attr("stage", stages.INPUT)[0]
+    tree.replace_node(oldinput, input)
+
     # attach a fileout node to the binary input of the recognizer and
     # save it as a binary file    
-    recs = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)
-    if not recs:
-        raise IndexError("No recognize stages found in script")
-    rec = recs[0]
-    outpath = ocrutils.get_binary_path(filepath, writepath)
-    outbin = tree.add_node("util.FileOut", "OutputBinary",
-            params=[
-                ("path", os.path.abspath(outpath).encode()),
-                ("create_dir", True)])
-    outbin.set_input(0, rec.input(0))
+    rec = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)[0]
+    recout.set_input(0, rec)
+    binout.set_input(0, rec.input(0))
     return json.dumps(tree.serialize(), indent=2)
 
 
+def validate_batch_script(script):
+    """Check everything is A-OK before starting."""
+    inputs = script.get_nodes_by_attr("stage", stages.INPUT)
+    if not inputs:
+        raise exceptions.ScriptError("No input stages found in script")
+    if len(inputs) > 1:
+        raise exceptions.ScriptError("More than one input found for batch script")
+
+    recs = script.get_nodes_by_attr("stage", stages.RECOGNIZE)
+    if not recs:
+        raise exceptions.ScriptError("No recognize stages found in script")
+    
 
