@@ -80,6 +80,11 @@ TEST_PROFILE = {
             "value": "recognize",
             "unique": False,
         },
+        {
+            "attr": "stage",
+            "value": "input",
+            "unique": True,
+        },
     ],
 }
 
