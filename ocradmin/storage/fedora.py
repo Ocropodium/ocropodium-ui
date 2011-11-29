@@ -7,7 +7,7 @@ import urllib
 from django import forms
 from django.conf import settings
 import eulfedora
-
+import hashlib
 from eulfedora.server import Repository
 from eulfedora.models import DigitalObject, FileDatastream
 
@@ -119,16 +119,28 @@ class FedoraStorage(base.BaseStorage):
 
     def document_metadata(self, doc):
         """Get document metadata. This currently
-        just exposes the DC stream attributes."""
+        just exposes the DC stream attributes."""                
         return doc._doc.dc.content
+
+    def _set_document_ds_content(self, doc, dsattr, content):
+        docattr = getattr(doc._doc, dsattr)
+        #checksum = hashlib.md5(content.read()).hexdigest()
+        #content.seek(0)
+        #docattr.checksum = checksum
+        #docattr.checksum_type = "MD5"
+        docattr.content = content
 
     def set_document_image_content(self, doc, content):
         """Set image content."""
-        doc._doc.image.content = content
+        self._set_document_ds_content(doc, "image", content)
 
     def set_document_thumbnail_content(self, doc, content):
         """Set thumbnail content."""
-        doc._doc.thumbnail.content = content
+        self._set_document_ds_content(doc, "thumbnail", content)
+
+    def set_document_transcript_content(self, doc, content):
+        """Set thumbnail content."""
+        self._set_document_ds_content(doc, "transcript", content)
 
     def set_document_image_mimetype(self, doc, mimetype):
         """Set image mimetype."""
@@ -163,7 +175,7 @@ class FedoraStorage(base.BaseStorage):
 
     def get(self, pid):
         """Get an object by id."""
-        doc = self.repo.get_object(pid)
+        doc = self.repo.get_object(pid, type=self.model)
         if doc:
             return FedoraDocument(doc, self)
 
