@@ -83,8 +83,7 @@ class DocWriter(DocMixin, utilnodes.FileOut):
         self._inputs[0].writer(memstream, input)        
         memstream.seek(0)
         self.logger.info("WRITING STREAM: %s to doc %s", attr, doc.pid)
-        func = getattr(storage, "set_document_%s_content" % attr)
-        func(doc, memstream)
+        storage.set_document_attr_content(doc, attr, memstream)
         if attr == "image":
             doc.make_thumbnail()
         doc.save()
