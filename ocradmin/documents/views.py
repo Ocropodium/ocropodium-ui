@@ -1,12 +1,15 @@
 # Create your views here.
 
+import json
 from django import forms
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 from ocradmin import storage
 from ocradmin.core.decorators import project_required
 from ocradmin.core import generic_views as gv
 
+from cStringIO import StringIO
 
 class DocumentForm(forms.Form):
     """New document form."""
@@ -18,11 +21,13 @@ class DocumentForm(forms.Form):
 def doclist(request):
     """List documents."""
     storage = request.session["project"].get_storage()
+    template = "documents/list.html" if not request.is_ajax() \
+            else "documents/includes/document_list.html"
     context = dict(
             page_name="%s: Documents" % storage.name,
             objects=storage.list()
     )
-    return render(request, "documents/list.html", context)
+    return render(request, template, context)
 
 
 @project_required
@@ -58,7 +63,37 @@ def create(request):
         # TODO: Make async
         #doc.save()
     return HttpResponseRedirect("/documents/list")
-    
+
+@project_required
+def show_small(request, pid):
+    """Render a document's details."""
+    store = request.session["project"].get_storage()
+    doc = store.get(pid)
+    template = "documents/includes/document.html"
+    return render(request, template, dict(object=doc))
+
+
+@csrf_exempt
+@project_required
+def create_ajax(request):
+    """Create new documents with an Ajax POST."""
+    store = request.session["project"].get_storage()
+    pid = None
+    if request.method == "POST" and request.GET.get("inlinefile"):
+        filename = request.GET.get("inlinefile")
+        doc = store.create_document(filename)
+        doc.image_content = StringIO(request.raw_post_data)
+        doc.image_mimetype = request.META.get("HTTP_X_FILE_TYPE")
+        doc.image_label = filename
+        doc.add_metadata("title", filename)
+        doc.add_metadata("status", "draft")
+        doc.make_thumbnail()
+        doc.save()
+        pid = doc.pid
+    response = HttpResponse(mimetype="application/json")
+    json.dump(dict(pid=pid), response)
+    return response
+
 
 @project_required
 def detail(request, pid):
