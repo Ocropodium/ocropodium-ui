@@ -187,8 +187,8 @@ class FileSystemStorage(base.BaseStorage):
 
     def get(self, pid):
         """Get an object by id."""
-        if os.path.exists(os.path.join(self.name_space_root, pid)):
-            return Document(pid)
+        if os.path.exists(os.path.join(self.namespace_root, pid)):
+            return Document(pid, self)
 
     def delete(self, doc, msg=None):
         """Delete an object."""

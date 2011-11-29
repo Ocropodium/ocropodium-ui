@@ -163,7 +163,9 @@ class FedoraStorage(base.BaseStorage):
 
     def get(self, pid):
         """Get an object by id."""
-        return self.repo.get_object(pid)
+        doc = self.repo.get_object(pid)
+        if doc:
+            return FedoraDocument(doc, self)
 
     def delete(self, doc, msg=None):
         """Delete an object."""

@@ -4,14 +4,12 @@
     <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
     
 	<script type='application/javascript' src='/static/js/documents/list.js'></script>
+	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
+	<script type='application/javascript' src='/static/js/status_bar.js'></script>
 {% endblock %}
 
 {% block bodycontent %}
-    <ul class="document-list">
-    {% for object in objects %}
-        {% include "documents/includes/document.html" %}
-    {% endfor %}
-    </ul>
+    {% include "documents/includes/document_list.html" %}
 {% endblock %}        
 
 {% block sidebarcontent %}
