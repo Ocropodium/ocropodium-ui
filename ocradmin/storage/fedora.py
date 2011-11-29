@@ -52,6 +52,7 @@ class FedoraStorage(base.BaseStorage):
         self.namespace = kwargs["namespace"]
         self.image_name = kwargs["image_name"]
         self.thumbnail_name = "THUMBNAIL"
+        self.binary_name = "BINARY"
         self.transcript_name = kwargs["transcript_name"]
 
         self.repo = Repository(
@@ -65,6 +66,9 @@ class FedoraStorage(base.BaseStorage):
             "image": FileDatastream(self.image_name, "Document image", defaults={
               'versionable': True,
             }),
+            "binary": FileDatastream(self.binary_name, "Document image binary", defaults={
+              'versionable': True,
+            }),
             "thumbnail": FileDatastream(self.thumbnail_name, "Document image thumbnail", defaults={
               'versionable': True,
             }),
@@ -73,49 +77,29 @@ class FedoraStorage(base.BaseStorage):
             }),
         })
 
-    def image_uri(self, doc):
+    def image_type_uri(self, doc, attr):
         """URI for image datastream."""
         return "%sobjects/%s/datastreams/%s/content" % (
                 self.repo.fedora_root,
                 urllib.quote(doc.pid),
-                self.image_name
-        )
-
-    def thumbnail_uri(self, doc):
-        """URI for image datastream."""
-        return "%sobjects/%s/datastreams/%s/content" % (
-                self.repo.fedora_root,
-                urllib.quote(doc.pid),
-                self.thumbnail_name
+                getattr(self, "%s_name" % attr)
         )
 
     def document_label(self, doc):
         """Get the document label."""
         return doc._doc.label
 
-    def document_image_label(self, doc):
-        """Get the document image label."""
-        return doc._doc.image.label
+    def document_image_type_label(self, doc, attr):
+        """Get label for an image type attribute."""
+        return getattr(doc._doc, attr).label
 
-    def document_image_mimetype(self, doc):
-        """Get the document image mimetype."""
-        return doc._doc.image.mimetype
+    def document_image_type_mimetype(self, doc, attr):
+        """Get mimetype for an image type attribute."""
+        return getattr(doc._doc, attr).mimetype
 
-    def document_thumbnail_mimetype(self, doc):
-        """Get the document thumbnail mimetype."""
-        return doc._doc.thumbnail.mimetype
-
-    def document_image_content(self, doc):
-        """Get document image content.  Currently
-        EULFedora doesn't support a streaming content
-        API so we have to load it into an in memory
-        buffer."""
-        return doc._doc.image.content
-
-    def document_thumbnail_content(self, doc):
-        """Get document image content.  Ditto issue
-        with Fedora streaming."""
-        return doc._doc.thumbnail.content
+    def document_image_type_content(self, doc, attr):
+        """Get content for an image type attribute."""
+        return getattr(doc._doc, attr).content
 
     def document_metadata(self, doc):
         """Get document metadata. This currently
@@ -130,29 +114,17 @@ class FedoraStorage(base.BaseStorage):
         #docattr.checksum_type = "MD5"
         docattr.content = content
 
-    def set_document_image_content(self, doc, content):
+    def set_document_image_type_content(self, doc, attr, content):
         """Set image content."""
-        self._set_document_ds_content(doc, "image", content)
+        self._set_document_ds_content(doc, attr, content)
 
-    def set_document_thumbnail_content(self, doc, content):
-        """Set thumbnail content."""
-        self._set_document_ds_content(doc, "thumbnail", content)
-
-    def set_document_transcript_content(self, doc, content):
-        """Set thumbnail content."""
-        self._set_document_ds_content(doc, "transcript", content)
-
-    def set_document_image_mimetype(self, doc, mimetype):
+    def set_document_image_type_mimetype(self, doc, attr, mimetype):
         """Set image mimetype."""
-        doc._doc.image.mimetype = mimetype
-
-    def set_document_thumbnail_mimetype(self, doc, mimetype):
-        """Set thumbnail mimetype."""
-        doc._doc.thumbnail.mimetype = mimetype
-
-    def set_document_image_label(self, doc, label):
+        getattr(doc._doc, attr).mimetype = mimetype
+    
+    def set_document_image_type_label(self, doc, attr, label):
         """Set image label."""
-        doc._doc.image.label = label
+        getattr(doc._doc, attr).label = label
 
     def set_document_label(self, doc, label):
         """Set document label."""
