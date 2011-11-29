@@ -287,6 +287,7 @@ OcrJs.PresetManager = OcrJs.Base.extend({
     },
 
     saveExistingPreset: function(slug, data, successfunc, errorfunc) {
+        var self = this;
         $.ajax({
             url: "/presets/update_data/" + slug,
             data: {
@@ -294,7 +295,15 @@ OcrJs.PresetManager = OcrJs.Base.extend({
             },
             type: "POST",
             error: errorfunc,
-            success: successfunc,
+            statusCode: {
+                200: function(errdata) {
+                    console.log("Errors", errdata);
+                    self.showErrors(errdata);
+                },
+                201: function() {
+                    successfunc.apply(null, arguments);
+                },
+            },
         });
     },
 
