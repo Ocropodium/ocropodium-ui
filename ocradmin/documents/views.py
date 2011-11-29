@@ -27,7 +27,7 @@ def doclist(request):
     profiles = Profile.objects.filter(name="Batch OCR")
     presets = Preset.objects.order_by("name").all()
     if profiles:
-        presets = profile[0].presets.order_by("name").all()
+        presets = profiles[0].presets.order_by("name").all()
 
     context = dict(
             page_name="%s: Documents" % storage.name,
