@@ -134,6 +134,14 @@ def create(request):
     return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
 
 
+@project_required
+def create_document_batch(request):
+    """Create a batch for document files in project storage."""
+
+    preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))
+    pids = request.POST.getlist("pid")
+
+
 def results(request, batch_pk):
     """
     Get results for a taskset.
@@ -487,5 +495,31 @@ def script_for_page_file(scriptjson, filepath, writepath):
                 ("create_dir", True)])
     outbin.set_input(0, rec.input(0))
     return json.dumps(tree.serialize(), indent=2)
+
+
+def script_for_document(scriptjson, pid):
+    """
+    Modify the given script for a specific file.
+    """
+    tree = script.Script(json.loads(scriptjson))
+    # get the input node and replace it with out path
+    inputs = tree.get_nodes_by_attr("stage", stages.INPUT)
+    if not inputs:
+        raise IndexError("No input stages found in script")
+    inputs[0].set_param("path", filepath)
+    # attach a fileout node to the binary input of the recognizer and
+    # save it as a binary file    
+    recs = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)
+    if not recs:
+        raise IndexError("No recognize stages found in script")
+    rec = recs[0]
+    outpath = ocrutils.get_binary_path(filepath, writepath)
+    outbin = tree.add_node("util.FileOut", "OutputBinary",
+            params=[
+                ("path", os.path.abspath(outpath).encode()),
+                ("create_dir", True)])
+    outbin.set_input(0, rec.input(0))
+    return json.dumps(tree.serialize(), indent=2)
+
 
 
