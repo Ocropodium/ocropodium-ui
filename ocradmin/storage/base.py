@@ -140,6 +140,10 @@ class BaseDocument(object):
         """Initialise the Document with an image path/handle."""
         self.pid = pid
         self._storage = storage
+        self._deleted = False
+
+    def __repr__(self):
+        return "<Document: %s>" % self.label
 
     def __unicode__(self):
         """Unicode representation."""
@@ -244,6 +248,11 @@ class BaseDocument(object):
     def add_metadata(self, attr, value):
         """Set a key/pair value."""
         self._storage.set_document_metadata(self, **{attr: value})
+
+    def delete(self):
+        """Delete this object."""
+        self._storage.delete(self)
+        self._deleted = True
 
 
 
