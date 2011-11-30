@@ -12,6 +12,7 @@ from django.conf import settings
 from ocradmin.presets.models import Preset
 from ocradmin.batch.models import Batch
 from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.projects.models import Project
 from ocradmin.core.tests import testutils
 
 from django.utils import simplejson as json
@@ -52,7 +53,17 @@ class BatchTest(TestCase):
         self.testuser = User.objects.create_user("test_user", "test@testing.com", "testpass")
         self.client = Client()
         self.client.login(username="test_user", password="testpass")
-        self.client.get("/projects/load/1/")
+        self.project = Project.objects.all()[0]
+        self.client.get("/projects/load/%s/" % self.project.pk)
+
+        # create a document in project storage
+        self.doc = self.project.get_storage().create_document("Test doc")
+        with open(TESTFILE, "rb") as fhandle:
+            self.doc.image_content = fhandle
+            self.doc.image_mimetype = "image/png"
+            self.doc.image_label = os.path.basename(TESTFILE)
+            self.doc.save()
+
 
     def tearDown(self):
         """
@@ -60,6 +71,7 @@ class BatchTest(TestCase):
         """
         self.testuser.delete()
         shutil.rmtree("media/files/test_user")
+        self.doc.delete()
 
     def test_batch_new(self):
         """
@@ -84,7 +96,7 @@ class BatchTest(TestCase):
         content = json.loads(r.content)
         self.assertEqual(
                 content[0]["fields"]["tasks"][0]["fields"]["page_name"],
-                os.path.basename(TESTFILE))
+                self.doc.pid)
         return pk
 
     def test_page_results_page_action(self):
@@ -98,7 +110,7 @@ class BatchTest(TestCase):
         content = json.loads(r.content)
         self.assertEqual(
                 content[0]["fields"]["page_name"],
-                os.path.basename(TESTFILE))
+                self.doc.pid)
 
     def test_save_transcript(self):
         """
@@ -111,7 +123,7 @@ class BatchTest(TestCase):
         content = json.loads(r.content)
         self.assertEqual(
                 content[0]["fields"]["page_name"],
-                os.path.basename(TESTFILE))
+                self.doc.pid)
 
     def test_show_action(self):
         """
@@ -139,9 +151,9 @@ class BatchTest(TestCase):
             params = dict(
                     name="Test Batch",
                     user=self.testuser.pk,
-                    project=1,
+                    project=self.project.pk,
                     task_type="run.batchitem",
-                    files=os.path.join("test-project-2", os.path.basename(TESTFILE)),
+                    pid=self.doc.pid,
                     preset=preset.id,
             )
         r = self._get_batch_response(params, headers)
@@ -162,7 +174,7 @@ class BatchTest(TestCase):
             r = self.client.post("/batch/upload_files/", params, **headers)
         #fh.close()
         content = json.loads(r.content)
-        self.assertEqual(content, [os.path.join("test-project-2",
+        self.assertEqual(content, [os.path.join(self.project.slug,
             os.path.basename(TESTFILE))])
 
     def _get_batch_response(self, params={}, headers={}):
