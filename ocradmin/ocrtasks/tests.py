@@ -49,7 +49,6 @@ class OcrTaskTest(TestCase):
         """
         args = (4, 5)
         task, async = self._start_test_task(args)
-        self.assertEqual(int(task.latest_transcript()), sum(args))
         self.assertEqual("SUCCESS", task.status)
 
     def test_task_retry(self):

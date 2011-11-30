@@ -167,7 +167,6 @@ def page_results(request, batch_pk, page_index):
         [page],
         excludes=("transcripts", "args", "kwargs",),
     )
-    taskssl[0]["fields"]["results"] = page.latest_transcript()
     json.dump(taskssl, response,
             cls=DjangoJSONEncoder, ensure_ascii=False)
     return response
@@ -304,38 +303,6 @@ def export_options(request, batch_pk):
         formats=formats
     )
     return render(request, template, context)
-
-
-def export(request, batch_pk):
-    """
-    Export a batch as HOCR.
-    """
-    batch = get_object_or_404(Batch, pk=batch_pk)
-    formats = {"text": "txt", "json": "json", "hocr": "html"}
-    reqformats = request.GET.getlist("format")
-    if not reqformats:
-        reqformats = ["hocr"]
-
-    #temp = tempfile.TemporaryFile()
-    response = HttpResponse(content_type="application/x-gzip")
-    tar = tarfile.open(fileobj=response, mode='w|gz')
-    for task in batch.tasks.all():
-        trans = task.latest_transcript()
-        if trans is None:
-            continue
-        for fmt, ext in formats.iteritems():
-            if not fmt in reqformats:
-                continue
-            output = getattr(ocrutils, "output_to_%s" % fmt)(trans)
-            info = tarfile.TarInfo(
-                    "%s.%s" % (os.path.splitext(task.page_name)[0], ext))
-            info.size = len(output)
-            buf = StringIO.StringIO(smart_str(output))
-            tar.addfile(info, buf)
-    tar.close()
-    response["Content-Disposition"] = \
-            "attachment: filename=%s.tar.gz" % batch.name
-    return response
 
 
 def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):

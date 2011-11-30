@@ -38,8 +38,7 @@ def show(request, pk):
     context = dict(
         object=task,
         fields=["id","page_name", "lines", "user", "batch",
-            "created_on", "updated_on", "status", "progress"],
-        transcript=task.latest_transcript(),
+            "created_on", "updated_on", "status", "progress"]
     )
     template = "ocrtasks/show.html" if not request.is_ajax() \
             else "ocrtasks/includes/task_info.html"
