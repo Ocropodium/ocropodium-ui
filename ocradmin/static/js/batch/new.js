@@ -122,7 +122,7 @@ $(function() {
         $("#batchform").addClass("waiting");
     });
 
-    function onXHRLoad(event) {
+    function uploadResult(event) {
         var xhr = event.target;
         if (!xhr.responseText) {
             return;
@@ -144,7 +144,7 @@ $(function() {
     // layout has been done
     setTimeout(function() {
         uploader  = new OcrJs.AjaxUploader($("#upload").get(0), "/batch/upload_files/");
-        uploader.addListener("onXHRLoad", onXHRLoad);
+        uploader.addListener("uploadResult", uploadResult);
     }, 100);
 
     // load state stored from last time

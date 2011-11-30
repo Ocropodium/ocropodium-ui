@@ -1,11 +1,8 @@
 {% extends "generic.html" %}
 
 {% block headerscript %}
-    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
-    
 	<script type='application/javascript' src='/static/js/documents/list.js'></script>
-	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
-	<script type='application/javascript' src='/static/js/status_bar.js'></script>
+    <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
 {% endblock %}
 
 {% block bodycontent %}
@@ -13,5 +10,5 @@
 {% endblock %}        
 
 {% block sidebarcontent %}
-    <h1>Hello!</h1>
+    {% include "batch/includes/new_form.html" %}
 {% endblock %}

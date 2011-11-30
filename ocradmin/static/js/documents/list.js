@@ -36,13 +36,13 @@ $(function() {
     statusbar = new OcrJs.StatusBar($("#status_bar").get(0));
 
     uploader.addListeners({
-        onUploadsStarted: function() {
+        uploading: function() {
             statusbar.setWorking(true);
         },
-        onUploadsFinished: function() {
+        complete: function() {
             statusbar.setWorking(false);
         },
-        onXHRLoad: function(data) {
+        uploadResult: function(data) {
             console.log("Loaded", data);
             var pid = JSON.parse(data.target.response).pid;
             $.ajax({
