@@ -176,10 +176,14 @@ $(function() {
     });
     $("#layout_nodes").click(function(event) {
         var self = this;
+        var aspect = $("#node_canvas").width() / $("#node_canvas").height();
         $.ajax({
             url: "/presets/layout_graph",
             type: "POST",
-            data: {script: JSON.stringify(nodetree.buildScript())},
+            data: {
+                script: JSON.stringify(nodetree.buildScript()),
+                aspect: aspect
+            },
             success: function(data) {
                 nodetree.cmdLayoutNodes(data);
             },
@@ -604,8 +608,12 @@ $(function() {
         },
         ready: function() {
             // load state stored from last time
-            if ($("#edit_task_pk").val())
-                statemanager.loadTaskData();
+            if ($("#page_pid").val())
+                statemanager.loadTaskData({
+                    pid: $("#page_pid").val(),
+                    page_name: $("#page_name").val(),
+                    script: $("#page_script").val(),    
+                });
             else
                 statemanager.loadCookieData();
             var node = nodetree.getFocussedNode();
