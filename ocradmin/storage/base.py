@@ -209,6 +209,10 @@ class BaseDocument(object):
         self.save()
 
     @property
+    def transcript_url(self):
+        return "/documents/transcript/%s/" % self.pid
+
+    @property
     def image_uri(self):
         return self._storage.attr_uri(self, "image")
 
