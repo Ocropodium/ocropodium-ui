@@ -96,8 +96,9 @@ def binary(request, pid):
     doc = request.project.get_storage().get(pid)
     bin = doc.binary_content
     assert bin is not None, "Binary has no content: %s" % pid
-    async = OcrTask.run_celery_task(taskname, (request.project.pk, pid), untracked=True,
-            queue="interactive", asyncronous=request.POST.get("async", True))
+    async = OcrTask.run_celery_task(taskname, (request.project.pk, pid, "binary"),
+            untracked=True,
+            queue="interactive", asyncronous=request.POST.get("async", False))
     out = dict(task_id=async.task_id, status=async.status,
         results=async.result)
     return HttpResponse(json.dumps(out), mimetype="application/json")
