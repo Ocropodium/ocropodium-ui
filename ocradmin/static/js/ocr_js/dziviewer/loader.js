@@ -13,7 +13,7 @@ DziViewer.Loader = OcrJs.Base.extend({
         $.extend(this.options, options);
 
         this._waiting = 0;
-
+        this._cachebuster = (new Date()).getTime();
         this._listeners = {
             loadedImage: [],
             loadedAll: [],
@@ -33,7 +33,7 @@ DziViewer.Loader = OcrJs.Base.extend({
                 callback(path, img);
             }
         };
-        img.src = path;
+        img.src = path + "?" + this._cachebuster;
     },
 
     loadImages: function(paths_callbacks) {
