@@ -35,7 +35,9 @@ class Document(base.BaseDocument):
         self.save()
 
 
-
+# README: This is a very naive and inefficient file-based repository.
+# Currently nothing is cached and all attribute updates are written
+# immediately.
 class FileSystemStorage(base.BaseStorage):
     """Filesystem storage backend.  A document is represented
     as a directory of datastreams, i.e:
@@ -50,6 +52,7 @@ class FileSystemStorage(base.BaseStorage):
     binary_name = "BINARY"
     thumbnail_name = "THUMBNAIL"
     transcript_name = "TRANSCRIPT"
+    script_name = "OCR_SCRIPT"
     meta_name = "meta.txt"
 
     def _checkconfigured(self):
@@ -149,7 +152,12 @@ class FileSystemStorage(base.BaseStorage):
         """Set image content."""
         imgpath = os.path.join(self.document_path(doc), getattr(self, "%s_name" % attr))
         with io.open(imgpath, "wb") as imghandle:
-            imghandle.write(content.read())
+            if content is None:
+                imghandle.truncate()
+            elif isinstance(content, basestring):
+                imghandle.write(content)
+            else:
+                imghandle.write(content.read())
 
     def set_document_attr_mimetype(self, doc, attr, mimetype):
         """Set image mimetype."""
