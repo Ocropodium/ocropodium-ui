@@ -7,10 +7,11 @@ from django.http import HttpResponse, HttpResponseRedirect, \
             HttpResponseServerError
 from django.views.decorators.csrf import csrf_exempt
 from ocradmin import storage
+from ocradmin.documents.utils import Aspell
 from ocradmin.core.decorators import project_required
-from ocradmin.core import generic_views as gv
 from ocradmin.presets.models import Preset, Profile
 from ocradmin.ocrtasks.models import OcrTask
+from BeautifulSoup import BeautifulSoup
 
 from cStringIO import StringIO
 
@@ -74,7 +75,6 @@ def save_transcript(request, pid):
     if not data:
         return HttpResponseServerError("No data passed to 'save' function.")
     doc = request.project.get_storage().get(pid)
-    from BeautifulSoup import BeautifulSoup
     soup = BeautifulSoup(doc.transcript_content)
     soup.find("div", {"class": "ocr_page"}).replaceWith(data)
     doc.transcript_content = StringIO(str(soup))
@@ -157,6 +157,23 @@ def create_ajax(request):
         pid = doc.pid
     response = HttpResponse(mimetype="application/json")
     json.dump(dict(pid=pid), response)
+    return response
+
+
+@project_required
+def spellcheck(request):
+    """
+    Spellcheck some POST data.
+    """
+    jsondata = request.POST.get("data")
+    print "Spellcheck data: %s" % jsondata
+    if not jsondata:
+        return HttpResponseServerError(
+                "No data passed to 'spellcheck' function.")
+    data = json.loads(jsondata)
+    aspell = Aspell()
+    response = HttpResponse(mimetype="application/json")
+    json.dump(aspell.spellcheck(data), response, ensure_ascii=False)
     return response
 
 

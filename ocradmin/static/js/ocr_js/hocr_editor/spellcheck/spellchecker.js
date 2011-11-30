@@ -155,7 +155,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
             return $(c).text();
         }).join("\n");
         $.ajax({
-            url: "/batch/spellcheck",
+            url: "/documents/spellcheck",
             type: "POST",
             data: { data: JSON.stringify(text) },
             dataType: "json",
