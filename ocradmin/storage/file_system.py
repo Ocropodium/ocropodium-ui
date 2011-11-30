@@ -102,15 +102,12 @@ class FileSystemStorage(base.BaseStorage):
     def write_metadata(self, doc, newmeta):
         metapath = os.path.join(self.document_path(doc), self.meta_name)
         meta = self.read_metadata(doc)
-        print "Writing metadata, existing meta is %s" % meta
         meta.update(newmeta)
         with io.open(metapath, "w") as metahandle:
             for k, v in meta.iteritems():
-                print "Writing metadata value %s = %s" % (k, v)
                 metahandle.write(u"%s=%s\n" % (k, v))
             #metahandle.writelines([u"%s=%s\n" % (k, v) \
             #        for k, v in meta.iteritems()])
-        print "Wrote metadata, readback is %s" % self.read_metadata(doc)
 
     def create_document(self, label):
         """Get a new document object"""
@@ -179,6 +176,13 @@ class FileSystemStorage(base.BaseStorage):
         """Delete an object."""
         # TODO: Make more robust
         shutil.rmtree(self.document_path(doc))
+        # if  we're deleting the last object
+        # also delete the namespace root.
+        # Just try this and ignore the error
+        try:
+            os.rmdir(self.namespace_root)
+        except OSError:
+            pass
 
     def list(self, namespace=None):
         """List documents in the repository."""
