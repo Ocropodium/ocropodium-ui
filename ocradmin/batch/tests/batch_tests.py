@@ -12,7 +12,6 @@ from django.conf import settings
 from ocradmin.presets.models import Preset
 from ocradmin.batch.models import Batch
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.reference_pages.models import ReferencePage
 from ocradmin.core.tests import testutils
 
 from django.utils import simplejson as json
@@ -130,29 +129,6 @@ class BatchTest(TestCase):
         r = self.client.post("/batch/delete/1/", follow=True)
         self.assertRedirects(r, "/batch/list/")
         self.assertEqual(before, Batch.objects.count() + 1)
-
-    def test_create_refpath_from_task(self):
-        """
-        Test creating a ref page from a task object.
-        Note:  There's one fixture test ref page already
-        (called test.png).  If we try to create one with the
-        same name as an existing page it will simply update
-        the page data (transcript.)  So asserting that there'll
-        be one more ref page in the DB after the operation
-        is a fragile assumption - it depends on the new page
-        NOT having the same name as the current fixture.
-        """
-        tasksbefore = OcrTask.objects.count()
-        batchpk = self._test_batch_action()
-        tasksafter = OcrTask.objects.count()
-        self.assertEqual(tasksbefore, tasksafter - 1)
-        newtask = OcrTask.objects.all().order_by("-created_on")[0]
-        refbefore = ReferencePage.objects.count()
-        r = self.client.post(
-                "/reference_pages/create_from_task/%s/" % newtask.pk)
-        self.assertEqual(r.status_code, 200)
-        refafter = ReferencePage.objects.count()
-        self.assertEqual(refbefore, refafter - 1)
 
     def _test_batch_action(self, params=None, headers={}):
         """
