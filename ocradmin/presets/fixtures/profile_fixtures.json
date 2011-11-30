@@ -1,15 +1,15 @@
 [
   {
-    "pk": 1,
-    "model": "presets.profile",
+    "pk": 1, 
+    "model": "presets.profile", 
     "fields": {
-      "description": "",
-      "tags": "batch",
-      "created_on": "2011-10-30",
-      "updated_on": "2011-11-13",
-      "data": "{\r\n  \"must_exist\": {\r\n    \"unique\": false, \r\n    \"attr\": \"stage\", \r\n    \"value\": \"recognize\"\r\n  }\r\n}",
-      "slug": "batch-ocr",
-      "name": "Batch OCR"
+      "description": "Basic profile for batch OCR.  Preset must contain a single input node and at least one recogniser node.", 
+      "tags": "batch recognise", 
+      "created_on": "2011-11-29", 
+      "updated_on": null, 
+      "data": "{\r\n  \"must_exist\": [\r\n    {\r\n      \"unique\": false, \r\n      \"attr\": \"stage\", \r\n      \"value\": \"recognize\"\r\n    }, \r\n    {\r\n      \"unique\": true, \r\n      \"attr\": \"stage\", \r\n      \"value\": \"input\"\r\n    }\r\n  ]\r\n}\r\n", 
+      "slug": "ocr-batch", 
+      "name": "OCR Batch"
     }
   }
 ]
