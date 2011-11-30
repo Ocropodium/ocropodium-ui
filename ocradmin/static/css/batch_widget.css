@@ -163,7 +163,17 @@
 }
 
 .page_name {
+    text-decoration: none;
+    color: #333;
     float: left;
+    padding: 3px;
+}
+
+.page_name:hover {
+    text-decoration: none;
+    color: #333;
+    float: left;
+    background-color: #FFFFEE;
 }
 
 .page_info {
