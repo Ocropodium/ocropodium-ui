@@ -204,12 +204,9 @@ INSTALLED_APPS = (
     'presets',
     'nodelib',
     'ocrtasks',
-    'reference_pages',
-    'training',
     'projects',
     'tagging',
     'test_utils',
-    'transcripts',
     'compress',
 )
 
