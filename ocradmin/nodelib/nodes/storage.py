@@ -83,7 +83,8 @@ class DocWriter(DocMixin, utilnodes.FileOut):
         # FIXME: This also seems to fail on a semi-random basis when
         # using a Fedora backend.
         memstream = StringIO()
-        self.input(0).writer(memstream, input)        
+        self.input(0).writer(memstream, input)
+        memstream.seek(0)
         storage.set_document_attr_content(doc, attr, memstream)        
         doc.save()
         memstream.close()
