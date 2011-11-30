@@ -142,6 +142,11 @@ class BatchTest(TestCase):
         self.assertRedirects(r, "/batch/list/")
         self.assertEqual(before, Batch.objects.count() + 1)
 
+    def test_builder_edit_task(self):
+        task = OcrTask.objects.all()[0]
+        r = self.client.get("/presets/builder/%s/" % task.page_name)
+        self.assertEqual(r.status_code, 200)
+
     def _test_batch_action(self, params=None, headers={}):
         """
         Testing actually OCRing a file.

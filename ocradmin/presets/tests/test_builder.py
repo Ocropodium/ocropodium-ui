@@ -40,9 +40,4 @@ class BuilderTest(TestCase):
         r = self.client.get("/presets/builder/")
         self.assertEqual(r.status_code, 200)
 
-    def test_builder_edit_task(self):
-        task = OcrTask.objects.all()[0]
-        r = self.client.get("/presets/builder/%s/" % task.id)
-        self.assertEqual(r.status_code, 200)
-
 
