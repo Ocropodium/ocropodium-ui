@@ -59,6 +59,12 @@ class BaseStorage(object):
     def __init__(self, *args, **kwargs):
         self.namespace = kwargs["namespace"]
 
+    def document_attr_dzi_path(self, doc, attr):
+        return "%s/dzi/%s/%s/%s.dzi" % (
+                settings.MEDIA_ROOT,
+                self.namespace,
+                doc.pid, attr)
+
     def attr_uri(self, doc):
         """URI for image datastream."""
         raise NotImplementedError
