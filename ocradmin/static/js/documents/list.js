@@ -36,6 +36,15 @@ $(function() {
     statusbar = new OcrJs.StatusBar($("#status_bar").get(0));
 
     uploader.addListeners({
+        hoverOver: function() {
+            $(".document-list").addClass("dragover");    
+        },
+        hoverOut: function() {
+            $(".document-list").removeClass("dragover");    
+        },
+        drop: function() {
+            $(".document-list").removeClass("dragover");    
+        },
         uploading: function() {
             statusbar.setWorking(true);
         },
