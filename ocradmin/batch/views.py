@@ -426,24 +426,26 @@ def script_for_document(scriptjson, project, pid):
     """
     Modify the given script for a specific file.
     """
-    storage = project.get_storage()
+    doc = project.get_storage().get(pid)
     tree = script.Script(json.loads(scriptjson))
     validate_batch_script(tree)
 
     # get the input node and replace it with out path
+    binname = ".bin".join(os.path.splitext(doc.image_label))
+    recname = os.path.splitext(doc.image_label)[0] + ".html"
     oldinput = tree.get_nodes_by_attr("stage", stages.INPUT)[0]
     rec = tree.get_nodes_by_attr("stage", stages.RECOGNIZE)[0]
     # assume the binary is the first input to the recogniser
     bin = rec.input(0)
 
-    input = tree.new_node("storage.DocImageFileIn", oldinput.label, 
+    input = tree.new_node("storage.DocImageFileIn", doc.image_label, 
             params=[("project", project.pk), ("pid", pid)])
-    recout = tree.add_node("storage.DocWriter", "%s_Out" % rec.label, 
+    recout = tree.add_node("storage.DocWriter", recname, 
             params=[
                 ("project", project.pk),
                 ("pid", pid),
                 ("attribute", "transcript")])
-    binout = tree.add_node("storage.DocWriter", "%s_Out" % bin.label, 
+    binout = tree.add_node("storage.DocWriter", binname, 
             params=[
                 ("project", project.pk),
                 ("pid", pid),
