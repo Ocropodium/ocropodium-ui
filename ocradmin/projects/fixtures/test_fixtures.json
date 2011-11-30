@@ -1,25 +1,91 @@
 [
-    {
-        "pk": 1, 
-        "model": "projects.project", 
-        "fields": {
-            "description": "", 
-            "tags": "", 
-            "created_on": "2010-08-16 12:06:55", 
-            "name": "Test Project 2",
-            "storage_backend": "FileSystemStorage",
-            "slug": "test-project-2"
-        }
-    },
-    {
-        "pk": 1,
-        "model": "projects.projectstorageconfig",
-        "fields": {
-            "project": 1,
-            "name": "namespace",
-            "value": "test-project-2"
-        }
+  {
+    "pk": 1, 
+    "model": "projects.project", 
+    "fields": {
+      "description": "", 
+      "tags": "", 
+      "created_on": "2011-11-28 11:52:17", 
+      "storage_backend": "FileSystemStorage", 
+      "updated_on": null, 
+      "slug": "file-store-test", 
+      "name": "File Store Test"
     }
+  }, 
+  {
+    "pk": 2, 
+    "model": "projects.project", 
+    "fields": {
+      "description": "", 
+      "tags": "", 
+      "created_on": "2011-11-29 14:39:42", 
+      "storage_backend": "FedoraStorage", 
+      "updated_on": null, 
+      "slug": "fedora-test", 
+      "name": "Fedora Test"
+    }
+  }, 
+  {
+    "pk": 1, 
+    "model": "projects.projectstorageconfig", 
+    "fields": {
+      "project": 1, 
+      "name": "namespace", 
+      "value": "hello-kitty-file-store-test"
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "projects.projectstorageconfig", 
+    "fields": {
+      "project": 6, 
+      "name": "username", 
+      "value": "fedoraAdmin"
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "projects.projectstorageconfig", 
+    "fields": {
+      "project": 6, 
+      "name": "namespace", 
+      "value": "fedora-checksum-test"
+    }
+  }, 
+  {
+    "pk": 4, 
+    "model": "projects.projectstorageconfig", 
+    "fields": {
+      "project": 6, 
+      "name": "image_name", 
+      "value": "IMG"
+    }
+  }, 
+  {
+    "pk": 5, 
+    "model": "projects.projectstorageconfig", 
+    "fields": {
+      "project": 6, 
+      "name": "transcript_name", 
+      "value": "TRANSCRIPT"
+    }
+  }, 
+  {
+    "pk": 6, 
+    "model": "projects.projectstorageconfig", 
+    "fields": {
+      "project": 6, 
+      "name": "password", 
+      "value": "fedora"
+    }
+  }, 
+  {
+    "pk": 7, 
+    "model": "projects.projectstorageconfig", 
+    "fields": {
+      "project": 6, 
+      "name": "root", 
+      "value": "http://localhost:8080/fedora/"
+    }
+  } 
 ]
-
-
