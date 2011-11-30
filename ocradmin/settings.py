@@ -315,6 +315,7 @@ COMPRESS_JS = {
         "source_filenames": (
             "js/appmenu.js",
             "js/ocr_js/global.js",
+            "js/ocr_js/ajax_uploader.js",
             "js/status_bar.js",
         ),
         "output_filename": "js/min/global.min.js",

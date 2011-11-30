@@ -1,5 +1,8 @@
-// Upload files via Ajax File API.  This is currently only supported by Firefox,
-// but it allows multiple files to be uploaded at once.
+//
+// Upload multiple files in a relay.  In addition to the
+// uploaded file (which is the whole POST body) extra GET
+// parameters can also be set.
+//
 
 
 OcrJs.AjaxUploader = OcrJs.Base.extend({
@@ -12,16 +15,19 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
             multi: true,    // whether to accept multiple files
             errorhandler: OcrJs.ajaxErrorHandler,
             fakeinput: true,
+            mimetypes: ["image/png"],
         };
         $.extend(this.options, options);
 
         this._listeners = {
-            onXHRLoad: [],
-            onUploadStart: [],
-            onUploadEnd: [],
-            onUploadsStarted: [],
-            onUploadsFinished: [],
-            hover: [],
+            uploadStart: [],
+            uploadResult: [],
+            uploading: [],
+            complete: [],
+            mouseOver: [],
+            mouseOut: [],
+            hoverOver: [],
+            hoverOut: [],
             drop: [],            
         };
 
@@ -63,43 +69,37 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         var self = this;
 
         this._cnt.addEventListener("drop", function(event) {
+            self.trigger("drop");
             try {
                 self.uploadPost(event.dataTransfer.files);
             } catch(err) {
                 alert("Error occurred: " + err);
             }
-            $(self.target).removeClass("hover");
             event.stopPropagation();
             event.preventDefault();
         }, false);
 
         this._cnt.addEventListener("dragenter", function(event) {
-            $(self.target).addClass("hover");
+            self.trigger("hoverOver");
         }, false);
 
         this._cnt.addEventListener("dragexit", function(event) {
-            $(self.target).removeClass("hover");
+            self.trigger("hoverOut");
         }, false);
 
         this._cnt.addEventListener("dragover", function(event) {
+            self.trigger("hoverOver");
             event.preventDefault();
         }, false);
 
         this._cnt.addEventListener("dragleave", function(event) {
-            $(self.target).removeClass("hover");
+            self.trigger("hoverOut");
             event.preventDefault();
         }, false);
 
         
         $(this._cnt).bind("mouseenter mouseleave", function(event) {
-            if (event.type == "mouseenter") {
-                $(self.target).addClass("hover"); //.text("Click to upload images...");
-
-
-            } else if (event.type == "mouseleave") {
-                //self._fakeinput.detach();
-                $(self.target).removeClass("hover"); //.text("Drop images here...");
-            }
+            self.trigger(event.type == "mouseenter" ? "mouseOver" : "mouseOut");
         });
 
         if (this.options.fakeinput) {
@@ -132,7 +132,7 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
     },
 
     uploadPost: function(files) {
-        this.trigger("onUploadsStarted");
+        this.trigger("uploading", files);
 
         // chuck away all but the first file if not
         // in multi mode
@@ -140,12 +140,11 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
             files = [files[0]]
 
         for (var i = 0; i < files.length; i++) {
-            if (!files[i].type.match(/text|image/)) {
+            if (! ~$.inArray(files[i].type, this.options.mimetypes)) {
                 throw("invalid file type: " + files[i].type);
             }
         }
         this._maxsize = files.length;
-
         for (var i = 0; i < files.length; i++) {
             this._queue.push(files[i]);
         }
@@ -154,7 +153,7 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
                 
     postNextItem: function() {
         if (!this._queue.length) {
-            this.trigger("onUploadsFinished");
+            this.trigger("complete");
             return false;
         }
 
@@ -163,15 +162,14 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         var xhr = new XMLHttpRequest();
         xhr.onload = function(event) {
             self.postNextItem();
-            self.trigger("onXHRLoad", event);
+            self.trigger("uploadResult", event);
         };
-        //xhr.onerror = this.options.errorhandler;
         xhr.onerror = OcrJs.ajaxErrorHandler;
 
         var params = this.parameters();
         params["inlinefile"] = file.fileName;
         var urlstring = this.getQueryString(params);
-        this.trigger("onUploadStart");
+        this.trigger("uploadStart", file.fileName);
         xhr.open("POST", urlstring, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.setRequestHeader("X-File-Name", file.fileName);

@@ -528,10 +528,10 @@ $(function() {
             nodetree.cmdSetNodeParameter(node, paramname, value);
         },
         registerUploader: function(name, elem) {
-            uploader.removeListeners("onXHRLoad.setfilepath");
+            uploader.removeListeners("uploadResult.setfilepath");
             uploader.setTarget(elem);
             // FIXME: No error handling
-            uploader.addListener("onXHRLoad.setfilepath", function(data) {
+            uploader.addListener("uploadResult.setfilepath", function(data) {
                 nodetree.cmdSetNodeParameter(nodetree.getNode(name), "path",
                     JSON.parse(data.target.response).file);
             });
