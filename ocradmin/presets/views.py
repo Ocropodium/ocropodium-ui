@@ -134,7 +134,7 @@ def update_data(request, slug):
     preset.save()
     return HttpResponse(preset.data, status=201, mimetype="application/json")
 
-
+@csrf_exempt
 def download(request, slug):
     """Return the data for a preset as an attachment"""
     preset = get_object_or_404(Preset, slug=slug)
@@ -143,6 +143,7 @@ def download(request, slug):
     return response
 
 
+@csrf_exempt
 def fetch(request):
     """Hacky method of forcing downloading of an in-progress script via JS"""
     slug = request.POST.get("name", "untitled")
