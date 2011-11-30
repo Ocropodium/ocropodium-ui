@@ -39,7 +39,7 @@ class Testmaker(TestCase):
         r = self.client.get('/static/css/nodetree.css', {})
         self.assertEqual(r.status_code, 200)
     def test_staticjsuploadersajaxjs_131016875014(self):
-        r = self.client.get('/static/js/uploaders/ajax.js', {})
+        r = self.client.get('/static/js/ocr_js/ajax_uploader.js', {})
         self.assertEqual(r.status_code, 200)
     def test_staticjspresetsbuilderjs_131016875015(self):
         r = self.client.get('/static/js/presets/builder.js', {})
