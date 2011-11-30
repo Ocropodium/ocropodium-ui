@@ -13,6 +13,7 @@ from django.utils import simplejson as json
 from nodetree import cache, node, script, exceptions
 from django.conf import settings
 from ocradmin.nodelib import stages, nodes
+from ocradmin.projects.models import Project
 
 
 
@@ -24,6 +25,7 @@ class DocBatchScriptTask(AbortableTask):
         """
         Runs the convert action.
         """
+        doc = Project.objects.get(pk=project_pk).get_storage().get(pid)
         logger = self.get_logger()
         logger.debug("Running Document Batch Item: %s")
         progress_handler = get_progress_callback(self.request.id)
@@ -39,6 +41,8 @@ class DocBatchScriptTask(AbortableTask):
         try:
             # write out the binary... this should cache it's input
             os.environ["NODETREE_WRITE_FILEOUT"] = "1"
+            doc.script_content = json.dumps(tree.serialize(), indent=2)
+            doc.save()
             [t.eval() for t in tree.get_terminals()]
         except exceptions.NodeError, err:
             logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
