@@ -15,7 +15,5 @@ urlpatterns = patterns('',
     (r'^delete/(?P<pk>\d+)/?$', login_required(views.projectdelete)),
 	(r'^open/?$', login_required(views.projectlist)),
 	(r'^close/?$', login_required(views.close)),
-	(r'^export/(?P<project_pk>\d+)/?$', login_required(views.export)),
-	(r'^ingest/(?P<project_pk>\d+)/?$', login_required(views.ingest)),
 	(r'^load/(?P<project_pk>\d+)/$', login_required(views.load)),
 )
