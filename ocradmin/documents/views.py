@@ -3,12 +3,14 @@
 import json
 from django import forms
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, \
+            HttpResponseServerError
 from django.views.decorators.csrf import csrf_exempt
 from ocradmin import storage
 from ocradmin.core.decorators import project_required
 from ocradmin.core import generic_views as gv
 from ocradmin.presets.models import Preset, Profile
+from ocradmin.ocrtasks.models import OcrTask
 
 from cStringIO import StringIO
 
@@ -43,6 +45,62 @@ def edit(request, pid):
     storage = request.session["project"].get_storage()
     doc = storage.get(pid)
     return render(request, "document/edit.html", dict(object=doc))
+
+
+@project_required
+def transcript(request, pid):
+    """Edit document transcript."""
+    if not request.is_ajax():
+        template = "documents/transcript.html"
+        context = dict(pid=pid)
+        return render(request, template, context)
+    # if it's an Ajax request, write the document text to the
+    # response
+    storage = request.project.get_storage()
+    response = HttpResponse(mimetype="text/html")
+    response.write(storage.get(pid).transcript_content.read())
+    return response
+
+
+@project_required
+def save_transcript(request, pid):
+    """
+    Save data for a single page.
+    """
+    if not request.is_ajax() and request.method == "POST":
+        return transcript(request, pid)
+
+    data = request.POST.get("data")
+    if not data:
+        return HttpResponseServerError("No data passed to 'save' function.")
+    doc = request.project.get_storage().get(pid)
+    from BeautifulSoup import BeautifulSoup
+    soup = BeautifulSoup(doc.transcript_content)
+    soup.find("div", {"class": "ocr_page"}).replaceWith(data)
+    doc.transcript_content = StringIO(str(soup))
+    doc.save()
+    # FIXME: This method of saving the data could potentially throw away
+    # metadata from the OCR source.  Ultimately we need to merge it
+    # into the old HOCR document, rather than creating a new one
+    return HttpResponse(json.dumps({"ok": True}), mimetype="application/json")
+
+
+@project_required
+def binary(request, pid):
+    """
+    Trigger a re-binarization of the image for viewing purposes.
+    """
+    if not request.is_ajax() and request.method == "POST":
+        return transcript(request, pid)
+    taskname = "create.docdzi"
+    doc = request.project.get_storage().get(pid)
+    bin = doc.binary_content
+    assert bin is not None, "Binary has no content: %s" % pid
+    async = OcrTask.run_celery_task(taskname, (request.project.pk, pid), untracked=True,
+            queue="interactive", asyncronous=request.POST.get("async", True))
+    out = dict(task_id=async.task_id, status=async.status,
+        results=async.result)
+    return HttpResponse(json.dumps(out), mimetype="application/json")
 
 
 @project_required

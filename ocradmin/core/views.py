@@ -89,25 +89,6 @@ def transcript(request, task_pk):
             context_instance=RequestContext(request))
 
 
-@project_required
-def doc_transcript(request, pid):
-    """View the transcription of a task."""
-    if not request.is_ajax():
-        template = "ocr/doc_transcript.html"
-        context = dict(pid=pid)
-        return render_to_response(template, context,
-                context_instance=RequestContext(request))
-    # if it's an Ajax request, write the document text to the
-    # response
-    storage = request.project.get_storage()
-    response = HttpResponse(mimetype="text/html")
-    response.write(storage.get(pid).transcript_content.read())
-    return response
-
-
-
-
-
 def save_transcript(request, task_pk):
     """
     Save data for a single page.
@@ -158,24 +139,6 @@ def submit_viewer_binarization(request, task_pk):
     dzipath = ocrutils.get_dzi_path(binpath)
     assert os.path.exists(binpath), "Binary path does not exist: %s" % binpath
     async = OcrTask.run_celery_task(taskname, (binpath, dzipath), untracked=True,
-            queue="interactive")
-    out = dict(task_id=async.task_id, status=async.status,
-        results=async.result)
-    return HttpResponse(json.dumps(out), mimetype="application/json")
-
-
-@project_required
-@saves_files
-def submit_viewer_docbinarization(request, pid):
-    """
-    Trigger a re-binarization of the image for viewing purposes.
-    """
-    taskname = "create.docdzi"
-    storage = request.project.get_storage()
-    doc = storage.get(pid)
-    bin = doc.binary_content
-    assert bin is not None, "Binary has no content: %s" % pid
-    async = OcrTask.run_celery_task(taskname, (request.project.pk, pid), untracked=True,
             queue="interactive")
     out = dict(task_id=async.task_id, status=async.status,
         results=async.result)

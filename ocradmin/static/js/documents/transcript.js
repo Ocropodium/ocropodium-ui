@@ -38,12 +38,6 @@ $(function() {
             primary: "ui-icon-disk",
         },
     });
-    $("#save_training_data").button({
-        text: false,
-        icons: {
-            primary: "ui-icon-check",
-        },
-    });
     $("#edit_task").button({
         text: false,
         icons: {
@@ -96,6 +90,20 @@ $(function() {
             primary: "ui-icon-refresh",
         }
     });
+    $("#undo_command").button({
+        text: false,
+        disabled: true,
+        icons: {
+            primary: "ui-icon-arrowreturnthick-1-w",
+        }
+    });
+    $("#redo_command").button({
+        text: false,
+        disabled: true,
+        icons: {
+            primary: "ui-icon-arrowreturnthick-1-e",
+        }
+    });
 
 
     $("#vlink").buttonset();
@@ -105,11 +113,6 @@ $(function() {
     });
     $("#format_column").click(function(event) {
         formatter.columnLayout($("#transcript"));
-    });
-    $("#page_slider").slider({
-        min: 0,
-        max: $("#batchsize").val() - 1,
-        value: $("#batchoffset").val(),
     });
     $("#undo_command").click(function(event) {
         cmdstack.undo();
@@ -220,14 +223,6 @@ $(function() {
         return confirm("Save changes to transcript?");
     }
 
-    function getBatchOffset() {
-        var batchoffset = parseInt($("#batchoffset").val());
-        var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
-        if (!isNaN(hashoffset))
-            batchoffset += hashoffset;
-        return batchoffset;
-    }
-
     function getPid() {
         return $("#id_pid").val();
     }
@@ -240,15 +235,9 @@ $(function() {
                     transcript.refresh();
                     pageLoaded();
         });
-        $("#page_slider").slider({value: getBatchOffset()});
     }
 
     function updateNavButtons() {
-        var ismax = $("#page_slider").slider("option", "value")
-                == $("#page_slider").slider("option", "max");
-        var ismin = $("#page_slider").slider("option", "value") == 0;
-        $("#next_page").button({disabled: ismax});
-        $("#prev_page").button({disabled: ismin});
         $("#heading").button({disabled: true});
     }
 
@@ -420,50 +409,11 @@ $(function() {
         });
     });
 
-    $("#page_slider").slider({
-        change: function(e, ui) {
-            var val = $("#page_slider").slider("value");
-            var diff = val - parseInt($("#batchoffset").val());
-            var batchoffset = parseInt($("#batchoffset").val());
-            var hashoffset = parseInt(window.location.hash.replace(/^#!\//, ""));
-            if (isNaN(hashoffset))
-                hashoffset = 0;
-            var diff = val - batchoffset;
-            var orig = batchoffset + hashoffset;
-
-            // return if nothing's changed
-            if (hashoffset == diff)
-                return;
-
-            function updatePage() {
-                sdviewer.clearHighlights();
-                window.location.hash = "#!/" + diff;
-                $("input[name=format]:checked").click();
-                updateNavButtons();
-            }
-
-            // check for unsaved changes
-            if (cmdstack.canUndo()) {
-                if (!unsavedPrompt()) {
-                    $("#page_slider").slider({value: orig});
-                } else {
-                    saveTranscript(updatePage);
-                }
-                return;
-            }
-            updatePage();
-        },
-    });
-
     $("#prev_page").click(function(event) {
-        $("#page_slider").slider("option", "value",
-            $("#page_slider").slider("option", "value") - 1);
     });
         
 
     $("#next_page").click(function(event) {
-        $("#page_slider").slider("option", "value",
-            $("#page_slider").slider("option", "value") + 1);
     });
     
     // line formatter object
