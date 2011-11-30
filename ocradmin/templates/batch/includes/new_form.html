@@ -23,16 +23,15 @@
 
 
 
-    <h3>Select Files</h3>
+    <h3>Select Pids</h3>
     <input type="hidden" id="id_files" name="files" />
     <div class="form_field">
         <div id="batch_file_list">
-        {% for path in paths %}
-            <div class="file_item">{{path}}</div>
+        {% for doc in docs %}
+        <input type="checkbox" id="pid{{forloop.counter}}" value="{{doc.pid}}" name="pid" />
+        <label for="pid{{forloop.counter}}">{{doc.label}}</label><br/>
         {% endfor %}
         </div>
-        <input type="button" value="Browse Server" id="browse" />
-        <input type="button" value="Upload Files" id="upload" />
     </div>
 </fieldset>
 

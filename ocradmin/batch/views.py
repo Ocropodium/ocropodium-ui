@@ -58,21 +58,9 @@ def new(request):
     """
     Present a new batch form.
     """
-    tasktype = "run.batchitem"
+    tasktype = "run.docbatchitem"
     template = "batch/new.html" if not request.is_ajax() \
         else "batch/includes/new_form.html"
-    return render(request, template, _new_batch_context(request, tasktype))
-
-
-@login_required
-@project_required
-def new_document_batch(request):
-    """
-    Present a new batch form.
-    """
-    tasktype = "run.docbatchitem"
-    template = "batch/new_doc.html" if not request.is_ajax() \
-        else "batch/includes/new_doc_form.html"
 
     return render(request, template, _new_batch_context(request, tasktype))
 
@@ -91,65 +79,8 @@ batchdelete = gv.GenericDeleteView.as_view(
 
 
 @project_required
-@saves_files
 @transaction.commit_on_success
 def create(request):
-    """
-    Create a batch from pre-saved images convert them asyncronously.
-    """
-    taskname = "run.batchitem"
-
-    # get the subject file paths from comma seperated POST data
-    paths = _get_batch_file_paths(request)
-    preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))
-    form = BatchForm(request.POST)
-    if not request.method == "POST" or not form.is_valid() or not paths:
-        return render(request, "batch/new.html", dict(
-            form=form, paths=paths,
-            presets=Preset.objects.all().order_by("name"),
-        ))
-
-    # create a batch db job
-    # TODO: catch potential integrity error for a duplicate
-    # batch name within the given project
-    batch = form.instance
-    batch.script = preset.data
-    batch.save()
-
-    ocrtasks = []
-    options = dict(loglevel=60, retries=2)
-    for path in paths:
-        pagescript = script_for_page_file(batch.script,
-                path, request.output_path)
-        tid = OcrTask.get_new_task_id()
-        args = (path, pagescript, request.output_path)
-        kwargs = dict()
-        ocrtask = OcrTask(
-            task_id=tid,
-            user=request.user,
-            batch=batch,
-            project=request.session["project"],
-            page_name=os.path.basename(path),
-            task_name=taskname,
-            status="INIT",
-            args=args,
-            kwargs=kwargs,
-        )
-        ocrtask.save()
-        ocrtasks.append(ocrtask)
-    try:
-        # ignoring the result for now
-        OcrTask.run_celery_task_multiple(taskname, ocrtasks, **options)
-    except StandardError:
-        transaction.rollback()
-        raise
-    transaction.commit()
-    return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
-
-
-@project_required
-@transaction.commit_on_success
-def create_document_batch(request):
     """Create a batch for document files in project storage."""    
     taskname = "run.docbatchitem"
 
@@ -158,10 +89,11 @@ def create_document_batch(request):
 
     form = BatchForm(request.POST)
     if not request.method == "POST" or not form.is_valid() or not pids:
-        return render(request, "batch/new.html", dict(
-            form=form, docs=request.project.get_storage().list(),
-            presets=Preset.objects.all().order_by("name"),
-        ))
+        return render(
+                request,
+                "batch/new.html",
+                _new_batch_context(request, tasktype, form)
+        )
     batch = form.instance
     batch.script = preset.data
     batch.save()
@@ -295,16 +227,6 @@ def upload_files(request):
     return HttpResponse(json.dumps(pathlist), mimetype=mimetype)
 
 
-@project_required
-def transcript(request, batch_pk):
-    """
-    View the transcription of a batch.
-    """
-    batch = get_object_or_404(Batch, pk=batch_pk)
-    tid = batch.tasks.all().order_by("id")[0]
-    return HttpResponseRedirect("/ocr/transcript/%d/" % tid.pk)
-
-
 def _show_batch(request, batch):
     """
     View a (passed-in) batch.
@@ -417,22 +339,6 @@ def export(request, batch_pk):
     return response
 
 
-def spellcheck(request):
-    """
-    Spellcheck some POST data.
-    """
-    jsondata = request.POST.get("data")
-    print "Spellcheck data: %s" % jsondata
-    if not jsondata:
-        return HttpResponseServerError(
-                "No data passed to 'spellcheck' function.")
-    data = json.loads(jsondata)
-    aspell = batchutils.Aspell()
-    response = HttpResponse(mimetype="application/json")
-    json.dump(aspell.spellcheck(data), response, ensure_ascii=False)
-    return response
-
-
 def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):
     """
     Hack around the problem of serializing
@@ -462,7 +368,7 @@ def _serialize_batch(batch, start=0, limit=25, statuses=None, name=None):
     return batchsl
 
 
-def _new_batch_context(request, tasktype):
+def _new_batch_context(request, tasktype, form=None):
     """
     Template variables for a new batch form.
     """
@@ -472,10 +378,12 @@ def _new_batch_context(request, tasktype):
     project = request.session["project"]
     batchname = "%s - Batch %d" % (project.name,
             project.batches.count() + 1)
-    form = BatchForm(initial=dict(name=batchname,
-            user=request.user, project=project, task_type=tasktype))
+    if form is None:
+        form = BatchForm(initial=dict(name=batchname,
+                user=request.user, project=project, task_type=tasktype))
     docs = project.get_storage().list()
-    return dict(form=form, presets=Preset.objects.all().order_by("name"), docs=docs)
+    presets = Preset.objects.filter(profile__isnull=False).order_by("name")
+    return dict(form=form, presets=presets, docs=docs)
 
 
 def _get_batch_file_paths(request):
