@@ -53,6 +53,7 @@ class FedoraStorage(base.BaseStorage):
         self.image_name = kwargs["image_name"]
         self.thumbnail_name = "THUMBNAIL"
         self.binary_name = "BINARY"
+        self.script_name = "OCR_SCRIPT"
         self.transcript_name = kwargs["transcript_name"]
 
         self.repo = Repository(
@@ -71,6 +72,9 @@ class FedoraStorage(base.BaseStorage):
             }),
             "thumbnail": FileDatastream(self.thumbnail_name, "Document image thumbnail", defaults={
               'versionable': True,
+            }),
+            "script": FileDatastream(self.script_name, "OCR Script", defaults={
+                "versionable": True,
             }),
             "transcript": FileDatastream(self.transcript_name, "Document transcript", defaults={
                 "versionable": True,

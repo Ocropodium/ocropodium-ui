@@ -141,7 +141,7 @@ class BaseDocumentType(type):
         if attrs.pop("abstract", None):
             return new(cls, name, bases, attrs)
         doccls = new(cls, name, bases, attrs)
-        for obj in ["image", "thumbnail", "binary", "transcript"]:
+        for obj in ["image", "thumbnail", "binary", "transcript", "script"]:
             for attr in ["label", "mimetype", "content"]:
                 generate_image_attr_accessors(doccls, obj, attr)
         return doccls
