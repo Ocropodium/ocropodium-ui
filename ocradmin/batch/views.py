@@ -70,7 +70,7 @@ def new(request):
     """
     Present a new batch form.
     """
-    taskname = "run.docbatchitem"
+    taskname = "run.batchitem"
     template = "batch/new.html" if not request.is_ajax() \
         else "batch/includes/new_form.html"
     return render(request, template, _new_batch_context(request, taskname))
@@ -80,7 +80,7 @@ def new(request):
 @transaction.commit_on_success
 def create(request):
     """Create a batch for document files in project storage."""    
-    taskname = "run.docbatchitem"
+    taskname = "run.batchitem"
 
     preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))    
     pids = request.POST.getlist("pid")
