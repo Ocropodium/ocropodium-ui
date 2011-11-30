@@ -229,7 +229,7 @@ $(function() {
 
 
     function updateTask(event) {
-        $("#transcript").load("/ocr/doc_transcript/" + getPid() + "/",
+        $("#transcript").load("/documents/transcript/" + getPid() + "/",
                 null, function(text) {
                     transcript.setWaiting(false);
                     transcript.refresh();
@@ -263,7 +263,7 @@ $(function() {
                 "/presets/builder/" + task_pid + "?ref="
                 + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
 
-        taskwatcher.run("/ocr/submit_viewer_docbinarization/" + task_pid + "/");
+        taskwatcher.run("/documents/binary/" + task_pid + "/");
     }
 
     function stackChanged() {
