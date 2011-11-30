@@ -15,7 +15,6 @@ from ocradmin.core import utils as ocrutils
 from ocradmin.nodelib import utils as pluginutils
 from ocradmin.core.decorators import saves_files, project_required
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.transcripts.models import Transcript
 from ocradmin.presets.models import Preset
 from ocradmin.core.decorators import project_required
 
@@ -74,50 +73,6 @@ def update_ocr_task(request, task_pk):
     return HttpResponseRedirect(ref)
 
 
-def transcript(request, task_pk):
-    """
-    View the transcription of a task.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    template = "ocr/transcript.html"
-    context = dict(task=task)
-    if task.batch:
-        context["batchoffset"] = task.pk - task.batch.tasks.all().order_by("id")[0].pk
-        context["batchsize"] = task.batch.tasks.count()
-
-    return render_to_response(template, context,
-            context_instance=RequestContext(request))
-
-
-def save_transcript(request, task_pk):
-    """
-    Save data for a single page.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    data = request.POST.get("data")
-    if not data:
-        return HttpResponseServerError("No data passed to 'save' function.")
-    from BeautifulSoup import BeautifulSoup
-    soup = BeautifulSoup(task.latest_transcript())
-    soup.find("div", {"class": "ocr_page"}).replaceWith(data)
-    print "REPLACED"
-    # FIXME: This method of saving the data could potentially throw away
-    # metadata from the OCR source.  Ultimately we need to merge it
-    # into the old HOCR document, rather than creating a new one
-    result = Transcript(data=str(soup), task=task)
-    result.save()
-    return HttpResponse(json.dumps({"ok": True}),
-            mimetype="application/json")
-
-
-def task_transcript(request, task_pk):
-    """
-    Retrieve the results using the previously provided task name.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    return HttpResponse(task.latest_transcript())
-
-
 def task_config(request, task_pk):
     """
     Get a task config as a set of key/value strings.
@@ -125,24 +80,6 @@ def task_config(request, task_pk):
     task = get_object_or_404(OcrTask, pk=task_pk)
     path, script, outdir = task.args
     return HttpResponse(script, mimetype="application/json")
-
-
-@project_required
-@saves_files
-def submit_viewer_binarization(request, task_pk):
-    """
-    Trigger a re-binarization of the image for viewing purposes.
-    """
-    task = get_object_or_404(OcrTask, pk=task_pk)
-    taskname = "create.dzi"
-    binpath = ocrutils.get_binary_path(task.args[0], request.output_path)
-    dzipath = ocrutils.get_dzi_path(binpath)
-    assert os.path.exists(binpath), "Binary path does not exist: %s" % binpath
-    async = OcrTask.run_celery_task(taskname, (binpath, dzipath), untracked=True,
-            queue="interactive")
-    out = dict(task_id=async.task_id, status=async.status,
-        results=async.result)
-    return HttpResponse(json.dumps(out), mimetype="application/json")
 
 
 def result(request, task_id):

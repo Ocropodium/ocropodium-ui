@@ -4,7 +4,6 @@ to the ConvertPageTask.
 """
 
 from ocradmin.ocrtasks.models import OcrTask
-from ocradmin.transcripts.models import Transcript
 from celery.datastructures import ExceptionInfo
 
 
@@ -34,10 +33,8 @@ def on_task_postrun(**kwargs):
     task = OcrTask.objects.get(task_id=kwargs.get("task_id"))
     retval = kwargs.get("retval")
     if not isinstance(retval, ExceptionInfo):
-        result = Transcript(task=task, data=retval)
-        result.save()
         task.status = "SUCCESS"
-    task.save()
+        task.save()
 
 
 def on_task_failure(**kwargs):
