@@ -52,8 +52,8 @@ class DocWriter(DocMixin, utilnodes.FileOut):
             dict(name="project", value=""),
             dict(name="pid", value=""),
             dict(
-                name="attribute", value="image",
-                choices=["image", "binary", "transcript"],
+                name="attribute", value="",
+                choices=["binary", "transcript"],
             )
     ]
 
@@ -70,7 +70,7 @@ class DocWriter(DocMixin, utilnodes.FileOut):
 
     def process(self, input):
         # TODO: Make robust
-        if input is None: # or not os.environ.get("NODETREE_WRITE_FILEOUT"):
+        if input is None or not os.environ.get("NODETREE_WRITE_FILEOUT"):
             return input
 
         project = Project.objects.get(pk=self._params.get("project"))
@@ -78,15 +78,15 @@ class DocWriter(DocMixin, utilnodes.FileOut):
         doc = storage.get(self._params.get("pid"))
         attr = self._params.get("attribute")
 
-        # FIXME: More memory processing...
+        # FIXME: More memory processing... want to somehow make this
+        # more efficient for large files
+        # FIXME: This also seems to fail on a semi-random basis when
+        # using a Fedora backend.
         memstream = StringIO()
-        self._inputs[0].writer(memstream, input)        
-        memstream.seek(0)
-        self.logger.info("WRITING STREAM: %s to doc %s", attr, doc.pid)
-        storage.set_document_attr_content(doc, attr, memstream)
-        if attr == "image":
-            doc.make_thumbnail()
+        self.input(0).writer(memstream, input)        
+        storage.set_document_attr_content(doc, attr, memstream)        
         doc.save()
+        memstream.close()
         return input
 
 
