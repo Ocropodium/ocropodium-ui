@@ -31,10 +31,11 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
         });
         this._menu.find("li.topmenu").hoverIntent(
             function(event) {
+                self._menu.find("ul.submenu").hide(); 
                 self.showSubContextMenu(this, event);
             },
             function(event) {
-                $(this).find("ul").delay(1000).hide();
+                //$(this).find("ul").delay(1000).hide();
             }
         );
 
@@ -98,6 +99,7 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
 
     hideContextMenu: function(event) {
         this._menu.hide();
+        this._menu.find("ul.submenu").hide(); 
         this._context = null;
     },
 
