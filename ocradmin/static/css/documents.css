@@ -1,4 +1,5 @@
 
+
 .document-item {
     float: left;
     width: 256px;
@@ -46,6 +47,10 @@
     list-style-type: none;
     margin: 0;
     padding: 0;
+}
+
+.document-list.dragover {
+    background-color: #DDDDFF;
 }
 
 .document-list .ui-selecting { 
