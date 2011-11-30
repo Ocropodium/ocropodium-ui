@@ -195,7 +195,7 @@ def load(request, project_pk):
     """
     project = get_object_or_404(Project, pk=project_pk)
     request.session["project"] = project
-    return HttpResponseRedirect("/projects/show/%s/" % project_pk)
+    return HttpResponseRedirect("/documents/list/")
 
 
 def close(request):
