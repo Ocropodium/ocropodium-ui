@@ -5,7 +5,7 @@ Basic OCR functions.  Submit OCR tasks and retrieve the result.
 import os
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect, \
-        HttpResponseServerError
+        HttpResponseServerError, HttpResponseNotFound
 from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -47,29 +47,34 @@ def abort(request, task_id):
     return response
 
 @csrf_exempt
-@saves_files
-def update_ocr_task(request, task_pk):
+@project_required
+def update_ocr_task(request, pid):
     """
     Re-save the params for a task and resubmit it,
     redirecting to the transcript page.
     """
-    task = get_object_or_404(OcrTask, pk=task_pk)
+    storage = request.project.get_storage()
+    doc = storage.get(pid)
+    # FIXME: This is fragile!  It might not get the
+    # exact task that wrote the script!  Need to find
+    # a more robust way of linking the two, like writing
+    # the task_id to the script metadata...
+    try:
+        task = OcrTask.objects.filter(page_name=doc.pid)\
+                .order_by("-updated_on")[0]
+    except IndexError:
+        return HttpResponseNotFound
     script = request.POST.get("script")
+
     # try and delete the existing binary path
-    binpath = ocrutils.get_binary_path(task.args[0], request.output_path)
-    dzipath = ocrutils.get_dzi_path(binpath)
-    try:
-        os.unlink(dzipath)
-    except OSError:
-        pass
+    dzipath = storage.document_attr_dzi_path(doc, "binary")
+    print "DELETING DZI: %s" % dzipath
+    os.unlink(dzipath)
     ref = request.POST.get("ref", "/batch/show/%d/" % task.batch.pk)
-    try:
-        json.loads(script)
-        task.args = (task.args[0], script, task.args[2])
-        task.save()
-        task.retry()
-    except ValueError:
-        pass
+    json.loads(script)
+    task.args = (task.args[0], task.args[1], script)
+    task.save()
+    task.retry()
     return HttpResponseRedirect(ref)
 
 

@@ -115,17 +115,14 @@ OcrJs.Nodetree.StateManager = OcrJs.Base.extend({
         return data;
     },
 
-    loadTaskData: function() {
-        var page = $("#edit_task_page").val(),
-            batch = $("#edit_task_batch").val(),
-            jsondata = $("#edit_task_script").val();
-        if (!jsondata) {
+    loadTaskData: function(data) {
+        if (!data.script) {
             throw "Error loading data.  No JSON found.";
         }
-        this.tree.loadScript(JSON.parse(jsondata));
+        this.tree.loadScript(JSON.parse(data.script));
         this._hash = this.getTreeHash();
-        this._name = batch + ": " + page;
-        this._open = page;
+        this._name = data.pid + " (" + data.page_name + ")";
+        this._open = data.pid;
         this.trigger("opened", this.getCurrentName());
     },
 

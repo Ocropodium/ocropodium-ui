@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 from ocradmin.core import generic_views as gv
-from ocradmin.core.decorators import saves_files
+from ocradmin.core.decorators import project_required, saves_files
 from ocradmin.ocrtasks.models import OcrTask
 from ocradmin.nodelib import graph, cache
 from ocradmin.nodelib import utils as pluginutils
@@ -154,7 +154,7 @@ def fetch(request):
 
 
 @saves_files
-def builder(request):
+def builder(request, doc=None):
     """
     Show the preset builder.
     """
@@ -162,24 +162,17 @@ def builder(request):
             form=PresetForm(initial=dict(user=request.user)),
             presets=Preset.objects.order_by("name"),
             profiles=Preset.objects.order_by("name"),
+            doc=doc,
+            ref=request.GET.get("ref", "/documents/list")
     )
     return render(request, "presets/builder.html", context)
 
 
-@saves_files
-def builder_task_edit(request, task_pk):
-    """
-    Show the preset builder for a specific task.
-    """
-    task=get_object_or_404(OcrTask, pk=task_pk)
-    context = dict(
-            form=PresetForm(initial=dict(user=request.user)),
-            presets=Preset.objects.order_by("name"),
-            profiles=Profile.objects.order_by("name"),
-            task=task,
-            ref=request.GET.get("ref", "/batch/show/%d/" % task.batch.pk)
-    )
-    return render(request, "presets/builder.html", context)
+@project_required
+def builder_doc_edit(request, pid):
+    """Show the preset builder for a specific document script."""
+    doc = request.project.get_storage().get(pid)
+    return builder(request, doc)
 
 
 def query_nodes(request):
@@ -255,9 +248,13 @@ def layout_graph(request):
     Get GraphViz positions for nodes in a list.
     """
     jsonscript = request.POST.get("script")
+    try:
+        aspect = float(request.POST.get("aspect"))
+    except TypeError:
+        aspect = None
     nodes = json.loads(jsonscript)
     return HttpResponse(
-            json.dumps(graph.get_node_positions(nodes)),
+            json.dumps(graph.get_node_positions(nodes, aspect)),
                 mimetype="application/json")
 
 

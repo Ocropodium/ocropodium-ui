@@ -39,18 +39,15 @@ class UnhandledCreateDzi(AbortableTask):
 class UnhandledCreateDocDzi(AbortableTask):
     name = "_create.docdzi"
 
-    def run(self, project_pk, pid, **kwargs):
+    def run(self, project_pk, pid, attr, **kwargs):
         """
         Create a DZI of the given document, as <path>/dzi/<basename>.
         """
         logger = self.get_logger()
         project = Project.objects.get(pk=project_pk)
         storage = project.get_storage()
-        path = "%s/dzi/%s/%s/%s.dzi" % (
-                settings.MEDIA_ROOT,
-                storage.namespace,
-                pid, "BINARY")
-
+        doc = storage.get(pid)
+        path = storage.document_attr_dzi_path(doc, attr)
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
         if not os.path.exists(path):
@@ -58,7 +55,7 @@ class UnhandledCreateDocDzi(AbortableTask):
                     tile_overlap=2, tile_format="png",
                     image_quality=1, resize_filter="nearest")
             logger.debug("Creating DZI path: %s", path)
-            creator.create(storage.get(pid).binary_content, path)
+            creator.create(storage.document_attr_content(doc, attr), path)
         return dict(pid=pid, dst=utils.media_path_to_url(path))
 
 

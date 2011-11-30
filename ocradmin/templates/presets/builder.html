@@ -10,7 +10,6 @@
     {% compressed_js 'nodetree' %}
 
 	<script type='application/javascript' src='/static/js/presets/builder.js'></script>
-	<script type='application/javascript' src='/static/js/uploaders/ajax.js'></script>
 
     {% compressed_css 'nodetree' %}
     {% compressed_css 'viewers' %}
@@ -66,10 +65,9 @@
 {% endblock %}
 {% block sidebar %}
     <form id="taskdetailsform">
-        <input type="hidden" id="edit_task_pk" name="task_pk" value="{{task.pk}}" />
-        <input type="hidden" id="edit_task_batch" name="task_batch" value="{{task.batch.name}}" />
-        <input type="hidden" id="edit_task_page" name="task_page" value="{{task.page_name}}" />
-        <input type="hidden" id="edit_task_script" name="task_script" value="{{task.args.1}}" />
+        <input type="hidden" id="page_pid" name="page_pid" value="{{doc.pid}}" />
+        <input type="hidden" id="page_name" name="page_name" value="{{doc.label}}" />
+        <input type="hidden" id="page_script" name="page_script" value="{{doc.script_content.read}}" />
     </form>
 
     <div id="node_canvas" class="ui-helper-reset ui-widget ui-layout-center ui-background-flat"></div>
@@ -134,7 +132,7 @@
         </div>
         <div id="script_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
             <span class="buttons_left">
-                {% if task %}
+                {% if doc %}
                 <button id="save_task_preset">Save</button>
                 <button id="cancel_task_preset">Cancel</button>
                 {% else %}
@@ -174,9 +172,9 @@
             </div>
         </form>
     </div>
-    {% if task %}
+    {% if doc %}
     <!-- form for POSTing updated task scripts -->
-    <form id="task_update_form" action="/ocr/update_task/{{task.pk}}/" method="POST">
+    <form id="task_update_form" action="/ocr/update_task/{{doc.pid}}/" method="POST">
         {{csrf_token}}
         <input type="hidden" id="task_update_script" name="script" value="" />
         <input type="hidden" id="task_update_ref" name="ref" value="{{ref}}" />
