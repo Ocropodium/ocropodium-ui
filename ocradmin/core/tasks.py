@@ -46,7 +46,7 @@ class UnhandledCreateDocDzi(AbortableTask):
         logger = self.get_logger()
         project = Project.objects.get(pk=project_pk)
         storage = project.get_storage()
-        path = "%s/files/%s/%s/%s.dzi" % (
+        path = "%s/dzi/%s/%s/%s.dzi" % (
                 settings.MEDIA_ROOT,
                 storage.namespace,
                 pid, "BINARY")
