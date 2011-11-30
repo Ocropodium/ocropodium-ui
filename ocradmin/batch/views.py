@@ -19,7 +19,6 @@ from django.shortcuts import render, get_object_or_404
 from django.utils import simplejson as json
 from django.utils.encoding import smart_str
 from django.views.decorators.csrf import csrf_exempt
-from ocradmin.batch import utils as batchutils
 from ocradmin.core import generic_views as gv
 from ocradmin.core import utils as ocrutils
 from ocradmin.core.decorators import project_required, saves_files
