@@ -62,7 +62,6 @@ $(function() {
 
     // active main menu click dropdown
     $("div.appmenu ul.top").bind("click.menuopen", function(e1) {
-        console.log("Menu open!");
         activateMenu(this);
     });
     
