@@ -9,11 +9,18 @@ import json
 import tempfile
 
 
-def get_node_positions(nodedict):
+def quote_name_if_dashed(name):
+    if name.find("-") != -1:
+        return "\"%s\"" % name
+    return name
+
+def get_node_positions(nodedict, aspect=None):
     """
     Build the pydot graph.
     """
     g = pydot.Dot(margin="0.1", ranksep="0.7", nodesep="1.5")
+    if aspect is not None:
+        g.set_aspect(round(aspect))
     for name, node in nodedict.iteritems():
         n = pydot.Node(name, width="0.5", fixedsize="0.5")
         g.add_node(n)
@@ -21,10 +28,10 @@ def get_node_positions(nodedict):
     for name, node in nodedict.iteritems():
         for i in node["inputs"]:
             try:
-                src = g.get_node(i)
+                src = g.get_node(quote_name_if_dashed(i))
                 if isinstance(src, list):
                     src = src[0]
-                dst = g.get_node(name)
+                dst = g.get_node(quote_name_if_dashed(name))
                 if isinstance(dst, list):
                     dst = dst[0]
                 g.add_edge(pydot.Edge(src, dst))
@@ -38,7 +45,7 @@ def get_node_positions(nodedict):
 
     out = {}
     for name, node in nodedict.iteritems():
-        gn = g.get_node(name)
+        gn = g.get_node(quote_name_if_dashed(name))
         if isinstance(gn, list):
             gn = gn[0]
         out[name] = [int(float(d)) \
