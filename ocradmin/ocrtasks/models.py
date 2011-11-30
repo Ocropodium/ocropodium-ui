@@ -97,16 +97,6 @@ class OcrTask(models.Model):
         celerytask = celery.registry.tasks[self.task_name]
         celerytask.apply_async(args=self.args, **self.kwargs)
 
-    def latest_transcript(self):
-        """
-        Return the latest transcript.
-        """
-        try:
-            result = self.transcripts.order_by("-version")[0].data
-        except IndexError:
-            result = None
-        return result
-
     def is_batch_task(self):
         """
         Whether task is part of a batch.
