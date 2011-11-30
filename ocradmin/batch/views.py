@@ -52,19 +52,6 @@ class BatchForm(forms.ModelForm):
         )
 
 
-@login_required
-@project_required
-def new(request):
-    """
-    Present a new batch form.
-    """
-    tasktype = "run.docbatchitem"
-    template = "batch/new.html" if not request.is_ajax() \
-        else "batch/includes/new_form.html"
-
-    return render(request, template, _new_batch_context(request, tasktype))
-
-
 batchlist = project_required(gv.GenericListView.as_view(
         model=Batch,
         page_name="OCR Batches",
@@ -76,6 +63,18 @@ batchdelete = gv.GenericDeleteView.as_view(
         model=Batch,
         page_name="Delete OCR Batch",
         success_url="/batch/list/",)
+
+
+@login_required
+@project_required
+def new(request):
+    """
+    Present a new batch form.
+    """
+    taskname = "run.docbatchitem"
+    template = "batch/new.html" if not request.is_ajax() \
+        else "batch/includes/new_form.html"
+    return render(request, template, _new_batch_context(request, taskname))
 
 
 @project_required
@@ -92,7 +91,7 @@ def create(request):
         return render(
                 request,
                 "batch/new.html",
-                _new_batch_context(request, tasktype, form)
+                _new_batch_context(request, taskname, form)
         )
     batch = form.instance
     batch.script = preset.data
