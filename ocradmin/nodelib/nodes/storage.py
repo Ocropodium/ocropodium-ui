@@ -85,7 +85,10 @@ class DocWriter(DocMixin, utilnodes.FileOut):
         memstream = StringIO()
         self.input(0).writer(memstream, input)
         memstream.seek(0)
+        mimetype = "image/png" if attr == "binary" else "text/html"
         storage.set_document_attr_content(doc, attr, memstream)        
+        storage.set_document_attr_mimetype(doc, attr, mimetype)        
+        storage.set_document_attr_label(doc, attr, self.label)        
         doc.save()
         memstream.close()
         return input
