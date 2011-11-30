@@ -27,9 +27,6 @@ urlpatterns = patterns('',
     (r'^presets/?', include('ocradmin.presets.urls')),
     (r'^profiles/?', include('ocradmin.presets.profileurls')),
     (r'^projects/?', include('ocradmin.projects.urls')),
-    (r'^reference_pages/?', include('ocradmin.reference_pages.urls')),
-    (r'^training/?', include('ocradmin.training.urls')),
-    (r'^transcripts/?', include('ocradmin.transcripts.urls')),
     (r'^celery/?', include('djcelery.urls')),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
