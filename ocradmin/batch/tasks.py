@@ -42,6 +42,9 @@ class DocBatchScriptTask(AbortableTask):
             # write out the binary... this should cache it's input
             os.environ["NODETREE_WRITE_FILEOUT"] = "1"
             doc.script_content = json.dumps(tree.serialize(), indent=2)
+            doc.script_label = "%s.json" % os.path.splitext(doc.label)[0]
+            doc.script_mimetype = "application/json"
+
             doc.save()
             [t.eval() for t in tree.get_terminals()]
         except exceptions.NodeError, err:
