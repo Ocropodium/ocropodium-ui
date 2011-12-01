@@ -82,15 +82,15 @@ class DocWriter(DocMixin, utilnodes.FileOut):
         # more efficient for large files
         # FIXME: This also seems to fail on a semi-random basis when
         # using a Fedora backend.
-        memstream = StringIO()
-        self.input(0).writer(memstream, input)
-        memstream.seek(0)
+        with io.StringIO() as memstream:
+            self.input(0).writer(memstream, input)
+            memstream.seek(0)
+            storage.set_document_attr_content(doc, attr, memstream)        
         mimetype = "image/png" if attr == "binary" else "text/html"
-        storage.set_document_attr_content(doc, attr, memstream)        
         storage.set_document_attr_mimetype(doc, attr, mimetype)        
         storage.set_document_attr_label(doc, attr, self.label)        
         doc.save()
-        memstream.close()
+        #memstream.close()
         return input
 
 
@@ -107,7 +107,8 @@ class DocImageFileIn(DocMixin, base.GrayPngWriterMixin):
         doc = storage.get(self._params.get("pid"))
 
         try:
-            pil = Image.open(doc.image_content)
+            with doc.image_content as io:
+                pil = Image.open(io)
         except IOError:
             raise exceptions.NodeError(
                     "Error reading datastream contents as an image.", self)

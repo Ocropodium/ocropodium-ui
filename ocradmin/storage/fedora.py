@@ -101,7 +101,7 @@ class FedoraStorage(base.BaseStorage):
         """Get mimetype for an image type attribute."""
         return getattr(doc._doc, attr).mimetype
 
-    def document_attr_content(self, doc, attr):
+    def document_attr_content_handle(self, doc, attr):
         """Get content for an image type attribute."""
         return getattr(doc._doc, attr).content
 

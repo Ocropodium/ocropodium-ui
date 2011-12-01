@@ -142,11 +142,15 @@ class FileSystemStorage(base.BaseStorage):
         """Get the document image mimetype."""
         return self.read_metadata(doc).get("%s_mimetype" % attr, "")
 
-    def document_attr_content(self, doc, attr):
-        """Get the document image content as a stream."""
-        imgpath = os.path.join(self.document_path(doc), getattr(self, "%s_name" % attr))
+    def document_attr_content_handle(self, doc, attr):
+        """Get a handle to a document attribute's content. This
+        should be closed when finished, or used via the context
+        manager method `document_attr_content`."""
+        imgpath = os.path.join(
+                self.document_path(doc), getattr(self, "%s_name" % attr))
         if os.path.exists(imgpath):
             return io.open(imgpath, "rb")
+        return StringIO("")
 
     def set_document_attr_content(self, doc, attr, content):
         """Set image content."""
