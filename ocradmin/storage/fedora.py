@@ -8,6 +8,7 @@ from django import forms
 from django.conf import settings
 import eulfedora
 import hashlib
+from cStringIO import StringIO
 from eulfedora.server import Repository
 from eulfedora.models import DigitalObject, FileDatastream
 
@@ -103,7 +104,8 @@ class FedoraStorage(base.BaseStorage):
 
     def document_attr_content_handle(self, doc, attr):
         """Get content for an image type attribute."""
-        return getattr(doc._doc, attr).content
+        handle = getattr(doc._doc, attr).content
+        return StringIO() if handle is None else handle
 
     def document_metadata(self, doc):
         """Get document metadata. This currently
@@ -165,5 +167,8 @@ class FedoraStorage(base.BaseStorage):
         return [FedoraDocument(d, self) \
                 for d in self.repo.find_objects("%s:*" % ns, type=self.model)]
         
-
+    def list_pids(self, namespace=None):
+        """List of pids.  This unforunately involves calling
+        list(), so it not a quicker alternative."""
+        return [doc.pid for doc in self.list()]
 
