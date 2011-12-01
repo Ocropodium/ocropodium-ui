@@ -4,6 +4,7 @@ Storage backend base class.
 
 import io
 import textwrap
+from contextlib import contextmanager
 from django import forms
 from django.conf import settings
 from . import registry
@@ -81,12 +82,20 @@ class BaseStorage(object):
         """Get the document image mimetype."""
         raise NotImplementedError
 
-    def document_attr_content(self, doc, attr):
+    def document_attr_content_handle(self, doc, attr):
         """Get document image content.  Currently
         EULFedora doesn't support a streaming content
         API so we have to load it into an in memory
         buffer."""
         raise NotImplementedError
+
+    @contextmanager
+    def document_attr_content(self, doc, attr):
+        """Get the document image content as a stream."""
+        try:
+            yield self.document_attr_content_handle(doc, attr)
+        finally:
+            handle.close()
 
     def document_metadata(self, doc):
         """Get document metadata. This currently
