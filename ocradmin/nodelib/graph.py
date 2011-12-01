@@ -3,14 +3,19 @@ Utility class for displaying node scripts.
 """
 
 import os
+import re
 import sys
 import pydot
 import json
 import tempfile
 
 
-def quote_name_if_dashed(name):
-    if name.find("-") != -1:
+# http://www.graphviz.org/doc/info/lang.html
+RAW_NAME_RE = r"(^[A-Za-z_][a-zA-Z0-9_]*$)|(^-?([.[0-9]+|[0-9]+(.[0-9]*)?)$)"
+
+
+def conditional_quote(name):
+    if re.match(RAW_NAME_RE, name) is None:
         return "\"%s\"" % name
     return name
 
@@ -28,10 +33,10 @@ def get_node_positions(nodedict, aspect=None):
     for name, node in nodedict.iteritems():
         for i in node["inputs"]:
             try:
-                src = g.get_node(quote_name_if_dashed(i))
+                src = g.get_node(conditional_quote(i))
                 if isinstance(src, list):
                     src = src[0]
-                dst = g.get_node(quote_name_if_dashed(name))
+                dst = g.get_node(conditional_quote(name))
                 if isinstance(dst, list):
                     dst = dst[0]
                 g.add_edge(pydot.Edge(src, dst))
@@ -39,13 +44,14 @@ def get_node_positions(nodedict, aspect=None):
                 print "Input %s not found" % i
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".dot") as t:
+        t.close()
         g.write_dot(t.name)
     g = pydot.graph_from_dot_file(t.name)
     os.unlink(t.name)
 
     out = {}
     for name, node in nodedict.iteritems():
-        gn = g.get_node(quote_name_if_dashed(name))
+        gn = g.get_node(conditional_quote(name))
         if isinstance(gn, list):
             gn = gn[0]
         out[name] = [int(float(d)) \
