@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import os
 import re
+import io
 import codecs
 import tempfile
 import subprocess as sp
@@ -82,20 +83,34 @@ class DocWriter(DocMixin, utilnodes.FileOut):
         # more efficient for large files
         # FIXME: This also seems to fail on a semi-random basis when
         # using a Fedora backend.
-        with io.StringIO() as memstream:
-            self.input(0).writer(memstream, input)
-            memstream.seek(0)
-            storage.set_document_attr_content(doc, attr, memstream)        
-        mimetype = "image/png" if attr == "binary" else "text/html"
-        storage.set_document_attr_mimetype(doc, attr, mimetype)        
-        storage.set_document_attr_label(doc, attr, self.label)        
-        doc.save()
-        #memstream.close()
-        return input
+        #try:
+        #    memstream = StringIO()
+        #    self.input(0).writer(memstream, input)
+        #    memstream.flush()
+        #    memstream.seek(0)
+        #    storage.set_document_attr_content(doc, attr, memstream)        
+        #    mimetype = "image/png" if attr == "binary" else "text/html"
+        #    storage.set_document_attr_mimetype(doc, attr, mimetype)        
+        #    storage.set_document_attr_label(doc, attr, self.label)        
+        #    doc.save()
+        #    return input
+        #finally:
+        #    memstream.close()
+        with tempfile.NamedTemporaryFile(delete=False, mode="w") as temp:
+            self.input(0).writer(temp, input)
+            temp.close()
+            mimetype = "image/png" if attr == "binary" else "text/html"
+            with open(temp.name, "rb") as rtemp:
+                storage.set_document_attr_content(doc, attr, rtemp)
+                storage.set_document_attr_mimetype(doc, attr, mimetype)        
+                storage.set_document_attr_label(doc, attr, self.label)        
+                doc.save()
+                os.unlink(temp.name)
+                return input
 
 
 class DocImageFileIn(DocMixin, base.GrayPngWriterMixin):
-    """Read an image file from doc storage."""
+    """Read an image file from doc storage to grayscale."""
     stage = stages.INPUT
     intypes = []
     outtype = ocrolib.numpy.ndarray
@@ -105,17 +120,9 @@ class DocImageFileIn(DocMixin, base.GrayPngWriterMixin):
         project = Project.objects.get(pk=self._params.get("project"))
         storage = project.get_storage()
         doc = storage.get(self._params.get("pid"))
-
-        try:
-            with doc.image_content as io:
-                pil = Image.open(io)
-        except IOError:
-            raise exceptions.NodeError(
-                    "Error reading datastream contents as an image.", self)
-        except RequestFailed:
-            raise exceptions.NodeError(
-                    "Error communicating with storage", self)
-        return ocrolib.numpy.asarray(pil)
+        with doc.image_content as handle:
+            pil = Image.open(handle)
+            return ocrolib.numpy.asarray(pil.convert("L"))
 
 
         
