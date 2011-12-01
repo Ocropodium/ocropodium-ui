@@ -17,5 +17,6 @@ urlpatterns = patterns('',
     (r'^binary/(?P<pid>[^/]+)/?$', login_required(views.binary)),
     (r'^show_small/(?P<pid>[^/]+)/?$', login_required(views.show_small)),
     (r'^delete/(?P<pid>[^/]+)/?$', login_required(views.delete)),
+    (r'^delete_multiple/?$', login_required(views.delete_multiple)),
 	(r'^spellcheck/?$', login_required(views.spellcheck)),
 )

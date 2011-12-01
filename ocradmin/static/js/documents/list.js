@@ -4,8 +4,46 @@ var uploader = null,
 
 $(function() {
 
-    $(".document-item").draggable();
-    $(".document-list").selectable();    
+    // map of key commands to functions
+    var cmdmap = {
+        "ctrl+del": function() { 
+            deleteSelected();
+        },
+    };
+
+    function bindKeys() {
+        $.each(cmdmap, function(key, handler) {
+            $(document).bind("keydown.keycmd", key, function(event) {
+                handler();
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        });
+    }
+
+    function deleteSelected() {
+        var sel = $.map($(".document-item.ui-selected"), function(elem, i) {
+            return "pid=" + $(elem).attr("id");
+        });
+        if (confirm("Delete " + sel.length + " documents?")) {
+            $.ajax({
+                url: "/documents/delete_multiple/?" + sel.join("&"),
+                type: "POST",
+                dataType: "json",
+                error: OcrJs.ajaxErrorHandler,
+                success: function(data) {
+                    $(".document-list").load("/documents/list", function() {
+                        makeSelectable();
+                    });
+                }
+            });
+        }
+    }
+
+    //$(".document-item").draggable();
+    function makeSelectable() {
+        $(".document-list").selectable();    
+    }
 
     function drop(e) {
         ignoreDrag(e);
@@ -52,16 +90,17 @@ $(function() {
             statusbar.setWorking(false);
         },
         uploadResult: function(data) {
-            console.log("Loaded", data);
             var pid = JSON.parse(data.target.response).pid;
             $.ajax({
                 url: "/documents/show_small/" + pid + "/",
                 error: OcrJs.ajaxErrorHandler,
-                success: function(data) {
-                    $(".document-list").append($(data));
+                success: function(html) {
+                    $(".document-list").append($(html));
+                    makeSelectable();
                 }
             });
         },
     });
-
+    makeSelectable();
+    bindKeys();
 });

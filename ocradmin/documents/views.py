@@ -23,6 +23,10 @@ class DocumentForm(forms.Form):
     label = forms.CharField(max_length=255, required=False)
     file = forms.FileField()
 
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 @project_required
 def doclist(request):
@@ -147,17 +151,23 @@ def create_ajax(request):
     """Create new documents with an Ajax POST."""
     store = request.session["project"].get_storage()
     pid = None
+    print "creating doc"
     if request.method == "POST" and request.GET.get("inlinefile"):
-        filename = request.GET.get("inlinefile")
-        doc = store.create_document(filename)
-        doc.image_content = StringIO(request.raw_post_data)
-        doc.image_mimetype = request.META.get("HTTP_X_FILE_TYPE")
-        doc.image_label = filename
-        doc.add_metadata("title", filename)
-        doc.add_metadata("status", "draft")
-        doc.make_thumbnail()
-        doc.save()
-        pid = doc.pid
+        try:
+            filename = request.GET.get("inlinefile")
+            doc = store.create_document(filename)
+            doc.image_content = StringIO(request.raw_post_data)
+            doc.image_mimetype = request.META.get("HTTP_X_FILE_TYPE")
+            doc.image_label = filename
+            doc.add_metadata("title", filename)
+            doc.add_metadata("status", "draft")
+            doc.make_thumbnail()
+            doc.save()
+            pid = doc.pid
+        except Exception, err:
+            logger.exception(err)
+
+    print "Rendering response"
     response = HttpResponse(mimetype="application/json")
     json.dump(dict(pid=pid), response)
     return response
@@ -182,14 +192,30 @@ def spellcheck(request):
 
 @project_required
 def detail(request, pid):
-    storage = request.session["project"].get_storage()
+    storage = request.project.get_storage()
     doc = storage.get(pid)
     return render(request, "document/details.html", dict(object=doc))
 
 
 @project_required
 def delete(request, pid):
-    storage = request.session["project"].get_storage()
+    storage = request.project.get_storage()
     doc = storage.get(pid)
     return render(request, "document/delete.html", dict(object=doc))
+
+@project_required
+def delete_multiple(request):
+    # fixme, figure out how to do the post
+    # properly
+    if request.method == "POST":
+        pids = request.GET.getlist("pid");
+        storage = request.project.get_storage()
+        print "Deleting %s" % pids
+        [storage.get(pid).delete() for pid in pids]
+        if request.is_ajax():
+            return HttpResponse(json.dumps({"ok": True}), 
+                    mimetype="application/json")
+        return render(request, "document/delete.html", dict(object=doc))
+
+
 
