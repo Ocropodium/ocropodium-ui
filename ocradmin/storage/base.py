@@ -243,6 +243,8 @@ class BaseDocument(object):
                 stream = StringIO()
                 thumb.save(stream, "PNG")
                 self.thumbnail_mimetype = "image/png"
+                self.thumbnail_label = "%s.thumb.png" % os.path.splitext(
+                        self.image_label)[0]
                 self.thumbnail_content = stream
                 self.save()
             finally:
