@@ -1,4 +1,6 @@
-# Create your views here.
+"""
+Views for handling documents and document storage.
+"""
 
 import json
 from django import forms
@@ -57,9 +59,10 @@ def transcript(request, pid):
         return render(request, template, context)
     # if it's an Ajax request, write the document text to the
     # response
-    storage = request.project.get_storage()
-    response = HttpResponse(mimetype="text/html")
-    response.write(storage.get(pid).transcript_content.read())
+    doc = request.project.get_storage().get(pid)
+    response = HttpResponse(mimetype=doc.transcript_mimetype)
+    with doc.transcript_content as handle:
+        response.write(handle.read())
     return response
 
 
@@ -71,17 +74,18 @@ def save_transcript(request, pid):
     if not request.is_ajax() and request.method == "POST":
         return transcript(request, pid)
 
+    # FIXME: This method of saving the data could potentially throw away
+    # metadata from the OCR source.  Ultimately we need to merge it
+    # into the old HOCR document, rather than creating a new one
     data = request.POST.get("data")
     if not data:
         return HttpResponseServerError("No data passed to 'save' function.")
     doc = request.project.get_storage().get(pid)
-    soup = BeautifulSoup(doc.transcript_content)
+    with doc.transcript_content as handle:
+        soup = BeautifulSoup(handle)
     soup.find("div", {"class": "ocr_page"}).replaceWith(data)
-    doc.transcript_content = StringIO(str(soup))
+    doc.transcript_content = str(soup)
     doc.save()
-    # FIXME: This method of saving the data could potentially throw away
-    # metadata from the OCR source.  Ultimately we need to merge it
-    # into the old HOCR document, rather than creating a new one
     return HttpResponse(json.dumps({"ok": True}), mimetype="application/json")
 
 
@@ -94,8 +98,9 @@ def binary(request, pid):
         return transcript(request, pid)
     taskname = "create.docdzi"
     doc = request.project.get_storage().get(pid)
+    
     bin = doc.binary_content
-    assert bin is not None, "Binary has no content: %s" % pid
+    assert bin, "Binary has no content: %s" % pid
     async = OcrTask.run_celery_task(taskname, (request.project.pk, pid, "binary"),
             untracked=True,
             queue="interactive", asyncronous=request.POST.get("async", False))
