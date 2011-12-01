@@ -34,18 +34,10 @@
                 <label for="format_column">Column</label>
             </span>
             <span>&nbsp;&nbsp;&nbsp;</span>
-            <input type="checkbox" id="link_viewers" checked="checked" />
-            <label for="link_viewers">Centre viewer on current line</label>
-            <span id="vlink">
-                <input type="radio" id="vlink_click" name="vlink" value="click" checked="checked" />
-                <label for="vlink_click">click</label>  
-                <input type="radio" id="vlink_hover" name="vlink" value="hover"  />
-                <label for="vlink_hover">Hover</label>  
-            </span>
-
-            <span>&nbsp;&nbsp;&nbsp;</span>
             <a href="/presets/builder/{{task.pk}}" id="edit_task">Edit</a>
             
+            <input type="hidden" name="prev_pid" value="{{prev}}" id="id_prev_pid" />
+            <input type="hidden" name="next_pid" value="{{next}}" id="id_next_pid" />
             <input type="hidden" name="pid" value="{{pid}}" id="id_pid" />
         </div>
     </div>
@@ -63,6 +55,16 @@
             <button class="tbbutton" id="image_zoomin">Zoom In</button>
             <button class="tbbutton" id="centre">Centre</button>
             <button class="tbbutton" id="fullscreen">Full Screen</button>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <input type="checkbox" id="link_viewers" checked="checked" />
+            <label for="link_viewers">Centre viewer on current line</label>
+            <span id="vlink">
+                <input type="radio" id="vlink_click" name="vlink" value="click" checked="checked" />
+                <label for="vlink_click">click</label>  
+                <input type="radio" id="vlink_hover" name="vlink" value="hover"  />
+                <label for="vlink_hover">Hover</label>  
+            </span>
+
             <span>&nbsp;&nbsp;&nbsp;</span>
             <button class="tbbutton" id="refresh">Refresh</button>
         </div>
