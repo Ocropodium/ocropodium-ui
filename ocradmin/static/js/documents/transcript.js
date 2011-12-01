@@ -367,7 +367,7 @@ $(function() {
 
     function saveTranscript(fun, funargs) {
         $.ajax({
-            url: "/ocr/save/" + getPid() + "/",
+            url: "/documents/save_transcript/" + getPid() + "/",
             data: {
                 data: transcript.getData()
             },
