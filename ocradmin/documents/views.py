@@ -9,6 +9,7 @@ from django.http import HttpResponse, HttpResponseRedirect, \
             HttpResponseServerError
 from django.views.decorators.csrf import csrf_exempt
 from ocradmin import storage
+from ocradmin.storage.utils import DocumentEncoder
 from ocradmin.documents.utils import Aspell
 from ocradmin.core.decorators import project_required
 from ocradmin.presets.models import Preset, Profile
@@ -43,36 +44,33 @@ def doclist(request):
 
 
 @project_required
-def edit(request, pid):
-    """Edit document with `id`."""
-    storage = request.session["project"].get_storage()
-    doc = storage.get(pid)
-    return render(request, "document/edit.html", dict(object=doc))
-
-
-@project_required
-def transcript(request, pid):
+def editor(request, pid):
     """Edit document transcript."""
+    storage = request.project.get_storage()
+    doc = storage.get(pid)    
+    context = dict(
+            next=storage.next(pid),
+            prev=storage.prev(pid),
+            doc=doc)
     if not request.is_ajax():
-        template = "documents/transcript.html"
-        context = dict(pid=pid)
+        template = "documents/editor.html"
         return render(request, template, context)
     # if it's an Ajax request, write the document text to the
     # response
-    doc = request.project.get_storage().get(pid)
-    response = HttpResponse(mimetype=doc.transcript_mimetype)
-    with doc.transcript_content as handle:
-        response.write(handle.read())
+    response = HttpResponse(mimetype="application/json")
+    json.dump(context, response, cls=DocumentEncoder)
     return response
 
 
 @project_required
-def save_transcript(request, pid):
-    """
-    Save data for a single page.
-    """
-    if not request.is_ajax() and request.method == "POST":
-        return transcript(request, pid)
+def transcript(request, pid):
+    """Get/set the transcript for a document."""
+    doc = request.project.get_storage().get(pid)
+    if not request.method == "POST":
+        response = HttpResponse(mimetype=doc.transcript_mimetype)
+        with doc.transcript_content as handle:
+            response.write(handle.read())
+        return response
 
     # FIXME: This method of saving the data could potentially throw away
     # metadata from the OCR source.  Ultimately we need to merge it
@@ -80,7 +78,6 @@ def save_transcript(request, pid):
     data = request.POST.get("data")
     if not data:
         return HttpResponseServerError("No data passed to 'save' function.")
-    doc = request.project.get_storage().get(pid)
     with doc.transcript_content as handle:
         soup = BeautifulSoup(handle)
     soup.find("div", {"class": "ocr_page"}).replaceWith(data)

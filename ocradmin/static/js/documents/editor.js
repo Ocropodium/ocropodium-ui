@@ -18,14 +18,16 @@ $(function() {
     });
     $("#spellcheck").button();
     $("#format").buttonset();
+    $("#navigate").buttonset();
     $("#next_page").button({
+        disabled: !$("#id_next_pid").val(),
         text: false,
         icons: {
             primary: "ui-icon-seek-next",
         },
     });
     $("#prev_page").button({
-        disabled: true,
+        disabled: !$("#id_prev_pid").val(),
         text: false,
         icons: {
             primary: "ui-icon-seek-prev",
@@ -239,6 +241,8 @@ $(function() {
 
     function updateNavButtons() {
         $("#heading").button({disabled: true});
+        $("#next_page").button({disabled: !$("#id_next_pid").val()});
+        $("#prev_page").button({disabled: !$("#id_prev_pid").val()});
     }
 
     function positionViewer(position) {
@@ -363,7 +367,7 @@ $(function() {
 
     function saveTranscript(fun, funargs) {
         $.ajax({
-            url: "/documents/save_transcript/" + getPid() + "/",
+            url: "/documents/transcript/" + getPid() + "/",
             data: {
                 data: transcript.getData()
             },
@@ -406,10 +410,34 @@ $(function() {
     });
 
     $("#prev_page").click(function(event) {
+        $.ajax({
+            url: "/documents/edit/" + $("#id_prev_pid").val() + "/",
+            error: OcrJs.ajaxErrorHandler,
+            success: function(data) {
+                console.log("Data", data);
+                $("#id_pid").val(data.doc.pid);
+                $("#id_next_pid").val(data.next);
+                $("#id_prev_pid").val(data.prev);
+                updateNavButtons();
+                updateTask();
+            }
+        });
     });
         
 
     $("#next_page").click(function(event) {
+        $.ajax({
+            url: "/documents/edit/" + $("#id_next_pid").val() + "/",
+            error: OcrJs.ajaxErrorHandler,
+            success: function(data) {
+                console.log("Data", data);
+                $("#id_pid").val(data.doc.pid);
+                $("#id_next_pid").val(data.next);
+                $("#id_prev_pid").val(data.prev);
+                updateNavButtons();
+                updateTask();
+            }
+        });
     });
     
     // line formatter object
