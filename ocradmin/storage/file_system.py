@@ -217,6 +217,18 @@ class FileSystemStorage(base.BaseStorage):
     def next(self, pid):
         """Get next pid to this one"""
         plist = self.list_pids()
+        idx = plist.index(pid)
+        if len(plist) == idx + 1:
+            return None
+        return plist[idx + 1]
+
+    def prev(self, pid):
+        """Get previous pid to this one."""
+        plist = self.list_pids()
+        idx = plist.index(pid)
+        if idx == 0:
+            return None
+        return plist[idx - 1]        
 
     @classmethod
     def pid_index(cls, namespace, pid):

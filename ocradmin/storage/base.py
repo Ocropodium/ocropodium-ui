@@ -250,7 +250,7 @@ class BaseDocument(object):
 
     @property
     def transcript_url(self):
-        return "/documents/transcript/%s/" % self.pid
+        return "/documents/edit/%s/" % self.pid
 
     @property
     def image_uri(self):
