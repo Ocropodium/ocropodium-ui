@@ -33,7 +33,7 @@ class Document(base.BaseDocument):
             with io.open(os.path.join(
                 self._storage.document_path(self), self._storage.thumbnail_name), "wb") as h:
                 thumb.save(h, "PNG")
-        self.thumbnail_label = "%.thumb.png" % os.path.splitext(self.image_label)[0]
+        self.thumbnail_label = "%s.thumb.png" % os.path.splitext(self.image_label)[0]
         self.thumbnail_mimetype = "image/png"
         self.save()
 
