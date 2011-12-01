@@ -93,7 +93,8 @@ class BaseStorage(object):
     def document_attr_content(self, doc, attr):
         """Get the document image content as a stream."""
         try:
-            yield self.document_attr_content_handle(doc, attr)
+            handle = self.document_attr_content_handle(doc, attr)
+            yield handle
         finally:
             handle.close()
 
