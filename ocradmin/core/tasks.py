@@ -51,11 +51,12 @@ class UnhandledCreateDocDzi(AbortableTask):
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
         if not os.path.exists(path):
-            creator = deepzoom.ImageCreator(tile_size=512,
-                    tile_overlap=2, tile_format="png",
-                    image_quality=1, resize_filter="nearest")
-            logger.debug("Creating DZI path: %s", path)
-            creator.create(storage.document_attr_content(doc, attr), path)
+            with storage.document_attr_content(doc, attr) as handle:
+                creator = deepzoom.ImageCreator(tile_size=512,
+                        tile_overlap=2, tile_format="png",
+                        image_quality=1, resize_filter="nearest")
+                logger.debug("Creating DZI path: %s", path)
+                creator.create(handle, path)
         return dict(pid=pid, dst=utils.media_path_to_url(path))
 
 
