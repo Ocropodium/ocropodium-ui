@@ -243,15 +243,11 @@ $(function() {
 
     function positionViewer(position) {
         // ensure the given line is centred in the viewport
-        //sdviewer.setBufferOverlays({
-        //    "current": [position],
-        //});
-        if ($("#link_viewers").prop("checked")) {
+        if ($("#link_viewers").prop("checked"))
             sdviewer.fitBounds(position.dilate(20), true);
-            sdviewer.clearHighlights();
-            sdviewer.addHighlight(position);
-            sdviewer.update();
-        }
+        sdviewer.clearHighlights();
+        sdviewer.addHighlight(position);
+        sdviewer.update();
     }
 
     function pageLoaded() {
