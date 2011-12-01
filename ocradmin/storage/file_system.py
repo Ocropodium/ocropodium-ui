@@ -6,6 +6,7 @@ import os
 import io
 import re
 import shutil
+from cStringIO import StringIO
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -25,14 +26,17 @@ class Document(base.BaseDocument):
 
     def make_thumbnail(self):
         """Create a thumbnail of the main image."""
-        im = Image.open(self.image_content)
-        thumb = self.process_thumbnail(im)
-        # FIXME: This is NOT elegant... 
-        with io.open(os.path.join(
-            self._storage.document_path(self), self._storage.thumbnail_name), "wb") as h:
-            thumb.save(h, "PNG")
+        with self.image_content as handle:
+            im = Image.open(handle)
+            thumb = self.process_thumbnail(im)
+            # FIXME: This is NOT elegant... 
+            with io.open(os.path.join(
+                self._storage.document_path(self), self._storage.thumbnail_name), "wb") as h:
+                thumb.save(h, "PNG")
+        self.thumbnail_label = "%.thumb.png" % os.path.splitext(self.image_label)[0]
         self.thumbnail_mimetype = "image/png"
         self.save()
+
 
 
 # README: This is a very naive and inefficient file-based repository.
@@ -81,15 +85,15 @@ class FileSystemStorage(base.BaseStorage):
 
     def get_next_pid(self):
         """Get the next filesystem pid.  FIXME: This is not
-        re-entrance or thread-safe."""
+        re-entrance or thread-safe (but then not much else is!)"""
         if not os.path.exists(self.namespace_root):
             return "%s:1" % self.namespace
         pidnums = []
         for item in os.listdir(self.namespace_root):
             if os.path.isdir(os.path.join(self.namespace_root, item)):
-                match = re.match("^" + self.namespace + ":(\d+)$", item)
-                if match is not None:
-                    pidnums.append(int(match.group(1)))
+                pidindex = self.pid_index(self.namespace, item)
+                if pidindex is not None:
+                    pidnums.append(pidindex)
         if not len(pidnums):
             return "%s:1" % self.namespace
         return "%s:%d" % (self.namespace, max(sorted(pidnums)) + 1)
@@ -200,7 +204,31 @@ class FileSystemStorage(base.BaseStorage):
         """List documents in the repository."""
         if not os.path.exists(self.namespace_root):
             return []
-        return [Document(pid, self) for pid in sorted(os.listdir(self.namespace_root)) \
-                if os.path.isdir(os.path.join(self.namespace_root, pid)) and \
-                    re.match("^" + self.namespace + ":\d+$", pid)]
-        
+        return [Document(pid, self) for pid in self.list_pids()]
+
+    def list_pids(self, namespace=None):
+        if not os.path.exists(self.namespace_root):
+            return []
+        return self.sort_pidlist(self.namespace, 
+                [p for p in os.listdir(self.namespace_root) \
+                    if os.path.isdir(os.path.join(self.namespace_root, p)) and \
+                        not self.pid_index(self.namespace, p) is None])
+
+    def next(self, pid):
+        """Get next pid to this one"""
+        plist = self.list_pids()
+
+    @classmethod
+    def pid_index(cls, namespace, pid):
+        """Get the numerical index of a pid."""
+        match = re.match("^" + namespace + ":(\d+)$", pid)
+        if match:
+            return int(match.groups()[0])
+
+    @classmethod
+    def sort_pidlist(cls, namespace, pidlist):
+        """Sort a pid list numerically."""
+        def sfunc(a, b):
+            return cls.pid_index(namespace, a) - cls.pid_index(namespace, b)
+        return sorted(pidlist, sfunc)
+

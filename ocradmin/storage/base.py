@@ -92,8 +92,8 @@ class BaseStorage(object):
     @contextmanager
     def document_attr_content(self, doc, attr):
         """Get the document image content as a stream."""
+        handle = self.document_attr_content_handle(doc, attr)
         try:
-            handle = self.document_attr_content_handle(doc, attr)
             yield handle
         finally:
             handle.close()
@@ -142,6 +142,26 @@ class BaseStorage(object):
     def list(self, namespace=None):
         """List documents in the repository."""
         raise NotImplementedError
+
+    def list_pids(self):
+        """List of pids."""
+        raise NotImplementedError
+
+    def next(self, pid):
+        """Get next pid to this one"""
+        plist = self.list_pids()
+        idx = plist.index(pid)
+        if len(plist) == idx - 1:
+            return None
+        return plist[idx + 1]
+
+    def prev(self, pid):
+        """Get previous pid to this one."""
+        plist = self.list_pids()
+        idx = plist.index(pid)
+        if idx == 0:
+            return None
+        return plist[idx - 1]        
 
 
 class BaseDocumentType(type):
@@ -215,14 +235,18 @@ class BaseDocument(object):
 
     def make_thumbnail(self):
         """Create a thumbnail of the main image."""
-        im = Image.open(self.image_content)
-        thumb = self.process_thumbnail(im)
-        # FIXME: This is NOT elegant... 
-        stream = StringIO()
-        thumb.save(stream, "PNG")
-        self.thumbnail_mimetype = "image/png"
-        self.thumbnail_content = stream
-        self.save()
+        with self.image_content as handle:
+            im = Image.open(handle)
+            thumb = self.process_thumbnail(im)
+            # FIXME: This is NOT elegant... 
+            try:
+                stream = StringIO()
+                thumb.save(stream, "PNG")
+                self.thumbnail_mimetype = "image/png"
+                self.thumbnail_content = stream
+                self.save()
+            finally:
+                stream.close()
 
     @property
     def transcript_url(self):
