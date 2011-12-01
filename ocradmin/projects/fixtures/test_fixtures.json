@@ -8,8 +8,8 @@
       "created_on": "2011-11-28 11:52:17", 
       "storage_backend": "FileSystemStorage", 
       "updated_on": null, 
-      "slug": "file-store-test", 
-      "name": "File Store Test"
+      "slug": "test-file-store", 
+      "name": "Test File Store"
     }
   }, 
   {
@@ -31,7 +31,7 @@
     "fields": {
       "project": 1, 
       "name": "namespace", 
-      "value": "hello-kitty-file-store-test"
+      "value": "test-file-store"
     }
   }, 
   {
@@ -49,7 +49,7 @@
     "fields": {
       "project": 6, 
       "name": "namespace", 
-      "value": "fedora-checksum-test"
+      "value": "test-fedora-store"
     }
   }, 
   {
