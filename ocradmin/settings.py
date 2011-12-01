@@ -274,13 +274,12 @@ COMPRESS_CSS = {
 
     },
 
-    "transcript_edit": {
+    "document_edit": {
         "source_filenames": (            
-           "css/transcript_editor.css",
-           "css/line_editor.css",
+           "css/document_editor.css",
            "css/spellcheck.css",
         ),
-        "output_filename": "css/min/transcript_edit.css",
+        "output_filename": "css/min/document_edit.css",
         "extra_context": {
             "media": "screen",
         }
@@ -389,7 +388,7 @@ COMPRESS_JS = {
         ),
         "output_filename": "js/min/viewers.min.js",        
     },
-    "transcript_edit": {
+    "document_edit": {
         "source_filenames": (
             "js/ocr_js/hocr_editor/editor.js",
             "js/ocr_js/hocr_editor/hocrdoc.js",
