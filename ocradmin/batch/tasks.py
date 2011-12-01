@@ -45,9 +45,9 @@ class DocBatchScriptTask(AbortableTask):
             doc.save()
             [t.eval() for t in tree.get_terminals()]
         except exceptions.NodeError, err:
-            logger.error("Ocropus Node Error (%s): %s", err.node, err.message)
+            logger.exception("Ocropus Node Error (%s): %s", err.node, err)
         except Exception, err:
-            logger.error("Unhandled exception: %s", err)
+            logger.exception("Unhandled exception: %s", err)
         return dict(done="Oh, yes")
             
 
