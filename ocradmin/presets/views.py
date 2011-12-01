@@ -154,7 +154,7 @@ def fetch(request):
 
 
 @saves_files
-def builder(request, doc=None):
+def builder(request, doc=None, scriptdata=None):
     """
     Show the preset builder.
     """
@@ -163,6 +163,7 @@ def builder(request, doc=None):
             presets=Preset.objects.order_by("name"),
             profiles=Preset.objects.order_by("name"),
             doc=doc,
+            scriptdata=scriptdata,
             ref=request.GET.get("ref", "/documents/list")
     )
     return render(request, "presets/builder.html", context)
@@ -172,7 +173,10 @@ def builder(request, doc=None):
 def builder_doc_edit(request, pid):
     """Show the preset builder for a specific document script."""
     doc = request.project.get_storage().get(pid)
-    return builder(request, doc)
+    # FIXME: another not-optimal situation, this is super dodgy
+    with doc.script_content as handle:
+        data = "".join(handle.readlines())
+    return builder(request, doc=doc, scriptdata=data)
 
 
 def query_nodes(request):
