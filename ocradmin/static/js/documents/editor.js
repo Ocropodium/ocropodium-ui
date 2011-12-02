@@ -231,7 +231,7 @@ $(function() {
     }
 
     $("input[name='status']").click(function(event) {
-        var status = $("input[name='status']:checked").val();
+        var status = getStatus();
         $.ajax({
             url: "/documents/status/" + getPid() + "/",
             type: "POST",
@@ -239,6 +239,7 @@ $(function() {
             dataType: "json",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
+                $("#id_status").val(status);
                 console.log(data);
             },
         });
@@ -269,14 +270,23 @@ $(function() {
         return $("#id_pid").val();
     }
 
+    function getStatus() {
+        return $("#id_status").val();
+    }
 
     function updateTask(event) {
-        $("#transcript").load("/documents/transcript/" + getPid() + "/",
-                null, function(text) {
-                    transcript.setWaiting(false);
-                    transcript.refresh();
-                    pageLoaded();
-        });
+        var status = getStatus();
+        if (status == "running") {
+            alert("Running");
+            // poll here...        
+        } else { 
+            $("#transcript").load("/documents/transcript/" + getPid() + "/",
+                    null, function(text) {
+                        transcript.setWaiting(false);
+                        transcript.refresh();
+                        pageLoaded();
+            });
+        }
     }
 
     function updateNavButtons() {
@@ -490,10 +500,6 @@ $(function() {
         dashboard: false,
     });
     
-    updateTask();
-    updateNavButtons();
-    window.addEventListener("hashchange", updateTask);
-
     hsplitL = $("#maincontent").layout({
         applyDefaultStyles: true,
         north: {
@@ -539,6 +545,10 @@ $(function() {
     $(window).unload(function() {
         saveState();
     });
+
+    updateTask();
+    updateNavButtons();
+    window.addEventListener("hashchange", updateTask);
 
     $(window).resize();
     sdviewer.resetSize();
