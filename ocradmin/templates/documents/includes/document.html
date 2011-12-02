@@ -1,12 +1,21 @@
-<li class="document-item" id="{{object.pid}}">
-    <div class="document-thumb">
-        <a class="document-thumb-link" href="{{object.image_uri}}">
-            <img src="{{object.thumbnail_uri}}" width="100%" height="100%" />
-        </a>
-    </div>
-    <div class="document-details">
-        <h4>{{object.label}}</h4>
-        <a href="{{object.transcript_url}}" title="Edit transcript">Transcript</a> 
-    </div>
+<li class="document-item ui-helper-clearfix" id="{{object.pid}}">
+    <table>
+        <th class="document-selector" colspan="2"></th>
+        <tr>
+            <td class="document-thumb">
+                <a class="document-thumb-link" href="{{object.image_uri}}">
+                    <img class="document-thumb-img" src="{{object.thumbnail_uri}}" width="100%" height="100%" />
+                </a>
+            </td>
+            <td class="document-details">
+                <h4>{{object.label}}</h4>
+                <a href="{{object.transcript_url}}" title="Edit transcript">Transcript</a> 
+            </td>
+        </tr>
+        <tr class="document-status">
+            <td class="document-progress"></td>
+            <td class="document-status"></td>
+        </tr>
+    </table>
 </li>
 

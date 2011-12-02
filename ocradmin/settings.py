@@ -244,6 +244,7 @@ COMPRESS_CSS = {
             "css/messages.css",
             "css/clean.css",
             "css/documents.css",
+            "css/jquery.lightbox-0.5.css",
         ),
         "output_filename": "css/min/standard.css",
         "extra_context": {
@@ -301,6 +302,7 @@ COMPRESS_JS = {
             "js/jquery/jquery.layout-latest.js",
         	"js/jquery/jquery.hoverIntent.min.js",
         	"js/jquery/jquery.hotkeys.js",
+        	"js/jquery/jquery.lightbox-0.5-mod.js",
         ),
         "output_filename": "js/min/jquery-lib.min.js",
     },

@@ -1,14 +1,16 @@
 
+.document-selector {
+    height: 1em;
+    background-color: #CCC;
+}
 
 .document-item {
     float: left;
-    width: 256px;
-    height: 128px;
     box-shadow: 2px 3px 5px #919598;
     -webkit-box-shadow: 2px 3px 5px #919598;
     -moz-box-shadow: 2px 3px 5px #919598;    
     margin: 20px;
-    padding: 6px;
+    padding: 2px;
     border: 1px solid #D4D4D4;
     background: -webkit-gradient(
         linear,
@@ -24,8 +26,11 @@
     );
 }
 
+.document-details {
+    vertical-align: top;
+}
+
 .document-thumb {
-    float: left;
     width: 128px;
     height: 128px;
     padding: 3px;
@@ -37,7 +42,6 @@
 }
 
 .document-details {
-    float: left;
     width: 100px;
     padding: 5px;
 }
