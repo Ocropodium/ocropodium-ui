@@ -92,6 +92,11 @@ def create(request):
                 "batch/new.html",
                 _new_batch_context(request, taskname, form)
         )
+
+    # hack - sort the incoming list of pids
+    storage = request.project.get_storage()
+    pid = storage.sort_pidlist(storage.namespace, pids)
+
     batch = form.instance
     batch.script = preset.data
     batch.save()
