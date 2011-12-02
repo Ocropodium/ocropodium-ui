@@ -22,8 +22,8 @@ $(function() {
     }
 
     function deleteSelected() {
-        var sel = $.map($(".document-item.ui-selected"), function(elem, i) {
-            return "pid=" + $(elem).attr("id");
+        var sel = $.map($(".document-selector.ui-selected"), function(elem, i) {
+            return "pid=" + $(elem).closest(".document-item").attr("id");
         });
         if (confirm("Delete " + sel.length + " documents?")) {
             $.ajax({
@@ -42,7 +42,10 @@ $(function() {
 
     //$(".document-item").draggable();
     function makeSelectable() {
-        $(".document-list").selectable();    
+        $(".document-list").selectable({
+            filter: ".document-selector",
+            cancel: ".document-thumb, .document-details", 
+        });    
     }
 
     function drop(e) {
@@ -103,4 +106,15 @@ $(function() {
     });
     makeSelectable();
     bindKeys();
+
+    $(".document-thumb-link").lightBox({
+        imageLoading: '/static/lightbox-ico-loading.gif',
+	    imageBtnClose: '/static/lightbox-btn-close.gif',
+    	imageBtnPrev: '/static/lightbox-btn-prev.gif',
+    	imageBtnNext: '/static/lightbox-btn-next.gif',        
+        imageBlank: '/static/lightbox-blank.gif',
+        maxWidth: 800,
+        maxHeight: 600,
+        containerResizeSpeed: 150,
+    });
 });
