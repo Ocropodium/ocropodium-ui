@@ -10,8 +10,9 @@ PRETTY_STATUS = {
         "complete" : "Complete",
 }
 
-INITIAL = "initial"         
+RUNNING = "running"
 ERROR = "error"         
+INITIAL = "initial" 
 UNCORRECTED = "uncorrected" 
 PART_CORRECTED = "part_corrected" 
 COMPLETE = "complete"
