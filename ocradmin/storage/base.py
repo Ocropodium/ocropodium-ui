@@ -3,6 +3,7 @@ Storage backend base class.
 """
 
 import os
+import re
 import io
 import textwrap
 from contextlib import contextmanager
@@ -174,6 +175,20 @@ class BaseStorage(object):
             return None
         return plist[idx - 1]        
 
+    @classmethod
+    def pid_index(cls, namespace, pid):
+        """Get the numerical index of a pid."""
+        match = re.match("^" + namespace + ":(\d+)$", pid)
+        if match:
+            return int(match.groups()[0])
+
+    @classmethod
+    def sort_pidlist(cls, namespace, pidlist):
+        """Sort a pid list numerically."""
+        def sfunc(a, b):
+            return cls.pid_index(namespace, a) - cls.pid_index(namespace, b)
+        return sorted(pidlist, sfunc)
+
 
 class BaseDocumentType(type):
     """Metaclass to generate accessors for document
@@ -222,6 +237,7 @@ class BaseDocument(object):
         self.pid = pid
         self._storage = storage
         self._deleted = False
+        self._metacache = None
 
     def __repr__(self):
         return "<Document: %s>" % self.label
@@ -274,33 +290,45 @@ class BaseDocument(object):
         return self._storage.attr_uri(self, "thumbnail")
 
     @property
+    def ocr_status(self):
+        return self.get_metadata("ocr_status")
+
+    @property
     def label(self):
         return self._storage.document_label(self)
 
     @property
-    def metadata(self, attr=None):
-        meta = self._storage.metadata(self)
-        if attr:
-            return meta.get(attr)
-        return meta
-    
+    def metadata(self):
+        if self._metacache is not None:
+            return self._metacache
+        self._metacache = self._storage.read_metadata(self)
+        return self._metacache
+
     @metadata.setter
     def metadata(self, meta):
         """Set arbitrary document metadata."""
+        self._metacache = None
         self._storage.write_metadata(self, **dict([meta]))
+
+    def get_metadata(self, attr=None):
+        meta = self.metadata
+        if attr:
+            return meta.get(attr)
+        return meta
 
     def set_metadata(self, **kwargs):
         """Set a key/pair value."""
+        self._metacache = None
         self._storage.merge_metadata(self, **kwargs)
 
     def delete_metadata(self, *args):
         """Delete metadata keys."""
+        self._metacache = None
         self._storage.delete_metadata(self, *args)
 
     def delete(self):
         """Delete this object."""
         self._storage.delete(self)
         self._deleted = True
-
 
 
