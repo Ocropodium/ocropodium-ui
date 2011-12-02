@@ -47,14 +47,13 @@ class RGBFileIn(base.ImageGeneratorNode, base.BinaryPngWriterMixin):
         return numpy.asarray(Image.open(path))
 
     @classmethod
-    def reader(cls, path):
-        return numpy.asarray(Image.open(path))
+    def reader(cls, handle):
+        return numpy.asarray(Image.open(handle))
 
     @classmethod
-    def writer(cls, path, data):
+    def writer(cls, handle, data):
         pil = Image.fromarray(data)
-        pil.save(path, "PNG")
-        return path
+        pil.save(handle, "PNG")
 
 
 class PilScale(node.Node, base.BinaryPngWriterMixin):
