@@ -218,7 +218,7 @@ OcrJs.BatchWidget = OcrJs.Base.extend({
                     .data("name", name)
                     .removeClass("empty")
                     .find(".page_name")
-                    .attr("href", "/documents/transcript/" + name + "/")
+                    .attr("href", "/documents/edit/" + name + "/")
                     .text(name)
                     .end()
                     .find(".page_info")
