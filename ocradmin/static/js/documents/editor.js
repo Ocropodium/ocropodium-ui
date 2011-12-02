@@ -262,7 +262,7 @@ $(function() {
         $("#edit_task").attr("href",
                 "/presets/builder/" + task_pid + "?ref="
                 + encodeURIComponent(window.location.href.replace(window.location.origin, "")));
-
+        sdviewer.clearHighlights();
         taskwatcher.run("/documents/binary/" + task_pid + "/");
     }
 
