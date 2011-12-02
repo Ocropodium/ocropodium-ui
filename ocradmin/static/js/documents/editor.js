@@ -18,6 +18,7 @@ $(function() {
     });
     $("#spellcheck").button();
     $("#format").buttonset();
+    $("#status").buttonset();
     $("#navigate").buttonset();
     $("#next_page").button({
         disabled: !$("#id_next_pid").val(),
@@ -104,6 +105,32 @@ $(function() {
         disabled: true,
         icons: {
             primary: "ui-icon-arrowreturnthick-1-e",
+        }
+    });
+
+    $("#status_uncorrected").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-help",
+        }
+    });
+    $("#status_part_corrected").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-pencil",
+        }
+    });
+    $("#status_complete").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-check",
+        }
+    });
+
+    $("#flag_document").button({
+        text: false,
+        icons: {
+            primary: "ui-icon-flag",
         }
     });
 
@@ -203,6 +230,19 @@ $(function() {
         $(element).unbind(".editkeycmd");
     }
 
+    $("input[name='status']").click(function(event) {
+        var status = $("input[name='status']:checked").val();
+        $.ajax({
+            url: "/documents/status/" + getPid() + "/",
+            type: "POST",
+            data: {status: status},
+            dataType: "json",
+            error: OcrJs.ajaxErrorHandler,
+            success: function(data) {
+                console.log(data);
+            },
+        });
+    });
 
     function saveState() {
         var view = {
