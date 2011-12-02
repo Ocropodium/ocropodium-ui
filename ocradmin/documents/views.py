@@ -6,7 +6,7 @@ import json
 from django import forms
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, \
-            HttpResponseServerError
+            HttpResponseServerError, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from ocradmin import storage
 from ocradmin.storage.utils import DocumentEncoder
@@ -95,13 +95,16 @@ def binary(request, pid):
     """
     Trigger a re-binarization of the image for viewing purposes.
     """
-    if not request.is_ajax() and request.method == "POST":
-        return transcript(request, pid)
     taskname = "create.docdzi"
     doc = request.project.get_storage().get(pid)
+    if not request.is_ajax():
+        response = HttpResponse(mimetype=doc.binary_mimetype)
+        with doc.binary_content as handle:
+            response.write(handle.read())
+        return response
     
-    bin = doc.binary_content
-    assert bin, "Binary has no content: %s" % pid
+    if doc.binary_empty:
+        return HttpResponseNotFound
     async = OcrTask.run_celery_task(taskname, (request.project.pk, pid, "binary"),
             untracked=True,
             queue="interactive", asyncronous=request.POST.get("async", False))
