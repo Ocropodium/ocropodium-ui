@@ -193,6 +193,7 @@ def spellcheck(request):
     json.dump(aspell.spellcheck(data), response, ensure_ascii=False)
     return response
 
+
 @project_required
 def status(request, pid):
     """Set document status."""
