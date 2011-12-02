@@ -51,7 +51,17 @@ class BatchForm(forms.ModelForm):
         )
 
 
-batchlist = project_required(gv.GenericListView.as_view(
+class BatchListView(gv.GenericListView):
+    """Specialised batch list view.  Only returns
+    batches for the current project."""
+    def get_queryset(self):
+        qset = super(BatchListView, self).get_queryset()
+        if not hasattr(self.request, "project"):
+            return qset
+        return qset.filter(project=self.request.project)
+
+
+batchlist = project_required(BatchListView.as_view(
         model=Batch,
         page_name="OCR Batches",
         fields=["name", "description", "user", "task_type",
