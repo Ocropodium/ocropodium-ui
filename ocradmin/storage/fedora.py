@@ -27,9 +27,9 @@ class ConfigForm(base.BaseConfigForm):
 
 class FedoraDocument(base.BaseDocument):
     """Fedora document class."""
-    def __init__(self, digiobj, storage):
+    def __init__(self, digiobj, *args, **kwargs):
         self._doc = digiobj
-        self._storage = storage
+        super(FedoraDocument, self).__init__(*args, **kwargs)
 
     @property
     def pid(self):
