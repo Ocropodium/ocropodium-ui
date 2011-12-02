@@ -3,12 +3,14 @@ Basic OCR functions.  Submit OCR tasks and retrieve the result.
 """
 
 import os
+import shutil
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect, \
         HttpResponseServerError, HttpResponseNotFound
 from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
+from ocradmin.documents import status as docstatus
 from django.utils import simplejson as json
 from django.views.decorators.csrf import csrf_exempt
 from ocradmin.core import utils as ocrutils
@@ -68,12 +70,21 @@ def update_ocr_task(request, pid):
 
     # try and delete the existing binary path
     dzipath = storage.document_attr_dzi_path(doc, "binary")
+    dzifiles = os.path.splitext(dzipath)[0] + "_files"
     print "DELETING DZI: %s" % dzipath
-    os.unlink(dzipath)
+    print "DELETING DZI files: %s" % dzifiles
+    try:
+        os.unlink(dzipath)
+        shutil.rmtree(dzifiles)
+    except OSError:
+        print "FAILED!"
+    
     ref = request.POST.get("ref", "/batch/show/%d/" % task.batch.pk)
     json.loads(script)
     task.args = (task.args[0], task.args[1], script)
     task.save()
+    doc.ocr_status = docstatus.RUNNING
+    doc.save()
     task.retry()
     return HttpResponseRedirect(ref)
 
