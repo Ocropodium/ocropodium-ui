@@ -14,12 +14,13 @@ from nodetree import cache, node, script, exceptions
 from django.conf import settings
 from ocradmin.nodelib import stages, nodes
 from ocradmin.projects.models import Project
-
+from ocradmin.documents import status
 
 
 @register_handlers
 class DocBatchScriptTask(AbortableTask):
     name = "run.batchitem"
+    ignore_result = True
 
     def run(self, project_pk, pid, scriptjson):
         """
@@ -44,17 +45,21 @@ class DocBatchScriptTask(AbortableTask):
             doc.script_content = json.dumps(tree.serialize(), indent=2)
             doc.script_label = "%s.json" % os.path.splitext(doc.label)[0]
             doc.script_mimetype = "application/json"
+            # set document metadata to indicate it's an OCR "draft"
+            doc.set_metadata(ocr_status=status.INITIAL)
             doc.save()
 
             # process the nodes
             [t.eval() for t in tree.get_terminals()]
 
-            # set document metadata to indicate it's an OCR "draft"
-            doc.set_metadata(ocr_status="draft")
-        except exceptions.NodeError, err:
-            logger.exception("Ocropus Node Error (%s): %s", err.node, err)
         except Exception, err:
             logger.exception("Unhandled exception: %s", err)
-        return dict(done="Oh, yes")
+            # set document metadata to indicate it's an OCR "draft"
+            doc.set_metadata(ocr_status=status.ERROR)
+        else:
+            # set document metadata to indicate it's an OCR "draft"
+            doc.set_metadata(ocr_status=status.UNCORRECTED)
+        finally:
+            doc.save()
             
 
