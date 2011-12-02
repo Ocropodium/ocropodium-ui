@@ -5,9 +5,10 @@ django-picklefield
 lxml
 mock
 pydot
-python-dateutil=1.5
--e git+https://github.com/ask/celery.git@v2.2.7#egg=celery
--e git+https://github.com/ask/django-celery.git@v2.2.4#egg=django-celery
+python-dateutil==1.5
+PIL
+celery==2.4.5
+django-celery==2.4.2
 -e git+https://github.com/emory-libraries/eulfedora.git#egg=eulfedora
 -e git+https://github.com/ericholscher/django-test-utils#egg=django-test-utils
 -e git+https://github.com/lamby/django-lint.git#egg=django-lint
