@@ -134,6 +134,12 @@ class FileSystemStorage(base.BaseStorage):
         """Get the document label."""
         return self.read_metadata(doc).get("label", "")
 
+    def document_attr_empty(self, doc, attr):
+        """Check if document attr is empty."""
+        path = os.path.join(
+                self.document_path(doc), getattr(self, "%s_name" % attr))
+        return not os.path.exists(path) or os.stat(path)[6] == 0
+
     def document_attr_label(self, doc, attr):
         """Get the document image label."""
         return self.read_metadata(doc).get("%s_label" % attr, "")
@@ -221,18 +227,4 @@ class FileSystemStorage(base.BaseStorage):
         if idx == 0:
             return None
         return plist[idx - 1]        
-
-    @classmethod
-    def pid_index(cls, namespace, pid):
-        """Get the numerical index of a pid."""
-        match = re.match("^" + namespace + ":(\d+)$", pid)
-        if match:
-            return int(match.groups()[0])
-
-    @classmethod
-    def sort_pidlist(cls, namespace, pidlist):
-        """Sort a pid list numerically."""
-        def sfunc(a, b):
-            return cls.pid_index(namespace, a) - cls.pid_index(namespace, b)
-        return sorted(pidlist, sfunc)
 
