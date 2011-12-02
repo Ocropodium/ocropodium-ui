@@ -162,7 +162,7 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         var xhr = new XMLHttpRequest();
         xhr.onload = function(event) {
             self.postNextItem();
-            self.trigger("uploadResult", event);
+            self.trigger("uploadResult", event, file.fileName, file.type);
         };
         xhr.onerror = OcrJs.ajaxErrorHandler;
 
