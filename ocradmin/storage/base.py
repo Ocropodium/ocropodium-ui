@@ -320,6 +320,10 @@ class BaseDocument(object):
         self._metacache = self._storage.read_metadata(self)
         return self._metacache
 
+    @ocr_status.setter
+    def ocr_status(self, status):
+        self.set_metadata(ocr_status=status)
+
     @metadata.setter
     def metadata(self, meta):
         """Set arbitrary document metadata."""
