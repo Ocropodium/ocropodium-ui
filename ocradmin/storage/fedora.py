@@ -88,6 +88,8 @@ class FedoraStorage(base.BaseStorage):
 
     def read_metadata(self, doc):
         meta = doc._doc.meta.content
+        if hasattr(meta, "read"):
+            meta = meta.read()
         if not meta:
             return {}
         return dict([v.strip().split("=") for v in \
@@ -110,6 +112,10 @@ class FedoraStorage(base.BaseStorage):
     def document_label(self, doc):
         """Get the document label."""
         return doc._doc.label
+
+    def document_attr_empty(self, doc, attr):
+        """Check if document attr is empty."""
+        return getattr(doc._doc, attr).info.size == 0
 
     def document_attr_label(self, doc, attr):
         """Get label for an image type attribute."""

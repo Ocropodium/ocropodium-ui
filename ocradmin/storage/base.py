@@ -76,6 +76,10 @@ class BaseStorage(object):
         """Get the document label."""
         raise NotImplementedError
 
+    def document_attr_empty(self, doc, attr):
+        """Check if an attr is missing or empty."""
+        raise NotImplementedError
+
     def document_attr_label(self, doc, attr):
         """Get the document image label."""
         raise NotImplementedError
@@ -224,6 +228,14 @@ def generate_image_attr_accessors(cls, objattr, attr):
     setter.__name__ = "set_%s_%s" % (objattr, attr)
     setattr(cls, setter.__name__, setter)
     setattr(cls, "%s_%s" % (objattr, attr), property(getter, setter))
+
+    def checker(self):
+        meth = getattr(self._storage, "document_attr_empty")
+        return meth(self, objattr)
+    checker.__doc__ = "Check if %s is empty" % objattr
+    checker.__name__ = "%s_empty" % objattr
+    setattr(cls, checker.__name__, checker)
+    setattr(cls, "%s_empty" % objattr, property(checker))
 
 
 class BaseDocument(object):
