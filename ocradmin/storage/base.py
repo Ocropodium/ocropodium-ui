@@ -246,7 +246,7 @@ class BaseDocument(object):
 
     def __init__(self, pid, storage):
         """Initialise the Document with an image path/handle."""
-        self.pid = pid
+        self._pid = pid
         self._storage = storage
         self._deleted = False
         self._metacache = None
@@ -257,6 +257,10 @@ class BaseDocument(object):
     def __unicode__(self):
         """Unicode representation."""
         return self.label
+
+    @property
+    def pid(self):
+        return self._pid
 
     def save(self):
         """Save objects, settings dates if necessary
