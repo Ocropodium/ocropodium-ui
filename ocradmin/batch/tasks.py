@@ -46,7 +46,7 @@ class DocBatchScriptTask(AbortableTask):
             doc.script_label = "%s.json" % os.path.splitext(doc.label)[0]
             doc.script_mimetype = "application/json"
             # set document metadata to indicate it's an OCR "draft"
-            doc.set_metadata(ocr_status=status.INITIAL)
+            doc.ocr_status = status.RUNNING
             doc.save()
 
             # process the nodes
@@ -55,10 +55,10 @@ class DocBatchScriptTask(AbortableTask):
         except Exception, err:
             logger.exception("Unhandled exception: %s", err)
             # set document metadata to indicate it's an OCR "draft"
-            doc.set_metadata(ocr_status=status.ERROR)
+            doc.ocr_status = status.ERROR
         else:
             # set document metadata to indicate it's an OCR "draft"
-            doc.set_metadata(ocr_status=status.UNCORRECTED)
+            doc.ocr_status = status.UNCORRECTED
         finally:
             doc.save()
             
