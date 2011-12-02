@@ -3,6 +3,7 @@ Fedora storage backend.
 """
 
 import io
+import re
 import urllib
 from django import forms
 from django.conf import settings
@@ -80,7 +81,23 @@ class FedoraStorage(base.BaseStorage):
             "transcript": FileDatastream(self.transcript_name, "Document transcript", defaults={
                 "versionable": True,
             }),
+            "meta": FileDatastream("meta", "Document metadata", defaults={
+                "versionable": False,
+            }),
         })
+
+    def read_metadata(self, doc):
+        meta = doc._doc.meta.content
+        if not meta:
+            return {}
+        return dict([v.strip().split("=") for v in \
+                meta.split("\n") if re.match("^\w+=[^=]+$", v.strip())])
+
+    def write_metadata(self, doc, **kwargs):
+        meta = self.read_metadata(doc)
+        meta.update(kwargs)
+        metacontent = [u"%s=%s" % (k, v) for k, v in meta.iteritems()]
+        doc._doc.meta.content = "\n".join(metacontent)
 
     def attr_uri(self, doc, attr):
         """URI for image datastream."""
@@ -110,7 +127,7 @@ class FedoraStorage(base.BaseStorage):
     def document_metadata(self, doc):
         """Get document metadata. This currently
         just exposes the DC stream attributes."""                
-        return doc._doc.dc.content
+        return self.read_metadata(doc)
 
     def _set_document_ds_content(self, doc, dsattr, content):
         docattr = getattr(doc._doc, dsattr)
@@ -138,8 +155,7 @@ class FedoraStorage(base.BaseStorage):
 
     def set_document_metadata(self, doc, **kwargs):
         """Set arbitrary document metadata."""
-        for attr, value in kwargs.iteritems():
-            setattr(doc._doc.dc.content, attr, value)
+        self.write_metadata(doc, kwargs)
 
     def save_document(self, doc):
         """Save document."""
@@ -147,9 +163,12 @@ class FedoraStorage(base.BaseStorage):
 
     def create_document(self, label):
         """Get a new document object"""
-        doc = self.repo.get_object(type=self.model)
-        doc.label = label
-        return FedoraDocument(doc, self)
+        dobj = self.repo.get_object(type=self.model)
+        dobj.label = label
+        dobj.meta.label = "Document Metadata"
+        dobj.meta.mimetype = "text/plain"
+        doc = FedoraDocument(dobj, self)
+        return doc
 
     def get(self, pid):
         """Get an object by id."""
