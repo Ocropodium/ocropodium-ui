@@ -29,7 +29,7 @@ class FedoraDocument(base.BaseDocument):
     """Fedora document class."""
     def __init__(self, digiobj, *args, **kwargs):
         self._doc = digiobj
-        super(FedoraDocument, self).__init__(*args, **kwargs)
+        super(FedoraDocument, self).__init__(self._doc.pid, *args, **kwargs)
 
     @property
     def pid(self):
