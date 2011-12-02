@@ -39,6 +39,21 @@
                 <button id="next_page">Next</button>
             </div>
             <span>&nbsp;&nbsp;&nbsp;</span>
+            <span id="status">
+                <input type="radio" id="status_uncorrected" value="uncorrected" name="status"
+                    {% if doc.ocr_status == "uncorrected" %}checked="checked"{% endif %} />
+                <label for="status_uncorrected">Uncorrected</label>
+                <input type="radio" id="status_part_corrected" value="part_corrected" name="status"
+                    {% if doc.ocr_status == "part_corrected" %}checked="checked"{% endif %} />
+                <label for="status_part_corrected">Part corrected</label>
+                <input type="radio" id="status_complete" value="complete" name="status"
+                    {% if doc.ocr_status == "complete" %}checked="checked"{% endif %} />
+                <label for="status_complete">Corrected</label>
+            </span>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <button id="flag_document">Flag</button>
+
+            <span>&nbsp;&nbsp;&nbsp;</span>
             <a href="/presets/builder/{{doc.pid}}" id="edit_task">Edit</a>
             
             <input type="hidden" name="prev_pid" value="{{prev|default_if_none:''}}" id="id_prev_pid" />

@@ -10,6 +10,7 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.views.decorators.csrf import csrf_exempt
 from ocradmin import storage
 from ocradmin.storage.utils import DocumentEncoder
+from ocradmin.documents import status as docstatus
 from ocradmin.documents.utils import Aspell
 from ocradmin.core.decorators import project_required
 from ocradmin.presets.models import Preset, Profile
@@ -131,7 +132,9 @@ def create(request):
         doc.image_content = request.FILES["file"]
         doc.image_mimetype = request.FILES["file"].content_type
         doc.image_label = request.FILES["file"].name
-        doc.set_metadata(title=form.cleaned_data["label"], ocr_status="initial")
+        doc.set_metadata(
+                title=form.cleaned_data["label"],
+                ocr_status=docstatus.INITIAL)
         doc.make_thumbnail()
         doc.save()
         # TODO: Make async
@@ -161,7 +164,7 @@ def create_ajax(request):
             doc.image_content = StringIO(request.raw_post_data)
             doc.image_mimetype = request.META.get("HTTP_X_FILE_TYPE")
             doc.image_label = filename
-            doc.set_metadata(title=filename, ocr_status="initial")
+            doc.set_metadata(title=filename, ocr_status=docstatus.INITIAL)
             doc.make_thumbnail()
             doc.save()
             pid = doc.pid
@@ -189,6 +192,20 @@ def spellcheck(request):
     response = HttpResponse(mimetype="application/json")
     json.dump(aspell.spellcheck(data), response, ensure_ascii=False)
     return response
+
+@project_required
+def status(request, pid):
+    """Set document status."""
+    doc = request.project.get_storage().get(pid)
+    if request.method == "POST":
+        stat = request.POST.get("status", docstatus.INITIAL)
+        doc.set_metadata(ocr_status=stat)
+        doc.save()
+    if request.is_ajax():
+        return HttpResponse(json.dumps({"status":doc.ocr_status}),
+            mimetype="application/json")
+    return HttpResponse(doc.ocr_status, mimetype="text/plain")
+
 
 
 @project_required
