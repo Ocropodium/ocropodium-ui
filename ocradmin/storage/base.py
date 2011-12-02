@@ -2,6 +2,7 @@
 Storage backend base class.
 """
 
+import os
 import io
 import textwrap
 from contextlib import contextmanager
@@ -98,10 +99,24 @@ class BaseStorage(object):
         finally:
             handle.close()
 
-    def document_metadata(self, doc):
-        """Get document metadata. This currently
-        just exposes the DC stream attributes."""
+    def read_metadata(self, doc):
+        """Get a dictionary of document metadata."""
         raise NotImplementedError
+
+    def write_metadata(self, doc, **kwargs):
+        """Get a dictionary of document metadata."""
+        raise NotImplementedError
+
+    def merge_metadata(self, doc, **kwargs):
+        meta = self.read_metadata(doc)
+        meta.update(kwargs)
+        self.write_metadata(doc, **meta)
+
+    def delete_metadata(self, *args):
+        meta = self.read_metadata(doc)
+        newmeta = dict([(k, v) for k, v in meta.iteritems() \
+                if k not in args])
+        self.write_metadata(doc, **newmeta)
 
     def set_document_attr_content(self, doc, attr, content):
         """Set image content."""
@@ -117,10 +132,6 @@ class BaseStorage(object):
 
     def set_document_label(self, doc, label):
         """Set document label."""
-        raise NotImplementedError
-
-    def set_document_metadata(self, doc, **kwargs):
-        """Set arbitrary document metadata."""
         raise NotImplementedError
 
     def save_document(self, doc):
@@ -267,17 +278,24 @@ class BaseDocument(object):
         return self._storage.document_label(self)
 
     @property
-    def metadata(self):
-        return self._storage.document_metadata(self)
+    def metadata(self, attr=None):
+        meta = self._storage.metadata(self)
+        if attr:
+            return meta.get(attr)
+        return meta
     
     @metadata.setter
     def metadata(self, meta):
         """Set arbitrary document metadata."""
-        self._storage.set_document_metadata(self, meta)
+        self._storage.write_metadata(self, **dict([meta]))
 
-    def add_metadata(self, attr, value):
+    def set_metadata(self, **kwargs):
         """Set a key/pair value."""
-        self._storage.set_document_metadata(self, **{attr: value})
+        self._storage.merge_metadata(self, **kwargs)
+
+    def delete_metadata(self, *args):
+        """Delete metadata keys."""
+        self._storage.delete_metadata(self, *args)
 
     def delete(self):
         """Delete this object."""

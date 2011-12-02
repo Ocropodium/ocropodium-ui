@@ -128,8 +128,7 @@ def create(request):
         doc.image_content = request.FILES["file"]
         doc.image_mimetype = request.FILES["file"].content_type
         doc.image_label = request.FILES["file"].name
-        doc.add_metadata("title", form.cleaned_data["label"])
-        doc.add_metadata("status", "draft")
+        doc.set_metadata(title=form.cleaned_data["label"], ocr_status="initial")
         doc.make_thumbnail()
         doc.save()
         # TODO: Make async
@@ -159,8 +158,7 @@ def create_ajax(request):
             doc.image_content = StringIO(request.raw_post_data)
             doc.image_mimetype = request.META.get("HTTP_X_FILE_TYPE")
             doc.image_label = filename
-            doc.add_metadata("title", filename)
-            doc.add_metadata("status", "draft")
+            doc.set_metadata(title=filename, ocr_status="initial")
             doc.make_thumbnail()
             doc.save()
             pid = doc.pid

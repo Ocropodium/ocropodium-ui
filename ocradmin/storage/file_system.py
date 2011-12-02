@@ -106,15 +106,11 @@ class FileSystemStorage(base.BaseStorage):
             return dict([v.strip().split("=") for v in \
                     metahandle.readlines() if re.match("^\w+=[^=]+$", v.strip())])
 
-    def write_metadata(self, doc, newmeta):
+    def write_metadata(self, doc, **kwargs):
         metapath = os.path.join(self.document_path(doc), self.meta_name)
-        meta = self.read_metadata(doc)
-        meta.update(newmeta)
         with io.open(metapath, "w") as metahandle:
-            for k, v in meta.iteritems():
+            for k, v in kwargs.iteritems():
                 metahandle.write(u"%s=%s\n" % (k, v))
-            #metahandle.writelines([u"%s=%s\n" % (k, v) \
-            #        for k, v in meta.iteritems()])
 
     def create_document(self, label):
         """Get a new document object"""
@@ -122,7 +118,7 @@ class FileSystemStorage(base.BaseStorage):
         # better that this fails than try to handle it
         os.makedirs(os.path.join(self.namespace_root, pid))
         doc = Document(pid, self)
-        self.write_metadata(doc, dict(label=label))
+        self.write_metadata(doc, label=label)
         return doc
 
     def save_document(self, doc):
@@ -169,19 +165,15 @@ class FileSystemStorage(base.BaseStorage):
 
     def set_document_attr_mimetype(self, doc, attr, mimetype):
         """Set image mimetype."""
-        self.write_metadata(doc, {"%s_mimetype" % attr: mimetype})
+        self.write_metadata(doc, **{"%s_mimetype" % attr: mimetype})
 
     def set_document_attr_label(self, doc, attr, label):
         """Set image label."""
-        self.write_metadata(doc, {"%s_label" % attr: label})
+        self.write_metadata(doc, **{"%s_label" % attr: label})
 
     def set_document_label(self, doc, label):
         """Set document label."""
-        self.write_metadata(doc, dict(label=label))
-
-    def set_document_metadata(self, doc, **kwargs):
-        """Set arbitrary document metadata."""
-        self.write_metadata(doc, kwargs)
+        self.write_metadata(doc, label=label)
 
     def get(self, pid):
         """Get an object by id."""

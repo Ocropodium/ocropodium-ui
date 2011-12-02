@@ -44,9 +44,13 @@ class DocBatchScriptTask(AbortableTask):
             doc.script_content = json.dumps(tree.serialize(), indent=2)
             doc.script_label = "%s.json" % os.path.splitext(doc.label)[0]
             doc.script_mimetype = "application/json"
-
             doc.save()
+
+            # process the nodes
             [t.eval() for t in tree.get_terminals()]
+
+            # set document metadata to indicate it's an OCR "draft"
+            doc.set_metadata(ocr_status="draft")
         except exceptions.NodeError, err:
             logger.exception("Ocropus Node Error (%s): %s", err.node, err)
         except Exception, err:
