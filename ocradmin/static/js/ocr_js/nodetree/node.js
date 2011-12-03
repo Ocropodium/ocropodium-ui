@@ -286,6 +286,14 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
             event.stopPropagation();
             event.preventDefault();
         });
+
+        $([this._rect, this._textlabel]).dblclick(function(event) {
+            console.log("dblclick");
+            self.trigger("toggleViewing");
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
         $(this._viewbutton).click(function(event) {
             if (self._dragging) {
                 self._dragging = false;
