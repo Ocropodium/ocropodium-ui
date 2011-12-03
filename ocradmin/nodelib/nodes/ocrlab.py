@@ -585,6 +585,54 @@ class SegmentPageByHint(node.Node, base.JSONWriterMixin):
             self.textlines.extend(clines)
 
 
+def get_coords(coordstr):
+    """
+    Return a list of rects from the coords string.
+    """
+    if coordstr is None:
+        return []
+    rstr = coordstr.split("~")
+    rects = []
+    for r in rstr:
+        points = r.split(",")
+        if len(points) != 4:
+            continue
+        try:
+            ints = [int(i) for i in points]
+            assert len(ints) == 4
+            rects.append(Rectangle(*ints))
+        except ValueError:
+            continue
+    return rects
+
+def sanitise_coords(rectlist, width, height):
+    """
+    Treat negative numbers as the outer bound.
+    """
+    def sanitise(rect):
+        rect.x0 = max(rect.x0, 0)
+        rect.y0 = max(rect.y0, 0)
+        if rect.x1 < 0:
+            rect.x1 = width
+        if rect.y1 < 0:
+            rect.y1 = height
+        if rect.x0 > width:
+            rect.x0 = width - 1
+        if rect.y0 > height:
+            rect.y0 = height - 1
+        if rect.x1 > width:
+            rect.x1 = width
+        if rect.y1 > height:
+            rect.y1 = height
+        return rect
+    return [sanitise(rect) for rect in rectlist]
+
+def flip_coord(rect, height):
+    return Rectangle(rect.x0, height - rect.y1, rect.x1, height - rect.y0)
+
+
+
+
 class SegmentPageManual(node.Node, base.JSONWriterMixin):
     """Segment a page using manual column definitions."""
     stage = stages.PAGE_SEGMENT
@@ -605,10 +653,6 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
         """
         return dict(columns=[], lines=[], paragraphs=[])
 
-    def flip_coord(self, rect, height):
-        return Rectangle(rect.x0, height - rect.y1,
-                    rect.x1, height - rect.y0)
-
     def process(self, binary):
         """
         Segment a binary image.
@@ -621,11 +665,12 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
             images
         """
         height = binary.shape[0]
-        coords = [self.flip_coord(r, height) for r in self.get_coords()]
+        pstr = self._params.get("boxes", "")
+        coords = [flip_coord(r, height) for r in get_coords(pstr)]
         if len(coords) == 0:
             coords.append(Rectangle(0, 0,
                 binary.shape[1] - 1, binary.shape[0] - 1))
-        self.sanitise_coords(coords, binary.shape[1], binary.shape[0]);
+        coords = sanitise_coords(coords, binary.shape[1], binary.shape[0]);
         boxes = {}
         for rect in coords:
             points = rect.points()
@@ -638,7 +683,7 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
                 else:
                     boxes[key] = rects
         for key, rects in boxes.iteritems():
-            boxes[key] = [self.flip_coord(r, height).points() for r in rects]
+            boxes[key] = [flip_coord(r, height).points() for r in rects]
         return boxes
 
     def segment_portion(self, portion, dx, dy, pheight):
@@ -647,50 +692,6 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
         """
         page_seg = self._segmenter.segment(ocrolib.narray2numpy(portion))
         return self.extract_boxes(self._regions, page_seg, dx, dy, pheight)
-
-    def get_coords(self):
-        """
-        Return a list of rects from the coords string.
-        """
-        strlist = self._params.get("boxes", "")
-        if strlist is None:
-            return []
-        rstr = strlist.split("~")
-        rects = []
-        for r in rstr:
-            points = r.split(",")
-            if len(points) != 4:
-                continue
-            try:
-                ints = [int(i) for i in points]
-                assert len(ints) == 4
-                rects.append(Rectangle(*ints))
-            except ValueError:
-                continue
-        return rects
-
-    @classmethod
-    def sanitise_coords(cls, rectlist, width, height):
-        """
-        Treat negative numbers as the outer bound.
-        """
-        for i in range(len(rectlist)):
-            rect = rectlist[i]
-            rect.x0 = max(rect.x0, 0)
-            rect.y0 = max(rect.y0, 0)
-            if rect.x1 < 0:
-                rect.x1 = width
-            if rect.y1 < 0:
-                rect.y1 = height
-            if rect.x0 > width:
-                rect.x0 = width - 1
-            if rect.y0 > height:
-                rect.y0 = height - 1
-            if rect.x1 > width:
-                rect.x1 = width
-            if rect.y1 > height:
-                rect.y1 = height
-            rectlist[i] = rect
 
     @classmethod
     def extract_boxes(cls, regions, page_seg, dx, dy, pheight):
@@ -710,4 +711,33 @@ class SegmentPageManual(node.Node, base.JSONWriterMixin):
                     (pheight - regions.y1(i)) + dy, regions.x1(i) + dx,
                     (pheight - regions.y0(i)) + dy))
         return out
+
+
+class BlockOut(node.Node, base.BinaryPngWriterMixin):
+    """Blockout sections of an image."""
+    stage = stages.FILTER_BINARY
+    intypes = [numpy.ndarray]
+    outtype = numpy.ndarray
+    parameters = [dict(name="boxes", value=""),]
+
+    def process(self, input):
+        """
+        Blockout an image, using PIL.  If any of
+        the parameters are -1 or less, use the
+        outer dimensions.
+        """
+        height = input.shape[0]
+        pstr = self._params.get("boxes", "")
+        coords = get_coords(pstr) 
+        if len(coords) == 0:
+            return input
+        sancoords = sanitise_coords(coords, input.shape[1], input.shape[0]);
+        flipcoords = [flip_coord(r, height) for r in sancoords]
+        narray = ocrolib.numpy2narray(input)
+        for rect in flipcoords:
+            ocrolib.iulib.fill_rect(narray, rect.x0, rect.y0, rect.x1, rect.y1, 255)
+        return ocrolib.narray2numpy(narray)
+
+
+
 
