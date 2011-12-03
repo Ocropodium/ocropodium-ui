@@ -142,9 +142,11 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         if (!this.options.multi)
             files = [files[0]]
 
-        for (var i = 0; i < files.length; i++) {
-            if (! ~$.inArray(files[i].type, this.options.mimetypes)) {
-                throw("invalid file type: " + files[i].type);
+        if (! ~$.inArray("*", this.options.mimetypes)) {
+            for (var i = 0; i < files.length; i++) {
+                if (! ~$.inArray(files[i].type, this.options.mimetypes)) {
+                    throw("invalid file type: " + files[i].type);
+                }
             }
         }
         this._maxsize = files.length;
@@ -155,17 +157,17 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
     },
                 
     postNextItem: function(event) {
-        if (!this._queue.length) {
-            this.trigger("complete", event);
-            return false;
-        }
-
+        var count = this._maxsize - this._queue.length;
         var self = this;
         var file = this._queue.shift();
         var xhr = new XMLHttpRequest();
         xhr.onload = function(pevent) {
+            self.trigger("uploadResult", pevent, file.fileName, file.type, event, count);
+            if (!self._queue.length) {
+                self.trigger("complete", event);
+                return false;
+            }
             self.postNextItem(event);
-            self.trigger("uploadResult", pevent, file.fileName, file.type, event);
         };
         xhr.onerror = OcrJs.ajaxErrorHandler;
 

@@ -272,7 +272,7 @@ $(function() {
             $("#node_canvas").get(0), 
             "/presets/upload/", {
                 fakeinput: false,
-                mimetypes: ["image/png", "text/plain"],
+                mimetypes: ["*"],
             });
 
     draguploader.addListeners({
@@ -286,31 +286,31 @@ $(function() {
             $("#node_canvas").removeClass("dragover");    
         },
         uploading: function() {
+            cmdstack.beginMacro("Drag drop node");
             statusbar.setWorking(true);
         },
         complete: function() {
             statusbar.setWorking(false);
+            cmdstack.endMacro();
         },
-        uploadResult: function(data, filename, filetype, event) {
+        uploadResult: function(data, filename, filetype, event, count) {
             // FIXME: This stuff needs to be rationalised and moved
             // to somewhere more appropriate... i.e. composed of the
             // functions already in Nodetree.Tree for getting the
             // canvas point from a mouse point
             var data = JSON.parse(data.target.response);
-            var type = "ocropus.GrayFileIn";
-            if (filetype.search("text") != -1)
-                type = "util.TextFileIn";
+            var type = "util.TextFileIn";
+            if (filetype.search("image") != -1)
+                type = "ocropus.GrayFileIn";
             var atpoint = SvgHelper.mouseCoord($("#node_canvas").get(0), event);
             var scale = SvgHelper.getScale(nodetree.group());
-            cmdstack.beginMacro("Drag drop node");
             nodetree.cmdCreateNode(filename, type, {
-                x: (atpoint.x - SvgHelper.getTranslate(nodetree.group()).x) / scale,
+                x: ((atpoint.x - SvgHelper.getTranslate(nodetree.group()).x) + (count * 150)) / scale,
                 y: (atpoint.y - SvgHelper.getTranslate(nodetree.group()).y) / scale,
             });
             var node = nodetree.getNode(filename);
             node.setParameter("path", data.file, true);
             nodetree.setNodeViewing(node);
-            cmdstack.endMacro();
         },
     });
     
