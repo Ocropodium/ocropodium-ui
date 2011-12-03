@@ -171,15 +171,15 @@ class FileSystemStorage(base.BaseStorage):
 
     def set_document_attr_mimetype(self, doc, attr, mimetype):
         """Set image mimetype."""
-        self.write_metadata(doc, **{"%s_mimetype" % attr: mimetype})
+        self.merge_metadata(doc, **{"%s_mimetype" % attr: mimetype})
 
     def set_document_attr_label(self, doc, attr, label):
         """Set image label."""
-        self.write_metadata(doc, **{"%s_label" % attr: label})
+        self.merge_metadata(doc, **{"%s_label" % attr: label})
 
     def set_document_label(self, doc, label):
         """Set document label."""
-        self.write_metadata(doc, label=label)
+        self.merge_metadata(doc, label=label)
 
     def get(self, pid):
         """Get an object by id."""
