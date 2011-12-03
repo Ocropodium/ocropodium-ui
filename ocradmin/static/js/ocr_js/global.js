@@ -91,10 +91,25 @@ $(function() {
     }
 
     vsplit = $("#vsplitter").layout(defaultlayout);
+
+    var mainsplit, sidesplit;
     setTimeout(function() {
-        $("#mainwidget").layout(widgetlayout);
-        $("#sidebarwidget").layout(widgetlayout);
-    }, 50);
+        mainsplit = $("#mainwidget").layout(widgetlayout);
+        sidesplit = $("#sidebarwidget").layout(widgetlayout);
+    });
+
+    vsplit.options.east.onresize_end = function() {
+        if (mainsplit) {
+            mainsplit.resizeAll();
+            sidesplit.resizeAll();
+        }
+    };
+    vsplit.options.center.onresize_end = function() {
+        if (mainsplit) {
+            mainsplit.resizeAll();
+            sidesplit.resizeAll();
+        }
+    };
 
     $(window).unload(function() {
         var state = {
