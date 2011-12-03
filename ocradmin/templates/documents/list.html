@@ -6,7 +6,11 @@
 {% endblock %}
 
 {% block bodycontent %}
-    {% include "documents/includes/document_list.html" %}
+
+    <div class="document-list ui-layout-center">
+        {% include "documents/includes/document_list.html" %}
+    </div>
+
 {% endblock %}        
 
 {% block sidebarcontent %}
