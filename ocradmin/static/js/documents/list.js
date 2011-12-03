@@ -11,8 +11,8 @@ $(function() {
         },
     };
 
+    $(".button_link").button();
     $(".button_link.error, .button_link.initial").button({disabled: true});
-    $(".button_link.corrected, .button_link.part_corrected, .button_link.uncorrected").button();
 
     function bindKeys() {
         $.each(cmdmap, function(key, handler) {
@@ -24,10 +24,14 @@ $(function() {
         });
     }
 
-    function deleteSelected() {
-        var sel = $.map($(".document-selector.ui-selected"), function(elem, i) {
+    function getSelectedPids() {
+        return $.map($(".document-selector.ui-selected"), function(elem, i) {
             return "pid=" + $(elem).closest(".document-item").attr("id");
         });
+    }
+
+    function deleteSelected() {
+        var sel = getSelectedPids();
         if (confirm("Delete " + sel.length + " documents?")) {
             $.ajax({
                 url: "/documents/delete_multiple/?" + sel.join("&"),
@@ -47,8 +51,16 @@ $(function() {
     function makeSelectable() {
         $(".document-list").selectable({
             filter: ".document-selector",
-            cancel: ".document-thumb, .document-details", 
+            cancel: ".document-thumb, .document-details",
+            stop: function() {
+                updateButtons();
+            } 
         });    
+    }
+
+    function updateButtons() {
+        var pids = getSelectedPids();
+        $("#submit_batch_form").attr("disabled", pids.length < 1);
     }
 
     function drop(e) {
@@ -78,6 +90,26 @@ $(function() {
             });
 
     statusbar = new OcrJs.StatusBar($("#status_bar").get(0));
+
+    $("#submit_batch_form").click(function(event) {
+        var pids = getSelectedPids();
+        $.ajax({
+            url: "/documents/batch?" + pids.join("&"),
+            type: "POST",
+            data: {preset: $("#batch_preset").val()},
+            dataType: "json",
+            error: OcrJs.ajaxErrorHandler,
+            success: function(data) {
+                pollForResults(data.pk);
+            }
+        });
+        event.preventDefault();
+        event.stopPropagation();
+    });
+
+    function pollForResults(batchpk) {
+        alert("Polling for: " + batchpk);
+    }
 
     uploader.addListeners({
         hoverOver: function() {

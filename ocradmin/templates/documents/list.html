@@ -14,5 +14,29 @@
 {% endblock %}        
 
 {% block sidebarcontent %}
-    {% include "batch/includes/new_form.html" %}
+    <h2>Upload a new image</h2>    
+    <form id="create_object_form" action="/documents/create/" enctype="multipart/form-data" method="POST">
+        {% csrf_token %}
+        {{newform.file}}
+        <div class="object_detail_footer form_footer ui-helper-clearfix">
+            <input type="submit" value="Submit" id="submit_document_form" disabled="disabled" />
+        </div>        
+    </form>
+
+    <hr />
+
+    <h2>Batch OCR images</h2>
+    <form id="create_batch_form" action="/documents/batch/" method="POST">
+        {% csrf_token %}
+        <select name="preset" id="batch_preset">
+            {% for preset in presets %}
+                <option value="{{preset.pk}}">{{preset.name}}</option>
+            {% endfor %}
+        </select>
+        <div class="object_detail_footer form_footer ui-helper-clearfix">
+            <input type="submit" value="Submit" id="submit_batch_form" disabled="disabled" />
+        </div>        
+    </form>
+
+
 {% endblock %}

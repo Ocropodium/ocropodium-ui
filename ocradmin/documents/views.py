@@ -4,7 +4,8 @@ Views for handling documents and document storage.
 
 import json
 from django import forms
-from django.shortcuts import render
+from django.db import transaction
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, \
             HttpResponseServerError, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
@@ -15,13 +16,14 @@ from ocradmin.documents.utils import Aspell
 from ocradmin.core.decorators import project_required
 from ocradmin.presets.models import Preset, Profile
 from ocradmin.ocrtasks.models import OcrTask
+from ocradmin.batch.models import Batch
+from ocradmin.batch.views import dispatch_batch
 from BeautifulSoup import BeautifulSoup
 
 from cStringIO import StringIO
 
 class DocumentForm(forms.Form):
     """New document form."""
-    label = forms.CharField(max_length=255, required=False)
     file = forms.FileField()
 
 import logging
@@ -37,23 +39,50 @@ def doclist(request):
     template = "documents/list.html" if not request.is_ajax() \
             else "documents/includes/document_list.html"
     profiles = Profile.objects.filter(name="Batch OCR")
-    presets = Preset.objects.order_by("name").all()
+    presets = Preset.objects.filter(profile__isnull=False).order_by("name")
+    newform = DocumentForm()
     if profiles:
         presets = profiles[0].presets.order_by("name").all()
 
     context = dict(
             objects=storage.list(),
             page_name="%s (%s)" % (project.name, storage.name),
-            presets=presets
+            presets=presets,
+            newform=newform
     )
     return render(request, template, context)
+
+
+@project_required
+def quick_batch(request):
+    """Quickly dispatch a batch job."""
+
+    preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))
+    pids = request.GET.getlist("pid")
+    assert len(pids), "No pids submitted"
+    batchname = "%s - Batch %d" % (request.project.name,
+            request.project.batches.count() + 1)
+    batch = Batch(
+        name=batchname,
+        user=request.user,
+        project=request.project,
+        description="",
+        script=preset.data,
+        tags="",
+        task_type="run.batchitem"
+    )
+    batch.save()
+    with transaction.commit_on_success():
+        dispatch_batch(batch, pids)
+    return HttpResponse(json.dumps({"pk":batch.pk}),
+            mimetype="application/json")
 
 
 @project_required
 def editor(request, pid):
     """Edit document transcript."""
     storage = request.project.get_storage()
-    doc = storage.get(pid)    
+    doc = storage.get(pid) 
     context = dict(
             next=storage.next(pid),
             prev=storage.prev(pid),
@@ -196,8 +225,9 @@ def spellcheck(request):
 def status(request, pid):
     """Set document status."""
     doc = request.project.get_storage().get(pid)
-    if request.method == "POST":
+    if request.method == "POST":        
         stat = request.POST.get("status", docstatus.INITIAL)
+        print "Setting status of %s to %s" % (pid, stat)
         doc.set_metadata(ocr_status=stat)
         doc.save()
     if request.is_ajax():

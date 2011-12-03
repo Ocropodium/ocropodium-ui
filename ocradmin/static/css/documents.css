@@ -1,9 +1,14 @@
 
 .document-selector {
-    height: 1.5em;
+    border-radius-top: 3px;
     background-color: #CCC;
     margin-bottom: 3px;
     text-align: left;
+    padding: 5px;
+}
+
+.document-selector th {
+    padding: 3px;
 }
 
 .document-item {
@@ -62,3 +67,28 @@
 .document-list .ui-selected {
     background: #F39814; color: white; 
 }
+
+.document-status.initial {
+    background-color: #cccccc;
+}
+
+.document-status.error {
+    background-color: #dd1100;
+}
+
+.document-status.running {
+    background-color: #ffee55;
+}
+
+.document-status.part_corrected {
+    background-color: #ff9900;
+}
+
+.document-status.uncorrected {
+    background-color: #ffee55;
+}
+
+.document-status.complete {
+    background-color: #00dd66;
+}
+

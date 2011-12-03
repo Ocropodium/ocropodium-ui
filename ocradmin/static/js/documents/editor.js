@@ -235,7 +235,8 @@ $(function() {
     }
 
     $("input[name='status']").click(function(event) {
-        var status = getStatus();
+        var status = $("input[name='status']:checked").val();
+        console.log("Setting status to ", status);
         $.ajax({
             url: "/documents/status/" + getPid() + "/",
             type: "POST",
@@ -243,7 +244,7 @@ $(function() {
             dataType: "json",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
-                $("#id_status").val(status);
+                $("#id_status").val(data.status);
                 console.log(data);
             },
         });
@@ -290,7 +291,7 @@ $(function() {
                     updateTask();
                 });
             }, 500);
-        } else {
+        } else if (status != "error" && status != "initial") {
             clearTimeout(polltimer);
             polltimer = null;
             $("#transcript").load("/documents/transcript/" + getPid() + "/",
@@ -453,23 +454,6 @@ $(function() {
 
     $("#save_data").click(function(event) {
         saveTranscript();
-    });
-
-    $("#save_training_data").click(function(event) {
-        var pid = getPid();
-        $.ajax({
-            url: "/reference_pages/create_from_task/" + pid + "/",
-            dataType: "json",
-            type: "POST",
-            success: function(data) {
-                if (data.error)
-                    return alert("Error: " + data.error);
-                alert("Saved!");
-            },
-            complete: function() {
-            },
-            error: OcrJs.ajaxErrorHandler,
-        });
     });
 
     $("#prev_page").click(function(event) {
