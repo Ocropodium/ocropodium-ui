@@ -93,15 +93,7 @@ $(function() {
             statusbar.setWorking(false);
         },
         uploadResult: function(data, filename, filetype) {
-            var pid = JSON.parse(data.target.response).pid;
-            $.ajax({
-                url: "/documents/show_small/" + pid + "/",
-                error: OcrJs.ajaxErrorHandler,
-                success: function(html) {
-                    $(".document-list").append($(html));
-                    makeSelectable();
-                }
-            });
+            $(".document-list").append($(data.target.response));
         },
     });
     makeSelectable();

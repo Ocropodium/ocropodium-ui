@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 @project_required
 def doclist(request):
     """List documents."""
-    storage = request.session["project"].get_storage()
+    project = request.project
+    storage = project.get_storage()
     template = "documents/list.html" if not request.is_ajax() \
             else "documents/includes/document_list.html"
     profiles = Profile.objects.filter(name="Batch OCR")
@@ -41,8 +42,8 @@ def doclist(request):
         presets = profiles[0].presets.order_by("name").all()
 
     context = dict(
-            page_name="%s: Documents" % storage.name,
             objects=storage.list(),
+            page_name="%s (%s)" % (project.name, storage.name),
             presets=presets
     )
     return render(request, template, context)
@@ -143,10 +144,11 @@ def create(request):
 
 
 @project_required
-def show_small(request, pid):
+def show_small(request, pid, doc=None):
     """Render a document's details."""
-    store = request.session["project"].get_storage()
-    doc = store.get(pid)
+    if doc is None:
+        storage = request.project.get_storage()
+        doc = storage.get(pid)
     template = "documents/includes/document.html"
     return render(request, template, dict(object=doc))
 
@@ -155,27 +157,22 @@ def show_small(request, pid):
 @project_required
 def create_ajax(request):
     """Create new documents with an Ajax POST."""
-    store = request.session["project"].get_storage()
+    storage = request.project.get_storage()
     pid = None
-    print "creating doc"
     if request.method == "POST" and request.GET.get("inlinefile"):
         try:
             filename = request.GET.get("inlinefile")
-            doc = store.create_document(filename)
+            doc = storage.create_document(filename)
             doc.image_content = StringIO(request.raw_post_data)
+            print "Creating document with", filename
             doc.image_mimetype = request.META.get("HTTP_X_FILE_TYPE")
             doc.image_label = filename
             doc.set_metadata(title=filename, ocr_status=docstatus.INITIAL)
             doc.make_thumbnail()
             doc.save()
-            pid = doc.pid
         except Exception, err:
             logger.exception(err)
-
-    print "Rendering response"
-    response = HttpResponse(mimetype="application/json")
-    json.dump(dict(pid=pid), response)
-    return response
+    return show_small(request, doc.pid, doc)
 
 
 @project_required
