@@ -58,22 +58,24 @@ class UnhandledRunScriptTask(AbortableTask):
         if term.__class__.__name__ == "Switch":
             return self.handle_output(term.first_active(), cacher, result)
 
-        path = cacher.get_path(term.first_active())
-        filename = term.first_active().get_file_name()
+        outpath = cacher.get_path(term.first_active())
+        outname = term.first_active().get_file_name()
+        outdzi = utils.media_path_to_url(
+                os.path.join(outpath, "%s.dzi" % os.path.splitext(outname)[0]))
+        indzi = None
+        if term.arity > 0 and term.input(0):
+            inpath = cacher.get_path(term.input(0).first_active())
+            inname = term.input(0).first_active().get_file_name()
+            indzi = utils.media_path_to_url(
+                    os.path.join(inpath, "%s.dzi" % os.path.splitext(inname)[0]))
 
         if term.outtype == numpy.ndarray:
-            dzi = "%s.dzi" % os.path.splitext(filename)[0]
-            return dict(
-                type="image",
-                path=utils.media_path_to_url(os.path.join(path, filename)),
-                dzi=utils.media_path_to_url(os.path.join(path, dzi))
-            )
+            out = dict(type="image", output=outdzi)
+            if indzi is not None:
+                out["input"] = indzi
+            return out
         elif term.outtype == dict:
-            path = cacher.get_path(term._inputs[0].first_active())
-            filename = term._inputs[0].first_active().get_file_name()
-            dzi = "%s.dzi" % os.path.splitext(filename)[0]
-            dzipath=utils.media_path_to_url(os.path.join(path, dzi))
-            result.update(type="pseg", dzi=dzipath)
+            result.update(type="pseg", input=indzi)
             return result
         elif term.outtype == types.HocrString:
             return dict(type="hocr", data=result)
