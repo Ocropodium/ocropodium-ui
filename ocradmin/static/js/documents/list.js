@@ -11,6 +11,9 @@ $(function() {
         },
     };
 
+    $(".button_link.error, .button_link.initial").button({disabled: true});
+    $(".button_link.corrected, .button_link.part_corrected, .button_link.uncorrected").button();
+
     function bindKeys() {
         $.each(cmdmap, function(key, handler) {
             $(document).bind("keydown.keycmd", key, function(event) {
