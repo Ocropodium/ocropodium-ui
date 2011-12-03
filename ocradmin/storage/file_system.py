@@ -118,7 +118,7 @@ class FileSystemStorage(base.BaseStorage):
         # better that this fails than try to handle it
         os.makedirs(os.path.join(self.namespace_root, pid))
         doc = Document(pid, self)
-        self.write_metadata(doc, label=label)
+        self.merge_metadata(doc, label=label)
         return doc
 
     def save_document(self, doc):
