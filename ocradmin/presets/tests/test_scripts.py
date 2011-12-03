@@ -55,13 +55,13 @@ class ViewsTest(TestCase):
         Test a script that should return image data, i.e.
         a path to a DZI file.
         """
-        self._run_script("binarize.json", "SUCCESS", "image", ["dzi", "path"])
+        self._run_script("binarize.json", "SUCCESS", "image", ["output"])
 
     def test_segment_script(self):
         """
         Test a script that should return line image geometry.
         """
-        self._run_script("segment.json", "SUCCESS", "pseg", ["dzi", "lines"])
+        self._run_script("segment.json", "SUCCESS", "pseg", ["input", "lines"])
 
     def test_ocropus_script(self):
         """
