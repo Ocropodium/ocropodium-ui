@@ -58,7 +58,7 @@ def quick_batch(request):
     """Quickly dispatch a batch job."""
 
     preset = get_object_or_404(Preset, pk=request.POST.get("preset", 0))
-    pids = request.GET.getlist("pid")
+    pids = request.POST.getlist("pid")
     assert len(pids), "No pids submitted"
     batchname = "%s - Batch %d" % (request.project.name,
             request.project.batches.count() + 1)
@@ -74,8 +74,10 @@ def quick_batch(request):
     batch.save()
     with transaction.commit_on_success():
         dispatch_batch(batch, pids)
-    return HttpResponse(json.dumps({"pk":batch.pk}),
-            mimetype="application/json")
+    if request.is_ajax():
+        return HttpResponse(json.dumps({"pk":batch.pk}),
+                mimetype="application/json")
+    return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
 
 
 @project_required
