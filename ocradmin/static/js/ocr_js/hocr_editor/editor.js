@@ -86,7 +86,7 @@ HE.Editor = OcrJs.Base.extend({
     },
 
     setWaiting: function(waiting) {
-        $(parent).toggleClass("waiting", waiting);
+        $(this.parent).toggleClass("waiting", waiting);
     },
 
     setupEvents: function() {
