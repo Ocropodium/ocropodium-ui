@@ -9,6 +9,7 @@ OcrJs.NodeGui.PilCropGui = DziViewer.Plugin.RectManager.extend({
     init: function(viewport, node) {
         this._super(viewport);
         this.node = node;
+        this.viewinput = true;
 
         this._coords = new DziViewer.Rect(-1,-1,-1,-1);
 
