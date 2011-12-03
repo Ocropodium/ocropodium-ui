@@ -1,10 +1,11 @@
-var transcript = null;
-var sdviewer = null;
-var formatter = null;
-var hsplitL, hsplitR;
-var cmdstack = null;
-var spellcheck = null;
-var taskwatcher = null;
+var transcript = null,
+    sdviewer = null,
+    formatter = null,
+    hsplitL, hsplitR,
+    cmdstack = null,
+    spellcheck = null,
+    taskwatcher = null,
+    polltimer = null;
 
 
 
@@ -280,9 +281,18 @@ $(function() {
     function updateTask(event) {
         var status = getStatus();
         if (status == "running") {
-            alert("Running");
-            // poll here...        
-        } else { 
+            transcript.setWaiting(true);
+            if (polltimer != null)
+                clearTimeout(polltimer);
+            polltimer = setTimeout(function() {
+                $.getJSON("/documents/status/" + getPid() + "/", function(data) {
+                    $("#id_status").val(data.status);
+                    updateTask();
+                });
+            }, 500);
+        } else {
+            clearTimeout(polltimer);
+            polltimer = null;
             $("#transcript").load("/documents/transcript/" + getPid() + "/",
                     null, function(text) {
                         transcript.setWaiting(false);
