@@ -1,7 +1,7 @@
 <li class="document-item ui-helper-clearfix" id="{{object.pid}}">
     <table>
         <thead>
-            <tr class="document-selector">
+            <tr class="ui-widget-header document-selector">
                 <th colspan="2">{{object.label}}</th>
             </tr>
         </thead>
@@ -12,12 +12,11 @@
                 </a>
             </td>
             <td class="document-details">
-                <a class="button_link" href="{{object.transcript_url}}" title="Edit transcript">Edit</a> 
+                <a class="button_link {{object.ocr_status}}" href="{{object.transcript_url}}" title="Edit transcript">Edit</a> 
             </td>
         </tr>
-        <tr class="document-status">
-            <td class="document-progress"></td>
-            <td class="document-status">{{object.ocr_status}}</td>
+        <tr class="document-status-row">
+            <td class="document-status {{object.ocr_status}}"></td>
         </tr>
     </table>
 </li>
