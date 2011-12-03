@@ -25,6 +25,14 @@ OcrJs.Nodetree.GuiManager = OcrJs.Base.extend({
         return this._node !== null;
     },
 
+    currentGui: function() {
+        return this._gui;
+    },
+
+    currentNode: function() {
+        return this._node;
+    },
+
     updateGui: function() {
         if (this._node && this._gui)
             this._gui.update();
