@@ -152,6 +152,9 @@ $(function() {
 
     // map of key commands to functions
     var cmdmap = {
+        "ctrl+del": function() {
+            transcript.cmdDeleteLine();
+        },
         "ctrl+z": function() { 
             cmdstack.undo();
         },

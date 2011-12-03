@@ -20,6 +20,26 @@ HE.EditCommand = OcrJs.UndoCommand.extend({
     }
 });
 
+HE.DeleteLineCommand = OcrJs.UndoCommand.extend({
+    init: function(editor, line) {
+        this._super("Delete paragraph");
+        var prev = line.prev(),
+            next = line.next(),
+            parent = line.parent();
+        this.redo = function() {
+            line.detach();
+        };
+        this.undo = function() {
+            if (prev.length > 0)
+                prev.after(line);
+            else if (next.length > 0)
+                next.after(line);
+            else
+                parent.append(line);
+        };
+    }
+});
+
 
 
 HE.Editor = OcrJs.Base.extend({
@@ -93,6 +113,11 @@ HE.Editor = OcrJs.Base.extend({
             this._undostack.push(
                     new HE.EditCommand(this, element, origtext, newtext));
         }
+    },
+
+    cmdDeleteLine: function() {
+        this._undostack.push(
+            new HE.DeleteLineCommand(this, this.currentLine()));        
     },
 
     forward: function() {

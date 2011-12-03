@@ -45,6 +45,10 @@ div.clear {
     overflow: auto;
 }
 
+.ocr_carea {
+    display: inline;
+}
+
 /* this is necessary so the dropdowns overlap the content */
 #menucontainer {
     overflow: visible;
