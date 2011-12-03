@@ -37,13 +37,12 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
 
         if (this.target)
             this.setTarget()
-
     },
 
     setTarget: function(elem) {
         this.target = elem || this.target;
-        $(this.target).wrap($("<span></span>"));
         if (this.options.fakeinput) {
+            $(this.target).wrap($("<span></span>"));
             this._fakeinput = $("<input></input>")
                 .attr("type", "file")
                 .attr("id", "fakeinput")
@@ -59,10 +58,9 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
             this._cnt = $(this.target).parent().get(0);
         } else {
             this._cnt = $(this.target).get(0);
+            $(this._cnt).addClass("uploader");
         }
-        
         this.setupEvents();
-
     },
 
     setupEvents: function() {
@@ -70,8 +68,13 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
 
         this._cnt.addEventListener("drop", function(event) {
             self.trigger("drop");
+            var point = {
+                x: event.pageX - $(self._cnt).offset().left,
+                y: event.pageY - $(self._cnt).offset().top,
+            };
+
             try {
-                self.uploadPost(event.dataTransfer.files);
+                self.uploadPost(event.dataTransfer.files, event);
             } catch(err) {
                 alert("Error occurred: " + err);
             }
@@ -131,8 +134,8 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         this._params = [];
     },
 
-    uploadPost: function(files) {
-        this.trigger("uploading", files);
+    uploadPost: function(files, event) {
+        this.trigger("uploading", files, event);
 
         // chuck away all but the first file if not
         // in multi mode
@@ -148,28 +151,28 @@ OcrJs.AjaxUploader = OcrJs.Base.extend({
         for (var i = 0; i < files.length; i++) {
             this._queue.push(files[i]);
         }
-        this.postNextItem();
+        this.postNextItem(event);
     },
                 
-    postNextItem: function() {
+    postNextItem: function(event) {
         if (!this._queue.length) {
-            this.trigger("complete");
+            this.trigger("complete", event);
             return false;
         }
 
         var self = this;
         var file = this._queue.shift();
         var xhr = new XMLHttpRequest();
-        xhr.onload = function(event) {
-            self.postNextItem();
-            self.trigger("uploadResult", event, file.fileName, file.type);
+        xhr.onload = function(pevent) {
+            self.postNextItem(event);
+            self.trigger("uploadResult", pevent, file.fileName, file.type, event);
         };
         xhr.onerror = OcrJs.ajaxErrorHandler;
 
         var params = this.parameters();
         params["inlinefile"] = file.fileName;
         var urlstring = this.getQueryString(params);
-        this.trigger("uploadStart", file.fileName);
+        this.trigger("uploadStart", file.fileName, event);
         xhr.open("POST", urlstring, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.setRequestHeader("X-File-Name", file.fileName);

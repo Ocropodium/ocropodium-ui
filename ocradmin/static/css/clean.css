@@ -51,6 +51,10 @@ div.clear {
     z-index:500;
 }
 
+.uploader.dragover {
+    background-color: #DDDDFF;
+}
+
 .toolbar_container {
     overflow: visible;
 }
