@@ -355,7 +355,7 @@ def _new_batch_context(request, tasktype, form=None):
     # add available seg and bin presets to the context
     # work out the name of the batch - start with how
     # many other batches there are in the projects
-    project = request.session["project"]
+    project = request.project
     batchname = "%s - Batch %d" % (project.name,
             project.batches.count() + 1)
     if form is None:
