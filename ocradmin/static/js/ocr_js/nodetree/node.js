@@ -90,7 +90,7 @@ OcrJs.Nodetree.Node = OcrJs.Base.extend({
         }
         if (!set)
             throw "Attempt to set non-existent parameter on "
-                + node.name + ": '" + name + "' = '" + value + "'";
+                + this.name + ": '" + name + "' = '" + value + "'";
     },
 
     getToolTip: function() {

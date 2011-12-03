@@ -3,20 +3,21 @@
 //
 
 // only in global scope for dubugging purposes
-var uploader = null;
-var formatter = null;
-var nodetree = null;
-var nodeparams = null;
-var nodemenu = null;
-var cmdstack = null;
-var sdviewer = null;
-var hocrviewer = null;
-var reshandler = null;
-var presetmanager = null;
-var guimanager = null;
-var resultcache = {};
-var statusbar = null;
-var statemanager = null;
+var uploader = null,
+    draguploader = null,
+    formatter = null,
+    nodetree = null,
+    nodeparams = null,
+    nodemenu = null,
+    cmdstack = null,
+    sdviewer = null,
+    hocrviewer = null,
+    reshandler = null,
+    presetmanager = null,
+    guimanager = null,
+    resultcache = {},
+    statusbar = null,
+    statemanager = null;
 
 $(function() {
 
@@ -260,12 +261,60 @@ $(function() {
         columns: ["rgba(255,255,34,0.2)", "rgba(255,255,34,0.1)"],
     };
 
-    // initialise the uploader...
-    uploader  = new OcrJs.AjaxUploader(
+    // initialise the uploaders...
+    uploader = new OcrJs.AjaxUploader(
         null,
         "/presets/upload/",
         { multi: false, errorhandler: OcrJs.ajaxErrorHandler, }
     );
+
+    draguploader = new OcrJs.AjaxUploader(
+            $("#node_canvas").get(0), 
+            "/presets/upload/", {
+                fakeinput: false,
+                mimetypes: ["image/png", "text/plain"],
+            });
+
+    draguploader.addListeners({
+        hoverOver: function() {
+            $("#node_canvas").addClass("dragover");    
+        },
+        hoverOut: function() {
+            $("#node_canvas").removeClass("dragover");    
+        },
+        drop: function() {
+            $("#node_canvas").removeClass("dragover");    
+        },
+        uploading: function() {
+            statusbar.setWorking(true);
+        },
+        complete: function() {
+            statusbar.setWorking(false);
+        },
+        uploadResult: function(data, filename, filetype, event) {
+            // FIXME: This stuff needs to be rationalised and moved
+            // to somewhere more appropriate... i.e. composed of the
+            // functions already in Nodetree.Tree for getting the
+            // canvas point from a mouse point
+            var data = JSON.parse(data.target.response);
+            var type = "ocropus.GrayFileIn";
+            if (filetype.search("text") != -1)
+                type = "util.TextFileIn";
+            var atpoint = SvgHelper.mouseCoord($("#node_canvas").get(0), event);
+            var scale = SvgHelper.getScale(nodetree.group());
+            cmdstack.beginMacro("Drag drop node");
+            nodetree.cmdCreateNode(filename, type, {
+                x: (atpoint.x - SvgHelper.getTranslate(nodetree.group()).x) / scale,
+                y: (atpoint.y - SvgHelper.getTranslate(nodetree.group()).y) / scale,
+            });
+            var node = nodetree.getNode(filename);
+            node.setParameter("path", data.file, true);
+            nodetree.setNodeViewing(node);
+            cmdstack.endMacro();
+        },
+    });
+    
+
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
         try {

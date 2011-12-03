@@ -92,7 +92,7 @@ $(function() {
         complete: function() {
             statusbar.setWorking(false);
         },
-        uploadResult: function(data) {
+        uploadResult: function(data, filename, filetype) {
             var pid = JSON.parse(data.target.response).pid;
             $.ajax({
                 url: "/documents/show_small/" + pid + "/",

@@ -56,10 +56,6 @@
     padding: 0;
 }
 
-.document-list.dragover {
-    background-color: #DDDDFF;
-}
-
 .document-list .ui-selecting { 
     background: #FECA40;
 }
