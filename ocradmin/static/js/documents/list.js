@@ -11,9 +11,6 @@ $(function() {
         },
     };
 
-    $(".button_link").button();
-    $(".button_link.error, .button_link.initial").button({disabled: true});
-
     function bindKeys() {
         $.each(cmdmap, function(key, handler) {
             $(document).bind("keydown.keycmd", key, function(event) {
@@ -56,6 +53,8 @@ $(function() {
                 updateButtons();
             } 
         });    
+        $(".button_link").button();
+        $(".button_link.error, .button_link.initial").button({disabled: true});
     }
 
     function updateButtons() {
@@ -84,7 +83,7 @@ $(function() {
         .bind('dragover', ignoreDrag)
         .bind('drop', drop);
 
-    uploader = new OcrJs.AjaxUploader($(".document-list").get(0),
+    uploader = new OcrJs.AjaxUploader($("#workspace").get(0),
             "/documents/create_ajax/", {
                 fakeinput: false,
             });
@@ -113,13 +112,13 @@ $(function() {
 
     uploader.addListeners({
         hoverOver: function() {
-            $(".document-list").addClass("dragover");    
+            $("#workspace").addClass("dragover");    
         },
         hoverOut: function() {
-            $(".document-list").removeClass("dragover");    
+            $("#workspace").removeClass("dragover");    
         },
         drop: function() {
-            $(".document-list").removeClass("dragover");    
+            $("#workspace").removeClass("dragover");    
         },
         uploading: function() {
             statusbar.setWorking(true);
@@ -128,6 +127,7 @@ $(function() {
             statusbar.setWorking(false);
         },
         uploadResult: function(data, filename, filetype) {
+            console.log($(data.target.response));
             $(".document-list").append($(data.target.response));
         },
     });
