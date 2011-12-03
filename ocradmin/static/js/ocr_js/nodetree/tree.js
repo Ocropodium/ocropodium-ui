@@ -793,17 +793,6 @@ NT.Tree = OcrJs.Base.extend({
                     case KC_SHIFT:
                         self._multiselect = true;
                         break;
-                    case KC_DELETE:
-                        self.cmdDeleteSelected();
-                        break;
-                    case KC_HOME:
-                        self.centreTree();
-                        break;
-                    case 65: // 'A'
-                        if (event.ctrlKey) {
-                            self.selectAll();
-                            break;
-                        }
                     case KC_UP:
                         self.cmdMoveNodesBy(self.selectedNodes(), 0, -movediff);
                         break;
