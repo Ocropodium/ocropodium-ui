@@ -141,6 +141,7 @@ def create(request):
         #doc.save()
     return HttpResponseRedirect("/documents/list")
 
+
 @project_required
 def show_small(request, pid):
     """Render a document's details."""
