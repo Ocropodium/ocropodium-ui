@@ -363,6 +363,7 @@ COMPRESS_JS = {
             "js/ocr_js/nodetree/state_manager.js",
             "js/ocr_js/nodegui/crop_gui.js",
             "js/ocr_js/nodegui/manualseg_gui.js",
+            "js/ocr_js/nodegui/blockout_gui.js",
             "js/ocr_js/nodetree/cable.js",
             "js/preset_manager.js",
             "js/crypto/bencode.js",
