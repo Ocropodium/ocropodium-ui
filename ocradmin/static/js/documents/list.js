@@ -23,12 +23,14 @@ $(function() {
 
     function getSelectedPids() {
         return $.map($(".document-selector.ui-selected"), function(elem, i) {
-            return "pid=" + $(elem).closest(".document-item").attr("id");
+            return $(elem).closest(".document-item").attr("id");
         });
     }
 
     function deleteSelected() {
-        var sel = getSelectedPids();
+        var sel = $.map(getSelectedPids(), function(p, i) {
+            return "pid=" + p;
+        });
         if (confirm("Delete " + sel.length + " documents?")) {
             $.ajax({
                 url: "/documents/delete_multiple/?" + sel.join("&"),
@@ -92,16 +94,22 @@ $(function() {
 
     $("#submit_batch_form").click(function(event) {
         var pids = getSelectedPids();
-        $.ajax({
-            url: "/documents/batch?" + pids.join("&"),
-            type: "POST",
-            data: {preset: $("#batch_preset").val()},
-            dataType: "json",
-            error: OcrJs.ajaxErrorHandler,
-            success: function(data) {
-                pollForResults(data.pk);
-            }
+        $.each(pids, function(i, pid) {
+            $("#create_batch_form").append(
+                $("<input name='pid' type='hidden' value='" + pid + "' />"));
         });
+        //$.ajax({
+        //    url: "/documents/batch?" + pids.join("&"),
+        //    type: "POST",
+        //    data: {preset: $("#batch_preset").val()},
+        //    dataType: "json",
+        //    error: OcrJs.ajaxErrorHandler,
+        //    success: function(data) {
+        //        pollForResults(data.pk);
+        //    }
+        //});
+        console.log($("#create_batch_form").html());
+        $("#create_batch_form").submit();
         event.preventDefault();
         event.stopPropagation();
     });
