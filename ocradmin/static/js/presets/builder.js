@@ -237,13 +237,70 @@ $(function() {
     $("#redo_command").click(function(event) {
         cmdstack.redo();
     });
-    $(document).bind("keydown.keycmd", function(event) {
-        if (event.ctrlKey && event.keyCode == 90) {
-            event.shiftKey ? cmdstack.redo() : cmdstack.undo();
+
+    // map of key commands to functions
+    var globalcmdmap = {
+        "ctrl+z": function() { 
+            cmdstack.undo();
+        },
+        "ctrl+shift+z": function() {
+            cmdstack.redo();
+        },
+        "ctrl+u": function() {
+            runScript();
+        },
+        "alt+ctrl+l": function() {
+            
+        }
+    };
+    $.each(globalcmdmap, function(key, handler) {
+        $(document).bind("keydown.keycmd", key, function(event) {
+            handler.apply();
             event.stopPropagation();
             event.preventDefault();
-        }
+        });
     });
+
+    var treemap = {
+        "alt+ctrl+l": function() {
+            nodetree.cmdLayoutNodes();
+        },
+        "home": function() {
+            nodetree.centreTree();
+        },
+        "ctrl+a": function() {
+            nodetree.selectAll();
+        },
+        "del": function() {
+            nodetree.cmdDeleteSelected();
+        },
+    };
+
+    var viewcmdmap = {
+        "home": function() {
+            sdviewer.goHome();
+        },
+    };
+
+    function bindScopedCmdMap(element, map, ns) {
+        $(document).unbind("." + ns);
+        $(element).bind("mouseenter", function(event) {
+            console.log("Binding ", element, ns);
+            $.each(map, function(key, handler) {
+                $(document).bind("keydown." + ns, key, function(event) {
+                    handler.apply();
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+            });
+        }).bind("mouseleave", function(event) {
+            console.log("Unbinding", element, ns);
+            $(document).unbind("." + ns);
+        });
+    }
+
+    bindScopedCmdMap($("#node_canvas"), treemap, "treecmd");
+    bindScopedCmdMap($("#imageviewer_1_container"), viewcmdmap, "viewercmd");
 
     $("#save_task_preset").click(function(event) {
         $("#task_update_script").val(
@@ -305,7 +362,7 @@ $(function() {
             var atpoint = SvgHelper.mouseCoord($("#node_canvas").get(0), event);
             var scale = SvgHelper.getScale(nodetree.group());
             nodetree.cmdCreateNode(filename, type, {
-                x: ((atpoint.x - SvgHelper.getTranslate(nodetree.group()).x) + (count * 150)) / scale,
+                x: ((atpoint.x - SvgHelper.getTranslate(nodetree.group()).x) + (count * 160)) / scale,
                 y: (atpoint.y - SvgHelper.getTranslate(nodetree.group()).y) / scale,
             });
             var node = nodetree.getNode(filename);
@@ -403,13 +460,13 @@ $(function() {
 
         if (result.type == "error") {
             console.log("NODE ERROR: ", result.node, result.error);
-            nodetree.setNodeErrored(data.result.node, data.result.error);
+            nodetree.setNodeErrored(result.node, result.error);
             return;
         }
 
         // otherwise cache the result and handle it
+        var node = nodetree.getNode(nodename);
         if (!cached) {
-            var node = nodetree.getNode(nodename);
             if (node) {
                 var hash = hex_md5(bencode(node.hashValue()));
                 resultcache[hash] = result;
@@ -417,12 +474,21 @@ $(function() {
         }
 
         if (result.type == "image" || result.type == "pseg") {
-            // this magic hides the buffer loading transition by putting the
-            // new data in the back buffer and switching them after a delay
-            // TODO: Find if we can subscript to an event to tell us exactly
-            // when it's safe to switch.  ATM just using a 200ms delay.
-            sdviewer.openDzi(result.dzi);
+            console.log("Setting data", result);
             sdviewer.clearHighlights();
+
+            // if we're viewing the current node && there's an active GUI on it, 
+            // and that GUI has a viewinput flag
+            var havecurrentgui = guimanager.hasCurrent()
+                    && guimanager.currentNode() == node
+                        && guimanager.currentGui().viewinput;
+
+            if (result.type == "pseg" || havecurrentgui) {
+                sdviewer.openDzi(result.input);
+                sdviewer.output = result.outout;
+            } else {
+                sdviewer.openDzi(result.output);
+            }
             guimanager.refreshGui();
             
             if (result.type == "pseg") {
@@ -642,9 +708,15 @@ $(function() {
         },
         nodeFocussed: function(node) {
             console.log("Node focussed!", node);
-            if (!node)
+            if (!node) {
+                //if (guimanager.hasCurrent()) {
+                //    var cnode = guimanager.currentNode();
+                //    var gui = guimanager.currentGui();
+                //    if (gui.viewinput && cnode.output)
+                //        sdviewer.openDzi(cnode.output);
+                //}
                 guimanager.tearDownGui();
-            else {
+            }else {
                 if (sdviewer.isOpen()) {
                     console.log("Setting GUI for", node.name);
                     guimanager.setupGui(node);
