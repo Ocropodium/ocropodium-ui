@@ -102,44 +102,47 @@ def create(request):
                 "batch/new.html",
                 _new_batch_context(request, taskname, form)
         )
-
-    # hack - sort the incoming list of pids
-    storage = request.project.get_storage()
-    pid = storage.sort_pidlist(storage.namespace, pids)
-
     batch = form.instance
     batch.script = preset.data
     batch.save()
 
-    ocrtasks = []
+    try:
+        dispatch_batch(batch, pids)
+    except StandardError:
+        transaction.rollback()
+        raise
+    transaction.commit()
+    return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
+
+
+def dispatch_batch(batch, pids):
+    """Dispatch a batch task."""
+    # hack - sort the incoming list of pids
+    storage = batch.project.get_storage()
+    pid = storage.sort_pidlist(storage.namespace, pids)
+
     options = dict(loglevel=60, retries=2)
+    ocrtasks = []
     for pid in pids:
         docscript = script_for_document(batch.script,
-                request.project, pid)
+                batch.project, pid)
         tid = OcrTask.get_new_task_id()
-        args = (request.project.pk, pid, docscript,)
+        args = (batch.project.pk, pid, docscript,)
         kwargs = dict()
         ocrtask = OcrTask(
             task_id=tid,
-            user=request.user,
+            user=batch.user,
             batch=batch,
-            project=request.project,
+            project=batch.project,
             page_name=pid, # FIXME: This is wrong
-            task_name=taskname,
+            task_name=batch.task_type,
             status="INIT",
             args=args,
             kwargs=kwargs,
         )
         ocrtask.save()
         ocrtasks.append(ocrtask)
-    try:
-        # ignoring the result for now
-        OcrTask.run_celery_task_multiple(taskname, ocrtasks, **options)
-    except StandardError:
-        transaction.rollback()
-        raise
-    transaction.commit()
-    return HttpResponseRedirect("/batch/show/%s/" % batch.pk)
+    OcrTask.run_celery_task_multiple(batch.task_type, ocrtasks, **options)
 
 
 def results(request, batch_pk):
