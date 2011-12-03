@@ -167,7 +167,7 @@ class BaseStorage(object):
         """Get next pid to this one"""
         plist = self.list_pids()
         idx = plist.index(pid)
-        if len(plist) == idx - 1:
+        if len(plist) == idx + 1:
             return None
         return plist[idx + 1]
 
