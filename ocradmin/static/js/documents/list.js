@@ -39,7 +39,7 @@ $(function() {
                 error: OcrJs.ajaxErrorHandler,
                 success: function(data) {
                     $(".document-list").load("/documents/list", function() {
-                        makeSelectable();
+                        addDynamicActions();
                     });
                 }
             });
@@ -47,7 +47,7 @@ $(function() {
     }
 
     //$(".document-item").draggable();
-    function makeSelectable() {
+    function addDynamicActions() {
         $(".document-list").selectable({
             filter: ".document-selector",
             cancel: ".document-thumb, .document-details",
@@ -57,6 +57,16 @@ $(function() {
         });    
         $(".button_link").button();
         $(".button_link.error, .button_link.initial").button({disabled: true});
+        $(".document-thumb-link").lightBox({
+            imageLoading: '/static/lightbox-ico-loading.gif',
+            imageBtnClose: '/static/lightbox-btn-close.gif',
+            imageBtnPrev: '/static/lightbox-btn-prev.gif',
+            imageBtnNext: '/static/lightbox-btn-next.gif',        
+            imageBlank: '/static/lightbox-blank.gif',
+            maxWidth: 800,
+            maxHeight: 600,
+            containerResizeSpeed: 150,
+        });
     }
 
     function updateButtons() {
@@ -137,19 +147,10 @@ $(function() {
         uploadResult: function(data, filename, filetype) {
             console.log($(data.target.response));
             $(".document-list").append($(data.target.response));
+            addDynamicActions();
         },
     });
-    makeSelectable();
+    addDynamicActions();
     bindKeys();
 
-    $(".document-thumb-link").lightBox({
-        imageLoading: '/static/lightbox-ico-loading.gif',
-	    imageBtnClose: '/static/lightbox-btn-close.gif',
-    	imageBtnPrev: '/static/lightbox-btn-prev.gif',
-    	imageBtnNext: '/static/lightbox-btn-next.gif',        
-        imageBlank: '/static/lightbox-blank.gif',
-        maxWidth: 800,
-        maxHeight: 600,
-        containerResizeSpeed: 150,
-    });
 });
