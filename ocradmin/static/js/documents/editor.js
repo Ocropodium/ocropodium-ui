@@ -387,10 +387,16 @@ $(function() {
     spellcheck = new OcrJs.Spellchecker($("#plugin"), cmdstack);
     spellcheck.addListeners({
         start: function() {
-            unbindNavKeys()
+            unbindNavKeys();
+            spellcheck.takeFocus();
         },
         stop: function() {
             bindNavKeys();
+            spellcheck.looseFocus();
+            $("#spellcheck").click();
+        },
+        edit: function() {
+            transcript.editLine();
         },
         onWordCorrection: function() {
         },

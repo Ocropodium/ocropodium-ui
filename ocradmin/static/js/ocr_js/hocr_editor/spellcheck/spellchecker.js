@@ -25,8 +25,11 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
     init: function(parent, cmdstack) {
         this._super(parent);
         this._listeners = {
+            start: [],
+            stop: [],
+            edit: [],
             onWordCorrection: [],
-            onWordHighlight: [],
+            onWordHighlight: [],            
         };
         this.parent = parent;
         this._wordindex = 0;
@@ -55,6 +58,13 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
         this._lineedit.bind("focus", function(event){
             // select field contents
             this.select();
+        });
+        this._lineedit.bind("keydown.deligate", "ctrl+shift+s", function() {
+            self.trigger("stop");
+        });
+        this._lineedit.bind("keydown.deligate", "f2", function(event) {
+            self.trigger("edit");
+
         });
 
         // handle certain key events in the replace word text edit
@@ -124,7 +134,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
 
         textcontainer
             .append(linecontainer.append(this._lineedit));
-        this._suggestions.init(textcontainer);
+        this._suggestions.startup(textcontainer);
 
         var buttons = {
             sp_next: "Next",
@@ -151,6 +161,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
 
     spellcheck: function(lines) {
         var self = this;
+        this.trigger("start");
         var text = $.map(lines, function(c) {
             return $(c).text();
         }).join("\n");
@@ -262,6 +273,7 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
 
 
     updateSuggestions: function() {
+        console.log("Updating suggestions", this._lineedit.val(), this._data[this._lineedit.val()]);
         if (this._data[this._lineedit.val()]) {
             var suggestions = this._data[this._lineedit.val()].suggestions;
             this._suggestions.loadSuggestions(suggestions);
@@ -297,9 +309,14 @@ OcrJs.Spellchecker = OcrJs.Base.extend({
 
     takeFocus: function(lines) {
         this._suggestions.enable();
+        this.teardownEvents();
         this.setupEvents();
-        this._lineedit.focus().select();
         this._container.find("*").attr("disabled", false);
+        this._lineedit.select().focus();
+        var self = this;
+        setTimeout(function() {
+            self._lineedit.select().focus();
+        }, 500);            
     },
 
     looseFocus: function(lines) {
