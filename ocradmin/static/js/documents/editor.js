@@ -467,6 +467,9 @@ $(function() {
                     transcript.refresh();
                     pageLoaded();
             });
+        } else {
+            transcript.setWaiting(false);
+            alert("Unexpected status: " + status);
         }
     }
 
