@@ -393,6 +393,7 @@ COMPRESS_JS = {
     },
     "document_edit": {
         "source_filenames": (
+            "js/jquery/jquery.address.js",
             "js/ocr_js/hocr_editor/editor.js",
             "js/ocr_js/hocr_editor/hocrdoc.js",
             "js/ocr_js/hocr_editor/spellcheck/suggestion_list.js",

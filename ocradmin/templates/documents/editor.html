@@ -34,10 +34,12 @@
                 <label for="format_column">Column</label>
             </span>
             <span>&nbsp;&nbsp;&nbsp;</span>
-            <div id="navigate">
-                <button class="nav_button" data-val="{{prev|default_if_none:''}}" id="prev_page">Previous</button>
-                <button class="nav_button" data-val="{{next|default_if_none:''}}" id="next_page">Next</button>
-            </div>
+            <span id="navigate">
+                <a class="nav_link" data-val="{{prev|default_if_none:''}}" 
+                    href="/documents/edit/{{prev|default_if_none:doc.pid}}/" id="prev_page">Previous Page</a>
+                <a class="nav_link" data-val="{{next|default_if_none:''}}"
+                    href="/documents/edit/{{next|default_if_none:doc.pid}}/" id="next_page">Next Page</a>
+            </span>
             <span>&nbsp;&nbsp;&nbsp;</span>
             <span id="status">
                 <input type="radio" id="status_uncorrected" value="uncorrected" name="status"
