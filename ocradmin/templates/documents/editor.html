@@ -46,6 +46,8 @@
         </span>
         <span>&nbsp;&nbsp;&nbsp;</span>
         <span id="status">
+            <input class="ui-helper-hidden" type="radio" id="status_running" value="running" name="status"
+                {% if doc.ocr_status == "running" %}checked="checked"{% endif %} />
             <input type="radio" id="status_uncorrected" value="uncorrected" name="status"
                 {% if doc.ocr_status == "uncorrected" %}checked="checked"{% endif %} />
             <label for="status_uncorrected">Uncorrected</label>
