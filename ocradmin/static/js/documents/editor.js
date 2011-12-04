@@ -367,9 +367,8 @@ $(function() {
             spellcheck.takeFocus();
         },
         stop: function() {
-            bindNavKeys();
             spellcheck.looseFocus();
-            $("#spellcheck").click();
+            bindNavKeys();
         },
         edit: function() {
             transcript.editLine();
