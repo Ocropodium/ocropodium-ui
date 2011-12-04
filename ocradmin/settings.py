@@ -320,6 +320,7 @@ COMPRESS_JS = {
     "ocrjs": {
         "source_filenames": (
             "js/ocr_js/base.js",
+            "js/layout_manager.js",
             "js/ocr_js/helpers.js",
             "js/ocr_js/constants.js",
             "js/ocr_js/task_watcher.js",
@@ -395,7 +396,7 @@ COMPRESS_JS = {
             "js/ocr_js/hocr_editor/spellcheck/suggestion_list.js",
             "js/ocr_js/hocr_editor/spellcheck/spellchecker.js",
         ),
-        "output_filename": "js/min/viewers.min.js",        
+        "output_filename": "js/min/document_edit.min.js",        
     },
 }
 
