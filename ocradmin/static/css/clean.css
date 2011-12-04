@@ -288,12 +288,19 @@ a.button:hover {
 }
 
 /* jquery UI override */
+.ui-tabs {
+    padding: 0em !important;
+}
 .ui-tabs-panel {
     padding: 0em !important;
 }
 
 .ui-tabs-nav {
-    
+    padding: 0em !important;
+}
+
+.ui-widget-content {
+    border: 0;
 }
 
 /* NB: this depends on the image viewer
