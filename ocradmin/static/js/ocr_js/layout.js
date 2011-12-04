@@ -116,6 +116,14 @@ $(function() {
         layoutmanager.trigger("layoutChanged");
     }
     
+    widgetcontentsplit.options.center.onresize_end = function() {
+        layoutmanager.trigger("layoutChanged");
+    }
+    sidecontentsplit.options.center.onresize_end = function() {
+        layoutmanager.trigger("layoutChanged");
+    }
+
+
     layoutmanager.trigger("initialised");
 });
 
