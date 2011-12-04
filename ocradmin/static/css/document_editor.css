@@ -13,6 +13,12 @@
     background-repeat: no-repeat;
 }
 
+.ocr_page * {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+}
+
 
 #page_slider {
     width: 50px;
