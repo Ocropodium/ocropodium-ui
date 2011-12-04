@@ -336,6 +336,8 @@ $(function() {
             sdviewer.setWaiting(false);
             $(sdviewer).data("binpath", data.results.out);
             sdviewer.openDzi(data.results.dst);
+            sdviewer.goHome();
+            sdviewer.resetSize();
             sdviewer.setWaiting(false);
         },
     });
