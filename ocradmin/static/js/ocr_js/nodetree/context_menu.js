@@ -60,14 +60,19 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
         var self = this;
         this._context = context;
         this._menu.find("#node_context").toggle(context instanceof NT.Node);
+        this._menu.find("ul.submenu").removeClass("opensubmenu").hide(); 
         this._menu.show();
-        var maxx = $(this.canvas).offset().left + $(this.canvas).width();
-        var left = event.pageX;
+        var maxx = $(this.canvas).offset().left + $(this.canvas).width(),
+            maxy = $(this.canvas).offset().top + $(this.canvas).height(),
+            left = event.pageX,
+            top = event.pageY;
         if (event.pageX + this._menu.outerWidth() > maxx)
             left = maxx - (this._menu.outerWidth() + 20);
+        if (event.pageY + this._menu.outerHeight() > maxy)
+            top = maxy - (this._menu.outerHeight() + 20);
         this._menu.css({
             position: "fixed",
-            top: event.pageY,
+            top: top,
             left: left,
         });
         // NB: The setTimeout here is a hacky workaround for an
@@ -85,21 +90,25 @@ OcrJs.Nodetree.ContextMenu = OcrJs.Base.extend({
     },
 
     showSubContextMenu: function(menu, event) {
-        var pos = $(menu).position();
-        var left = pos.left + $(menu).outerWidth() - 5;
-        var sub = $(menu).find("ul");
+        var pos = $(menu).position(),
+            left = pos.left + $(menu).outerWidth() - 5,
+            top = pos.top - 5;
+        var sub = $(menu).find("ul").addClass("opensubsubmenu");
         sub.show();
-        sub.css({left: left, top: $(menu).position().top})
-        var span = $(menu).offset().left + $(menu).outerWidth() + sub.outerWidth();
-        var outer = $(this.canvas).offset().left + $(this.canvas).width();
-        if (span > outer) {
+        sub.css({left: left, top: top});
+        var spanx = $(menu).offset().left + $(menu).outerWidth() + sub.outerWidth(),
+            spany = $(menu).offset().top + sub.outerHeight(),
+            outerx = $(this.canvas).offset().left + $(this.canvas).width(),
+            outery = $(window).height();
+        if (spanx > outerx)
             sub.css("left", pos.left - sub.outerWidth());
-        }
+        if (spany > outery)
+            sub.css("top", top - ((spany - outery) + 20));
     },
 
     hideContextMenu: function(event) {
         this._menu.hide();
-        this._menu.find("ul.submenu").hide(); 
+        this._menu.find("ul.submenu").removeClass("opensubmenu").hide(); 
         this._context = null;
     },
 
