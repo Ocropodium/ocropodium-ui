@@ -5,7 +5,6 @@
 var OcrJs = OcrJs || {};
 OcrJs.NodeGui = OcrJs.NodeGui || {}
 
-console.log("INITIALISING BLOCKOUT");
 OcrJs.NodeGui.BlockOutGui = DziViewer.Plugin.RectManager.extend({
     init: function(viewport, node) {
         this._super(viewport);
