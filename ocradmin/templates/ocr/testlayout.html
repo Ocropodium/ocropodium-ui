@@ -1,0 +1,41 @@
+{% extends "paned.html" %}
+
+{% block title %} OCRopodium - Convert {% endblock %}
+
+{% block headerscript %}
+    <style type="text/css">@import "/static/css/jquery.svg.css";</style> 
+	<script type='application/javascript' src='/static/js/jquery/jquery.layout-latest.js'></script>
+	<script type='application/javascript' src='/static/js/ocr/testlayout.js'></script>
+	<script type='application/javascript' src='/static/js/appmenu.js'></script>
+    <link rel="stylesheet" href="/static/css/layout-default.css" type="text/css" media="screen" />
+{% endblock %}
+
+{% block widgettoolbar %}
+    <button>Tool 1</button>
+    <button>Tool 2</button>
+    <button>Tool 2</button>
+{% endblock %}
+
+{% block widgetbody %}
+    <h1>Welcome to the test page</h1>
+{% endblock %}
+
+{% block widgethelper %}
+{% endblock %}
+
+{% block sidebarcontent %}
+    <div id="script_toolbar" class="ui-layout-north">
+        <button>Button 1 </button>
+        <button>Button 2 </button>
+        <button>Button 3 </button>
+    </div>
+    <div id="node_canvas" class="ui-layout-center">
+        <h1>Canvas</h1>
+    </div>
+    <div id="parameters" class="ui-layout-south">
+        <h2>Parameters</h2>            
+    </div>
+
+
+{% endblock %}
+
