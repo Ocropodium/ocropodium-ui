@@ -279,30 +279,6 @@ $(function() {
         return $("input[name='status']:checked").val();
     }
 
-    function updateTask(event) {
-        var status = getStatus();
-        if (status == "running") {
-            transcript.setWaiting(true);
-            if (polltimer != null)
-                clearTimeout(polltimer);
-            polltimer = setTimeout(function() {
-                $.getJSON("/documents/status/" + getPid() + "/", function(data) {
-                    $("#id_status").val(data.status);
-                    updateTask();
-                });
-            }, 500);
-        } else if (status != "error" && status != "initial") {
-            clearTimeout(polltimer);
-            polltimer = null;
-            $("#transcript").load("/documents/transcript/" + getPid() + "/",
-                    null, function(text) {
-                        transcript.setWaiting(false);
-                        transcript.refresh();
-                        pageLoaded();
-            });
-        }
-    }
-
     function updateButtons() {
         $("#heading").button({disabled: true});
         $("#next_page").button({disabled: !$("#next_page").data("val")});
@@ -469,8 +445,34 @@ $(function() {
         saveTranscript();
     });
 
+    function updateTask(event) {
+        var status = getStatus();
+        if (status == "running") {
+            transcript.setWaiting(true);
+            if (polltimer != null)
+                clearTimeout(polltimer);
+            polltimer = setTimeout(function() {
+                $.getJSON("/documents/status/" + getPid() + "/", function(data) {
+                    $("#id_status").val(data.status);
+                    updateTask();
+                });
+            }, 500);
+        } else if (status != "error" && status != "initial") {
+            clearTimeout(polltimer);
+            polltimer = null;
+            console.log("Loading ", getPid());
+            $("#transcript").load("/documents/transcript/" + getPid() + "/",
+                null, function(text) {
+                    transcript.setWaiting(false);
+                    transcript.refresh();
+                    pageLoaded();
+            });
+        }
+    }
+
     $.address.change(function(event) {
         if (event.value != "/") {
+            console.log("CHANGED!");
             $.ajax({
                 url: "/documents/edit" + event.value + "/",
                 error: OcrJs.ajaxErrorHandler,
@@ -485,6 +487,7 @@ $(function() {
                         .prop("checked", true).button("refresh");
                     $("#edit_task").attr("href", "/presets/builder/" + data.doc.pid + "/");
                     updateButtons();
+                    
                     updateTask();
                 }
             });
