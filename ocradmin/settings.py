@@ -306,16 +306,12 @@ COMPRESS_JS = {
         ),
         "output_filename": "js/min/jquery-lib.min.js",
     },
-    "utils" : {
-        "source_filenames": (
-            "js/utils/json2.js",
-        ),
-        "output_filename": "js/min/utils.min.js",
-    },
     "global": {
         "source_filenames": (
             "js/appmenu.js",
             "js/ocr_js/global.js",
+            "js/utils/json2.js",
+            "js/ocr_js/layout.js",
             "js/ocr_js/ajax_uploader.js",
             "js/status_bar.js",
         ),

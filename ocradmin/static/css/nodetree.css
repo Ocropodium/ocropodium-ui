@@ -3,6 +3,10 @@
     overflow: hidden;
 }
 
+#script_toolbar {
+    overflow: visible;
+}
+
 #options .buttons_left {
 
 }

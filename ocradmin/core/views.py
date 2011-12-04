@@ -138,6 +138,15 @@ def test(request):
     return render_to_response("ocr/test.html", {})
 
 
+def testlayout(request):
+    """
+    Dummy action for running JS unit tests.  Probably needs to
+    be put somewhere else.
+    """
+
+    return render_to_response("ocr/testlayout.html", {})
+
+
 def testparams(request):
     """
     Dummy action for running JS unit tests.  Probably needs to

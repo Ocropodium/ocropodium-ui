@@ -2,13 +2,12 @@
  * http://www.seoconsultants.com/css/menus/horizontal/css/menuh.css
  */
 
-.appmenu {
+.dropdownmenu {
     /* top margin is to prevent glitchy hovers to the child
      * elements when the browser is temporarily unaware of 
      * the position of the mouse (i.e. when closing select
      * menus. */
     color: #060606;
-    width: 100%;
     float: left;
     vertical-align: middle;
     background-color: #F0F0F0;
@@ -25,17 +24,18 @@
     background: linear-gradient(top, #fafafa 0%,#fafafa 25%,#f0f0f0 75%);    
 }
 
-.appmenu ul {
+
+.dropdownmenu ul {
     cursor: pointer;
 }
 
-.appmenu a {
+.dropdownmenu a {
     display: block;
     white-space: nowrap;
     margin: 0;
 }
 
-.appmenu h3 {
+.dropdownmenu h3 {
     display: block;
     white-space: nowrap;
     margin: 2px;;
@@ -43,23 +43,23 @@
     font-weight: normal;
 }
 
-.appmenu ul ul a, .disabled_option {
+.dropdownmenu ul ul a, .disabled_option {
     padding: 5px 40px 5px 5px;
     font-size: 1.1em;
 }
 
-.appmenu h3.top {
+.dropdownmenu h3.top {
     background-image: url("/static/hz_scroll_down.gif");
     background-repeat: no-repeat;
     background-position: center right;
 }
 
-.appmenu ul {
+.dropdownmenu ul {
     border-left: 1px solid transparent;
     border-right: 1px solid transparent;
 }
 
-.appmenu ul.ui-selected {
+.dropdownmenu ul.ui-selected {
     color: #FFF;
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
@@ -69,35 +69,35 @@
     border-left: 1px solid #4B6E99;
 }
 
-.appmenu h3.right {
+.dropdownmenu h3.right {
     background-image: url("/static/vt_scroll_right.gif");
     background-repeat: no-repeat;
     background-position: center right;
 }
 
-.appmenu a {
+.dropdownmenu a {
     text-decoration: none;
 }
 
-.appmenu ul a, .appmenu a:visited {
+.dropdownmenu ul a, .dropdownmenu a:visited {
     color: #060606;
 }
 
-.appmenu a:active {
+.dropdownmenu a:active {
 }
 
-.appmenu ul {
+.dropdownmenu ul {
     list-style: none;
     margin: 0;
     padding: 0;
     float: left;
 }
 
-.appmenu li {
+.dropdownmenu li {
     position: relative;
 }
 
-.appmenu ul ul {
+.dropdownmenu ul ul {
     position: absolute;
     z-index: 500;
     top: auto;
@@ -108,20 +108,20 @@
     -moz-box-shadow: 2px 3px 3px #919598;
 }
 
-.appmenu ul ul ul {
+.dropdownmenu ul ul ul {
     top: 0;
     left: 100%;
 }
 
-.appmenu ul ul li {
+.dropdownmenu ul ul li {
     border: 1px solid transparent;
 }
 
-.appmenu ul ul li.ui-selected {
+.dropdownmenu ul ul li.ui-selected {
     border: 1px solid #4B6E99;
 }
 
-.appmenu ul ul li.ui-selected a {
+.dropdownmenu ul ul li.ui-selected a {
     color: #FFF;
 }
 

@@ -1,42 +1,39 @@
-{% extends "standard.html" %}
+{% extends "paned.html" %}
 {% load tagging_tags %}
 
 
 {% block title %} {{page_name}} {% endblock %}
-{% block headerscript %}
+{% block headercss %}
     <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
 {% endblock %}
 
+{% block widgetheader %}
+    {{page_name}}
+{% endblock %}
 
-{% block content %}
-<div class="ui-widget" id="mainwidget">
-    <div class="ui-widget-header ui-layout-header ui-layout-north">{{page_name}}</div>
-    <div class="ui-widget-content ui-helper-clearfix ui-layout-center">
+{% block widgetcontent %}
+    <div class="ui-layout-center">
         {% include "includes/messages.html" %}
         {% block bodycontent %}
         {% endblock %}
     </div>
-</div>
 {% endblock %}
 
 
-{% block sidebar %}
-<div class="ui-widget ui-medium-flat" id="sidebarwidget">
-    <div class="ui-widget-header ui-layout-header ui-layout-north">Item Tags</div>
-    <div class="ui-helper-clearfix ui-layout-center">
-        {% block sidebarcontent %}
-        <div id="tag_list">
-            <ul class="taglist">
-            {% for tagitem in tags %}
-            <li class="tagitem"><a class="taglink {% if tag == tagitem.name %}current{% endif %}"
-                href="{{model.get_list_url}}?{% if tag != tagitem.name %}tag={{ tagitem.name }}{% endif %}{% if order %}&order={{order}}{% endif %}{% if page %}&page={{page}}{% endif %}">
-                {{tagitem.name}}{% if tagitem.count %} ({{tagitem.count}}){% endif %}</a></li>
-            {% empty %}
-                No tags found
-            {% endfor %}
-            </ul>
-        </div>
-        {% endblock %}
-    </div>
-</div>    
+{% block sidebarheader %}
+    Item Tags
+{% endblock %}
+
+{% block sidebarcontent %}
+<div id="tag_list" class="ui-layout-center">
+    <ul class="taglist">
+    {% for tagitem in tags %}
+    <li class="tagitem"><a class="taglink {% if tag == tagitem.name %}current{% endif %}"
+        href="{{model.get_list_url}}?{% if tag != tagitem.name %}tag={{ tagitem.name }}{% endif %}{% if order %}&order={{order}}{% endif %}{% if page %}&page={{page}}{% endif %}">
+        {{tagitem.name}}{% if tagitem.count %} ({{tagitem.count}}){% endif %}</a></li>
+    {% empty %}
+        No tags found
+    {% endfor %}
+    </ul>
+</div>
 {% endblock %}
