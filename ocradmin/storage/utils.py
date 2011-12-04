@@ -14,7 +14,8 @@ class DocumentEncoder(json.JSONEncoder):
         if issubclass(doc.__class__, base.BaseDocument):
             return dict(
                 label=doc.label,
-                pid=doc.pid
+                pid=doc.pid,
+                ocr_status=doc.ocr_status
             )
         return super(DocumentEncoder, self).default(doc)
 
