@@ -380,7 +380,7 @@ $(function() {
     transcript = new OcrJs.HocrEditor.Editor($("#transcript").get(0), cmdstack);
 
     function showPluginPane(onoff) {
-        hsplitL[onoff ? "show" : "hide"]("south");
+        widgetcontentsplit[onoff ? "show" : "hide"]("south");
     }
 
     // initialize spellcheck
@@ -507,58 +507,24 @@ $(function() {
         dashboard: false,
     });
     
-    hsplitL = $("#maincontent").layout({
-        applyDefaultStyles: true,
-        north: {
-            resizable: false,
-            closable: false,
-            slidable: false,
-            spacing_open: 0,
-        },
-        south: {
-            resizable: false,
-            closable: false,
-            slidable: false,
-            spacing_open: 0,
-            initClosed: true,
-        },
-    });
-
-    hsplitR = $("#sidebar").layout({
-        applyDefaultStyles: true,
-        north: {
-            resizable: false,
-            closable: false,
-            slidable: false,
-            spacing_open: 0,
-        },
-    });
-
-    hsplitL.options.center.onresize_end = function() {
-        setTimeout(function() {
-            sdviewer.resetSize();
-            transcript.resetSize();
-            $("input[name=format]:checked").click();
-        });
-    };
-    hsplitR.options.center.onresize_end = function() {
-        setTimeout(function() {
-            sdviewer.resetSize();
-            transcript.resetSize();
-            $("input[name=format]:checked").click();
-        });
-    };
-
     $(window).unload(function() {
         saveState();
     });
 
-    updateTask();
+    layoutmanager.addListeners({
+        layoutChanged: function() {
+            sdviewer.resetSize();
+            $("input[name=format]:checked").click();
+        },
+        initialised: function() {
+            sdviewer.resetSize();
+            $("input[name=format]:checked").click();
+            updateTask();
+        }
+    });
+
     updateButtons();
     window.addEventListener("hashchange", updateTask);
-
-    $(window).resize();
-    sdviewer.resetSize();
 
     // set up key commands
     bindNavKeys();

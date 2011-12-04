@@ -10,19 +10,17 @@ OcrJs.Hocr = new function() {
     var indexre = /(\d+)$/;
 
     this.parseBbox =  function(elem) {
-        if (elem.attr("title").match(bboxre)) {
+        if (elem.attr("title") && elem.attr("title").match(bboxre)) {
             return new DziViewer.Rect(parseInt(RegExp.$1), parseInt(RegExp.$2),
                 parseInt(RegExp.$3), parseInt(RegExp.$4));
         }
-        console.error("No BBox match:", elem);
         return new DziViewer.Rect(0,0,0,0);
     };
 
     this.parseIndex = function(elem) {
-        if (elem.attr("id").match(indexre)) {
+        if (elem.attr("id") && elem.attr("id").match(indexre)) {
             return parseInt(RegExp.$1);
         }
-        console.error("No Index match:", elem);
         return -1;
     };
 };
