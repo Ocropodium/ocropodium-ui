@@ -7,7 +7,7 @@ $(function() {
         $(menu).removeClass("ui-selected")
             .unbind("click.menuclose")
             .find("ul").hide();
-        $("div.appmenu ul.top").unbind("mouseenter.menuover");
+        $(".dropdownmenu > ul.top").unbind("mouseenter.menuover");
         $(window).unbind("click.menuclose");
         $(window).unbind("keydown.menuclose");
         $(menu).bind("click.menuopen", function(event) {
@@ -16,7 +16,7 @@ $(function() {
     }
 
     function activateMenu(menu) {
-        $("div.appmenu ul.top").not($(menu)).each(function(i, elem) {
+        $(".dropdownmenu > ul.top").not($(menu)).each(function(i, elem) {
             deactivateMenu(elem);
         }).bind("mouseenter.menuover", function(event) {
             activateMenu(this);
@@ -36,7 +36,7 @@ $(function() {
             .bind("keydown.menuclose", function(event) {
                 if (event.keyCode == KC_ESCAPE) {
                     deactivateMenu(menu);
-                    $("div.appmenu ul.top").unbind("click.menuclose");
+                    $(".dropdownmenu > ul.top").unbind("click.menuclose");
                     $(window).unbind("keydown.menuclose");
                 } else if (event.keyCode == KC_LEFT) {
                     if (menu.previousElementSibling) {
@@ -61,12 +61,12 @@ $(function() {
     }
 
     // active main menu click dropdown
-    $("div.appmenu ul.top").bind("click.menuopen", function(e1) {
+    $(".dropdownmenu > ul.top").bind("click.menuopen", function(e1) {
         activateMenu(this);
     });
     
     // active main menu click dropdown
-    $("div.appmenu ul.top ul li").bind("click.launch", function(e1) {
+    $(".dropdownmenu > ul.top ul li").bind("click.launch", function(e1) {
         deactivateMenu(this);
     });
 });

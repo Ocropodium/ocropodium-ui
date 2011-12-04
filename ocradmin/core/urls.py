@@ -11,4 +11,5 @@ urlpatterns = patterns('',
     (r'^update_task/(?P<pid>[^/]+)/?$', login_required(views.update_ocr_task)),
 	(r'^test/?$', views.test),
 	(r'^testparams/?$', views.testparams),
+	(r'^testlayout/?$', views.testlayout),
 )

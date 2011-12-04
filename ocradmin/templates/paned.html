@@ -1,0 +1,80 @@
+{% extends "standard.html" %}
+
+
+{% block body %}
+    <div id="page" class="ui-layout-center">
+        <div id="widget" class="ui-layout-center">
+            {% block widget %}
+            <div id="widgetheader" class="pane-header ui-widget-header ui-layout-north">
+                {% block widgetheader %}
+                    Toolbar
+                {% endblock widgetheader %}
+            </div>
+            <div id="widgetcontent" class="ui-widget-content ui-layout-center">
+                {% block widgetcontent %}
+                <div id="toolbar" class="ui-layout-north">
+                    {% block widgettoolbar %}
+                    <h1>Widget toolbar - override widgetcontent to clear</h1>
+                    {% endblock widgettoolbar %}
+                </div>
+                <div id="widgetbody" class="ui-layout-center">                
+                    {% block widgetbody %}
+                    <h1>Widget content - override widgetcontent to clear</h1>
+                    {% endblock widgetbody %}
+                </div>
+                <div id="widgethelper" class="ui-layout-south">
+                    {% block widgethelper %}
+                    <h2>I'm a helper - override widgethelper to clear</h2>
+                    {% endblock widgethelper %}
+                </div>
+                {% endblock widgetcontent %}
+            </div>
+            {% endblock widget %}
+        </div>
+
+
+        <div id="sidebar" class="ui-widget ui-layout-east">
+            {% block sidebar %}
+            <div id="sidebarheader" class="pane-header ui-widget-header ui-layout-north">
+                {% block sidebarheader %}
+                I'm the sidebar
+                {% endblock sidebarheader %}
+            </div>
+            <div id="sidebarcontent" class="ui-layout-center">
+                {% block sidebarcontent %}
+                <div id="script_toolbar" class="ui-layout-north">
+                    <button>Button 1 </button>
+                    <button>Button 2 </button>
+                    <button>Button 3 </button>
+                </div>
+                <div id="node_canvas" class="ui-layout-center">
+                    <h1>Canvas</h1>
+                </div>
+                <div id="parameters" class="ui-layout-south">
+                    <h2>Parameters</h2>            
+                </div>
+                {% endblock sidebarcontent %}
+            </div>
+            {% endblock sidebar %}
+        </div>
+
+        <div id="status_bar" class="ui-layout-south ui-helper-clearfix">
+            <div id="status_message1" class="status_bar_left">
+                Welcome to OWP
+            </div>
+            <div id="status_message2" class="status_bar_right">
+                <span id="status_bar_progress">
+                    <span title="Abort" id="progress_bar_cancel" class=""></span>
+                    <span id="progress_bar_progress"></span>
+                </span>
+            </div>
+        </div>
+
+        <div id="appmenu" class="dropdownmenu ui-layout-north ui-helper-clearfix">
+            {% include "includes/appmenu.html" %}
+        </div>
+    </div>
+{% endblock body %}
+
+
+

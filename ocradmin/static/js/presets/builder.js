@@ -285,7 +285,6 @@ $(function() {
     function bindScopedCmdMap(element, map, ns) {
         $(document).unbind("." + ns);
         $(element).bind("mouseenter", function(event) {
-            console.log("Binding ", element, ns);
             $.each(map, function(key, handler) {
                 $(document).bind("keydown." + ns, key, function(event) {
                     handler.apply();
@@ -294,13 +293,12 @@ $(function() {
                 });
             });
         }).bind("mouseleave", function(event) {
-            console.log("Unbinding", element, ns);
             $(document).unbind("." + ns);
         });
     }
 
     bindScopedCmdMap($("#node_canvas"), treemap, "treecmd");
-    bindScopedCmdMap($("#imageviewer_1_container"), viewcmdmap, "viewercmd");
+    bindScopedCmdMap($("#imageviewer"), viewcmdmap, "viewercmd");
 
     $("#save_task_preset").click(function(event) {
         $("#task_update_script").val(
@@ -382,7 +380,7 @@ $(function() {
         }
     }
 
-    $("#viewertabs").tabs({
+    $("#widget").tabs({
         select: function(event, ui) {
             sdviewer.refresh();
         },
@@ -495,14 +493,14 @@ $(function() {
                 highlightComponents(result);
             }
            // sdviewer.setBufferOverlays(overlays, 0);
-            $("#viewertabs").tabs("select", 0);
+            $("#widget").tabs("select", 0);
         } else if (result.type == "hocr") {
             hocrviewer.setData(result.data);
-            $("#viewertabs").tabs("select", 1);
+            $("#widget").tabs("select", 1);
             $("input[name='format']:checked").click();
         } else if (result.type == "text") {
             textviewer.setData(result.data);
-            $("#viewertabs").tabs("select", 2);
+            $("#widget").tabs("select", 2);
         } else {
             throw "Unknown result type: " + result.type;
         }
@@ -756,46 +754,10 @@ $(function() {
         },
     });
 
-    var hsplit = $("#sidebar").layout({
-        applyDefaultStyles: true,
-        north: {
-            resizable: false,
-            closable: false,
-            slidable: false,
-            spacing_open: 0,
-        },
-        south: {
-            size: 200,
-            onresize_end: function() {
-                setTimeout(function() {
-                    nodetree.resetSize();
-                });
-            },
-            onclose_end: function() {
-                setTimeout(function() {
-                    nodetree.resetSize();
-                });
-            },
-        },
-    });
 
-    vsplit.options.east.onresize_end = function() {
-        setTimeout(function() {
-            nodetree.resetSize();
-            sdviewer.resetSize();
-        });
-    };
-    vsplit.options.center.onresize_end = function() {
-        // FIXME: grotesque hack to resize the image viewer
-        // to fit the full page height.  The viewers overflow
-        // is also hidden in CSS.
-        var iv = $("#imageviewer_1");
-            mc = $("#maincontent");
-        iv.height((mc.height() + mc.offset().top) - (iv.offset().top));
+    setTimeout(function() {
         sdviewer.resetSize();
-    };
-
-    $(window).resize();
+    });
 
     // Initialise nodetree!
     $.ajax({

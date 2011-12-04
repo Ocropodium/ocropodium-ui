@@ -141,42 +141,41 @@ $(function() {
         }
     }
 
-    hsplitL = $("#maincontent").layout({
-        applyDefaultStyles: true,
-        north: {
-            resizable: false,
-            closable: false,
-            slidable: false,
-            spacing_open: 0,
-        },
-    });
+    //hsplitL = $("#maincontent").layout({
+    //    applyDefaultStyles: true,
+    //    north: {
+    //        resizable: false,
+    //        closable: false,
+    //        slidable: false,
+    //        spacing_open: 0,
+    //    },
+    //});
 
-    hsplitR = $("#sidebar").layout({
-        applyDefaultStyles: true,
-        north: {
-            resizable: false,
-            closable: false,
-            slidable: false,
-            spacing_open: 0,
-        },
-    });
+    //hsplitR = $("#sidebar").layout({
+    //    applyDefaultStyles: true,
+    //    north: {
+    //        resizable: false,
+    //        closable: false,
+    //        slidable: false,
+    //        spacing_open: 0,
+    //    },
+    //});
 
-    hsplitL.options.center.onresize_end = function() {
-        setTimeout(function() {
-            batch.resetSize();
-        });
-    };
-    hsplitR.options.center.onresize_end = function() {
-        setTimeout(function() {
-        });
-    };
+    //hsplitL.options.center.onresize_end = function() {
+    //    setTimeout(function() {
+    //        batch.resetSize();
+    //    });
+    //};
+    //hsplitR.options.center.onresize_end = function() {
+    //    setTimeout(function() {
+    //    });
+    //};
 
-    vsplit.options.east.onresize_end = function() {
-        setTimeout(function() {
-        });
-    };
+    //vsplit.options.east.onresize_end = function() {
+    //    setTimeout(function() {
+    //    });
+    //};
 
-    $(window).resize();
 
 });
 

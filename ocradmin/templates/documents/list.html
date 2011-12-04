@@ -1,19 +1,19 @@
-{% extends "generic.html" %}
+{% extends "paned.html" %}
 
 {% block headerscript %}
-	<script type='application/javascript' src='/static/js/documents/list.js'></script>
+<!--<script type='application/javascript' src='/static/js/documents/list.js'></script>-->
     <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
 {% endblock %}
 
-{% block bodycontent %}
-
+{% block widgetcontent %}
     <div id="workspace" class="ui-layout-center">
         {% include "documents/includes/document_list.html" %}
     </div>
+{% endblock %}
 
-{% endblock %}        
 
 {% block sidebarcontent %}
+    <div class="ui-layout-center">
     <h2>Upload a new image</h2>    
     <form id="create_object_form" action="/documents/create/" enctype="multipart/form-data" method="POST">
         {% csrf_token %}
@@ -37,6 +37,6 @@
             <input type="submit" value="Submit" id="submit_batch_form" disabled="disabled" />
         </div>        
     </form>
-
+    </div>
 
 {% endblock %}
