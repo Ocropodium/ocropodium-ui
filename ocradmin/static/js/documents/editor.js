@@ -386,6 +386,12 @@ $(function() {
     // initialize spellcheck
     spellcheck = new OcrJs.Spellchecker($("#plugin"), cmdstack);
     spellcheck.addListeners({
+        start: function() {
+            unbindNavKeys()
+        },
+        stop: function() {
+            bindNavKeys();
+        },
         onWordCorrection: function() {
         },
         onWordHighlight: function(element) {
@@ -457,22 +463,32 @@ $(function() {
         saveTranscript();
     });
 
-    $(".nav_button").click(function(event) {
-        var val = $(this).data("val");
-        $.ajax({
-            url: "/documents/edit/" + val + "/",
-            error: OcrJs.ajaxErrorHandler,
-            success: function(data) {
-                $("#page_name").data("val", data.doc.pid).text(data.doc.label);
-                $("#next_page").data("val", data.next);
-                $("#prev_page").data("val", data.prev);
-                $("input[value='" + data.doc.ocr_status + "']")
-                    .prop("checked", true).button("refresh");
-                $("#edit_task").attr("href", "/presets/builder/" + data.doc.pid + "/");
-                updateButtons();
-                updateTask();
-            }
-        });
+    $.address.change(function(event) {
+        if (event.value != "/") {
+            $.ajax({
+                url: "/documents/edit" + event.value + "/",
+                error: OcrJs.ajaxErrorHandler,
+                success: function(data) {
+                    console.log(data);
+                    $("#page_name").data("val", data.doc.pid).text(data.doc.label);
+                    $("#next_page").data("val", (data.next || data.doc.pid))
+                        .attr("href", "/documents/edit/" + (data.next || data.doc.pid) + "/");
+                    $("#prev_page").data("val", (data.prev || data.doc.pid))
+                        .attr("href", "/documents/edit/" + (data.prev || data.doc.pid) + "/");
+                    $("input[value='" + data.doc.ocr_status + "']")
+                        .prop("checked", true).button("refresh");
+                    $("#edit_task").attr("href", "/presets/builder/" + data.doc.pid + "/");
+                    updateButtons();
+                    updateTask();
+                }
+            });
+        }
+    });
+
+    $(".nav_link").click(function(event) {
+        $.address.value($(this).data("val"));
+        event.preventDefault();
+        event.stopPropagation();
     });
     
     // line formatter object
