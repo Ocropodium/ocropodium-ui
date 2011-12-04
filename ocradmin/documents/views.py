@@ -45,8 +45,9 @@ def doclist(request):
         presets = profiles[0].presets.order_by("name").all()
 
     context = dict(
+            project=project,
+            storage=storage,
             objects=storage.list(),
-            page_name="%s (%s)" % (project.name, storage.name),
             presets=presets,
             newform=newform
     )

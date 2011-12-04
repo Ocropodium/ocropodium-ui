@@ -5,12 +5,19 @@
     <link rel="stylesheet" href="/static/css/generic.css" type="text/css" media="screen" />
 {% endblock %}
 
+{% block widgetheader %}
+    {{project.name}} - {{storage.name}}
+{% endblock %}
+
 {% block widgetcontent %}
     <div id="workspace" class="ui-layout-center">
         {% include "documents/includes/document_list.html" %}
     </div>
 {% endblock %}
 
+{% block sidebarheader %}
+    Manage Documents
+{% endblock %}
 
 {% block sidebarcontent %}
     <div class="ui-layout-center">
