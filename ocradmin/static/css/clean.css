@@ -299,7 +299,7 @@ a.button:hover {
     padding: 0em !important;
 }
 
-.ui-widget-content {
+#widget.ui-widget-content {
     border: 0;
 }
 
