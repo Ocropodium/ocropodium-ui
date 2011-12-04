@@ -272,11 +272,11 @@ $(function() {
     }
 
     function getPid() {
-        return $("#id_pid").val();
+        return $("#page_name").data("val");
     }
 
     function getStatus() {
-        return $("#id_status").val();
+        return $("input[name='status']:checked").val();
     }
 
     function updateTask(event) {
@@ -303,10 +303,10 @@ $(function() {
         }
     }
 
-    function updateNavButtons() {
+    function updateButtons() {
         $("#heading").button({disabled: true});
-        $("#next_page").button({disabled: !$("#id_next_pid").val()});
-        $("#prev_page").button({disabled: !$("#id_prev_pid").val()});
+        $("#next_page").button({disabled: !$("#next_page").data("val")});
+        $("#prev_page").button({disabled: !$("#prev_page").data("val")});
     }
 
     function positionViewer(position) {
@@ -322,6 +322,7 @@ $(function() {
         // get should-be-hidden implementation details
         // i.e. the task id that process the page.  We
         // want to rebinarize with the same params
+        $("input[name=format]:checked").click();
         var task_pid = getPid();
         $("#edit_task").attr("href",
                 "/presets/builder/" + task_pid + "?ref="
@@ -456,32 +457,19 @@ $(function() {
         saveTranscript();
     });
 
-    $("#prev_page").click(function(event) {
+    $(".nav_button").click(function(event) {
+        var val = $(this).data("val");
         $.ajax({
-            url: "/documents/edit/" + $("#id_prev_pid").val() + "/",
+            url: "/documents/edit/" + val + "/",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
-                console.log("Data", data);
-                $("#id_pid").val(data.doc.pid);
-                $("#id_next_pid").val(data.next);
-                $("#id_prev_pid").val(data.prev);
-                updateNavButtons();
-                updateTask();
-            }
-        });
-    });
-        
-
-    $("#next_page").click(function(event) {
-        $.ajax({
-            url: "/documents/edit/" + $("#id_next_pid").val() + "/",
-            error: OcrJs.ajaxErrorHandler,
-            success: function(data) {
-                console.log("Data", data);
-                $("#id_pid").val(data.doc.pid);
-                $("#id_next_pid").val(data.next);
-                $("#id_prev_pid").val(data.prev);
-                updateNavButtons();
+                $("#page_name").data("val", data.doc.pid).text(data.doc.label);
+                $("#next_page").data("val", data.next);
+                $("#prev_page").data("val", data.prev);
+                $("input[value='" + data.doc.ocr_status + "']")
+                    .prop("checked", true).button("refresh");
+                $("#edit_task").attr("href", "/presets/builder/" + data.doc.pid + "/");
+                updateButtons();
                 updateTask();
             }
         });
@@ -544,7 +532,7 @@ $(function() {
     });
 
     updateTask();
-    updateNavButtons();
+    updateButtons();
     window.addEventListener("hashchange", updateTask);
 
     $(window).resize();

@@ -17,7 +17,7 @@
 {% block content %}
 
     <div class="ui-layout-north toolbar_container">
-        <div class="ui-widget-header ui-layout-header">Transcript</div>
+        <div class="ui-widget-header ui-layout-header"><span data-val="{{doc.pid}}" id="page_name">{{doc.label}}</span></div>
         <div id="transcript_toolbar" class="viewer_toolbar ui-medium-flat ui-helper-clearfix">
             <button id="save_data">Save Text</button>
             <span>&nbsp;&nbsp;&nbsp;</span>
@@ -35,8 +35,8 @@
             </span>
             <span>&nbsp;&nbsp;&nbsp;</span>
             <div id="navigate">
-                <button id="prev_page">Previous</button>
-                <button id="next_page">Next</button>
+                <button class="nav_button" data-val="{{prev|default_if_none:''}}" id="prev_page">Previous</button>
+                <button class="nav_button" data-val="{{next|default_if_none:''}}" id="next_page">Next</button>
             </div>
             <span>&nbsp;&nbsp;&nbsp;</span>
             <span id="status">
@@ -55,11 +55,6 @@
 
             <span>&nbsp;&nbsp;&nbsp;</span>
             <a href="/presets/builder/{{doc.pid}}" id="edit_task">Edit</a>
-            
-            <input type="hidden" name="prev_pid" value="{{prev|default_if_none:''}}" id="id_prev_pid" />
-            <input type="hidden" name="next_pid" value="{{next|default_if_none:''}}" id="id_next_pid" />
-            <input type="hidden" name="pid" value="{{doc.pid}}" id="id_pid" />
-            <input type="hidden" name="pid" value="{{doc.ocr_status}}" id="id_status" />
         </div>
     </div>
     <div id="transcript" class="ui-layout-center"></div>
