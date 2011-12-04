@@ -4,8 +4,10 @@
 
 var bodysplit = null,
     pagesplit = null,
-    mainsplit = null,
-    sidesplit = null;
+    widgetsplit = null,
+    sidesplit = null,
+    widgetcontentsplit = null,
+    sidecontentsplit = null;
 
 
 $(function() {
@@ -20,7 +22,7 @@ $(function() {
     });
 
 
-    var menupanelayout = {
+    var menupanellayout = {
         applyDefaultStyles: true,
         north: {
             resizable: false,
@@ -62,12 +64,42 @@ $(function() {
         },
     };
 
-    $("#page").layout(menupanelayout);
-    $("#widget").layout(widgetlayout);
-    $("#sidebar").layout(widgetlayout);
+    var loadstate = $.cookie("panels");
+    if (loadstate) {
+        var state = JSON.parse(loadstate),
+            pageid = window.location.pathname.replace("/$", "");
+        if (state && state[pageid]) {
+            console.log("Loading state for", pageid);
+            $.extend(menupanellayout.east, state[pageid].east);
+        }
+    }
 
-    $("#widgetcontent").layout(innerlayout);
-    $("#sidebarcontent").layout(innerlayout);
-    $(".toolpane").layout(innerlayout);
+
+    $(window).unload(function() {
+        console.log("Unloading");
+        var pageid = window.location.pathname.replace("/$", "");
+            statestr = $.cookie("panels"),
+            state = {};
+        if (statestr)
+            state = JSON.parse(statestr);
+        
+        state[pageid] = pagesplit.getState();
+        $.cookie("panels", JSON.stringify(state));
+    });
+
+    pagesplit = $("#page").layout(menupanellayout);
+    widgetsplit = $("#widget").layout(widgetlayout);
+    sidesplit = $("#sidebar").layout(widgetlayout);
+
+    widgetcontentsplit = $("#widgetcontent").layout(innerlayout);
+    sidecontentsplit = $("#sidebarcontent").layout(innerlayout);
+    toolpanesplits = $(".toolpane").layout(innerlayout);
+    pagesplit.options.center.onresize_end = function() {
+        widgetsplit.resizeAll();
+        sidesplit.resizeAll();
+        layoutmanager.trigger("layoutChanged");
+    }
+    
+    layoutmanager.trigger("initialised");
 });
 

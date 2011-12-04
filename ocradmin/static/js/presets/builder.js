@@ -754,9 +754,15 @@ $(function() {
         },
     });
 
-
-    setTimeout(function() {
-        sdviewer.resetSize();
+    layoutmanager.addListeners({
+        layoutChanged: function() {
+            nodetree.resetSize();
+            sdviewer.resetSize();
+        },
+        initialised: function() {
+            nodetree.resetSize();
+            sdviewer.resetSize();
+        }
     });
 
     // Initialise nodetree!
