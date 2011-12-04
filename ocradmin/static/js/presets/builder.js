@@ -373,7 +373,7 @@ $(function() {
     // save state on leaving the page... at least try to...
     window.onbeforeunload = function(event) {
         try {
-            if (!$("#edit_task_pk").val())
+            if (!$("#page_pid").val())
                 statemanager.saveCookieData();
         } catch (msg) {
             alert(msg);
