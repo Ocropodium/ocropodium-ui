@@ -452,7 +452,8 @@ $(function() {
                 clearTimeout(polltimer);
             polltimer = setTimeout(function() {
                 $.getJSON("/documents/status/" + getPid() + "/", function(data) {
-                    $("#id_status").val(data.status);
+                    console.log("Setting status", data.status);
+                    $("input[value='" + data.status + "']").prop("checked", true);
                     updateTask();
                 });
             }, 500);
