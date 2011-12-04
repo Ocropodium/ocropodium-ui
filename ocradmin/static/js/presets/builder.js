@@ -762,17 +762,17 @@ $(function() {
         initialised: function() {
             nodetree.resetSize();
             sdviewer.resetSize();
+            // Initialise nodetree!
+            $.ajax({
+                url: "/presets/query/",
+                success: function(data) {
+                    nodetree.startup(data);
+                    nodemenu.startup(data);
+                },
+                error: OcrJs.ajaxErrorHandler,
+            });
         }
     });
 
-    // Initialise nodetree!
-    $.ajax({
-        url: "/presets/query/",
-        success: function(data) {
-            nodetree.startup(data);
-            nodemenu.startup(data);
-        },
-        error: OcrJs.ajaxErrorHandler,
-    });
 });
 
