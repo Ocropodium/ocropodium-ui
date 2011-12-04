@@ -324,12 +324,6 @@ class BaseDocument(object):
     def ocr_status(self, status):
         self.set_metadata(ocr_status=status)
 
-    @metadata.setter
-    def metadata(self, meta):
-        """Set arbitrary document metadata."""
-        self._metacache = None
-        self._storage.write_metadata(self, **dict([meta]))
-
     def get_metadata(self, attr=None):
         meta = self.metadata
         if attr:
