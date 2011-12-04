@@ -60,8 +60,25 @@ $(function() {
             spacing_open: 0,
         },
         south: {
-            size: 100,
+            size: 200,
+            resizable: false,
+            closable: false,
+            slidable: false,
+            initClosed: true,
         },
+    };
+
+    var innersidebarlayout = {
+        applyDefaultStyles: true,
+        north: {
+            resizable: false,
+            closable: false,
+            slidable: false,
+            spacing_open: 0,
+        },
+        south: {
+            size: 200,
+        }
     };
 
     var loadstate = $.cookie("panels");
@@ -73,7 +90,6 @@ $(function() {
             $.extend(menupanellayout.east, state[pageid].east);
         }
     }
-
 
     $(window).unload(function() {
         console.log("Unloading");
@@ -92,7 +108,7 @@ $(function() {
     sidesplit = $("#sidebar").layout(widgetlayout);
 
     widgetcontentsplit = $("#widgetcontent").layout(innerlayout);
-    sidecontentsplit = $("#sidebarcontent").layout(innerlayout);
+    sidecontentsplit = $("#sidebarcontent").layout(innersidebarlayout);
     toolpanesplits = $(".toolpane").layout(innerlayout);
     pagesplit.options.center.onresize_end = function() {
         widgetsplit.resizeAll();
