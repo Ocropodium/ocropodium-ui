@@ -13,6 +13,11 @@ $(function() {
         },
     };
 
+    // replace the edit hrefs with ajax-friendly ones
+    $(".button_link").each(function(i, elem) {
+        this.href = this.href.replace(/\/edit\//, "/edit/#/");
+    });        
+
     function bindKeys() {
         $.each(cmdmap, function(key, handler) {
             $(document).bind("keydown.keycmd", key, function(event) {
