@@ -9,6 +9,9 @@ import pydot
 import json
 import tempfile
 
+class DotError(StandardError):
+    """Dot problems."""
+
 
 # http://www.graphviz.org/doc/info/lang.html
 RAW_NAME_RE = r"(^[A-Za-z_][a-zA-Z0-9_]*$)|(^-?([.[0-9]+|[0-9]+(.[0-9]*)?)$)"
@@ -42,12 +45,17 @@ def get_node_positions(nodedict, aspect=None):
                 g.add_edge(pydot.Edge(src, dst))
             except IndexError:
                 print "Input %s not found" % i
+    
+    # dot doesn't seem to work on < 4 nodes... prevent it from
+    # by just throwing an error
+    if len(nodedict) < 4:
+        raise DotError("Dot breaks with less than 4 nodes.")
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".dot") as t:
         t.close()
         g.write_dot(t.name)
     g = pydot.graph_from_dot_file(t.name)
-    os.unlink(t.name)
+    print "Wrote dot file %s" % t.name
 
     out = {}
     for name, node in nodedict.iteritems():
