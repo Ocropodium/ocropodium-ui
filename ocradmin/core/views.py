@@ -68,17 +68,6 @@ def update_ocr_task(request, pid):
         return HttpResponseNotFound
     script = request.POST.get("script")
 
-    # try and delete the existing binary path
-    dzipath = storage.document_attr_dzi_path(doc, "binary")
-    dzifiles = os.path.splitext(dzipath)[0] + "_files"
-    print "DELETING DZI: %s" % dzipath
-    print "DELETING DZI files: %s" % dzifiles
-    try:
-        os.unlink(dzipath)
-        shutil.rmtree(dzifiles)
-    except OSError:
-        print "FAILED!"
-    
     ref = request.POST.get("ref", "/batch/show/%d/" % task.batch.pk)
     json.loads(script)
     task.args = (task.args[0], task.args[1], script)
