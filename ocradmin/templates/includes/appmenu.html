@@ -1,7 +1,7 @@
 {% if request.user.username %}
     <span id="login_info">
-        Logged in as {{request.user.username}}. <a class="button_link" href="/accounts/logout" alt="Logout">Logout</a>
-        <a class="button_link" alt="Account Admin" href="/admin/">Admin</a>
+        Logged in as {{request.user.username}}. <a class="login_button" href="/accounts/logout" alt="Logout">Logout</a>
+        <a class="login_button" alt="Account Admin" href="/admin/">Admin</a>
     </span>
 
 {% endif %}
