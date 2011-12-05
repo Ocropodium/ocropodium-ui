@@ -98,6 +98,12 @@ class HocrToTextHelper(HTMLParser):
         self._gotline = False
 
 
+def merge_hocr(hocrlist):
+    """Merge several HOCR files (i.e. representing
+    individual columns) into one page file."""
+    raise NotImplementedError
+
+
 def hocr_from_data(pagedata):
     """
     Return an HOCR document (as a string).
