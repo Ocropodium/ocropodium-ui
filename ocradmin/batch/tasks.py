@@ -3,7 +3,7 @@ Celery tasks for Batch operations.
 """
 
 import os
-import glob
+import shutil
 from celery.contrib.abortable import AbortableTask
 from celery.task.sets import subtask
 from ocradmin.ocrtasks.decorators import register_handlers
