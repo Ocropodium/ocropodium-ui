@@ -18,7 +18,7 @@
 {% endblock %}
 
 {% block widgetheader %}
-    <span data-val="{{doc.pid}}" id="page_name">{{doc.label}}</span>
+<span data-val="{{doc.pid}}" id="page_name">{% if doc %}{{doc.label}}{% else %}Loading...{% endif %}</span>
 {% endblock %}
 
 {% block widgetcontent %}
@@ -39,10 +39,8 @@
         </span>
         <span>&nbsp;&nbsp;&nbsp;</span>
         <span id="navigate">
-            <a class="nav_link" data-val="{{prev|default_if_none:''}}" 
-                href="/documents/edit/{{prev|default_if_none:doc.pid}}/" id="prev_page">Previous Page</a>
-            <a class="nav_link" data-val="{{next|default_if_none:''}}"
-                href="/documents/edit/{{next|default_if_none:doc.pid}}/" id="next_page">Next Page</a>
+            <button class="nav_link" data-val="{{prev|default_if_none:''}}" id="prev_page">Previous Page</button>
+            <button class="nav_link" data-val="{{next|default_if_none:''}}" id="next_page">Next Page</button>
         </span>
         <span>&nbsp;&nbsp;&nbsp;</span>
         <span id="status">

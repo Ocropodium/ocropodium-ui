@@ -84,14 +84,16 @@ def quick_batch(request):
 
 
 @project_required
-def editor(request, pid):
+def editor(request, pid=None):
     """Edit document transcript."""
-    storage = request.project.get_storage()
-    doc = storage.get(pid) 
-    context = dict(
-            next=storage.next(pid),
-            prev=storage.prev(pid),
-            doc=doc)
+    context = {}
+    if pid is not None:
+        storage = request.project.get_storage()
+        doc = storage.get(pid) 
+        context = dict(
+                next=storage.next(pid),
+                prev=storage.prev(pid),
+                doc=doc)
     if not request.is_ajax():
         template = "documents/editor.html"
         return render(request, template, context)

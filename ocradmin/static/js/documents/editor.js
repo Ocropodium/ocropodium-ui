@@ -235,20 +235,22 @@ $(function() {
     }
 
     $("input[name='status']").click(function(event) {
-        var status = $("input[name='status']:checked").val();
-        console.log("Setting status to ", status);
+        updateStatus(getPid(), $(this).val());
+    });
+
+    function updateStatus(pid, status) {
+        console.log("Setting", pid, "status to", status);
         $.ajax({
-            url: "/documents/status/" + getPid() + "/",
+            url: "/documents/status/" + pid + "/",
             type: "POST",
             data: {status: status},
             dataType: "json",
             error: OcrJs.ajaxErrorHandler,
             success: function(data) {
-                $("#id_status").val(data.status);
                 console.log(data);
             },
         });
-    });
+    }
 
     function saveState() {
         var view = {
@@ -272,7 +274,13 @@ $(function() {
     }
 
     function getPid() {
-        return $("#page_name").data("val");
+        var pid = $("#page_name").data("val");
+        if (!pid) {
+            pid = $.address.value().replace(/^\//, "").replace(/\/$/, "");
+            $("#page_name").data("val", pid);
+        }
+        console.log("Got pid", pid);
+        return pid;
     }
 
     function getStatus() {
@@ -335,9 +343,12 @@ $(function() {
         done: function(data) {
             sdviewer.setWaiting(false);
             $(sdviewer).data("binpath", data.results.out);
+            sdviewer.resetSize();
             sdviewer.openDzi(data.results.dst);
             sdviewer.goHome();
-            sdviewer.resetSize();
+            setTimeout(function() {
+                sdviewer.resetSize();
+            });
             sdviewer.setWaiting(false);
         },
     });
@@ -479,20 +490,17 @@ $(function() {
         if (event.value != "/") {
             console.log("CHANGED!");
             $.ajax({
-                url: "/documents/edit" + event.value + "/",
+                url: "/documents/edit" + event.value,
                 error: OcrJs.ajaxErrorHandler,
                 success: function(data) {
                     console.log(data);
                     $("#page_name").data("val", data.doc.pid).text(data.doc.label);
-                    $("#next_page").data("val", (data.next || data.doc.pid))
-                        .attr("href", "/documents/edit/" + (data.next || data.doc.pid) + "/");
-                    $("#prev_page").data("val", (data.prev || data.doc.pid))
-                        .attr("href", "/documents/edit/" + (data.prev || data.doc.pid) + "/");
+                    $("#next_page").data("val", data.next);
+                    $("#prev_page").data("val", data.prev);
                     $("input[value='" + data.doc.ocr_status + "']")
                         .prop("checked", true).button("refresh");
                     $("#edit_task").attr("href", "/presets/builder/" + data.doc.pid + "/");
                     updateButtons();
-                    
                     updateTask();
                 }
             });
@@ -509,12 +517,6 @@ $(function() {
     formatter = new OcrJs.LineFormatter();
     
     // viewer object
-    sdviewer = new DziViewer.Viewer($("#viewer").get(0), {
-        numBuffers: 1,
-        height: 300,
-        dashboard: false,
-    });
-    
     $(window).unload(function() {
         saveState();
     });
@@ -525,14 +527,17 @@ $(function() {
             $("input[name=format]:checked").click();
         },
         initialised: function() {
-            sdviewer.resetSize();
+            sdviewer = new DziViewer.Viewer($("#viewer").get(0), {
+                numBuffers: 1,
+                height: 300,
+                dashboard: false,
+            });
             $("input[name=format]:checked").click();
             updateTask();
         }
     });
 
     updateButtons();
-    window.addEventListener("hashchange", updateTask);
 
     // set up key commands
     bindNavKeys();
