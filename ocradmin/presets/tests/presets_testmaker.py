@@ -164,8 +164,6 @@ class Testmaker(TestCase):
     def test_presetsquery_131016880277(self):
         r = self.client.get('/presets/query/', {})
         self.assertEqual(r.status_code, 200)
-    def test_presetslayout_graph_131016880292(self):
-        r = self.client.post('/presets/layout_graph', {'script': '{}', })
     def test_staticcsscustom_themeimagesui_icons_454545_256x240png_13101688043(self):
         r = self.client.get('/static/css/custom-theme/images/ui-icons_454545_256x240.png', {})
         self.assertEqual(r.status_code, 200)
