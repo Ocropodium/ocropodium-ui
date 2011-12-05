@@ -1,0 +1,10 @@
+{% load getattribute %}
+{% load formatattr %}
+
+{% for field in fields %}
+<tr class="{% cycle '' 'odd' %}">
+    <td>{{field|formatattr}}</td>
+    <td>{{object|getattribute:field}}</td>
+</tr>        
+{% endfor %}
+

@@ -1,6 +1,3 @@
-{% load getattribute %}
-{% load formatattr %}
-
 <table class="object_detail object_list">
         <thead>
             <tr class="object_detail_header object_list_header">
@@ -9,12 +6,7 @@
             </tr>
         </thead>            
         <tbody>
-            {% for field in fields %}
-            <tr class="{% cycle '' 'odd' %}">
-                <td>{{field|formatattr}}</td>
-                <td>{{object|getattribute:field}}</td>
-            </tr>        
-            {% endfor %}
+            {% include "includes/generic_detail_body_table.html" %}
         </tbody>
     </table>
 </table>
