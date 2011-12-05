@@ -134,6 +134,55 @@ class LineRecognizerNode(node.Node, TextWriterMixin):
         self.cleanup()
         return utils.hocr_from_data(out)
 
+
+class ColumnRecognizerNode(node.Node, TextWriterMixin):
+    """
+    Node which takes a binary and a segmentation and
+    recognises each column separately.
+    """
+    stage = stages.RECOGNIZE
+    intypes = [ocrolib.numpy.ndarray, dict]
+    outtype = types.HocrString
+    abstract = True
+
+    def init_converter(self):
+        raise NotImplementedError
+
+    def get_transcript(self):
+        raise NotImplementedError
+
+    def cleanup(self):
+        pass
+
+    def prepare(self):
+        pass
+
+    def process(self, binary, boxes):
+        """
+        Recognize page text.
+
+        input: tuple of binary, input boxes
+        return: page data
+        """
+        self.prepare()
+        pageheight, pagewidth = binary.shape
+        iulibbin = ocrolib.numpy2narray(binary)
+        out = [] # list of hocr strings
+        numcols = len(boxes.get("columns", []))
+        for i in range(numcols):
+            set_progress(self.logger, self.progress_func, i, numcols)
+            coords = boxes.get("columns")[i]
+            iulibcoords = (
+                    coords[0], pageheight - coords[3], coords[2],
+                    pageheight - coords[1])
+            colimage = ocrolib.iulib.bytearray()
+            ocrolib.iulib.extract_subimage(colimage, iulibbin, *iulibcoords)
+            out.append(self.get_transcript(ocrolib.narray2numpy(colimage)))
+        set_progress(self.logger, self.progress_func, numcols, numcols)
+        self.cleanup()
+        return utils.merge_hocr(out)
+
+
 def set_progress(logger, progress_func, step, end, granularity=5):
     """
     Call a progress function, if supplied.  Only call
