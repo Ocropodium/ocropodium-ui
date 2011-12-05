@@ -10,7 +10,6 @@ import tempfile
 import subprocess as sp
 from lxml import etree
 from HTMLParser import HTMLParser
-
 from . import cache, exceptions
 
 
