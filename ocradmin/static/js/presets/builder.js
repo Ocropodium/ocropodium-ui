@@ -756,14 +756,25 @@ $(function() {
         },
     });
 
+    function resetViewers() {
+        // Grotesque hacks - no time!!!
+        var ivh = $("#imageviewer_1").height();
+        var viewers = $("#textviewer_1, #hocrviewer_1");
+        viewers.height(ivh - (viewers.outerHeight() - viewers.height()))
+            .css("overflow", "auto");
+    }
+
     layoutmanager.addListeners({
         layoutChanged: function() {
             nodetree.resetSize();
             sdviewer.resetSize();
+            resetViewers();
         },
         initialised: function() {
             nodetree.resetSize();
             sdviewer.resetSize();
+            resetViewers();
+
             // Initialise nodetree!
             $.ajax({
                 url: "/presets/query/",
