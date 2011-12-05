@@ -386,9 +386,12 @@ $(function() {
         select: function(event, ui) {
             // FIXME: Another hack to reset the image viewer
             // when the layout is changed when it is hidden
-            $(sdviewer.parent).parent().show();
-            sdviewer.refresh();
-            sdviewer.resetSize();
+            setTimeout(function() {
+                $(sdviewer.parent).parent().show();
+                sdviewer.resetSize();
+                sdviewer.refresh();
+            });
+
         },
     });
 
