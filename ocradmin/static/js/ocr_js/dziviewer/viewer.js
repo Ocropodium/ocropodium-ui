@@ -167,7 +167,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
     },
 
     goHome: function() {
-        if (self.source !== null) {
+        if (this.source !== null) {
             this.viewport.centerOn(new DziViewer.Size(
                         this.source.width, this.source.height));
             this.viewport.interacted = false;
@@ -175,7 +175,7 @@ DziViewer.Viewer = OcrJs.Base.extend({
     },
 
     fitBounds: function(rect) {
-        if (self.source === null)
+        if (this.source === null)
             return;
 
         this.viewport.centerOn(rect.getSize(), true);
