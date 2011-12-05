@@ -26,9 +26,21 @@ class DocBatchScriptTask(AbortableTask):
         """
         Runs the convert action.
         """
-        doc = Project.objects.get(pk=project_pk).get_storage().get(pid)
+        project = Project.objects.get(pk=project_pk)
+        storage = project.get_storage()
+        doc = storage.get(pid)
         logger = self.get_logger()
         logger.debug("Running Document Batch Item: %s")
+
+        # try and delete the existing binary dzi file
+        dzipath = storage.document_attr_dzi_path(doc, "binary")
+        dzifiles = os.path.splitext(dzipath)[0] + "_files"
+        try:
+            os.unlink(dzipath)
+            shutil.rmtree(dzifiles)
+        except OSError:
+            pass
+
         progress_handler = get_progress_callback(self.request.id)
         abort_handler = get_abort_callback(self.request.id)
         progress_handler(0)
