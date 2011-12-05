@@ -4,6 +4,8 @@ var uploader = null,
 
 $(function() {
 
+    $("#project_manage").accordion();
+
     // map of key commands to functions
     var cmdmap = {
         "ctrl+del": function() { 
