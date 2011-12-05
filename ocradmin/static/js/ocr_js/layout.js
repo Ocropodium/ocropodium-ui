@@ -86,7 +86,6 @@ $(function() {
         var state = JSON.parse(loadstate),
             pageid = window.location.pathname.replace("/$", "");
         if (state && state[pageid]) {
-            console.log("Loading state for", pageid);
             $.extend(menupanellayout.east, state[pageid].east);
         }
     }
