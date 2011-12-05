@@ -80,10 +80,6 @@
      being positioned above.  It is so the menu overlaps the params
      where necessary -->
     <div id="script_toolbar" class="ui-layout-north viewer_toolbar ui-medium-flat ui-helper-clearfix">
-        {% if doc %}
-        <button id="save_task_preset">Save</button>
-        <button id="cancel_task_preset">Cancel</button>
-        {% else %}
         <div class="dropdownmenu dropdown">
             <ul class="top">
                 <a id="show_file_menu" class="ui-helper-clearfix">Show File Menu</a>
@@ -99,7 +95,6 @@
                 </li>
             </ul>
         </div>
-        {% endif %}
         <span>&nbsp;&nbsp;&nbsp;</span>
         <button id="undo_command" disabled="disabled">Undo</button>
         <button id="redo_command" disabled="disabled">Redo</button>
@@ -109,6 +104,11 @@
         <button id="layout_nodes">Cleanup Node Layout</button>
         <button id="clear_cache">Clear Cache</button>
         <button id="focus_dummy"></button>
+        {% if doc %}
+        <span>&nbsp;&nbsp;&nbsp;</span>
+        <button id="save_task_preset">Save</button>
+        <button id="cancel_task_preset">Cancel</button>
+        {% endif %}
     </div>                
 
 
