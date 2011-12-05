@@ -16,6 +16,36 @@ from . import base
 from .. import stages, types, utils
 
 
+class NoOp(node.Node, writable_node.WritableNodeMixin):
+    stage = stages.UTILS
+
+    def __init__(self, *args, **kwargs):
+        super(NoOp, self).__init__(*args, **kwargs)
+        self.intypes = [type(None)]
+        self.outtype = type(None)
+
+    def validate(self):
+        if self.input(0):
+            self.intypes = [self._inputs[0].outtype]
+            self.outtype = self._inputs[0].outtype
+        super(NoOp, self).validate()
+
+
+    def set_input(self, num, n):
+        """
+        Override the base set input to dynamically change our
+        in and out types.
+        """
+        super(NoOp, self).set_input(num, n)
+        self.intypes = [self._inputs[num].outtype]
+        self.outtype = self._inputs[num].outtype
+
+    def first_active(self):
+        return self._inputs[0].first_active()
+
+    def process(self, input):
+        return input
+
 
 class FindReplace(node.Node, base.TextWriterMixin):
     """
