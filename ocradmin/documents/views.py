@@ -195,8 +195,8 @@ def create_ajax(request):
     """Create new documents with an Ajax POST."""
     if request.method == "POST" and request.GET.get("inlinefile"):
         storage = request.project.get_storage()
-        doc = storage.create_document(filename)
         filename = request.GET.get("inlinefile")
+        doc = storage.create_document(filename)
         try:
             doc.image_content = StringIO(request.raw_post_data)
             doc.image_mimetype = request.META.get("HTTP_X_FILE_TYPE")
