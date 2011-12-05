@@ -459,7 +459,8 @@ $(function() {
 
     function updateTask(event) {
         var status = getStatus();
-        if (status == "running") {
+        console.log("Updating task with status", status);
+        if (!status || status == "running") {
             transcript.setWaiting(true);
             if (polltimer != null)
                 clearTimeout(polltimer);
@@ -470,7 +471,7 @@ $(function() {
                     updateTask();
                 });
             }, 500);
-        } else if (status != "error" && status != "initial") {
+        } else if (~$.inArray(status, ["uncorrected", "part_corrected", "complete"])) {
             clearTimeout(polltimer);
             polltimer = null;
             console.log("Loading ", getPid());
