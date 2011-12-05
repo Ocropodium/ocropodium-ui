@@ -49,7 +49,9 @@ def doclist(request):
             storage=storage,
             objects=storage.list(),
             presets=presets,
-            newform=newform
+            newform=newform,
+            pfields=["tags", "description", "created_on", "storage_backend"],
+            sfields=project.storage_config_dict().keys()
     )
     return render(request, template, context)
 
@@ -189,14 +191,12 @@ def show_small(request, pid, doc=None):
 @project_required
 def create_ajax(request):
     """Create new documents with an Ajax POST."""
-    storage = request.project.get_storage()
-    pid = None
     if request.method == "POST" and request.GET.get("inlinefile"):
+        storage = request.project.get_storage()
+        doc = storage.create_document(filename)
+        filename = request.GET.get("inlinefile")
         try:
-            filename = request.GET.get("inlinefile")
-            doc = storage.create_document(filename)
             doc.image_content = StringIO(request.raw_post_data)
-            print "Creating document with", filename
             doc.image_mimetype = request.META.get("HTTP_X_FILE_TYPE")
             doc.image_label = filename
             doc.set_metadata(title=filename, ocr_status=docstatus.INITIAL)
@@ -204,7 +204,9 @@ def create_ajax(request):
             doc.save()
         except Exception, err:
             logger.exception(err)
-    return show_small(request, doc.pid, doc)
+    if request.is_ajax():
+        return show_small(request, doc.pid, doc)
+    return HttpRedirect("/documents/list/")
 
 
 @project_required
