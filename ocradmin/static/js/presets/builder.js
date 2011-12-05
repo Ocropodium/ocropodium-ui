@@ -72,11 +72,13 @@ $(function() {
         }
     });
     $("#save_task_preset").button({
+        text: false,
         icons: {
-            primary: "ui-icon-arrowreturnthick-1-w",
+            primary: "ui-icon-disk",
         }
     });
     $("#cancel_task_preset").button({
+        text: false,
         icons: {
             primary: "ui-icon-cancel",
         }
