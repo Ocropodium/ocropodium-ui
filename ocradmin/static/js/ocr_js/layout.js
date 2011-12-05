@@ -114,14 +114,16 @@ $(function() {
         sidesplit.resizeAll();
         layoutmanager.trigger("layoutChanged");
     }
-    
-    widgetcontentsplit.options.center.onresize_end = function() {
-        layoutmanager.trigger("layoutChanged");
+    if (widgetcontentsplit) {    
+        widgetcontentsplit.options.center.onresize_end = function() {
+            layoutmanager.trigger("layoutChanged");
+        }
     }
-    sidecontentsplit.options.center.onresize_end = function() {
-        layoutmanager.trigger("layoutChanged");
+    if (sidecontentsplit) {
+        sidecontentsplit.options.center.onresize_end = function() {
+            layoutmanager.trigger("layoutChanged");
+        }
     }
-
 
     layoutmanager.trigger("initialised");
 });

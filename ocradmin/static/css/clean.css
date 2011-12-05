@@ -57,6 +57,15 @@ input, textarea, .selectable {
     overflow: visible;
 }
 
+.login_button {
+    text-decoration: none;
+    color: #666;
+}
+
+.login_button:hover {
+    background-color: #DDDDFF;
+}
+
 #sidebar, #sidebarcontent {
     overflow: hidden;
     height: 100%;
@@ -88,7 +97,6 @@ html, body {
 #login_info a {
     margin-left: 5px;
     display: inline;
-    text-decoration: underline;
 }
 
 #login_info a:hover {

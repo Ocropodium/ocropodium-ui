@@ -311,11 +311,16 @@ COMPRESS_JS = {
             "js/appmenu.js",
             "js/ocr_js/global.js",
             "js/utils/json2.js",
-            "js/ocr_js/layout.js",
             "js/ocr_js/ajax_uploader.js",
             "js/status_bar.js",
         ),
         "output_filename": "js/min/global.min.js",
+    },
+    "layout" : {
+        "source_filenames": (
+            "js/ocr_js/layout.js",
+        ),
+        "output_filename": "js/min/layout.min.js",
     },
     "ocrjs": {
         "source_filenames": (
