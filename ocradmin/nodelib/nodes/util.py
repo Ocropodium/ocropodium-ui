@@ -9,7 +9,7 @@ import re
 import codecs
 import tempfile
 import subprocess as sp
-from BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 from nodetree import node, writable_node, exceptions
 
 from . import base
@@ -102,7 +102,9 @@ class HocrToText(node.Node, base.TextWriterMixin):
     def process(self, input):
         soup = BeautifulSoup(input)
         raw = ''.join(soup.find("div", {"class":"ocr_page"}).findAll(text=True))
-        return re.sub("[\n]{3,100}", "\n\n", raw)
+        decode = BeautifulStoneSoup(raw, 
+                convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
+        return re.sub("[\n]{3,100}", "\n\n", decode.text)
 
 
 class TextFileIn(base.FileNode, base.TextWriterMixin):
