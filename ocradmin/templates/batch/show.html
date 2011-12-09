@@ -49,5 +49,12 @@
     Batch Info
 {% endblock sidebarheader %}
 {% block sidebarcontent %}
-    <div id="sidebar_content" class="ui-widget-content ui-layout-center"></div> 
+    <div id="batch_manage" class="ui-layout-center">
+        <h3><a href="#">{{batch.name}}</a></h3>
+        <div class="batch_info">
+            <table class="object_detail object_list"> 
+                {% include "includes/generic_detail_body_table.html" with object=batch fields=fields %}
+            </table>
+        </div>        
+    </div>
 {% endblock %}
