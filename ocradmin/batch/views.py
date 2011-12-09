@@ -200,7 +200,7 @@ def latest(request):
             project=request.session["project"]
         ).order_by("-created_on")[0]
     except (Batch.DoesNotExist, IndexError):
-        batch = None
+        return HttpResponseRedirect("/batch/list")
 
     return _show_batch(request, batch)
 
@@ -248,7 +248,8 @@ def _show_batch(request, batch):
     """
     template = "batch/show.html" if not request.is_ajax() \
             else "batch/includes/show_batch.html"
-    context = {"batch": batch}
+    fields = ["name","tags", "description","created_on"]
+    context = dict(batch=batch, fields=fields)
     return render(request, template, context)
 
 

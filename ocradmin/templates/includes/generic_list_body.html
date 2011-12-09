@@ -58,8 +58,10 @@
     </div>
     {% endif %}
     
-{% else %}
-    No {{model}}s found.
+    {% else %}
+    <div class="empty_list">
+        <h4>Nothing found.</h4>
+    </div>
 {% endif %}
 
 

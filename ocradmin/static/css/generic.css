@@ -34,11 +34,15 @@
 }
 
 .object_list th {
-    font-size: 1.2em;
+    font-size: 1.1em;
 }
 
 .object_list tr.odd {
     background-color: #F4F4F4;
+}
+
+.empty_list {
+    padding: 10px;
 }
 
 .pagination {
