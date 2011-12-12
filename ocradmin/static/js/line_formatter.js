@@ -43,7 +43,7 @@ OcrJs.LineFormatter = OcrJs.Base.extend({
                 left: Math.round(spanboxes[i].x0) + margin,
                 top: Math.round(spanboxes[i].y0) + margin
             });
-            var th = (spanboxes[i].height / stats.median - 1) < 0.5
+            var th = (spanboxes[i].height / stats.median - 1) < 1.25
                 ? stats.median
                 : spanboxes[i].height;
             self._resizeToTarget($(elem), spanboxes[i].width, th);
