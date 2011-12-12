@@ -389,7 +389,7 @@ COMPRESS_JS = {
             "js/text_viewer.js",
             "js/hocr_viewer.js",
 	        "js/utils/stats.js",
-            "js/line_formatter.js",
+            "js/ocr_js/hocr_formatter.js",
         ),
         "output_filename": "js/min/viewers.min.js",        
     },
